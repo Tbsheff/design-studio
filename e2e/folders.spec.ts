@@ -1,9 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, renameSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { Project } from '../src/shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../src/shared/folders';
-import { readState, ROOT } from './support/server';
+import { projectsDirFor, readState, ROOT } from './support/server';
 import { openHome, type StudioApi } from './support/studio';
 
 const SHOTS = process.env.STUDIO_FOLDERS_SHOTS === '1';
@@ -31,7 +31,7 @@ async function stubPicker(page: Page, answer: (request: PickRequest) => { status
 }
 
 async function folders(api: StudioApi): Promise<WorkspaceFolder[]> {
-  return (await api.call<WorkspaceList>('GET', '/api/workspaces')).folders;
+  return (await api.call<WorkspaceList>('GET', '/api/workspaces')).folders.filter((folder) => !folder.default);
 }
 
 async function forgetAllFolders(api: StudioApi): Promise<void> {
@@ -71,7 +71,7 @@ test('create a project in a chosen folder: new subfolder only, listed under Fold
   await page.reload();
 
   await page.getByLabel('Describe the design').fill('Folder pricing page');
-  await expect(page.getByTestId('location-target')).toHaveText('Kept in the studio data folder');
+  await expect(page.getByTestId('location-target')).toContainText('Design Studio/folder-pricing-page');
   await page.getByLabel('Location').selectOption({ label: 'Choose folder…' });
   await expect(page.getByLabel('Location')).toHaveValue(parent);
   await expect(page.getByTestId('location-target')).toContainText('folder-pricing-page');
@@ -187,4 +187,62 @@ test('off macOS the picker falls back to pasting a path', async ({ page }) => {
   await expect(page.getByText('The folder picker needs macOS. Paste the full path.')).toBeVisible();
   await expect(page.getByPlaceholder('/Users/me/projects/site')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Choose folder…' })).toHaveCount(0);
+});
+
+test('create with no location: a readable folder in the default Design Studio folder', async ({ page }) => {
+  const api = await openHome(page);
+  const row = folderRow(page, 'Design Studio');
+  await expect(row.locator('.folder-default')).toHaveText('Default');
+  await expect(row.getByRole('button', { name: /^Remove/ })).toHaveCount(0);
+  await expect(page.getByLabel('Location')).toHaveValue('default');
+  const countBefore = Number((await row.locator('.folder-count').textContent())?.split(' ')[0]);
+
+  await page.getByLabel('Describe the design').fill('Default folder landing');
+  await expect(page.getByTestId('location-target')).toContainText('Design Studio/default-folder-landing');
+  const before = new Set((await api.projects()).map((project) => project.id));
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await expect(page.locator('.topbar')).toBeVisible();
+  const project = (await api.projects()).find((candidate) => !before.has(candidate.id)) as Project;
+  const folder = path.join(realpathSync(projectsDirFor(readState().dataDir)), 'default-folder-landing');
+  expect(project.imported).toEqual({ sourcePath: folder, created: true });
+  expect(project.directions[0]?.workTree).toBe(folder);
+  await api.waitForRuns(project.id, 1);
+  expect(existsSync(path.join(folder, 'index.html'))).toBe(true);
+
+  await goHome(page);
+  const countAfter = countBefore + 1;
+  await expect(row.locator('.folder-count')).toHaveText(`${countAfter} project${countAfter === 1 ? '' : 's'}`);
+  await row.locator('.folder-main').click();
+  await expect(page.getByRole('heading', { name: 'Projects in Design Studio' })).toBeVisible();
+  await expect(page.locator('.project-card .project-name', { hasText: 'Default folder landing' })).toBeVisible();
+});
+
+test('hidden projects move to the default folder only when the user clicks Move', async ({ page }) => {
+  const api = await openHome(page);
+  const { project: source } = await api.call<{ project: Project }>('POST', '/api/projects', { prompt: 'Hidden source page', kind: 'html', startRun: false });
+  const { dataDir } = readState();
+  const id = `hidden${Date.now().toString(36)}`;
+  const projectDir = path.join(dataDir, 'projects', id);
+  const workTree = path.join(projectDir, 'directions', 'main');
+  cpSync(path.join(dataDir, 'projects', source.id), projectDir, { recursive: true });
+  mkdirSync(workTree, { recursive: true });
+  writeFileSync(path.join(workTree, 'index.html'), '<!doctype html><title>x</title><h1>Old hidden</h1>\n');
+  const stored = JSON.parse(readFileSync(path.join(projectDir, 'project.json'), 'utf8')) as Project;
+  const hidden: Project = { ...stored, id, name: 'Old hidden page', imported: null, directions: stored.directions.map((direction) => ({ ...direction, workTree, headVersionId: null })) };
+  writeFileSync(path.join(projectDir, 'project.json'), JSON.stringify(hidden, null, 2));
+  await page.reload();
+
+  const note = page.locator('.home-hidden-note');
+  await expect(note).toContainText("1 project is in the app's hidden folder");
+  expect(readFileSync(path.join(workTree, 'index.html'), 'utf8')).toContain('Old hidden');
+  await note.getByRole('button', { name: /^Move to / }).click();
+  await expect(note).toHaveCount(0);
+  const folder = path.join(realpathSync(projectsDirFor(dataDir)), 'old-hidden-page');
+  const moved = await api.call<Project>('GET', `/api/projects/${id}`);
+  expect(moved.directions[0]?.workTree).toBe(folder);
+  expect(moved.imported).toEqual({ sourcePath: folder, created: true });
+  expect(readFileSync(path.join(folder, 'index.html'), 'utf8')).toContain('Old hidden');
+  expect(existsSync(workTree)).toBe(false);
+  await folderRow(page, 'Design Studio').locator('.folder-main').click();
+  await expect(page.locator('.project-card .project-name', { hasText: 'Old hidden page' })).toBeVisible();
 });

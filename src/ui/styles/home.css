@@ -518,3 +518,23 @@
   border: 1px dashed transparent;
   color: var(--text-2);
 }
+
+.home-hidden-note {
+  width: min(720px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  color: var(--text-3);
+  font-size: var(--t-sm);
+}
+
+.home-hidden-error {
+  flex-basis: 100%;
+  color: var(--danger);
+}
+
+.folder-default {
+  margin-left: var(--s-2);
+  vertical-align: 1px;
+}

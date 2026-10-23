@@ -125,7 +125,7 @@ export function OpenFolder({ busy, path, homeDir, chooser, onPath, onImport }: O
   );
 }
 
-const LIBRARY = 'library';
+const DEFAULT = 'default';
 const CHOOSE = 'choose';
 
 interface LocationProps {
@@ -140,8 +140,10 @@ interface LocationProps {
 
 export function LocationField({ folders, value, homeDir, prompt, chooser, onChange, onAddFolder }: LocationProps) {
   const [pasting, setPasting] = useState(false);
-  const usable = folders.filter((folder) => !folder.missing);
-  const target = value ? `${value}/${slugify(nameFromPrompt(prompt))}` : null;
+  const fallback = folders.find((folder) => folder.default) ?? null;
+  const usable = folders.filter((folder) => !folder.missing && !folder.default);
+  const parent = value ?? fallback?.path ?? null;
+  const target = parent ? `${parent}/${slugify(nameFromPrompt(prompt))}` : null;
   const useFolder = async (path: string) => {
     const saved = await onAddFolder(path);
     if (saved) {
@@ -164,18 +166,18 @@ export function LocationField({ folders, value, homeDir, prompt, chooser, onChan
       <select
         id="new-project-location"
         className="select"
-        value={value ?? LIBRARY}
+        value={value ?? DEFAULT}
         disabled={chooser.picking}
         onChange={(e) => {
           const next = e.target.value;
           if (next === CHOOSE) void pick();
           else {
             setPasting(false);
-            onChange(next === LIBRARY ? null : next);
+            onChange(next === DEFAULT ? null : next);
           }
         }}
       >
-        <option value={LIBRARY}>Studio library</option>
+        <option value={DEFAULT}>{fallback?.label ?? 'Design Studio'}</option>
         {usable.map((folder) => (
           <option key={folder.id} value={folder.path}>
             {folder.label}
@@ -188,12 +190,10 @@ export function LocationField({ folders, value, homeDir, prompt, chooser, onChan
         <PastePath label="Folder for the new project" action="Use folder" onSubmit={(path) => void useFolder(path)} />
       ) : (
         <span className="home-location-target" data-testid="location-target">
-          {target ? (
+          {target && (
             <>
               New folder <FolderPath path={target} homeDir={homeDir} />
             </>
-          ) : (
-            'Kept in the studio data folder'
           )}
         </span>
       )}
@@ -211,9 +211,11 @@ interface FolderRowProps {
   onOpenHere: () => void;
   onRename: (label: string) => Promise<boolean>;
   onRemove: () => void;
+  onChangeDefault: () => void;
+  changing: boolean;
 }
 
-function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpenHere, onRename, onRemove }: FolderRowProps) {
+function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpenHere, onRename, onRemove, onChangeDefault, changing }: FolderRowProps) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(folder.label);
   const renameRef = useRef<HTMLButtonElement>(null);
@@ -257,7 +259,10 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
         <button type="button" className="folder-main" aria-pressed={active} onClick={onFilter} title={active ? 'Show all projects' : `Show projects in ${folder.label}`}>
           <Icon name="folder" size={16} />
           <span className="folder-text">
-            <span className="folder-label">{folder.label}</span>
+            <span className="folder-label">
+              {folder.label}
+              {folder.default && <span className="badge folder-default">Default</span>}
+            </span>
             <FolderPath path={folder.path} homeDir={homeDir} />
           </span>
           {folder.missing ? (
@@ -278,12 +283,20 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
         <button type="button" className="btn small" disabled={folder.missing} onClick={onOpenHere}>
           Open folder here…
         </button>
-        <button ref={renameRef} type="button" className="icon-btn small" aria-label={`Rename ${folder.label}`} data-tip="Rename" onClick={() => setEditing(true)} disabled={editing}>
-          <Icon name="pencil" size={14} />
-        </button>
-        <button type="button" className="icon-btn small" aria-label={`Remove ${folder.label} from the list`} data-tip="Remove from list. Files stay on disk." onClick={onRemove}>
-          <Icon name="close" size={14} />
-        </button>
+        {folder.default ? (
+          <button type="button" className="btn small" aria-label="Change the default folder" data-tip="New projects go here when you pick no location." onClick={onChangeDefault} disabled={changing}>
+            Change…
+          </button>
+        ) : (
+          <>
+            <button ref={renameRef} type="button" className="icon-btn small" aria-label={`Rename ${folder.label}`} data-tip="Rename" onClick={() => setEditing(true)} disabled={editing}>
+              <Icon name="pencil" size={14} />
+            </button>
+            <button type="button" className="icon-btn small" aria-label={`Remove ${folder.label} from the list`} data-tip="Remove from list. Files stay on disk." onClick={onRemove}>
+              <Icon name="close" size={14} />
+            </button>
+          </>
+        )}
       </div>
     </li>
   );
@@ -300,12 +313,23 @@ interface FoldersSectionProps {
   onRemove: (folder: WorkspaceFolder) => void;
   onNewHere: (folder: WorkspaceFolder) => void;
   onOpenHere: (folder: WorkspaceFolder) => void;
+  onSetDefault: (path: string) => Promise<boolean>;
 }
 
-export function FoldersSection({ list, projects, filterId, chooser, onFilter, onAdd, onRename, onRemove, onNewHere, onOpenHere }: FoldersSectionProps) {
+export function FoldersSection({ list, projects, filterId, chooser, onFilter, onAdd, onRename, onRemove, onNewHere, onOpenHere, onSetDefault }: FoldersSectionProps) {
   const [pasting, setPasting] = useState(false);
+  const [pastingDefault, setPastingDefault] = useState(false);
   const folders = list?.folders ?? [];
   const homeDir = list?.homeDir ?? null;
+  const changeDefault = async (current: WorkspaceFolder) => {
+    if (chooser.unsupported) {
+      setPastingDefault(true);
+      return;
+    }
+    const picked = await chooser.choose('Choose the default folder for new projects', current.path);
+    if (picked.path) await onSetDefault(picked.path);
+    else if (picked.unsupported) setPastingDefault(true);
+  };
   const add = async () => {
     if (chooser.unsupported) {
       setPasting(true);
@@ -337,8 +361,16 @@ export function FoldersSection({ list, projects, filterId, chooser, onFilter, on
           }
         />
       )}
-      {list !== null && folders.length === 0 && !pasting && (
-        <p className="home-folders-empty">Add the folders you work in. Then you can make new projects there and see which projects each one holds.</p>
+      {pastingDefault && (
+        <PastePath
+          label="Default folder for new projects"
+          action="Use as default"
+          onSubmit={(path) =>
+            void onSetDefault(path).then((ok) => {
+              if (ok) setPastingDefault(false);
+            })
+          }
+        />
       )}
       {folders.length > 0 && (
         <ul className="folder-list">
@@ -354,9 +386,14 @@ export function FoldersSection({ list, projects, filterId, chooser, onFilter, on
               onOpenHere={() => onOpenHere(folder)}
               onRename={(label) => onRename(folder.id, label)}
               onRemove={() => onRemove(folder)}
+              onChangeDefault={() => void changeDefault(folder)}
+              changing={chooser.picking}
             />
           ))}
         </ul>
+      )}
+      {list !== null && folders.every((folder) => folder.default) && !pasting && (
+        <p className="home-folders-empty">Add the other folders you work in. Then you can make new projects there and see which projects each one holds.</p>
       )}
     </section>
   );

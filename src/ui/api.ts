@@ -105,6 +105,9 @@ export const api = {
   addWorkspace: (path: string, label?: string) => json<WorkspaceFolder>('POST', '/api/workspaces', { path, ...(label ? { label } : {}) }),
   renameWorkspace: (id: string, label: string) => json<WorkspaceFolder>('PATCH', `/api/workspaces/${encodeURIComponent(id)}`, { label }),
   removeWorkspace: (id: string) => json<{ ok: true }>('DELETE', `/api/workspaces/${encodeURIComponent(id)}`),
+  setDefaultFolder: (path: string) => json<WorkspaceList>('PUT', '/api/workspaces/default', { path }),
+  hiddenProjects: () => json<{ count: number; target: string }>('GET', '/api/hidden-projects'),
+  moveHiddenProjects: () => json<{ moved: string[]; failed: { projectId: string; error: string }[] }>('POST', '/api/hidden-projects/move'),
   pickFolder: async (input: { title: string; defaultPath?: string }): Promise<string | null> => {
     const res = await request('POST', '/api/pick-folder', input);
     if (res.status === 204) return null;

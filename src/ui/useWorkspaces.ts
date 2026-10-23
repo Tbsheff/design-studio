@@ -5,7 +5,11 @@ import { api, errorText } from './api';
 
 export function locationFor(list: WorkspaceList | null, lastLocation: string | null): string | null {
   if (list === null) return lastLocation;
-  return list.folders.some((folder) => folder.path === lastLocation && !folder.missing) ? lastLocation : null;
+  return list.folders.some((folder) => folder.path === lastLocation && !folder.missing && !folder.default) ? lastLocation : null;
+}
+
+export function defaultFolderOf(list: WorkspaceList | null): WorkspaceFolder | null {
+  return list?.folders.find((folder) => folder.default) ?? null;
 }
 
 export function filterByFolder(projects: Project[] | null, list: WorkspaceList | null, filterId: string | null): { filterFolder: WorkspaceFolder | null; shownProjects: Project[] | null } {
@@ -58,5 +62,11 @@ export function useWorkspaces(onError: (message: string | null) => void) {
       return true;
     }, false);
 
-  return { workspaces, addFolder, renameFolder, forgetFolder };
+  const setDefaultFolder = (path: string): Promise<boolean> =>
+    attempt(async () => {
+      setWorkspaces(await api.setDefaultFolder(path));
+      return true;
+    }, false);
+
+  return { workspaces, addFolder, renameFolder, forgetFolder, setDefaultFolder };
 }

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { DEFAULT_SETTINGS, type Project, type ProjectKind } from '../../shared/contracts';
-import type { WorkspaceFolder } from '../../shared/folders';
+import { shortenHome, type WorkspaceFolder } from '../../shared/folders';
 import { api, errorText } from '../api';
 import { findPack, usePacks } from '../packs';
 import { homeVariations, uiStore, useUi } from '../storage';
@@ -59,6 +59,47 @@ function PromptArea({ value, onChange, onSubmit }: { value: string; onChange: (v
   );
 }
 
+function HiddenProjectsNote({ homeDir, onMoved }: { homeDir: string | null; onMoved: () => void }) {
+  const [hidden, setHidden] = useState<{ count: number; target: string } | null>(null);
+  const [moving, setMoving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const load = () =>
+    api
+      .hiddenProjects()
+      .then(setHidden)
+      .catch(() => setHidden(null));
+  useEffect(() => {
+    void load();
+  }, []);
+  if (!hidden || hidden.count === 0) return null;
+  const move = async () => {
+    setMoving(true);
+    setError(null);
+    try {
+      const result = await api.moveHiddenProjects();
+      const first = result.failed[0];
+      if (first) setError(`Could not move ${result.failed.length} project${result.failed.length === 1 ? '' : 's'}: ${first.error}`);
+      if (result.moved.length > 0) onMoved();
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setMoving(false);
+      await load();
+    }
+  };
+  return (
+    <div className="home-hidden-note" role="status">
+      <span>
+        {hidden.count === 1 ? "1 project is in the app's hidden folder" : `${hidden.count} projects are in the app's hidden folder`}
+      </span>
+      <button type="button" className="btn small" onClick={() => void move()} disabled={moving}>
+        {moving ? 'Moving…' : `Move to ${shortenHome(hidden.target, homeDir)}`}
+      </button>
+      {error && <span className="home-hidden-error">{error}</span>}
+    </div>
+  );
+}
+
 function focusPrompt(home: HTMLElement | null): void {
   home?.scrollTo({ top: 0, behavior: 'smooth' });
   window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')?.focus());
@@ -91,14 +132,17 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const [importPath, setImportPath] = useState('');
   const chooser = useFolderChooser(setFormError);
   const homeRef = useRef<HTMLDivElement>(null);
-  const { workspaces, addFolder, renameFolder, forgetFolder } = useWorkspaces(setFormError);
+  const { workspaces, addFolder, renameFolder, forgetFolder, setDefaultFolder } = useWorkspaces(setFormError);
   const homeDir = workspaces ? workspaces.homeDir : null;
 
-  useEffect(() => {
+  const loadProjects = () =>
     api
       .listProjects()
       .then((list) => setProjects([...list].sort((a, b) => b.updatedAt - a.updatedAt)))
       .catch((err) => setListError(errorText(err)));
+
+  useEffect(() => {
+    void loadProjects();
   }, []);
 
   const location = locationFor(workspaces, lastLocation);
@@ -111,7 +155,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const newProjectHere = (folder: WorkspaceFolder) => {
-    setLocation(folder.path);
+    setLocation(folder.default ? null : folder.path);
     focusPrompt(homeRef.current);
   };
 
@@ -217,6 +261,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <Disclosure className="home-disclosure" />
           <OpenFolder busy={busy !== null} path={importPath} homeDir={homeDir} chooser={chooser} onPath={setImportPath} onImport={(p) => void importFolder(p)} />
         </section>
+        <HiddenProjectsNote homeDir={homeDir} onMoved={() => void loadProjects()} />
         <FoldersSection
           list={workspaces}
           projects={projects}
@@ -228,6 +273,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           onRemove={(folder) => void removeFolder(folder)}
           onNewHere={newProjectHere}
           onOpenHere={(folder) => void openFolderHere(folder)}
+          onSetDefault={setDefaultFolder}
         />
         <ProjectGrid
           projects={shownProjects}

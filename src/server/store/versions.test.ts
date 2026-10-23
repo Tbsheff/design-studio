@@ -1,9 +1,10 @@
+import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, readdir, rm, symlink, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rename, rm, symlink, writeFile, mkdir } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { Project } from '../../shared/contracts.js';
+import type { Project, Version } from '../../shared/contracts.js';
 import type { ServerConfig } from '../types.js';
 import { createProjectStore, type StudioProjectStore } from './projects.js';
 import { makeTempConfig } from './testConfig.js';
@@ -262,5 +263,49 @@ describe('version store', { timeout: 20000 }, () => {
     expect(version?.meta.kind).toBe('manual');
     expect(await versions.status(project, main)).toEqual({ dirty: true, changed: ['index.html'] });
     expect(await versions.commitFile(project, main, 'DESIGN.md', 'again', { kind: 'manual' })).toBeNull();
+  });
+
+  it('lists the same changed files as one diff-tree per commit', async () => {
+    const main = projects.mainDirection(project);
+    const committed: Version[] = [];
+    const commitStep = async (title: string, kind: 'run' | 'fork' = 'run') => {
+      const version = await versions.commit(project, main, title, { kind });
+      if (version) committed.push(version);
+      return version;
+    };
+    await write(main.workTree, 'index.html', '<h1>one</h1>');
+    await write(main.workTree, 'pages/old name.html', '<p>same content</p>');
+    await write(main.workTree, 'assets/logo.bin', '');
+    await writeFile(path.join(main.workTree, 'assets/logo.bin'), Buffer.from([0, 1, 2, 255, 0, 10, 13]));
+    await write(main.workTree, 'café/ünï.css', 'a{}');
+    await commitStep('Root');
+    await rename(path.join(main.workTree, 'pages/old name.html'), path.join(main.workTree, 'pages/new name.html'));
+    await commitStep('Rename');
+    await rm(path.join(main.workTree, 'assets/logo.bin'));
+    await write(main.workTree, 'index.html', '<h1>two</h1>');
+    await commitStep('Delete and edit');
+    await writeFile(path.join(main.workTree, 'assets/photo.bin'), Buffer.from([137, 80, 78, 71, 0, 0, 0]));
+    await write(main.workTree, 'deep/a/b/c.txt', 'c');
+    await commitStep('Binary and nested');
+    expect(await commitStep('Empty fork', 'fork')).not.toBeNull();
+
+    const list = await versions.list(project, main);
+    expect(list).toEqual([...committed].reverse());
+
+    const gitDir = path.join(config.dataDir, 'projects', project.id, 'git');
+    const env = { ...process.env, GIT_DIR: gitDir, GIT_CONFIG_GLOBAL: os.devNull, GIT_CONFIG_NOSYSTEM: '1' };
+    for (const version of list) {
+      const args = ['diff-tree', '--no-commit-id', '--name-only', '-r', '-z', ...(version.parentId ? [] : ['--root']), version.id];
+      const expected = execFileSync('git', args, { env, encoding: 'utf8' }).split('\0').filter(Boolean);
+      expect(version.changedFiles).toEqual(expected);
+    }
+    expect(list.map((version) => version.changedFiles)).toEqual([
+      [],
+      ['assets/photo.bin', 'deep/a/b/c.txt'],
+      ['assets/logo.bin', 'index.html'],
+      ['pages/new name.html', 'pages/old name.html'],
+      ['assets/logo.bin', 'café/ünï.css', 'index.html', 'pages/old name.html'],
+    ]);
+    expect((await versions.get(project, list[1]!.id)).changedFiles).toEqual(['assets/photo.bin', 'deep/a/b/c.txt']);
   });
 });

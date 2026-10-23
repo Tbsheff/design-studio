@@ -133,6 +133,16 @@ function splitNul(text: string): string[] {
   return text.split('\0').filter((entry) => entry !== '');
 }
 
+function parseLogRecord(record: string): Version {
+  const [sha = '', parents = '', committedAt = '0'] = record.split(FIELD, 3);
+  const bodyStart = sha.length + parents.length + committedAt.length + 3;
+  const bodyEnd = record.indexOf(`${FIELD}\0`, bodyStart);
+  const body = bodyEnd === -1 ? record.slice(bodyStart) : record.slice(bodyStart, bodyEnd);
+  const message = body.split(FIELD)[0] ?? '';
+  const files = bodyEnd === -1 ? '' : record.slice(bodyEnd + 2).replace(/^\n/, '');
+  return toVersion(sha, parents, committedAt, message, splitNul(files));
+}
+
 function parseCommitMessage(message: string): { title: string; meta: StoredVersionMeta | null } {
   const lines = message.replace(/\n+$/, '').split('\n');
   const title = lines[0] ?? '';
@@ -224,19 +234,12 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   };
 
   const readVersions = async (project: Project, revArgs: string[]): Promise<Version[]> => {
-    const format = ['%H', '%P', '%ct', '%B'].join('%x1f') + '%x1e';
-    const { stdout } = await runGit(repoScope(project), ['log', `--format=${format}`, ...revArgs, '--']);
-    const records = stdout
+    const format = '%x1e' + ['%H', '%P', '%ct', '%B'].join('%x1f') + '%x1f';
+    const { stdout } = await runGit(repoScope(project), ['log', `--format=${format}`, '--name-only', '--no-renames', '--root', '-z', ...revArgs, '--']);
+    return stdout
       .split(RECORD)
-      .map((record) => record.replace(/^\n/, ''))
-      .filter((record) => record.trim() !== '');
-    return Promise.all(
-      records.map(async (record) => {
-        const [sha = '', parents = '', committedAt = '0', message = ''] = record.split(FIELD);
-        const files = await changedFilesOf(project, sha, parents.trim() !== '');
-        return toVersion(sha, parents, committedAt, message, files);
-      }),
-    );
+      .filter((record) => record !== '')
+      .map(parseLogRecord);
   };
 
   const getVersion = async (project: Project, versionId: string): Promise<Version> => {

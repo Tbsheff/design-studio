@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpat
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import type { Project, RunSummary, Version } from '../../../src/shared/contracts';
-import { BASE_URL, PREVIEW_PORT, readState, ROOT, startServer, stopServer, writeState } from '../../support/server';
+import { BASE_URL, PREVIEW_PORT, projectsDirFor, readState, ROOT, startServer, stopServer, writeState } from '../../support/server';
 import { createProjectViaUi, frontFrame, headVersion, mainDirection, openHome, selectInFrame, sendPrompt, StudioApi, openFolderByPath } from '../../support/studio';
 
 function listTree(dir: string, skip = new Set(['node_modules', 'dist'])): string[] {
@@ -174,7 +174,8 @@ test('AC-06 AC-07: generated source is real, editable on disk, and stored as pla
   const projectDir = path.join(dataDir, 'projects', project.id);
   const projectJson = JSON.parse(readFileSync(path.join(projectDir, 'project.json'), 'utf8')) as Project;
   expect(projectJson.id).toBe(project.id);
-  expect(realpathSync(main.workTree).startsWith(realpathSync(projectDir))).toBe(true);
+  expect(realpathSync(main.workTree).startsWith(realpathSync(projectsDirFor(dataDir)) + path.sep)).toBe(true);
+  expect(existsSync(path.join(main.workTree, '.git'))).toBe(false);
   expect(statSync(indexFile).isFile()).toBe(true);
   const head = await headVersion(api, project.id, main.id);
   const gitEnv = { ...process.env, GIT_DIR: path.join(projectDir, 'git') };

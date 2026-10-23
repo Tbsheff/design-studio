@@ -113,7 +113,7 @@ li.pending::before {
   border-radius: 50%;
   border: 2px solid var(--line-strong);
   border-top-color: var(--accent);
-  animation: spin 700ms linear infinite;
+  animation: spin 600ms linear infinite;
 }
 
 .mark {
@@ -223,9 +223,18 @@ button.primary:hover {
   }
 }
 
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  li,
+  li {
+    animation-name: fade;
+  }
+
   li.pending::before {
-    animation: none;
+    animation-duration: 1.5s;
   }
 }

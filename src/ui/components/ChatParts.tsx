@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import type { RunLevel, RunStatus } from '../../shared/contracts';
 import { Exception, ExceptionHeader, ExceptionMessage, ExceptionType } from '../ai/components/ai/exception';
 import { Markdown } from '../ai/components/ai/markdown';
@@ -77,13 +77,13 @@ export function UserMessage({ run }: { run: RunView }) {
   );
 }
 
-export function AssistantText({ text }: { text: string }) {
+export const AssistantText = memo(function AssistantText({ text }: { text: string }) {
   return (
     <MessageText className="msg-body wrap-anywhere">
       <Markdown>{text}</Markdown>
     </MessageText>
   );
-}
+});
 
 export function Thinking({ text, running }: { text: string; running: boolean }) {
   if (!text) return null;

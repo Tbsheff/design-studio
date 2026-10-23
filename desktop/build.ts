@@ -12,6 +12,7 @@ const TEMPLATE_DIR = path.join(ROOT, 'src', 'server', 'templates', 'react-vite')
 const TEMPLATE_CACHE = path.join(ROOT, 'build', 'react-template-cache');
 const FIRST_RUN_STATIC = ['first-run.html', 'first-run.css'];
 const NOT_SHIPPED = new Set(['playwright-core']);
+const NOT_SHIPPED_PATTERNS = [/^@anthropic-ai\/claude-agent-sdk-(darwin|linux|win32)-/];
 const SLIM_GIT_FILES = ['bin/git', 'libexec/git-core/git', 'share/git-core/templates', 'etc/gitconfig'];
 
 export const STAGE_APP = path.join(STAGE, 'app');
@@ -70,7 +71,11 @@ export function importedPackages(metafiles: Metafile[]): string[] {
       for (const entry of output.imports) if (entry.external && !entry.path.startsWith('node:')) names.add(packageName(entry.path));
     }
   }
-  return [...names].filter((name) => !NOT_SHIPPED.has(name)).sort();
+  return [...names].filter(isShipped).sort();
+}
+
+export function isShipped(name: string): boolean {
+  return !NOT_SHIPPED.has(name) && !NOT_SHIPPED_PATTERNS.some((pattern) => pattern.test(name));
 }
 
 function resolvePackageDir(name: string, fromDir: string): string | null {
@@ -98,12 +103,12 @@ function runtimeDependencies(dir: string): string[] {
 
 export function dependencyClosure(names: string[]): string[] {
   const seen = new Set<string>();
-  const queue = names.map((name) => resolvePackageDir(name, ROOT)).filter((dir): dir is string => dir !== null);
+  const queue = names.filter(isShipped).map((name) => resolvePackageDir(name, ROOT)).filter((dir): dir is string => dir !== null);
   while (queue.length > 0) {
     const dir = queue.pop() as string;
     if (seen.has(dir)) continue;
     seen.add(dir);
-    for (const name of runtimeDependencies(dir)) {
+    for (const name of runtimeDependencies(dir).filter(isShipped)) {
       const found = resolvePackageDir(name, dir);
       if (found && !seen.has(found)) queue.push(found);
     }

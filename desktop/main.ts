@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, dialog, session, shell } from 'electron';
 import { LOCKED_EXIT_CODE } from '../src/server/store/data-lock.js';
+import { bundledClaude, expectedClaudeVersion, resolveClaude, type ClaudeLocation } from './claude-cli.js';
 import { chooseDataDir } from './data-choice.js';
 import { baseEnv, buildServerEnv, knownPathDirs, loginShellPath, mergePath, nodeDirs } from './env.js';
 import { openSetupWindow, registerSetupIpc, setupNeeded } from './first-run.js';
@@ -11,7 +12,7 @@ import { guardContents, guardPermissions } from './navigation.js';
 import { claudeBinary, devLayout, dugiteDir, packagedLayout, repoDataDir } from './paths.js';
 import { pickPorts, readSavedPorts, savePorts, waitForFree, type PortSet } from './ports.js';
 import { startServer, type ServerExit, type ServerHandle } from './server-process.js';
-import type { CheckInputs } from './setup-checks.js';
+import type { CheckInputs, ClaudeSetup } from './setup-checks.js';
 import { cleanStaleServer, clearServerPid, writeServerPid } from './stale-server.js';
 import { createMainWindow } from './window.js';
 import { isRenderContents, RenderPool } from './render-pool.js';
@@ -41,6 +42,7 @@ interface Runtime {
   url: string;
   server: ServerHandle;
   ready: boolean;
+  claudePath: string | null;
 }
 
 let prepared: Prepared | null = null;
@@ -92,17 +94,33 @@ async function prepare(): Promise<Prepared | null> {
   return { dataDir: choice.dir, git, knownPath: knownPath(), loginPath: loginShellPath(process.env) };
 }
 
-function setupInputs(current: Prepared): CheckInputs {
-  return { git: current.git, claudeBinary: claudeBinary(layout), claudeEnv: baseEnv(process.env, current.knownPath), dataDir: current.dataDir, env: process.env };
+async function searchPath(current: Prepared): Promise<string[]> {
+  return [...(await current.loginPath), ...current.knownPath.split(':')];
 }
 
-async function serverOverrides(current: Prepared, ports: PortSet): Promise<Record<string, string>> {
+async function locateClaude(current: Prepared): Promise<ClaudeLocation | null> {
+  if (!layout.packaged && !process.env.STUDIO_CLAUDE_PATH) return bundledClaude(claudeBinary(layout));
+  return resolveClaude({ env: process.env, home: process.env.HOME ?? os.homedir(), searchPath: await searchPath(current) });
+}
+
+async function claudeSetup(current: Prepared): Promise<ClaudeSetup> {
+  const location = await locateClaude(current);
+  console.log(`[desktop] claude: ${location ? `${location.path} (${location.source}, real ${location.realPath})` : 'not found'}`);
+  return { location, expectedVersion: expectedClaudeVersion(layout.modulesDir) };
+}
+
+async function setupInputs(current: Prepared): Promise<CheckInputs> {
+  const claudeEnv = baseEnv(process.env, mergePath(await searchPath(current)));
+  return { git: current.git, claude: await claudeSetup(current), claudeEnv, dataDir: current.dataDir, env: process.env };
+}
+
+async function serverOverrides(current: Prepared, ports: PortSet, claudePath: string | null): Promise<Record<string, string>> {
   return {
     STUDIO_PORT: String(ports.studio),
     STUDIO_PREVIEW_PORT: String(ports.preview),
     STUDIO_VITE_PORT_BASE: String(ports.viteBase),
     STUDIO_DATA_DIR: current.dataDir,
-    STUDIO_CLAUDE_PATH: claudeBinary(layout),
+    ...(claudePath ? { STUDIO_CLAUDE_PATH: claudePath } : {}),
     STUDIO_PARENT_PID: String(process.pid),
     STUDIO_LOGIN_SHELL_PATH: (await current.loginPath).join(':'),
     [RENDER_IPC_ENV]: '1',
@@ -116,12 +134,13 @@ async function launchServer(current: Prepared): Promise<Runtime> {
   const ports = await pickPorts(readSavedPorts(portsFile));
   savePorts(portsFile, ports);
   const url = `http://127.0.0.1:${ports.studio}`;
-  const env = buildServerEnv(process.env, current.knownPath, await serverOverrides(current, ports));
+  const claudePath = (await locateClaude(current))?.path ?? null;
+  const env = buildServerEnv(process.env, current.knownPath, await serverOverrides(current, ports, claudePath));
   const server = startServer({ cwd: layout.serverCwd, args: layout.serverArgs, execPath: process.execPath, env, studioOrigin: url, logFile: logFile(), echo: !layout.packaged });
   writeServerPid(userDataFile('server.pid'), server.pid);
   serveChild(renderHost, server.child);
   serverLink.attach(server.child, url);
-  const next: Runtime = { ports, url, server, ready: false };
+  const next: Runtime = { ports, url, server, ready: false, claudePath };
   runtime = next;
   void server.exited.then((exit) => onServerExit(next, exit));
   await server.ready;
@@ -205,15 +224,27 @@ async function failBoot(error: unknown): Promise<void> {
   app.exit(1);
 }
 
+async function restartIfClaudeMoved(current: Prepared): Promise<void> {
+  const owner = runtime;
+  if (!owner?.ready || serverStopping || serverStopped) return;
+  const claudePath = (await locateClaude(current))?.path ?? null;
+  if (claudePath === owner.claudePath) return;
+  console.log(`[desktop] claude moved to ${claudePath ?? 'nothing'}; restarting the server`);
+  runtime = null;
+  await owner.server.stop();
+  await restartServer(owner.ports);
+}
+
 function checkSetup(): void {
-  if (prepared) void openSetupWindow({ ownDir: OWN_DIR, inputs: async () => setupInputs(prepared as Prepared), continueLabel: 'Done' });
+  const current = prepared;
+  if (current) void openSetupWindow({ ownDir: OWN_DIR, inputs: () => setupInputs(current), continueLabel: 'Done' }).then(() => restartIfClaudeMoved(current));
 }
 
 async function firstRun(current: Prepared): Promise<void> {
   const mode = process.env[SETUP_MODE_ENV];
   if (mode === 'skip') return;
-  const { needed } = await setupNeeded(setupInputs(current));
-  if (needed || mode === 'always') await openSetupWindow({ ownDir: OWN_DIR, inputs: async () => setupInputs(current), continueLabel: 'Continue' });
+  const { needed } = await setupNeeded(await setupInputs(current));
+  if (needed || mode === 'always') await openSetupWindow({ ownDir: OWN_DIR, inputs: () => setupInputs(current), continueLabel: 'Continue' });
 }
 
 async function boot(): Promise<void> {
@@ -233,8 +264,9 @@ async function boot(): Promise<void> {
   }
   const [current] = await Promise.all([launchServer(prepared), firstRun(prepared)]);
   if (serverStopping || serverStopped) return;
+  await restartIfClaudeMoved(prepared);
   windowsAllowed = true;
-  openWindow(current);
+  openWindow(runtime ?? current);
   updater.start();
 }
 

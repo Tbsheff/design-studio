@@ -19,6 +19,7 @@ const MARKS = { ok: '✓', warn: '!', fail: '✕' };
 const FIX_LABELS: Record<string, string> = {
   'install-clt': 'Install Command Line Tools',
   'copy-claude': 'Copy “claude”',
+  'copy-claude-install': 'Copy install command',
   'open-terminal': 'Open Terminal',
   'reveal-data': 'Show data folder',
 };

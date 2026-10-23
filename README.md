@@ -28,7 +28,7 @@ Screenshots will go here.
 - Node.js 24 or later
 - git
 - Google Chrome (the studio uses the installed Chrome for render checks and screenshots)
-- A Claude login (run `claude` and sign in) or an `ANTHROPIC_API_KEY`
+- Claude Code installed and logged in (`npm i -g @anthropic-ai/claude-code` or the installer at claude.ai, then run `claude` and sign in), or an `ANTHROPIC_API_KEY`. The desktop app does not ship Claude Code; it uses yours.
 
 ## Quick start
 

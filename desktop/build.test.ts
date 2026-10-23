@@ -16,4 +16,10 @@ describe('server package list', () => {
     expect(dirs).toContain('hono');
     expect(dirs).not.toContain('react');
   });
+
+  it('ships the agent SDK JavaScript without its Claude Code binary package', () => {
+    const dirs = dependencyClosure(['@anthropic-ai/claude-agent-sdk']).map((dir) => dir.split('node_modules/').pop());
+    expect(dirs).toContain('@anthropic-ai/claude-agent-sdk');
+    expect(dirs.some((dir) => dir?.startsWith('@anthropic-ai/claude-agent-sdk-'))).toBe(false);
+  });
 });

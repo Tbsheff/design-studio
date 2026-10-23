@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { BrowserWindow, clipboard, ipcMain, shell, type IpcMainInvokeEvent } from 'electron';
-import { needsAttention, runChecks, type CheckInputs, type CheckResult, type FixAction } from './setup-checks.js';
+import { CLAUDE_INSTALL_COMMAND, FIX_ACTIONS, needsAttention, runChecks, type CheckInputs, type CheckResult, type FixAction } from './setup-checks.js';
 
 export interface SetupWindowOptions {
   ownDir: string;
@@ -20,13 +20,14 @@ function fromSetupWindow(event: IpcMainInvokeEvent): boolean {
 
 async function applyFix(action: FixAction, inputs: CheckInputs): Promise<void> {
   if (action === 'copy-claude') clipboard.writeText('claude');
+  if (action === 'copy-claude-install') clipboard.writeText(CLAUDE_INSTALL_COMMAND);
   if (action === 'open-terminal') await shell.openPath(TERMINAL_APP);
   if (action === 'reveal-data') shell.showItemInFolder(inputs.dataDir);
   if (action === 'install-clt') execFile('/usr/bin/xcode-select', ['--install'], () => undefined);
 }
 
 function isFixAction(value: unknown): value is FixAction {
-  return value === 'install-clt' || value === 'copy-claude' || value === 'open-terminal' || value === 'reveal-data';
+  return typeof value === 'string' && (FIX_ACTIONS as readonly string[]).includes(value);
 }
 
 export function registerSetupIpc(): void {

@@ -3,10 +3,13 @@ import { existsSync } from 'node:fs';
 import { statfs } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { claudeVersion, compareClaudeVersion, type ClaudeLocation } from './claude-cli.js';
 import type { GitChoice } from './git-choice.js';
 
 export type CheckStatus = 'ok' | 'warn' | 'fail';
-export type FixAction = 'install-clt' | 'copy-claude' | 'open-terminal' | 'reveal-data';
+export type FixAction = 'install-clt' | 'copy-claude' | 'copy-claude-install' | 'open-terminal' | 'reveal-data';
+export const FIX_ACTIONS: readonly FixAction[] = ['install-clt', 'copy-claude', 'copy-claude-install', 'open-terminal', 'reveal-data'];
+export const CLAUDE_INSTALL_COMMAND = 'npm i -g @anthropic-ai/claude-code';
 
 export interface CheckResult {
   id: 'git' | 'claude' | 'disk' | 'network' | 'design-memory';
@@ -17,9 +20,14 @@ export interface CheckResult {
   fixes: FixAction[];
 }
 
+export interface ClaudeSetup {
+  location: ClaudeLocation | null;
+  expectedVersion: string | null;
+}
+
 export interface CheckInputs {
   git: GitChoice;
-  claudeBinary: string;
+  claude: ClaudeSetup;
   claudeEnv: Record<string, string>;
   dataDir: string;
   env: NodeJS.ProcessEnv;
@@ -58,14 +66,26 @@ function parseLoggedIn(stdout: string): boolean | null {
   }
 }
 
-export async function checkClaude(binary: string, env: Record<string, string>): Promise<CheckResult> {
-  const base = { id: 'claude' as const, label: 'Claude login', required: true };
-  if (!existsSync(binary)) return { ...base, status: 'fail', detail: `Claude binary missing at ${binary}.`, fixes: [] };
+const INSTALL_DETAIL = `Claude Code not found. Install it (\`${CLAUDE_INSTALL_COMMAND}\` or the installer at claude.ai), log in, then reopen Design Studio.`;
+
+function olderDetail(found: string, expected: string): string {
+  return `Update Claude Code: ${found} is older than ${expected}. Run \`claude update\` or \`${CLAUDE_INSTALL_COMMAND}\`, then reopen Design Studio.`;
+}
+
+export async function checkClaude(setup: ClaudeSetup, env: Record<string, string>): Promise<CheckResult> {
+  const base = { id: 'claude' as const, label: 'Claude Code', required: true };
+  const binary = setup.location?.path;
+  if (!binary || !existsSync(binary)) return { ...base, status: 'fail', detail: INSTALL_DETAIL, fixes: ['copy-claude-install', 'open-terminal'] };
+  const found = await claudeVersion(binary, env);
+  const fit = compareClaudeVersion(found, setup.expectedVersion);
+  if (fit === 'older' && found && setup.expectedVersion) return { ...base, status: 'fail', detail: olderDetail(found, setup.expectedVersion), fixes: ['copy-claude-install', 'open-terminal'] };
   const result = await runAuthStatus(binary, env);
   if (result.timedOut) return { ...base, status: 'warn', detail: 'No answer in 15 s. A Keychain prompt may be open.', fixes: [] };
   const loggedIn = parseLoggedIn(result.stdout);
-  if (loggedIn) return { ...base, status: 'ok', detail: 'Logged in.', fixes: [] };
-  return { ...base, status: 'fail', detail: 'Not logged in. Run `claude` in Terminal and log in, then recheck.', fixes: ['copy-claude', 'open-terminal'] };
+  if (!loggedIn) return { ...base, status: 'fail', detail: 'Not logged in. Run `claude` in Terminal and log in, then recheck.', fixes: ['copy-claude', 'open-terminal'] };
+  const version = found ? ` Claude Code ${found}.` : '';
+  if (fit === 'newer') return { ...base, status: 'warn', detail: `Logged in.${version} It is newer than ${setup.expectedVersion}, the version Design Studio was tested with.`, fixes: [] };
+  return { ...base, status: 'ok', detail: `Logged in.${version}`, fixes: [] };
 }
 
 function existingAncestor(dir: string): string {
@@ -100,7 +120,7 @@ export function checkDesignMemory(env: NodeJS.ProcessEnv): CheckResult {
 }
 
 export async function runChecks(inputs: CheckInputs): Promise<CheckResult[]> {
-  const [claude, disk, network] = await Promise.all([checkClaude(inputs.claudeBinary, inputs.claudeEnv), checkDisk(inputs.dataDir), checkNetwork()]);
+  const [claude, disk, network] = await Promise.all([checkClaude(inputs.claude, inputs.claudeEnv), checkDisk(inputs.dataDir), checkNetwork()]);
   return [checkGit(inputs.git), claude, disk, network, checkDesignMemory(inputs.env)];
 }
 

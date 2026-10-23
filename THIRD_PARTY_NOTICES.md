@@ -70,5 +70,5 @@ These are unmodified npm packages, installed from the registry and not copied in
 | --- | --- | --- |
 | Electron | MIT (Chromium and its dependencies have their own notices, shipped in the app's `LICENSES.chromium.html`) | App shell. |
 | git, from `dugite` | GPL-2.0 (git); `dugite` itself is MIT | Slim git binaries in `Contents/Resources/git`, used only when the system git is missing. A binary release must meet the GPL-2.0 source terms for git. |
-| Claude Code CLI, from `@anthropic-ai/claude-agent-sdk` | Anthropic's terms (see the package's `LICENSE.md`) | Runs the agent. Its signature is kept. |
+| Claude Agent SDK (JavaScript only), `@anthropic-ai/claude-agent-sdk` | Anthropic's terms (see the package's `LICENSE.md`) | Talks to the agent. The Claude Code CLI binary is not shipped: the app runs the user's installed `claude`. |
 | npm runtime packages | Each package's own license | Copied into `Contents/Resources/server/node_modules`. |

@@ -179,7 +179,7 @@ Electron main (windows, menus, dialogs, render pool, first-run checks)
 - `npm.cmd` already handled; bundle git (dugite); NSIS installer, Authenticode; `win32-x64/arm64` claude packages; same e2e matrix on CI.
 
 ## 7. Decisions (decided 2026-10-22)
-1. **claude binary: bundle the SDK's pinned binary** (P1). The user's CLI saves ~260 MB but can drift from the SDK version.
+1. **claude binary: use the user's installed Claude Code** (changed 2026-10-23; P1 bundled the SDK's pinned binary). This removes 262 MiB from the app. `desktop/claude-cli.ts` finds it: `STUDIO_CLAUDE_PATH`, then the login-shell PATH and the fixed PATH folders, then `~/.local/bin`, `~/.claude/local`, `/opt/homebrew/bin`, `/usr/local/bin`, `~/.npm-global/bin`, the npm prefix. The setup check compares `claude --version` with the SDK's `claudeCodeVersion`: same major.minor passes, older fails ("Update Claude Code"), newer warns. Dev and tests keep the SDK's npm binary unless `STUDIO_CLAUDE_PATH` is set.
 2. **Data: `~/Library/Application Support/Design Studio/studio-data`** for packaged builds, with Reveal in Finder and Export. The dev shell keeps the repo `studio-data` so existing projects stay visible; `STUDIO_DATA_DIR` overrides both. The switch on `app.isPackaged` is in `desktop/main.ts`, so P1 only changes packaging.
 3. **git: Command Line Tools git when `xcode-select -p` succeeds, else bundled dugite** (P1).
 

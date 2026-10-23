@@ -33,8 +33,6 @@ mac:
   notarize: false
   entitlements: desktop/build-resources/entitlements.mac.plist
   entitlementsInherit: desktop/build-resources/entitlements.mac.plist
-  signIgnore:
-    - "claude-agent-sdk-darwin-.*/claude$"
   extendInfo:
     NSDocumentsFolderUsageDescription: Design Studio opens design folders you import from Documents.
     NSDesktopFolderUsageDescription: Design Studio opens design folders you import from the Desktop.

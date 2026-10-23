@@ -12,6 +12,8 @@ export interface WindowOptions {
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 const SAVE_DELAY_MS = 400;
+const FIRST_PAINT_COLOR = '#f6f8fa';
+const MAC_CHROME = { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } } as const;
 
 function displays(): DisplayInfo[] {
   return screen.getAllDisplays().map((display) => ({ id: display.id, bounds: display.bounds, workArea: display.workArea }));
@@ -49,6 +51,19 @@ function trackState(window: BrowserWindow, file: string): void {
   });
 }
 
+function markFullScreen(window: BrowserWindow): void {
+  if (window.isDestroyed()) return;
+  const value = window.isFullScreen() ? 'true' : 'false';
+  void window.webContents.executeJavaScript(`document.documentElement.dataset.fullscreen = '${value}'`).catch(() => undefined);
+}
+
+function trackFullScreen(window: BrowserWindow): void {
+  const mark = () => markFullScreen(window);
+  window.on('enter-full-screen', mark);
+  window.on('leave-full-screen', mark);
+  window.webContents.on('did-finish-load', mark);
+}
+
 export function createMainWindow(options: WindowOptions): BrowserWindow {
   const saved = readWindowState(options.stateFile);
   const window = new BrowserWindow({
@@ -57,7 +72,8 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
     minHeight: 600,
     show: false,
     title: 'Design Studio',
-    backgroundColor: '#ffffff',
+    backgroundColor: FIRST_PAINT_COLOR,
+    ...(process.platform === 'darwin' ? MAC_CHROME : {}),
     webPreferences: {
       preload: options.preload,
       contextIsolation: true,
@@ -69,6 +85,7 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
   });
   if (saved?.maximized) window.maximize();
   trackState(window, options.stateFile);
+  trackFullScreen(window);
   window.once('ready-to-show', () => window.show());
   void window.loadURL(options.url);
   return window;

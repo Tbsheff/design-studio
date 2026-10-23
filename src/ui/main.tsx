@@ -21,6 +21,10 @@ import './styles/tokens-panel.css';
 import './styles/tweaks.css';
 import './styles/variations.css';
 import './styles/responsive.css';
+import './styles/shell.css';
+
+const desktop = (window as unknown as { studioDesktop?: { platform: string } }).studioDesktop;
+if (desktop?.platform === 'darwin') document.documentElement.dataset.shell = 'mac';
 
 const root = document.getElementById('root');
 if (root) {

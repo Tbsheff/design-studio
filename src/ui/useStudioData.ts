@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Project, RunRequest, StudioEvent, Version, WorkTreeStatus } from '../shared/contracts';
 import { api, errorText } from './api';
+import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
 import { applyRunEvent, runFromSummary, type RunMap } from './runState';
 import { uiStore, useUi } from './storage';
@@ -53,6 +54,8 @@ export function useStudioData(projectId: string): StudioData {
   const [errors, setErrors] = useState<BuildError[]>([]);
   const [lastChange, setLastChange] = useState<FilesChange | null>(null);
   const mountedAt = useRef(Date.now());
+  const [batcher] = useState(() => createDeltaBatcher(setRuns, frameOrTimeout(100)));
+  useEffect(() => () => batcher.dispose(), [batcher]);
 
   const stored = ui.directionByProject[projectId];
   const directionId =
@@ -130,7 +133,7 @@ export function useStudioData(projectId: string): StudioData {
     (event: StudioEvent) => {
       const live = event.ts >= mountedAt.current - 1000;
       const active = event.directionId === undefined || event.directionId === directionRef.current;
-      setRuns((prev) => applyRunEvent(prev, event));
+      batcher.push(event);
       switch (event.type) {
         case 'files.changed':
           if (live && event.directionId)
@@ -167,7 +170,7 @@ export function useStudioData(projectId: string): StudioData {
           break;
       }
     },
-    [addError],
+    [addError, batcher],
   );
 
   const connection = useProjectEvents(projectId, onEvent);

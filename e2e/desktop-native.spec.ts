@@ -21,7 +21,6 @@ let page: Page;
 let origin = '';
 let token = '';
 let work = '';
-let dataDir = '';
 let userData = '';
 
 async function call<T>(method: string, route: string, body?: unknown): Promise<T> {
@@ -64,7 +63,6 @@ async function openedProjectName(): Promise<string> {
 
 test.beforeAll(async () => {
   work = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'studio desktop native ')));
-  dataDir = path.join(work, 'data');
   userData = path.join(work, 'user-data');
   mkdirSync(path.join(work, 'downloads'), { recursive: true });
   app = await launchDesktop(desktopEnv(work, { STUDIO_DESKTOP_NOTIFY: 'off', STUDIO_DESKTOP_DOWNLOADS: path.join(work, 'downloads') }));
@@ -227,13 +225,13 @@ test('Run sends the draft, Stop cancels the run, and a background finish notifie
   await expect.poll(() => app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().some((window) => window.isMinimized()))).toBe(false);
 });
 
-test('Reveal in Finder shows the work tree and the last export, never a path outside the data folder', async () => {
+test('Reveal in Finder shows the work tree in the default projects folder and the last export', async () => {
   const project = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('Native undo check'));
   const main = project?.directions[0];
   if (!project || !main) throw new Error('project missing');
   await clickMenu('reveal-work-tree');
   await expect.poll(async () => (await recorded()).reveals).toContain(main.workTree);
-  expect(main.workTree.startsWith(dataDir)).toBe(true);
+  expect(main.workTree.startsWith(path.join(work, 'Design Studio') + path.sep)).toBe(true);
 
   await page.evaluate(() => {
     const link = document.createElement('a');

@@ -62,6 +62,13 @@
   background: var(--accent-hover);
 }
 
+.btn.primary:disabled {
+  opacity: 1;
+  background: var(--surface-active);
+  color: var(--text-3);
+  box-shadow: none;
+}
+
 .btn.danger {
   color: var(--danger);
 }

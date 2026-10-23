@@ -482,7 +482,7 @@ describe('sdk driver baseline capture', () => {
       inspect: async (_url: string, viewport: string, file: string) => {
         await baselineGate;
         timeline.push(`baseline:${viewport}`);
-        return { path: file, selectionRects: [] };
+        return { path: file, selectionRects: [], nav: { navs: 0, totalLinks: 0, visibleLinks: 0, menuControl: false } };
       },
     };
     const hookWaits: Record<string, Promise<unknown>> = {};

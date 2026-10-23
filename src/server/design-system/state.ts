@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { CompiledTokenEntry, DesignSystemState, Direction, Project } from '../../shared/contracts.js';
+import { stripTokenBlock } from './design-md.js';
 import { DESIGN_MD_FILE } from './packs.js';
 import { readDesignSystemFiles } from './sync.js';
 
@@ -44,7 +45,7 @@ export async function loadDesignSystemPromptContext(workTree: string): Promise<D
   const designMd = await readDesignMd(workTree);
   const fontsUrl = files.manifest?.fonts?.googleFontsUrl;
   return {
-    designMd: designMd === null ? null : capDesignMd(designMd),
+    designMd: designMd === null ? null : capDesignMd(stripTokenBlock(designMd)),
     entries: files.entries,
     googleFontsUrl: typeof fontsUrl === 'string' ? fontsUrl : null,
     errors: files.errors,

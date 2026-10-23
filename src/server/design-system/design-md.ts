@@ -8,7 +8,7 @@ function cell(value: string | null | undefined): string {
   return text === '' ? EMPTY_CELL : text.replace(/\|/g, '\\|');
 }
 
-function tokenTable(entries: CompiledTokenEntry[]): string {
+export function tokenTable(entries: CompiledTokenEntry[]): string {
   const rows = entries.map((entry) => `| \`${entry.cssVar}\` | ${cell(entry.value)} | ${cell(entry.darkValue)} | ${cell(entry.description)} |`);
   return ['| token | value | dark | use |', '|---|---|---|---|', ...rows].join('\n');
 }
@@ -50,4 +50,14 @@ export function upsertTokenBlock(markdown: string, entries: CompiledTokenEntry[]
     return markdown.slice(0, start) + block + markdown.slice(end + DESIGN_MD_TOKENS_END.length);
   }
   return insertBlock(markdown, block);
+}
+
+export const TOKEN_TABLE_POINTER = 'The token table is in the <design_tokens> block.';
+
+export function stripTokenBlock(markdown: string): string {
+  const start = markdown.indexOf(DESIGN_MD_TOKENS_START);
+  if (start < 0) return markdown;
+  const end = markdown.indexOf(DESIGN_MD_TOKENS_END, start);
+  const after = end < 0 ? '' : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
+  return `${markdown.slice(0, start)}${TOKEN_TABLE_POINTER}${after}`;
 }

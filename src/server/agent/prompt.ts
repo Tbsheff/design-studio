@@ -1,4 +1,5 @@
-import type { CompiledTokenEntry, Project, RunMode } from '../../shared/contracts.js';
+import type { Project, RunMode } from '../../shared/contracts.js';
+import { tokenTable } from '../design-system/design-md.js';
 import type { DesignSystemPromptContext } from '../design-system/state.js';
 import type { TasteRule } from './taste.js';
 
@@ -84,15 +85,6 @@ const SELECTION_TOKEN_RULE = `- When the message has <selected-elements>, use th
 
 const CRITIQUE_TOKEN_RULE = `- In a critique, flag hard-coded colors, fonts, sizes, spacing, radii and shadows that a token covers, and name the token to use.`;
 
-function cell(value: string | null): string {
-  return (value ?? '-').replace(/\|/g, '\\|');
-}
-
-function formatTokenTable(entries: CompiledTokenEntry[]): string {
-  const rows = entries.map((entry) => `| ${entry.cssVar} | ${cell(entry.value)} | ${cell(entry.darkValue)} |`);
-  return ['| css var | value | dark |', '|---|---|---|', ...rows].join('\n');
-}
-
 function fontsRule(url: string | null): string[] {
   if (!url) return [];
   return [`- Fonts: link this stylesheet in HTML \`<head>\` (React projects already load it from index.html): \`<link rel="stylesheet" href="${url}">\``];
@@ -103,7 +95,7 @@ function buildDesignSystemBlock(project: Project, mode: RunMode, designSystem: D
   const modeRules = mode === 'critique' ? [CRITIQUE_TOKEN_RULE] : [kindRule, ...fontsRule(designSystem.googleFontsUrl), SELECTION_TOKEN_RULE];
   const parts = [[DESIGN_SYSTEM_RULES, ...modeRules].join('\n')];
   if (designSystem.designMd && designSystem.designMd.trim()) parts.push(`<design_md>\n${designSystem.designMd.trim()}\n</design_md>`);
-  parts.push(`<design_tokens>\n${formatTokenTable(designSystem.entries)}\n</design_tokens>`);
+  parts.push(`<design_tokens>\n${tokenTable(designSystem.entries)}\n</design_tokens>`);
   return parts.join('\n\n');
 }
 

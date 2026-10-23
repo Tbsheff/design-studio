@@ -73,6 +73,31 @@ describe('discoverSkills', () => {
   });
 });
 
+describe('discoverSkills cache', () => {
+  it('sees an added skill, an edited description and a removed skill on the next scan', async () => {
+    const fresh = path.join(root, 'fresh-home');
+    await skill(path.join(fresh, 'skills', 'alpha'), 'alpha', 'First.');
+    expect((await discoverSkills(fresh)).skills.map((s) => s.id)).toEqual(['personal:alpha']);
+    await skill(path.join(fresh, 'skills', 'beta'), 'beta', 'Second.');
+    expect((await discoverSkills(fresh)).skills.map((s) => s.id)).toEqual(['personal:alpha', 'personal:beta']);
+    await skill(path.join(fresh, 'skills', 'alpha'), 'alpha', 'First, now longer and edited.', 'Run `npx thing`.');
+    expect((await discoverSkills(fresh)).skills.find((s) => s.id === 'personal:alpha')).toMatchObject({ description: 'First, now longer and edited.', needsBash: true });
+    await rm(path.join(fresh, 'skills', 'beta'), { recursive: true });
+    expect((await discoverSkills(fresh)).skills.map((s) => s.id)).toEqual(['personal:alpha']);
+    await rm(path.join(fresh, 'skills', 'alpha', 'SKILL.md'));
+    const gone = await discoverSkills(fresh);
+    expect(gone.skills).toEqual([]);
+    expect(gone.problems.map((p) => p.reason)).toEqual(['no SKILL.md in this folder']);
+  });
+
+  it('keeps folder order with many skills read at once', async () => {
+    const many = path.join(root, 'many-home');
+    const names = Array.from({ length: 85 }, (_, index) => `s-${String(index).padStart(2, '0')}`);
+    await Promise.all(names.map((name) => skill(path.join(many, 'skills', name), name, `Skill ${name}.`)));
+    for (let pass = 0; pass < 3; pass += 1) expect((await discoverSkills(many)).skills.map((s) => s.id)).toEqual(names.map((name) => `personal:${name}`));
+  });
+});
+
 describe('prepareSkills', () => {
   it('links only skill folders into generated plugins and skips turned-off skills', async () => {
     const out = path.join(root, 'out');

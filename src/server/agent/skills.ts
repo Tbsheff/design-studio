@@ -72,40 +72,66 @@ interface Scan {
   problems: SkillProblem[];
 }
 
-async function readSkill(source: SkillSource, scan: Scan): Promise<void> {
-  const file = path.join(source.dir, 'SKILL.md');
-  if (!existsSync(file)) {
-    scan.problems.push({ source: source.dir, reason: 'no SKILL.md in this folder' });
-    return;
-  }
-  const text = await readFile(file, 'utf8');
+type SkillRead = { skill: SkillInfo } | { problem: SkillProblem };
+type ParsedSkill = Omit<SkillInfo, 'id' | 'origin' | 'sourcePath'> | { problem: string };
+
+interface ParsedEntry {
+  stamp: string;
+  parsed: ParsedSkill;
+}
+
+const MAX_PARSED_ENTRIES = 4000;
+const parsedSkills = new Map<string, ParsedEntry>();
+
+function parseSkillText(text: string, entryName: string): ParsedSkill {
   const fields = parseFrontMatter(text);
   const description = fields['description'] ?? '';
-  if (!description) {
-    scan.problems.push({ source: file, reason: 'SKILL.md has no description in its front matter' });
-    return;
-  }
-  scan.skills.push({
-    id: `${source.plugin}:${source.entryName}`,
-    name: fields['name'] || source.entryName,
+  if (!description) return { problem: 'SKILL.md has no description in its front matter' };
+  return {
+    name: fields['name'] || entryName,
     description,
-    origin: source.origin,
-    sourcePath: await realpath(source.dir),
     needsBash: BASH_HINT.test(text),
     modelInvocable: fields['disable-model-invocation'] !== 'true',
-  });
+  };
+}
+
+async function parsedSkillFile(file: string, entryName: string): Promise<ParsedSkill | null> {
+  const info = await stat(file).catch(() => null);
+  if (!info?.isFile()) return null;
+  const stamp = `${info.mtimeMs}:${info.ctimeMs}:${info.size}:${entryName}`;
+  const known = parsedSkills.get(file);
+  if (known?.stamp === stamp) return known.parsed;
+  const parsed = parseSkillText(await readFile(file, 'utf8'), entryName);
+  if (parsedSkills.size >= MAX_PARSED_ENTRIES) parsedSkills.clear();
+  parsedSkills.set(file, { stamp, parsed });
+  return parsed;
+}
+
+async function readSkill(source: SkillSource): Promise<SkillRead> {
+  const file = path.join(source.dir, 'SKILL.md');
+  const [parsed, sourcePath] = await Promise.all([parsedSkillFile(file, source.entryName), realpath(source.dir)]);
+  if (!parsed) return { problem: { source: source.dir, reason: 'no SKILL.md in this folder' } };
+  if ('problem' in parsed) return { problem: { source: file, reason: parsed.problem } };
+  return {
+    skill: {
+      id: `${source.plugin}:${source.entryName}`,
+      name: parsed.name,
+      description: parsed.description,
+      origin: source.origin,
+      sourcePath,
+      needsBash: parsed.needsBash,
+      modelInvocable: parsed.modelInvocable,
+    },
+  };
 }
 
 async function personalSources(home: string): Promise<SkillSource[]> {
   const root = path.join(home, 'skills');
   if (!(await isDir(root))) return [];
   const names = (await readdir(root)).filter((name) => !name.startsWith('.') && !SKIPPED_PERSONAL_DIRS.has(name)).sort();
-  const sources: SkillSource[] = [];
-  for (const name of names) {
-    const dir = path.join(root, name);
-    if (await isDir(dir)) sources.push({ plugin: PERSONAL_PLUGIN, origin: 'personal', entryName: name, dir });
-  }
-  return sources;
+  const dirs = names.map((name) => ({ name, dir: path.join(root, name) }));
+  const kept = await Promise.all(dirs.map(async (entry) => ((await isDir(entry.dir)) ? entry : null)));
+  return kept.flatMap((entry) => (entry ? [{ plugin: PERSONAL_PLUGIN, origin: 'personal' as const, entryName: entry.name, dir: entry.dir }] : []));
 }
 
 interface InstalledEntry {
@@ -143,10 +169,10 @@ async function skillDirsUnder(candidate: string): Promise<string[]> {
 
 async function pluginSkillDirs(installPath: string, manifest: { skills?: unknown }): Promise<string[]> {
   const candidates = [path.join(installPath, 'skills'), ...manifestSkillPaths(manifest).map((rel) => path.resolve(installPath, rel))];
+  const found = await Promise.all(candidates.map(skillDirsUnder));
+  const resolved = await Promise.all(found.flat().map(async (dir) => ({ dir, real: await realpath(dir) })));
   const seen = new Map<string, string>();
-  for (const candidate of candidates) {
-    for (const dir of await skillDirsUnder(candidate)) seen.set(await realpath(dir), dir);
-  }
+  for (const entry of resolved) seen.set(entry.real, entry.dir);
   return [...seen.values()];
 }
 
@@ -166,18 +192,35 @@ async function pluginSources(key: string, entries: InstalledEntry[] | undefined,
   return dirs.map((dir) => ({ plugin, origin: `plugin:${plugin}` as const, entryName: path.basename(dir), dir }));
 }
 
+async function allPluginSources(home: string, problems: SkillProblem[]): Promise<SkillSource[]> {
+  const [installed, keys] = await Promise.all([installedPlugins(home), enabledPluginKeys(home)]);
+  const perKey = await Promise.all(
+    keys.map(async (key) => {
+      const keyProblems: SkillProblem[] = [];
+      const sources = await pluginSources(key, installed[key], keyProblems);
+      return { sources, keyProblems };
+    }),
+  );
+  for (const entry of perKey) problems.push(...entry.keyProblems);
+  return perKey.flatMap((entry) => entry.sources);
+}
+
 export async function discoverSkills(home: string = claudeHome()): Promise<SkillCatalog> {
   const scan: Scan = { skills: [], problems: [] };
-  const sources = await personalSources(home);
-  const installed = await installedPlugins(home);
-  for (const key of await enabledPluginKeys(home)) sources.push(...(await pluginSources(key, installed[key], scan.problems)));
-  for (const source of sources) {
-    await readSkill(source, scan).catch((error: unknown) => {
-      scan.problems.push({ source: source.dir, reason: error instanceof Error ? error.message : String(error) });
-    });
-  }
+  const [personal, plugins] = await Promise.all([personalSources(home), allPluginSources(home, scan.problems)]);
+  const reads = await Promise.all(
+    [...personal, ...plugins].map((source) =>
+      readSkill(source).catch((error: unknown): SkillRead => ({ problem: { source: source.dir, reason: error instanceof Error ? error.message : String(error) } })),
+    ),
+  );
   const ids = new Set<string>();
-  scan.skills = scan.skills.filter((skill) => !ids.has(skill.id) && Boolean(ids.add(skill.id)));
+  for (const read of reads) {
+    if ('problem' in read) scan.problems.push(read.problem);
+    else if (!ids.has(read.skill.id)) {
+      ids.add(read.skill.id);
+      scan.skills.push(read.skill);
+    }
+  }
   return scan;
 }
 

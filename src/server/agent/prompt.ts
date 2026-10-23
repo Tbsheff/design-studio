@@ -110,7 +110,10 @@ function buildDesignSystemBlock(project: Project, mode: RunMode, designSystem: D
 function skillsRule(count: number, allowBash: boolean): string {
   const shell = allowBash ? '' : ' Shell commands are off in this project. Load a skill that uses a shell anyway for its guidance: follow its design rules and skip only its shell or script steps.';
   return `## Skills
-${count} of the user's Claude skills are available through the Skill tool. Before you build, redesign or critique UI, scan the skill list and load every skill whose description matches the task: design, UI, layout, typography, color, critique, taste. When the message has a <recommended-skills> block, load those skills first unless one clearly does not fit.${shell} These instructions and the project rules above take priority over a skill.`;
+${count} of the user's Claude skills are available through the Skill tool. Each skill you load costs time and context, so load only these:
+- The skills in the <recommended-skills> block, when the message has one, unless one clearly does not fit the request.
+- A skill the user names in the message (for example "Use the X skill." or [skill:X]). Always load it.
+Do not load other skills, even when their descriptions match. With no block and no named skill, load none.${shell} These instructions and the project rules above take priority over a skill.`;
 }
 
 const TASTE_RULES = `## Personal taste

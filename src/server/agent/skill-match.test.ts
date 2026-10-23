@@ -51,3 +51,10 @@ describe('recommendSkills', () => {
     );
   });
 });
+
+describe('recommendation cap', () => {
+  it('recommends at most three skills by default even when more match', () => {
+    const many = ['a', 'b', 'c', 'd', 'e'].map((letter) => skill(`personal:${letter}-ui`, 'UI interface design layout typography color critique taste frontend.'));
+    expect(recommendSkills(many, many.map((entry) => entry.id), { prompt: 'Build a landing page', mode: 'edit' })).toEqual(['personal:a-ui', 'personal:b-ui', 'personal:c-ui']);
+  });
+});

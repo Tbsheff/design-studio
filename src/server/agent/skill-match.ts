@@ -1,6 +1,6 @@
 import type { RunMode, SkillInfo } from '../../shared/contracts.js';
 
-const MAX_RECOMMENDED_SKILLS = 5;
+const MAX_RECOMMENDED_SKILLS = 3;
 const MIN_SCORE = 6;
 const BASE_QUERY = 'ui design interface layout typography color critique taste frontend';
 const MODE_QUERY: Record<RunMode, string> = { edit: 'build redesign', critique: 'critique review audit' };

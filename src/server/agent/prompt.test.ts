@@ -40,10 +40,12 @@ describe('verify rules', () => {
 });
 
 describe('skills rule', () => {
-  it('tells the agent to load every matching skill and the recommended ones, and keeps Bash-only skills for guidance', async () => {
+  it('tells the agent to load only the recommended and user-named skills, and keeps Bash-only skills for guidance', async () => {
     const off = buildSystemPrompt(await project(false), 'edit', null, 12);
-    expect(off).toContain('scan the skill list and load every skill whose description matches the task: design, UI, layout, typography, color, critique, taste');
-    expect(off).toContain('<recommended-skills> block');
+    expect(off).toContain('The skills in the <recommended-skills> block');
+    expect(off).toContain('A skill the user names in the message');
+    expect(off).toContain('Do not load other skills, even when their descriptions match');
+    expect(off).not.toContain('load every skill');
     expect(off).toContain('Load a skill that uses a shell anyway for its guidance');
     const on = buildSystemPrompt(await project(true), 'edit', null, 12);
     expect(on).not.toContain('Shell commands are off');

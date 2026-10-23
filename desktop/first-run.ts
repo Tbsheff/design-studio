@@ -12,6 +12,7 @@ export interface SetupWindowOptions {
 const FIRST_RUN_FILE = 'first-run.html';
 const TERMINAL_APP = '/System/Applications/Utilities/Terminal.app';
 
+const SETUP_BACKGROUND = '#fbfcfe';
 let current: { window: BrowserWindow; options: SetupWindowOptions } | null = null;
 
 function fromSetupWindow(event: IpcMainInvokeEvent): boolean {
@@ -51,15 +52,21 @@ export function openSetupWindow(options: SetupWindowOptions): Promise<void> {
     return Promise.resolve();
   }
   const window = new BrowserWindow({
-    width: 640,
-    height: 640,
+    width: 600,
+    height: 680,
+    minWidth: 480,
+    minHeight: 420,
     resizable: true,
+    show: false,
     title: 'Design Studio setup',
+    backgroundColor: SETUP_BACKGROUND,
+    ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 16 } } as const : {}),
     webPreferences: { preload: path.join(options.ownDir, 'first-run-preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   console.log(`[desktop] window: setup (${options.continueLabel})`);
   return new Promise((resolve) => {
     current = { window, options };
+    window.once('ready-to-show', () => window.show());
     window.on('closed', () => {
       current = null;
       resolve();

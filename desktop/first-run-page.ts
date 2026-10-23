@@ -64,6 +64,7 @@ async function refresh(): Promise<void> {
 }
 
 async function start(): Promise<void> {
+  if (navigator.userAgent.includes('Mac OS X')) document.documentElement.dataset.shell = 'mac';
   const info = await bridge.info();
   const next = document.getElementById('continue');
   if (next && info) next.textContent = info.continueLabel;

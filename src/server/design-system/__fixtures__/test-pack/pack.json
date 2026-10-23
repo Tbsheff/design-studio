@@ -1,0 +1,15 @@
+{
+  "id": "test-pack",
+  "name": "Test Pack",
+  "description": "Minimal pack for server tests.",
+  "mode": "light",
+  "tags": ["test"],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Inter",
+    "body": "Inter",
+    "mono": "JetBrains Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+  }
+}

@@ -1,0 +1,214 @@
+import type { MutableRefObject } from 'react';
+import type { SelectionContext } from '../../shared/contracts';
+import type { PreviewPort } from '../bridge';
+import { textEditability } from '../cssValues';
+import type { DesignTokens } from '../useDesignSystemState';
+import { useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
+import { TokenUiContext, type TokenUi } from '../useTokenSnap';
+import { BoxModel } from './BoxModel';
+import { Icon } from './Icon';
+import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
+import { CreateTokenHost, FontField, SnapToggle, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { NumberField } from './NumberField';
+
+interface InspectorProps {
+  projectId: string;
+  directionId: string | null;
+  selection: SelectionContext[];
+  editable: boolean;
+  port: MutableRefObject<PreviewPort | null>;
+  control: MutableRefObject<DirectEditControl | null>;
+  onCommitted: (commit: DirectEditCommit) => void;
+  notice: string | null;
+  onStale: (message: string) => void;
+  tokens: DesignTokens | null;
+}
+
+const WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
+const BORDER_STYLES = ['none', 'solid', 'dashed', 'dotted', 'double'];
+const DISPLAYS = ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'inline-grid', 'contents', 'none'];
+
+export function isDirectEditable(source: { kind: string }, compareOpen: boolean): boolean {
+  return source.kind === 'live' && !compareOpen;
+}
+
+export function inspectorEmptyReason(selection: SelectionContext[], editable: boolean): string | null {
+  if (selection.length !== 1) return 'Select one element to edit its style. Press V, then click an element in the preview.';
+  if (!selection[0]?.source) return 'This element has no source location. Ask the agent to change it in Chat.';
+  if (!editable) return 'Switch the canvas to Live to edit styles directly.';
+  return null;
+}
+
+function EmptyState({ reason, notice }: { reason: string; notice: string | null }) {
+  return (
+    <div className="chat-empty ins-empty">
+      {notice ? (
+        <div className="ins-error" role="alert">
+          <Icon name="alert" size={14} />
+          <span>{notice}</span>
+        </div>
+      ) : null}
+      <span className="chat-empty-icon" aria-hidden="true">
+        <Icon name="pointer" size={18} />
+      </span>
+      <strong>No element to edit</strong>
+      <p>{reason}</p>
+    </div>
+  );
+}
+
+function StatusText({ status }: { status: SaveStatus }) {
+  if (status.kind === 'saving') return <span className="ins-status saving">Saving…</span>;
+  if (status.kind === 'saved') return <span className="ins-status saved">Saved</span>;
+  return null;
+}
+
+function Header({ selection, edit, ui }: { selection: SelectionContext; edit: DirectEdit; ui: TokenUi | null }) {
+  const source = selection.source;
+  const where = source ? `${source.file}:${source.line}` : '';
+  return (
+    <div className="ins-header">
+      <span className="ins-tag">{selection.tag}</span>
+      <span className="ins-source" title={where}>
+        {where}
+      </span>
+      <span className="ins-header-end" role="status" aria-live="polite">
+        <StatusText status={edit.status} />
+      </span>
+      <SnapToggle ui={ui} />
+      <button type="button" className="btn ghost small" onClick={edit.reset}>
+        Reset
+      </button>
+    </div>
+  );
+}
+
+function TextSection({ selection, edit }: { selection: SelectionContext; edit: DirectEdit }) {
+  const state = textEditability(selection);
+  return (
+    <InspectorSection title="Text">
+      {state === 'ok' ? (
+        <textarea
+          className="ins-text"
+          aria-label="Text content"
+          rows={2}
+          value={edit.text}
+          onChange={(event) => edit.previewText(event.target.value)}
+          onBlur={edit.commit}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              edit.commit();
+            } else if (event.key === 'Escape') {
+              event.preventDefault();
+              event.stopPropagation();
+              edit.revertText();
+            }
+          }}
+        />
+      ) : (
+        <p className="ins-note">{state === 'children' ? 'Has child elements' : 'Text is too long to edit here'}</p>
+      )}
+    </InspectorSection>
+  );
+}
+
+function TypographySection({ edit, ui }: { edit: DirectEdit; ui: TokenUi | null }) {
+  return (
+    <InspectorSection title="Typography">
+      <FontField ui={ui} edit={edit} />
+      <div className="ins-grid">
+        <NumberField short="Size" spec={{ prop: 'font-size', label: 'Font size', edit, min: 0 }} />
+        <SelectField prop="font-weight" label="Font weight" short="Wt" edit={edit} options={WEIGHTS} />
+        <NumberField short="LH" spec={{ prop: 'line-height', label: 'Line height', edit, unit: '', step: 0.1, min: 0 }} />
+        <NumberField short="LS" spec={{ prop: 'letter-spacing', label: 'Letter spacing', edit, step: 0.1 }} />
+      </div>
+      <ColorField prop="color" label="Text color" short="Text" edit={edit} />
+      <AlignField edit={edit} />
+    </InspectorSection>
+  );
+}
+
+function FillSection({ edit }: { edit: DirectEdit }) {
+  return (
+    <InspectorSection title="Fill and border">
+      <ColorField prop="background-color" label="Background color" short="Fill" edit={edit} />
+      <div className="ins-grid">
+        <NumberField short="R" spec={{ prop: 'border-radius', label: 'Border radius', edit, min: 0 }} />
+        <NumberField short="Op" spec={{ prop: 'opacity', label: 'Opacity', edit, unit: '', step: 0.05, min: 0, max: 1 }} />
+        <NumberField short="BW" spec={{ prop: 'border-width', label: 'Border width', edit, min: 0 }} />
+        <SelectField prop="border-style" label="Border style" short="Style" edit={edit} options={BORDER_STYLES} />
+      </div>
+      <ColorField prop="border-color" label="Border color" short="Border" edit={edit} />
+    </InspectorSection>
+  );
+}
+
+function LayoutSection({ edit }: { edit: DirectEdit }) {
+  return (
+    <InspectorSection title="Layout">
+      <div className="ins-grid">
+        <SelectField prop="display" label="Display" short="Disp" edit={edit} options={DISPLAYS} />
+        <NumberField short="Gap" spec={{ prop: 'gap', label: 'Gap', edit, min: 0 }} />
+        <NumberField short="W" spec={{ prop: 'width', label: 'Width', edit, min: 0 }} />
+        <NumberField short="H" spec={{ prop: 'height', label: 'Height', edit, min: 0 }} />
+      </div>
+    </InspectorSection>
+  );
+}
+
+function ErrorLine({ status }: { status: SaveStatus }) {
+  if (status.kind !== 'error') return null;
+  return (
+    <div className="ins-error" role="alert">
+      <Icon name="alert" size={14} />
+      <span>{status.message}</span>
+    </div>
+  );
+}
+
+function Editor(props: InspectorProps & { target: SelectionContext }) {
+  const scope = { projectId: props.projectId, directionId: props.directionId, selection: props.target, tokens: props.tokens, onCommitted: props.onCommitted };
+  const tk = useInspectorTokens(scope);
+  const edit = useDirectEdit({
+    projectId: props.projectId,
+    directionId: props.directionId,
+    selection: props.target,
+    port: props.port,
+    control: props.control,
+    onCommitted: props.onCommitted,
+    onStale: props.onStale,
+    rewrite: tk.ui ? tk.snap.rewrite : undefined,
+  });
+  const keepRaw = (raw: Partial<typeof edit.values>) => {
+    tk.snap.keepRaw(raw);
+    edit.preview(raw);
+    edit.commit();
+  };
+  return (
+    <TokenUiContext.Provider value={tk.ui}>
+    <div className="inspector" aria-label="Design inspector">
+      <Header selection={props.target} edit={edit} ui={tk.ui} />
+      <div className="ins-scroll">
+        <ErrorLine status={edit.status} />
+        <TextSection selection={props.target} edit={edit} />
+        <TypographySection edit={edit} ui={tk.ui} />
+        <FillSection edit={edit} />
+        <InspectorSection title="Spacing">
+          <BoxModel edit={edit} />
+        </InspectorSection>
+        <LayoutSection edit={edit} />
+      </div>
+      <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
+    </div>
+    <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
+    </TokenUiContext.Provider>
+  );
+}
+
+export function Inspector(props: InspectorProps) {
+  const reason = inspectorEmptyReason(props.selection, props.editable);
+  const target = props.selection[0];
+  if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
+  return <Editor key={target.selector} {...props} target={target} />;
+}

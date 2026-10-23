@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generic pricing</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 40px; }
+    .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .card { border: 1px solid #ccc; padding: 24px; background: #fff; }
+    .card.featured { background: #1d1d1d; color: #fff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pricing</h1>
+    <h2>Compare plans</h2>
+    <table><tr><th>Feature</th><th>Starter</th><th>Team</th><th>Scale</th></tr><tr><td>Events</td><td>100k</td><td>1M</td><td>10M</td></tr></table>
+    <div class="plans">
+      <div class="card"><h2>Starter</h2><p>$19 / month</p><p>For one site.</p></div>
+      <div class="card featured"><h2>Team</h2><p>$49 / month</p><p>For product teams.</p></div>
+      <div class="card"><h2>Scale</h2><p>$129 / month</p><p>For large traffic.</p></div>
+    </div>
+    <h2>FAQ</h2>
+    <details><summary>What counts as an event?</summary><p>One tracked action.</p></details>
+  </main>
+</body>
+</html>

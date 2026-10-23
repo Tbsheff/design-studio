@@ -1,0 +1,119 @@
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' source(none);
+@plugin '@tailwindcss/typography';
+
+@source '../ai';
+@source '../components/ChatPanel.tsx';
+@source '../components/ChatParts.tsx';
+@source '../components/ToolChips.tsx';
+@source '../components/PromptBox.tsx';
+@source '../components/ComposerParts.tsx';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-foreground: var(--text);
+  --color-background: var(--bg);
+  --color-muted: var(--surface-hover);
+  --color-muted-foreground: var(--text-2);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-2);
+  --color-border: var(--line);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface-hover);
+  --color-secondary-foreground: var(--text);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--on-accent);
+  --color-accent: var(--surface-hover);
+  --color-warning: var(--warn);
+  --color-success: var(--ok);
+  --color-inflight: var(--accent);
+  --radius: var(--r-sm);
+  --radius-outer: var(--r-lg);
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+}
+
+:where([data-ai-scope]) :where(button) {
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  background: transparent;
+}
+
+[data-slot='composer-input'],
+[data-slot='composer-input']:hover,
+[data-slot='composer-input']:focus {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-slot='markdown'] {
+  --tw-prose-body: var(--text);
+  --tw-prose-headings: var(--text);
+  --tw-prose-bold: var(--text);
+  --tw-prose-links: var(--accent-text);
+  --tw-prose-code: var(--text);
+  --tw-prose-quotes: var(--text-2);
+  --tw-prose-quote-borders: var(--line-strong);
+  --tw-prose-bullets: var(--text-3);
+  --tw-prose-counters: var(--text-3);
+  --tw-prose-hr: var(--line);
+  --tw-prose-th-borders: var(--line-strong);
+  --tw-prose-td-borders: var(--line);
+  font-size: var(--t-md);
+  line-height: 1.55;
+}
+
+[data-slot='markdown'] :not(pre) > code {
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+  background: var(--surface-active);
+  font-family: var(--mono);
+  font-size: 0.86em;
+  font-weight: 500;
+}
+
+[data-slot='markdown'] :not(pre) > code::before,
+[data-slot='markdown'] :not(pre) > code::after {
+  content: none;
+}
+
+[data-slot='markdown'] > :first-child {
+  margin-top: 0;
+}
+
+[data-slot='markdown'] > :last-child {
+  margin-bottom: 0;
+}
+
+@keyframes text-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes loading-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}

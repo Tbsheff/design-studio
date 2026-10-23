@@ -1,0 +1,21 @@
+{
+  "id": "tech-utility",
+  "name": "Tech Utility",
+  "description": "Dense tool interfaces on cool grays: compact type, monospace data, small corners and one sharp azure signal color.",
+  "mode": "light",
+  "tags": [
+    "dashboard",
+    "dense",
+    "developer",
+    "data",
+    "monospace"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "IBM Plex Sans",
+    "body": "IBM Plex Sans",
+    "mono": "IBM Plex Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+  }
+}

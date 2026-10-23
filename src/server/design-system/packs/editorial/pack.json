@@ -1,0 +1,21 @@
+{
+  "id": "editorial",
+  "name": "Editorial",
+  "description": "Magazine pages: high-contrast serif headlines and a humanist sans body in ink on warm paper, with one deep oxblood accent.",
+  "mode": "light",
+  "tags": [
+    "editorial",
+    "serif",
+    "publishing",
+    "long-form",
+    "warm"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Fraunces",
+    "body": "Source Sans 3",
+    "mono": "JetBrains Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@400&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap"
+  }
+}

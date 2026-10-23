@@ -1,0 +1,18 @@
+:root { color-scheme: light dark; font: 14px/1.45 -apple-system, BlinkMacSystemFont, sans-serif; }
+body { margin: 0; padding: 28px 32px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.lead { margin: 0 0 20px; opacity: 0.75; }
+ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+li { display: grid; grid-template-columns: 20px 1fr; gap: 4px 10px; padding: 12px; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-radius: 8px; }
+.mark { font-weight: 700; }
+li[data-status='ok'] .mark { color: #1a7f37; }
+li[data-status='warn'] .mark { color: #9a6700; }
+li[data-status='fail'] .mark { color: #cf222e; }
+.label { font-weight: 600; }
+.optional { font-weight: 400; opacity: 0.6; }
+.detail, .fixes { grid-column: 2; }
+.detail { opacity: 0.8; }
+.fixes { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+button { font: inherit; padding: 5px 12px; border-radius: 6px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); background: transparent; color: inherit; }
+button.primary { background: #0969da; border-color: #0969da; color: #fff; }

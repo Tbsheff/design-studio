@@ -1,0 +1,192 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import type { McpSdkServerConfigWithInstance, query } from '@anthropic-ai/claude-agent-sdk';
+import { z } from 'zod';
+import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
+import type { TileResult } from '../preview/browser.js';
+import type { AgentRunContext, PreviewService } from '../types.js';
+import { budgetLine, buildCheckReport, saveCheck, type RunToolState } from './check-tool.js';
+import { recordShot } from './polish-loop.js';
+import { criticImages, criticOutPrefix, describeCriticResult, runCritic } from './critic.js';
+import type { TasteRule } from './taste.js';
+import { tweakControlSchema } from '../tweaks/schema.js';
+import { defineTweaks } from '../tweaks/store.js';
+
+const VIEWPORTS = {
+  desktop: { width: 1440, height: 900 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 390, height: 844 },
+} as const;
+
+type ViewportName = keyof typeof VIEWPORTS;
+
+const TILE_PLAN: Record<ViewportName, { tileHeight: number; maxTiles: number }> = {
+  desktop: { tileHeight: 900, maxTiles: 4 },
+  tablet: { tileHeight: 1024, maxTiles: 3 },
+  mobile: { tileHeight: 1560, maxTiles: 4 },
+};
+
+type QueryFn = typeof query;
+
+export interface StudioToolDeps {
+  preview: PreviewService;
+  ctx: AgentRunContext;
+  runsDir: string;
+  runId: string;
+  run?: RunToolState;
+  tasteRules?: TasteRule[];
+  queryFn?: QueryFn;
+  env?: Record<string, string | undefined>;
+}
+
+function errorText(message: string) {
+  return { content: [{ type: 'text' as const, text: message }], isError: true };
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export function describeTiles(viewport: ViewportName, tiles: TileResult): string {
+  const size = `${viewport} ${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}`;
+  const span = `${tiles.paths.length} image(s) cover y=${tiles.from}-${tiles.to}px of a ${tiles.pageHeight}px page`;
+  const more = tiles.to < tiles.pageHeight ? ` More of the page is below: call screenshot again with from=${tiles.to}.` : ' This is the end of the page.';
+  return `${size}: ${span}.${more}`;
+}
+
+async function tileContent(paths: string[]) {
+  const images = await Promise.all(paths.map(async (file) => (await readFile(file)).toString('base64')));
+  return images.map((data) => ({ type: 'image' as const, data, mimeType: 'image/png' }));
+}
+
+interface StudioToolCounters {
+  shots: number;
+  checks: number;
+  mobileShots?: number;
+}
+
+function firstMobileFrom(counters: StudioToolCounters, viewport: ViewportName, from: number): { from: number; note: string } {
+  if (viewport !== 'mobile') return { from, note: '' };
+  const first = (counters.mobileShots ?? 0) === 0;
+  counters.mobileShots = (counters.mobileShots ?? 0) + 1;
+  if (!first || from === 0) return { from, note: '' };
+  return { from: 0, note: ' The first mobile screenshot of a run always starts at the top, so from was set to 0.' };
+}
+
+export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: { viewport: ViewportName; from: number }) {
+  const { viewport } = args;
+  if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
+  const start = firstMobileFrom(counters, viewport, args.from);
+  counters.shots += 1;
+  if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
+  if (deps.run?.log) recordShot(deps.run.log, viewport);
+  const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}`);
+  try {
+    await mkdir(deps.runsDir, { recursive: true });
+    const tiles = await deps.preview.screenshotTiles(deps.ctx.previewUrl, { viewport: VIEWPORTS[viewport], ...TILE_PLAN[viewport], from: start.from, outPrefix });
+    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `${describeTiles(viewport, tiles)}${start.note}` }] };
+  } catch (error) {
+    return errorText(`Screenshot failed: ${describeError(error)}`);
+  }
+}
+
+function configOf(deps: StudioToolDeps): ResolvedRunConfig {
+  return deps.run?.config ?? withRunTask(resolveRunConfig(deps.ctx.project.settings, levelOf(deps.ctx.request, deps.ctx.project.settings)), deps.ctx.request.task);
+}
+
+export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolCounters) {
+  if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so render_check cannot run.');
+  try {
+    const report = await buildCheckReport(deps.preview, deps.ctx, configOf(deps), deps.run);
+    counters.checks += 1;
+    if (deps.run) {
+      deps.run.lastFindings = report.findings;
+      deps.run.lastChecks = report.results;
+    }
+    await saveCheck(deps.runsDir, deps.runId, counters.checks, report.results);
+    return { content: [{ type: 'text' as const, text: report.text }] };
+  } catch (error) {
+    return errorText(`render_check failed: ${describeError(error)}`);
+  }
+}
+
+async function loadQuery(deps: StudioToolDeps): Promise<QueryFn> {
+  if (deps.queryFn) return deps.queryFn;
+  return (await import('@anthropic-ai/claude-agent-sdk')).query;
+}
+
+function criticBlocked(deps: StudioToolDeps): string | null {
+  const run = deps.run;
+  if (!run || !run.config.preset.checks.critic || !run.config.criticModel) return 'design_review is only available in polish runs. Use render_check and screenshots instead.';
+  if (run.criticCalls >= run.config.preset.criticMaxCalls) return `design_review was already called ${run.criticCalls} times in this run, the limit. Use render_check and screenshots for the final check.`;
+  if (!deps.ctx.previewUrl) return 'Preview is not running for this direction, so design_review cannot run.';
+  return null;
+}
+
+export async function runDesignReview(deps: StudioToolDeps) {
+  const blocked = criticBlocked(deps);
+  if (blocked) return errorText(blocked);
+  const run = deps.run as RunToolState;
+  run.criticCalls += 1;
+  try {
+    const images = await criticImages(deps.preview, deps.ctx.previewUrl as string, criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls));
+    const input = { request: deps.ctx.request.prompt, findings: run.lastFindings, tasteRules: deps.tasteRules ?? [], images };
+    const result = await runCritic(await loadQuery(deps), input, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, deps.env);
+    run.criticCostUsd += result.costUsd;
+    await writeFile(`${criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls)}.json`, `${JSON.stringify({ model: run.config.criticModel, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`);
+    return { content: [{ type: 'text' as const, text: [describeCriticResult(result, run), budgetLine(run)].filter(Boolean).join('\n') }] };
+  } catch (error) {
+    return errorText(`design_review failed: ${describeError(error)}`);
+  }
+}
+
+export async function runDefineTweaks(deps: Pick<StudioToolDeps, 'ctx'>, controls: unknown) {
+  if (deps.ctx.request.mode === 'critique') return errorText('define_tweaks is not available in critique runs.');
+  try {
+    const result = await defineTweaks(deps.ctx.direction.workTree, controls);
+    return result.ok ? { content: [{ type: 'text' as const, text: result.text }] } : errorText(result.text);
+  } catch (error) {
+    return errorText(`define_tweaks failed: ${describeError(error)}`);
+  }
+}
+
+export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSdkServerConfigWithInstance> {
+  const { createSdkMcpServer, tool } = await import('@anthropic-ai/claude-agent-sdk');
+  const counters: StudioToolCounters = deps.run ? (deps.run.counters ??= { shots: 0, checks: 0 }) : { shots: 0, checks: 0 };
+
+  const screenshot = tool(
+    'screenshot',
+    'Take PNG screenshots of the live preview at a viewport size. Returns up to four images, top to bottom, starting at the y offset `from`. The text says whether more of the page is below.',
+    {
+      viewport: z.enum(['desktop', 'mobile', 'tablet']).default('desktop'),
+      from: z.number().int().min(0).default(0).describe('Page y offset in px where the first image starts.'),
+    },
+    (args) => takeScreenshot(deps, counters, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const renderCheck = tool(
+    'render_check',
+    'Render the current design at the sizes this run level uses. Returns JSON: per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
+    {},
+    () => runRenderCheck(deps, counters),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const designReview = tool(
+    'design_review',
+    'Polish runs only. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots, the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, where, problem, fix}]. At most 2 calls per run.',
+    {},
+    () => runDesignReview(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const defineTweaksTool = tool(
+    'define_tweaks',
+    'Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.',
+    { controls: z.array(tweakControlSchema).max(12) },
+    (args) => runDefineTweaks(deps, args.controls),
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool] });
+}

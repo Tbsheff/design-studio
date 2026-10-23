@@ -1,0 +1,288 @@
+import { useRef, useState, type ClipboardEvent, type DragEvent } from 'react';
+import type { Project, ProjectSettings, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
+import { api, errorText } from '../api';
+import { AttachmentThumbs, ModelTag, SelectionChips, type PendingAttachment } from './ComposerParts';
+import { Disclosure } from './Disclosure';
+import { Icon } from './Icon';
+import { MOD_LABEL } from './CommentPopover';
+import { RunSettings } from './RunSettings';
+import { SkillChips, SkillPicker, SkillsIndicator } from './SkillPicker';
+import { skillInstruction } from '../skills';
+import { useRunLevel } from '../useRunLevel';
+import { useDesktopCommand } from '../desktop';
+import { useDraft, type DraftStore } from '../storage';
+
+interface Props {
+  projectId: string;
+  model: string;
+  settings: ProjectSettings;
+  onSettingsSaved: (project: Project) => void;
+  draft: DraftStore;
+  selection: SelectionContext[];
+  onRemoveSelection: (selector: string) => void;
+  running: boolean;
+  disabled: boolean;
+  onSend: (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel) => Promise<void>;
+  onCancel: () => void;
+  variations?: VariationsPromptProps;
+  queued?: boolean;
+}
+
+interface VariationsPromptProps {
+  count: number;
+  max: number;
+  onCount: (count: number) => void;
+  onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
+}
+
+function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; quiet: boolean; onCancel: () => void }) {
+  if (props.running) {
+    return (
+      <button type="button" className="btn small danger send-btn" onClick={props.onCancel}>
+        <Icon name="stop" size={14} />
+        Cancel
+      </button>
+    );
+  }
+  return (
+    <ComposerSubmit
+      disabled={!props.canSend}
+      aria-label={props.sending ? 'Sending…' : 'Send'}
+      data-tip={`Send (${MOD_LABEL}Enter)`}
+      data-tip-side="top"
+      data-tip-align="end"
+      render={<button className={`btn small has-icon send-btn ${props.quiet ? '' : 'primary'}`} />}
+    >
+      {props.sending ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
+      {props.sending ? 'Sending…' : 'Send'}
+    </ComposerSubmit>
+  );
+}
+
+function KbdHint() {
+  return (
+    <span className="kbd-hint" aria-hidden="true">
+      {MOD_LABEL === '⌘' ? <kbd>⌘</kbd> : <><kbd>Ctrl</kbd>+</>}
+      <kbd>↵</kbd>
+    </span>
+  );
+}
+
+function designsBlocker(mode: RunMode, selectionCount: number): string | null {
+  if (mode === 'critique') return 'Critique makes one review.';
+  if (selectionCount > 0) return 'Variations need an empty selection.';
+  return null;
+}
+
+export function PromptBox(props: Props) {
+  const [mode, setMode] = useState<RunMode>('edit');
+  const [files, setFiles] = useState<PendingAttachment[]>([]);
+  const [dragging, setDragging] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [skillIds, setSkillIds] = useState<string[]>([]);
+  const [picking, setPicking] = useState(false);
+  const runLevel = useRunLevel(props.projectId, props.settings.defaultLevel, props.onSettingsSaved);
+  const draft = useDraft(props.draft);
+  const setDraft = props.draft.set;
+
+  const closePicker = () => {
+    setPicking(false);
+    window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt textarea')?.focus());
+  };
+  const pickSkill = (id: string) => {
+    setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    closePicker();
+  };
+  const onDraft = (value: string) => {
+    if (value === '/' && draft === '') {
+      setPicking(true);
+      return;
+    }
+    setDraft(value);
+  };
+
+  const addFiles = (list: Iterable<File>) => {
+    for (const file of list) {
+      if (!file.type.startsWith('image/')) {
+        setError(`${file.name} is not an image. Attach a PNG, JPEG, GIF or WebP file.`);
+        continue;
+      }
+      const localId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const previewUrl = URL.createObjectURL(file);
+      setFiles((prev) => [...prev, { localId, name: file.name, previewUrl, attachment: null, error: null }]);
+      api
+        .uploadAttachment(props.projectId, file)
+        .then((attachment) => setFiles((prev) => prev.map((f) => (f.localId === localId ? { ...f, attachment } : f))))
+        .catch((err) =>
+          setFiles((prev) => prev.map((f) => (f.localId === localId ? { ...f, error: errorText(err) } : f))),
+        );
+    }
+  };
+
+  const removeFile = (localId: string) =>
+    setFiles((prev) => {
+      const f = prev.find((x) => x.localId === localId);
+      if (f) URL.revokeObjectURL(f.previewUrl);
+      return prev.filter((x) => x.localId !== localId);
+    });
+
+  const uploading = files.some((f) => !f.attachment && !f.error);
+  const canSend = !props.running && !props.disabled && !sending && !uploading && (draft.trim().length > 0 || skillIds.length > 0);
+
+  const send = async () => {
+    if (!canSend) return;
+    setSending(true);
+    setError(null);
+    try {
+      const ids = files.flatMap((f) => (f.attachment ? [f.attachment.id] : []));
+      const prompt = [draft.trim(), skillInstruction(skillIds)].filter(Boolean).join('\n\n');
+      const fanOut = mode === 'edit' && props.variations && props.variations.count > 1 && props.selection.length === 0;
+      if (fanOut && props.variations) await props.variations.onSend(prompt, runLevel.level, ids);
+      else await props.onSend(prompt, mode, ids, runLevel.level);
+      files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+      setFiles([]);
+      setSkillIds([]);
+      setDraft('');
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  useDesktopCommand((command) => {
+    if (command.type === 'run') {
+      if (canSend) void send();
+      else document.querySelector<HTMLTextAreaElement>('.prompt textarea')?.focus();
+      return true;
+    }
+    if (command.type === 'stop') {
+      if (props.running) props.onCancel();
+      return true;
+    }
+    return false;
+  });
+
+  const onPaste = (e: ClipboardEvent) => {
+    const images = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith('image/'));
+    if (images.length > 0) {
+      e.preventDefault();
+      addFiles(images);
+    }
+  };
+
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    addFiles(Array.from(e.dataTransfer.files));
+  };
+
+  return (
+    <div
+      className={`prompt ${dragging ? 'dragging' : ''}`}
+      data-ai-scope=""
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={onDrop}
+    >
+      {files
+        .filter((f) => f.error)
+        .map((f) => (
+          <div key={f.localId} className="alert error" role="alert">
+            {f.name}: {f.error}
+          </div>
+        ))}
+      {error && <div className="alert error">{error}</div>}
+      {runLevel.error && <div className="alert error">{runLevel.error}</div>}
+      {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} />}
+      <Composer
+        className={`composer cursor-text ${dragging ? 'bg-accent ring-2 ring-primary/40' : ''}`}
+        onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
+      >
+        <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
+        <AttachmentThumbs files={files} onRemove={removeFile} />
+        <SkillChips ids={skillIds} onRemove={(id) => setSkillIds((prev) => prev.filter((x) => x !== id))} />
+        <ComposerInput
+          className="min-h-16"
+          value={draft}
+          aria-label={mode === 'edit' ? 'Describe a change' : 'Ask for a critique'}
+          placeholder={mode === 'edit' ? 'Describe a change, or type / for skills' : 'Ask for a critique, or type / for skills'}
+          maxRows={9}
+          submitOnEnter={false}
+          onValueChange={onDraft}
+          onSubmit={() => void send()}
+          onPaste={onPaste}
+        />
+        <ComposerToolbar className="prompt-bar cursor-default gap-1 px-1.5 pt-0 pb-1.5">
+          <button
+            type="button"
+            className="icon-btn small"
+            aria-label="Attach image"
+            data-tip="Attach image"
+            data-tip-side="top"
+            data-tip-align="start"
+            onClick={() => inputRef.current?.click()}
+          >
+            <Icon name="paperclip" />
+          </button>
+          <button
+            type="button"
+            className={`icon-btn small ${picking ? 'on' : ''}`}
+            aria-label="Skills"
+            aria-expanded={picking}
+            data-tip="Use a skill (/)"
+            data-tip-side="top"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => (picking ? closePicker() : setPicking(true))}
+          >
+            <Icon name="book" />
+          </button>
+          <RunSettings
+            mode={{ value: mode, onChange: setMode }}
+            level={runLevel.level}
+            onLevel={runLevel.choose}
+            onOpen={() => setPicking(false)}
+            designs={
+              props.variations && {
+                value: props.variations.count,
+                max: props.variations.max,
+                onChange: props.variations.onCount,
+                disabledReason: designsBlocker(mode, props.selection.length),
+              }
+            }
+          />
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            multiple
+            hidden
+            onChange={(e) => {
+              if (e.target.files) addFiles(Array.from(e.target.files));
+              e.target.value = '';
+            }}
+          />
+          <ComposerToolbarSpacer className="prompt-send gap-1">
+            <KbdHint />
+            <SendButton running={props.running} sending={sending} canSend={canSend} quiet={Boolean(props.queued)} onCancel={props.onCancel} />
+          </ComposerToolbarSpacer>
+        </ComposerToolbar>
+      </Composer>
+      <Disclosure
+        className="prompt-foot"
+        lead={
+          <>
+            <ModelTag model={props.model} />
+            <SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />
+          </>
+        }
+      />
+    </div>
+  );
+}

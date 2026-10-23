@@ -1,0 +1,145 @@
+.toolbar {
+  overflow-x: clip;
+}
+
+.toolbar-group.source {
+  min-width: min-content;
+}
+
+.topbar {
+  z-index: 50;
+}
+
+.splitter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  z-index: 25;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.splitter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.splitter:hover::after,
+.splitter:focus-visible::after,
+body.resizing .splitter::after {
+  background: var(--accent);
+}
+
+.splitter:focus-visible {
+  outline: none;
+}
+
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.resizing iframe {
+  pointer-events: none;
+}
+
+.seg-label {
+  display: inline;
+}
+
+.segmented .seg-icon {
+  display: none;
+}
+
+.prompt {
+  container-type: inline-size;
+}
+
+@container (max-width: 400px) {
+  .kbd-hint {
+    display: none;
+  }
+}
+
+@container (max-width: 760px) {
+  .select-toggle kbd {
+    display: none;
+  }
+}
+
+@container (max-width: 720px) {
+  .dims-readout {
+    display: none;
+  }
+}
+
+@container (max-width: 640px) {
+  .segmented.source-seg button {
+    width: 30px;
+    padding: 0;
+  }
+  .segmented .seg-label {
+    display: none;
+  }
+  .segmented .seg-icon {
+    display: block;
+  }
+}
+
+@container (max-width: 600px) {
+  .select-toggle .label {
+    display: none;
+  }
+  .select-toggle {
+    width: 32px;
+    padding: 0;
+  }
+  .zoom-select {
+    width: 84px;
+    padding-right: 22px;
+    background-position: right 4px center;
+  }
+  .dims input {
+    width: 46px;
+  }
+}
+
+@container (max-width: 580px) {
+  .toolbar .toolbar-sep,
+  .dims .x {
+    display: none;
+  }
+  .toolbar,
+  .toolbar-group {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 1099px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, var(--chat-w, 340px), 50%);
+  }
+  .topbar .crumbs .badge {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, var(--chat-w, 300px), 50%);
+  }
+  .topbar-name {
+    max-width: 200px;
+  }
+  .topbar .btn.has-icon {
+    padding: 0 8px;
+  }
+}

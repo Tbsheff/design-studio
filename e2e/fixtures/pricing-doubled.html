@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plotline pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:oklch(0.97 0.012 85);
+  --surface:oklch(0.99 0.006 85);
+  --ink:oklch(0.22 0.02 160);
+  --muted:oklch(0.45 0.02 160);
+  --line:oklch(0.88 0.015 90);
+  --accent:oklch(0.52 0.16 38);
+  --accent-ink:oklch(0.98 0.01 85);
+  --deep:oklch(0.27 0.04 165);
+  --ring:0 0 0 1px oklch(0.2 0.02 160 / .08), 0 1px 2px oklch(0.2 0.02 160 / .06), 0 8px 24px -12px oklch(0.2 0.02 160 / .12);
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--s8:64px;--s9:96px;
+}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.55 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:500;margin:0;letter-spacing:-.01em;text-wrap:balance}
+p{margin:0;text-wrap:pretty}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--s5)}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:var(--s5) 0}
+.mark{font-family:Fraunces,serif;font-weight:600;font-size:20px;text-decoration:none;display:flex;align-items:center;gap:var(--s2)}
+.mark svg{width:22px;height:22px}
+nav.links{display:flex;gap:var(--s5);align-items:center;font-size:15px}
+nav.links a{text-decoration:none;color:var(--muted);padding:var(--s2) 0}
+nav.links a:hover{color:var(--ink)}
+nav.links a.signin{color:var(--ink);font-weight:500}
+.hero{padding:var(--s8) 0 var(--s7);max-width:720px}
+.hero h1{font-size:clamp(40px,6vw,64px);line-height:1.05}
+.hero p{margin-top:var(--s4);font-size:18px;color:var(--muted);max-width:52ch}
+.toggle{display:inline-flex;margin-top:var(--s6);padding:3px;border-radius:999px;background:oklch(0.93 0.015 88);gap:2px}
+.toggle button{font:500 14px Inter,sans-serif;border:0;background:none;color:var(--muted);padding:var(--s2) var(--s4);border-radius:999px;cursor:pointer;min-height:40px;transition:background-color .15s ease-out,color .15s ease-out}
+.toggle button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px oklch(0.2 0.02 160/.08),0 1px 2px oklch(0.2 0.02 160/.1)}
+.toggle small{font-size:13px;font-weight:600;color:oklch(0.45 0.15 38);margin-left:var(--s1);white-space:nowrap}
+.toggle button{min-height:44px}
+.toggle button:hover{color:var(--ink)}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s5);align-items:stretch}
+.plan{background:var(--surface);border-radius:16px;padding:var(--s6);box-shadow:var(--ring);display:flex;flex-direction:column}
+.plan.rec{background:var(--deep);color:oklch(0.95 0.015 90);box-shadow:none}
+.plan h2{font-size:22px}
+.plan h2{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.tag{font:600 13px/1 Inter,sans-serif;letter-spacing:.02em;color:oklch(0.22 0.04 60);background:oklch(0.85 0.12 70);white-space:nowrap;padding:6px 10px;border-radius:999px}
+main{display:flex;flex-direction:column}
+#compare{order:1;padding-top:0}
+.plans{order:2;margin-top:var(--s9)}
+section#faq{order:3}
+.cta{order:4}
+.hero{order:0}
+footer a{text-decoration-thickness:1px;text-underline-offset:3px;display:inline-block;padding:14px 4px;margin:-14px -4px}
+nav.links a{padding-left:9px;padding-right:9px;margin:0 -9px}
+footer a:hover{color:var(--ink)}
+.cmp thead th{vertical-align:bottom}
+.hn{display:block;font:500 18px Fraunces,serif}
+.hp{display:block;font-size:13px;color:var(--muted);margin-top:var(--s1)}
+.hp b{font:500 28px Fraunces,serif;color:var(--ink);letter-spacing:-.01em}
+.btn.sm{min-height:40px;margin-top:var(--s3);padding:0 var(--s4);font-size:14px;position:relative}
+.btn.sm::after{content:"";position:absolute;inset:-2px 0}
+nav.links a,.mark{position:relative}
+nav.links a::after,.mark::after{content:"";position:absolute;inset:-8px -4px}
+.hero h1+p{margin-top:var(--s5)}
+.plan .for{margin-top:var(--s2);font-size:15px;color:var(--muted);min-height:46px}
+.rec .for{color:oklch(0.82 0.02 150)}
+.price{margin-top:var(--s5);display:flex;align-items:baseline;gap:var(--s2)}
+.price b{font:500 56px/1 Fraunces,serif;letter-spacing:-.02em}
+.price span{font-size:14px;color:var(--muted)}
+.rec .price span{color:oklch(0.82 0.02 150)}
+.bill{font-size:13px;color:var(--muted);margin-top:var(--s1);min-height:20px}
+.rec .bill{color:oklch(0.82 0.02 150)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;margin-top:var(--s5);padding:0 var(--s5);border-radius:10px;font:500 15px Inter,sans-serif;text-decoration:none;border:1px solid var(--ink);color:var(--ink);background:transparent;transition:transform .15s ease-out,background-color .15s ease-out}
+.btn:hover{background:oklch(0.95 0.012 88)}
+.btn:active{transform:scale(.96)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:oklch(0.47 0.16 38)}
+.plan ul{list-style:none;margin:var(--s5) 0 0;padding:var(--s5) 0 0;border-top:1px solid var(--line);display:grid;gap:var(--s3);font-size:15px}
+.rec ul{border-color:oklch(1 0 0/.16)}
+.plan li{display:flex;gap:var(--s3);align-items:flex-start}
+.plan li svg{flex:none;width:18px;height:18px;margin-top:2px;color:var(--accent)}
+.rec li svg{color:oklch(0.82 0.1 60)}
+section{padding-top:var(--s9)}
+.sec-head{margin-bottom:var(--s6);max-width:560px}
+.sec-head h2{font-size:clamp(28px,4vw,40px);line-height:1.1}
+.sec-head p{margin-top:var(--s3);color:var(--muted)}
+.cmp{width:100%;border-collapse:collapse;font-size:15px}
+.cmp th,.cmp td{text-align:left;padding:var(--s4) var(--s4) var(--s4) 0;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp thead th{font:500 18px Fraunces,serif;padding-bottom:var(--s4);border-bottom:1px solid var(--ink)}
+.cmp thead th.hl{color:var(--accent)}
+.cmp tbody th{font-weight:400;width:34%}
+.cmp tr.group th{padding:var(--s7) 0 var(--s2);font:600 13px Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cmp td{width:22%}
+.cmp .no{color:oklch(0.4 0.02 160)}
+@media (min-width:721px){
+  .cmp thead th.hl,.cmp tbody tr:not(.group) td:nth-of-type(2){background:oklch(0.95 0.025 75);padding-left:var(--s3)}
+  .cmp thead th{padding-top:var(--s3)}
+}
+.faq{max-width:760px}
+details{border-top:1px solid var(--line)}
+details:last-child{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:var(--s5);align-items:center;padding:var(--s5) 0;font:500 19px/1.3 Fraunces,serif;min-height:56px}
+summary::-webkit-details-marker{display:none}
+summary svg{flex:none;width:20px;height:20px;transition:transform .15s ease-out}
+details[open] summary svg{transform:rotate(45deg)}
+details p{padding:0 var(--s7) var(--s5) 0;color:var(--muted);max-width:64ch}
+.cta{margin:var(--s9) 0 var(--s8);padding:var(--s7);border-radius:16px;background:var(--deep);color:oklch(0.95 0.015 90);display:flex;justify-content:space-between;align-items:center;gap:var(--s5);flex-wrap:wrap}
+.cta h2{font-size:clamp(26px,3.5vw,34px);max-width:20ch}
+.cta .btn{margin-top:0}
+footer{border-top:1px solid var(--line);padding:var(--s5) 0 var(--s7);font-size:14px;color:var(--muted);display:flex;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
+@media (max-width:900px){
+  .plans{grid-template-columns:1fr}
+  .plan .for{min-height:0}
+}
+@media (max-width:720px){
+  .wrap{padding:0 var(--s4)}
+  nav.links{gap:var(--s3);font-size:14px}
+  nav.links a,.mark{display:inline-flex;align-items:center;min-height:44px}
+  .toggle button{min-height:44px}
+  .hero{padding-top:var(--s6)}
+  .plan{padding:var(--s5)}
+  .cmp thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .cmp,.cmp tbody{display:block}
+  .cmp tr{display:grid;grid-template-columns:repeat(3,1fr);column-gap:var(--s3);padding:var(--s4) 0;border-bottom:1px solid var(--line)}
+  .cmp tr.group{display:block;padding:0}
+  .cmp tr.group th{padding-top:var(--s6)}
+  .plans{order:0;margin-top:0}
+  #compare{order:1;padding-top:var(--s9)}
+  .cmp th,.cmp td{border:0;padding:0;width:auto!important}
+  .cmp tbody th{grid-column:1/-1;font-weight:500;margin-bottom:var(--s2)}
+  .cmp td::before{content:attr(data-plan);display:block;font-size:12px;color:var(--muted)}
+  .cta{padding:var(--s5)}
+  details p{padding-right:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l5-6 4 3 8-9"/><circle cx="20" cy="5" r="1.5" fill="var(--accent)" stroke="none"/></svg>Plotline</a>
+    <nav class="links" aria-label="Main"><a href="#compare">Compare</a><a href="#faq">FAQ</a><a class="signin" href="#">Sign in</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Pricing that follows your traffic, not your headcount.</h1>
+      <p>Every plan includes unlimited seats and a 14-day trial. Pay for the events you track.</p>
+      <div class="toggle" role="group" aria-label="Billing period">
+        <button type="button" id="mo" aria-pressed="true">Monthly</button>
+        <button type="button" id="yr" aria-pressed="false">Yearly <small>Save 20%</small></button>
+      </div>
+    </div>
+
+    <div class="plans">
+      <article class="plan">
+        <h2>Starter</h2>
+        <p class="for">For a side project or a first launch.</p>
+        <div class="price"><b data-m="19" data-y="15">$19</b><span>/ month</span></div>
+        <p class="bill" data-bill>Billed monthly</p>
+        <a class="btn" href="#">Start free trial</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>100,000 events a month</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>3 dashboards</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>12 months of history</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Email support</li>
+        </ul>
+      </article>
+
+      <article class="plan rec">
+        <h2>Team<span class="tag">Recommended</span></h2>
+        <p class="for">For product teams that review numbers every week.</p>
+        <div class="price"><b data-m="49" data-y="39">$49</b><span>/ month</span></div>
+        <p class="bill" data-bill>Billed monthly</p>
+        <a class="btn primary" href="#">Start free trial</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>1 million events a month</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Unlimited dashboards</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Funnels and retention</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>24 months of history</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Slack alerts</li>
+        </ul>
+      </article>
+
+      <article class="plan">
+        <h2>Scale</h2>
+        <p class="for">For high volume and stricter data controls.</p>
+        <div class="price"><b data-m="129" data-y="103">$129</b><span>/ month</span></div>
+        <p class="bill" data-bill>Billed monthly</p>
+        <a class="btn" href="#">Start free trial</a>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>10 million events a month</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Everything in Team</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>SSO and audit log</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>SQL access and data export</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Priority support, 4 hour reply</li>
+        </ul>
+      </article>
+    </div>
+
+    <section id="compare">
+      <div class="sec-head"><h2>Compare every feature</h2><p>All prices in USD. Event limits reset on your billing date.</p></div>
+      <table class="cmp">
+        <thead><tr><th scope="col"><span class="sr" style="position:absolute;left:-9999px">Feature</span></th><th scope="col"><span class="hn">Starter</span><span class="hp"><b data-m="19" data-y="15">$19</b> / mo</span><a class="btn sm" href="#">Start trial</a></th><th scope="col" class="hl"><span class="hn">Team</span><span class="hp"><b data-m="49" data-y="39">$49</b> / mo</span><a class="btn sm primary" href="#">Start trial</a></th><th scope="col"><span class="hn">Scale</span><span class="hp"><b data-m="129" data-y="103">$129</b> / mo</span><a class="btn sm" href="#">Start trial</a></th></tr></thead>
+        <tbody>
+          <tr class="group"><th colspan="4" scope="colgroup">Usage</th></tr>
+          <tr><th scope="row">Events per month</th><td data-plan="Starter">100,000</td><td data-plan="Team">1 million</td><td data-plan="Scale">10 million</td></tr>
+          <tr><th scope="row">Team seats</th><td data-plan="Starter">Unlimited</td><td data-plan="Team">Unlimited</td><td data-plan="Scale">Unlimited</td></tr>
+          <tr><th scope="row">Data history</th><td data-plan="Starter">12 months</td><td data-plan="Team">24 months</td><td data-plan="Scale">60 months</td></tr>
+          <tr class="group"><th colspan="4" scope="colgroup">Analysis</th></tr>
+          <tr><th scope="row">Dashboards</th><td data-plan="Starter">3</td><td data-plan="Team">Unlimited</td><td data-plan="Scale">Unlimited</td></tr>
+          <tr><th scope="row">Funnels and retention</th><td class="no" data-plan="Starter">Not included</td><td data-plan="Team">Included</td><td data-plan="Scale">Included</td></tr>
+          <tr><th scope="row">SQL access</th><td class="no" data-plan="Starter">Not included</td><td class="no" data-plan="Team">Not included</td><td data-plan="Scale">Included</td></tr>
+          <tr class="group"><th colspan="4" scope="colgroup">Security and support</th></tr>
+          <tr><th scope="row">SSO and audit log</th><td class="no" data-plan="Starter">Not included</td><td class="no" data-plan="Team">Not included</td><td data-plan="Scale">Included</td></tr>
+          <tr><th scope="row">Slack alerts</th><td class="no" data-plan="Starter">Not included</td><td data-plan="Team">Included</td><td data-plan="Scale">Included</td></tr>
+          <tr><th scope="row">Support</th><td data-plan="Starter">Email</td><td data-plan="Team">Email, 1 day reply</td><td data-plan="Scale">4 hour reply</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="faq">
+      <div class="sec-head"><h2>Questions, answered</h2></div>
+      <div class="faq">
+        <details open><summary>What counts as an event?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>One event is one tracked action, such as a page view, a click, or a custom signup event. Sessions and users are calculated from events and are not billed separately.</p></details>
+        <details><summary>What happens if I go over my limit?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>We keep collecting. You get an email at 80% and again at 100%, then a month to upgrade or trim your tracking before anything is paused.</p></details>
+        <details><summary>Can I change plans later?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Yes, at any time. Upgrades apply immediately and are prorated. Downgrades take effect at the next billing date.</p></details>
+        <details><summary>Do you offer refunds?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Monthly plans can be cancelled whenever you like. If you pay yearly and change your mind within 30 days, we refund the full amount.</p></details>
+        <details><summary>Is the free trial really free?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>Yes. The 14-day trial has no card requirement and includes every Team feature, so you can test funnels before you choose.</p></details>
+        <details><summary>Where is my data stored?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary><p>You pick a US or EU region when you create a project. Data stays in that region and you can export or delete it at any time.</p></details>
+      </div>
+    </section>
+
+    <div class="cta">
+      <h2>Not sure which plan fits? Start with Team.</h2>
+      <a class="btn primary" href="#">Start 14-day trial</a>
+    </div>
+  </main>
+
+  <footer><span>&copy; 2026 Plotline Analytics</span><span>Questions? <a href="mailto:support@plotline.app">support@plotline.app</a></span></footer>
+</div>
+<script>
+const mo=document.getElementById('mo'),yr=document.getElementById('yr');
+function set(y){
+  mo.setAttribute('aria-pressed',!y);yr.setAttribute('aria-pressed',y);
+  document.querySelectorAll('.price b,.hp b').forEach(b=>b.textContent='$'+(y?b.dataset.y:b.dataset.m));
+  document.querySelectorAll('[data-bill]').forEach(p=>{
+    const b=p.previousElementSibling.querySelector('b');
+    p.textContent=y?'Billed yearly, $'+(b.dataset.y*12)+' a year':'Billed monthly';
+  });
+}
+mo.onclick=()=>set(false);yr.onclick=()=>set(true);
+</script>
+</body>
+</html>

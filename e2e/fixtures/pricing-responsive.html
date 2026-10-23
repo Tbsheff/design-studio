@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Responsive pricing</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; }
+    .cards { display: none; }
+    .card { border: 1px solid #ccc; padding: 16px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px; }
+    @media (max-width: 700px) { .cards { display: block; } table { display: none; } }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pricing</h1>
+    <div class="cards">
+      <div class="card"><h2>Starter</h2><p>$19 / month</p><a href="#start-starter">Start trial</a></div>
+      <div class="card"><h2>Team</h2><p>$49 / month</p><a href="#start-team">Start trial</a></div>
+    </div>
+    <table>
+      <thead><tr><th>Feature</th><th>Starter <span>$19 / month</span> <a href="#start-starter">Start trial</a></th><th>Team <span>$49 / month</span> <a href="#start-team">Start trial</a></th></tr></thead>
+      <tbody><tr><td>Events</td><td>100k</td><td>1M</td></tr></tbody>
+    </table>
+    <p class="sr-only">Team costs $49 / month.</p>
+    <details><summary>Is Team billed yearly?</summary><p>Team is $49 / month, or $470 a year.</p></details>
+    <p data-studio-repeat>Most teams pick Team at $49 / month.</p>
+  </main>
+</body>
+</html>

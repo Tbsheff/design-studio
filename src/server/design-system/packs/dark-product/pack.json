@@ -1,0 +1,21 @@
+{
+  "id": "dark-product",
+  "name": "Dark Product",
+  "description": "Night-first product UI: near-black layered surfaces, thin quiet borders and one bright chartreuse accent with no glow.",
+  "mode": "dark",
+  "tags": [
+    "dark",
+    "product",
+    "saas",
+    "app",
+    "contrast"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Sora",
+    "body": "Inter",
+    "mono": "JetBrains Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Sora:wght@600&display=swap"
+  }
+}

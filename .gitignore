@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+desktop/dist/
+studio-data/
+refs/
+test-results/
+playwright-report/
+.env
+.env.*
+*.log
+.DS_Store
+design-review/
+e2e/results/
+verification/*
+!verification/ACCEPTANCE.md

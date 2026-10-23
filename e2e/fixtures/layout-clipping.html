@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout clipping fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+  .site-nav { display: flex; gap: 24px; overflow: hidden; white-space: nowrap; padding: 12px 16px; max-width: 100%; box-sizing: border-box; }
+  .site-nav a { flex: none; }
+  .table-wrap { overflow-x: auto; margin: 16px; }
+  table { min-width: 720px; border-collapse: collapse; }
+  th, td { padding: 8px 12px; text-align: left; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .offscreen { position: absolute; left: -9999px; }
+  .truncate { display: block; width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+  <nav class="site-nav" aria-label="Main">
+    <a href="#">Overview</a><a href="#">Usage</a><a href="#">Devices</a><a href="#">Alerts</a><a href="#">Reports</a><a href="#">Billing</a><a href="#">Settings</a>
+  </nav>
+  <span class="sr-only">Skip to the comparison table for every plan in detail</span>
+  <span class="offscreen">Feature</span>
+  <span class="truncate">A long label that the design truncates on purpose</span>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>Starter</th><th>Team</th><th>Scale</th><th>Enterprise</th></tr></thead>
+      <tbody><tr><td>Events per month</td><td>100k</td><td>1M</td><td>10M</td><td>Custom</td></tr></tbody>
+    </table>
+  </div>
+</body>
+</html>

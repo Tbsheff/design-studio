@@ -1,0 +1,244 @@
+.studio {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.topbar {
+  height: 48px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  position: relative;
+  z-index: 10;
+}
+
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--text);
+  color: var(--bg);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--t-sm);
+}
+
+.crumbs .btn.ghost {
+  color: var(--text-2);
+  padding: 0 8px;
+}
+
+.crumb-sep {
+  color: var(--text-3);
+  margin: 0 2px;
+}
+
+.topbar-name {
+  font-weight: 600;
+  max-width: 440px;
+  padding: 0 4px;
+}
+
+.topbar-direction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-full);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+
+.columns {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, var(--chat-w, 392px), 50%);
+}
+
+.panel {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.panel.right {
+  border-left: 1px solid var(--line);
+  position: relative;
+}
+
+.panel-section {
+  padding: var(--s-1) 0 var(--s-3);
+}
+
+.panel-section + .panel-section {
+  border-top: 1px solid var(--line);
+}
+
+.panel-section.grow {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  height: 44px;
+  padding: 0 var(--s-2) 0 var(--s-4);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+}
+
+.section-head h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-head .count {
+  color: var(--text-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--s-2);
+  display: grid;
+  gap: 1px;
+}
+
+.list-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  column-gap: var(--s-2);
+  row-gap: 1px;
+  align-items: center;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 7px var(--s-2);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.list-item .icon {
+  color: var(--text-3);
+  grid-row: span 2;
+  align-self: start;
+  margin-top: 2px;
+}
+
+.list-item .name {
+  font-weight: 500;
+}
+
+.list-item .sub {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.list-item:hover {
+  background: var(--surface-hover);
+}
+
+.list-item.selected {
+  background: var(--accent-soft);
+}
+
+.list-item.selected .icon {
+  color: var(--accent-text);
+}
+
+.list-item.compact {
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  padding-block: 6px;
+}
+
+.list-item.compact .icon {
+  grid-row: auto;
+  align-self: center;
+  margin-top: 0;
+}
+
+.fork-form {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-2) var(--s-3) 0;
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  animation: pop-in var(--dur-slow) var(--ease);
+}
+
+.fork-form .fork-from {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.fork-form input {
+  height: 32px;
+}
+
+@media (max-width: 1360px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) clamp(300px, var(--chat-w, 352px), 50%);
+  }
+  .topbar-name {
+    max-width: 340px;
+  }
+}

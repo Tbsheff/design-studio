@@ -1,0 +1,21 @@
+{
+  "id": "soft-pastel",
+  "name": "Soft Pastel",
+  "description": "Airy and playful: pastel mint, peach and lilac surfaces with dark, very legible text and a deep berry action color.",
+  "mode": "light",
+  "tags": [
+    "pastel",
+    "playful",
+    "friendly",
+    "accessible",
+    "light"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Bricolage Grotesque",
+    "body": "Atkinson Hyperlegible Next",
+    "mono": "Atkinson Hyperlegible Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap"
+  }
+}

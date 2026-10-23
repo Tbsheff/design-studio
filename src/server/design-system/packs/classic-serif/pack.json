@@ -1,0 +1,21 @@
+{
+  "id": "classic-serif",
+  "name": "Classic Serif",
+  "description": "Traditional and composed: a Caslon-style serif for headings and text on cream, deep navy ink and a restrained gold accent.",
+  "mode": "light",
+  "tags": [
+    "serif",
+    "traditional",
+    "formal",
+    "heritage",
+    "print"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Libre Caslon Display",
+    "body": "Libre Caslon Text",
+    "mono": "Courier Prime",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap"
+  }
+}

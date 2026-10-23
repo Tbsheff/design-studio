@@ -1,0 +1,228 @@
+.tk-control {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 3px;
+}
+
+.ins-field .ins-suffix + .tk-control {
+  margin-left: -4px;
+}
+
+.tk-chip,
+.tk-raw,
+.tk-open {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: transparent;
+  font-size: var(--t-xs);
+  line-height: 1;
+  cursor: pointer;
+  transition-property: background-color, color, box-shadow;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.tk-chip::after,
+.tk-raw::after,
+.tk-open::after,
+.tk-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px -2px;
+}
+
+.tk-chip {
+  gap: 5px;
+  max-width: 112px;
+  padding: 0 6px 0 4px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-weight: 500;
+}
+
+.tk-chip:hover {
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.tk-raw {
+  padding: 0 6px;
+  color: var(--text-3);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.tk-raw.near {
+  color: var(--warn);
+  box-shadow: inset 0 0 0 1px var(--warn-line);
+  background: var(--warn-soft);
+}
+
+.tk-raw:hover {
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px oklch(0.78 0.008 var(--hue));
+}
+
+.tk-open {
+  justify-content: center;
+  width: 20px;
+  color: var(--text-3);
+}
+
+.tk-open:hover,
+.tk-open[aria-expanded='true'] {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.tk-chip:focus-visible,
+.tk-raw:focus-visible,
+.tk-open:focus-visible,
+.tk-dot:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.tk-swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.12);
+}
+
+.tk-swatch.sm {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.side-cell {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.tk-control.mini {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  padding: 0;
+}
+
+.tk-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  cursor: pointer;
+  transition-property: background-color, box-shadow, opacity;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.tk-control.mini.token .tk-dot {
+  background: var(--accent);
+}
+
+.tk-control.mini.raw .tk-dot {
+  box-shadow: inset 0 0 0 1.5px var(--text-3);
+}
+
+.tk-control.mini.unset .tk-dot {
+  box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  opacity: 0;
+}
+
+.box-ring:hover > .side-cell .tk-control.mini.unset .tk-dot,
+.side-cell:focus-within .tk-control.mini.unset .tk-dot,
+.tk-control.mini.unset .tk-dot:focus-visible {
+  opacity: 1;
+}
+
+.tk-item code,
+.tk-note code,
+.tk-help code {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+}
+
+.tk-snap-toggle {
+  flex: none;
+  color: var(--text-3);
+}
+
+.tk-snap-toggle[aria-pressed='true'] {
+  color: var(--accent-text);
+}
+
+.ins-header .tk-snap-toggle + .btn {
+  margin-left: -4px;
+}
+
+.tk-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  margin: 0 var(--s-3) var(--s-3);
+  padding: 0 4px 0 10px;
+  height: 32px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  animation: pop-in var(--dur) var(--ease);
+}
+
+.tk-note > .icon {
+  flex: none;
+  color: var(--accent-text);
+}
+
+.tk-note-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-note-sep {
+  color: var(--text-3);
+}
+
+.tk-note-action {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tk-note-action:hover {
+  text-decoration: underline;
+}
+
+.tk-note-close.icon-btn {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+}
+
+.ins-field.font .ins-input {
+  padding-left: 2px;
+}
+

@@ -1,0 +1,21 @@
+{
+  "id": "warm-human",
+  "name": "Warm Human",
+  "description": "Friendly and soft: a rounded sans on oat-colored neutrals, terracotta actions, sage highlights and large round corners.",
+  "mode": "light",
+  "tags": [
+    "friendly",
+    "rounded",
+    "warm",
+    "consumer",
+    "wellness"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Nunito",
+    "body": "Nunito",
+    "mono": "DM Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&family=Nunito:wght@400;600;800&display=swap"
+  }
+}

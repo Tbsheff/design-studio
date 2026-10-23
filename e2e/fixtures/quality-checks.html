@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quality fixture</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; }
+    .site-nav { display: flex; gap: 16px; padding: 16px; }
+    .site-nav a { padding: 14px 8px; }
+    @media (max-width: 600px) { .site-nav { display: none; } }
+    .faint { color: #c8c8c8; }
+    .tiny { width: 20px; height: 20px; padding: 0; }
+    .extended { position: relative; width: 24px; height: 24px; padding: 0; }
+    .extended::after { content: ''; position: absolute; inset: -12px; }
+    .big { min-width: 48px; min-height: 48px; }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="site-nav" aria-label="Main">
+      <a href="#plans">Plans</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+  <main>
+    <h1>Pricing</h1>
+    <p class="faint">Low contrast text that axe should flag.</p>
+    <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="40" height="40">
+    <input type="text">
+    <button class="tiny" aria-label="Close">x</button>
+    <button class="extended" aria-label="Info">i</button>
+    <button class="big">Start trial</button>
+    <p>Read the <a href="#terms">terms</a> before you buy a plan for your whole team.</p>
+    <p id="draft">Office address to come.</p>
+    <p id="mail">Write to hello@plotline.example for help.</p>
+    <p data-sample>Sample data from a demo account.</p>
+  </main>
+</body>
+</html>

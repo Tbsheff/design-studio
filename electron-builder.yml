@@ -1,0 +1,49 @@
+appId: dev.designstudio.app
+productName: Design Studio
+electronVersion: 44.9.3
+npmRebuild: false
+asar: true
+files:
+  - "**/*"
+  - "!node_modules{,/**/*}"
+directories:
+  app: build/desktop/app
+  output: dist
+  buildResources: desktop/build-resources
+extraResources:
+  - from: build/desktop/resources
+    to: .
+    filter:
+      - "**/*"
+protocols:
+  - name: Design Studio link
+    schemes:
+      - designstudio
+afterSign: desktop/notarize.cjs
+mac:
+  category: public.app-category.graphics-design
+  icon: desktop/build-resources/icon.icns
+  target:
+    - dir
+    - dmg
+    - zip
+  identity: "-"
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: false
+  entitlements: desktop/build-resources/entitlements.mac.plist
+  entitlementsInherit: desktop/build-resources/entitlements.mac.plist
+  signIgnore:
+    - "claude-agent-sdk-darwin-.*/claude$"
+  extendInfo:
+    NSDocumentsFolderUsageDescription: Design Studio opens design folders you import from Documents.
+    NSDesktopFolderUsageDescription: Design Studio opens design folders you import from the Desktop.
+    NSDownloadsFolderUsageDescription: Design Studio saves exports to Downloads.
+    CFBundleDocumentTypes:
+      - CFBundleTypeName: Folder
+        CFBundleTypeRole: Viewer
+        LSHandlerRank: Alternate
+        LSItemContentTypes:
+          - public.folder
+dmg:
+  writeUpdateInfo: false

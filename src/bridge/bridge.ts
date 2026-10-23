@@ -1,0 +1,843 @@
+import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, SelectionContext, SourceLoc } from '../shared/contracts.js';
+import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
+import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
+import {
+  BRIDGE_CHANGES_PATH,
+  BRIDGE_PARENT_ORIGIN_PARAM,
+  BRIDGE_TOKEN_PARAM,
+  DIRECT_STYLE_PROPERTIES,
+  SOURCE_LOC_ATTR,
+  TOKEN_PREVIEW_STYLE_ID,
+  zoomKeyOf,
+} from '../shared/contracts.js';
+
+type Rect = SelectionContext['rect'];
+type OutgoingBody = BridgeToParent extends infer Message
+  ? Message extends BridgeToParent
+    ? Omit<Message, 'ns' | 'token'>
+    : never
+  : never;
+
+const STORAGE_PREFIX = '__studio_bridge:';
+const STYLE_KEYS = [
+  'color',
+  'background-color',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'line-height',
+  'letter-spacing',
+  'padding',
+  'margin',
+  'border-radius',
+  'display',
+  'gap',
+  'width',
+  'height',
+  'text-align',
+];
+const MAX_SELECTOR_DEPTH = 8;
+const MAX_ANCESTORS = 5;
+const MAX_TEXT = 300;
+const MAX_HTML = 3000;
+
+interface BridgeSession {
+  token: string;
+  parentOrigin: string;
+}
+
+function storageKey(): string {
+  return `${STORAGE_PREFIX}${window.location.pathname}`;
+}
+
+function isBridgeSession(value: unknown): value is BridgeSession {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as BridgeSession).token === 'string' &&
+    typeof (value as BridgeSession).parentOrigin === 'string'
+  );
+}
+
+function rememberSession(session: BridgeSession): void {
+  try {
+    window.sessionStorage.setItem(storageKey(), JSON.stringify(session));
+  } catch {
+    return;
+  }
+}
+
+function stripBridgeParams(url: URL): void {
+  url.searchParams.delete(BRIDGE_TOKEN_PARAM);
+  url.searchParams.delete(BRIDGE_PARENT_ORIGIN_PARAM);
+  try {
+    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+  } catch {
+    return;
+  }
+}
+
+function storedSession(): BridgeSession | null {
+  try {
+    const stored = window.sessionStorage.getItem(storageKey());
+    if (!stored) return null;
+    const parsed: unknown = JSON.parse(stored);
+    return isBridgeSession(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readSession(): BridgeSession | null {
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get(BRIDGE_TOKEN_PARAM);
+  const parentOrigin = url.searchParams.get(BRIDGE_PARENT_ORIGIN_PARAM);
+  if (!token || !parentOrigin) return storedSession();
+  const session = { token, parentOrigin };
+  rememberSession(session);
+  stripBridgeParams(url);
+  return session;
+}
+
+function rectOf(element: Element): Rect {
+  const box = element.getBoundingClientRect();
+  return { x: box.x, y: box.y, width: box.width, height: box.height };
+}
+
+function shortLabel(element: Element): string {
+  const tag = element.tagName.toLowerCase();
+  const firstClass = (element.getAttribute('class') ?? '').trim().split(/\s+/)[0];
+  return firstClass ? `${tag}.${firstClass}` : tag;
+}
+
+function uniqueId(element: Element): string | null {
+  const id = element.id;
+  if (!id) return null;
+  const selector = `#${CSS.escape(id)}`;
+  try {
+    return document.querySelectorAll(selector).length === 1 ? selector : null;
+  } catch {
+    return null;
+  }
+}
+
+function nthOfType(element: Element): string {
+  const tag = element.tagName.toLowerCase();
+  const parent = element.parentElement;
+  if (!parent) return tag;
+  let index = 0;
+  let count = 0;
+  for (const sibling of Array.from(parent.children)) {
+    if (sibling.tagName === element.tagName) {
+      count += 1;
+      if (sibling === element) index = count;
+    }
+  }
+  return count > 1 ? `${tag}:nth-of-type(${index})` : tag;
+}
+
+function selectorFor(element: Element): string {
+  const own = uniqueId(element);
+  if (own) return own;
+  const parts: string[] = [];
+  let current: Element | null = element;
+  while (current && current !== document.body && current !== document.documentElement) {
+    if (parts.length >= MAX_SELECTOR_DEPTH) break;
+    const id = parts.length > 0 ? uniqueId(current) : null;
+    if (id) {
+      parts.unshift(id);
+      return parts.join(' > ');
+    }
+    parts.unshift(nthOfType(current));
+    current = current.parentElement;
+  }
+  if (current === document.body) parts.unshift('body');
+  if (parts.length === 0) return element.tagName.toLowerCase();
+  return parts.join(' > ');
+}
+
+function parseLoc(value: string): SourceLoc | null {
+  const match = /^(.*):(\d+):(\d+)$/.exec(value);
+  if (!match || !match[1] || !match[2] || !match[3]) return null;
+  return { file: match[1], line: Number(match[2]), col: Number(match[3]) };
+}
+
+function sourceOf(element: Element): SourceLoc | null {
+  const owner = element.closest(`[${SOURCE_LOC_ATTR}]`);
+  const value = owner?.getAttribute(SOURCE_LOC_ATTR);
+  return value ? parseLoc(value) : null;
+}
+
+function stylesOf(element: Element): Record<string, string> {
+  const computed = window.getComputedStyle(element);
+  const styles: Record<string, string> = {};
+  for (const key of STYLE_KEYS) styles[key] = computed.getPropertyValue(key);
+  return styles;
+}
+
+function ancestorsOf(element: Element): string[] {
+  const labels: string[] = [];
+  let current = element.parentElement;
+  while (current && labels.length < MAX_ANCESTORS) {
+    labels.push(shortLabel(current));
+    if (current === document.body) break;
+    current = current.parentElement;
+  }
+  return labels;
+}
+
+function textOf(element: Element): string {
+  const raw = element instanceof HTMLElement ? element.innerText : (element.textContent ?? '');
+  return raw.trim().slice(0, MAX_TEXT);
+}
+
+function selectionFor(element: Element): SelectionContext {
+  return {
+    selector: selectorFor(element),
+    tag: element.tagName.toLowerCase(),
+    text: textOf(element),
+    outerHTML: element.outerHTML.slice(0, MAX_HTML),
+    styles: stylesOf(element),
+    rect: rectOf(element),
+    source: sourceOf(element),
+    ancestors: ancestorsOf(element),
+  };
+}
+
+function stringifyArg(value: unknown): string {
+  if (value instanceof Error) return value.message;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value) ?? String(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function eventElement(event: Event): Element | null {
+  const target = event.composedPath()[0] ?? event.target;
+  if (target instanceof Element) return target;
+  if (target instanceof Node) return target.parentElement;
+  return null;
+}
+
+function reloadIfChangedDuringLoad(): void {
+  if (!document.querySelector('script[src="/@vite/client"]')) return;
+  const loadStartedAt = performance.timeOrigin;
+  fetch(BRIDGE_CHANGES_PATH, { cache: 'no-store' })
+    .then((res) => (res.ok ? (res.json() as Promise<{ changedAt?: unknown }>) : null))
+    .then((body) => {
+      if (body && typeof body.changedAt === 'number' && body.changedAt >= loadStartedAt) window.location.reload();
+    })
+    .catch(() => undefined);
+}
+
+type WheelBody = Extract<OutgoingBody, { type: 'wheel' }>;
+
+function forwardZoomInput(post: (body: OutgoingBody) => void): void {
+  let pending: WheelBody | null = null;
+  let frame = 0;
+
+  const flush = (): void => {
+    frame = 0;
+    const body = pending;
+    pending = null;
+    if (body) post(body);
+  };
+
+  const onWheel = (event: WheelEvent): void => {
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault();
+    if (pending && pending.deltaMode !== event.deltaMode) flush();
+    pending = {
+      type: 'wheel',
+      deltaX: (pending?.deltaX ?? 0) + event.deltaX,
+      deltaY: (pending?.deltaY ?? 0) + event.deltaY,
+      deltaMode: event.deltaMode,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      clientX: event.clientX,
+      clientY: event.clientY,
+    };
+    if (!frame) frame = window.requestAnimationFrame(flush);
+  };
+
+  const onKeyDown = (event: KeyboardEvent): void => {
+    const key = zoomKeyOf(event);
+    if (!key) return;
+    event.preventDefault();
+    post({ type: 'zoom-key', key });
+  };
+
+  window.addEventListener('wheel', onWheel, { capture: true, passive: false });
+  window.addEventListener('keydown', onKeyDown, { capture: true });
+}
+
+type StyledElement = HTMLElement | SVGElement;
+
+interface StyleBackup {
+  hadAttribute: boolean;
+  props: Map<string, { value: string; priority: string }>;
+}
+
+interface LivePreview {
+  previewStyle(selector: unknown, style: unknown): void;
+  previewText(selector: unknown, text: unknown): void;
+  reset(): void;
+}
+
+const PREVIEW_STYLE_KEYS = new Set<string>(DIRECT_STYLE_PROPERTIES);
+const MAX_PREVIEW_VALUE = 200;
+const MAX_PREVIEW_TEXT = 5000;
+const NON_TEXT_TAGS = new Set(['script', 'style', 'template', 'iframe', 'textarea', 'img', 'input', 'br', 'hr', 'svg']);
+
+function queryPreviewTarget(selector: unknown): Element | null {
+  if (typeof selector !== 'string' || selector === '') return null;
+  try {
+    return document.querySelector(selector);
+  } catch {
+    return null;
+  }
+}
+
+function isStyledElement(element: Element | null): element is StyledElement {
+  return element instanceof HTMLElement || element instanceof SVGElement;
+}
+
+function isPreviewValue(value: unknown): value is string | null {
+  return value === null || (typeof value === 'string' && value.length <= MAX_PREVIEW_VALUE);
+}
+
+function previewEntries(style: unknown): [string, string | null][] {
+  if (typeof style !== 'object' || style === null || Array.isArray(style)) return [];
+  return Object.entries(style as Record<string, unknown>).filter(
+    (entry): entry is [string, string | null] => PREVIEW_STYLE_KEYS.has(entry[0]) && isPreviewValue(entry[1]),
+  );
+}
+
+function restoreStyle(element: StyledElement, backup: StyleBackup): void {
+  for (const [prop, original] of backup.props) {
+    if (original.value === '') element.style.removeProperty(prop);
+    else element.style.setProperty(prop, original.value, original.priority);
+  }
+  if (!backup.hadAttribute && element.getAttribute('style') === '') element.removeAttribute('style');
+}
+
+function createLivePreview(): LivePreview {
+  const styleBackups = new Map<StyledElement, StyleBackup>();
+  const textBackups = new Map<Element, Node[]>();
+
+  const backupFor = (element: StyledElement): StyleBackup => {
+    const existing = styleBackups.get(element);
+    if (existing) return existing;
+    const created: StyleBackup = { hadAttribute: element.hasAttribute('style'), props: new Map() };
+    styleBackups.set(element, created);
+    return created;
+  };
+
+  const previewStyle = (selector: unknown, style: unknown): void => {
+    const element = queryPreviewTarget(selector);
+    if (!isStyledElement(element)) return;
+    const entries = previewEntries(style);
+    if (entries.length === 0) return;
+    const backup = backupFor(element);
+    for (const [prop, value] of entries) {
+      if (!backup.props.has(prop)) {
+        backup.props.set(prop, { value: element.style.getPropertyValue(prop), priority: element.style.getPropertyPriority(prop) });
+      }
+      if (value === null) element.style.removeProperty(prop);
+      else element.style.setProperty(prop, value);
+    }
+  };
+
+  const previewText = (selector: unknown, text: unknown): void => {
+    const element = queryPreviewTarget(selector);
+    if (!element || typeof text !== 'string' || text.length > MAX_PREVIEW_TEXT) return;
+    if (NON_TEXT_TAGS.has(element.tagName.toLowerCase())) return;
+    if (!textBackups.has(element)) {
+      if (element.children.length > 0) return;
+      textBackups.set(element, [...element.childNodes]);
+    }
+    element.textContent = text;
+  };
+
+  const reset = (): void => {
+    for (const [element, nodes] of textBackups) element.replaceChildren(...nodes);
+    for (const [element, backup] of styleBackups) restoreStyle(element, backup);
+    textBackups.clear();
+    styleBackups.clear();
+  };
+
+  return { previewStyle, previewText, reset };
+}
+
+const MAX_TOKEN_PREVIEW_CSS = 200_000;
+
+type PreviewLayer = 'tokens' | 'tweaks';
+
+const PREVIEW_LAYERS: { layer: PreviewLayer; id: string }[] = [
+  { layer: 'tokens', id: TOKEN_PREVIEW_STYLE_ID },
+  { layer: 'tweaks', id: TWEAKS_PREVIEW_STYLE_ID },
+];
+
+interface PreviewStyles {
+  apply(layer: PreviewLayer, css: unknown): void;
+}
+
+function createPreviewStyles(): PreviewStyles {
+  const active: Record<PreviewLayer, string> = { tokens: '', tweaks: '' };
+  let observer: MutationObserver | null = null;
+
+  const element = (id: string): HTMLStyleElement | null => {
+    const found = document.getElementById(id);
+    return found instanceof HTMLStyleElement ? found : null;
+  };
+
+  const wanted = () => PREVIEW_LAYERS.filter((item) => active[item.layer] !== '');
+
+  const inOrder = (): boolean => {
+    const items = wanted();
+    let node = document.head.lastElementChild;
+    for (let i = items.length - 1; i >= 0; i -= 1) {
+      const item = items[i];
+      if (!item || !(node instanceof HTMLStyleElement) || node.id !== item.id || node.textContent !== active[item.layer]) return false;
+      node = node.previousElementSibling;
+    }
+    return true;
+  };
+
+  const ensureOrder = (): void => {
+    if (inOrder()) return;
+    const head = document.head;
+    for (const item of wanted()) {
+      let style = element(item.id);
+      if (!style) {
+        style = document.createElement('style');
+        style.id = item.id;
+      }
+      if (style.textContent !== active[item.layer]) style.textContent = active[item.layer];
+      head.appendChild(style);
+    }
+  };
+
+  const watch = (): void => {
+    if (observer || typeof MutationObserver !== 'function') return;
+    observer = new MutationObserver(() => ensureOrder());
+    observer.observe(document.head, { childList: true });
+  };
+
+  const apply = (layer: PreviewLayer, css: unknown): void => {
+    if (typeof css !== 'string' || css.length > MAX_TOKEN_PREVIEW_CSS) return;
+    active[layer] = css;
+    if (!css) element(PREVIEW_LAYERS.find((item) => item.layer === layer)?.id ?? '')?.remove();
+    if (wanted().length === 0) {
+      observer?.disconnect();
+      observer = null;
+      return;
+    }
+    ensureOrder();
+    watch();
+  };
+
+  return { apply };
+}
+
+interface ThemeControl {
+  set(theme: unknown): void;
+}
+
+function createThemeControl(): ThemeControl {
+  let original: { theme: string | undefined; dark: boolean } | null = null;
+
+  const restore = (): void => {
+    if (!original) return;
+    const root = document.documentElement;
+    if (original.theme === undefined) delete root.dataset.theme;
+    else root.dataset.theme = original.theme;
+    root.classList.toggle('dark', original.dark);
+    if (root.getAttribute('class') === '') root.removeAttribute('class');
+    original = null;
+  };
+
+  const set = (theme: unknown): void => {
+    if (theme === null) {
+      restore();
+      return;
+    }
+    if (theme !== 'light' && theme !== 'dark') return;
+    const root = document.documentElement;
+    original ??= { theme: root.dataset.theme, dark: root.classList.contains('dark') };
+    root.dataset.theme = theme;
+    root.classList.toggle('dark', theme === 'dark');
+  };
+
+  return { set };
+}
+
+function queryElement(selector: string): Element | null {
+  try {
+    return document.querySelector(selector);
+  } catch {
+    return null;
+  }
+}
+
+function sameElements(a: (Element | null)[], b: (Element | null)[]): boolean {
+  return a.length === b.length && a.every((element, index) => element === b[index]);
+}
+
+interface RectTracker {
+  track(selectors: string[]): void;
+  schedule(): void;
+}
+
+function createRectTracker(post: (body: OutgoingBody) => void): RectTracker {
+  let selectors: string[] = [];
+  let observed: (Element | null)[] = [];
+  let frame = 0;
+  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => schedule()) : null;
+
+  const observe = (elements: (Element | null)[]): void => {
+    if (!observer || sameElements(elements, observed)) return;
+    observed = elements;
+    observer.disconnect();
+    if (elements.length === 0) return;
+    observer.observe(document.documentElement);
+    for (const element of elements) if (element) observer.observe(element);
+  };
+
+  const send = (): void => {
+    frame = 0;
+    if (selectors.length === 0) return;
+    const elements = selectors.map(queryElement);
+    observe(elements);
+    post({ type: 'rects', selectors, rects: elements.map((element) => (element ? rectOf(element) : null)) });
+  };
+
+  function schedule(): void {
+    if (selectors.length === 0 || frame) return;
+    frame = window.requestAnimationFrame(send);
+  }
+
+  const track = (next: string[]): void => {
+    selectors = next;
+    if (frame) window.cancelAnimationFrame(frame);
+    if (next.length === 0) {
+      frame = 0;
+      observe([]);
+      return;
+    }
+    send();
+  };
+
+  return { track, schedule };
+}
+
+const MAX_ANCHORS = 200;
+
+const anchorDom: AnchorDom<Element> = {
+  bySource: (loc) => Array.from(document.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)).filter((element) => element.getAttribute(SOURCE_LOC_ATTR) === loc),
+  bySelector: (selector) => queryElement(selector),
+  byTag: (tag) => (/^[a-z][a-z0-9-]*$/i.test(tag) ? Array.from(document.getElementsByTagName(tag)) : []),
+  tagOf: (element) => element.tagName.toLowerCase(),
+  textOf: (element) => (element instanceof HTMLElement ? element.innerText : (element.textContent ?? '')),
+};
+
+function isAnchorQuery(value: unknown): value is AnchorQuery {
+  if (typeof value !== 'object' || value === null) return false;
+  const query = value as Partial<AnchorQuery>;
+  return (
+    typeof query.id === 'string' &&
+    typeof query.selector === 'string' &&
+    typeof query.tag === 'string' &&
+    typeof query.textSnippet === 'string' &&
+    (query.sourceLoc === null || typeof query.sourceLoc === 'string')
+  );
+}
+
+function anchorQueries(raw: unknown): AnchorQuery[] {
+  return Array.isArray(raw) ? raw.filter(isAnchorQuery).slice(0, MAX_ANCHORS) : [];
+}
+
+function resolveAnchorElement(query: AnchorQuery): { element: Element; report: AnchorReport } | null {
+  const found = resolveAnchor(query, anchorDom);
+  if (!found) return null;
+  const report: AnchorReport = {
+    id: query.id,
+    rect: rectOf(found.element),
+    via: found.via,
+    selector: selectorFor(found.element),
+    sourceLoc: found.element.getAttribute(SOURCE_LOC_ATTR),
+  };
+  return { element: found.element, report };
+}
+
+interface AnchorTracker {
+  track(queries: AnchorQuery[]): void;
+  schedule(): void;
+}
+
+function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker {
+  let queries: AnchorQuery[] = [];
+  let observed: (Element | null)[] = [];
+  let frame = 0;
+  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => schedule()) : null;
+
+  const observe = (elements: (Element | null)[]): void => {
+    if (!observer || sameElements(elements, observed)) return;
+    observed = elements;
+    observer.disconnect();
+    if (elements.length === 0) return;
+    observer.observe(document.documentElement);
+    for (const element of elements) if (element) observer.observe(element);
+  };
+
+  const send = (): void => {
+    frame = 0;
+    const resolved = queries.map(resolveAnchorElement);
+    observe(resolved.map((entry) => entry?.element ?? null));
+    post({
+      type: 'anchor-rects',
+      anchors: resolved.map((entry, index) => entry?.report ?? { id: queries[index]?.id ?? '', rect: null, via: null }),
+    });
+  };
+
+  function schedule(): void {
+    if (queries.length === 0 || frame) return;
+    frame = window.requestAnimationFrame(send);
+  }
+
+  const track = (next: AnchorQuery[]): void => {
+    queries = next;
+    if (frame) window.cancelAnimationFrame(frame);
+    frame = 0;
+    if (next.length === 0) {
+      observe([]);
+      post({ type: 'anchor-rects', anchors: [] });
+      return;
+    }
+    send();
+  };
+
+  return { track, schedule };
+}
+
+function startBridge(session: BridgeSession): void {
+  const parentWindow = window.parent;
+  let mode: 'select' | 'none' = 'none';
+  let hoverFrame = 0;
+  let pendingHover: Element | null = null;
+  let lastHover: Element | null = null;
+  let scrollFrame = 0;
+  let reporting = false;
+
+  const post = (body: OutgoingBody): void => {
+    try {
+      parentWindow.postMessage({ ...body, ns: 'studio', token: session.token }, session.parentOrigin);
+    } catch {
+      void 0;
+    }
+  };
+
+  const reportError = (body: Extract<OutgoingBody, { type: 'error' }>): void => {
+    if (reporting) return;
+    reporting = true;
+    try {
+      post(body);
+    } finally {
+      reporting = false;
+    }
+  };
+
+  window.addEventListener('error', (event: ErrorEvent) => {
+    const error: unknown = event.error;
+    reportError({
+      type: 'error',
+      kind: 'runtime',
+      message: event.message || stringifyArg(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      source: event.filename || undefined,
+      line: event.lineno || undefined,
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    const reason: unknown = event.reason;
+    reportError({
+      type: 'error',
+      kind: 'unhandledrejection',
+      message: stringifyArg(reason),
+      stack: reason instanceof Error ? reason.stack : undefined,
+    });
+  });
+
+  const originalConsoleError = console.error.bind(console);
+  console.error = (...args: unknown[]): void => {
+    originalConsoleError(...args);
+    const firstError = args.find((arg): arg is Error => arg instanceof Error);
+    reportError({
+      type: 'error',
+      kind: 'console',
+      message: args.map(stringifyArg).join(' '),
+      stack: firstError?.stack,
+    });
+  };
+
+  const flushHover = (): void => {
+    hoverFrame = 0;
+    const element = pendingHover;
+    pendingHover = null;
+    if (mode !== 'select') return;
+    if (element === lastHover && element) return;
+    lastHover = element;
+    if (!element) {
+      post({ type: 'hover', rect: null });
+      return;
+    }
+    post({ type: 'hover', rect: rectOf(element), label: shortLabel(element) });
+  };
+
+  const onPointerMove = (event: PointerEvent): void => {
+    if (mode !== 'select') return;
+    pendingHover = eventElement(event);
+    if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
+  };
+
+  const block = (event: Event): void => {
+    if (mode !== 'select') return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+  };
+
+  const onClick = (event: MouseEvent): void => {
+    if (mode !== 'select') return;
+    block(event);
+    const element = eventElement(event);
+    if (!element) return;
+    post({
+      type: 'select',
+      selection: selectionFor(element),
+      additive: event.shiftKey,
+      at: performance.timeOrigin + performance.now(),
+    });
+  };
+
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (mode !== 'select' || event.key !== 'Escape') return;
+    mode = 'none';
+    lastHover = null;
+    pendingHover = null;
+    post({ type: 'hover', rect: null });
+    post({ type: 'mode-exited' });
+  };
+
+  const onScroll = (): void => {
+    anchors.schedule();
+    if (scrollFrame) return;
+    scrollFrame = window.requestAnimationFrame(() => {
+      scrollFrame = 0;
+      post({ type: 'scroll' });
+    });
+  };
+
+  const rects = createRectTracker(post);
+  const anchors = createAnchorTracker(post);
+  const livePreview = createLivePreview();
+  const previewStyles = createPreviewStyles();
+  const themeControl = createThemeControl();
+  const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
+    'set-mode': (message) => {
+      mode = message.mode === 'select' ? 'select' : 'none';
+      lastHover = null;
+      pendingHover = null;
+    },
+    'request-rects': (message) => {
+      const selectors = Array.isArray(message.selectors) ? message.selectors : [];
+      rects.track(selectors.filter((selector): selector is string => typeof selector === 'string'));
+    },
+    clear: () => {
+      lastHover = null;
+      pendingHover = null;
+    },
+    'preview-style': (message) => livePreview.previewStyle(message.selector, message.style),
+    'preview-text': (message) => livePreview.previewText(message.selector, message.text),
+    'preview-reset': () => livePreview.reset(),
+    'tokens-preview': (message) => previewStyles.apply('tokens', message.css),
+    'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
+    'set-theme': (message) => themeControl.set(message.theme),
+    'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
+    'describe-anchors': (message) => {
+      if (typeof message.requestId !== 'string') return;
+      const contexts = anchorQueries(message.anchors).map((query) => {
+        const found = resolveAnchorElement(query);
+        return found ? selectionFor(found.element) : null;
+      });
+      post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
+    },
+  };
+
+  const onMessage = (event: MessageEvent): void => {
+    if (event.source !== parentWindow || event.origin !== session.parentOrigin) return;
+    const data = event.data as Partial<ParentToBridge> | null;
+    if (!data || typeof data !== 'object' || data.ns !== 'studio' || data.token !== session.token) return;
+    const message = data as ParentToBridge;
+    if (typeof message.type !== 'string' || !Object.hasOwn(messageHandlers, message.type)) return;
+    const handler = messageHandlers[message.type] as (message: ParentToBridge) => void;
+    handler(message);
+  };
+
+  window.addEventListener('message', onMessage);
+  window.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
+  window.addEventListener('pointerdown', block, { capture: true });
+  window.addEventListener('mousedown', block, { capture: true });
+  window.addEventListener('pointerup', block, { capture: true });
+  window.addEventListener('mouseup', block, { capture: true });
+  window.addEventListener('click', onClick, { capture: true });
+  window.addEventListener('dblclick', block, { capture: true });
+  window.addEventListener('auxclick', block, { capture: true });
+  window.addEventListener('contextmenu', block, { capture: true });
+  window.addEventListener('keydown', onKeyDown, { capture: true });
+  window.addEventListener('scroll', onScroll, { capture: true, passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  forwardZoomInput(post);
+
+  let paintScheduled = false;
+  const schedulePainted = (): void => {
+    rects.schedule();
+    anchors.schedule();
+    if (paintScheduled) return;
+    paintScheduled = true;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        paintScheduled = false;
+        post({ type: 'painted', at: performance.timeOrigin + performance.now() });
+      });
+    });
+  };
+
+  const announce = (): void => {
+    reloadIfChangedDuringLoad();
+    post({ type: 'ready', url: window.location.href });
+    schedulePainted();
+    new MutationObserver(schedulePainted).observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', announce, { once: true });
+  } else {
+    announce();
+  }
+}
+
+const marker = '__studioBridgeStarted';
+const globalScope = window as unknown as Record<string, unknown>;
+if (!globalScope[marker]) {
+  globalScope[marker] = true;
+  const session = readSession();
+  if (session) startBridge(session);
+}

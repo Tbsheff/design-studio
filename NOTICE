@@ -1,0 +1,19 @@
+Design Studio
+Copyright 2026 The Design Studio authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes software from other projects:
+
+- UI components copied and changed from nauvalazhar/ai
+  (https://github.com/nauvalazhar/ai, commit 9944bcffc7412b27315ce853a49b4ea6035dea98).
+  The upstream repository has no license file. See THIRD_PARTY_NOTICES.md.
+
+- npm packages installed from the registry, each under its own license,
+  including axe-core (MPL-2.0), pixelmatch (ISC) and pngjs (MIT).
+
+- In the packaged desktop app only: Electron (MIT), git binaries from dugite
+  (GPL-2.0) and the Claude Code CLI from @anthropic-ai/claude-agent-sdk
+  (Anthropic's terms).
+
+THIRD_PARTY_NOTICES.md has the full list, the copied files and the changes.

@@ -1,0 +1,222 @@
+.btn {
+  --btn-h: 32px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--btn-h);
+  padding: 0 var(--s-3);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-xs);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition-property: background-color, color, box-shadow, scale, opacity;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.btn:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn.small {
+  --btn-h: 28px;
+  padding: 0 10px;
+  font-size: var(--t-xs);
+  border-radius: var(--r-sm);
+}
+
+.btn.large {
+  --btn-h: 36px;
+  padding: 0 var(--s-4);
+  font-size: var(--t-md);
+}
+
+.btn.has-icon {
+  padding-left: 10px;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14), 0 1px 2px oklch(0.3 0.1 254 / 0.3);
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn.danger {
+  color: var(--danger);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.btn.ghost {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.btn.active,
+.btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.btn[aria-pressed='true']:hover:not(:disabled) {
+  background: oklch(0.93 0.04 254);
+}
+
+.icon-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition-property: background-color, color, scale, opacity;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.icon-btn:active:not(:disabled) {
+  scale: 0.96;
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.icon-btn.small {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+}
+
+.icon-btn.on,
+.icon-btn[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 50;
+  left: 50%;
+  top: calc(100% + 6px);
+  translate: -50% -2px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: oklch(0.24 0.012 var(--hue));
+  color: oklch(0.97 0.004 var(--hue));
+  font-size: var(--t-xs);
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition-property: opacity, translate;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  translate: -50% 0;
+  transition-delay: 350ms;
+}
+
+[data-tip-side='top']::after {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+[data-tip-align='end']::after {
+  left: auto;
+  right: 0;
+  translate: 0 -2px;
+}
+
+[data-tip-align='end']:hover::after,
+[data-tip-align='end']:focus-visible::after {
+  translate: 0 0;
+}
+
+[data-tip-align='start']::after {
+  left: 0;
+  translate: 0 -2px;
+}
+
+[data-tip-align='start']:hover::after,
+[data-tip-align='start']:focus-visible::after {
+  translate: 0 0;
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent-text);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--r-xs);
+}
+
+.link:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:disabled {
+  color: var(--text-3);
+  cursor: default;
+}
+
+.btn.ghost.danger {
+  color: var(--danger);
+}
+
+.btn.ghost.danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}

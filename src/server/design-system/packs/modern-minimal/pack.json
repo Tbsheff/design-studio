@@ -1,0 +1,21 @@
+{
+  "id": "modern-minimal",
+  "name": "Modern Minimal",
+  "description": "Neutral, exact and quiet: a single grotesk family, wide whitespace and one confident deep-teal action color.",
+  "mode": "light",
+  "tags": [
+    "minimal",
+    "neutral",
+    "saas",
+    "clean",
+    "sans"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Geist",
+    "body": "Geist",
+    "mono": "Geist Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+  }
+}

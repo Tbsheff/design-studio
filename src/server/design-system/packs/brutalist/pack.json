@@ -1,0 +1,21 @@
+{
+  "id": "brutalist",
+  "name": "Brutalist",
+  "description": "Raw and loud: heavy grotesk type, black on white, a signal-yellow primary, square corners and hard offset shadows.",
+  "mode": "light",
+  "tags": [
+    "brutalist",
+    "bold",
+    "high-contrast",
+    "grotesk",
+    "poster"
+  ],
+  "license": "MIT",
+  "provenance": "original",
+  "fonts": {
+    "display": "Archivo",
+    "body": "Archivo",
+    "mono": "Space Mono",
+    "googleFontsUrl": "https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap"
+  }
+}

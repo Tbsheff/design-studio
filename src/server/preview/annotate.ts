@@ -76,10 +76,18 @@ export function annotateHtml(source: string, file: string, options: { injectBrid
   if (options.injectBridge !== false) {
     insertions.push({ offset: bridgeInsertionOffset(document), text: BRIDGE_SCRIPT_TAG });
   }
-  insertions.sort((a, b) => b.offset - a.offset);
-  let output = source;
-  for (const insertion of insertions) {
-    output = output.slice(0, insertion.offset) + insertion.text + output.slice(insertion.offset);
+  return applyInsertions(source, insertions);
+}
+
+function applyInsertions(source: string, insertions: Insertion[]): string {
+  const ordered = insertions.map((insertion, index) => ({ insertion, index }));
+  ordered.sort((a, b) => a.insertion.offset - b.insertion.offset || b.index - a.index);
+  const chunks: string[] = [];
+  let cursor = 0;
+  for (const { insertion } of ordered) {
+    chunks.push(source.slice(cursor, insertion.offset), insertion.text);
+    cursor = insertion.offset;
   }
-  return output;
+  chunks.push(source.slice(cursor));
+  return chunks.join('');
 }

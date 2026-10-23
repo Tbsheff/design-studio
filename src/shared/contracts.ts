@@ -429,7 +429,16 @@ export const API_ROUTES = {
   getSession: 'GET /api/session (same-origin only) -> {token, previewOrigin}',
   listProjects: 'GET /api/projects -> Project[]',
   createProject: 'POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null; with no parentPath the project gets a new subfolder in the default projects folder)',
-  listPacks: 'GET /api/packs -> PackSummary[]',
+  listPacks: 'GET /api/packs -> PackSummary[] (built-in packs first, then user packs; user packs are read again when their files change)',
+  packProblems: 'GET /api/packs/problems -> PackProblem[] (packs skipped because a file is missing or invalid)',
+  getPack: 'GET /api/packs/:id -> PackDetail (404 unknown)',
+  createPack: 'POST /api/packs CreateUserPackInput -> PackSummary (new user pack user-<slug of name>[-2, -3…]; 400 invalid)',
+  updatePack: 'PATCH /api/packs/:id UpdateUserPackInput -> PackSummary (same id; 400 built-in or invalid, 404 unknown)',
+  duplicatePack: 'POST /api/packs/:id/duplicate {name?} -> PackSummary (built-in or user; default name "<name> copy")',
+  deletePack: 'DELETE /api/packs/:id -> {ok} (user packs only; 400 built-in, 404 unknown; projects that use it keep their files)',
+  exportPack: 'GET /api/packs/:id/export -> application/zip (<id>/pack.json, <id>/tokens.json, <id>/DESIGN.md)',
+  applyPack: 'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
+  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?} -> SavePackResult (new user pack, or updates packId when it is a user pack; 400 built-in packId or invalid files, 404 no design system)',
   getDesignSystem: 'GET /api/projects/:pid/d/:did/design-system -> DesignSystemState',
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
@@ -662,8 +671,51 @@ export interface PackManifest {
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string };
 }
 
+export type PackSource = 'builtin' | 'user';
+
 export interface PackSummary extends PackManifest {
+  source: PackSource;
   swatches: { name: string; value: string }[];
+}
+
+export interface PackDetail {
+  summary: PackSummary;
+  tokensJson: string;
+  designMd: string;
+}
+
+export interface PackProblem {
+  id: string;
+  source: PackSource;
+  errors: string[];
+}
+
+export interface CreateUserPackInput {
+  name: string;
+  description?: string;
+  mode: PackManifest['mode'];
+  fonts: PackManifest['fonts'];
+  tokensJson: string | Record<string, unknown>;
+  designMd: string;
+  provenance: PackManifest['provenance'];
+  tags?: string[];
+  license?: string;
+}
+
+export type UpdateUserPackInput = Partial<CreateUserPackInput>;
+
+export interface ApplyPackResult {
+  project: Project;
+  state: DesignSystemState;
+  version: Version;
+  written: string[];
+  wired: boolean;
+  notice: string | null;
+}
+
+export interface SavePackResult {
+  pack: PackSummary;
+  created: boolean;
 }
 
 export interface CompiledTokenEntry {

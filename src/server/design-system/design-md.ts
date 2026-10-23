@@ -61,3 +61,52 @@ export function stripTokenBlock(markdown: string): string {
   const after = end < 0 ? '' : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
   return `${markdown.slice(0, start)}${TOKEN_TABLE_POINTER}${after}`;
 }
+
+export const PROJECT_NOTES_HEADING = '## Project notes';
+
+export function composeDesignMd(packDesignMd: string, entries: CompiledTokenEntry[], userNotes?: string): string {
+  const base = upsertTokenBlock(packDesignMd, entries).trimEnd();
+  const notes = userNotes?.trim();
+  return notes ? `${base}\n\n${PROJECT_NOTES_HEADING}\n\n${notes}\n` : `${base}\n`;
+}
+
+export function removeTokenBlock(markdown: string): string {
+  const start = markdown.indexOf(DESIGN_MD_TOKENS_START);
+  if (start < 0) return markdown;
+  const end = markdown.indexOf(DESIGN_MD_TOKENS_END, start);
+  const tail = end < 0 ? '' : markdown.slice(end + DESIGN_MD_TOKENS_END.length);
+  const head = markdown.slice(0, start).replace(/\n*$/, '');
+  const rest = tail.replace(/^\n*/, '');
+  if (head === '') return rest;
+  if (rest === '') return `${head}\n`;
+  return `${head}\n\n${rest}`;
+}
+
+function notesRange(lines: string[]): { from: number; to: number } | null {
+  let inFence = false;
+  let from = -1;
+  for (const [index, line] of lines.entries()) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+    if (from < 0 && line.trim() === PROJECT_NOTES_HEADING) from = index;
+    else if (from >= 0 && /^#{1,2}\s/.test(line)) return { from, to: index };
+  }
+  return from < 0 ? null : { from, to: lines.length };
+}
+
+export interface DesignMdParts {
+  prose: string;
+  notes: string;
+}
+
+export function splitDesignMd(markdown: string): DesignMdParts {
+  const lines = removeTokenBlock(markdown.replace(/\r\n/g, '\n')).split('\n');
+  const range = notesRange(lines);
+  if (!range) return { prose: `${lines.join('\n').trimEnd()}\n`, notes: '' };
+  const notes = lines.slice(range.from + 1, range.to).join('\n').trim();
+  const prose = [...lines.slice(0, range.from), ...lines.slice(range.to)].join('\n').trimEnd();
+  return { prose: `${prose}\n`, notes };
+}

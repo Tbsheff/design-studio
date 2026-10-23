@@ -27,6 +27,7 @@ import { discoverSkills } from '../agent/skills.js';
 import { REPO_ROOT } from '../config.js';
 import { resourcePath, resourcesDir } from '../resources.js';
 import { createToken } from '../design-system/create-token.js';
+import { createPackLibrary } from '../design-system/library.js';
 import { applyPack, packRegistry } from '../design-system/packs.js';
 import type { LoadedPack, PackRegistry } from '../design-system/packs.js';
 import { loadDesignSystemPromptContext, readDesignSystemState } from '../design-system/state.js';
@@ -39,6 +40,7 @@ import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeErro
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
+import { registerPackRoutes } from './packs-routes.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, ServerConfig, VersionStore } from '../types.js';
 import { renderIndexHtml, serveStatic } from './static.js';
@@ -225,7 +227,7 @@ export function isRunSummary(value: unknown): value is RunSummary {
 export function createApp(deps: AppDeps): Hono {
   const { config, bus, projects, versions, runner, preview } = deps;
   const uiDir = deps.uiDir ?? resourcePath('ui', path.join(REPO_ROOT, 'dist', 'ui'));
-  const packs = deps.packs ?? packRegistry();
+  const packs = deps.packs ?? packRegistry(undefined, { userDir: path.join(config.dataDir, 'packs') });
   const defaultFolder = deps.defaultFolder ?? createDefaultFolderStore(config.dataDir, config.projectsDir);
   const workspaces = deps.workspaces ?? createWorkspaceStore(config.dataDir, { defaultFolder });
   const folderPicker = deps.folderPicker ?? createFolderPicker();
@@ -273,6 +275,13 @@ export function createApp(deps: AppDeps): Hono {
     await applyPack(project, projects.mainDirection(project).workTree, pack, { userDesignMd: designMd });
     await projects.setPackId(project.id, pack.manifest.id);
     return commitInit(await projects.get(project.id), `Apply ${pack.manifest.name} design system`);
+  };
+
+  const syncPackId = async (project: Project, direction: Direction): Promise<void> => {
+    if (projects.mainDirection(project).id !== direction.id) return;
+    const onDisk = (await readDesignSystemState(project, direction)).manifest;
+    const id = onDisk && typeof onDisk.id === 'string' ? onDisk.id : null;
+    if (id !== (project.packId ?? null)) await projects.setPackId(project.id, id);
   };
 
   const prepareCreated = async (created: Project, pack: LoadedPack | null, designMd: string | undefined): Promise<Project> => {
@@ -360,8 +369,6 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   app.get('/api/projects', async (c) => c.json(await projects.list()));
-
-  app.get('/api/packs', async (c) => c.json(await packs.list()));
 
   app.get('/api/skills', async (c) => c.json(await discoverSkills()));
 
@@ -623,6 +630,7 @@ export function createApp(deps: AppDeps): Hono {
     const version = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       const restored = await versions.restore(project, direction, 'head', 'undo');
       await recordVersion(project, direction, restored, 'undo');
+      await syncPackId(project, direction);
       await emitStatus(project, direction);
       return restored;
     });
@@ -716,6 +724,7 @@ export function createApp(deps: AppDeps): Hono {
     const version = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       const restored = await versions.restore(project, direction, versionId, 'restore');
       await recordVersion(project, direction, restored, 'restore');
+      await syncPackId(project, direction);
       await emitStatus(project, direction);
       return restored;
     });
@@ -837,6 +846,8 @@ export function createApp(deps: AppDeps): Hono {
     withDirection,
     startRun,
   });
+
+  registerPackRoutes(app, { library: createPackLibrary(packs), editDeps: { bus, projects, versions, runner }, readBody, withDirection });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

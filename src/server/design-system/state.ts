@@ -17,7 +17,7 @@ export interface DesignSystemPromptContext {
 export async function readDesignSystemState(project: Project, direction: Direction): Promise<DesignSystemState> {
   const files = await readDesignSystemFiles(direction.workTree);
   return {
-    packId: project.packId ?? null,
+    packId: files ? (files.manifest?.id ?? project.packId ?? null) : null,
     manifest: files?.manifest ?? null,
     tokens: files?.tokens ?? null,
     entries: files?.entries ?? [],

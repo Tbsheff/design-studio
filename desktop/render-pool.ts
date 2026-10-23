@@ -3,6 +3,7 @@ import path from 'node:path';
 import { BrowserWindow, session, type Session, type WebContents } from 'electron';
 import { PNG } from 'pngjs';
 import type { RenderClip, RenderErrors } from '../src/shared/render-rpc.js';
+import { pngSize } from './png-size.js';
 
 const POOL_SIZE = 3;
 const IDLE_CLOSE_MS = 30_000;
@@ -238,34 +239,34 @@ export class RenderPool {
     return { width: Math.max(Math.ceil(metrics.cssContentSize.width), scroll[0]), height: Math.max(Math.ceil(metrics.cssContentSize.height), scroll[1]) };
   }
 
-  private async captureClip(state: PageState, clip: RenderClip): Promise<PNG> {
+  private async captureClip(state: PageState, clip: RenderClip): Promise<Buffer> {
     const shot = (await state.slot.window.webContents.debugger.sendCommand('Page.captureScreenshot', {
       format: 'png',
       captureBeyondViewport: true,
       fromSurface: true,
       clip: { ...clip, scale: 1 },
     })) as { data: string };
-    return PNG.sync.read(Buffer.from(shot.data, 'base64'));
+    return Buffer.from(shot.data, 'base64');
   }
 
-  private async captureTall(state: PageState, clip: RenderClip): Promise<PNG> {
+  private async captureTall(state: PageState, clip: RenderClip): Promise<Buffer> {
     const out = new PNG({ width: clip.width, height: clip.height });
     for (let offset = 0; offset < clip.height; offset += MAX_SEGMENT_PX) {
       const height = Math.min(MAX_SEGMENT_PX, clip.height - offset);
-      const part = await this.captureClip(state, { x: clip.x, y: clip.y + offset, width: clip.width, height });
+      const part = PNG.sync.read(await this.captureClip(state, { x: clip.x, y: clip.y + offset, width: clip.width, height }));
       PNG.bitblt(part, out, 0, 0, Math.min(part.width, clip.width), Math.min(part.height, height), 0, offset);
     }
-    return out;
+    return PNG.sync.write(out);
   }
 
   async screenshot(state: PageState, outPath: string, clip?: RenderClip): Promise<{ width: number; height: number }> {
     const size = await this.contentSize(state);
     const target = clip ?? { x: 0, y: 0, width: size.width, height: size.height };
     const rounded = { x: Math.round(target.x), y: Math.round(target.y), width: Math.max(1, Math.round(target.width)), height: Math.max(1, Math.round(target.height)) };
-    const image = rounded.height > MAX_SEGMENT_PX ? await this.captureTall(state, rounded) : await this.captureClip(state, rounded);
+    const bytes = rounded.height > MAX_SEGMENT_PX ? await this.captureTall(state, rounded) : await this.captureClip(state, rounded);
     await mkdir(path.dirname(outPath), { recursive: true });
-    await writeFile(outPath, PNG.sync.write(image));
-    return { width: image.width, height: image.height };
+    await writeFile(outPath, bytes);
+    return pngSize(bytes);
   }
 
   async close(state: PageState): Promise<void> {

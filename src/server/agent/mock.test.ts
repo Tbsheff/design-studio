@@ -70,8 +70,11 @@ describe('mock agent run', () => {
 
     const eventTypes = types(env.bus.events);
     expect(eventTypes[0]).toBe('run.started');
-    expect(eventTypes.filter((type) => type === 'run.text.delta').length).toBeGreaterThanOrEqual(5);
-    expect(eventTypes).toContain('run.text');
+    const firstTextAt = eventTypes.indexOf('run.text');
+    const firstText = env.bus.events[firstTextAt];
+    const streamed = env.bus.events.slice(0, firstTextAt).flatMap((event) => (event.type === 'run.text.delta' ? [event.text] : []));
+    expect(streamed.length).toBeGreaterThanOrEqual(1);
+    expect(firstText?.type === 'run.text' ? firstText.text : null).toBe(streamed.join(''));
     expect(eventTypes).toContain('run.tool.started');
     expect(eventTypes).toContain('run.tool.finished');
     expect(eventTypes.slice(-4)).toEqual(['version.created', 'direction.updated', 'status.changed', 'run.finished']);

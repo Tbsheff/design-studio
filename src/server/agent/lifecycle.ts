@@ -67,6 +67,9 @@ export const EMPTY_USAGE: RunUsage = { inputTokens: 0, outputTokens: 0, cacheRea
 
 const FILE_WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit']);
 
+export const DELTA_FLUSH_MS = 50;
+export const DELTA_FLUSH_CHARS = 2048;
+
 function sessionsDirOf(runsDir: string): string {
   return path.join(path.dirname(runsDir), 'sessions');
 }
@@ -150,10 +153,50 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       });
     }
 
-    function emitBody(body: StudioEventBody): void {
+    function publish(body: StudioEventBody): void {
       const event = deps.bus.emit({ ...body, projectId, directionId });
       const line = `${JSON.stringify(event)}\n`;
       enqueue(() => appendFile(eventsPath, line));
+    }
+
+    let pendingDelta = '';
+    let deltaTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function closeDeltaWindow(): void {
+      if (deltaTimer) clearTimeout(deltaTimer);
+      deltaTimer = null;
+    }
+
+    function publishPendingDelta(): boolean {
+      if (!pendingDelta) return false;
+      const text = pendingDelta;
+      pendingDelta = '';
+      publish({ type: 'run.text.delta', runId, text } as StudioEventBody);
+      return true;
+    }
+
+    function flushDelta(): void {
+      closeDeltaWindow();
+      publishPendingDelta();
+    }
+
+    function onDeltaWindowEnd(): void {
+      deltaTimer = publishPendingDelta() ? setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS) : null;
+    }
+
+    function addDelta(text: string): void {
+      if (!deltaTimer) {
+        publish({ type: 'run.text.delta', runId, text } as StudioEventBody);
+        deltaTimer = setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS);
+        return;
+      }
+      pendingDelta += text;
+      if (pendingDelta.length >= DELTA_FLUSH_CHARS) publishPendingDelta();
+    }
+
+    function emitBody(body: StudioEventBody): void {
+      flushDelta();
+      publish(body);
     }
 
     function emitRun(payload: RunEventPayload): void {
@@ -214,7 +257,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     const sink: DriverSink = {
       textDelta(text) {
-        if (text) emitRun({ type: 'run.text.delta', text });
+        if (text) addDelta(text);
       },
       text(text) {
         if (!text) return;
@@ -243,6 +286,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs });
       },
       sent(message) {
+        flushDelta();
         const record: RunSentRecord = { type: 'run.sent', runId, projectId, directionId, ts: Date.now(), ...message };
         const line = `${JSON.stringify(record)}\n`;
         enqueue(() => appendFile(eventsPath, line));
@@ -300,6 +344,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         failure = describeError(error);
       }
       driverSettled = true;
+      flushDelta();
 
       let status: RunStatus = canceled ? 'canceled' : outcome ? outcome.status : 'failed';
       summary.error = canceled ? null : (outcome?.error ?? failure);

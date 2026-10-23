@@ -53,6 +53,7 @@ export interface WorkspaceFolder {
   label: string;
   addedAt: number;
   missing: boolean;
+  default?: boolean;
 }
 
 export interface WorkspaceList {

@@ -86,6 +86,10 @@ export class WatcherManager {
     return this.watches.get(directionId)?.readyPromise ?? Promise.resolve();
   }
 
+  unwatchOf(projectId: string, directionId: string): void {
+    if (this.watches.get(directionId)?.projectId === projectId) this.unwatch(directionId);
+  }
+
   unwatch(directionId: string): void {
     const entry = this.watches.get(directionId);
     if (!entry) return;

@@ -19,6 +19,7 @@ function cleanEnv(work: string): Record<string, string> {
     STUDIO_DESKTOP_NOTIFY: 'off',
     STUDIO_AGENT: 'mock',
     STUDIO_DATA_DIR: path.join(work, 'data'),
+    STUDIO_PROJECTS_DIR: path.join(work, 'Design Studio'),
     STUDIO_DESKTOP_USER_DATA: path.join(work, 'user-data'),
   };
 }

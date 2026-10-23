@@ -1,7 +1,10 @@
 import { randomBytes } from 'node:crypto';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_PREVIEW_PORT, DEFAULT_STUDIO_PORT, DEFAULT_VITE_PORT_BASE } from '../shared/contracts.js';
+import { resourcesDir } from './resources.js';
+import { projectsDirFromEnv } from './store/default-folder.js';
 import type { ServerConfig } from './types.js';
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -29,6 +32,7 @@ export function loadConfig(): ServerConfig {
   const dataDir = path.resolve(process.env.STUDIO_DATA_DIR || path.join(REPO_ROOT, 'studio-data'));
   return {
     dataDir,
+    projectsDir: projectsDirFromEnv(process.env.STUDIO_PROJECTS_DIR, os.homedir(), resourcesDir() ? null : REPO_ROOT),
     studioPort,
     previewPort,
     vitePortBase,

@@ -126,7 +126,7 @@ export interface VariationMixRequest {
   level?: RunLevel;
 }
 
-export type SessionResetReason = 'restore' | 'undo';
+export type SessionResetReason = 'restore' | 'undo' | 'move';
 
 export interface Project {
   id: string;
@@ -428,7 +428,7 @@ export interface RenderCheckResult {
 export const API_ROUTES = {
   getSession: 'GET /api/session (same-origin only) -> {token, previewOrigin}',
   listProjects: 'GET /api/projects -> Project[]',
-  createProject: 'POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null)',
+  createProject: 'POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null; with no parentPath the project gets a new subfolder in the default projects folder)',
   listPacks: 'GET /api/packs -> PackSummary[]',
   getDesignSystem: 'GET /api/projects/:pid/d/:did/design-system -> DesignSystemState',
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
@@ -439,7 +439,10 @@ export const API_ROUTES = {
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
   addWorkspace: 'POST /api/workspaces {path, label?} -> WorkspaceFolder (realpath, must be a folder; same path returns the saved entry)',
   updateWorkspace: 'PATCH /api/workspaces/:id {label} -> WorkspaceFolder',
-  removeWorkspace: 'DELETE /api/workspaces/:id -> {ok} (forgets the folder; never touches disk)',
+  removeWorkspace: 'DELETE /api/workspaces/:id -> {ok} (forgets the folder; never touches disk; 400 for the default folder)',
+  setDefaultFolder: 'PUT /api/workspaces/default {path} -> WorkspaceList (realpath, must be a folder outside the data dir; the old default is kept as a saved folder)',
+  hiddenProjects: 'GET /api/hidden-projects -> {count, target} (projects whose main work tree is in the data dir)',
+  moveHiddenProjects: 'POST /api/hidden-projects/move -> {moved: pid[], failed: {projectId, error}[]} (copies each main work tree into a new subfolder of the default folder, then removes the old one)',
   pickFolder: 'POST /api/pick-folder {title?, defaultPath?} -> {path} | 204 canceled | 409 a picker is open | 501 not macOS | 504 timed out',
   getProject: 'GET /api/projects/:pid -> Project',
   updateSettings: 'PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, disabledSkills: skill ids from GET /api/skills) -> Project',

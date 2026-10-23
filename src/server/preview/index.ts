@@ -193,6 +193,10 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     snapshotUrl,
     watch: (project, direction) => watchers.watch(project, direction),
     unwatch: (directionId) => watchers.unwatch(directionId),
+    release: async (project, direction) => {
+      watchers.unwatchOf(project.id, direction.id);
+      await vite.loaded()?.then((manager) => manager.stopOne(`d:${project.id}:${direction.id}`));
+    },
     renderCheck,
     inspect: async (url, viewport, outPath, selectionLocs) => (await browsers.get()).inspect(url, viewport, outPath, selectionLocs),
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),

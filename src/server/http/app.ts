@@ -44,6 +44,7 @@ import type { AgentRunner, EventBus, PreviewService, ServerConfig, VersionStore 
 import { renderIndexHtml, serveStatic } from './static.js';
 import { registerVariationRoutes } from '../variations/routes.js';
 import { createWorkspaceStore, type WorkspaceStore } from '../store/workspaces.js';
+import { createDefaultFolderStore, type DefaultFolderStore } from '../store/default-folder.js';
 import { createFolderPicker, type FolderPicker } from './pick-folder.js';
 import { nameFromPrompt } from '../../shared/folders.js';
 
@@ -58,6 +59,7 @@ interface AppDeps {
   uiDir?: string;
   comments?: CommentStore;
   workspaces?: WorkspaceStore;
+  defaultFolder?: DefaultFolderStore;
   folderPicker?: FolderPicker;
 }
 
@@ -224,7 +226,8 @@ export function createApp(deps: AppDeps): Hono {
   const { config, bus, projects, versions, runner, preview } = deps;
   const uiDir = deps.uiDir ?? resourcePath('ui', path.join(REPO_ROOT, 'dist', 'ui'));
   const packs = deps.packs ?? packRegistry();
-  const workspaces = deps.workspaces ?? createWorkspaceStore(config.dataDir);
+  const defaultFolder = deps.defaultFolder ?? createDefaultFolderStore(config.dataDir, config.projectsDir);
+  const workspaces = deps.workspaces ?? createWorkspaceStore(config.dataDir, { defaultFolder });
   const folderPicker = deps.folderPicker ?? createFolderPicker();
   const allowedOrigins = new Set([config.studioOrigin, ...(resourcesDir() ? [] : DEV_UI_ORIGINS)]);
   const runProjectIndex = new Map<string, string>();
@@ -374,9 +377,10 @@ export function createApp(deps: AppDeps): Hono {
     const shouldStartRun = parseStartRun(body.startRun);
     const parentPath = optionalString(body, 'parentPath');
     const name = optionalString(body, 'name') ?? nameFromPrompt(prompt);
-    const created = parentPath === undefined ? await projects.create({ name, kind, settings }) : await projects.createInFolder({ parentPath, name, kind, settings });
-    if (parentPath !== undefined) {
-      await workspaces.add({ path: path.dirname(projects.mainDirection(created).workTree) }).catch((error: unknown) => console.error('[http] could not save the parent folder', error));
+    const created = await projects.createInFolder({ parentPath: parentPath ?? (await defaultFolder.ensure()), name, kind, settings });
+    const parent = path.dirname(projects.mainDirection(created).workTree);
+    if (parentPath !== undefined && parent !== (await defaultFolder.current())) {
+      await workspaces.add({ path: parent }).catch((error: unknown) => console.error('[http] could not save the parent folder', error));
     }
     await versions.ensureRepo(created);
     const project = await prepareCreated(created, pack, designMd);
@@ -401,6 +405,47 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/workspaces', async (c) => {
     const body = await readBody(c);
     return c.json(await workspaces.add({ path: requireString(body, 'path'), label: optionalString(body, 'label') }));
+  });
+
+  app.put('/api/workspaces/default', async (c) => {
+    const body = await readBody(c);
+    const previous = await defaultFolder.current();
+    const next = await defaultFolder.set(requireString(body, 'path'));
+    if (previous !== next && existsSync(previous)) {
+      await workspaces.add({ path: previous }).catch((error: unknown) => console.error('[http] could not keep the old default folder', error));
+    }
+    return c.json(await workspaces.list());
+  });
+
+  app.get('/api/hidden-projects', async (c) => {
+    const hidden = (await projects.list()).filter((project) => projects.isHidden(project));
+    return c.json({ count: hidden.length, target: await defaultFolder.current() });
+  });
+
+  app.post('/api/hidden-projects/move', async (c) => {
+    const hidden = (await projects.list()).filter((project) => projects.isHidden(project));
+    const moved: string[] = [];
+    const failed: { projectId: string; error: string }[] = [];
+    if (hidden.length === 0) return c.json({ moved, failed });
+    const target = await defaultFolder.ensure();
+    for (const project of hidden) {
+      const main = projects.mainDirection(project);
+      try {
+        const updated = await directionLock(`${project.id}/${main.id}`, async () => {
+          if (project.directions.some((direction) => runner.isRunning(project.id, direction.id))) throw new ConflictError('run_in_progress');
+          await preview.release(project, main);
+          const next = await projects.moveIntoFolder(project.id, target);
+          await preview.release(next, main);
+          return next;
+        });
+        bus.emit({ type: 'direction.updated', projectId: project.id, directionId: main.id, direction: projects.mainDirection(updated) });
+        moved.push(project.id);
+      } catch (error) {
+        console.error(`[http] could not move project ${project.id}`, error);
+        failed.push({ projectId: project.id, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+    return c.json({ moved, failed });
   });
 
   app.patch('/api/workspaces/:id', async (c) => {

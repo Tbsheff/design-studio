@@ -5,10 +5,12 @@ import path from 'node:path';
 import { customAlphabet } from 'nanoid';
 import { z } from 'zod';
 import type { WorkspaceFolder, WorkspaceList } from '../../shared/folders.js';
+import { DEFAULT_FOLDER_NAME, type DefaultFolderStore } from './default-folder.js';
 import { BadRequestError, NotFoundError, assertSafeId, isNodeError } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
 
 export const WORKSPACES_FILE = 'workspaces.json';
+export const DEFAULT_WORKSPACE_ID = 'default';
 const MAX_WORKSPACES = 200;
 const MAX_LABEL_LENGTH = 80;
 const MAX_PATH_LENGTH = 4096;
@@ -45,6 +47,7 @@ export interface WorkspaceStore {
 
 interface WorkspaceStoreOptions {
   homeDir?: string;
+  defaultFolder?: DefaultFolderStore;
 }
 
 async function isFolder(target: string): Promise<boolean> {
@@ -100,6 +103,16 @@ export function createWorkspaceStore(dataDir: string, options: WorkspaceStoreOpt
 
   const present = async (folder: StoredFolder): Promise<WorkspaceFolder> => ({ ...folder, missing: !(await isFolder(folder.path)) });
 
+  const defaultRow = async (): Promise<WorkspaceFolder | null> => {
+    if (!options.defaultFolder) return null;
+    const folderPath = await options.defaultFolder.current();
+    return { id: DEFAULT_WORKSPACE_ID, path: folderPath, label: DEFAULT_FOLDER_NAME, addedAt: 0, missing: false, default: true };
+  };
+
+  const refuseDefault = (id: string): void => {
+    if (options.defaultFolder && id === DEFAULT_WORKSPACE_ID) throw new BadRequestError('the default folder always stays in the list');
+  };
+
   const resolveFolder = async (raw: string): Promise<string> => {
     if (typeof raw !== 'string' || raw.trim() === '') throw new BadRequestError('path is required');
     if (raw.includes('\0') || raw.length > MAX_PATH_LENGTH) throw new BadRequestError('invalid path');
@@ -119,7 +132,9 @@ export function createWorkspaceStore(dataDir: string, options: WorkspaceStoreOpt
   return {
     async list(): Promise<WorkspaceList> {
       const data = await read();
-      return { homeDir, folders: await Promise.all(data.folders.map(present)) };
+      const fallback = await defaultRow();
+      const saved = await Promise.all(data.folders.filter((folder) => folder.path !== fallback?.path).map(present));
+      return { homeDir, folders: fallback ? [fallback, ...saved] : saved };
     },
 
     async add(input: { path: string; label?: string }): Promise<WorkspaceFolder> {
@@ -139,6 +154,7 @@ export function createWorkspaceStore(dataDir: string, options: WorkspaceStoreOpt
 
     async rename(id: string, label: string): Promise<WorkspaceFolder> {
       assertSafeId(id, 'workspaceId');
+      refuseDefault(id);
       const clean = parseLabel(label);
       return lock('file', async () => {
         const data = await read();
@@ -152,6 +168,7 @@ export function createWorkspaceStore(dataDir: string, options: WorkspaceStoreOpt
 
     async remove(id: string): Promise<void> {
       assertSafeId(id, 'workspaceId');
+      refuseDefault(id);
       return lock('file', async () => {
         const data = await read();
         const next = data.folders.filter((candidate) => candidate.id !== id);

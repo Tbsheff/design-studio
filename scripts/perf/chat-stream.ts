@@ -83,6 +83,7 @@ function startServer(dataDir: string, uiDir: string): ChildProcess {
       ...process.env,
       STUDIO_AGENT: 'mock',
       STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: `${dataDir} projects`,
       STUDIO_CLAUDE_HOME: path.join(dataDir, 'claude-home'),
       STUDIO_PORT: String(PORT),
       STUDIO_PREVIEW_PORT: String(PORT + 1),

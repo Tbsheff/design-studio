@@ -19,6 +19,7 @@ import type { DesignSystemPromptContext } from './design-system/state.js';
 
 export interface ServerConfig {
   dataDir: string;
+  projectsDir: string;
   studioPort: number;
   previewPort: number;
   vitePortBase: number;
@@ -92,6 +93,7 @@ export interface PreviewService {
   snapshotUrl(project: Project, versionId: string, snapshotDir: string): Promise<string>;
   watch(project: Project, direction: Direction): void;
   unwatch(directionId: string): void;
+  release(project: Project, direction: Direction): Promise<void>;
   renderCheck(project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]>;
   inspect(url: string, viewport: CheckViewport, outPath: string, selectionLocs: string[]): Promise<InspectResult>;
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;

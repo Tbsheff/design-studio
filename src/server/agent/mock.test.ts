@@ -21,6 +21,7 @@ async function setup(kind: 'html' | 'react' = 'html') {
   const versions = createFakeVersions();
   const config: ServerConfig = {
     dataDir: temp.root,
+    projectsDir: `${temp.root} projects`,
     studioPort: 0,
     previewPort: 0,
     vitePortBase: 0,

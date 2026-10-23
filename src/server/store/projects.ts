@@ -46,6 +46,8 @@ export interface StudioProjectStore extends ProjectStore {
   updateSettings(projectId: string, patch: Partial<ProjectSettings>): Promise<Project>;
   setPackId(projectId: string, packId: string | null): Promise<Project>;
   createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings> }): Promise<Project>;
+  isHidden(project: Project): boolean;
+  moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;
 }
 
 function migrateSettings(project: Pick<Project, 'settings' | 'settingsVersion'>): ProjectSettings {
@@ -333,6 +335,34 @@ export function createProjectStore(
         if (project) await rm(projectDir(project.id), { recursive: true, force: true });
         throw error;
       }
+    },
+
+    isHidden(project: Project): boolean {
+      return project.imported === null && isInsideDataDir(path.resolve(mainDirection(project).workTree));
+    },
+
+    async moveIntoFolder(projectId: string, parentPath: string): Promise<Project> {
+      if (typeof parentPath !== 'string' || !path.isAbsolute(parentPath)) throw new BadRequestError('parentPath must be an absolute path');
+      const parent = await resolveUserFolder(parentPath);
+      return lock(projectId, async () => {
+        const project = await readProject(projectId);
+        const main = mainDirection(project);
+        const from = main.workTree;
+        if (project.imported !== null || !isInsideDataDir(path.resolve(from))) throw new BadRequestError(`project ${projectId} is not in the hidden folder`);
+        const folder = await makeNewSubfolder(parent, slugify(project.name));
+        try {
+          await cp(from, folder, { recursive: true, verbatimSymlinks: true, force: false, preserveTimestamps: true });
+          const moved: Direction = { ...main, workTree: folder, sessionId: null, sessionCostUsd: 0, sessionResetReason: 'move' };
+          project.directions = project.directions.map((direction) => (direction.id === main.id ? moved : direction));
+          project.imported = { sourcePath: folder, created: true };
+          await writeProject(project);
+        } catch (error) {
+          await rm(folder, { recursive: true, force: true });
+          throw error;
+        }
+        await rm(from, { recursive: true, force: true }).catch((error: unknown) => console.error(`[projects] moved ${projectId} but could not remove ${from}`, error));
+        return project;
+      });
     },
 
     save(project: Project): Promise<void> {

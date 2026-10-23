@@ -60,6 +60,10 @@ function serverCommand(): { file: string; args: string[]; env: Record<string, st
   };
 }
 
+export function projectsDirFor(dataDir: string): string {
+  return path.join(path.dirname(dataDir), 'Design Studio');
+}
+
 export async function startServer(dataDir: string): Promise<{ pid: number; listenMs: number }> {
   mkdirSync(LOG_DIR, { recursive: true });
   const log = createWriteStream(path.join(LOG_DIR, `server-${Date.now()}.log`));
@@ -75,6 +79,7 @@ export async function startServer(dataDir: string): Promise<{ pid: number; liste
       ...command.env,
       STUDIO_AGENT: 'mock',
       STUDIO_DATA_DIR: dataDir,
+      STUDIO_PROJECTS_DIR: projectsDirFor(dataDir),
       STUDIO_CLAUDE_HOME: claudeHome,
       STUDIO_PORT: String(STUDIO_PORT),
       STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),

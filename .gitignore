@@ -3,6 +3,7 @@ dist/
 build/
 desktop/dist/
 studio-data/
+studio-projects/
 refs/
 test-results/
 playwright-report/

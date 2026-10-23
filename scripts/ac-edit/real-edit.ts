@@ -70,7 +70,7 @@ async function main(): Promise<void> {
   const server = spawn(path.join(ROOT, 'node_modules', '.bin', 'tsx'), ['src/server/index.ts'], {
     cwd: ROOT,
     detached: true,
-    env: { ...process.env, STUDIO_AGENT: 'sdk', STUDIO_DATA_DIR: dataDir, STUDIO_PORT: String(PORT), STUDIO_PREVIEW_PORT: String(PREVIEW_PORT), STUDIO_VITE_PORT_BASE: '7400' },
+    env: { ...process.env, STUDIO_AGENT: 'sdk', STUDIO_DATA_DIR: dataDir, STUDIO_PROJECTS_DIR: path.join(work, 'Design Studio'), STUDIO_PORT: String(PORT), STUDIO_PREVIEW_PORT: String(PREVIEW_PORT), STUDIO_VITE_PORT_BASE: '7400' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   server.stdout.pipe(log);

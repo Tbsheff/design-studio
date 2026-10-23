@@ -140,6 +140,7 @@ export function createFakePreview(): PreviewService {
     snapshotUrl: () => notImplemented('snapshotUrl'),
     watch() {},
     unwatch() {},
+    async release() {},
     async renderCheck() {
       return [
         { viewport: 'desktop', width: 1440, height: 900, ok: true, consoleErrors: [], pageErrors: [], horizontalOverflow: false, layout: [], layoutTotal: 0, screenshotPath: '' },

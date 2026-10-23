@@ -298,6 +298,7 @@ async function main(): Promise<void> {
   const studioPort = await freePort();
   const config: ServerConfig = {
     dataDir,
+    projectsDir: path.join(tmp, 'Design Studio'),
     studioPort,
     previewPort,
     vitePortBase: 5300,

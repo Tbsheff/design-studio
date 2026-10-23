@@ -86,7 +86,7 @@ async function main(): Promise<void> {
   const serverLog = path.join(work, 'server.log');
   results.serverLog = serverLog;
   const logStream = createWriteStream(serverLog);
-  const env: Record<string, string | undefined> = { ...process.env, STUDIO_AGENT: 'sdk', STUDIO_DATA_DIR: dataDir, STUDIO_PORT: String(PORT), STUDIO_PREVIEW_PORT: String(PREVIEW_PORT), STUDIO_VITE_PORT_BASE: String(VITE_BASE) };
+  const env: Record<string, string | undefined> = { ...process.env, STUDIO_AGENT: 'sdk', STUDIO_DATA_DIR: dataDir, STUDIO_PROJECTS_DIR: path.join(work, 'Design Studio'), STUDIO_PORT: String(PORT), STUDIO_PREVIEW_PORT: String(PREVIEW_PORT), STUDIO_VITE_PORT_BASE: String(VITE_BASE) };
   delete env.ANTHROPIC_API_KEY;
   const server = spawn(path.join(ROOT, 'node_modules', '.bin', 'tsx'), ['src/server/index.ts'], { cwd: ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
   server.stdout.pipe(logStream);

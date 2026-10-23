@@ -264,14 +264,27 @@ export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: str
   };
 }
 
-export function createPreToolUseGuard(policy: ToolPolicy, onDecision?: (toolName: string, result: PermissionResult) => void): HookCallback {
+const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review']);
+
+export function canChangePreview(toolName: string): boolean {
+  return !NO_CHANGE_TOOLS.has(toolName);
+}
+
+export function createPreToolUseGuard(
+  policy: ToolPolicy,
+  onDecision?: (toolName: string, result: PermissionResult) => void,
+  beforeChange?: () => Promise<void>,
+): HookCallback {
   return async (hookInput) => {
     if (hookInput.hook_event_name !== 'PreToolUse') return {};
     const toolInput = hookInput.tool_input;
     const record = toolInput && typeof toolInput === 'object' ? (toolInput as Record<string, unknown>) : {};
     const result = evaluateToolUse(policy, hookInput.tool_name, record);
     onDecision?.(hookInput.tool_name, result);
-    if (result.behavior === 'allow') return {};
+    if (result.behavior === 'allow') {
+      if (beforeChange && canChangePreview(hookInput.tool_name)) await beforeChange();
+      return {};
+    }
     return {
       hookSpecificOutput: {
         hookEventName: 'PreToolUse',

@@ -9,6 +9,7 @@ import type { AgentRunContext } from '../types.js';
 import { createRunLifecycle } from './lifecycle.js';
 import { LOAD_ORDER } from './skill-match.js';
 import { addCriticCost, createSdkDriver, estimateCostUsd, hashPrompt, withRecommendedSkills, withUpdatedInstructions } from './sdk-driver.js';
+import { canChangePreview } from './permissions.js';
 import { createFakeBus, createFakePreview, createFakeProjects, createFakeVersions, createTempProject } from './test-fakes.js';
 
 type QueryFn = typeof query;
@@ -453,5 +454,82 @@ describe('sdk driver claude binary and env', () => {
     } finally {
       delete process.env.CLAUDE_CODE_TEST_LEAK;
     }
+  });
+});
+
+describe('sdk driver baseline capture', () => {
+  type Hook = (input: unknown, toolUseId: string | undefined, options: { signal: AbortSignal }) => Promise<unknown>;
+
+  function preToolUse(options: Options): Hook {
+    const hook = options.hooks?.PreToolUse?.[0]?.hooks[0];
+    if (!hook) throw new Error('no PreToolUse hook');
+    return hook as unknown as Hook;
+  }
+
+  async function baselineSetup() {
+    const temp = await createTempProject('html');
+    roots.push(temp.root);
+    temp.project.directions[0]!.headVersionId = 'v1';
+    const claudeHome = path.join(temp.root, 'claude-home');
+    await mkdir(claudeHome, { recursive: true });
+    const timeline: string[] = [];
+    let releaseBaseline: () => void = () => undefined;
+    const baselineGate = new Promise<void>((resolve) => {
+      releaseBaseline = resolve;
+    });
+    const preview = {
+      ...createFakePreview(),
+      inspect: async (_url: string, viewport: string, file: string) => {
+        await baselineGate;
+        timeline.push(`baseline:${viewport}`);
+        return { path: file, selectionRects: [] };
+      },
+    };
+    const hookWaits: Record<string, Promise<unknown>> = {};
+    const queryFn = (({ options }: { options: Options }) => {
+      timeline.push('query');
+      const hook = preToolUse(options);
+      const call = (name: string, input: Record<string, unknown>) =>
+        hook({ hook_event_name: 'PreToolUse', tool_name: name, tool_input: input, session_id: SESSION, transcript_path: '', cwd: temp.workTree }, `tu-${name}`, { signal: new AbortController().signal }).then((out) => {
+          timeline.push(`hook:${name}`);
+          return out;
+        });
+      async function* run(): AsyncGenerator<SDKMessage> {
+        yield init();
+        hookWaits['Read'] = call('Read', { file_path: path.join(temp.workTree, 'index.html') });
+        hookWaits['Write'] = call('Write', { file_path: path.join(temp.workTree, 'index.html') });
+        await hookWaits['Read'];
+        timeline.push('read-done');
+        releaseBaseline();
+        await hookWaits['Write'];
+        yield result(0.001, 10, 20);
+      }
+      return Object.assign(run(), { close: () => undefined });
+    }) as unknown as QueryFn;
+    const driver = createSdkDriver({ preview, queryFn, tasteHome: tasteHomeFor, claudeHome, skillsRoot: path.join(temp.root, 'skills-root') });
+    const projects = createFakeProjects(temp.project, temp.root);
+    const runner = createRunLifecycle({ bus: createFakeBus(), projects, versions: createFakeVersions() }, driver);
+    const project = structuredClone(projects.current);
+    const direction = project.directions[0]!;
+    const ctx: AgentRunContext = { project, direction, request: { prompt: 'Tighten the hero', mode: 'edit', level: 'prototype' }, attachments: [], designMd: null, previewUrl: 'http://127.0.0.1:1/preview/' };
+    return { runner, ctx, timeline, hookWaits };
+  }
+
+  it('starts the SDK query before the baseline is ready, lets reads through, and holds the first write until the baseline is taken', async () => {
+    const t = await baselineSetup();
+    const summary = await t.runner.start(t.ctx).done;
+    expect(summary.status).toBe('completed');
+    expect(t.timeline[0]).toBe('query');
+    expect(t.timeline.indexOf('hook:Read')).toBeLessThan(t.timeline.indexOf('read-done'));
+    const write = t.timeline.indexOf('hook:Write');
+    expect(t.timeline.indexOf('read-done')).toBeLessThan(write);
+    expect(t.timeline.indexOf('baseline:desktop')).toBeLessThan(write);
+    expect(t.timeline.indexOf('baseline:mobile')).toBeLessThan(write);
+    expect(await t.hookWaits['Write']).toEqual({});
+  });
+
+  it('marks only read and check tools as tools that cannot change the preview', () => {
+    for (const name of ['Read', 'Glob', 'Grep', 'Skill', 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review']) expect(canChangePreview(name)).toBe(false);
+    for (const name of ['Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Bash', 'mcp__studio__define_tweaks', 'SomeNewTool']) expect(canChangePreview(name)).toBe(true);
   });
 });

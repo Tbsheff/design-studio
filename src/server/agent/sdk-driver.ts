@@ -419,6 +419,24 @@ interface AttemptSetup {
   tasteRules: TasteRule[];
 }
 
+const BASELINE_GATE_TIMEOUT_S = 300;
+
+function whenAborted(signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.resolve();
+  return new Promise((resolve) => signal.addEventListener('abort', () => resolve(), { once: true }));
+}
+
+function baselineGate(run: RunToolState, signal: AbortSignal): (() => Promise<void>) | undefined {
+  const baseline = run.baseline;
+  if (!baseline) return undefined;
+  const ready = baseline.then(
+    () => undefined,
+    () => undefined,
+  );
+  const gate = Promise.race([ready, whenAborted(signal)]);
+  return () => gate;
+}
+
 async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, resume: string | null, setup: AttemptSetup): Promise<Options> {
   const { ctx, signal } = input;
   const { skills, config } = setup;
@@ -445,7 +463,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     settings: ISOLATION_SETTINGS,
     ...skillOptions(skills),
     canUseTool: createCanUseTool(policy, options.onPermission),
-    hooks: { PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision)] }] },
+    hooks: { PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal))], timeout: BASELINE_GATE_TIMEOUT_S }] },
     permissionMode: 'default',
     ...(config.agentBudgetUsd !== null ? { maxBudgetUsd: config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0) } : {}),
     maxTurns: config.maxTurns,
@@ -627,7 +645,6 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const { sent } = message;
     sink.sent({ text: sent.text, imageCount: sent.images.length, updatedInstructions: message.updatedInstructions, recommendedSkills: message.recommendedSkills, promptHash, resume });
 
-    await setup.run.baseline;
     const segment: AttemptSegment = { setup, sdkOptions, promptHash, spentUsd: 0, maxBudgetUsd: sdkOptions.maxBudgetUsd ?? null };
     const first = await runSegment(input, segment, sent, prior);
     const looped = wantsLoop(setup.config, input.ctx.request.mode) ? await continueLoop(input, segment, first) : null;

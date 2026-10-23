@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { readState } from './support/server';
+import { projectsDirFor, readState } from './support/server';
 import { createProjectViaUi, mainDirection, openHome } from './support/studio';
 
 async function choosePack(page: Page, name: string): Promise<void> {
@@ -39,7 +39,7 @@ test('design-system packs: picker, project files, top bar chip and popover', asy
   const project = await createProjectViaUi(page, api, 'Pack Landing Page', 'html');
   expect(project.packId).toBe(pack.id);
   const tree = mainDirection(project).workTree;
-  expect(tree.startsWith(dataDir)).toBe(true);
+  expect(tree.startsWith(realpathSync(projectsDirFor(dataDir)) + path.sep)).toBe(true);
   for (const file of ['design-system/tokens.json', 'design-system/tokens.css', 'DESIGN.md']) {
     await expect.poll(() => existsSync(path.join(tree, file)), { message: file }).toBe(true);
   }

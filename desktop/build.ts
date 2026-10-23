@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build, type BuildOptions, type Metafile } from 'esbuild';
+import { linkEsbuildBinary, pruneModules, type PruneStats } from './prune.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STAGE = path.join(ROOT, 'build', 'desktop');
@@ -170,6 +171,12 @@ function writeAppPackage(appDir: string): void {
   writeFileSync(path.join(appDir, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
+function describePrune(stats: PruneStats[]): string {
+  const files = stats.reduce((sum, item) => sum + item.files, 0);
+  const bytes = stats.reduce((sum, item) => sum + item.bytes, 0);
+  return `${files} files, ${(bytes / 1024 ** 2).toFixed(1)} MiB`;
+}
+
 export async function stagePackage(): Promise<void> {
   ensureUi();
   rmSync(STAGE, { recursive: true, force: true });
@@ -183,7 +190,10 @@ export async function stagePackage(): Promise<void> {
   copySlimGit(path.join(STAGE_RESOURCES, 'git'));
   const packages = copyServerModules(serverDir, metafiles);
   prebuiltTemplate(path.join(STAGE_RESOURCES, 'react-template'));
-  console.log(`[desktop] staged app and resources in ${STAGE} (${packages} server packages)`);
+  const serverModules = path.join(serverDir, 'node_modules');
+  const templateModules = path.join(STAGE_RESOURCES, 'react-template', 'node_modules');
+  const pruned = [pruneModules(serverModules, { keepTypes: false }), pruneModules(templateModules, { keepTypes: true }), linkEsbuildBinary(serverModules), linkEsbuildBinary(templateModules)];
+  console.log(`[desktop] staged app and resources in ${STAGE} (${packages} server packages, pruned ${describePrune(pruned)})`);
 }
 
 const invokedDirectly = process.argv[1] !== undefined && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;

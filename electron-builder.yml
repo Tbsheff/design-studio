@@ -3,6 +3,9 @@ productName: Design Studio
 electronVersion: 44.9.3
 npmRebuild: false
 asar: true
+compression: maximum
+electronLanguages:
+  - en
 files:
   - "**/*"
   - "!node_modules{,/**/*}"
@@ -44,4 +47,5 @@ mac:
         LSItemContentTypes:
           - public.folder
 dmg:
+  format: UDBZ
   writeUpdateInfo: false

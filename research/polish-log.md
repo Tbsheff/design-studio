@@ -104,3 +104,76 @@ The full runs below are on `721622f`. Later commits (card image radius, ⌘↩ w
 - `npm run build:ui`: built.
 - Playwright with `STUDIO_E2E_GROUP=r1 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 65 passed (7 new in `home-r1.spec.ts`), `ac-core` 7, `ac-edit` 19, `ac-safety` 10.
 - `npm run e2e:desktop`: 19 passed.
+
+## Round 2 — Canvas (2026-10-24)
+
+### Features built
+
+| Item | Acceptance check | Proof | Result |
+|---|---|---|---|
+| R2-1 Zoom keys like Figma, menu clash (P0) | Desktop: ⌘0, ⌘= and ⌘− change the canvas zoom and `getZoomFactor()` stays 1; Shift+1 fits within 1 frame of the key; both with focus in the iframe | `e2e/desktop-native.spec.ts` "R2-1" (keys in studio and iframe, then each View menu item, zoom factor read from the studio window); "the menus carry the native shortcuts" asserts no `zoomin`, `zoomout`, `resetzoom` roles; `e2e/canvas-r2.spec.ts` "R2-1"; `src/ui/canvasFrames.test.ts` "zoomKeyOf" | Pass. Zoom factor 1 after every key and menu item. Key to next painted frame for Shift+1 (wall clock, key listener in the focused document, rAF after the transform write): studio 3–14 ms, iframe 1–6 ms over 3 runs; limit 17.7 ms (16.7 ms plus 1 ms clock grain) |
+| R2-2 Pan with no React render (P0) | 0 commits of `Canvas` during a 3 s pan; pan smooth | `e2e/canvas-r2.spec.ts` "R2-2": a fake React DevTools hook counts commits where the `Canvas` fiber did work (positive control: the wheel-idle commit is counted); rAF frame probe | Pass. 3 s Space-drag pan and 3 s Ctrl-wheel zoom with 3 frames: 0 Canvas commits, 0 commits at all. Headless (60 Hz vsync): pan p95 16.7 ms, max 16.8 ms, 0 frames > 32 ms. Headed Chrome on the 120 Hz display, 4 runs: pan p95 9.9–10.2 ms, max 10.4 ms; zoom p95 10.0–10.2 ms, max 10.4 ms; 0 frames > 32 ms |
+| R2-3 Multi-frame canvas, part 1 (P0) | Add 3 frames (1440, 768, 390), drag one, reload; all 3 keep their place; Shift+1 fits all 3 | `e2e/canvas-r2.spec.ts` "R2-3"; `src/ui/canvasFrames.test.ts` | Pass. The drag moves the label exactly 50, 100 px on screen; frame offsets match before and after reload; all 3 frames inside the stage after Shift+1, before and after reload. Click a frame name to make it the live frame; arrow keys nudge (10 px, Shift 100 px); remove has Undo |
+| R2-4 Layers tree, part 1 (P0) | A row click selects the same element in the preview in < 50 ms; on a 1,000-node page the tree opens in < 150 ms (virtual list) | `e2e/canvas-r2.spec.ts` "R2-4" (1,132-node page); `src/ui/layersTree.test.ts` | Pass. Open to first row: 12–17 ms. Row pointerdown to selected box: 12.8–18.8 ms. Fewer than 80 rows in the DOM. The selected box equals the element `getBoundingClientRect`; hover row shows the outline; arrows move, Left collapses and goes to the parent, Right expands; hidden elements are listed and selectable |
+| R2-5 Select parent, child, sibling (P1) | From a section, 3 key presses reach a nested button, with focus in the iframe | `e2e/canvas-r2.spec.ts` "R2-5" | Pass. Section, Enter ×3, button "Deep"; Shift+Enter goes back up. Tab and Shift+Tab move between siblings with focus in the studio too. In the tree: Enter and Shift+Enter; Tab is left for focus moves |
+| R2-6 Distance measurement (P1) | Labels match `getBoundingClientRect` within 1 px | `e2e/canvas-r2.spec.ts` "R2-6"; `src/ui/measure.test.ts` | Pass. Sibling gap 24 = 24; insets to the parent 24, 24, 24 (and 1216) equal the rects |
+
+### Polish
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R2-7 Z-click zoom (P2) | Z+click zooms 2× around the cursor; Z+Alt+click zooms out | `e2e/canvas-r2.spec.ts` "R2-7" | Pass. Point under the cursor stays within 1 px; zoom-in cursor while Z is held |
+| R2-8 Zoom label and `navigator.platform` (P2) | The menu never shows an empty label; no deprecated API | `zoomOptionLabel` in `CanvasToolbar.tsx`; `isApple()` uses `userAgentData.platform` or the user agent | Pass. The Fit option reads "Fit" or "Fit N%" |
+
+Decisions:
+- ⌘1 means fit (Sketch and the benchmark row), ⌘2 means selection. Figma's documented keys (Shift+1, Shift+2, Shift+0) work too.
+- The View menu keeps zoom items with ⌘ accelerators for the native-feel line, but they send canvas commands. A key that the page handled and the menu echo of the same key within 150 ms apply once.
+- `.artboard` stays the live frame at the world origin, so all old specs that read its transform and size still pass. Other frames are previews of the same URL with no bridge token and no pointer events; a click makes one the live frame. Per-frame pages wait for R7-3 (variations as frames).
+- In select mode a click in the preview now focuses the preview, so Enter and Tab reach the bridge instead of the Select button.
+- No animation on the layers panel (it opens from ⌥1 many times a day). Twisty rotate 100 ms.
+
+Skills used: `make-interfaces-feel-better` (hit areas to 28 px, press scale), `emil-design-eng` (no panel animation, faster twisty), `better-interface` (keyboard path for frame moves, Undo for frame removal, hidden state shown as text, not only opacity), `impeccable` (no pure white, separator after the layers toggle).
+
+Premium-feel checklist (canvas: toolbar, frames, layers, measure):
+
+| Line | Result |
+|---|---|
+| Spacing on `--s-*` | Pass on new CSS. Row indent is 4 + 12 px per level (inline style) |
+| Related 8 px, groups 16–24, sections 32+ | Pass |
+| Concentric radius | Pass (rows 6 inside a 248 px panel with no radius) |
+| Icon buttons ≥ 28×28 | Pass (frame name and remove 28; twisty 16 visible, 28 hit area) |
+| Only `--t-*` sizes, nothing under 12 | Pass |
+| 3 sizes and 2 weights per panel | Pass (layers: 13/600 title, 12/400 rows) |
+| `tabular-nums`, truncation with tooltip | Pass (frame names, sizes, measure labels; rows have a title) |
+| `text-wrap: balance` | Pass on the empty and note text |
+| Hover, active, focus-visible, disabled | Pass (Add frame disabled at 12 frames; Layers disabled outside Live) |
+| Focus ring visible, not clipped | Pass (inset rings on rows, frame names, list) |
+| Empty state | Pass ("This frame has no elements yet.") |
+| Loading within 100 ms | Pass ("Reading layers…" with spinner; the tree arrives in about 15 ms) |
+| Error with a way out | Not applicable (no new error paths) |
+| Durations from tokens, nothing over 300 ms | Pass (new `--dur-fast` 100 ms) |
+| Enter ease-out, exit faster | Pass |
+| Only transform and opacity animate | Pass |
+| Reduced motion | Pass |
+| Smooth | Pass (numbers above) |
+| Copy, same words | Pass ("frame" everywhere) |
+| Shortcut glyphs | Pass (⇧1, ⇧2, ⇧0, ⌘, ⌥1 in tips; ⌘ accelerators in the View menu) |
+| One icon set and stroke | Pass (new `layers`, `frame` in `Icon.tsx`) |
+| Semantic colors, one accent action | Pass (new `--measure` token) |
+| Contrast | Pass (measure label 0.99 on oklch 0.54 0.2 25, about 4.6:1) |
+| Native feel | Pass for zoom (menu items); frame and layer actions have no menu items yet (R8 palette) |
+
+### Screenshots
+
+Before (web, `scripts/canvas-shots.ts`, 1440×900 at 2x): `/tmp/polish-r2/before-canvas.png`, `before-canvas-select.png`, `before-canvas-toolbar.png`.
+
+After: `/tmp/polish-r2/after-canvas.png`, `after-canvas-select.png`, `after-canvas-measure.png`, `after-canvas-layers.png`, `after-canvas-frames.png`, `after-canvas-add-frame-menu.png`, `after-canvas-toolbar.png`. The layers, frames, menu and measure screens did not exist before.
+
+### Left for later rounds
+
+- Frames: per-frame page or route, resize handles on the frame, select and edit in a frame that is not live (one live frame at a time), frames for variations (R7-3).
+- Layers: rename, hide, reorder (R4-4); Tab in the tree is kept for focus.
+- Z+drag region zoom; Z-click when focus is in the preview.
+- Frame and layer actions in the app menu and palette (R8).
+- Menu accelerator echo on real keys is handled by the 150 ms rule, but CDP keys never reach accelerators, so only the menu clicks are proven in the desktop e2e.
+- Passive frames reload on every HTML change; with many frames this costs load time (minimap and low-zoom thumbnails stay deferred).

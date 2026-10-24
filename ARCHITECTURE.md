@@ -352,11 +352,13 @@ Home "Design systems" · chip Change dialog "Manage…" (libraryFrom = {projectI
 
 - Preview: the app and packs share names such as `--bg`, `--surface` and `--shadow-md`. The preview sets the pack values inline on its own surfaces, so they shadow the app values only inside the preview. No pack CSS goes into the app document and no frame is used. Card fonts use the pack font stacks; the screen does not load Google Fonts (if the browser already has a font, the card uses it).
 - Check (`GET /api/packs/:id/check`): `checkDesignSystemFiles(files, {kitPage: false})` skips `kit-colors` and the kit page `<link>` font rules and keeps the pack.json-vs-tokens font rules. Every built-in pack passes.
-- Import (`pack-import.ts`, reader in `zip.ts`, no dependency): the central directory is the truth. Refused: more than 2 MB (content-length first, then the file), more than 3 entries, encryption, zip64, methods other than store and deflate, folder or non-regular entries, duplicate names, any name that is not `<id>/pack.json|tokens.json|DESIGN.md` under one folder that matches the pack id rule (this stops `..`, absolute paths and backslashes), a declared size over 512 KB, inflate output over the cap (`maxOutputLength`) and a bad CRC. pack.json must pass `manifestSchema`; then `createUserPack` validates tokens and DESIGN.md as usual. The new pack is `user-<slug of name>` with provenance `imported` and no draft flag. A conflict is a user pack with the zip folder id or the same name (case-insensitive); `replace` keeps that pack id (`updateUserPack`).
-- Open in editor (`POST /api/packs/:id/editor`, user packs only, keyed mutex per pack): the project whose `designSystemFor` is the pack id, else a new backing project made with the slice 2 path (kit page from `renderKitPage`, `source/meta.json` with `inputs: {library: id}`, no coverage). The draft flag does not change. The DraftBar shows no grade when there is no coverage.
+- Import (`pack-import.ts`, reader in `zip.ts`, no dependency): the central directory is the truth. Refused: more than 2 MB (content-length first, then the file), more than 3 entries, encryption, zip64, methods other than store and deflate, folder or non-regular entries, duplicate names, any name that is not `<id>/pack.json|tokens.json|DESIGN.md` under one folder that matches the pack id rule (this stops `..`, absolute paths and backslashes), a declared size over 512 KB, inflate output over the cap (`maxOutputLength`) and a bad CRC. pack.json must pass `manifestSchema`; then `createUserPack` validates tokens and DESIGN.md as usual. The new pack is `user-<slug of name>` with provenance `imported` and no draft flag. A conflict is a user pack with the zip folder id or the same name (case-insensitive); `replace` keeps that pack id and its draft flag (`updateUserPack`).
+- Open in editor (`POST /api/packs/:id/editor`, user packs only, keyed mutex per pack): the project whose `designSystemFor` is the pack id, else a new backing project made with the slice 2 path (kit page from `renderKitPage`, `source/meta.json` with `inputs: {library: id}`, and a coverage file from `libraryCoverage`: each required token the saved pack sets counts as `library`, high confidence). The draft flag does not change. The grade there says how complete the saved pack is, not how well an extraction went.
 - Save as a new design system: the Save dialog in the chip offers it when the direction uses a user pack and the project is not a backing project. `POST .../design-system/save {name, asNew: true}` always creates a pack; the direction (and `project.packId` for main) then names the new pack.
+- Copies: Duplicate and Make a copy set `copiedFrom` in pack.json, and the card badge says Copy, not Made here.
+- Apply to current project: `libraryFrom` persists in localStorage beside the screen and is checked against the project list on load.
 - Problems: `GET /api/packs/problems` shows as a closed `<details>` notice ("1 design system could not load").
-- Known gap: delete a user pack, then make or import one with the same name, and it gets the same id; an old backing project for the deleted pack then matches Open in editor.
+- Delete: the route marks each backing project of the pack `designSystemDeleted`, and Open in editor skips those. So a new pack with the same id gets a new backing project.
 
 ## Design systems (phase 3): live token editing
 
@@ -390,6 +392,29 @@ Commit
 - Preview css uses the same blocks as tokens.css: `:root`, `:root[data-theme="dark"], .dark`, the `prefers-color-scheme` block (light packs only), and the `@supports (color: oklch(...))` copy for colors. Each previewed token is declared in the dark selectors too (its dark value, else its light value), so removing a dark value also overrides the old dark value of tokens.css.
 - On a write or commit failure the three files go back to their snapshots. Undo is the normal `POST .../undo`.
 - Speed: 10 changes take under 1 ms in the server test (`update-tokens.test.ts`), target < 30 ms.
+
+## Design systems: Round 6 (mode preview, token checks, components, CSS import)
+
+```
+Canvas toolbar moon / Tokens panel mode  → tokenFrames theme store (one value, reset on direction change)
+  → set-theme to every registered frame: front, passive canvas frames and variation panes
+    (passive frames now open a bridge session so they register); again on each `ready`
+Inspector selection → tokenLint.lintValues(values, token entries, mode, authored css)
+  → off-palette color (nearest token, ΔE = OKLab distance × 100), raw size near a space/radius token,
+    font outside --font-* → "Use token" previews var(--token) and commits one direct edit
+Components tab → GET /api/projects/:pid/d/:did/components   (inventory.ts)
+  React: components with a host element that carries data-studio-loc, with use counts;
+  HTML: named layers (data-name) and classes used 2+ times
+  skips node_modules, dist, build, source, design-system, dot dirs; ≤200 files, ≤256 KB each, depth 6, ≤40 results
+  → GET .../components/:id/thumb  (thumbs.ts: one page load per version, clipped shots per selector, cached)
+  card click or @ picker → mention {kind: 'component', name, file, selector} → user message names the part
+```
+
+- The theme switch only sets `data-theme` in frames. No file changes and no version. The switch shows only when the tokens have dark values (`hasDarkMode`).
+- Component names and files come from user files: names must match `^[A-Z][A-Za-z0-9]{0,47}$`, and the agent gets them in a `<mentioned-components>` block.
+- CSS import (`extract/vars.ts`, `tokens-file.ts`): a `.css` file in New design system reads its custom properties. Mapped ones fill required tokens; the rest stay as extra tokens with a type from the value (color, dimension, shadow, fontFamily). `breakpoint` is a core group of type dimension, shown in the Tokens panel.
+- Pack cards: the server sends the dark swatches in `PackSummary`, and only the `DesignSystems` chunk draws the light and dark pair, so Home stays under its byte gate.
+- DESIGN.md editor (`DesignMdModal.tsx`): outline from headings, a live preview with `markdownBlocks` (no raw HTML, comments dropped), and a save prompt on Close, Cancel, Esc and backdrop click when there are changes.
 
 ## Tweaks (live controls)
 

@@ -150,17 +150,17 @@ Current gate (R5): `e2e/latency.spec.ts` `TARGETS = { open: 1000, html: 150, rea
 |---|---|---|---|---|
 | Pack library | OD: 151 DESIGN.md packs [OD1] | has, `DesignSystems.tsx`, `PackDetail.tsx` | — | — |
 | Live token edit | pen.dev variables with theme columns [P8] | has, `TokensPanel.tsx`, `useTokenDraft.ts`, `tokenFrames.ts` | — | — |
-| Light and dark modes | Figma: modes as columns, set per page or object [F6]; pen.dev: extra theme axes [P8] | has light/dark (`TokensPanel.tsx:16`); no preview mode switch on canvas, no extra axes | P1 | M |
+| Light and dark modes | Figma: modes as columns, set per page or object [F6]; pen.dev: extra theme axes [P8] | has light/dark; canvas toolbar dark switch themes every frame (R6-1); no extra axes | — | — |
 | Extraction from URL, folder, images | CD: repo, deck, PDF, screenshots, Figma [CD3] | has (`NewDesignSystem.tsx`, `extract/url.ts`, `extract/folder.ts`) | — | — |
 | Extraction from Figma or PDF | CD [CD3] | missing | P2 | L |
-| Code-to-tokens | pen.dev: variables from globals.css via the agent [P8]; Paper: from code CSS variables via MCP [A2] | partial (tokens file import) | P2 | S |
+| Code-to-tokens | pen.dev: variables from globals.css via the agent [P8]; Paper: from code CSS variables via MCP [A2] | has, tokens file and CSS file (`globals.css`) import, unmapped vars kept as typed tokens (R6-4) | — | — |
 | DESIGN.md | OD, CD | has, `DesignMdModal.tsx` | — | — |
 | Token binding in inspector | Figma variables [F6] | has | — | — |
 | Lint / check | OD Design Jury: 5 critics, score ≥ 8.0 [OD5] | has, `design-system/check.ts`, `RenderCheckPanel.tsx` | — | — |
-| Lint in context (off-palette in the inspector) | — | partial, check runs per pack, not per selection | P1 | S |
-| Component inventory | pen.dev: Cmd+Alt+K make component, instances, slots [P9]; Figma Shift+I quick insert [F10] | partial, kit page preview only `extract/kit-page.ts` | P1 | L |
+| Lint in context (off-palette in the inspector) | — | has, inspector token checks with nearest token, ΔE and Use token (R6-3) | — | — |
+| Component inventory | pen.dev: Cmd+Alt+K make component, instances, slots [P9]; Figma Shift+I quick insert [F10] | partial, Components tab lists project components with thumbnails and `@` mentions (R6-2); no kit-page parts, no instance editing | P1 | L |
 | Pack export | — | has, `GET /api/packs/:id/export` | — | — |
-| Token types | Paper: radius, container, breakpoint, line height [A2] | partial, `contracts.ts:634 TokenType` has color, dimension, fontFamily, fontWeight, number, shadow, duration; no breakpoint | P2 | S |
+| Token types | Paper: radius, container, breakpoint, line height [A2] | has, `breakpoint` core group (dimension) added in R6-4 | — | — |
 
 ### 1.7 Versions, variations, comments and collaboration
 

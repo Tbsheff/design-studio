@@ -111,11 +111,16 @@ function parseManifest(text: string | null, folderId: string, errors: string[]):
   return parsed.data as PackManifest;
 }
 
-function swatchesOf(entries: CompiledTokenEntry[]): PackSummary['swatches'] {
+function swatchesOf(entries: CompiledTokenEntry[], dark = false): PackSummary['swatches'] {
   return SWATCH_TOKENS.flatMap((name) => {
     const entry = entries.find((item) => item.path === `color.${name}`);
-    return entry ? [{ name, value: resolveEntryValue(entries, entry) }] : [];
+    return entry ? [{ name, value: resolveEntryValue(entries, entry, dark) }] : [];
   });
+}
+
+function darkSwatchesOf(mode: PackManifest['mode'], entries: CompiledTokenEntry[]): Pick<PackSummary, 'darkSwatches'> {
+  if (mode !== 'light' || !entries.some((entry) => entry.type === 'color' && entry.darkValue)) return {};
+  return { darkSwatches: swatchesOf(entries, true) };
 }
 
 async function loadPack(dir: string, source: PackSource): Promise<PackLoadResult> {
@@ -127,7 +132,7 @@ async function loadPack(dir: string, source: PackSource): Promise<PackLoadResult
   if (designMd === null || designMd.trim() === '') errors.push('DESIGN.md is missing or empty');
   const tokens = await loadTokens(dir, manifest?.mode ?? 'light', errors);
   if (errors.length > 0 || !manifest || !tokens || designMd === null) return { id, source, pack: null, errors };
-  const summary: PackSummary = { ...manifest, source, swatches: swatchesOf(tokens.entries) };
+  const summary: PackSummary = { ...manifest, source, swatches: swatchesOf(tokens.entries), ...darkSwatchesOf(manifest.mode, tokens.entries) };
   return { id, source, errors, pack: { dir, source, manifest, ...tokens, designMd, summary } };
 }
 

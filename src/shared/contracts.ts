@@ -903,6 +903,7 @@ export type PackSource = 'builtin' | 'user';
 export interface PackSummary extends PackManifest {
   source: PackSource;
   swatches: { name: string; value: string }[];
+  darkSwatches?: { name: string; value: string }[];
 }
 
 export interface PackDetail {

@@ -21,6 +21,27 @@ function swatch(pack: PackSummary, name: string): string | undefined {
   return pack.swatches.find((item) => item.name === name)?.value;
 }
 
+function ModeSwatches({ pack }: { pack: PackSummary }) {
+  const light = pack.mode === 'light' ? pack.swatches : null;
+  const dark = pack.mode === 'dark' ? pack.swatches : (pack.darkSwatches ?? null);
+  return (
+    <span className="lib-modes" data-testid="mode-swatches">
+      {light && (
+        <span className="lib-mode light" title="Light mode colors">
+          <span className="sr-only">Light</span>
+          <Swatches swatches={light} />
+        </span>
+      )}
+      {dark && (
+        <span className="lib-mode dark" title="Dark mode colors">
+          <span className="sr-only">Dark</span>
+          <Swatches swatches={dark} />
+        </span>
+      )}
+    </span>
+  );
+}
+
 function LibraryCard({ pack, onOpen }: { pack: PackSummary; onOpen: () => void }) {
   const display = fontStack(pack.fonts.display, SERIF);
   const body = fontStack(pack.fonts.body, SANS);
@@ -40,7 +61,7 @@ function LibraryCard({ pack, onOpen }: { pack: PackSummary; onOpen: () => void }
             <span aria-hidden="true"> · </span>
             <span style={{ fontFamily: body }}>{pack.fonts.body}</span>
           </span>
-          <Swatches swatches={pack.swatches} max={7} />
+          <ModeSwatches pack={pack} />
           <PackBadges pack={pack} tags={2} />
         </span>
       </button>

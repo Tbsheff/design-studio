@@ -419,14 +419,15 @@ export function parseTokenFile(text: string): { file: TokenFile | null; error: s
   }
 }
 
-export function resolveEntryValue(entries: CompiledTokenEntry[], entry: CompiledTokenEntry): string {
+export function resolveEntryValue(entries: CompiledTokenEntry[], entry: CompiledTokenEntry, dark = false): string {
   const byVar = new Map(entries.map((item) => [item.cssVar, item]));
+  const valueOf = (item: CompiledTokenEntry) => (dark && item.darkValue ? item.darkValue : item.value);
   let current = entry;
   for (let depth = 0; depth < entries.length; depth++) {
-    const match = /^var\((--[A-Za-z0-9_-]+)\)$/.exec(current.value);
+    const match = /^var\((--[A-Za-z0-9_-]+)\)$/.exec(valueOf(current));
     const next = match ? byVar.get(match[1] ?? '') : undefined;
-    if (!next) return current.value;
+    if (!next) return valueOf(current);
     current = next;
   }
-  return current.value;
+  return valueOf(current);
 }

@@ -61,7 +61,7 @@ const userPacks = async () => (await ok<PackSummary[]>(call('GET', '/api/packs')
 
 async function packEntries(id: string, folder = id): Promise<ZipEntry[]> {
   const detail = await ok<PackDetail>(call('GET', `/api/packs/${id}`));
-  const { source: _source, swatches: _swatches, ...manifest } = detail.summary;
+  const { source: _source, swatches: _swatches, darkSwatches: _dark, ...manifest } = detail.summary;
   return [
     { name: `${folder}/pack.json`, data: Buffer.from(JSON.stringify(manifest)) },
     { name: `${folder}/tokens.json`, data: Buffer.from(detail.tokensJson) },
@@ -181,6 +181,22 @@ describe('POST /api/packs/import', { timeout: 30000 }, () => {
     expect(byId.body.existing?.id).toBe('user-house');
     const badMode = await failure(importZip(zip, 'merge'));
     expect(badMode.status).toBe(400);
+  });
+});
+
+describe('GET /api/packs', () => {
+  it('sends light and dark swatches for every built-in light pack and dark swatches only for a dark pack', async () => {
+    const packs = (await ok<PackSummary[]>(call('GET', '/api/packs'))).filter((pack) => pack.source === 'builtin');
+    expect(packs.length).toBeGreaterThan(0);
+    for (const pack of packs) {
+      expect(pack.swatches, pack.id).toHaveLength(6);
+      if (pack.mode === 'light') {
+        expect(pack.darkSwatches?.map((swatch) => swatch.name), pack.id).toEqual(pack.swatches.map((swatch) => swatch.name));
+        expect(pack.darkSwatches?.find((swatch) => swatch.name === 'bg')?.value, pack.id).not.toBe(pack.swatches.find((swatch) => swatch.name === 'bg')?.value);
+      } else {
+        expect(pack.darkSwatches, pack.id).toBeUndefined();
+      }
+    }
   });
 });
 

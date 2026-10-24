@@ -327,3 +327,25 @@ test('R6 open questions: save as new, problems notice, Apply after reload, Copy 
     for (const id of [base.id, fork?.id]) if (id) await api.call('DELETE', `/api/packs/${id}`).catch(() => undefined);
   }
 });
+
+test('R6-5: every built-in pack card shows its light and dark swatches side by side', async ({ page }) => {
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
+  const api = await openHome(page);
+  const builtins = (await api.call<PackSummary[]>('GET', '/api/packs')).filter((pack) => pack.source === 'builtin');
+  await page.getByRole('button', { name: 'Design systems', exact: true }).click();
+  const region = page.getByRole('region', { name: /^Built-in/ });
+  for (const pack of builtins) {
+    const modes = region.getByRole('button', { name: pack.name, exact: true }).getByTestId('mode-swatches');
+    const light = modes.locator('.lib-mode.light');
+    const dark = modes.locator('.lib-mode.dark');
+    await expect(dark.locator('.swatch')).toHaveCount(6);
+    if (pack.mode === 'dark') {
+      await expect(light).toHaveCount(0);
+      continue;
+    }
+    await expect(light.locator('.swatch')).toHaveCount(6);
+    const [lightBox, darkBox] = [await light.boundingBox(), await dark.boundingBox()];
+    expect(Math.abs((lightBox?.y ?? 0) - (darkBox?.y ?? 100))).toBeLessThan(2);
+    expect((darkBox?.x ?? 0) - ((lightBox?.x ?? 0) + (lightBox?.width ?? 0))).toBeLessThan(1);
+  }
+});

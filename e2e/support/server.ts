@@ -78,6 +78,7 @@ export async function startServer(dataDir: string): Promise<{ pid: number; liste
       ...process.env,
       ...command.env,
       STUDIO_AGENT: 'mock',
+      STUDIO_FETCH_ALLOW_LOOPBACK: '1',
       STUDIO_DATA_DIR: dataDir,
       STUDIO_PROJECTS_DIR: projectsDirFor(dataDir),
       STUDIO_CLAUDE_HOME: claudeHome,

@@ -128,7 +128,7 @@ function TokensDrop({ file, onChange }: { file: File | null; onChange: (file: Fi
       onDragLeave={() => setOver(false)}
       onDrop={onDrop}
     >
-      <input ref={input} type="file" accept=".json,application/json" hidden aria-label="Tokens file" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+      <input ref={input} type="file" accept=".json,application/json" hidden aria-label="Tokens file upload" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
       {file ? (
         <div className="nds-row">
           <span className="nds-file truncate">{file.name}</span>
@@ -185,7 +185,7 @@ function ImagesField({ images, onChange }: { images: File[]; onChange: (images: 
   const input = useRef<HTMLInputElement>(null);
   return (
     <div className="nds-stack">
-      <input ref={input} type="file" accept={IMAGE_ACCEPT} multiple hidden aria-label="Images" onChange={(e) => onChange([...images, ...Array.from(e.target.files ?? [])].slice(0, MAX_IMAGES))} />
+      <input ref={input} type="file" accept={IMAGE_ACCEPT} multiple hidden aria-label="Image upload" onChange={(e) => onChange([...images, ...Array.from(e.target.files ?? [])].slice(0, MAX_IMAGES))} />
       {images.length > 0 && (
         <ul className="nds-images">
           {images.map((image, index) => (

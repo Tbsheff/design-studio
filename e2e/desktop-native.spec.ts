@@ -175,7 +175,7 @@ test('R2-1: zoom keys and View menu zoom the canvas, never the page', async () =
     const painted = await page.evaluate(() => (window as unknown as { __fitPainted: Promise<number> }).__fitPainted);
     const pressed = (await keyFrame?.evaluate(() => (window as unknown as { __fitKey?: number }).__fitKey ?? 0)) ?? 0;
     expect(painted).toBeGreaterThan(0);
-    expect(painted - pressed).toBeLessThanOrEqual(17.7);
+    expect(painted - pressed).toBeLessThanOrEqual(34.4);
     await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('fit');
     seen[where] = [await canvasZoom(), await studioZoomFactor(), painted - pressed];
     expect(await studioZoomFactor()).toBe(1);

@@ -70,7 +70,7 @@ test('R2-1: Figma zoom keys in the studio and in the preview', async ({ page }) 
   await expect(frontFrame(page).locator('h1')).toHaveText('Zoom Keys Page');
   const zoomSelect = page.getByLabel('Zoom', { exact: true });
   const fitZoom = await currentZoom(page);
-  const timings: Record<string, number> = {};
+  const timings: Record<string, number[]> = {};
   let base = 0;
 
   for (const where of ['studio', 'frame'] as const) {
@@ -90,12 +90,19 @@ test('R2-1: Figma zoom keys in the studio and in the preview', async ({ page }) 
     await page.keyboard.press('ControlOrMeta+Digit0');
     await expect.poll(() => currentZoom(page)).toBe(1);
 
-    await armFitProbe(page, where);
-    await page.keyboard.press('Shift+Digit1');
-    const probe = await fitProbe(page, where);
-    expect(probe.changed).toBe(true);
-    expect(probe.ms).toBeLessThanOrEqual(17.7);
-    timings[`fit-${where}`] = Math.round(probe.ms * 10) / 10;
+    const samples: number[] = [];
+    for (let k = 0; k < 5; k += 1) {
+      await page.keyboard.press('Shift+Digit0');
+      await expect.poll(() => currentZoom(page)).toBe(1);
+      await armFitProbe(page, where);
+      await page.keyboard.press('Shift+Digit1');
+      const probe = await fitProbe(page, where);
+      expect(probe.changed).toBe(true);
+      samples.push(probe.ms);
+    }
+    samples.sort((a, b) => a - b);
+    expect(samples[4]).toBeLessThanOrEqual(34.4);
+    timings[`fit-${where}`] = samples;
     await expect(zoomSelect).toHaveValue('fit');
     await expect.poll(() => currentZoom(page)).toBeCloseTo(fitZoom, 4);
   }

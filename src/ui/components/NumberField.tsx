@@ -1,12 +1,13 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import type { DirectStyleProperty } from '../../shared/contracts';
 import { formatNumber, normalizeLength, parseNumber, stepValue } from '../cssValues';
+import { resolveNumberInput } from '../mathInput';
 import { lengthToPx, resolveTokenValue, varName } from '../../shared/token-match';
 import type { DirectEdit } from '../useDirectEdit';
 import { useTokenUi, type TokenUi } from '../useTokenSnap';
 import { TokenControl } from './TokenControl';
 
-interface NumberSpec {
+export interface NumberSpec {
   prop: DirectStyleProperty;
   label: string;
   edit: DirectEdit;
@@ -47,28 +48,42 @@ function stepOf(event: { shiftKey: boolean }, spec: NumberSpec): number {
 export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: string; className?: string }) {
   const { edit, prop } = spec;
   const [text, setText] = useState<string | null>(null);
+  const start = useRef<string | null>(null);
   const ui = useTokenUi();
   const unit = spec.unit ?? 'px';
-  const shown = text ?? plainLength(edit.values[prop], ui);
+  const current = plainLength(edit.values[prop], ui);
+  const shown = text ?? current;
 
   const apply = (raw: string) => {
+    if (start.current === null) start.current = current;
     setText(raw);
-    edit.preview(patchFor(spec, clamp(normalizeLength(raw, unit), spec)));
+    const math = resolveNumberInput(raw, start.current, unit);
+    if (math === null && /[-+*/(]\s*$/.test(raw)) return;
+    edit.preview(patchFor(spec, clamp(math ?? normalizeLength(raw, unit), spec)));
+  };
+
+  const settle = () => {
+    start.current = null;
+    setText(null);
+    edit.commit();
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
       const delta = stepOf(event, spec) * (event.key === 'ArrowUp' ? 1 : -1);
-      apply(clamp(stepValue(shown, delta, unit), spec));
-      edit.commit();
+      start.current = null;
+      const next = clamp(stepValue(shown, delta, unit), spec);
+      setText(next);
+      edit.preview(patchFor(spec, next));
+      edit.commitSoon();
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      setText(null);
-      edit.commit();
+      settle();
     } else if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
+      start.current = null;
       setText(null);
       edit.revert(spec.targets ?? [prop]);
     }
@@ -85,10 +100,7 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
       placeholder="—"
       onChange={(event) => apply(event.target.value)}
       onKeyDown={onKeyDown}
-      onBlur={() => {
-        setText(null);
-        edit.commit();
-      }}
+      onBlur={settle}
     />
   );
 }
@@ -120,16 +132,25 @@ function useScrub(spec: NumberSpec) {
   return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
 }
 
-export function NumberField({ spec, short, icon }: { spec: NumberSpec; short: string; icon?: ReactNode }) {
-  const id = `ins-${spec.prop}`;
+interface NumberFieldProps {
+  spec: NumberSpec;
+  short: string;
+  icon?: ReactNode;
+  id?: string;
+  tokens?: boolean;
+  className?: string;
+}
+
+export function NumberField({ spec, short, icon, id: idProp, tokens = true, className }: NumberFieldProps) {
+  const id = idProp ?? `ins-${spec.prop}`;
   const scrub = useScrub(spec);
   return (
-    <div className="ins-field">
+    <div className={`ins-field ${className ?? ''}`}>
       <label htmlFor={id} className="ins-scrub" title={`Drag to change ${spec.label.toLowerCase()}`} {...scrub}>
         {icon ?? short}
       </label>
       <NumberInput spec={spec} id={id} />
-      <TokenControl prop={spec.prop} label={spec.label} edit={spec.edit} targets={spec.targets} />
+      {tokens && <TokenControl prop={spec.prop} label={spec.label} edit={spec.edit} targets={spec.targets} />}
     </div>
   );
 }

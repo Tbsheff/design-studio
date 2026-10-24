@@ -168,9 +168,14 @@ export function useDirectEdit(o: Options) {
     }
   }, [fail, rewriteDraft]);
 
-  const commit = useCallback(() => {
+  const commitSoon = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => void flush(), DEBOUNCE_MS);
+  }, [flush]);
+
+  const commit = useCallback(() => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    void flush();
   }, [flush]);
 
   const preview = useCallback(
@@ -253,7 +258,7 @@ export function useDirectEdit(o: Options) {
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
-  return { values, text, status, preview, revert, commit, previewText, revertText, reset, drain, absorb, dirty };
+  return { values, text, status, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

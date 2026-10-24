@@ -9,6 +9,8 @@ import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import type { BuildError, FilesChange } from './useStudioData';
 
+export const PREVIEW_LAYOUT_KEY_EVENT = 'studio:preview-layout-key';
+
 interface Slot {
   token: string;
   src: string;
@@ -334,6 +336,9 @@ export function usePreviewFrames(o: Options) {
           break;
         case 'history-key':
           if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
+          break;
+        case 'layout-key':
+          window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
           break;
       }
     },

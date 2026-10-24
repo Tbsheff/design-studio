@@ -52,7 +52,7 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
           onInput={(event) => edit.preview({ [prop]: event.currentTarget.value })}
           onChange={(event) => {
             edit.preview({ [prop]: event.currentTarget.value });
-            edit.commit();
+            edit.commitSoon();
           }}
         />
       </span>

@@ -5,6 +5,7 @@ import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
+import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -187,7 +188,7 @@ function stylesOf(element: Element): Record<string, string> {
   const computed = window.getComputedStyle(element);
   const styles: Record<string, string> = {};
   for (const key of STYLE_KEYS) styles[key] = computed.getPropertyValue(key);
-  return styles;
+  return { ...styles, ...layoutStyles(element, computed) };
 }
 
 function ancestorsOf(element: Element): string[] {
@@ -284,6 +285,11 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && !event.repeat) post({ type: 'escape' });
+    if (isLayoutKey(event) && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      post({ type: 'layout-key' });
+      return;
+    }
     const key = zoomKeyOf(event);
     if (!key) return;
     const mod = isModZoomKey(event);

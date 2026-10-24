@@ -177,3 +177,29 @@ After: `/tmp/polish-r2/after-canvas.png`, `after-canvas-select.png`, `after-canv
 - Frame and layer actions in the app menu and palette (R8).
 - Menu accelerator echo on real keys is handled by the 150 ms rule, but CDP keys never reach accelerators, so only the menu clicks are proven in the desktop e2e.
 - Passive frames reload on every HTML change; with many frames this costs load time (minimap and low-zoom thumbnails stay deferred).
+
+### Regressions found
+
+- Intended change: ⌘0 is now 100% and ⌘1 is fit (the reverse of before). `e2e/zoom.spec.ts` was updated on purpose; its zoom label check now polls, because a wheel zoom commits the label 160 ms after the last event.
+- Found in review: my first version of R2-5 focused the preview on every select click, so studio keys (F, V, C, Space, Z) stopped working after a click. Fixed: the bridge no longer takes focus; the parent blurs a toolbar button when a `select` arrives, so focus goes to the page body. `e2e/canvas-r2.spec.ts` R2-5 now presses F and V after a select click.
+- Found while testing: quick Enter presses lost a step, because a `request-rects` for the old selection reset the bridge selection. The bridge now ignores that reset for 400 ms after its own select, and studio-side moves start from the bridge selection.
+- Fit probe flake (test only): the first probe fired on the Shift keydown. It now listens only for Digit1 and the `zoom-key` fit message.
+- AC-14 failed in both full runs when ac-core ran right after the main suite ("Not found" in the preview after a 286 ms mock run; the frame did not reload). It passed in 4 standalone ac-core runs. Round 1 saw the same failure with the same text before any Round 2 code, so I count it as a pre-existing race between the first preview load and the first write. Not fixed; listed below.
+- AC-48 failed once in the second full ac-safety run and passed alone twice (the known load-sensitive check). AC-49 failed once in the first ac-safety run while my screenshot server was running; with the server stopped it passed in both later full runs.
+- R1-1 thumbnail lag in the full suite: first run 1383 ms, 1851 ms and 1386 ms in the three full runs (limit 2 s); second run 1294–1333 ms. No flake this round, but 1851 ms leaves little margin under load.
+
+Left (added): the AC-14 first-load race above.
+
+### Test runs (final)
+
+On `fix(canvas)` (last code commit) and the test-only commits after it:
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 83 files, 689 tests passed (11 new in `canvasFrames.test.ts`, `layersTree.test.ts`, `measure.test.ts`).
+- `npm run build:ui`: built.
+- Playwright with `STUDIO_E2E_GROUP=r2 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 72 tests (7 new in `canvas-r2.spec.ts`); 71 passed in each full run, the failure was the R2-1 fit probe flake, fixed in the last test commit and then passed 8 of 8 repeats. `ac-core` 7 passed in 4 standalone runs (AC-14 above). `ac-edit` 19 passed. `ac-safety` 10 passed in the first post-fix full run; AC-48 passed alone after its one failure.
+- `npm run e2e:desktop`: 20 passed (1 new: R2-1).
+
+### Commits
+
+`336ac87` feat zoom keys, View menu zoom, rAF pan, multi-frame · `2ea8305` test R2-1–3 · `1998aa0` test desktop zoom · `f79e14e` feat layers, select keys, measure, Z-click · `4356937`, `297e3fc`, `39bf401`, `4ca22ce` polish · `9a5f6ed` unit tests · `c5dc30e` docs architecture and scorecard · `0810428` docs log · then the focus fix, the fit-timing test commits and this log update.

@@ -5,6 +5,7 @@
   --surface-2: oklch(0.978 0.003 var(--hue));
   --surface-hover: oklch(0.955 0.004 var(--hue));
   --surface-active: oklch(0.93 0.005 var(--hue));
+  --surface-inverse: oklch(0.22 0.01 var(--hue));
   --line: oklch(0.915 0.004 var(--hue));
   --line-strong: oklch(0.86 0.006 var(--hue));
   --text: oklch(0.21 0.012 var(--hue));

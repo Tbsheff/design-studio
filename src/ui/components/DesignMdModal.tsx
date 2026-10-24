@@ -163,7 +163,7 @@ export function DesignMdModal({ projectId, onClose }: { projectId: string; onClo
         <div className="dmd-pane">
           <p className="dmd-pane-label">Preview</p>
           <div ref={preview} className="dmd-preview" aria-label="DESIGN.md preview" tabIndex={0}>
-            {shown.trim() ? <Markdown>{shown}</Markdown> : <p className="dmd-outline-empty">Nothing to show yet.</p>}
+            {shown.trim() ? <Markdown>{shown.replace(/<!--[\s\S]*?-->/g, '')}</Markdown> : <p className="dmd-outline-empty">Nothing to show yet.</p>}
           </div>
         </div>
       </div>

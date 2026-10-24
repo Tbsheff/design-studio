@@ -1,4 +1,4 @@
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { chromium, type Locator, type Page } from 'playwright-core';
 
@@ -37,6 +37,33 @@ async function call<T>(page: Page, token: string, method: string, url: string, b
   ) as Promise<T>;
 }
 
+const SHOT_PAGE = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Harbor Coffee</title><link rel="stylesheet" href="design-system/tokens.css">
+<style>
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); }
+header { display: flex; justify-content: space-between; align-items: center; padding: 24px 64px; border-bottom: 1px solid var(--border); }
+.hero { padding: 96px 64px 64px; max-width: 760px; }
+h1 { font-family: var(--font-display); font-size: 64px; line-height: 1.05; margin: 0 0 24px; }
+.lede { color: var(--fg-muted); font-size: 20px; line-height: 1.5; }
+.cta { display: inline-block; margin-top: 24px; padding: 14px 22px; border-radius: 10px; background: var(--primary); color: #ff0001; font-weight: 600; text-decoration: none; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 0 64px 96px; }
+.card { padding: 24px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.card h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 24px; }
+.card p { margin: 0; color: var(--fg-muted); }
+</style></head>
+<body>
+<header><strong>Harbor Coffee</strong><nav>Shop · Subscribe · Visit</nav></header>
+<section class="hero"><h1>Small-batch coffee, roasted on the pier.</h1><p class="lede">Fresh bags every Tuesday. Pause or skip any week.</p><a class="cta" href="#">Start a subscription</a></section>
+<section class="cards">
+<article class="card"><h3>Pier Blend</h3><p>Chocolate, orange peel, a long finish.</p></article>
+<article class="card"><h3>Fog Line</h3><p>Light roast with stone fruit and honey.</p></article>
+<article class="card"><h3>Night Shift</h3><p>Dark, smoky and built for milk.</p></article>
+</section>
+</body>
+</html>
+`;
+
 const frame = (page: Page) => page.frameLocator('iframe.frame.front');
 
 async function main(): Promise<void> {
@@ -46,9 +73,10 @@ async function main(): Promise<void> {
   await page.goto(base);
   const token = (await page.locator('meta[name="studio-token"]').getAttribute('content')) ?? '';
   await page.evaluate(() => localStorage.clear());
-  const created = await call<{ project: { id: string } }>(page, token, 'POST', '/api/projects/from-starter', { starterId: 'landing' });
+  const created = await call<{ project: { id: string; directions: { workTree: string }[] } }>(page, token, 'POST', '/api/projects', { prompt: 'Harbor Coffee', kind: 'html', packId: 'editorial', startRun: false });
   const pid = created.project.id;
-  await call(page, token, 'POST', `/api/projects/${pid}/d/main/design-system/apply`, { packId: 'modern-minimal' });
+  writeFileSync(path.join(created.project.directions[0]!.workTree, 'index.html'), SHOT_PAGE);
+  await call(page, token, 'POST', `/api/projects/${pid}/d/main/keep`);
   await page.goto(base);
   await page.locator(`.project-card[data-project-id="${pid}"] .project-open`).click();
   await page.locator('iframe.frame.front').waitFor();
@@ -76,12 +104,13 @@ async function main(): Promise<void> {
     if ((await tab.count()) === 0) throw new Error('no Components tab');
     await tab.click(SHORT);
     await page.locator('.cmp-thumb img').first().waitFor({ timeout: 20000 });
+    await page.getByRole('button', { name: 'Mention Card' }).click();
     await shot(page, 'components-panel');
   });
   await step('inspector', async () => {
     await page.getByRole('button', { name: 'Select', exact: true }).click(SHORT);
     await page.waitForTimeout(500);
-    const target = frame(page).locator('h1').first();
+    const target = frame(page).locator('.cta').first();
     const box = await target.boundingBox();
     if (!box) throw new Error('h1 has no box');
     await page.mouse.click(box.x + 4, box.y + 4);

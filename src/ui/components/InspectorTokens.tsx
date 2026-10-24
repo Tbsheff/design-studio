@@ -89,12 +89,21 @@ const PROP_LABEL: Partial<Record<DirectStyleProperty, string>> = {
   'border-radius': 'Radius',
 };
 
+function boxLabel(name: string, props: DirectStyleProperty[]): string {
+  if (props.length === 4) return name;
+  const sides = props.map((prop) => prop.slice(prop.indexOf('-') + 1));
+  const list = sides.length > 1 ? `${sides.slice(0, -1).join(', ')} and ${sides.at(-1)}` : (sides[0] ?? '');
+  return `${name} ${list}`;
+}
+
 function propsLabel(props: DirectStyleProperty[]): string {
   const first = props[0] ?? 'color';
-  if (first.startsWith('padding-')) return 'Padding';
-  if (first.startsWith('margin-')) return 'Margin';
+  if (first.startsWith('padding-')) return boxLabel('Padding', props);
+  if (first.startsWith('margin-')) return boxLabel('Margin', props);
   return PROP_LABEL[first] ?? first;
 }
+
+const LINT_SHOWN = 3;
 
 function shownValue(issue: LintIssue): string {
   if (issue.kind === 'color') return colorHex(issue.value) ?? issue.value;
@@ -113,7 +122,9 @@ function issueText(issue: LintIssue): ReactNode {
 
 export function TokenLint({ ui, edit, css }: { ui: TokenUi | null; edit: DirectEdit; css: AuthoredCss | null }) {
   const issues = useMemo(() => (ui ? lintValues(edit.values, ui.entries, ui.mode, css, edit.dirty) : []), [ui, edit.values, edit.dirty, css]);
+  const [all, setAll] = useState(false);
   if (!ui || issues.length === 0) return null;
+  const shown = all ? issues : issues.slice(0, LINT_SHOWN);
   const use = (issue: LintIssue) => {
     edit.preview(Object.fromEntries(issue.props.map((p) => [p, `var(${issue.token.cssVar})`])));
     edit.commit();
@@ -125,7 +136,7 @@ export function TokenLint({ ui, edit, css }: { ui: TokenUi | null; edit: DirectE
         {issues.length === 1 ? '1 value is not a token' : `${issues.length} values are not tokens`}
       </h3>
       <ul className="tk-lint-list">
-        {issues.map((issue) => {
+        {shown.map((issue) => {
           const label = propsLabel(issue.props);
           return (
             <li key={`${issue.props.join(',')}`} className="tk-lint-row" data-testid="token-lint">
@@ -142,6 +153,11 @@ export function TokenLint({ ui, edit, css }: { ui: TokenUi | null; edit: DirectE
           );
         })}
       </ul>
+      {issues.length > LINT_SHOWN && (
+        <button type="button" className="tk-lint-more" aria-expanded={all} onClick={() => setAll(!all)}>
+          {all ? 'Show fewer' : `Show ${issues.length - LINT_SHOWN} more`}
+        </button>
+      )}
     </section>
   );
 }

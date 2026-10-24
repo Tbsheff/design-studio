@@ -76,7 +76,12 @@ export function ComponentsPanel({ projectId, directionId, list, onMention }: Pro
         {list.error && (
           <p className="ins-error" role="alert">
             <Icon name="alert" size={13} />
-            Could not list components. {list.error}
+            <span>Could not list components. {list.error}</span>
+            {list.retry && (
+              <button type="button" className="btn small" onClick={list.retry}>
+                Try again
+              </button>
+            )}
           </p>
         )}
         {list.components === null && !list.error && (
@@ -99,7 +104,7 @@ export function ComponentsPanel({ projectId, directionId, list, onMention }: Pro
                     type="button"
                     className="cmp-card"
                     aria-label={`Mention ${component.name}`}
-                    title={`Add @${component.name} to your message`}
+                    title={`Add @${component.name} to your message${component.file ? ` · ${component.file}` : ''}`}
                     data-testid="component-card"
                     onClick={() => onMention(component)}
                   >

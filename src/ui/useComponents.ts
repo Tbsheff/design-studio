@@ -20,12 +20,14 @@ export interface ComponentList {
   components: ComponentInfo[] | null;
   version: string;
   error: string | null;
+  retry?: () => void;
 }
 
 export function useComponents(projectId: string, directionId: string | null, lastChange: FilesChange | null): ComponentList {
   const [state, setState] = useState<ComponentList>({ components: null, version: '0', error: null });
   const changedAt = lastChange && lastChange.directionId === directionId ? lastChange.changedAt : 0;
   const seq = useRef(0);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     if (!directionId) return;
     const my = ++seq.current;
@@ -44,7 +46,7 @@ export function useComponents(projectId: string, directionId: string | null, las
       changedAt === 0 ? 0 : REFRESH_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [projectId, directionId, changedAt]);
+  }, [projectId, directionId, changedAt, attempt]);
   useEffect(() => setState({ components: null, version: '0', error: null }), [projectId, directionId]);
-  return state;
+  return { ...state, retry: () => setAttempt((n) => n + 1) };
 }

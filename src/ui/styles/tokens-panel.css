@@ -327,13 +327,15 @@
   transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-.cmp-card:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) and (pointer: fine) {
+  .cmp-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .cmp-card:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
 .cmp-card:focus-visible {
@@ -356,7 +358,7 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  outline: 1px solid oklch(0.2 0.02 var(--hue) / 0.06);
+  outline: 1px solid oklch(0 0 0 / 0.1);
   outline-offset: -1px;
 }
 

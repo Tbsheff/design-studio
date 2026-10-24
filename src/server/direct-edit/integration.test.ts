@@ -83,7 +83,7 @@ describe('direct edit route', { timeout: 30000 }, () => {
     expect(result.version.meta.prompt).toContain('color: red');
     const file = path.join(workTree, 'index.html');
     expect(await readFile(file, 'utf8')).toBe(PAGE.replace('<h1 class', '<h1 style="color: red; font-size: 20px;" class'));
-    expect(seen.map((event) => event.type)).toEqual(['version.created', 'direction.updated', 'status.changed']);
+    expect(seen.map((event) => event.type)).toEqual(['edit-history.changed', 'version.created', 'direction.updated', 'status.changed']);
     expect((await projects.get(project.id)).directions[0]?.headVersionId).toBe(result.version.id);
     expect(await (await call('GET', `/api/projects/${project.id}/d/main/status`)).json()).toEqual({ dirty: false, changed: [] });
 

@@ -119,20 +119,22 @@ export function useSelectionRefresh(selection: SelectionContext[], setSelection:
   current.current = selection;
   const deadline = useRef(0);
 
+  const refresh = useCallback(() => {
+    if (Date.now() > deadline.current || current.current.length === 0) return;
+    const describe = describeRef.current;
+    if (!describe) {
+      setSelection([]);
+      return;
+    }
+    const selectors = current.current.map((item) => item.selector);
+    const queries = current.current.map((item, index) => anchorQueryOf({ id: String(index), target: targetFromSelection(item) }));
+    describe(queries)
+      .then((contexts) => setSelection((prev) => refreshedSelection(prev, selectors, contexts)))
+      .catch(() => undefined);
+  }, [describeRef, setSelection]);
+
   useEffect(() => {
-    const onPainted = () => {
-      if (Date.now() > deadline.current || current.current.length === 0) return;
-      const describe = describeRef.current;
-      if (!describe) {
-        setSelection([]);
-        return;
-      }
-      const selectors = current.current.map((item) => item.selector);
-      const queries = current.current.map((item, index) => anchorQueryOf({ id: String(index), target: targetFromSelection(item) }));
-      describe(queries)
-        .then((contexts) => setSelection((prev) => refreshedSelection(prev, selectors, contexts)))
-        .catch(() => undefined);
-    };
+    const onPainted = () => refresh();
     const onInput = (event: Event) => {
       if (event instanceof KeyboardEvent && historyKeyOf(event)) return;
       deadline.current = 0;
@@ -145,9 +147,13 @@ export function useSelectionRefresh(selection: SelectionContext[], setSelection:
       window.removeEventListener('keydown', onInput, true);
       window.removeEventListener('pointerdown', onInput, true);
     };
-  }, [describeRef, setSelection]);
+  }, [refresh]);
 
-  return useCallback(() => {
-    deadline.current = Date.now() + REFRESH_WINDOW_MS;
-  }, []);
+  return useCallback(
+    (now: boolean) => {
+      deadline.current = Date.now() + REFRESH_WINDOW_MS;
+      if (now) refresh();
+    },
+    [refresh],
+  );
 }

@@ -139,10 +139,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     locked: activeRun !== null,
     before: async () => {
       await editControl.current?.settle();
+      refreshSelection(false);
       port.current?.post({ type: 'preview-reset' });
     },
     onStepped: () => {
-      refreshSelection();
+      refreshSelection(true);
       data.refreshVersions();
     },
     onError: setActionError,

@@ -160,6 +160,7 @@ function copyStatic(resources: string): void {
   cpSync(path.join(ROOT, 'dist', 'ui'), path.join(resources, 'ui'), { recursive: true });
   cpSync(path.join(ROOT, 'src', 'server', 'design-system', 'packs'), path.join(resources, 'packs'), { recursive: true });
   cpSync(TEMPLATE_DIR, path.join(resources, 'templates', 'react-vite'), { recursive: true });
+  cpSync(path.join(ROOT, 'src', 'server', 'templates', 'starters'), path.join(resources, 'templates', 'starters'), { recursive: true });
   cpSync(path.join(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), path.join(resources, 'axe.min.js'));
 }
 

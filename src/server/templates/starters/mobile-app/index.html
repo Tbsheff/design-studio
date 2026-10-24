@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Today — Tend habit tracker</title>
+<style>
+:root {
+  --backdrop: #e7ebe2;
+  --backdrop-2: #d7dfd0;
+  --screen: #fbfaf6;
+  --card: #ffffff;
+  --ink: #1d2a22;
+  --ink-2: #5b6a60;
+  --line: #e6e8e1;
+  --sage: #3f6f55;
+  --sage-soft: #e3eee6;
+  --sun: #f3c969;
+  --sun-ink: #6b4a00;
+  --clay: #d9825f;
+  --clay-soft: #fbe9e1;
+  --sky: #c7dcef;
+  --font: ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 2rem;
+  --space-1: 6px;
+  --space-2: 12px;
+  --space-3: 18px;
+  --space-4: 24px;
+  --radius-phone: 52px;
+  --radius-card: 22px;
+  --radius-chip: 999px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 40px 16px; font: 400 var(--fs-md)/1.45 var(--font); color: var(--ink); background: radial-gradient(1200px 600px at 20% 0%, var(--backdrop-2), transparent 60%), radial-gradient(900px 700px at 100% 100%, #e9e3d4, transparent 60%), var(--backdrop); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; border-radius: 10px; }
+.phone { width: 390px; height: 844px; background: var(--screen); border-radius: var(--radius-phone); box-shadow: 0 0 0 10px #1b1f1c, 0 0 0 11px #3a403c, 0 40px 80px -20px rgb(29 42 34 / 0.45); position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.status { height: 50px; flex: none; display: flex; justify-content: space-between; align-items: center; padding: 14px 32px 0; font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; }
+.status::after { content: ""; position: absolute; left: 50%; top: 11px; width: 120px; height: 34px; border-radius: 20px; background: #1b1f1c; transform: translateX(-50%); }
+.scroll { flex: 1; overflow-y: auto; padding: 8px 20px 96px; }
+.app-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+.app-head p { margin: 0; color: var(--ink-2); font-size: var(--fs-sm); }
+.app-head h1 { margin: 0; font-size: var(--fs-xl); line-height: 1.1; letter-spacing: -0.02em; font-weight: 700; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; cursor: pointer; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+.week li a { display: grid; justify-items: center; gap: 4px; padding: 8px 0; border-radius: 16px; text-decoration: none; color: var(--ink-2); font-size: var(--fs-xs); }
+.week b { font-size: var(--fs-md); color: var(--ink); font-variant-numeric: tabular-nums; }
+.week .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); }
+.week .dot.off { background: transparent; }
+.week [aria-current="date"] { background: var(--ink); color: #d8e2da; }
+.week [aria-current="date"] b { color: #fff; }
+.week [aria-current="date"] .dot { background: var(--sun); }
+.hero-card { background: var(--sage); color: #fff; border-radius: var(--radius-card); padding: var(--space-3); display: grid; grid-template-columns: 1fr auto; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); }
+.hero-card h2 { margin: 0 0 4px; font-size: var(--fs-lg); line-height: 1.2; }
+.hero-card p { margin: 0; color: #e2efe6; font-size: var(--fs-sm); }
+.streak { display: inline-flex; gap: 6px; align-items: center; margin-top: var(--space-2); background: rgb(0 0 0 / 0.24); padding: 5px 10px; border-radius: var(--radius-chip); font-size: var(--fs-xs); font-weight: 600; }
+.ring { position: relative; width: 92px; height: 92px; }
+.ring span { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.section-title { display: flex; justify-content: space-between; align-items: baseline; margin: var(--space-4) 0 var(--space-2); }
+.section-title h2 { font-size: var(--fs-md); margin: 0; }
+.section-title a { font-size: var(--fs-sm); color: var(--sage); font-weight: 600; text-decoration: none; }
+.habits { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.habit { display: grid; grid-template-columns: 44px 1fr auto; gap: var(--space-2); align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 12px 12px 12px 14px; }
+.habit .ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--bg, var(--sage-soft)); }
+.habit h3 { margin: 0; font-size: var(--fs-md); font-weight: 600; }
+.habit p { margin: 2px 0 0; color: var(--ink-2); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.bar { height: 4px; border-radius: 4px; background: var(--line); margin-top: 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: var(--w); background: var(--c, var(--sage)); border-radius: inherit; }
+.check { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--card); display: grid; place-items: center; cursor: pointer; transition: background-color .2s, border-color .2s; }
+.check[aria-pressed="true"] { background: var(--sage); border-color: var(--sage); }
+.habit.done h3 { color: var(--ink-2); }
+.note { margin-top: var(--space-3); background: var(--clay-soft); border-radius: var(--radius-card); padding: var(--space-3); display: flex; gap: var(--space-2); align-items: flex-start; }
+.note p { margin: 0; font-size: var(--fs-sm); }
+.note strong { display: block; font-size: var(--fs-md); margin-bottom: 2px; }
+.tabs { flex: none; border-top: 1px solid var(--line); background: rgb(251 250 246 / 0.96); padding: 8px 18px 28px; }
+.tabs ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.tabs a { display: grid; justify-items: center; gap: 3px; padding: 6px 0; font-size: 0.6875rem; font-weight: 600; color: var(--ink-2); text-decoration: none; border-radius: 12px; }
+.tabs a[aria-current="page"] { color: var(--sage); }
+.fab { position: absolute; right: 20px; bottom: 104px; width: 56px; height: 56px; border-radius: 20px; border: 0; background: var(--ink); color: #fff; display: grid; place-items: center; box-shadow: 0 10px 24px -6px rgb(29 42 34 / 0.5); cursor: pointer; }
+@media (min-width: 481px) and (max-height: 940px) {
+  body { padding: 32px 16px; }
+  .phone { zoom: 0.86; }
+}
+@media (max-width: 480px) {
+  body { padding: 0; display: block; background: var(--screen); }
+  .phone { width: 100%; height: 100vh; height: 100dvh; border-radius: 0; box-shadow: none; }
+  .status { display: none; }
+  .scroll { padding-top: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status" aria-hidden="true"><span>9:41</span><span>5G ▮▮▮</span></div>
+  <div class="scroll">
+    <header class="app-head">
+      <div>
+        <p>Friday, 24 October</p>
+        <h1>Good morning, Priya</h1>
+      </div>
+      <button class="icon-btn" type="button" aria-label="Open profile">
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="7" r="3.5" fill="none" stroke="#1d2a22" stroke-width="1.6"/><path d="M3.5 17c1-3 3.4-4.5 6.5-4.5s5.5 1.5 6.5 4.5" fill="none" stroke="#1d2a22" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <main id="main">
+      <nav aria-label="This week">
+        <ul class="week">
+          <li><a href="#"><span>M</span><b>20</b><i class="dot"></i></a></li>
+          <li><a href="#"><span>T</span><b>21</b><i class="dot"></i></a></li>
+          <li><a href="#"><span>W</span><b>22</b><i class="dot off"></i></a></li>
+          <li><a href="#"><span>T</span><b>23</b><i class="dot"></i></a></li>
+          <li><a href="#" aria-current="date"><span>F</span><b>24</b><i class="dot"></i></a></li>
+          <li><a href="#"><span>S</span><b>25</b><i class="dot off"></i></a></li>
+          <li><a href="#"><span>S</span><b>26</b><i class="dot off"></i></a></li>
+        </ul>
+      </nav>
+      <section class="hero-card" aria-labelledby="today-title">
+        <div>
+          <h2 id="today-title">3 of 5 done</h2>
+          <p>Two left. Your evening stretch is the one you skip most on Fridays.</p>
+          <span class="streak">
+            <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden="true"><path d="M6 0c1 3 5 4.5 5 8.5A5 5 0 0 1 1 8.5C1 6 2.5 5 3 3c1 1 1.5 2 1.5 3C5.5 4.5 6 2.5 6 0Z" fill="#f3c969"/></svg>
+            12-day streak
+          </span>
+        </div>
+        <div class="ring" role="img" aria-label="60 percent of today’s habits complete">
+          <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true"><circle cx="46" cy="46" r="38" fill="none" stroke="rgb(255 255 255 / .2)" stroke-width="9"/><circle cx="46" cy="46" r="38" fill="none" stroke="#f3c969" stroke-width="9" stroke-linecap="round" stroke-dasharray="143.3 238.8" transform="rotate(-90 46 46)"/></svg>
+          <span aria-hidden="true">60%</span>
+        </div>
+      </section>
+      <section aria-labelledby="habits-title">
+        <div class="section-title"><h2 id="habits-title">Today’s habits</h2><a href="#">Edit</a></div>
+        <ul class="habits">
+          <li class="habit done">
+            <span class="ico" style="--bg:#e3eee6"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 2c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11Z" fill="#3f6f55"/></svg></span>
+            <div><h3>Drink 2 L of water</h3><p>8 of 8 glasses</p><div class="bar"><i style="--w:100%"></i></div></div>
+            <button class="check" type="button" aria-pressed="true" aria-label="Mark Drink 2 L of water not done"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="m4 9.5 3.2 3L14 5.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </li>
+          <li class="habit done">
+            <span class="ico" style="--bg:#fdf1d2"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 18V7l7-4 7 4v11" fill="none" stroke="#6b4a00" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 18v-6h6v6" fill="none" stroke="#6b4a00" stroke-width="1.8"/></svg></span>
+            <div><h3>Read 20 pages</h3><p>24 pages · “The Overstory”</p><div class="bar"><i style="--w:100%;--c:#d9a62e"></i></div></div>
+            <button class="check" type="button" aria-pressed="true" aria-label="Mark Read 20 pages not done"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="m4 9.5 3.2 3L14 5.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </li>
+          <li class="habit done">
+            <span class="ico" style="--bg:#e4eef8"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="#2f5d86" stroke-width="1.8"/><path d="M11 7v4l2.5 2" fill="none" stroke="#2f5d86" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+            <div><h3>Meditate</h3><p>10 min · done at 7:12</p><div class="bar"><i style="--w:100%;--c:#5f8fbf"></i></div></div>
+            <button class="check" type="button" aria-pressed="true" aria-label="Mark Meditate not done"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="m4 9.5 3.2 3L14 5.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </li>
+          <li class="habit">
+            <span class="ico" style="--bg:#fbe9e1"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="13" cy="4.5" r="2" fill="#a14a28"/><path d="M8 19l2.5-6 3 2v4M6 10l3-3h4l2 4 3 1" fill="none" stroke="#a14a28" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <div><h3>Walk 8,000 steps</h3><p>5,240 of 8,000</p><div class="bar"><i style="--w:65%;--c:#d9825f"></i></div></div>
+            <button class="check" type="button" aria-pressed="false" aria-label="Mark Walk 8,000 steps done"></button>
+          </li>
+          <li class="habit">
+            <span class="ico" style="--bg:#ede7f6"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 16c3-1 4-4 7-9 3 5 4 8 7 9" fill="none" stroke="#5b3f8c" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="4" r="1.8" fill="#5b3f8c"/></svg></span>
+            <div><h3>Evening stretch</h3><p>15 min · reminder at 21:00</p><div class="bar"><i style="--w:0%"></i></div></div>
+            <button class="check" type="button" aria-pressed="false" aria-label="Mark Evening stretch done"></button>
+          </li>
+        </ul>
+      </section>
+      <aside class="note" aria-label="Weekly insight">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true" style="flex:none"><circle cx="14" cy="14" r="13" fill="#d9825f"/><path d="M14 8v7M14 19v.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <p><strong>You sleep 40 min longer on meditation days.</strong>Based on the last 30 nights from your watch.</p>
+      </aside>
+    </main>
+  </div>
+  <button class="fab" type="button" aria-label="Add a habit"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 4v14M4 11h14" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+  <footer class="tabs">
+    <nav aria-label="App">
+      <ul>
+        <li><a href="#" aria-current="page"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 10 11 3l8 7v9H3Z" fill="currentColor"/></svg>Today</a></li>
+        <li><a href="#"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 18V11M9 18V5M14 18v-9M19 18V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Progress</a></li>
+        <li><a href="#"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="15" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 18c.8-3 2.7-4.5 5.5-4.5s4.7 1.5 5.5 4.5M14 13.5c2.4 0 4.2 1.2 5 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Circles</a></li>
+        <li><a href="#"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 2v3M11 17v3M2 11h3M17 11h3M4.6 4.6l2.1 2.1M15.3 15.3l2.1 2.1M4.6 17.4l2.1-2.1M15.3 6.7l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Settings</a></li>
+      </ul>
+    </nav>
+  </footer>
+</div>
+</body>
+</html>

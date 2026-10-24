@@ -2,7 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, PermissionDecision, PermissionRequest, QueuedMessage, RunPart, RunSentRecord, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
+import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, PermissionDecision, PermissionRequest, QueuedMessage, RunPart, RunSentRecord, TodoItem, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
 import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
@@ -17,6 +17,8 @@ export interface DriverSink {
   toolStarted(toolUseId: string, name: string, input: unknown): void;
   toolFinished(toolUseId: string, isError: boolean, summary: string): void;
   beforeWrite(toolUseId: string, name: string, input: unknown): void;
+  usage(contextTokens: number): void;
+  retry(attempt: number, max: number, delayMs: number, error: string): void;
   sessionStarted(sessionId: string): Promise<void>;
   sent(message: SentMessage): void;
 }
@@ -126,6 +128,23 @@ function toolFilePath(input: unknown, workTree: string): string | null {
 }
 
 const DIFF_MAX_BYTES = 1_000_000;
+export const TODO_TOOL = 'TodoWrite';
+const TODO_STATUSES = new Set(['pending', 'in_progress', 'completed']);
+
+export function parseTodos(input: unknown): TodoItem[] | null {
+  const raw = input && typeof input === 'object' ? (input as Record<string, unknown>)['todos'] : null;
+  if (!Array.isArray(raw)) return null;
+  const todos: TodoItem[] = [];
+  for (const item of raw.slice(0, 50)) {
+    if (!item || typeof item !== 'object') continue;
+    const record = item as Record<string, unknown>;
+    const content = typeof record['content'] === 'string' ? record['content'].slice(0, 300) : '';
+    const status = typeof record['status'] === 'string' && TODO_STATUSES.has(record['status']) ? (record['status'] as TodoItem['status']) : 'pending';
+    const activeForm = typeof record['activeForm'] === 'string' ? record['activeForm'].slice(0, 300) : undefined;
+    if (content) todos.push({ content, status, ...(activeForm ? { activeForm } : {}) });
+  }
+  return todos;
+}
 
 type FileText = { kind: 'missing' } | { kind: 'text'; text: string } | { kind: 'skip' };
 
@@ -351,6 +370,11 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         toolCalls.push(record);
         toolIndex.set(toolUseId, record);
         emitRun({ type: 'run.tool.started', toolUseId, name, input });
+        const todos = name === TODO_TOOL ? parseTodos(input) : null;
+        if (todos) {
+          summary.todos = todos;
+          emitRun({ type: 'run.todos', todos });
+        }
       },
       toolFinished(toolUseId, isError, resultSummary) {
         const record = toolIndex.get(toolUseId);
@@ -368,6 +392,14 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         }
         toolMs += durationMs;
         emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}) });
+      },
+      usage(contextTokens) {
+        if (!Number.isFinite(contextTokens) || contextTokens <= 0 || contextTokens === summary.contextTokens) return;
+        summary.contextTokens = contextTokens;
+        emitRun({ type: 'run.usage', contextTokens });
+      },
+      retry(attempt, max, delayMs, error) {
+        emitRun({ type: 'run.retry', attempt, max, delayMs, error });
       },
       beforeWrite(toolUseId, name, input) {
         if (!FILE_WRITE_TOOLS.has(name) || befores.has(toolUseId)) return;

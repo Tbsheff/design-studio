@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, variationsGrid } from './VariationsLayer';
-import type { RunLevel, RunMode, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { RunEffort, RunLevel, RunMode, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { downloadBlob } from '../format';
 import { POLISH_REQUEST } from '../polish';
@@ -28,6 +28,8 @@ import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
 import { useComments } from '../useComments';
 import { useRunControls } from '../useRunControls';
+import type { RunView } from '../runState';
+import { useChatState } from '../useChatState';
 
 function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: ReturnType<typeof useVariations>['propose']): void {
   useEffect(() => {
@@ -37,13 +39,8 @@ function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: Re
   }, [ready, projectId, propose]);
 }
 
-function promptHistoryOf(runs: readonly { request: { prompt: string; task?: string; variation?: unknown } | null }[]): string[] {
-  const prompts: string[] = [];
-  for (const run of runs) {
-    const prompt = run.request && !run.request.task && !run.request.variation ? run.request.prompt.trim() : '';
-    if (prompt && prompts.at(-1) !== prompt) prompts.push(prompt);
-  }
-  return prompts;
+function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
+  return effort ? { effort } : {};
 }
 
 function runById<T>(runs: Record<string, T>, id: string | null): T | null {
@@ -98,7 +95,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const { guard } = studioTokens;
   const detailsRun = runById(runs, detailsRunId);
   const comments = useComments(projectId, directionId, composerActive);
-  const promptHistory = useMemo(() => promptHistoryOf(directionRuns), [directionRuns]);
+  const chatState = useChatState(directionRuns);
 
   useHomeVariationsHandoff(projectId, project !== null && direction !== null, variations.propose);
 
@@ -157,16 +154,21 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     panel.show('chat');
   };
 
-  const send = (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel) =>
+  const send = (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) =>
     startRun({
       prompt,
       mode,
       level,
+      ...effortOf(effort),
       selection: selection.length > 0 ? selection : undefined,
       attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
     });
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
+  const retryRun = (run: RunView) => {
+    const request = run.request;
+    if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
+  };
 
   const [left, right] = compare;
 
@@ -237,7 +239,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           columnsRef={columnsRef}
           tab={panel.tab}
           onTab={panel.choose}
-          chat={{ runs: directionRuns, direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish }}
+          chat={{ runs: directionRuns, direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,
@@ -252,7 +254,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             disabled: !did,
             onSend: send,
             ...runControls,
-            history: promptHistory,
+            history: chatState.history,
+            contextTokens: chatState.contextTokens,
             variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
           }}
           inspector={{
@@ -286,6 +289,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
           }}
           tokens={studioTokens.panel}
+          todos={chatState.todos}
           tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
           versions={{
             project,

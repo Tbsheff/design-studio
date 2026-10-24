@@ -198,3 +198,55 @@ test('R3-12: a 10k-token reply streams smoothly, an open fence renders as code, 
   expect(stats.over32).toBe(0);
   expect(stats.long.filter((ms) => ms > 50)).toEqual([]);
 });
+
+test('R3-7: todo writes update "N of M" in place, finished messages do not change, and the list stays after reload', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Todo Probe Market');
+  await type(page, 'Plan the page [todo]', 'Meta+Enter');
+  const count = page.getByTestId('todo-count');
+  await expect(count).toHaveText('1 of 5');
+  await page.evaluate(() => {
+    const first = document.querySelector('[data-run-id]');
+    const w = window as unknown as { __mutations: number };
+    w.__mutations = 0;
+    if (first) new MutationObserver((records) => (w.__mutations += records.length)).observe(first, { subtree: true, childList: true, characterData: true, attributes: true });
+  });
+  const panel = await page.getByTestId('todo-panel').elementHandle();
+  await expect(count).toHaveText('2 of 5', { timeout: 10_000 });
+  expect(await panel?.evaluate((el) => el.isConnected)).toBe(true);
+  expect(await page.evaluate(() => (window as unknown as { __mutations: number }).__mutations)).toBe(0);
+  await expect(page.locator('.todo-item[aria-current="step"]')).toContainText('Plan the layout');
+  await finishedRun(api, project.id, 'Plan the page [todo]');
+  await page.reload();
+  await expect(page.getByTestId('todo-count')).toHaveText('2 of 5');
+});
+
+test('R3-9: the context meter shows input tokens over the model window and the effort choice is in the next request', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Meter Probe Gallery');
+  const meter = page.getByTestId('context-meter');
+  await expect(meter).toHaveAttribute('data-tokens', '24000');
+  await expect(meter).toHaveAttribute('aria-valuenow', '12');
+  await page.getByTestId('run-settings').click();
+  await page.getByTestId('run-settings-popover').getByRole('radio', { name: 'High' }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('run-settings')).toContainText('High effort');
+  await type(page, 'Think hard about the hero', 'Meta+Enter');
+  const run = await runFor(api, project.id, 'Think hard about the hero');
+  expect(run.request.effort).toBe('high');
+});
+
+test('R3-10: the retry line counts down, and Retry on an error card adds no second user message', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Retry Probe Diner');
+  await type(page, 'Slow start [retry]', 'Meta+Enter');
+  await expect(page.getByTestId('live-status')).toContainText(/Retrying in [12]s \(1\/5\)/);
+  await finishedRun(api, project.id, 'Slow start [retry]');
+  await type(page, '[fail] Break on purpose', 'Meta+Enter');
+  await finishedRun(api, project.id, '[fail] Break on purpose');
+  const users = page.locator('.msg.user .msg-body');
+  const before = await users.count();
+  const discard = page.locator('.banner').getByRole('button', { name: 'Discard' });
+  if (await discard.count()) await discard.click();
+  await page.locator('.run-error').getByRole('button', { name: 'Retry' }).click();
+  await expect.poll(async () => (await api.runs(project.id)).filter((run) => run.request.prompt === '[fail] Break on purpose').length).toBe(2);
+  await expect(page.getByTestId('retry-marker')).toHaveCount(1);
+  expect(await users.count()).toBe(before);
+});

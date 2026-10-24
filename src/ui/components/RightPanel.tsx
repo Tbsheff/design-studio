@@ -12,6 +12,7 @@ import { TokensPanel } from './TokensPanel';
 import { VersionsPanel } from './VersionsPanel';
 import { CommentsPanel, QueuedComposerBar } from './CommentsPanel';
 import { TweaksPanel } from './TweaksPanel';
+import { TodoPanel } from './TodoPanel';
 
 interface Props {
   columnsRef: RefObject<HTMLDivElement | null>;
@@ -26,6 +27,7 @@ interface Props {
   versions: ComponentProps<typeof VersionsPanel>;
   comments?: ComponentProps<typeof CommentsPanel>;
   tweaks?: ComponentProps<typeof TweaksPanel>;
+  todos?: ComponentProps<typeof TodoPanel> | null;
 }
 
 const TABS: { id: PanelTab; label: string; icon: IconName }[] = [
@@ -188,6 +190,7 @@ export function RightPanel(props: Props) {
       </div>
       <ErrorsPanel {...props.errors} />
       {comments && tab !== 'comments' && <QueuedComposerBar control={comments.control} onShow={() => props.onTab('comments')} />}
+      {props.todos && tab === 'chat' && <TodoPanel {...props.todos} />}
       <PromptBox {...props.prompt} />
       {props.details.run && <RunDetails {...props.details} run={props.details.run} />}
     </aside>

@@ -36,6 +36,14 @@ function LevelChip({ level }: { level: RunLevel | null }) {
 export function UserMessage({ run }: { run: RunView }) {
   const req = run.request;
   if (!req) return null;
+  if (req.retryOf) {
+    return (
+      <div className="msg-retry text-xs text-muted-foreground tabular-nums" data-testid="retry-marker">
+        <Icon name="undo" size={12} />
+        Retry · <time>{formatTime(run.startedAt)}</time>
+      </div>
+    );
+  }
   const selected = req.selection?.length ?? 0;
   const critique = req.mode === 'critique';
   const skills = skillsFromPrompt(req.prompt);
@@ -118,7 +126,7 @@ export function SentWhileRunning({ text }: { text: string }) {
   );
 }
 
-export function RunError({ run, latest }: { run: RunView; latest: boolean }) {
+export function RunError({ run, latest, onRetry }: { run: RunView; latest: boolean; onRetry?: () => void }) {
   const error = run.summary?.error;
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -130,6 +138,11 @@ export function RunError({ run, latest }: { run: RunView; latest: boolean }) {
       <ExceptionHeader className="h-auto min-h-11 items-start py-2.5">
         <ExceptionType>Error</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>
+        {latest && onRetry && run.status !== 'canceled' && (
+          <button type="button" className="btn small run-retry" onClick={onRetry}>
+            Retry
+          </button>
+        )}
       </ExceptionHeader>
     </Exception>
   );

@@ -375,3 +375,15 @@
   color: var(--danger);
   font-size: var(--t-xs);
 }
+
+.msg-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  align-self: flex-end;
+}
+
+.run-retry {
+  margin-left: auto;
+  flex-shrink: 0;
+}

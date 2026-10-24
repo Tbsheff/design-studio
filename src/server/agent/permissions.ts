@@ -12,6 +12,7 @@ const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check'
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
 const SKILL_TOOL = 'Skill';
+const TODO_TOOL = 'TodoWrite';
 const WRITE_TOOLS = ['Write', 'Edit'];
 const PATH_TOOLS = new Set(['Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit', 'Glob', 'Grep']);
 const PATH_FIELDS = ['file_path', 'path', 'notebook_path'] as const;
@@ -60,7 +61,7 @@ function skillsOn(policy: Pick<ToolPolicy, 'skills'>): boolean {
 }
 
 export function builtinToolNames(policy: ToolSet): string[] {
-  const names = policy.mode === 'critique' ? [...READ_TOOLS] : [...READ_TOOLS, ...WRITE_TOOLS];
+  const names = policy.mode === 'critique' ? [...READ_TOOLS, TODO_TOOL] : [...READ_TOOLS, ...WRITE_TOOLS, TODO_TOOL];
   if (policy.allowBash && policy.mode !== 'critique') names.push('Bash');
   if (skillsOn(policy)) names.push(SKILL_TOOL);
   return names;
@@ -281,7 +282,7 @@ export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: str
   };
 }
 
-const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL]);
+const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, TODO_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL]);
 
 export function canChangePreview(toolName: string): boolean {
   return !NO_CHANGE_TOOLS.has(toolName);

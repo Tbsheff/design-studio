@@ -5,7 +5,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { RUN_LEVELS, STUDIO_TOKEN_HEADER, isRunLevel } from '../../shared/contracts.js';
+import { RUN_EFFORTS, RUN_LEVELS, STUDIO_TOKEN_HEADER, isRunLevel, type RunEffort } from '../../shared/contracts.js';
 import type {
   Attachment,
   Direction,
@@ -125,6 +125,16 @@ function parseLevel(raw: unknown): RunLevel | undefined {
   return raw;
 }
 
+function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf'> {
+  const extras: Pick<RunRequest, 'effort' | 'retryOf'> = {};
+  if (body.effort !== undefined) {
+    if (!RUN_EFFORTS.includes(body.effort as RunEffort)) throw new BadRequestError('effort must be low, medium or high');
+    extras.effort = body.effort as RunEffort;
+  }
+  if (body.retryOf !== undefined) extras.retryOf = assertSafeId(String(body.retryOf), 'retryOf');
+  return extras;
+}
+
 function parseRunRequest(body: Record<string, unknown>): RunRequest {
   const prompt = requireString(body, 'prompt');
   const mode = body.mode ?? 'edit';
@@ -132,6 +142,7 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
   const request: RunRequest = { prompt, mode };
   const level = parseLevel(body.level);
   if (level) request.level = level;
+  Object.assign(request, parseRunExtras(body));
   if (body.selection !== undefined) {
     if (!Array.isArray(body.selection)) throw new BadRequestError('selection must be an array');
     request.selection = body.selection as RunRequest['selection'];
@@ -325,7 +336,7 @@ export function createApp(deps: AppDeps): Hono {
       const project = await projects.get(pid);
       const direction = project.directions.find((candidate) => candidate.id === did);
       if (!direction || runner.isRunning(pid, did)) return;
-      await startRun(project, direction, { prompt: next.text, mode: previous.mode, ...(previous.level ? { level: previous.level } : {}) });
+      await startRun(project, direction, { prompt: next.text, mode: previous.mode, ...(previous.level ? { level: previous.level } : {}), ...(previous.effort ? { effort: previous.effort } : {}) });
     } catch (error) {
       console.error(`[http] could not send the ${next.reason} message`, error);
     }

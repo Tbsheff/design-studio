@@ -19,6 +19,13 @@ const STEP_TOOL_MS = 900;
 export const MOCK_BASH_OUTPUT = 'mock-bash-output.txt';
 const LONG_SECTIONS = 24;
 
+const MOCK_TODO_STEPS = ['Read the page', 'Plan the layout', 'Write the hero', 'Write the cards', 'Check mobile'];
+export const MOCK_CONTEXT_TOKENS = 24_000;
+
+function mockTodos(current: number) {
+  return MOCK_TODO_STEPS.map((content, index) => ({ content, activeForm: `${content}…`, status: index < current ? 'completed' : index === current ? 'in_progress' : 'pending' }));
+}
+
 export function longReply(): string {
   const sections: string[] = [];
   for (let n = 1; n <= LONG_SECTIONS; n += 1) {
@@ -560,6 +567,7 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
   const flags: MockFlags = { slow: prompt.includes('[slow]'), fail: prompt.includes('[fail]') };
   const session = new MockSession(input, flags);
   await input.sink.sessionStarted(input.ctx.direction.sessionId ?? `mock-${input.ctx.direction.id}-${input.runId}`);
+  input.sink.usage(MOCK_CONTEXT_TOKENS);
   input.sink.sent({ text: buildUserText(input.ctx), imageCount: input.ctx.attachments.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId });
   for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
   if (prompt.includes('[steps]')) {
@@ -568,7 +576,16 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
     await session.fakeTool('Glob', { pattern: '*.css' }, 'Glob *.css', STEP_TOOL_MS);
   }
   if (prompt.includes('[bash]')) await session.bash('npm test');
+  if (prompt.includes('[retry]')) {
+    input.sink.retry(1, 5, 2000, 'Overloaded (529)');
+    await sleep(2000, input.signal);
+  }
   if (prompt.includes('[long]')) await session.stream(longReply(), 96, 8);
+  if (prompt.includes('[todo]')) {
+    await session.fakeTool('TodoWrite', { todos: mockTodos(0) }, 'Todo list', STEP_TOOL_MS);
+    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html', STEP_TOOL_MS);
+    await session.fakeTool('TodoWrite', { todos: mockTodos(1) }, 'Todo list', STEP_TOOL_MS);
+  }
   if (prompt.includes('[think]')) {
     await session.think('Thinking A: the page needs a clear heading first.');
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
-import type { RunLevel, RunMode } from '../../shared/contracts';
+import type { RunEffort, RunLevel, RunMode } from '../../shared/contracts';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
 import { LevelControl, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
@@ -18,7 +18,38 @@ interface DesignsSetting {
   disabledReason: string | null;
 }
 
+interface EffortSetting {
+  value: RunEffort | null;
+  onChange: (effort: RunEffort | null) => void;
+}
+
+const EFFORTS = ['auto', 'low', 'medium', 'high'] as const;
+type EffortChoice = (typeof EFFORTS)[number];
+const EFFORT_LABEL: Record<EffortChoice, string> = { auto: 'Auto', low: 'Low', medium: 'Medium', high: 'High' };
+const EFFORT_HINT: Record<EffortChoice, string> = {
+  auto: 'The model picks how hard to think.',
+  low: 'Fastest and cheapest. Good for small changes.',
+  medium: 'A balance of speed and care.',
+  high: 'Thinks the longest. Best for large or tricky work.',
+};
+
+function EffortToggle({ effort, hintId }: { effort: EffortSetting; hintId: string }) {
+  const choice: EffortChoice = effort.value ?? 'auto';
+  const pick = (next: EffortChoice) => effort.onChange(next === 'auto' ? null : next);
+  const radios = useRovingRadioGroup(EFFORTS, choice, pick);
+  return (
+    <div className="segmented" role="radiogroup" aria-label="Effort" aria-describedby={hintId} onKeyDown={radios.onKeyDown}>
+      {EFFORTS.map((e) => (
+        <button key={e} {...radios.item(e)} type="button" role="radio" aria-checked={choice === e} className={choice === e ? 'on' : ''} onClick={() => pick(e)}>
+          {EFFORT_LABEL[e]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface Props {
+  effort?: EffortSetting;
   mode?: ModeSetting;
   level: RunLevel;
   onLevel: (level: RunLevel) => void;
@@ -36,8 +67,8 @@ const GAP = 4;
 const MARGIN = 8;
 const UNPLACED: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
 
-export function runSettingsSummary(input: { mode?: RunMode; level: RunLevel; designs?: number; designsOn?: boolean }): string {
-  const parts = [input.mode ? MODE_LABEL[input.mode] : null, levelLabel(input.level)];
+export function runSettingsSummary(input: { mode?: RunMode; level: RunLevel; designs?: number; designsOn?: boolean; effort?: RunEffort | null }): string {
+  const parts = [input.mode ? MODE_LABEL[input.mode] : null, levelLabel(input.level), input.effort ? `${EFFORT_LABEL[input.effort]} effort` : null];
   if (input.designsOn !== false && input.designs !== undefined && input.designs > 1) parts.push(`${input.designs} designs`);
   return parts.filter(Boolean).join(' · ');
 }
@@ -74,14 +105,14 @@ function tabStops(panel: HTMLElement): HTMLElement[] {
   return Array.from(panel.querySelectorAll<HTMLElement>('[tabindex="0"]:not(:disabled)'));
 }
 
-export function RunSettings({ mode, level, onLevel, designs, onOpen }: Props) {
+export function RunSettings({ mode, level, onLevel, designs, onOpen, effort }: Props) {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const id = useId();
   const designsOn = designs ? designs.disabledReason === null : false;
-  const summary = runSettingsSummary({ mode: mode?.value, level, designs: designs?.value, designsOn });
+  const summary = runSettingsSummary({ mode: mode?.value, level, designs: designs?.value, designsOn, effort: effort?.value ?? null });
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -158,6 +189,15 @@ export function RunSettings({ mode, level, onLevel, designs, onOpen }: Props) {
               <LevelControl value={level} onChange={onLevel} />
               <p className="rs-hint">{levelHint(level)}</p>
             </section>
+            {effort && (
+              <section className="rs-group">
+                <h3 className="rs-label">Effort</h3>
+                <EffortToggle effort={effort} hintId={`${id}-effort-hint`} />
+                <p className="rs-hint" id={`${id}-effort-hint`}>
+                  {EFFORT_HINT[effort.value ?? 'auto']}
+                </p>
+              </section>
+            )}
             {designs && (
               <section className="rs-group">
                 <h3 className="rs-label" id={`${id}-designs`}>

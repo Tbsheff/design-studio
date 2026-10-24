@@ -1,5 +1,6 @@
 import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
-import type { Project, ProjectSettings, QueuedMessage, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import type { Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import { ContextMeter } from './ContextMeter';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
@@ -25,7 +26,7 @@ interface Props {
   onRemoveSelection: (selector: string) => void;
   running: boolean;
   disabled: boolean;
-  onSend: (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel) => Promise<void>;
+  onSend: (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) => Promise<void>;
   onCancel: () => void;
   variations?: VariationsPromptProps;
   queued?: boolean;
@@ -33,6 +34,7 @@ interface Props {
   onQueueChange?: (items: QueuedMessage[]) => void;
   onSteer?: (text: string) => void;
   history?: string[];
+  contextTokens?: number | null;
 }
 
 interface VariationsPromptProps {
@@ -104,6 +106,7 @@ function designsBlocker(mode: RunMode, selectionCount: number): string | null {
 
 export function PromptBox(props: Props) {
   const [mode, setMode] = useState<RunMode>('edit');
+  const [effort, setEffort] = useState<RunEffort | null>(null);
   const [files, setFiles] = useState<PendingAttachment[]>([]);
   const [dragging, setDragging] = useState(false);
   const [sending, setSending] = useState(false);
@@ -169,7 +172,7 @@ export function PromptBox(props: Props) {
       const prompt = [draft.trim(), skillInstruction(skillIds)].filter(Boolean).join('\n\n');
       const fanOut = mode === 'edit' && props.variations && props.variations.count > 1 && props.selection.length === 0;
       if (fanOut && props.variations) await props.variations.onSend(prompt, runLevel.level, ids);
-      else await props.onSend(prompt, mode, ids, runLevel.level);
+      else await props.onSend(prompt, mode, ids, runLevel.level, effort);
       files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       setFiles([]);
       setSkillIds([]);
@@ -279,6 +282,7 @@ export function PromptBox(props: Props) {
           </button>
           <RunSettings
             mode={{ value: mode, onChange: setMode }}
+            effort={{ value: effort, onChange: setEffort }}
             level={runLevel.level}
             onLevel={runLevel.choose}
             onOpen={() => setPicking(false)}
@@ -303,6 +307,7 @@ export function PromptBox(props: Props) {
             }}
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
+            <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
             <KbdHint running={props.running} />
             <StopButton running={props.running} onStop={props.onCancel} />
             <SendButton running={props.running} sending={sending} canSend={canSend} quiet={Boolean(props.queued)} canQueue={keys.canQueue} onQueue={keys.queueDraft} />

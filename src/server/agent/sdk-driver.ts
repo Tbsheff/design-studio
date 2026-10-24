@@ -486,6 +486,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     ...(config.agentBudgetUsd !== null ? { maxBudgetUsd: config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0) } : {}),
     maxTurns: config.maxTurns,
     model: config.model,
+    ...(ctx.request.effort ? { effort: ctx.request.effort } : {}),
     includePartialMessages: true,
     abortController: controller,
     env,
@@ -496,10 +497,15 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
   };
 }
 
+function contextTokensOf(usage: RawUsage | undefined): number {
+  return (usage?.input_tokens ?? 0) + (usage?.cache_read_input_tokens ?? 0) + (usage?.cache_creation_input_tokens ?? 0);
+}
+
 function handleStreamEvent(message: StreamEventMessage, state: StreamState, sink: DriverSink): void {
   trackStreamUsage(message, state);
   if (message.parent_tool_use_id) return;
   const event = message.event;
+  if (event.type === 'message_start') sink.usage(contextTokensOf(event.message.usage as RawUsage | undefined));
   if (event.type !== 'content_block_delta') return;
   if (event.delta.type === 'text_delta') sink.textDelta(event.delta.text);
   else if (event.delta.type === 'thinking_delta') sink.thinkingDelta(event.delta.thinking);
@@ -545,6 +551,10 @@ async function handleMessage(message: SDKMessage, state: StreamState, sink: Driv
     state.sawInit = true;
     state.sessionId = message.session_id;
     await sink.sessionStarted(message.session_id);
+    return false;
+  }
+  if (message.type === 'system' && message.subtype === 'api_retry') {
+    sink.retry(message.attempt, message.max_retries, message.retry_delay_ms, String(message.error_status ?? message.error ?? 'API error'));
     return false;
   }
   if (message.type === 'stream_event') handleStreamEvent(message, state, sink);

@@ -228,10 +228,15 @@ export interface Attachment {
 export type RunMode = 'edit' | 'critique';
 export type RunTask = 'tweaks' | 'design-system';
 
+export type RunEffort = 'low' | 'medium' | 'high';
+export const RUN_EFFORTS: readonly RunEffort[] = ['low', 'medium', 'high'];
+
 export interface RunRequest {
   prompt: string;
   mode: RunMode;
   level?: RunLevel;
+  effort?: RunEffort;
+  retryOf?: string;
   variation?: VariationBrief & { index: number; count: number };
   reference?: ReferenceElement;
   selection?: SelectionContext[];

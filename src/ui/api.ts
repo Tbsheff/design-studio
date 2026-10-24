@@ -11,6 +11,8 @@ import {
   type PackSummary,
   type ProjectKind,
   type ProjectSettings,
+  type ApplyPackResult,
+  type SavePackResult,
   type SkillCatalog,
   type RenderCheckResult,
   type RunLevel,
@@ -83,6 +85,11 @@ export const api = {
   listPacks: () => json<PackSummary[]>('GET', '/api/packs'),
   listSkills: () => json<SkillCatalog>('GET', '/api/skills'),
   getDesignSystem: (pid: string, did: string) => json<DesignSystemState>('GET', `${d(pid, did)}/design-system`),
+  applyPack: async (pid: string, did: string, packId: string): Promise<ApplyPackResult> => {
+    const res = await request('POST', `${d(pid, did)}/design-system/apply`, { packId }, pickMessage);
+    return (await res.json()) as ApplyPackResult;
+  },
+  savePack: (pid: string, did: string, input: { name: string; packId?: string }) => json<SavePackResult>('POST', `${d(pid, did)}/design-system/save`, input),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request('POST', `${d(pid, did)}/design-system/tokens`, req, pickMessage);
     return (await res.json()) as CreateTokenResult;

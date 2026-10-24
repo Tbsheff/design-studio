@@ -63,3 +63,11 @@ export function StudioBoot({ message, onExit }: { message: string | null; onExit
     </div>
   );
 }
+
+export function StudioToast({ text }: { text: string | null }) {
+  return (
+    <div className="ds-toast-slot" role="status" aria-live="polite">
+      {text && <div className="ds-toast">{text}</div>}
+    </div>
+  );
+}

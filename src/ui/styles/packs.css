@@ -184,12 +184,25 @@
 }
 
 .pack-name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
   padding-right: var(--s-5);
   font-size: var(--t-sm);
   font-weight: 600;
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
+}
+
+.pack-yours {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 16px;
 }
 
 .pack-desc {
@@ -394,4 +407,37 @@
   .pack-trigger {
     max-width: 150px;
   }
+}
+
+.ds-actions {
+  display: flex;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-2) 0;
+}
+
+.ds-switch-body {
+  max-height: min(560px, calc(100vh - 220px));
+  overflow: auto;
+}
+
+.ds-toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--s-5);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: min(560px, calc(100vw - 32px));
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--t-sm);
+  transform: translateX(-50%);
+  animation: pop-in var(--dur) var(--ease);
+}
+
+.ds-toast.error {
+  color: var(--danger, var(--text));
 }

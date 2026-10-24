@@ -1,5 +1,5 @@
 import type { ProjectKind } from '../../shared/contracts';
-import { DesignSystemChip, type DesignSystemRef } from './DesignSystemChip';
+import { DesignSystemChip, type DesignSystemActions, type DesignSystemRef } from './DesignSystemChip';
 import { Icon } from './Icon';
 
 interface Props {
@@ -7,6 +7,7 @@ interface Props {
   kind: ProjectKind;
   directionName: string | null;
   designSystem: DesignSystemRef;
+  designSystemActions: DesignSystemActions;
   connection: string;
   actionError: string | null;
   onDismissError: () => void;
@@ -73,7 +74,7 @@ export function StudioTopbar(props: Props) {
       <div className="topbar-actions">
         <ConnectionState connection={props.connection} />
         <ActionError message={props.actionError} onDismiss={props.onDismissError} />
-        <DesignSystemChip system={props.designSystem} onOpenDesignMd={props.onDesign} />
+        <DesignSystemChip system={props.designSystem} actions={props.designSystemActions} onOpenDesignMd={props.onDesign} />
         <button className="btn ghost small has-icon" onClick={props.onDesign}>
           <Icon name="doc" />
           DESIGN.md

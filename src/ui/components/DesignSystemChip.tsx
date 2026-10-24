@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CompiledTokenEntry, DesignSystemState } from '../../shared/contracts';
+import type { CompiledTokenEntry, DesignSystemState, Project } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { findPack, keySwatches, usePacks } from '../packs';
 import { usePopover } from '../usePopover';
+import { ChangePackDialog, SavePackDialog } from './DesignSystemDialogs';
 import { Icon } from './Icon';
 import { Swatches } from './Swatches';
 
@@ -10,6 +11,17 @@ export interface DesignSystemRef {
   projectId: string;
   directionId: string | null;
   packId: string | null;
+  name: string | null;
+}
+
+export function designSystemRef(projectId: string, directionId: string | null, project: Project, state: DesignSystemState | null): DesignSystemRef {
+  if (!state) return { projectId, directionId, packId: project.packId ?? null, name: null };
+  return { projectId, directionId, packId: state.packId, name: state.manifest?.name ?? null };
+}
+
+export interface DesignSystemActions {
+  onApply: (packId: string) => Promise<void>;
+  onSave: (name: string) => Promise<void>;
 }
 
 type Load = { state: DesignSystemState | null; error: string | null };
@@ -86,20 +98,44 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
   return load;
 }
 
-export function DesignSystemChip({ system, onOpenDesignMd }: { system: DesignSystemRef; onOpenDesignMd: () => void }) {
+type Dialog = 'change' | 'save' | null;
+
+export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: DesignSystemRef; actions: DesignSystemActions; onOpenDesignMd: () => void }) {
   const [open, setOpen] = useState(false);
+  const [dialog, setDialog] = useState<Dialog>(null);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const { packs } = usePacks();
   const load = useDesignSystem(system, open);
   const pack = findPack(packs, system.packId);
-  const name = pack?.name ?? load.state?.manifest?.name ?? system.packId ?? '';
+  const name = system.name ?? pack?.name ?? load.state?.manifest?.name ?? system.packId ?? '';
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
     if (refocus) trigger.current?.focus();
   }, []);
   usePopover(open, root, close);
-  if (!system.packId) return null;
+  const openDialog = (next: Dialog) => {
+    close(false);
+    setDialog(next);
+  };
+  const dialogs = (
+    <>
+      {dialog === 'change' && <ChangePackDialog currentId={system.packId} onClose={() => setDialog(null)} onApply={actions.onApply} />}
+      {dialog === 'save' && <SavePackDialog defaultName={name} onClose={() => setDialog(null)} onSave={actions.onSave} />}
+    </>
+  );
+  if (!system.directionId) return null;
+  if (!system.packId) {
+    return (
+      <>
+        <button type="button" className="btn ghost small has-icon ds-add" onClick={() => setDialog('change')}>
+          <Icon name="palette" size={14} />
+          Add design system
+        </button>
+        {dialogs}
+      </>
+    );
+  }
 
   return (
     <div className="ds-chip-wrap" ref={root}>
@@ -122,7 +158,15 @@ export function DesignSystemChip({ system, onOpenDesignMd }: { system: DesignSys
               <strong>{name}</strong>
               {pack && <span>{pack.description}</span>}
             </div>
-            <span className="badge">Read-only</span>
+            <span className="badge">{pack?.source === 'user' ? 'Yours' : 'Read-only'}</span>
+          </div>
+          <div className="ds-actions">
+            <button type="button" className="btn small" onClick={() => openDialog('change')}>
+              Change design system…
+            </button>
+            <button type="button" className="btn small" onClick={() => openDialog('save')}>
+              Save to library…
+            </button>
           </div>
           <div className="ds-body">
             <TokenList load={load} />
@@ -143,6 +187,7 @@ export function DesignSystemChip({ system, onOpenDesignMd }: { system: DesignSys
           </div>
         </div>
       )}
+      {dialogs}
     </div>
   );
 }

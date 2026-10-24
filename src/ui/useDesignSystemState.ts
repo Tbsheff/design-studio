@@ -16,7 +16,12 @@ function touchesDesignSystem(change: FilesChange | null, directionId: string | n
   return change.paths.some((file) => file.startsWith('design-system/')) ? change.receivedAt : 0;
 }
 
-export function useDesignSystemState(projectId: string, project: Project | null, directionId: string | null, lastChange: FilesChange | null): DesignTokens | null {
+export interface DesignSystemView {
+  tokens: DesignTokens | null;
+  state: DesignSystemState | null;
+}
+
+export function useDesignSystemState(projectId: string, project: Project | null, directionId: string | null, lastChange: FilesChange | null): DesignSystemView {
   const [loaded, setLoaded] = useState<{ key: string; state: DesignSystemState } | null>(null);
   const packId = project?.packId ?? null;
   const headVersionId = project?.directions.find((x) => x.id === directionId)?.headVersionId ?? null;
@@ -26,7 +31,7 @@ export function useDesignSystemState(projectId: string, project: Project | null,
   live.current = key;
 
   useEffect(() => {
-    if (!packId || !directionId) return;
+    if (!directionId) return;
     const want = `${projectId}:${directionId}`;
     api
       .getDesignSystem(projectId, directionId)
@@ -38,7 +43,8 @@ export function useDesignSystemState(projectId: string, project: Project | null,
 
   return useMemo(() => {
     const state = loaded?.key === key ? loaded.state : null;
-    if (!packId || !state || state.entries.length === 0) return null;
-    return { entries: state.entries, mode: state.manifest?.mode === 'dark' ? 'dark' : 'light', file: state.tokens, replace };
-  }, [packId, loaded, key, replace]);
+    if (!state || state.entries.length === 0) return { tokens: null, state };
+    const tokens: DesignTokens = { entries: state.entries, mode: state.manifest?.mode === 'dark' ? 'dark' : 'light', file: state.tokens, replace };
+    return { tokens, state };
+  }, [loaded, key, replace]);
 }

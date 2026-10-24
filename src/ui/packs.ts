@@ -19,8 +19,23 @@ function loadPacks(): Promise<PackSummary[]> {
   return cached;
 }
 
+const listeners = new Set<() => void>();
+
+export function refreshPacks(): void {
+  cached = null;
+  for (const listener of listeners) listener();
+}
+
 export function usePacks(): PacksState {
   const [state, setState] = useState<PacksState>({ packs: null, error: null });
+  const [generation, setGeneration] = useState(0);
+  useEffect(() => {
+    const listener = () => setGeneration((n) => n + 1);
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
   useEffect(() => {
     let live = true;
     loadPacks()
@@ -29,7 +44,7 @@ export function usePacks(): PacksState {
     return () => {
       live = false;
     };
-  }, []);
+  }, [generation]);
   return state;
 }
 

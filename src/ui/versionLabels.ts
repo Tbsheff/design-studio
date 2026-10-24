@@ -21,7 +21,8 @@ const KIND_INFO: Record<Exclude<Version['meta']['kind'], 'manual'>, KindInfo> = 
   fork: { label: 'Branch', icon: 'branch', hint: 'Start of a new direction' },
 };
 
-const EDIT_INFO: Record<'tokens' | 'design-md' | 'element', KindInfo> = {
+const EDIT_INFO: Record<'tokens' | 'design-md' | 'design-system' | 'element', KindInfo> = {
+  'design-system': { label: 'Design system', icon: 'palette', hint: 'You applied or switched the design system' },
   tokens: { label: 'Tokens', icon: 'token', hint: 'You changed design tokens' },
   'design-md': { label: 'DESIGN.md', icon: 'doc', hint: 'You edited DESIGN.md' },
   element: { label: 'Edit', icon: 'pencil', hint: 'You edited an element' },
@@ -34,6 +35,7 @@ export function indexVersions(versions: Version[]): VersionIndex {
 function manualSort(title: string): keyof typeof EDIT_INFO {
   if (/^(Update tokens|Add token)\b/.test(title)) return 'tokens';
   if (title.startsWith('Update DESIGN.md')) return 'design-md';
+  if (/^(Apply|Switch to) .+ design system$/.test(title)) return 'design-system';
   return 'element';
 }
 

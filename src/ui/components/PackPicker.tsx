@@ -65,7 +65,10 @@ function PackCard({ pack }: { pack: PackSummary }) {
         </span>
       </span>
       <span className="pack-text">
-        <span className="pack-name">{pack.name}</span>
+        <span className="pack-name">
+          <span className="truncate">{pack.name}</span>
+          {pack.source === 'user' && <span className="pack-yours">Yours</span>}
+        </span>
         <span className="pack-desc" title={pack.description}>{pack.description}</span>
         <Swatches swatches={pack.swatches} max={7} />
       </span>
@@ -90,13 +93,83 @@ function TriggerLabel({ pack }: { pack: PackSummary | null }) {
   );
 }
 
+interface ListProps {
+  packs: PackSummary[] | null;
+  value: string | null;
+  includeNone: boolean;
+  onChoose: (pack: PackSummary | null) => void;
+  onTab?: () => void;
+}
+
+export function PackList({ packs, value, includeNone, onChoose, onTab }: ListProps) {
+  const options: (PackSummary | null)[] = includeNone ? [null, ...(packs ?? [])] : (packs ?? []);
+  const selected = findPack(packs, value);
+  const [active, setActive] = useState(0);
+  const list = useRef<HTMLDivElement>(null);
+  const ready = packs !== null;
+  const selectedIndex = options.findIndex((pack) => (pack?.id ?? null) === (selected?.id ?? null));
+
+  useEffect(() => {
+    if (ready) setActive(Math.max(0, selectedIndex));
+  }, [ready]);
+
+  useEffect(() => {
+    if (packs) loadPackFonts(packs);
+  }, [packs]);
+
+  useEffect(() => {
+    if (!ready) return;
+    list.current?.parentElement?.scrollIntoView({ block: 'nearest' });
+    list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.focus({ preventScroll: false });
+  }, [active, ready]);
+
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (options.length > 0) onChoose(options[active] ?? null);
+      return;
+    }
+    if (e.key === 'Tab') return onTab?.();
+    const next = nextIndex(e.key, active, options.length, columnsOf(list.current));
+    if (next === null) return;
+    e.preventDefault();
+    setActive(next);
+  };
+
+  return (
+    <div ref={list} className="pack-list" role="listbox" aria-label="Design systems" onKeyDown={onKey}>
+      {options.map((pack, index) => {
+        const isSelected = (pack?.id ?? null) === (selected?.id ?? null);
+        return (
+          <div
+            key={pack?.id ?? NONE}
+            role="option"
+            aria-label={pack?.name ?? 'No design system'}
+            aria-selected={isSelected}
+            tabIndex={index === active ? 0 : -1}
+            data-index={index}
+            className={`pack-card ${isSelected ? 'selected' : ''}`}
+            onClick={() => onChoose(pack)}
+            onMouseMove={() => index !== active && setActive(index)}
+          >
+            {pack ? <PackCard pack={pack} /> : <NoneCard />}
+            {isSelected && (
+              <span className="pack-check" aria-hidden="true">
+                <Icon name="check" size={12} />
+              </span>
+            )}
+          </div>
+        );
+      })}
+      {packs === null && <div className="pack-card skeleton" aria-hidden="true" />}
+    </div>
+  );
+}
+
 export function PackPicker({ state, value, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
   const root = useRef<HTMLDivElement>(null);
-  const list = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const options: (PackSummary | null)[] = [null, ...(state.packs ?? [])];
   const selected = findPack(state.packs, value);
 
   const close = useCallback((refocus: boolean) => {
@@ -105,36 +178,9 @@ export function PackPicker({ state, value, onChange }: Props) {
   }, []);
   usePopover(open, root, close);
 
-  useEffect(() => {
-    if (!open) return;
-    if (state.packs) loadPackFonts(state.packs);
-    list.current?.parentElement?.scrollIntoView({ block: 'nearest' });
-    const el = list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`);
-    el?.focus({ preventScroll: false });
-  }, [open, active, state.packs]);
-
-  const openPicker = () => {
-    const index = options.findIndex((pack) => (pack?.id ?? null) === (selected?.id ?? null));
-    setActive(Math.max(0, index));
-    setOpen(true);
-  };
-
   const choose = (pack: PackSummary | null) => {
     onChange(pack?.id ?? null);
     close(true);
-  };
-
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      choose(options[active] ?? null);
-      return;
-    }
-    if (e.key === 'Tab') return setOpen(false);
-    const next = nextIndex(e.key, active, options.length, columnsOf(list.current));
-    if (next === null) return;
-    e.preventDefault();
-    setActive(next);
   };
 
   return (
@@ -147,7 +193,7 @@ export function PackPicker({ state, value, onChange }: Props) {
         aria-haspopup="listbox"
         aria-expanded={open}
         title={selected ? `Design system: ${selected.name}` : 'Design system'}
-        onClick={() => (open ? close(false) : openPicker())}
+        onClick={() => (open ? close(false) : setOpen(true))}
       >
         <TriggerLabel pack={selected} />
         <Icon name="chevronDown" size={12} />
@@ -159,32 +205,7 @@ export function PackPicker({ state, value, onChange }: Props) {
             <span>Tokens, fonts and a DESIGN.md go into the project. The agent builds with them.</span>
           </div>
           {state.error && <div className="alert error small">Could not load design systems. {state.error}</div>}
-          <div ref={list} className="pack-list" role="listbox" aria-label="Design systems" onKeyDown={onKey}>
-            {options.map((pack, index) => {
-              const isSelected = (pack?.id ?? null) === (selected?.id ?? null);
-              return (
-                <div
-                  key={pack?.id ?? NONE}
-                  role="option"
-                  aria-label={pack?.name ?? 'No design system'}
-                  aria-selected={isSelected}
-                  tabIndex={index === active ? 0 : -1}
-                  data-index={index}
-                  className={`pack-card ${isSelected ? 'selected' : ''}`}
-                  onClick={() => choose(pack)}
-                  onMouseMove={() => index !== active && setActive(index)}
-                >
-                  {pack ? <PackCard pack={pack} /> : <NoneCard />}
-                  {isSelected && (
-                    <span className="pack-check" aria-hidden="true">
-                      <Icon name="check" size={12} />
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-            {state.packs === null && <div className="pack-card skeleton" aria-hidden="true" />}
-          </div>
+          <PackList packs={state.packs} value={value} includeNone onChoose={choose} onTab={() => setOpen(false)} />
         </div>
       )}
     </div>

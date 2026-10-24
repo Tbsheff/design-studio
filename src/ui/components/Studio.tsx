@@ -7,6 +7,7 @@ import { downloadBlob } from '../format';
 import { POLISH_REQUEST } from '../polish';
 import { createDraftStore, homeVariations, useDraftActive, useUi } from '../storage';
 import { useDesignSystemState } from '../useDesignSystemState';
+import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
 import type { PreviewPort } from '../bridge';
 import { inspectorEmptyReason, isDirectEditable } from './Inspector';
@@ -17,8 +18,9 @@ import type { CanvasSource } from './CanvasToolbar';
 import { chatWidthStyle } from './ChatSplitter';
 import { fixPrompt } from './ErrorsPanel';
 import { RightPanel } from './RightPanel';
+import { designSystemRef } from './DesignSystemChip';
 import { StudioTopbar } from './StudioTopbar';
-import { CenterView, StudioBoot, StudioModals, UnfinishedSlot } from './StudioParts';
+import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
 import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
@@ -63,7 +65,9 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const panel = usePanelTab(inspectorEmptyReason(selection, editable) === null);
 
   const direction = project?.directions.find((x) => x.id === directionId) ?? null;
-  const tokens = useDesignSystemState(projectId, project, directionId, data.lastChange);
+  const designSystem = useDesignSystemState(projectId, project, directionId, data.lastChange);
+  const tokens = designSystem.tokens;
+  const packActions = usePackActions({ projectId, directionId, setProject: data.setProject, onCommitted: data.refreshVersions });
   const directionRuns = useMemo(
     () =>
       Object.values(runs)
@@ -157,7 +161,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         name={project.name}
         kind={project.kind}
         directionName={direction?.name ?? null}
-        designSystem={{ projectId, directionId: did, packId: project.packId ?? null }}
+        designSystem={designSystemRef(projectId, did, project, designSystem.state)}
+        designSystemActions={packActions.actions}
         connection={data.connection}
         actionError={actionError}
         onDismissError={() => setActionError(null)}
@@ -292,6 +297,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onCloseDesign={() => setDesignOpen(false)}
         onCloseSettings={() => setSettingsOpen(false)}
       />
+      <StudioToast text={packActions.toast?.text ?? null} />
     </div>
   );
 }

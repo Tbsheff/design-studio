@@ -98,6 +98,7 @@ export interface AgentRunner {
   start(ctx: AgentRunContext): RunHandle;
   get(runId: string): RunHandle | undefined;
   isRunning(projectId: string, directionId: string): boolean;
+  stopping?(projectId: string, directionId: string): Promise<unknown> | null;
 }
 
 export interface PreviewService {

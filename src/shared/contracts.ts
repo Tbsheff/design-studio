@@ -438,6 +438,7 @@ export type StudioEventBody =
   | { type: 'run.tool.finished'; runId: string; toolUseId: string; isError: boolean; summary: string; durationMs: number; diff?: ToolDiff; denied?: boolean }
   | { type: 'run.user'; runId: string; id: string; text: string }
   | { type: 'run.queue'; runId: string; items: QueuedMessage[] }
+  | { type: 'run.stopping'; runId: string }
   | { type: 'run.permission'; runId: string; request: PermissionRequest }
   | { type: 'run.permission.resolved'; runId: string; requestId: string; allow: boolean }
   | { type: 'run.todos'; runId: string; todos: TodoItem[] }

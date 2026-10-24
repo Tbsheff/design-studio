@@ -129,11 +129,15 @@ describe('mock agent run, Round 3', () => {
 
   it('a stop while a prompt is open answers it as a deny', async () => {
     const env = await setup();
-    const handle = env.runner.start(env.context({ prompt: 'Test it [bash]', mode: 'edit', level: 'wireframe' }));
+    const ctx = env.context({ prompt: 'Test it [bash]', mode: 'edit', level: 'wireframe' });
+    const handle = env.runner.start(ctx);
     await waitUntil(() => env.bus.events.some((event) => event.type === 'run.permission'));
     handle.cancel();
+    expect(env.bus.events.some((event) => event.type === 'run.stopping' && event.runId === handle.runId)).toBe(true);
+    expect(env.runner.stopping?.(ctx.project.id, ctx.direction.id)).toBe(handle.done);
     const summary = await handle.done;
     expect(summary.status).toBe('canceled');
+    expect(env.runner.stopping?.(ctx.project.id, ctx.direction.id)).toBeNull();
     expect(env.bus.events.some((event) => event.type === 'run.permission.resolved' && !event.allow)).toBe(true);
     await expect(readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), 'utf8')).rejects.toThrow();
   });

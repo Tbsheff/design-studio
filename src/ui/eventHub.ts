@@ -1,28 +1,31 @@
 import type { StudioEvent, StudioEventBody } from '../shared/contracts';
 
-export const EVENT_TYPES: StudioEventBody['type'][] = [
-  'run.started',
-  'run.text.delta',
-  'run.text',
-  'run.thinking.delta',
-  'run.thinking',
-  'run.tool.started',
-  'run.tool.finished',
-  'run.user',
-  'run.queue',
-  'run.permission',
-  'run.permission.resolved',
-  'run.todos',
-  'run.usage',
-  'run.retry',
-  'run.finished',
-  'files.changed',
-  'version.created',
-  'direction.updated',
-  'status.changed',
-  'preview.build-error',
-  'comments.changed',
-];
+const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
+  'run.started': true,
+  'run.text.delta': true,
+  'run.text': true,
+  'run.thinking.delta': true,
+  'run.thinking': true,
+  'run.tool.started': true,
+  'run.tool.finished': true,
+  'run.user': true,
+  'run.queue': true,
+  'run.stopping': true,
+  'run.permission': true,
+  'run.permission.resolved': true,
+  'run.todos': true,
+  'run.usage': true,
+  'run.retry': true,
+  'run.finished': true,
+  'files.changed': true,
+  'version.created': true,
+  'direction.updated': true,
+  'status.changed': true,
+  'preview.build-error': true,
+  'comments.changed': true,
+};
+
+export const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody['type'][];
 
 export type ConnectionState = 'connecting' | 'open' | 'reconnecting';
 

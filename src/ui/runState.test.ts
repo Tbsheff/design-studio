@@ -26,4 +26,19 @@ describe('run state', () => {
     ]);
     expect(runText(done.r1!)).toBe('Partial');
   });
+
+  it('shows Stopped as soon as the stop is asked, and drops late stream events', () => {
+    const live = [
+      ev({ type: 'run.started', request: { prompt: 'x', mode: 'edit' } }),
+      ev({ type: 'run.text.delta', text: 'Kept' }),
+      ev({ type: 'run.queue', items: [{ id: 'q', text: 'later' }] }),
+      ev({ type: 'run.stopping' }),
+      ev({ type: 'run.text.delta', text: ' late' }),
+      ev({ type: 'run.tool.started', toolUseId: 't9', name: 'Read', input: {} }),
+    ].reduce(applyRunEvent, {} as RunMap);
+    expect(live.r1?.status).toBe('canceled');
+    expect(live.r1?.queue).toEqual([]);
+    expect(runText(live.r1!)).toBe('Kept');
+    expect(live.r1?.tools).toEqual([]);
+  });
 });

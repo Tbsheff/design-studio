@@ -142,6 +142,8 @@ export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
   if (event.type === 'run.finished') return { ...runs, [runId]: finishedView(prev, event.summary) };
   if (prev?.summary) return runs;
   const run: RunView = prev ? { ...prev, directionId: prev.directionId ?? event.directionId ?? null } : emptyRun(runId, event.directionId ?? null, event.ts);
+  if (event.type === 'run.stopping') return { ...runs, [runId]: { ...run, status: 'canceled', queue: [], permissions: [], retry: null } };
+  if (run.status === 'canceled' && isPartEvent(event)) return runs;
   if (isPartEvent(event)) {
     run.parts = applyPartEvent(run.parts, event);
     if (event.type === 'run.text.delta' || event.type === 'run.thinking.delta') run.retry = null;

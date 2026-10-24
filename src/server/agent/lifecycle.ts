@@ -204,6 +204,7 @@ type RunEventPayload = DistributiveOmit<RunEventBody, 'runId'>;
 export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): AgentRunner {
   const handles = new Map<string, RunHandle>();
   const activeRuns = new Map<string, string>();
+  const stopping = new Map<string, Promise<unknown>>();
   const activeKey = (projectId: string, directionId: string): string => `${projectId}/${directionId}`;
 
   async function runBeforeCommit(project: Project, direction: Direction): Promise<void> {
@@ -541,6 +542,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     const done = execute().finally(() => {
       if (activeRuns.get(runKey) === runId) activeRuns.delete(runKey);
+      if (stopping.get(runKey) === done) stopping.delete(runKey);
     });
 
     const handle: RunHandle = {
@@ -549,6 +551,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         if (driverSettled || canceled) return;
         canceled = true;
         controller.abort();
+        stopping.set(runKey, done);
+        emitRun({ type: 'run.stopping' });
       },
       done,
       setQueue(items) {
@@ -578,5 +582,6 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     start,
     get: (runId) => handles.get(runId),
     isRunning: (projectId, directionId) => activeRuns.has(activeKey(projectId, directionId)),
+    stopping: (projectId, directionId) => stopping.get(activeKey(projectId, directionId)) ?? null,
   };
 }

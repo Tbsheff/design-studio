@@ -64,10 +64,17 @@ async function main(): Promise<void> {
     runs.push(first);
     console.log(`[r3-smoke] create: ${describe(first)}`);
 
-    const { runId } = await call<{ runId: string }>('POST', `/api/projects/${project.id}/d/main/runs`, { prompt: 'Read index.html, then change the headline to "Fresh bread daily". Use the Edit tool.', mode: 'edit' });
-    await waitFor('first tool', async () => ((await list(project.id)).find((run) => run.id === runId)?.toolCalls.length ? true : null), 120_000, 100).catch(() => undefined);
-    const queued = await fetch(`${BASE}/api/runs/${runId}/queue`, { method: 'PUT', headers: { 'x-studio-token': token, 'content-type': 'application/json' }, body: JSON.stringify({ items: [{ id: 'q1', text: QUEUED }] }) });
-    console.log(`[r3-smoke] queue put ${queued.status}`);
+    await page.evaluate((pid) => localStorage.setItem('design-studio.ui.v1', JSON.stringify({ activeProjectId: pid })), project.id);
+    await page.reload();
+    const box = page.locator('.prompt textarea');
+    await box.click();
+    const runsBefore = await page.locator('[data-run-id]').count();
+    await box.fill('Read index.html, then change the headline to "Fresh bread daily". Use the Edit tool.');
+    await page.keyboard.press('Meta+Enter');
+    await page.locator('[data-run-id]').nth(runsBefore).locator('.tool-row').first().waitFor({ timeout: 120_000 });
+    await box.fill(QUEUED);
+    await box.press('Enter');
+    const runId = await waitFor('edit run id', async () => (await list(project.id)).find((run) => run.request.prompt.startsWith('Read index.html, then change'))?.id ?? null, 30_000);
     const edit = await finished(project.id, runId);
     runs.push(edit);
     const detail = await call<{ sent: RunSentRecord[] }>('GET', `/api/runs/${runId}`);
@@ -82,24 +89,38 @@ async function main(): Promise<void> {
       } else console.log('[r3-smoke] queued message: not found in any run');
     }
 
-    await page.evaluate((pid) => localStorage.setItem('design-studio.ui.v1', JSON.stringify({ activeProjectId: pid })), project.id);
-    await page.reload();
-    const box = page.locator('.prompt textarea');
     await box.click();
+    const before = await page.locator('[data-run-id]').count();
     await box.fill('Read index.html, then add a short opening hours section under the button.');
     await page.keyboard.press('Meta+Enter');
-    await page.locator('[data-run-id]').last().locator('.tool-row').first().waitFor({ timeout: 120_000 });
+    await page.locator('[data-run-id]').nth(before).locator('.tool-row').first().waitFor({ timeout: 120_000 });
     await box.focus();
     const started = Date.now();
+    page.on('request', (request) => {
+      if (request.url().includes('/cancel')) console.log(`[r3-smoke] cancel request sent after ${Date.now() - started} ms`);
+    });
+    page.on('response', (response) => {
+      if (response.url().includes('/cancel')) console.log(`[r3-smoke] cancel answered ${response.status()} after ${Date.now() - started} ms`);
+    });
     await page.keyboard.press('Escape');
     const stoppedAt = await page.waitForFunction(() => (document.querySelector('[data-run-id]:last-child .run-foot .status.canceled') ? Date.now() : 0), undefined, { polling: 'raf', timeout: 10_000 });
     console.log(`[r3-smoke] Esc to Stopped: ${(await stoppedAt.jsonValue()) - started} ms`);
-    const all = await list(project.id);
-    const stopped = [...all].sort((a, b) => b.startedAt - a.startedAt)[0];
+    const stopped = (await list(project.id)).find((run) => run.request.prompt.startsWith('Read index.html, then add'));
+    const nextPrompt = 'Make the button corners round.';
+    const nextSent = Date.now();
+    await box.fill(nextPrompt);
+    await page.keyboard.press('Meta+Enter');
+    const next = await waitFor('run after the stop', async () => (await list(project.id)).find((run) => run.request.prompt === nextPrompt) ?? null, 30_000, 100).catch(() => null);
+    console.log(`[r3-smoke] send right after the stop: ${next ? `run started after ${Date.now() - nextSent} ms` : 'no run started'}`);
     if (stopped) {
       const done = await finished(project.id, stopped.id);
       runs.push(done);
       console.log(`[r3-smoke] stopped run: ${describe(done)}`);
+    }
+    if (next) {
+      const done = await finished(project.id, next.id);
+      runs.push(done);
+      console.log(`[r3-smoke] run after the stop: ${describe(done)}`);
     }
     console.log(`[r3-smoke] total cost $${runs.reduce((sum, run) => sum + run.costUsd, 0).toFixed(4)}`);
     console.log(`[r3-smoke] data dir: ${dataDir}`);

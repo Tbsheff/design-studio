@@ -637,6 +637,15 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
   });
 }
 
+export const MOCK_SLOW_STOP_MS = 2000;
+
 export function createMockDriver(): RunDriver {
-  return runMock;
+  return async (input) => {
+    try {
+      return await runMock(input);
+    } catch (error) {
+      if (input.signal.aborted && input.ctx.request.prompt.includes('[slowstop]')) await new Promise((resolve) => setTimeout(resolve, MOCK_SLOW_STOP_MS));
+      throw error;
+    }
+  };
 }

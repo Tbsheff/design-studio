@@ -110,7 +110,7 @@ test('R3-2: a message queued during a 3-tool run reaches the agent before tool 3
 for (const where of ['studio', 'iframe'] as const) {
   test(`R3-2: Esc stops the run in under 500 ms and keeps finished tool rows, focus in ${where}`, async ({ page }) => {
     const { api, project } = await newProject(page, `Esc Probe ${where}`);
-    const prompt = `Walk then stop ${where} [steps]`;
+    const prompt = `Walk then stop ${where} [steps]${where === 'studio' ? ' [slowstop]' : ''}`;
     await type(page, prompt, 'Meta+Enter');
     const run = page.locator('[data-run-id]').last();
     await expect(run.locator('.tool-row[data-state="done"]')).toHaveCount(1, { timeout: 10_000 });
@@ -132,6 +132,10 @@ for (const where of ['studio', 'iframe'] as const) {
     await expect(run.locator('.tool-row[data-state="done"]').first()).toBeVisible();
     await expect(run.locator('.tool-row[data-state="pending"]')).toHaveCount(0);
     expect((await finishedRun(api, project.id, prompt)).status).toBe('canceled');
+    if (where === 'studio') {
+      await type(page, `After the stop ${where}`, 'Meta+Enter');
+      expect((await finishedRun(api, project.id, `After the stop ${where}`)).status).toBe('completed');
+    }
   });
 }
 

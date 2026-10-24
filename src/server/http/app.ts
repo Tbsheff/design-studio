@@ -58,6 +58,8 @@ import { createProjectLibrary } from '../store/project-library.js';
 import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
 import { registerHomeRoutes } from './home-routes.js';
 
+const STOP_WAIT_MS = 10_000;
+
 interface AppDeps {
   config: ServerConfig;
   bus: EventBus;
@@ -332,6 +334,11 @@ export function createApp(deps: AppDeps): Hono {
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
+  };
+
+  const waitForStop = async (pid: string, did: string): Promise<void> => {
+    const pending = runner.stopping?.(pid, did);
+    if (pending) await Promise.race([pending.catch(() => undefined), new Promise((resolve) => setTimeout(resolve, STOP_WAIT_MS))]);
   };
 
   const continueWithNext = async (pid: string, did: string, previous: RunRequest, handle: RunHandle): Promise<void> => {
@@ -675,6 +682,7 @@ export function createApp(deps: AppDeps): Hono {
     const request = parseRunRequest(body);
     const referenceUrls = parseReferenceUrls(body.referenceUrls, config.fetchAllowLoopback === true);
     if (referenceUrls.length > 0) request.referencePages = await Promise.all(referenceUrls.map((url) => captureReferencePage(url, config.fetchAllowLoopback === true)));
+    await waitForStop(c.req.param('pid'), c.req.param('did'));
     const runId = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       if (runner.isRunning(project.id, direction.id)) throw new ConflictError('run_in_progress');
       return startRun(project, direction, await withTaskInputs(project, direction, request));

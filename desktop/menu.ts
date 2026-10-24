@@ -1,4 +1,5 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron';
+import type { ZoomKey } from '../src/shared/contracts.js';
 
 export interface MenuActions {
   checkSetup: () => void;
@@ -9,6 +10,7 @@ export interface MenuActions {
   redo: () => void;
   run: () => void;
   stop: () => void;
+  zoom: (key: ZoomKey) => void;
   revealWorkTree: () => void;
   revealExport: () => void;
 }
@@ -31,6 +33,11 @@ export const MENU_IDS = {
   revealExport: 'reveal-export',
   checkUpdates: 'check-updates',
   checkSetup: 'check-setup',
+  zoomIn: 'zoom-in',
+  zoomOut: 'zoom-out',
+  zoomActual: 'zoom-actual',
+  zoomFit: 'zoom-fit',
+  zoomSelection: 'zoom-selection',
 } as const;
 
 function appMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
@@ -95,23 +102,34 @@ function runMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOpt
   };
 }
 
-const VIEW_MENU: MenuItemConstructorOptions = {
-  label: 'View',
-  submenu: [
-    { role: 'reload' },
-    { role: 'forceReload' },
-    { role: 'toggleDevTools' },
-    { type: 'separator' },
-    { role: 'resetZoom' },
-    { role: 'zoomIn' },
-    { role: 'zoomOut' },
-    { type: 'separator' },
-    { role: 'togglefullscreen' },
-  ],
-};
+function viewMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
+  const zoom = (id: string, label: string, accelerator: string, key: ZoomKey): MenuItemConstructorOptions => ({
+    id,
+    label,
+    accelerator,
+    enabled: state.inProject,
+    click: () => actions.zoom(key),
+  });
+  return {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
+      zoom(MENU_IDS.zoomIn, 'Zoom In', 'CmdOrCtrl+=', 'in'),
+      zoom(MENU_IDS.zoomOut, 'Zoom Out', 'CmdOrCtrl+-', 'out'),
+      zoom(MENU_IDS.zoomActual, 'Zoom to 100%', 'CmdOrCtrl+0', 'actual'),
+      zoom(MENU_IDS.zoomFit, 'Zoom to Fit', 'CmdOrCtrl+1', 'fit'),
+      zoom(MENU_IDS.zoomSelection, 'Zoom to Selection', 'CmdOrCtrl+2', 'selection'),
+      { type: 'separator' },
+      { role: 'togglefullscreen' },
+    ],
+  };
+}
 
 export function buildMenu(actions: MenuActions, state: MenuState): Menu {
-  return Menu.buildFromTemplate([appMenu(actions, state), fileMenu(actions, state), editMenu(actions), VIEW_MENU, runMenu(actions, state), { role: 'windowMenu' }]);
+  return Menu.buildFromTemplate([appMenu(actions, state), fileMenu(actions, state), editMenu(actions), viewMenu(actions, state), runMenu(actions, state), { role: 'windowMenu' }]);
 }
 
 export function buildDockMenu(newProject: () => void, recents: { id: string; name: string }[], open: (id: string) => void): Menu {

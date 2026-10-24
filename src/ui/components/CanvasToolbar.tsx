@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from 'react';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
 
@@ -28,6 +28,8 @@ interface Props {
   hasHead: boolean;
   checking: boolean;
   onCheck: () => void;
+  addFrame?: ReactNode;
+  layers?: ReactNode;
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
@@ -163,25 +165,36 @@ function SourceControls({ source, onSource, hasHead }: Pick<Props, 'source' | 'o
   );
 }
 
-const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+function isApple(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const data = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
+  return /mac|iphone|ipad/i.test(data?.platform || navigator.userAgent);
+}
+
+const MOD_KEY = isApple() ? '⌘' : 'Ctrl+';
 
 type ZoomControlProps = Pick<Props, 'zoomSetting' | 'zoom' | 'onZoomTo' | 'onZoomStep' | 'onFit'>;
+
+export function zoomOptionLabel(setting: ZoomSetting, zoom: number): string {
+  return setting === 'fit' ? `Fit ${Math.round(zoom * 100)}%` : 'Fit';
+}
 
 function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomControlProps) {
   const percent = Math.round(zoom * 100);
   const custom = zoomSetting !== 'fit' && !ZOOMS.includes(zoomSetting);
   return (
     <div className="zoom-controls">
-      <button className="icon-btn small" aria-label="Zoom out" aria-keyshortcuts="Control+- Meta+-" data-tip={`Zoom out ${MOD_KEY}−`} onClick={() => onZoomStep(-1)}>
+      <button className="icon-btn small" aria-label="Zoom out" aria-keyshortcuts="- Control+- Meta+-" data-tip={`Zoom out  −  ${MOD_KEY}−`} onClick={() => onZoomStep(-1)}>
         <Icon name="minus" />
       </button>
       <select
         className="select zoom-select"
         aria-label="Zoom"
+        data-tip={`Fit ⇧1  ·  Selection ⇧2  ·  100% ⇧0`}
         value={zoomSetting === 'fit' ? 'fit' : String(zoomSetting)}
         onChange={(e) => (e.target.value === 'fit' ? onFit() : onZoomTo(Number(e.target.value)))}
       >
-        <option value="fit">Fit {zoomSetting === 'fit' ? `${percent}%` : ''}</option>
+        <option value="fit">{zoomOptionLabel(zoomSetting, zoom)}</option>
         {ZOOMS.map((z) => (
           <option key={z} value={String(z)}>
             {Math.round(z * 100)}%
@@ -192,8 +205,8 @@ function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomCo
       <button
         className="icon-btn small"
         aria-label="Zoom in"
-        aria-keyshortcuts="Control+= Meta+="
-        data-tip={`Zoom in ${MOD_KEY}+`}
+        aria-keyshortcuts="= Control+= Meta+="
+        data-tip={`Zoom in  +  ${MOD_KEY}+`}
         data-tip-align="end"
         onClick={() => onZoomStep(1)}
       >
@@ -206,7 +219,9 @@ function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomCo
 export function CanvasToolbar(props: Props) {
   return (
     <div className="toolbar">
+      {props.layers}
       <ViewportControls viewport={props.viewport} />
+      {props.addFrame}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />

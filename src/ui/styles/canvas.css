@@ -220,6 +220,7 @@
   bottom: 100%;
   left: calc(var(--stroke) * -1);
   transform-origin: 0 100%;
+  transform: scale(var(--inv-zoom, 1));
   margin-bottom: 0;
   background: var(--accent);
   color: var(--on-accent);
@@ -237,8 +238,150 @@
 }
 
 .stage.grab .frame,
-.stage.grabbing .frame {
+.stage.grabbing .frame,
+.stage.zoom-in .frame {
   pointer-events: none;
+}
+
+.stage.zoom-in {
+  cursor: zoom-in;
+}
+
+.stage.panning .artboard {
+  will-change: transform;
+}
+
+.canvas-frame {
+  position: absolute;
+  background: oklch(0.995 0 0);
+  box-shadow: 0 0 0 1px oklch(0.2 0.02 var(--hue) / 0.08), 0 2px 4px oklch(0.2 0.02 var(--hue) / 0.04),
+    0 12px 32px -8px oklch(0.2 0.02 var(--hue) / 0.16);
+}
+
+.frame.passive {
+  pointer-events: none;
+}
+
+.frame-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: default;
+}
+
+.frame-label {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding-bottom: var(--s-1);
+  transform: scale(var(--inv-zoom, 1));
+  transform-origin: 0 100%;
+  white-space: nowrap;
+}
+
+.frame-name {
+  height: 24px;
+  padding: 0 var(--s-1);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-3);
+  font: 500 var(--t-xs) / 24px var(--font);
+  font-variant-numeric: tabular-nums;
+  cursor: grab;
+  user-select: none;
+  transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+
+.frame-name:hover {
+  color: var(--text);
+  background: oklch(0.2 0.02 var(--hue) / 0.06);
+}
+
+.frame-name:active {
+  cursor: grabbing;
+  background: oklch(0.2 0.02 var(--hue) / 0.1);
+}
+
+.frame-name:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.frame-label.active .frame-name {
+  color: var(--accent-text);
+}
+
+.frame-remove {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-3);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
+}
+
+.frame-label:hover .frame-remove,
+.frame-remove:focus-visible {
+  opacity: 1;
+}
+
+.frame-remove:hover {
+  color: var(--text);
+  background: oklch(0.2 0.02 var(--hue) / 0.06);
+}
+
+.frame-remove:active {
+  background: oklch(0.2 0.02 var(--hue) / 0.1);
+}
+
+.frame-remove:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+body.frame-dragging,
+body.frame-dragging * {
+  cursor: grabbing !important;
+}
+
+body.frame-dragging .frame {
+  pointer-events: none;
+}
+
+.add-frame {
+  position: relative;
+}
+
+.canvas-menu {
+  min-width: 240px;
+  white-space: nowrap;
+  top: calc(100% + var(--s-1));
+  left: 0;
+  right: auto;
+  transform-origin: top left;
+}
+
+.canvas-menu kbd {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-menu {
+    animation: none;
+  }
 }
 
 .canvas > .check-panel {

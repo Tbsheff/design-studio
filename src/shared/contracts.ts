@@ -559,17 +559,35 @@ export type BridgeToParent =
       clientX: number;
       clientY: number;
     }
-  | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey }
+  | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey; at: number }
   | { ns: 'studio'; token: string; type: 'anchor-rects'; anchors: AnchorReport[] }
   | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] };
 
-export type ZoomKey = '=' | '-' | '0' | '1';
+export type ZoomKey = 'in' | 'out' | 'actual' | 'fit' | 'selection';
 
-const ZOOM_KEY_MAP: Record<string, ZoomKey> = { '=': '=', '+': '=', '-': '-', _: '-', '0': '0', '1': '1' };
+export interface ZoomKeyInput {
+  key: string;
+  code: string;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+}
 
-export function zoomKeyOf(event: { key: string; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): ZoomKey | null {
-  if (!(event.ctrlKey || event.metaKey) || event.altKey) return null;
-  return ZOOM_KEY_MAP[event.key] ?? null;
+const MOD_ZOOM_KEYS: Record<string, ZoomKey> = { '=': 'in', '+': 'in', '-': 'out', _: 'out' };
+const MOD_ZOOM_CODES: Record<string, ZoomKey> = { Digit0: 'actual', Digit1: 'fit', Digit2: 'selection' };
+const SHIFT_ZOOM_CODES: Record<string, ZoomKey> = { Digit0: 'actual', Digit1: 'fit', Digit2: 'selection' };
+const BARE_ZOOM_KEYS: Record<string, ZoomKey> = { '=': 'in', '+': 'in', '-': 'out' };
+
+export function zoomKeyOf(event: ZoomKeyInput): ZoomKey | null {
+  if (event.altKey) return null;
+  if (event.ctrlKey || event.metaKey) return MOD_ZOOM_CODES[event.code] ?? MOD_ZOOM_KEYS[event.key] ?? null;
+  if (event.shiftKey && SHIFT_ZOOM_CODES[event.code]) return SHIFT_ZOOM_CODES[event.code] ?? null;
+  return BARE_ZOOM_KEYS[event.key] ?? null;
+}
+
+export function isModZoomKey(event: ZoomKeyInput): boolean {
+  return event.ctrlKey || event.metaKey;
 }
 
 export type ParentToBridge =

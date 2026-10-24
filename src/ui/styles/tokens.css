@@ -66,6 +66,7 @@
   --ring-soft: 0 0 0 3px oklch(0.55 0.18 254 / 0.22);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 100ms;
   --dur: 160ms;
   --dur-slow: 220ms;
 

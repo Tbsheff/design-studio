@@ -9,6 +9,7 @@ import {
   SOURCE_LOC_ATTR,
   TOKEN_PREVIEW_STYLE_ID,
   zoomKeyOf,
+  isModZoomKey,
 } from '../shared/contracts.js';
 
 type Rect = SelectionContext['rect'];
@@ -221,6 +222,11 @@ function eventElement(event: Event): Element | null {
   return null;
 }
 
+function isTypingElement(element: Element | null): boolean {
+  if (!(element instanceof HTMLElement)) return false;
+  return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
+}
+
 function reloadIfChangedDuringLoad(): void {
   if (!document.querySelector('script[src="/@vite/client"]')) return;
   const loadStartedAt = performance.timeOrigin;
@@ -265,8 +271,10 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const key = zoomKeyOf(event);
     if (!key) return;
+    const mod = isModZoomKey(event);
+    if (!mod && isTypingElement(eventElement(event))) return;
     event.preventDefault();
-    post({ type: 'zoom-key', key });
+    post({ type: 'zoom-key', key, at: performance.timeOrigin + performance.now() });
   };
 
   window.addEventListener('wheel', onWheel, { capture: true, passive: false });

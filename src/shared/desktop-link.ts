@@ -1,4 +1,4 @@
-import type { RunStatus } from './contracts.js';
+import type { RunStatus, ZoomKey } from './contracts.js';
 
 export const DESKTOP_MESSAGE = 'studio-desktop';
 
@@ -27,7 +27,8 @@ export type DesktopCommand =
   | { type: 'undo' }
   | { type: 'redo' }
   | { type: 'run' }
-  | { type: 'stop' };
+  | { type: 'stop' }
+  | { type: 'zoom'; key: ZoomKey };
 
 export interface DesktopContext {
   projectId: string | null;

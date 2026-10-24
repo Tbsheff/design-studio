@@ -43,7 +43,7 @@ async function expectPointKept(page: Page, at: Point, deltaY: number): Promise<n
   await page.mouse.wheel(0, deltaY);
   await page.keyboard.up('Control');
   await expect.poll(() => currentZoom(page)).not.toBe(before);
-  await page.waitForTimeout(100);
+  await expect.poll(async () => percentOf(await zoomLabel(page))).toBe(Math.round((await currentZoom(page)) * 100));
   const after = await currentZoom(page);
   const moved = await artboardOrigin(page);
   expect(Math.abs(moved.x + design.x * after - at.x)).toBeLessThanOrEqual(4);
@@ -99,7 +99,7 @@ test('canvas zoom: ctrl+wheel over the frame, buttons, and keyboard shortcuts', 
   base = await currentZoom(page);
   await page.keyboard.press('ControlOrMeta+Minus');
   await expect.poll(() => currentZoom(page)).toBeLessThan(base);
-  await page.keyboard.press('ControlOrMeta+Digit1');
+  await page.keyboard.press('ControlOrMeta+Digit0');
   await expect.poll(() => currentZoom(page)).toBe(1);
   await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('1');
 
@@ -113,7 +113,7 @@ test('canvas zoom: ctrl+wheel over the frame, buttons, and keyboard shortcuts', 
   await page.keyboard.press('ControlOrMeta+Minus');
   await expect.poll(() => currentZoom(page)).toBeLessThan(base);
 
-  await page.keyboard.press('ControlOrMeta+Digit0');
+  await page.keyboard.press('ControlOrMeta+Digit1');
   await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('fit');
   await expect.poll(() => currentZoom(page)).toBeCloseTo(fitZoom, 4);
   expect(await zoomLabel(page)).toBe(`Fit ${Math.round(fitZoom * 100)}%`);

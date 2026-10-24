@@ -153,6 +153,7 @@ export class NativeShell {
           redo: () => this.edit('redo'),
           run: () => this.send({ type: 'run' }),
           stop: () => this.send({ type: 'stop' }),
+          zoom: (key) => this.send({ type: 'zoom', key }),
           revealWorkTree: () => void this.revealWorkTree(),
           revealExport: () => this.revealExport(),
         },

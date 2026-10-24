@@ -66,6 +66,8 @@ import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
 import { createProjectLibrary } from '../store/project-library.js';
 import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
 import { registerHomeRoutes } from './home-routes.js';
+import { registerVersionRoutes } from './version-routes.js';
+import { createVersionNames } from '../store/version-names.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -273,6 +275,8 @@ export function createApp(deps: AppDeps): Hono {
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
   const editDeps = { bus, projects, versions, runner, history: editHistory };
   const app = new Hono();
+  const versionNames = createVersionNames((pid) => projects.projectDir(pid));
+  const thumbnails = deps.thumbnails ?? createThumbnailService({ projects, preview, versions });
 
   const projectsRoot = path.join(config.dataDir, 'projects');
   const runsDir = (projectId: string): string => path.join(projects.projectDir(projectId), 'runs');
@@ -669,7 +673,7 @@ export function createApp(deps: AppDeps): Hono {
 
   app.get('/api/projects/:pid/d/:did/versions', async (c) => {
     const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json(await versions.list(project, direction));
+    return c.json(await versionNames.apply(project.id, await versions.list(project, direction)));
   });
 
   app.get('/api/projects/:pid/d/:did/design-system', async (c) => {
@@ -969,13 +973,15 @@ export function createApp(deps: AppDeps): Hono {
     projects,
     versions,
     library: createProjectLibrary({ config, projects, versions, preview, runner, defaultFolder: () => defaultFolder.ensure() }),
-    thumbnails: deps.thumbnails ?? createThumbnailService({ projects, preview }),
+    thumbnails,
     defaultFolder,
     readBody,
     commitInit,
     watch: (project) => watchDirection(project, projects.mainDirection(project)),
     addParentFolder,
   });
+
+  registerVersionRoutes(app, { projects, versions, thumbnails, names: versionNames, readBody });
 
   registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection });
 

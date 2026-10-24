@@ -73,6 +73,22 @@ export function diffImages(before: PNG, after: PNG, masks: ProbeRect[]): VisualD
   return { ...base, changedPct: Math.round((changed / (width * height)) * 1000) / 10, bands: bandsOf(diff, width, height) };
 }
 
+export interface DiffMask {
+  png: Buffer;
+  width: number;
+  height: number;
+  changed: number;
+}
+
+export function diffMask(before: PNG, after: PNG): DiffMask {
+  const width = Math.min(before.width, after.width);
+  const height = Math.min(before.height, after.height);
+  const out = new PNG({ width: Math.max(1, width), height: Math.max(1, height) });
+  if (width === 0 || height === 0) return { png: PNG.sync.write(out), width, height, changed: 0 };
+  const changed = pixelmatch(cropTo(before, width, height), cropTo(after, width, height), out.data, width, height, { threshold: 0.1, diffMask: true, diffColor: [255, 0, 0], diffColorAlt: [255, 0, 0] });
+  return { png: PNG.sync.write(out), width, height, changed };
+}
+
 export async function readPng(file: string): Promise<PNG> {
   return PNG.sync.read(await readFile(file));
 }

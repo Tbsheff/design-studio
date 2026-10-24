@@ -167,6 +167,13 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     });
   };
 
+  const snapshotShot = async (project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }> => {
+    const key = `s:${project.id}:${versionId}`;
+    const owned = project.kind !== 'html' && !((await vite.loaded()?.then((manager) => manager.pid(key) !== null)) ?? false);
+    const url = await snapshotUrl(project, versionId, snapshotDir);
+    return { url, release: async () => (owned ? vite.loaded()?.then((manager) => manager.stopOne(key)) : undefined) };
+  };
+
   const renderCheck = async (project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]> => {
     const url = await directionUrl(project, direction);
     const results = await (await browsers.get()).renderCheck(url, path.join(projects.projectDir(project.id), 'checks'), direction.id, options);
@@ -191,6 +198,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     stop,
     directionUrl,
     snapshotUrl,
+    snapshotShot,
     watch: (project, direction) => watchers.watch(project, direction),
     unwatch: (directionId) => watchers.unwatch(directionId),
     release: async (project, direction) => {

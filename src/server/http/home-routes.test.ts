@@ -63,7 +63,7 @@ function build(extra: Partial<ServerConfig> = {}): void {
   const preview = fakePreview();
   const observed = observeBus(createEventBus(config.dataDir));
   bus = observed.bus;
-  const thumbnails = createThumbnailService({ projects, preview });
+  const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
     if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
   });
@@ -283,7 +283,7 @@ describe('home routes', { timeout: 30000 }, () => {
     });
     expect(second.versionId).not.toBe(first.versionId);
     const files = await readdir(path.join(projects.projectDir(project.id), 'thumbs'));
-    expect(files).toEqual([`${version.id}.png`]);
+    expect(files.sort()).toEqual([`${first.versionId}.png`, `${version.id}.png`].sort());
     const status = await call<{ dirty: boolean; changed: string[] }>('GET', `/api/projects/${project.id}/d/main/status`);
     expect(status.changed).toEqual([]);
   });

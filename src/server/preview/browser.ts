@@ -91,6 +91,7 @@ export interface TileRequest {
   maxTiles: number;
   outPrefix: string;
   theme?: 'light' | 'dark';
+  still?: boolean;
 }
 
 export interface TileResult {
@@ -109,6 +110,14 @@ export function planTiles(pageHeight: number, tileHeight: number, from: number, 
   return tiles;
 }
 
+const STILL_EXPRESSION = `(async () => {
+  const style = document.createElement('style');
+  style.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }';
+  document.head.appendChild(style);
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  await document.fonts?.ready;
+  return true;
+})()`;
 const DARK_THEME_EXPRESSION = `(() => { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.classList.add('dark'); return true; })()`;
 
 const EMPTY_PROBE: LayoutProbeResult = { findings: [], total: 0 };
@@ -220,6 +229,10 @@ export class BrowserPool {
     return this.withPage(url, request.viewport, async (page) => {
       if (request.theme === 'dark') {
         await page.evaluate(DARK_THEME_EXPRESSION);
+        await settle(page);
+      }
+      if (request.still) {
+        await page.evaluate(STILL_EXPRESSION).catch(() => undefined);
         await settle(page);
       }
       const pageHeight = await page.evaluate<number>(PAGE_HEIGHT_EXPRESSION);

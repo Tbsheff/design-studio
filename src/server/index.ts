@@ -59,7 +59,7 @@ async function main(): Promise<void> {
   const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
   const runner = createAgentRunner({ config, bus, projects, versions, preview });
-  const thumbnails = createThumbnailService({ projects, preview });
+  const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
     if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
   });

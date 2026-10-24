@@ -201,6 +201,7 @@ export interface Version {
   meta: VersionMeta;
   createdAt: number;
   changedFiles: string[];
+  name?: string;
 }
 
 export interface WorkTreeStatus {
@@ -648,6 +649,9 @@ export const API_ROUTES = {
   directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
+  renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
+  versionThumb: 'GET /api/projects/:pid/versions/:vid/thumb -> image/png 640x400 (rendered on first request, 404 no_page)',
+  versionDiff: 'GET /api/projects/:pid/versions/:vid/diff/:other?w=&h= -> image/png mask, red where the first viewport changed (x-changed-pct)',
   getRun: 'GET /api/runs/:runId -> {summary, events}',
   cancelRun: 'POST /api/runs/:runId/cancel -> {ok}',
   postTelemetry: 'POST /api/telemetry TelemetrySample -> {ok}',

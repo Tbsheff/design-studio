@@ -128,21 +128,21 @@ All file paths are relative to the repo root. Status comes from a read-only code
 
 No competitor publishes startup, open, fps or generation numbers [research, 2026-10-23]. OD has roadmap targets only (<500 ms daemon cold start) [OD4]. CD reviews report about 10 min for a codebase prototype and about 25 min for 3 variations [CD5, CD6]. The targets below are ours, set to beat what users report. They are not copies of a rival number.
 
-Current gate: `e2e/latency.spec.ts` `TARGETS = { open: 2000, html: 250, react: 750, select: 100, http: 2000 }` (p95 over 20 samples).
+Current gate (R5): `e2e/latency.spec.ts` `TARGETS = { open: 1000, html: 150, react: 400, select: 50, http: 2000, firstToken: 1500, userMessage: 50, edit: 200 }` (p95; 20 samples, 12 for Send and edit). Was `{ open: 2000, html: 250, react: 750, select: 100 }` before R5.
 
 | Capability | Best in class | Design Studio status | Target (p95) | P | Size |
 |---|---|---|---|---|---|
-| App cold start to Home usable | Paper: memory cut "nearly half" (no number) [A6] | missing measurement (no `app.start` telemetry kind; `app.ts:72` lists preview.latency, select.latency, studio.open, file.write) | < 1500 ms desktop, < 800 ms web | P0 | S |
-| Open project to first preview paint | — | has gate: open < 2000 ms | < 1000 ms | P0 | M |
-| Send to first token visible | CC: streams at once [CC1] | missing measurement | < 1500 ms mock agent; < 3 s real agent p50 | P0 | M |
-| HTML write to preview paint | — | has gate: < 250 ms | < 150 ms | P1 | S |
-| React write to HMR paint | — | has gate: < 750 ms | < 400 ms | P1 | M |
-| Click to selection outline | — | has gate: < 100 ms | < 50 ms | P1 | S |
-| Direct edit to source write and repaint | Lovable: no model call [L1] | missing measurement (`file.write` kind exists) | < 200 ms | P1 | S |
-| Pan and zoom frame rate | pen.dev claim: smooth with thousands of layers [P6] | not measured | 60 fps, smooth (section 3 definition) over 3 s of pan | P0 | S |
+| App cold start to Home usable | Paper: memory cut "nearly half" (no number) [A6] | has (R5): `app.start` telemetry with desktop boot marks; web cold p95 ≈ 100 ms (`perf-r5`), packaged desktop p50 ≈ 500 ms process start to Home painted (`scripts/perf/desktop-start.ts`) | < 1500 ms desktop, < 800 ms web | P0 | S |
+| Open project to first preview paint | — | has gate (R5): open < 1000 ms (reload p95 ≈ 95 ms); card click on Home to first paint p95 ≈ 80 ms (`perf-r5`) | < 1000 ms | P0 | M |
+| Send to first token visible | CC: streams at once [CC1] | has gate (R5): first token < 1500 ms with the mock (p95 ≈ 50–120 ms), user message < 50 ms (optimistic Send); `run.first_token` telemetry (server and visible); real agent not measured in R5 | < 1500 ms mock agent; < 3 s real agent p50 | P0 | M |
+| HTML write to preview paint | — | has gate (R5): < 150 ms (p95 ≈ 65 ms) | < 150 ms | P1 | S |
+| React write to HMR paint | — | has gate (R5): < 400 ms (p95 ≈ 80 ms) | < 400 ms | P1 | M |
+| Click to selection outline | — | has gate (R5): < 50 ms (p95 ≈ 31 ms) | < 50 ms | P1 | S |
+| Direct edit to source write and repaint | Lovable: no model call [L1] | has gate (R5): Enter to bytes < 200 ms (p95 ≈ 20 ms); `edit.commit` telemetry; R4 `edit-latency-r4` covers 7 edit types | < 200 ms | P1 | S |
+| Pan and zoom frame rate | pen.dev claim: smooth with thousands of layers [P6] | has (R2-2, R5): 3 s pan and 3 s zoom, p95 ≤ 17 ms, no frame > 32 ms; Home grid scroll with 54 cards p95 16.7–16.8 ms, no frame > 32 ms | 60 fps, smooth (section 3 definition) over 3 s of pan | P0 | S |
 | Streaming frame rate | — | measured (R3): finished blocks memoized (`markdownBlocks.ts`), only the open tail re-parses; 10k-token mock stream in `chat-r3.spec.ts` R3-12 | no long task > 50 ms during a 10k-token stream | P0 | S |
-| UI bundle | — | 711 kB JS in `dist/ui`, one chunk, `App.tsx:4` static import (`optimizations.md` 06.1) | Home chunk < 300 kB | P2 | S |
-| Version list load | — | N+2 git spawns (`optimizations.md` 05.1) | < 300 ms at 100 versions | P2 | M |
+| UI bundle | — | has (R5): Home JS 299 kB (was 876 kB in one chunk); Studio, design systems and Home-only parts are lazy chunks (`screens.tsx`) | Home chunk < 300 kB | P2 | S |
+| Version list load | — | has (R5): one git process; 100 versions: GET p95 ≈ 50 ms, panel p95 ≈ 60 ms (`perf-r5`) | < 300 ms at 100 versions | P2 | M |
 
 ### 1.6 Design systems and tokens
 

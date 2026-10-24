@@ -6,9 +6,11 @@ import { Icon } from './Icon';
 import { LevelControl, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
 import { VariationsControl } from './VariationsControl';
 
+export type ComposerMode = RunMode | 'plan';
+
 interface ModeSetting {
-  value: RunMode;
-  onChange: (mode: RunMode) => void;
+  value: ComposerMode;
+  onChange: (mode: ComposerMode) => void;
 }
 
 interface DesignsSetting {
@@ -57,17 +59,18 @@ interface Props {
   onOpen?: () => void;
 }
 
-const MODES = ['edit', 'critique'] as const;
-const MODE_LABEL: Record<RunMode, string> = { edit: 'Edit', critique: 'Critique' };
-const MODE_HINT: Record<RunMode, string> = {
+const MODES = ['edit', 'plan', 'critique'] as const;
+const MODE_LABEL: Record<ComposerMode, string> = { edit: 'Edit', plan: 'Plan', critique: 'Critique' };
+const MODE_HINT: Record<ComposerMode, string> = {
   edit: 'Send changes the design.',
+  plan: 'Send makes a plan first. Files change only after you approve it.',
   critique: 'Send asks for a review. The design does not change.',
 };
 const GAP = 4;
 const MARGIN = 8;
 const UNPLACED: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
 
-export function runSettingsSummary(input: { mode?: RunMode; level: RunLevel; designs?: number; designsOn?: boolean; effort?: RunEffort | null }): string {
+export function runSettingsSummary(input: { mode?: ComposerMode; level: RunLevel; designs?: number; designsOn?: boolean; effort?: RunEffort | null }): string {
   const parts = [input.mode ? MODE_LABEL[input.mode] : null, levelLabel(input.level), input.effort ? `${EFFORT_LABEL[input.effort]} effort` : null];
   if (input.designsOn !== false && input.designs !== undefined && input.designs > 1) parts.push(`${input.designs} designs`);
   return parts.filter(Boolean).join(' · ');

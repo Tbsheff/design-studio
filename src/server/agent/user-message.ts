@@ -64,8 +64,13 @@ The ${count} attached image(s) are source material for this design system: scree
 </source-images>`;
 }
 
+export const PLAN_MODE_BLOCK = `<plan-mode>
+Plan only. Do not change any file: write tools are turned off for this run. Read what you need, then reply with a short plan as a numbered list of steps. The user will approve the plan before you build it.
+</plan-mode>`;
+
 export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem'> & { attachments?: readonly unknown[] }): string {
   const blocks = [ctx.request.prompt.trim()];
+  if (ctx.request.plan) blocks.push(PLAN_MODE_BLOCK);
   const imageCount = ctx.attachments?.length ?? 0;
   if (ctx.request.task === 'design-system' && imageCount > 0) blocks.push(sourceImagesBlock(imageCount));
   const variation = variationBlock(ctx.request.variation);

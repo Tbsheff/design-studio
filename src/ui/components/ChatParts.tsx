@@ -52,7 +52,7 @@ export function UserMessage({ run }: { run: RunView }) {
     <Message type="outgoing" className="msg user">
       <MessageContent>
         <div className="msg-meta flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
-          <span className={`badge mode-tag ${req.mode} ${critique ? 'warn' : ''}`}>{critique ? 'Critique' : 'Edit'}</span>
+          <span className={`badge mode-tag ${req.plan ? 'plan' : req.mode} ${critique ? 'warn' : ''}`}>{critique ? 'Critique' : req.plan ? 'Plan' : 'Edit'}</span>
           <LevelChip level={runLevel(run)} />
           {selected > 0 && (
             <span className="inline-flex items-center gap-1">
@@ -179,6 +179,24 @@ export function PolishThis({ disabled, onPolish }: { disabled: boolean; onPolish
         Polish this
       </button>
       <span>Run every check on this version and fix what it finds.</span>
+    </div>
+  );
+}
+
+export function PlanCard({ onApprove }: { onApprove: () => void }) {
+  return (
+    <div className="plan-card" data-testid="plan-card" role="group" aria-label="Plan ready">
+      <p>
+        <strong>Plan ready.</strong> No files changed yet.
+      </p>
+      <div className="plan-actions">
+        <button type="button" className="btn small primary" onClick={onApprove}>
+          Approve and build
+        </button>
+        <button type="button" className="btn small" onClick={() => document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]')?.focus()}>
+          Keep planning
+        </button>
+      </div>
     </div>
   );
 }

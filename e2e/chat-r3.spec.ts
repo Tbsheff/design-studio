@@ -250,3 +250,23 @@ test('R3-10: the retry line counts down, and Retry on an error card adds no seco
   await expect(page.getByTestId('retry-marker')).toHaveCount(1);
   expect(await users.count()).toBe(before);
 });
+
+test('R3-8: plan mode refuses a write, then Approve starts the build', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Plan Probe Florist');
+  const before = (await api.versions(project.id, mainDirection(project).id)).length;
+  await page.getByTestId('run-settings').click();
+  await page.getByTestId('run-settings-popover').getByRole('radio', { name: 'Plan' }).click();
+  await page.keyboard.press('Escape');
+  await composer(page).fill('A warmer hero');
+  await composer(page).press('Meta+Enter');
+  const planned = await finishedRun(api, project.id, 'A warmer hero');
+  expect(planned.request.plan).toBe(true);
+  const write = planned.toolCalls.find((tool) => tool.name === 'Write');
+  expect(write?.isError).toBe(true);
+  expect((await api.versions(project.id, mainDirection(project).id)).length).toBe(before);
+  await page.getByTestId('plan-card').getByRole('button', { name: 'Approve and build' }).click();
+  const built = await finishedRun(api, project.id, 'Build the plan above.');
+  expect(built.status).toBe('completed');
+  expect(built.request.plan).toBeUndefined();
+  expect((await api.versions(project.id, mainDirection(project).id)).length).toBe(before + 1);
+});

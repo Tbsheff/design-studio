@@ -5,6 +5,7 @@ import type { RunRequest, RunSummary, SelectionContext, StudioEvent } from '../.
 import type { AgentRunContext, ServerConfig } from '../types.js';
 import { createAgentRunner } from './index.js';
 import { MOCK_BASH_OUTPUT } from './mock.js';
+import { PLAN_MODE_DENY } from './permissions.js';
 import { createFakeBus, createFakePreview, createFakeProjects, createFakeVersions, createTempProject } from './test-fakes.js';
 
 const roots: string[] = [];
@@ -135,6 +136,18 @@ describe('mock agent run, Round 3', () => {
     expect(summary.status).toBe('canceled');
     expect(env.bus.events.some((event) => event.type === 'run.permission.resolved' && !event.allow)).toBe(true);
     await expect(readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), 'utf8')).rejects.toThrow();
+  });
+
+  it('plan mode refuses a write and leaves the files as they are', async () => {
+    const env = await setup();
+    await env.runner.start(env.context({ prompt: 'Base page', mode: 'edit', level: 'wireframe' })).done;
+    const before = await readFile(path.join(env.workTree, 'index.html'), 'utf8');
+    const summary = await env.runner.start(env.context({ prompt: 'New hero', mode: 'edit', plan: true })).done;
+    const write = summary.toolCalls.find((tool) => tool.name === 'Write');
+    expect(write?.isError).toBe(true);
+    expect(write?.summary).toBe(PLAN_MODE_DENY);
+    expect(await readFile(path.join(env.workTree, 'index.html'), 'utf8')).toBe(before);
+    expect(summary.finalText).toMatch(/^Plan:/);
   });
 });
 

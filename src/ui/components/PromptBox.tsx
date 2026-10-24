@@ -9,7 +9,7 @@ import { AttachmentThumbs, ModelTag, SelectionChips, type PendingAttachment } fr
 import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
 import { MOD_LABEL } from './CommentPopover';
-import { RunSettings } from './RunSettings';
+import { RunSettings, type ComposerMode } from './RunSettings';
 import { SkillChips, SkillPicker, SkillsIndicator } from './SkillPicker';
 import { skillInstruction } from '../skills';
 import { useRunLevel } from '../useRunLevel';
@@ -26,7 +26,7 @@ interface Props {
   onRemoveSelection: (selector: string) => void;
   running: boolean;
   disabled: boolean;
-  onSend: (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) => Promise<void>;
+  onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) => Promise<void>;
   onCancel: () => void;
   variations?: VariationsPromptProps;
   queued?: boolean;
@@ -98,14 +98,21 @@ function KbdHint({ running }: { running: boolean }) {
 }
 
 
-function designsBlocker(mode: RunMode, selectionCount: number): string | null {
+const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
+  edit: { label: 'Describe a change', placeholder: 'Describe a change, or type / for skills' },
+  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan, or type / for skills' },
+  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique, or type / for skills' },
+};
+
+function designsBlocker(mode: ComposerMode, selectionCount: number): string | null {
   if (mode === 'critique') return 'Critique makes one review.';
+  if (mode === 'plan') return 'Plan makes one plan.';
   if (selectionCount > 0) return 'Variations need an empty selection.';
   return null;
 }
 
 export function PromptBox(props: Props) {
-  const [mode, setMode] = useState<RunMode>('edit');
+  const [mode, setMode] = useState<ComposerMode>('edit');
   const [effort, setEffort] = useState<RunEffort | null>(null);
   const [files, setFiles] = useState<PendingAttachment[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -245,8 +252,8 @@ export function PromptBox(props: Props) {
         <ComposerInput
           className="min-h-16"
           value={draft}
-          aria-label={mode === 'edit' ? 'Describe a change' : 'Ask for a critique'}
-          placeholder={mode === 'edit' ? 'Describe a change, or type / for skills' : 'Ask for a critique, or type / for skills'}
+          aria-label={INPUT_COPY[mode].label}
+          placeholder={INPUT_COPY[mode].placeholder}
           maxRows={9}
           submitOnEnter={false}
           onValueChange={(value) => {

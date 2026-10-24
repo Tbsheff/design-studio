@@ -4,7 +4,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from '../
 import { Message, MessageContent } from '../ai/components/ai/message';
 import { canPolishRun } from '../polish';
 import type { RunView, ToolRow } from '../runState';
-import { AssistantText, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
+import { AssistantText, PlanCard, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
 import { Icon } from './Icon';
 import { LiveStatus, RunChanges, ToolChips } from './ToolChips';
 import { PermissionPrompt } from './PermissionPrompt';
@@ -14,6 +14,7 @@ interface PolishProps {
   running: boolean;
   onPolish: () => void;
   onRetry?: (run: RunView) => void;
+  onApprovePlan?: (run: RunView) => void;
 }
 
 type Segment =
@@ -73,6 +74,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           {!running && <RunChanges tools={run.tools} />}
           <RunFoot run={run} onDetails={details} />
+          {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
         </MessageContent>
       </Message>
@@ -106,19 +108,22 @@ interface Props {
   busy: boolean;
   onPolish: () => void;
   onRetry?: (run: RunView) => void;
+  onApprovePlan?: (run: RunView) => void;
 }
 
-export function ChatPanel({ runs, direction, onDetails, running, busy, onPolish, onRetry }: Props) {
+export function ChatPanel({ runs, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
   const polishRef = useLatest(onPolish);
   const retryRef = useLatest(onRetry);
   const retry = useCallback((run: RunView) => retryRef.current?.(run), [retryRef]);
+  const approveRef = useLatest(onApprovePlan);
+  const approve = useCallback((run: RunView) => approveRef.current?.(run), [approveRef]);
   const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
   const startPolish = useCallback(() => polishRef.current(), [polishRef]);
   const polishing = running || busy;
-  const polish = useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry }), [headVersionId, polishing, startPolish, retry]);
+  const polish = useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry, onApprovePlan: approve }), [headVersionId, polishing, startPolish, retry, approve]);
   return (
     <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="">
       <ConversationContent className="chat">

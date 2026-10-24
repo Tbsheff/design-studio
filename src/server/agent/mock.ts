@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { RunComment, RunLevel, SelectionContext } from '../../shared/contracts.js';
 import { levelOf } from '../../shared/run-levels.js';
 import type { DriverInput, DriverOutcome, DriverSink, RunDriver } from './lifecycle.js';
-import { checkPathInside } from './permissions.js';
+import { checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions.js';
 import { createBashGate } from './ask-gate.js';
 import { queuedText } from './lifecycle.js';
 import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
@@ -193,6 +193,14 @@ class MockSession {
       await sleep(delayMs, this.signal);
     }
     this.sink.text(text);
+  }
+
+  toolCounterNext(): void {
+    this.toolCounter += 1;
+  }
+
+  lastToolId(): string {
+    return `mock_tool_${this.toolCounter}`;
   }
 
   async think(text: string): Promise<void> {
@@ -529,7 +537,7 @@ async function runLevelChecks(session: MockSession, level: RunLevel): Promise<vo
 
 function wantsLevelChecks(input: DriverInput): boolean {
   const request = input.ctx.request;
-  return request.mode === 'edit' && !request.selection?.length && !request.comments?.length;
+  return request.mode === 'edit' && !request.plan && !request.selection?.length && !request.comments?.length;
 }
 
 function wantsTweaks(input: DriverInput): boolean {
@@ -546,12 +554,27 @@ async function runMockScenario(input: DriverInput, session: MockSession): Promis
   return finalText;
 }
 
+async function runPlan(session: MockSession, workTree: string, text: string): Promise<string> {
+  await session.say(`Planning "${text}" before any change.`);
+  const policy: ToolPolicy = { workTree, mode: 'edit', allowBash: false, allowInstall: false, plan: true };
+  const target = { file_path: path.join(workTree, 'index.html') };
+  session.toolCounterNext();
+  const toolUseId = session.lastToolId();
+  session.sink.toolStarted(toolUseId, 'Write', target);
+  const decision = evaluateToolUse(policy, 'Write', target);
+  session.sink.toolFinished(toolUseId, decision.behavior === 'deny', decision.behavior === 'deny' ? decision.message : 'Write index.html');
+  const plan = `Plan:\n\n1. Keep the hero and make "${text}" the heading.\n2. Tighten the card copy.\n3. Check mobile at 390 px.`;
+  await session.say(plan);
+  return plan;
+}
+
 function runMockEdit(input: DriverInput, session: MockSession): Promise<string> {
   const { ctx } = input;
   const prompt = ctx.request.prompt;
   const workTree = ctx.direction.workTree;
   const text = cleanPrompt(prompt) || 'Untitled';
   if (ctx.request.mode === 'critique') return runCritique(session);
+  if (ctx.request.plan) return runPlan(session, workTree, text);
   if (ctx.request.variation || ctx.request.reference) return runVariationMock(session, ctx.request, ctx.project.kind, workTree, text);
   if (ctx.request.comments?.length) return runCommentEdit(session, workTree, ctx.request.comments);
   const selection = ctx.request.selection;

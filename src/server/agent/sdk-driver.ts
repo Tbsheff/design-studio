@@ -352,6 +352,7 @@ function buildPolicy(input: DriverInput, skills: PreparedSkills, config: Resolve
     skills: skills.enabled,
     skillDirs: skills.readableDirs,
     ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
+    ...(ctx.request.plan ? { plan: true } : {}),
   };
 }
 

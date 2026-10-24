@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, variationsGrid } from './VariationsLayer';
-import type { RunEffort, RunLevel, RunMode, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { RunEffort, RunLevel, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { downloadBlob } from '../format';
 import { POLISH_REQUEST } from '../polish';
@@ -37,6 +38,10 @@ function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: Re
     const intent = homeVariations.take(projectId);
     if (intent) void propose(intent.prompt, intent.level, [], intent.count);
   }, [ready, projectId, propose]);
+}
+
+function modeOf(mode: ComposerMode): Pick<RunRequest, 'mode' | 'plan'> {
+  return mode === 'plan' ? { mode: 'edit', plan: true } : { mode };
 }
 
 function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
@@ -154,10 +159,10 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     panel.show('chat');
   };
 
-  const send = (prompt: string, mode: RunMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) =>
+  const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) =>
     startRun({
       prompt,
-      mode,
+      ...modeOf(mode),
       level,
       ...effortOf(effort),
       selection: selection.length > 0 ? selection : undefined,
@@ -165,6 +170,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     });
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
+  const approvePlan = (run: RunView) => void act(() => startRun({ prompt: 'Build the plan above.', mode: 'edit', ...(run.request?.level ? { level: run.request.level } : {}) }));
   const retryRun = (run: RunView) => {
     const request = run.request;
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
@@ -239,7 +245,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           columnsRef={columnsRef}
           tab={panel.tab}
           onTab={panel.choose}
-          chat={{ runs: directionRuns, direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun }}
+          chat={{ runs: directionRuns, direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,

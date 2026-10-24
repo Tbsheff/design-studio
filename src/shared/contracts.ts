@@ -237,6 +237,7 @@ export interface RunRequest {
   level?: RunLevel;
   effort?: RunEffort;
   retryOf?: string;
+  plan?: boolean;
   variation?: VariationBrief & { index: number; count: number };
   reference?: ReferenceElement;
   selection?: SelectionContext[];

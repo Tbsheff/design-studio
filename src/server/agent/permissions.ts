@@ -52,7 +52,10 @@ export interface ToolPolicy {
   skillDirs?: string[];
   skillsOff?: string;
   readOnlyDirs?: string[];
+  plan?: boolean;
 }
+
+export const PLAN_MODE_DENY = 'Plan mode is on, so files stay as they are. Reply with the plan; the user approves it before the build.';
 
 type ToolSet = Pick<ToolPolicy, 'mode' | 'allowBash' | 'skills'>;
 
@@ -253,6 +256,7 @@ function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string |
 
 function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<string, unknown>): string | null {
   if (!permittedToolNames(policy).includes(toolName)) return `Tool ${toolName} is not available in Design Studio.`;
+  if (policy.plan && (WRITE_PATH_TOOLS.has(toolName) || toolName === 'Bash' || toolName === TWEAKS_TOOL)) return PLAN_MODE_DENY;
   if (PATH_TOOLS.has(toolName)) {
     const problem = checkPathTool(policy, toolName, input);
     if (problem) return problem;

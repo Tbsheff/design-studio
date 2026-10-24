@@ -55,9 +55,10 @@ interface PassiveProps {
   offset: { x: number; y: number };
   label: LabelProps;
   register: (id: string, el: HTMLDivElement | null) => void;
+  frameRef?: (el: HTMLIFrameElement | null) => void;
 }
 
-export function PassiveFrame({ frame, src, sandbox, offset, label, register }: PassiveProps) {
+export function PassiveFrame({ frame, src, sandbox, offset, label, register, frameRef }: PassiveProps) {
   const name = frameName(frame);
   return (
     <div
@@ -66,7 +67,7 @@ export function PassiveFrame({ frame, src, sandbox, offset, label, register }: P
       data-frame-id={frame.id}
       style={{ left: frame.x - offset.x, top: frame.y - offset.y, width: frame.width, height: frame.height }}
     >
-      {src && <iframe title={`${name} preview`} className="frame passive" src={src} sandbox={sandbox} width={frame.width} height={frame.height} tabIndex={-1} />}
+      {src && <iframe ref={frameRef} title={`${name} preview`} className="frame passive" src={src} sandbox={sandbox} width={frame.width} height={frame.height} tabIndex={-1} />}
       <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => label.onPointerDown(e, frame)} />
       <FrameLabel {...label} />
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, type MutableRefObject } from 'react';
+import { useEffect, useSyncExternalStore, type MutableRefObject } from 'react';
 import type { BridgeToParent, ProjectKind } from '../shared/contracts';
 import { postToFrame, useBridge, type BridgeFrame } from './bridge';
 
@@ -104,9 +104,22 @@ export function holdTweakCssUntilReload(): void {
   holdUntilReload(tweakChannel);
 }
 
+const themeListeners = new Set<() => void>();
+
+function subscribeTheme(listener: () => void): () => void {
+  themeListeners.add(listener);
+  return () => themeListeners.delete(listener);
+}
+
 export function broadcastTheme(theme: ThemeChoice): void {
+  const changed = current.theme !== theme;
   current.theme = theme;
   for (const frame of tokenFrames()) postToFrame(frame, { type: 'set-theme', theme });
+  if (changed) for (const listener of themeListeners) listener();
+}
+
+export function useCanvasTheme(): ThemeChoice {
+  return useSyncExternalStore(subscribeTheme, () => current.theme);
 }
 
 function syncTokenFrame(frame: BridgeFrame): void {
@@ -144,7 +157,7 @@ export function useTokenFrameSync(): void {
         endHold(channel);
         channel.css = '';
       }
-      current.theme = null;
+      broadcastTheme(null);
     },
     [],
   );

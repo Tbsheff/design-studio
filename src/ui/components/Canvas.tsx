@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
-import type { ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
+import { BRIDGE_PASSIVE_PARAM, type ProjectKind, type RenderCheckResult, type SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { uiStore, useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
@@ -10,9 +10,10 @@ import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
-import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
+import { HTML_FRAME_SANDBOX, frameSrc, type PreviewPort } from '../bridge';
+import { randomToken } from '../session';
 import { usePreviewFrames } from '../usePreviewFrames';
-import { setCanvasFront, useTokenFrames } from '../tokenFrames';
+import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
 import type { BuildError, FilesChange } from '../useStudioData';
 import { CanvasToolbar, type CanvasSource } from './CanvasToolbar';
 import { RenderCheckPanel } from './RenderCheckPanel';
@@ -37,6 +38,7 @@ interface Props {
   running?: boolean;
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
+  darkPreview?: boolean;
 }
 
 const RECT_REFRESH_MS = [300, 1200];
@@ -158,17 +160,61 @@ function PreviewSlots({ frames, sandbox, viewport }: { frames: SlotFrames; sandb
   ));
 }
 
-function OtherFrames({ frames, active, src, sandbox, labelProps, register }: {
+function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
+  if (!enabled) return undefined;
+  const dark = theme === 'dark';
+  return { dark, onToggle: () => broadcastTheme(dark ? null : 'dark') };
+}
+
+interface PassiveSlot {
+  id: string;
+  token: string;
+  src: string;
+}
+
+function usePassiveSlots(frames: CanvasFrame[], activeId: string, src: string | null, kind: ProjectKind) {
+  const tokens = useRef(new Map<string, string>());
+  const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
+  const ids = frames.filter((f) => f.id !== activeId).map((f) => f.id).join(' ');
+  const slots = useMemo<PassiveSlot[]>(() => {
+    if (!src || ids === '') return [];
+    return ids.split(' ').map((id) => {
+      const token = tokens.current.get(id) ?? randomToken();
+      tokens.current.set(id, token);
+      return { id, token, src: frameSrc(src, token, { [BRIDGE_PASSIVE_PARAM]: '1' }) };
+    });
+  }, [ids, src]);
+  useTokenFrames(slots, elements, kind);
+  return { slots, elements };
+}
+
+function OtherFrames({ frames, active, passive, sandbox, labelProps, register }: {
   frames: CanvasFrame[];
   active: CanvasFrame;
-  src: string | null;
+  passive: ReturnType<typeof usePassiveSlots>;
   sandbox?: string;
   labelProps: (frame: CanvasFrame) => ComponentProps<typeof FrameLabel>;
   register: (id: string, el: HTMLDivElement | null) => void;
 }) {
   return frames
     .filter((f) => f.id !== active.id)
-    .map((f) => <PassiveFrame key={f.id} frame={f} src={src} sandbox={sandbox} offset={active} label={labelProps(f)} register={register} />);
+    .map((f) => {
+      const slot = passive.slots.find((item) => item.id === f.id);
+      return (
+        <PassiveFrame
+          key={f.id}
+          frame={f}
+          src={slot?.src ?? null}
+          sandbox={sandbox}
+          offset={active}
+          label={labelProps(f)}
+          register={register}
+          frameRef={(el) => {
+            if (slot) passive.elements.current[slot.token] = el;
+          }}
+        />
+      );
+    });
 }
 
 function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking: boolean): T | null {
@@ -268,6 +314,8 @@ export function Canvas(props: Props) {
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
+  const passive = usePassiveSlots(layout.frames, active.id, passiveSrc(baseUrl, kind, live ? props.lastChange : null), kind);
+  const theme = useCanvasTheme();
   useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);
   useEffect(() => () => setCanvasFront(null, false), []);
 
@@ -319,6 +367,7 @@ export function Canvas(props: Props) {
         onCheck={check.run}
         addFrame={<AddFrameMenu disabled={!canAddFrame(layout)} onAdd={addFrameAt} />}
         layers={<LayersToggle open={layersOpen} disabled={!live} />}
+        theme={themeSwitch(props.darkPreview, theme)}
       />
       <CheckResults projectId={projectId} check={check} />
       <div className="canvas-body">
@@ -355,7 +404,7 @@ export function Canvas(props: Props) {
             }
           />
           {layout.frames.length > 1 && <FrameLabel {...labelProps(active)} />}
-          <OtherFrames frames={layout.frames} active={active} src={passiveSrc(baseUrl, kind, live ? props.lastChange : null)} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />

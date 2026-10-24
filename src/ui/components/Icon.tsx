@@ -64,6 +64,8 @@ const PATHS = {
   selfStart: 'M2.5 2.5h11M6 5h4v6.5H6z',
   selfCenter: 'M2.5 8h2.5M11 8h2.5M6 4.5h4v7H6z',
   selfEnd: 'M2.5 13.5h11M6 4.5h4V11H6z',
+  moon: 'M13.25 9.75A5.5 5.5 0 1 1 6.25 2.75a4.5 4.5 0 0 0 7 7z',
+  component: 'M8 1.75l2.25 2.25L8 6.25 5.75 4zM8 9.75l2.25 2.25L8 14.25 5.75 12zM4 5.75L6.25 8 4 10.25 1.75 8zM12 5.75L14.25 8 12 10.25 9.75 8z',
   selfStretch: 'M2.5 2.5h11M2.5 13.5h11M6 5h4v6H6z',
 } as const;
 

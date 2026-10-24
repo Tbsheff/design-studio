@@ -74,6 +74,10 @@ function buildPlanRequest(run: RunView): RunRequest {
   return { prompt: 'Build the plan above.', mode: 'edit', ...(level ? { level } : {}) };
 }
 
+function hasDarkMode(tokens: { mode: string; entries: CompiledTokenEntry[] } | null): boolean {
+  return tokens?.mode === 'light' && tokens.entries.some((entry) => entry.darkValue !== undefined && entry.darkValue !== null);
+}
+
 function tokenEntries(tokens: { entries: CompiledTokenEntry[] } | null): CompiledTokenEntry[] {
   return tokens?.entries ?? [];
 }
@@ -304,6 +308,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               comments,
               running: activeRun !== null,
               noRuns: neverRan(data.runsLoaded, directionRuns),
+              darkPreview: hasDarkMode(tokens),
               onTextCommit: (selector, text) => {
                 const target = selection.length === 1 ? selection[0] : undefined;
                 if (target?.selector === selector && editControl.current?.commitText(selector, text)) return;

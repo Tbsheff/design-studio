@@ -11,6 +11,7 @@ import { createTextEditor } from './text-edit.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
+  BRIDGE_PASSIVE_PARAM,
   BRIDGE_TOKEN_PARAM,
   DIRECT_STYLE_PROPERTIES,
   SOURCE_LOC_ATTR,
@@ -112,6 +113,7 @@ function readSession(): BridgeSession | null {
   const parentOrigin = url.searchParams.get(BRIDGE_PARENT_ORIGIN_PARAM);
   if (!token || !parentOrigin) return storedSession();
   const session = { token, parentOrigin };
+  if (url.searchParams.has(BRIDGE_PASSIVE_PARAM)) return session;
   rememberSession(session);
   stripBridgeParams(url);
   return session;

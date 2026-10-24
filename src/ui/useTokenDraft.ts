@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CompiledTokenEntry, TokenChange, Version } from '../shared/contracts';
 import { ApiError, api, errorText } from './api';
-import { broadcastTheme, broadcastTokenCss, holdTokenCssUntilReload, type ThemeChoice } from './tokenFrames';
+import { broadcastTheme, broadcastTokenCss, holdTokenCssUntilReload, useCanvasTheme, type ThemeChoice } from './tokenFrames';
 import { errorPaths, overlayTokens, rawToken, setPending, toChanges, withField, type PendingMap, type PendingToken, type TokenField } from './tokenDraft';
 import type { DesignTokens } from './useDesignSystemState';
 
@@ -63,7 +63,7 @@ function commitMessage(err: unknown): string {
 export function useTokenDraft(o: Options) {
   const [pending, setPendingMap] = useState<PendingMap>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [theme, setThemeState] = useState<ThemeChoice>(null);
+  const theme = useCanvasTheme();
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
   const history = useRef<Step[]>([]);
@@ -157,10 +157,8 @@ export function useTokenDraft(o: Options) {
     if (step) apply(setPending(pendingRef.current, step.path, step.before));
   }, [apply]);
 
-  const setTheme = useCallback((next: ThemeChoice) => {
-    setThemeState(next);
-    broadcastTheme(next);
-  }, []);
+  const setTheme = useCallback((next: ThemeChoice) => broadcastTheme(next), []);
+  useEffect(() => () => broadcastTheme(null), [scope]);
 
   const commit = useCallback(async () => {
     const { projectId, directionId, tokens } = opts.current;

@@ -30,6 +30,7 @@ interface Props {
   onCheck: () => void;
   addFrame?: ReactNode;
   layers?: ReactNode;
+  theme?: { dark: boolean; onToggle: () => void };
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
@@ -216,6 +217,21 @@ function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomCo
   );
 }
 
+function ThemeSwitch({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="icon-btn theme-switch"
+      aria-label="Preview dark mode"
+      aria-pressed={dark}
+      data-tip={dark ? 'Back to the default mode' : 'Preview dark mode'}
+      onClick={onToggle}
+    >
+      <Icon name="moon" />
+    </button>
+  );
+}
+
 export function CanvasToolbar(props: Props) {
   return (
     <div className="toolbar">
@@ -223,6 +239,7 @@ export function CanvasToolbar(props: Props) {
       {props.layers && <div className="toolbar-sep" />}
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
+      {props.theme && <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />

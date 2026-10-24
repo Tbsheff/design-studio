@@ -151,7 +151,7 @@ export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
   if (event.type === 'run.started') {
     run.request = event.request;
     run.startedAt = event.ts;
-    run.status = 'running';
+    if (run.status !== 'canceled') run.status = 'running';
   }
   applyToolEvent(run, event);
   applyControlEvent(run, event);

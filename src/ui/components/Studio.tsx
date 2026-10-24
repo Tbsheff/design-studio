@@ -182,7 +182,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       setBusy(false);
     }
   }, []);
-  const runControls = useRunControls(activeRun, draft, act);
+  const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
 
@@ -208,8 +208,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
 
   const startRun = async (request: RunRequest) => {
     if (!did) return;
-    const { runId } = await api.startRun(projectId, did, request);
-    data.seedRun(runId, did, request);
+    const { runId, stopped } = await trackSend(() => api.startRun(projectId, did, request));
+    data.seedRun(runId, did, request, stopped);
     setSource({ kind: 'live' });
     panel.show('chat');
   };

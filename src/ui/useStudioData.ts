@@ -40,7 +40,7 @@ interface StudioData {
   lastChange: FilesChange | null;
   connection: ConnectionState;
   refreshVersions: () => void;
-  seedRun: (runId: string, directionId: string, request: RunRequest) => void;
+  seedRun: (runId: string, directionId: string, request: RunRequest, stopped?: boolean) => void;
 }
 
 export function useStudioData(projectId: string): StudioData {
@@ -175,11 +175,12 @@ export function useStudioData(projectId: string): StudioData {
 
   const connection = useProjectEvents(projectId, onEvent);
 
-  const seedRun = useCallback((runId: string, did: string, request: RunRequest) => {
+  const seedRun = useCallback((runId: string, did: string, request: RunRequest, stopped = false) => {
     setRuns((prev) => {
       const existing = prev[runId];
-      if (existing) return { ...prev, [runId]: { ...existing, directionId: existing.directionId ?? did, request: existing.request ?? request } };
-      return { ...prev, [runId]: emptyRun(runId, did, Date.now(), request) };
+      const status = stopped && !existing?.summary ? { status: 'canceled' as const } : {};
+      if (existing) return { ...prev, [runId]: { ...existing, directionId: existing.directionId ?? did, request: existing.request ?? request, ...status } };
+      return { ...prev, [runId]: { ...emptyRun(runId, did, Date.now(), request), ...status } };
     });
   }, []);
 

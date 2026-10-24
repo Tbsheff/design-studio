@@ -1,12 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { TelemetrySample } from '../src/shared/contracts';
 import { BASE_URL, ROOT } from './support/server';
-import { createProjectViaUi, frontFrame, mainDirection, openHome, setSelectMode, type StudioApi } from './support/studio';
+import { createProjectViaUi, frontFrame, mainDirection, openHome, selectInFrame, setSelectMode, type StudioApi } from './support/studio';
 
 const SAMPLES = 20;
-const TARGETS = { open: 2000, html: 250, react: 750, select: 100, http: 2000 };
+const SEND_SAMPLES = 12;
+const EDIT_SAMPLES = 12;
+const TARGETS = { open: 1000, html: 150, react: 400, select: 50, http: 2000, firstToken: 1500, userMessage: 50, edit: 200 };
 const RESULTS_FILE = path.join(ROOT, 'e2e', 'results', 'latency.json');
 
 interface Stats {
@@ -52,6 +55,29 @@ const PROBE = () => {
     }).observe(overlay, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
   };
   document.addEventListener('DOMContentLoaded', watchOverlay);
+  const send = window as unknown as { __send: { at: number; user: number | null; token: number | null; baseUser: number; baseText: number } | null };
+  send.__send = null;
+  const filledText = () => [...document.querySelectorAll('.msg.assistant .assistant-text')].filter((el) => (el.textContent ?? '').trim().length > 0).length;
+  document.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key !== 'Enter' || !event.metaKey || !(event.target as Element | null)?.closest?.('.prompt')) return;
+      send.__send = { at: performance.now(), user: null, token: null, baseUser: document.querySelectorAll('.msg.user').length, baseText: filledText() };
+    },
+    true,
+  );
+  new MutationObserver(() => {
+    const s = send.__send;
+    if (!s) return;
+    if (s.user === null && document.querySelectorAll('.msg.user').length > s.baseUser) {
+      s.user = -1;
+      requestAnimationFrame(() => (s.user = performance.now()));
+    }
+    if (s.token === null && filledText() > s.baseText) {
+      s.token = -1;
+      requestAnimationFrame(() => (s.token = performance.now()));
+    }
+  }).observe(document, { subtree: true, childList: true, characterData: true });
 };
 
 async function frontToken(page: Page): Promise<string> {
@@ -132,6 +158,56 @@ async function measureOpen(page: Page): Promise<number[]> {
   return out;
 }
 
+async function measureSend(page: Page, api: StudioApi, pid: string): Promise<{ user: number[]; token: number[] }> {
+  const composer = page.locator('.prompt [data-slot="composer-input"]');
+  const before = (await api.runs(pid)).length;
+  const user: number[] = [];
+  const token: number[] = [];
+  for (let i = 0; i < SEND_SAMPLES; i += 1) {
+    await composer.fill(`Token sample ${i}`);
+    await page.waitForTimeout(150);
+    await composer.press('Meta+Enter');
+    const handle = await page.waitForFunction(() => {
+      const s = (window as unknown as { __send: { at: number; user: number | null; token: number | null } | null }).__send;
+      return s && s.user !== null && s.user > 0 && s.token !== null && s.token > 0 ? { user: s.user - s.at, token: s.token - s.at } : null;
+    });
+    const sample = (await handle.jsonValue()) as { user: number; token: number };
+    user.push(sample.user);
+    token.push(sample.token);
+    await api.waitForRuns(pid, before + i + 1);
+    await expect(composer).toBeEnabled();
+  }
+  return { user, token };
+}
+
+async function bytesAt(file: string, ok: (source: string) => boolean): Promise<number> {
+  const deadline = Date.now() + 5000;
+  for (;;) {
+    if (ok(readFileSync(file, 'utf8'))) return Date.now();
+    if (Date.now() > deadline) throw new Error(`expected bytes never reached ${file}`);
+    await new Promise((resolve) => setTimeout(resolve, 2));
+  }
+}
+
+async function measureEdit(page: Page, file: string): Promise<number[]> {
+  await selectInFrame(page, 'h1');
+  const field = page.getByLabel('Font size', { exact: true });
+  const out: number[] = [];
+  for (let i = 0; i < EDIT_SAMPLES; i += 1) {
+    const needle = `font-size: ${40 + i}px`;
+    await field.fill(String(40 + i));
+    await page.waitForTimeout(100);
+    const t0 = Date.now();
+    await field.press('Enter');
+    out.push((await bytesAt(file, (source) => source.includes(needle))) - t0);
+    await expect(page.locator('.ins-status.saving')).toHaveCount(0);
+    await expect(page.locator('iframe.frame')).toHaveCount(1);
+    await page.waitForTimeout(120);
+  }
+  await setSelectMode(page, false);
+  return out;
+}
+
 async function measureHttp(api: StudioApi): Promise<{ index: number[]; projects: number[] }> {
   const index: number[] = [];
   const projects: number[] = [];
@@ -156,7 +232,7 @@ async function telemetry(api: StudioApi, pid: string): Promise<Record<string, nu
   return out;
 }
 
-test('latency: p95 over 20 samples for html, react, select, open', async ({ page }) => {
+test('latency: p95 for html, react, select, open, user message, first token and direct edit', async ({ page }) => {
   test.setTimeout(600_000);
   await page.addInitScript(PROBE);
   const api = await openHome(page);
@@ -168,6 +244,8 @@ test('latency: p95 over 20 samples for html, react, select, open', async ({ page
   const selectSamples = await measureSelect(page);
   const openSamples = await measureOpen(page);
   const http = await measureHttp(api);
+  const send = await measureSend(page, api, html.id);
+  const editSamples = await measureEdit(page, path.join(mainDirection(html).workTree, 'index.html'));
   const htmlTelemetry = await telemetry(api, html.id);
 
   await page.getByRole('button', { name: 'Projects' }).click();
@@ -179,18 +257,25 @@ test('latency: p95 over 20 samples for html, react, select, open', async ({ page
 
   const results = {
     measuredAt: new Date().toISOString(),
+    load: os.loadavg(),
     method: {
       html: 'test writes index.html, then parent receives bridge painted from the new front iframe; ms = receivedAt - write time',
       react: 'test writes src/App.tsx, then parent receives bridge painted (MutationObserver) from the same iframe after HMR; ms = receivedAt - write time',
       select: 'bridge click timestamp to the animation frame after .box.selected is drawn in the parent overlay',
       open: 'reload of the studio page to first bridge painted message, from performance.timeOrigin',
       http: 'warm GET / and GET /api/projects from Node',
+      userMessage: 'Cmd+Enter keydown in the composer to the animation frame after the user message is in the chat (studio page clock)',
+      firstToken: 'Cmd+Enter keydown to the animation frame after the first assistant text node has text, mock agent',
+      edit: 'Enter in the Font size field to the new bytes on disk (Node clock), direct edit with no model call',
     },
     targets: TARGETS,
     html: stats(htmlSamples),
     react: stats(reactSamples),
     select: stats(selectSamples),
     open: stats(openSamples),
+    userMessage: stats(send.user),
+    firstToken: stats(send.token),
+    edit: stats(editSamples),
     httpIndex: stats(http.index),
     httpProjects: stats(http.projects),
     appTelemetry: Object.fromEntries(
@@ -200,7 +285,7 @@ test('latency: p95 over 20 samples for html, react, select, open', async ({ page
   mkdirSync(path.dirname(RESULTS_FILE), { recursive: true });
   writeFileSync(RESULTS_FILE, `${JSON.stringify(results, null, 2)}\n`);
   console.log(
-    `[latency] p95 ms: open ${Math.round(results.open.p95)} (<${TARGETS.open}), html ${Math.round(results.html.p95)} (<${TARGETS.html}), react ${Math.round(results.react.p95)} (<${TARGETS.react}), select ${Math.round(results.select.p95)} (<${TARGETS.select}), GET / ${results.httpIndex.p95.toFixed(1)}, GET /api/projects ${results.httpProjects.p95.toFixed(1)}`,
+    `[latency] p95 ms: open ${Math.round(results.open.p95)} (<${TARGETS.open}), html ${Math.round(results.html.p95)} (<${TARGETS.html}), react ${Math.round(results.react.p95)} (<${TARGETS.react}), select ${Math.round(results.select.p95)} (<${TARGETS.select}), user message ${Math.round(results.userMessage.p95)} (<${TARGETS.userMessage}), first token ${Math.round(results.firstToken.p95)} (<${TARGETS.firstToken}), edit ${Math.round(results.edit.p95)} (<${TARGETS.edit}), GET / ${results.httpIndex.p95.toFixed(1)}, GET /api/projects ${results.httpProjects.p95.toFixed(1)}; load ${os.loadavg()[0]?.toFixed(1)}`,
   );
 
   expect(results.html.n).toBe(SAMPLES);
@@ -211,6 +296,9 @@ test('latency: p95 over 20 samples for html, react, select, open', async ({ page
   expect(results.html.p95).toBeLessThan(TARGETS.html);
   expect(results.react.p95).toBeLessThan(TARGETS.react);
   expect(results.select.p95).toBeLessThan(TARGETS.select);
+  expect(results.userMessage.p95).toBeLessThan(TARGETS.userMessage);
+  expect(results.firstToken.p95).toBeLessThan(TARGETS.firstToken);
+  expect(results.edit.p95).toBeLessThan(TARGETS.edit);
   expect(results.httpIndex.p95).toBeLessThan(TARGETS.http);
   expect(results.httpProjects.p95).toBeLessThan(TARGETS.http);
 });

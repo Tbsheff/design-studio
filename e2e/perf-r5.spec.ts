@@ -10,10 +10,9 @@ const UI_KEY = 'design-studio.ui.v1';
 const RESULTS_FILE = path.join(ROOT, 'e2e', 'results', 'perf-r5.json');
 const START_SAMPLES = 12;
 const OPEN_SAMPLES = 12;
-const TOKEN_SAMPLES = 12;
 const VERSION_COUNT = 100;
 const GRID_PROJECTS = 54;
-const TARGETS = { homeUsableWeb: 800, openFromHome: 1000, firstToken: 1500, userMessage: 50, versionsPanel: 300, homeJsKb: 300, gridP95: 17.5, gridMax: 32 };
+const TARGETS = { homeUsableWeb: 800, openFromHome: 1000, versionsPanel: 300, homeJsKb: 300, gridP95: 17.5, gridMax: 32 };
 
 interface Stats {
   n: number;
@@ -191,67 +190,6 @@ test('R5 open from Home: card click to first preview paint, fresh page each samp
   saveResult('openFromHome', { ...s, eventSourcesPerOpen: perProject });
   expect(perProject.every((count) => count === 1)).toBe(true);
   expect(s.p95).toBeLessThan(TARGETS.openFromHome);
-});
-
-const SEND_PROBE = () => {
-  const w = window as unknown as { __send: { at: number | null; user: number | null; token: number | null; baseUser: number; baseText: number } | null };
-  w.__send = null;
-  const filledText = () => [...document.querySelectorAll('.msg.assistant .assistant-text')].filter((el) => (el.textContent ?? '').trim().length > 0).length;
-  document.addEventListener(
-    'keydown',
-    (event) => {
-      if (event.key !== 'Enter' || !event.metaKey || !(event.target as Element | null)?.closest?.('.prompt')) return;
-      w.__send = { at: performance.now(), user: null, token: null, baseUser: document.querySelectorAll('.msg.user').length, baseText: filledText() };
-    },
-    true,
-  );
-  new MutationObserver(() => {
-    const s = w.__send;
-    if (!s || s.at === null) return;
-    if (s.user === null && document.querySelectorAll('.msg.user').length > s.baseUser) {
-      s.user = -1;
-      requestAnimationFrame(() => (s.user = performance.now()));
-    }
-    if (s.token === null && filledText() > s.baseText) {
-      s.token = -1;
-      requestAnimationFrame(() => (s.token = performance.now()));
-    }
-  }).observe(document, { subtree: true, childList: true, characterData: true });
-};
-
-test('R5 send: user message at once, first token with the mock agent', async ({ page }) => {
-  test.setTimeout(300_000);
-  await page.addInitScript(SEND_PROBE);
-  const api = await openHome(page);
-  const project = await createProjectViaUi(page, api, 'Send probe page', 'html');
-  await expect(frontFrame(page).locator('h1')).toHaveText('Send probe page');
-  await api.waitForRuns(project.id, 1);
-  const composer = page.locator('.prompt [data-slot="composer-input"]');
-  const user: number[] = [];
-  const token: number[] = [];
-  for (let i = 0; i < TOKEN_SAMPLES; i += 1) {
-    await composer.fill(`Token probe ${i}`);
-    await page.waitForTimeout(200);
-    await composer.press('Meta+Enter');
-    const handle = await page.waitForFunction(() => {
-      const s = (window as unknown as { __send: { at: number; user: number | null; token: number | null } | null }).__send;
-      return s && s.user !== null && s.user > 0 && s.token !== null && s.token > 0 ? { user: s.user - s.at, token: s.token - s.at } : null;
-    }, undefined, { timeout: 30_000 });
-    const sample = (await handle.jsonValue()) as { user: number; token: number };
-    user.push(sample.user);
-    token.push(sample.token);
-    await api.waitForRuns(project.id, i + 2);
-    await expect(page.locator('.prompt [data-slot="composer-input"]')).toBeEnabled();
-  }
-  const u = stats(user);
-  const t = stats(token);
-  report('send to user message', u, TARGETS.userMessage);
-  report('send to first token', t, TARGETS.firstToken);
-  const kinds = new Set((await telemetry(api, `projectId=${project.id}`)).map((sample) => sample.kind));
-  saveResult('send', { userMessage: u, firstToken: t, kinds: [...kinds] });
-  expect(kinds.has('run.first_token')).toBe(true);
-  expect(u.p95).toBeLessThan(TARGETS.userMessage);
-  expect(t.p95).toBeLessThan(TARGETS.firstToken);
 });
 
 test('R5 versions panel: 100 versions load and render', async ({ page }) => {

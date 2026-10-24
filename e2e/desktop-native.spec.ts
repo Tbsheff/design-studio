@@ -155,9 +155,29 @@ test('R2-1: zoom keys and View menu zoom the canvas, never the page', async () =
     await expect.poll(canvasZoom).toBeCloseTo(1, 4);
     await page.keyboard.press('Meta+Minus');
     await expect.poll(canvasZoom).toBeCloseTo(0.8, 4);
+    await page.evaluate(() => {
+      const artboard = document.querySelector<HTMLElement>('.artboard');
+      const before = artboard?.style.transform ?? '';
+      const w = window as unknown as { __fitPainted?: Promise<number> };
+      w.__fitPainted = new Promise((resolve) => {
+        const onSignal = () => {
+          window.removeEventListener('keydown', onSignal, true);
+          window.removeEventListener('message', onSignal, true);
+          queueMicrotask(() => requestAnimationFrame(() => resolve((artboard?.style.transform ?? '') !== before ? Date.now() : -1)));
+        };
+        window.addEventListener('keydown', onSignal, true);
+        window.addEventListener('message', onSignal, true);
+      });
+    });
+    const keyFrame = where === 'studio' ? page.mainFrame() : page.frames().find((f) => f.parentFrame() === page.mainFrame());
+    await keyFrame?.evaluate(() => window.addEventListener('keydown', () => ((window as unknown as { __fitKey: number }).__fitKey = Date.now()), { capture: true, once: true }));
     await page.keyboard.press('Shift+Digit1');
+    const painted = await page.evaluate(() => (window as unknown as { __fitPainted: Promise<number> }).__fitPainted);
+    const pressed = (await keyFrame?.evaluate(() => (window as unknown as { __fitKey?: number }).__fitKey ?? 0)) ?? 0;
+    expect(painted).toBeGreaterThan(0);
+    expect(painted - pressed).toBeLessThanOrEqual(17.7);
     await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('fit');
-    seen[where] = [await canvasZoom(), await studioZoomFactor()];
+    seen[where] = [await canvasZoom(), await studioZoomFactor(), painted - pressed];
     expect(await studioZoomFactor()).toBe(1);
   }
   await clickMenu('zoom-actual');

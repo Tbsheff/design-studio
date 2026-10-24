@@ -49,6 +49,11 @@ const LOAD_GRACE_MS = 500;
 const REACT_LATENCY_WINDOW_MS = 10000;
 const HMR_FALLBACK_MS = 2500;
 
+function releaseToolbarFocus(): void {
+  const active = document.activeElement;
+  if (active instanceof HTMLButtonElement && active.closest('.toolbar')) active.blur();
+}
+
 function applyRects(
   prev: SelectionContext[],
   selectors: string[],
@@ -292,6 +297,7 @@ export function usePreviewFrames(o: Options) {
           setTree(parseLayerTree(msg));
           break;
         case 'select':
+          releaseToolbarFocus();
           setSelectedNode(typeof msg.node === 'number' ? msg.node : null);
           cur.setSelection((prev) => {
             if (msg.additive && prev.some((s) => s.selector === msg.selection.selector)) return prev;

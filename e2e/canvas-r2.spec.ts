@@ -455,6 +455,16 @@ test('R2-5: Enter, Shift+Enter and Tab move the selection, with focus in the pre
   if (!nest) throw new Error('no section');
   await page.mouse.click(nest.x + 8, nest.y + 8);
   await expect(page.locator('.chip')).toContainText('section');
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('Enter');
+  await expect(page.locator('.chip')).toContainText('button');
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.press('Shift+Enter');
+  await page.keyboard.press('Shift+Enter');
+  await expect(page.locator('.chip')).toContainText('section');
+
+  const preview = page.frames().find((f) => f !== page.mainFrame() && f.parentFrame() === page.mainFrame());
+  await preview?.evaluate(() => window.focus());
   await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
   for (let i = 0; i < 3; i += 1) await page.keyboard.press('Enter');
   await expect(page.locator('.chip')).toContainText('button');
@@ -474,6 +484,19 @@ test('R2-5: Enter, Shift+Enter and Tab move the selection, with focus in the pre
   await page.keyboard.press('Shift+Tab');
   const b1 = await frontFrame(page).locator('#b1').boundingBox();
   await expect.poll(async () => Math.abs(((await page.locator('.overlay .box.selected').boundingBox())?.x ?? 0) - (b1?.x ?? 0))).toBeLessThanOrEqual(2);
+
+  await page.getByRole('button', { name: /^Select/ }).click();
+  await setSelectMode(page, true);
+  await frontFrame(page).locator('#b2').click();
+  await expect(page.getByPlaceholder('Quick feedback (F)')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await page.keyboard.press('KeyF');
+  await expect(page.getByPlaceholder('Quick feedback (F)')).toBeFocused();
+  await focusStudio(page);
+  await frontFrame(page).locator('#b1').click();
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await page.keyboard.press('KeyV');
+  await expect(page.getByRole('button', { name: /^Select/ })).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('R2-6: Alt over another element shows distances that match getBoundingClientRect', async ({ page }) => {

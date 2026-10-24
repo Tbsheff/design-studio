@@ -43,6 +43,7 @@ const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;
 const MAX_TEXT = 300;
 const MAX_HTML = 3000;
+const SELECT_SETTLE_MS = 400;
 
 interface BridgeSession {
   token: string;
@@ -695,6 +696,7 @@ function startBridge(session: BridgeSession): void {
 
   const layers = createLayerIndex();
   let selected: Element | null = null;
+  let selectedAt = -Infinity;
   let altHeld = false;
   let lastAlt = false;
 
@@ -733,6 +735,7 @@ function startBridge(session: BridgeSession): void {
 
   const postSelect = (element: Element, additive: boolean): void => {
     selected = element;
+    selectedAt = performance.now();
     post({
       type: 'select',
       selection: selectionFor(element),
@@ -747,7 +750,6 @@ function startBridge(session: BridgeSession): void {
     block(event);
     const element = eventElement(event);
     if (!element) return;
-    window.focus();
     postSelect(element, event.shiftKey);
   };
 
@@ -801,7 +803,8 @@ function startBridge(session: BridgeSession): void {
     'request-rects': (message) => {
       const selectors = (Array.isArray(message.selectors) ? message.selectors : []).filter((selector): selector is string => typeof selector === 'string');
       const last = selectors.at(-1);
-      selected = last ? queryElement(last) : null;
+      if (!last) selected = null;
+      else if (performance.now() - selectedAt > SELECT_SETTLE_MS) selected = queryElement(last);
       rects.track(selectors);
     },
     clear: () => {
@@ -822,7 +825,7 @@ function startBridge(session: BridgeSession): void {
       if (element) postSelect(element, message.additive === true);
     },
     'select-relative': (message) => {
-      const base = typeof message.selector === 'string' ? queryElement(message.selector) : null;
+      const base = selected?.isConnected ? selected : typeof message.selector === 'string' ? queryElement(message.selector) : null;
       const valid = message.move === 'child' || message.move === 'parent' || message.move === 'next' || message.move === 'prev';
       const next = base && valid ? moveSelection(base, message.move) : null;
       if (next) postSelect(next, false);

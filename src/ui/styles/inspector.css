@@ -201,9 +201,9 @@
 .ins-section-head h3,
 .twk-section-head,
 .tkp-section-head {
-  color: var(--text-2);
+  color: var(--text);
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -240,8 +240,8 @@
 .ins-scrub {
   flex: none;
   display: grid;
-  place-items: center;
-  min-width: 30px;
+  place-items: center start;
+  min-width: 36px;
   height: 100%;
   padding: 0 var(--s-1) 0 var(--s-2);
   color: var(--text-3);
@@ -312,16 +312,24 @@
   color: var(--danger);
 }
 
-.ins-field.select .ins-input {
-  padding-left: 0;
-  padding-right: var(--s-1);
-  text-overflow: ellipsis;
-  cursor: pointer;
+.ins-field.select {
+  padding: 0;
+  background-image: none;
+  font-weight: 400;
+  cursor: default;
 }
 
-.ins-field.select .ins-scrub.static {
-  min-width: 0;
+.ins-field.select .ins-input {
+  appearance: none;
+  padding-left: 0;
+  padding-right: var(--s-6);
+  text-overflow: ellipsis;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23677085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 6.5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s-1) center;
 }
+
 
 .ins-field.color .ins-input {
   font-family: var(--mono);

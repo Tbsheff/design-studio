@@ -135,10 +135,10 @@ export function AutoLayoutSection({ edit }: { edit: DirectEdit }) {
     <InspectorSection title="Auto layout" aside={flex ? remove : undefined}>
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
-          <SelectField prop="display" label="Display" short="Disp" edit={edit} options={DISPLAYS} />
+          <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
           {!flex && (
             <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" onClick={() => write(edit, { display: 'flex' })}>
-              <Icon name="plus" size={13} />
+              <Icon name="plus" size={14} />
               Add auto layout
               <kbd className="ins-kbd" aria-hidden="true">⇧A</kbd>
             </button>

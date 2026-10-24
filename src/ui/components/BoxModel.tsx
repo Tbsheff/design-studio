@@ -30,7 +30,7 @@ function LinkToggle({ box, linked, onToggle }: { box: Box; linked: boolean; onTo
       title={linked ? `${name}: all sides change together` : `${name}: set each side`}
       onClick={onToggle}
     >
-      <Icon name={linked ? 'link' : 'unlink'} size={13} />
+      <Icon name={linked ? 'link' : 'unlink'} size={14} />
     </button>
   );
 }

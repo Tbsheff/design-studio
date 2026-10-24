@@ -57,6 +57,14 @@ const PATHS = {
   copy: 'M5.5 5.5h7.75v7.75H5.5zM10.5 5.5V2.75H2.75v7.75H5.5',
   image: 'M2.25 2.75h11.5v10.5H2.25zM2.25 10.5l3.5-3.25 3 2.75 1.75-1.5 3.25 2.75M10.25 5.75h.01',
   book: 'M3 3.25A1.5 1.5 0 0 1 4.5 1.75h8v10.5h-8A1.5 1.5 0 0 0 3 13.75zM3 13.75a1.5 1.5 0 0 0 1.5 1.5h8v-3M6 5h4',
+  arrowRight: 'M3 8h10M9 4l4 4-4 4',
+  arrowDown: 'M8 3v10M4 9l4 4 4-4',
+  wrap: 'M2.5 4.5h9a2.25 2.25 0 0 1 0 4.5H6.5M8.5 7l-2 2 2 2M2.5 12.5h3',
+  corners: 'M2.5 6V4.5a2 2 0 0 1 2-2H6M10 2.5h1.5a2 2 0 0 1 2 2V6M13.5 10v1.5a2 2 0 0 1-2 2H10M6 13.5H4.5a2 2 0 0 1-2-2V10',
+  selfStart: 'M2.5 2.5h11M6 5h4v6.5H6z',
+  selfCenter: 'M2.5 8h2.5M11 8h2.5M6 4.5h4v7H6z',
+  selfEnd: 'M2.5 13.5h11M6 4.5h4V11H6z',
+  selfStretch: 'M2.5 2.5h11M2.5 13.5h11M6 5h4v6H6z',
 } as const;
 
 export type IconName = keyof typeof PATHS;

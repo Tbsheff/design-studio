@@ -1,7 +1,7 @@
 .panel-tabs {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-1);
   height: 48px;
   flex: none;
   padding: 0 var(--s-3);
@@ -17,9 +17,9 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--s-1);
   height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -43,11 +43,11 @@
 }
 
 .panel-tab.compact {
-  padding: 0 6px;
+  padding: 0 var(--s-1);
 }
 
 .panel-tab.compact.on {
-  padding: 0 10px 0 8px;
+  padding: 0 var(--s-2);
 }
 
 .panel-tab-dot {
@@ -96,7 +96,7 @@
 
 .ins-tag {
   flex: none;
-  padding: 1px 6px;
+  padding: 0 var(--s-1);
   border-radius: var(--r-xs);
   background: var(--accent-soft);
   color: var(--accent-text);
@@ -127,7 +127,7 @@
 .ins-status {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--s-1);
   color: var(--text-3);
   font-size: var(--t-xs);
 }
@@ -173,7 +173,7 @@
 
 .ins-error .icon {
   flex: none;
-  margin-top: 2px;
+  height: 18px;
 }
 
 .ins-section {
@@ -238,7 +238,7 @@
   place-items: center;
   min-width: 30px;
   height: 100%;
-  padding: 0 4px 0 6px;
+  padding: 0 var(--s-1) 0 var(--s-2);
   color: var(--text-3);
   font-size: var(--t-xs);
   font-weight: 500;
@@ -256,7 +256,7 @@
   min-width: 0;
   width: 100%;
   height: 100%;
-  padding: 0 8px 0 0;
+  padding: 0 var(--s-2) 0 0;
   border-radius: var(--r-sm);
   background: transparent;
   box-shadow: none;
@@ -274,8 +274,8 @@
 }
 
 .ins-field.select .ins-input {
-  padding-left: 2px;
-  padding-right: 4px;
+  padding-left: 0;
+  padding-right: var(--s-1);
   text-overflow: ellipsis;
   cursor: pointer;
 }
@@ -294,7 +294,7 @@
   flex: none;
   width: 18px;
   height: 18px;
-  margin: 0 8px 0 5px;
+  margin: 0 var(--s-2) 0 var(--s-1);
   border-radius: var(--r-xs);
   background: var(--swatch);
   box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.12);
@@ -321,7 +321,7 @@
 .ins-text {
   min-height: 52px;
   max-height: 160px;
-  padding: 6px 8px;
+  padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px transparent;
@@ -363,8 +363,8 @@
     'left core right'
     '. bottom .';
   align-items: center;
-  gap: 4px;
-  padding: 4px 6px 6px;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-2) var(--s-2);
   border-radius: var(--r-md);
 }
 
@@ -373,7 +373,7 @@
 }
 
 .box-ring.padding {
-  padding: 2px 4px 4px;
+  padding: var(--s-1);
   border-radius: var(--r-sm);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -385,7 +385,6 @@
   align-items: center;
   justify-content: space-between;
   height: 22px;
-  padding-left: 2px;
 }
 
 .box-ring-label {
@@ -407,7 +406,7 @@
 
 .box-ring .side {
   height: 24px;
-  padding: 0 2px;
+  padding: 0;
   border-radius: var(--r-xs);
   background: transparent;
   text-align: center;
@@ -466,9 +465,211 @@
 
 .ins-suffix {
   flex: none;
-  padding-right: 8px;
+  padding-right: var(--s-2);
   color: var(--text-3);
   font-size: var(--t-xs);
   font-weight: 500;
   pointer-events: none;
+}
+
+.ins-layout {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.ins-add-layout {
+  justify-self: start;
+}
+
+.ins-kbd {
+  margin-left: var(--s-1);
+  color: var(--text-3);
+}
+
+.ins-flex {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-3);
+}
+
+.ins-flex-side {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.ins-flex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.ins-direction button {
+  width: 32px;
+}
+
+.ins-align-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  grid-auto-rows: 28px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ins-align-grid button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  cursor: pointer;
+  transition-property: background-color, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease);
+}
+
+.ins-align-grid button:hover {
+  background: var(--surface-hover);
+}
+
+.ins-align-grid button:active {
+  scale: 0.96;
+}
+
+.ins-align-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--text-3);
+}
+
+.ins-align-grid button:hover .ins-align-dot {
+  background: var(--text);
+}
+
+.ins-align-grid button.on .ins-align-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-xs);
+  background: var(--accent);
+}
+
+.ins-field.select .ins-size-mode {
+  padding-left: var(--s-2);
+}
+
+.ins-self {
+  justify-self: start;
+}
+
+.ins-self.column .icon {
+  rotate: -90deg;
+}
+
+.ins-radius {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.ins-radius > .ins-field {
+  flex: 1;
+}
+
+.ins-radius.split {
+  grid-column: 1 / -1;
+  align-items: start;
+}
+
+.ins-radius.split > .ins-grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.ins-shadows {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ins-shadow {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.ins-shadow-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 28px;
+}
+
+.ins-shadow-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+
+.ins-chip-toggle {
+  height: 28px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition-property: background-color, color, scale;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease);
+}
+
+.ins-chip-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.ins-chip-toggle:active {
+  scale: 0.96;
+}
+
+.ins-chip-toggle[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.ins-custom {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.ins-custom-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ins-align-grid button:active,
+  .ins-chip-toggle:active {
+    scale: none;
+  }
 }

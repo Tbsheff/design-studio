@@ -7,7 +7,10 @@ import { useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditC
 import { TokenUiContext, type TokenUi } from '../useTokenSnap';
 import { BoxModel } from './BoxModel';
 import { Icon } from './Icon';
+import { RadiusField } from './InspectorCorners';
+import { EffectsSection } from './InspectorEffects';
 import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
+import { AutoLayoutSection, SizeSection } from './InspectorLayout';
 import { CreateTokenHost, FontField, SnapToggle, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { NumberField } from './NumberField';
 
@@ -26,7 +29,6 @@ interface InspectorProps {
 
 const WEIGHTS = ['100', '200', '300', '400', '500', '600', '700', '800', '900'];
 const BORDER_STYLES = ['none', 'solid', 'dashed', 'dotted', 'double'];
-const DISPLAYS = ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'inline-grid', 'contents', 'none'];
 
 export function isDirectEditable(source: { kind: string }, compareOpen: boolean): boolean {
   return source.kind === 'live' && !compareOpen;
@@ -134,25 +136,12 @@ function FillSection({ edit }: { edit: DirectEdit }) {
     <InspectorSection title="Fill and border">
       <ColorField prop="background-color" label="Background color" short="Fill" edit={edit} />
       <div className="ins-grid">
-        <NumberField short="R" spec={{ prop: 'border-radius', label: 'Border radius', edit, min: 0 }} />
+        <RadiusField edit={edit} />
         <NumberField short="Op" spec={{ prop: 'opacity', label: 'Opacity', edit, unit: '', step: 0.05, min: 0, max: 1 }} />
         <NumberField short="BW" spec={{ prop: 'border-width', label: 'Border width', edit, min: 0 }} />
         <SelectField prop="border-style" label="Border style" short="Style" edit={edit} options={BORDER_STYLES} />
       </div>
       <ColorField prop="border-color" label="Border color" short="Border" edit={edit} />
-    </InspectorSection>
-  );
-}
-
-function LayoutSection({ edit }: { edit: DirectEdit }) {
-  return (
-    <InspectorSection title="Layout">
-      <div className="ins-grid">
-        <SelectField prop="display" label="Display" short="Disp" edit={edit} options={DISPLAYS} />
-        <NumberField short="Gap" spec={{ prop: 'gap', label: 'Gap', edit, min: 0 }} />
-        <NumberField short="W" spec={{ prop: 'width', label: 'Width', edit, min: 0 }} />
-        <NumberField short="H" spec={{ prop: 'height', label: 'Height', edit, min: 0 }} />
-      </div>
     </InspectorSection>
   );
 }
@@ -192,12 +181,14 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
       <div className="ins-scroll">
         <ErrorLine status={edit.status} />
         <TextSection selection={props.target} edit={edit} />
-        <TypographySection edit={edit} ui={tk.ui} />
-        <FillSection edit={edit} />
+        <AutoLayoutSection edit={edit} />
+        <SizeSection edit={edit} selection={props.target} />
         <InspectorSection title="Spacing">
           <BoxModel edit={edit} />
         </InspectorSection>
-        <LayoutSection edit={edit} />
+        <TypographySection edit={edit} ui={tk.ui} />
+        <FillSection edit={edit} />
+        <EffectsSection edit={edit} />
       </div>
       <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
     </div>

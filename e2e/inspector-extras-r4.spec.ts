@@ -63,6 +63,13 @@ test('R4-8: the breadcrumb lists each ancestor, collapses the middle, and a clic
   await crumbs.getByRole('button', { name: 'Show 1 more' }).click();
   await expect(crumbs.locator('.ins-crumb')).toHaveText(['main.shell', 'section.wrap', 'div.row', 'div.col', 'article.card', 'h1.title']);
 
+  await page.getByLabel('Font size', { exact: true }).fill('40');
+  await page.getByLabel('Font size', { exact: true }).press('Enter');
+  await expect(page.locator('.ins-status.saved')).toBeVisible();
+  await expect(frontFrame(page).locator('h1')).toHaveCSS('font-size', '40px');
+  await expect(page.locator('iframe.frame.back')).toHaveCount(0);
+  await expect(crumbs.locator('.ins-crumb')).toHaveCount(6);
+
   const before = await selectedBox(page);
   await crumbs.getByRole('button', { name: 'article.card', exact: true }).click();
   await expect(page.locator('.ins-tag')).toHaveText('article');

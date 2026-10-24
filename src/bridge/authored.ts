@@ -1,4 +1,4 @@
-import type { AuthoredRule, SelectionPathEntry } from '../shared/contracts.js';
+import type { AuthoredRule } from '../shared/contracts.js';
 
 export const AUTHORED_MAX_RULES = 60;
 export const AUTHORED_MAX_BYTES = 20_000;
@@ -109,11 +109,11 @@ function crumbLabel(element: Element): string {
   return label.slice(0, MAX_LABEL);
 }
 
-export function ancestorPath(element: Element, idOf: (element: Element) => number): SelectionPathEntry[] {
-  const path: SelectionPathEntry[] = [];
+export function ancestorPath(element: Element): string[] {
+  const path: string[] = [];
   let current = element.parentElement;
   while (current && current !== document.body && current !== document.documentElement && path.length < MAX_PATH) {
-    path.unshift({ node: idOf(current), label: crumbLabel(current) });
+    path.unshift(crumbLabel(current));
     current = current.parentElement;
   }
   return path;

@@ -764,7 +764,7 @@ function startBridge(session: BridgeSession): void {
     selectedAt = performance.now();
     post({
       type: 'select',
-      selection: { ...selectionFor(element), path: ancestorPath(element, layers.idOf) },
+      selection: { ...selectionFor(element), path: ancestorPath(element) },
       additive,
       at: performance.timeOrigin + performance.now(),
       node: layers.idOf(element),

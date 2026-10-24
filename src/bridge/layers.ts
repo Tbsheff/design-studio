@@ -52,7 +52,7 @@ export function createLayerIndex(): LayerIndex {
   };
 
   const build = (): { nodes: LayerNode[]; truncated: boolean } => {
-    byId = new Map([...byId].filter(([, kept]) => kept.isConnected));
+    byId = new Map();
     const nodes: LayerNode[] = [];
     const stack: { element: Element; depth: number }[] = layerChildren(document.body)
       .reverse()

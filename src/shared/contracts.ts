@@ -216,12 +216,7 @@ export interface SelectionContext {
   rect: { x: number; y: number; width: number; height: number };
   source: SourceLoc | null;
   ancestors: string[];
-  path?: SelectionPathEntry[];
-}
-
-export interface SelectionPathEntry {
-  node: number;
-  label: string;
+  path?: string[];
 }
 
 export interface Attachment {

@@ -1,6 +1,6 @@
 import { Fragment, useState, type MutableRefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
-import { collapseCrumbs, parseSelectionPath, type Crumb } from '../authoredCss';
+import { collapseCrumbs, parseSelectionPath, pathCrumbs, type Crumb } from '../authoredCss';
 import type { PreviewPort } from '../bridge';
 import { Icon } from './Icon';
 
@@ -16,20 +16,22 @@ function elementLabel(selection: SelectionContext): string {
 
 export function InspectorBreadcrumb({ selection, port }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const path = parseSelectionPath(selection.path);
+  const path = pathCrumbs(parseSelectionPath(selection.path));
   if (path.length === 0) return null;
-  const crumbs: Crumb[] = expanded ? path.map((entry) => ({ kind: 'node', entry })) : collapseCrumbs(path);
-  const select = (node: number) => port.current?.post({ type: 'select-node', id: node, additive: false });
+  const crumbs: Crumb[] = expanded ? path.map((crumb) => ({ kind: 'node', ...crumb })) : collapseCrumbs(path);
+  const select = (levels: number) => {
+    for (let step = 0; step < levels; step += 1) port.current?.post({ type: 'select-relative', selector: selection.selector, move: 'parent' });
+  };
   const current = elementLabel(selection);
   return (
     <nav className="ins-crumbs" aria-label="Element path">
       <ol>
         {crumbs.map((crumb, index) => (
-          <Fragment key={crumb.kind === 'node' ? crumb.entry.node : `gap-${index}`}>
+          <Fragment key={crumb.kind === 'node' ? crumb.levels : `gap-${index}`}>
             <li>
               {crumb.kind === 'node' ? (
-                <button type="button" className="ins-crumb" title={`Select ${crumb.entry.label}`} onClick={() => select(crumb.entry.node)}>
-                  {crumb.entry.label}
+                <button type="button" className="ins-crumb" title={`Select ${crumb.label}`} onClick={() => select(crumb.levels)}>
+                  {crumb.label}
                 </button>
               ) : (
                 <button

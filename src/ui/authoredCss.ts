@@ -1,4 +1,4 @@
-import { DIRECT_STYLE_PROPERTIES, type AuthoredRule, type SelectionPathEntry } from '../shared/contracts';
+import { DIRECT_STYLE_PROPERTIES, type AuthoredRule } from '../shared/contracts';
 
 export interface AuthoredCss {
   rules: AuthoredRule[];
@@ -145,24 +145,27 @@ export function parseAuthoredReply(message: { rules?: unknown; inline?: unknown 
   return { rules, inline };
 }
 
-export function parseSelectionPath(raw: unknown): SelectionPathEntry[] {
+export function parseSelectionPath(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
-  const path: SelectionPathEntry[] = [];
-  for (const entry of raw.slice(-MAX_PATH)) {
-    if (!entry || typeof entry !== 'object') return [];
-    const { node, label } = entry as Record<string, unknown>;
-    if (typeof node !== 'number' || !Number.isInteger(node) || node < 1) return [];
-    if (typeof label !== 'string' || label === '') return [];
-    path.push({ node, label: label.slice(0, MAX_LABEL) });
-  }
-  return path;
+  const path = raw.slice(-MAX_PATH);
+  if (!path.every((label): label is string => typeof label === 'string' && label !== '')) return [];
+  return path.map((label) => label.slice(0, MAX_LABEL));
 }
 
-export type Crumb = { kind: 'node'; entry: SelectionPathEntry } | { kind: 'gap'; hidden: SelectionPathEntry[] };
+export interface PathCrumb {
+  label: string;
+  levels: number;
+}
 
-export function collapseCrumbs(path: SelectionPathEntry[], max = 4): Crumb[] {
-  const nodes = path.map((entry): Crumb => ({ kind: 'node', entry }));
-  if (path.length <= max) return nodes;
+export type Crumb = ({ kind: 'node' } & PathCrumb) | { kind: 'gap'; hidden: PathCrumb[] };
+
+export function pathCrumbs(path: string[]): PathCrumb[] {
+  return path.map((label, index) => ({ label, levels: path.length - index }));
+}
+
+export function collapseCrumbs(crumbs: PathCrumb[], max = 4): Crumb[] {
+  const nodes = crumbs.map((crumb): Crumb => ({ kind: 'node', ...crumb }));
+  if (crumbs.length <= max) return nodes;
   const keep = max - 1;
-  return [nodes[0] as Crumb, { kind: 'gap', hidden: path.slice(1, path.length - keep) }, ...nodes.slice(path.length - keep)];
+  return [nodes[0] as Crumb, { kind: 'gap', hidden: crumbs.slice(1, crumbs.length - keep) }, ...nodes.slice(crumbs.length - keep)];
 }

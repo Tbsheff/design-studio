@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collapseCrumbs, formatCopyCss, isCoveredDeclaration, otherStyles, parseAuthoredReply, parseDeclarations, parseSelectionPath } from './authoredCss';
+import { collapseCrumbs, formatCopyCss, isCoveredDeclaration, otherStyles, parseAuthoredReply, parseDeclarations, parseSelectionPath, pathCrumbs } from './authoredCss';
 
 describe('parseDeclarations', () => {
   it('keeps semicolons inside url() and quotes, and keeps !important', () => {
@@ -82,18 +82,20 @@ describe('parseAuthoredReply', () => {
 });
 
 describe('breadcrumb path', () => {
-  const path = [1, 2, 3, 4, 5, 6].map((node) => ({ node, label: `div.n${node}` }));
+  const path = [1, 2, 3, 4, 5, 6].map((n) => `div.n${n}`);
 
-  it('parses a valid path and refuses bad entries', () => {
-    expect(parseSelectionPath(path.slice(0, 2))).toEqual(path.slice(0, 2));
-    expect(parseSelectionPath([{ node: 1.5, label: 'a' }])).toEqual([]);
-    expect(parseSelectionPath([{ node: 1, label: '' }])).toEqual([]);
+  it('parses a valid path, caps it, and refuses bad entries', () => {
+    expect(parseSelectionPath(path.slice(0, 2))).toEqual(['div.n1', 'div.n2']);
+    expect(parseSelectionPath(Array.from({ length: 30 }, (_, i) => `p${i}`))).toHaveLength(20);
+    expect(parseSelectionPath(['a', 3])).toEqual([]);
+    expect(parseSelectionPath(['a', ''])).toEqual([]);
     expect(parseSelectionPath('x')).toEqual([]);
   });
 
-  it('collapses the middle of a long path', () => {
-    expect(collapseCrumbs(path.slice(0, 4))).toHaveLength(4);
-    const crumbs = collapseCrumbs(path);
-    expect(crumbs.map((crumb) => (crumb.kind === 'node' ? crumb.entry.node : `gap:${crumb.hidden.map((entry) => entry.node).join(',')}`))).toEqual([1, 'gap:2,3', 4, 5, 6]);
+  it('counts parent levels from the element and collapses the middle of a long path', () => {
+    expect(pathCrumbs(['main', 'div'])).toEqual([{ label: 'main', levels: 2 }, { label: 'div', levels: 1 }]);
+    expect(collapseCrumbs(pathCrumbs(path.slice(0, 4)))).toHaveLength(4);
+    const crumbs = collapseCrumbs(pathCrumbs(path));
+    expect(crumbs.map((crumb) => (crumb.kind === 'node' ? crumb.levels : `gap:${crumb.hidden.map((entry) => entry.levels).join(',')}`))).toEqual([6, 'gap:5,4', 3, 2, 1]);
   });
 });

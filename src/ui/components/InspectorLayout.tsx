@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
-import { isTypingTarget } from '../usePanZoom';
+import { isTypingTarget } from '../typingTarget';
 import type { DirectEdit } from '../useDirectEdit';
 import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, parentLayout, sizeModeOf, sizePatch, type Axis, type SizeMode } from '../sizing';
 import { Icon, type IconName } from './Icon';

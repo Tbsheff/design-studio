@@ -2,6 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, 
 import { isModZoomKey, zoomKeyOf, type ZoomKey } from '../shared/contracts';
 import type { Box } from './canvasFrames';
 import { uiStore, type ZoomSetting } from './storage';
+import { isTypingTarget } from './typingTarget';
+
+export { isTypingTarget };
 
 const PAD = 24;
 const SELECTION_PAD = 64;
@@ -69,11 +72,6 @@ function fitBase(stage: Stage, layout: PanZoomLayout, z: number): { x: number; y
     x: Math.round((stage.w - bounds.width * z) / 2) + (active.x - bounds.x) * z,
     y: Math.max(PAD, Math.round((stage.h - bounds.height * z) / 2)) + (active.y - bounds.y) * z,
   };
-}
-
-export function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 }
 
 export function blocksZoomKey(event: KeyboardEvent): boolean {

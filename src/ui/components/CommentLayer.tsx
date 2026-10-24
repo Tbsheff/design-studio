@@ -3,7 +3,7 @@ import type { AnchorQuery, AnchorReport, ProjectKind, SelectionContext } from '.
 import { anchorQueryOf, createOrphanTracker, hasPin } from '../../shared/comments';
 import { reviewReport } from '../commentAnchors';
 import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
-import { isTypingTarget } from '../usePanZoom';
+import { isTypingTarget } from '../typingTarget';
 import type { CommentsControl } from '../useComments';
 import { COMPACT_PLACEMENT, ComposePopover, OpenCommentPopover, popoverStyle } from './CommentPopover';
 import '../styles/comments.css';

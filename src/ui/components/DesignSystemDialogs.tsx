@@ -4,7 +4,7 @@ import { pickable, usePacks } from '../packs';
 import { uiStore, type LibraryFrom } from '../storage';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
-import { PackList } from './PackPicker';
+import { PackList } from './PackList';
 
 interface ChangeProps {
   currentId: string | null;

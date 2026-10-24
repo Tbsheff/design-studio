@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SelectionContext } from '../shared/contracts';
 import type { CommentsControl } from './useComments';
-import { isTypingTarget } from './usePanZoom';
+import { isTypingTarget } from './typingTarget';
 
 type SetSelection = (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
 

@@ -2,7 +2,7 @@ import type { Attachment as UploadedAttachment, SelectionContext } from '../../s
 import { Attachment, AttachmentMedia, AttachmentOverlay, AttachmentProgress } from '../ai/components/ai/attachment';
 import { Chip } from '../ai/components/ai/chip';
 import { Icon } from './Icon';
-import { modelLabel } from './SettingsFields';
+import { modelLabel } from '../settingsDraft';
 
 export interface PendingAttachment {
   localId: string;

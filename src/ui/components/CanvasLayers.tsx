@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shared/contracts';
 import { uiStore } from '../storage';
-import { isTypingTarget } from '../usePanZoom';
+import { isTypingTarget } from '../typingTarget';
 import type { LayerTree } from '../layersTree';
 import type { LayerEdits } from '../useLayerEdits';
 import { Icon } from './Icon';

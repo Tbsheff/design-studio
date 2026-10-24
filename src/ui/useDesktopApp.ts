@@ -3,7 +3,7 @@ import type { Project } from '../shared/contracts';
 import { api, errorText } from './api';
 import { useDesktopCommand, useDesktopContext } from './desktop';
 import { uiStore } from './storage';
-import { isTypingTarget } from './usePanZoom';
+import { isTypingTarget } from './typingTarget';
 
 function projectForFolder(projects: Project[], folder: string): Project | undefined {
   const clean = folder.replace(/\/+$/, '');

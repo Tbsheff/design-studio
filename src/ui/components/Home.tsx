@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react';
 import { formatAnswers, needsQuestions } from '../../shared/clarify';
 import { DEFAULT_SETTINGS, type ClarifyQuestion, type Project, type ProjectKind, type ProjectSettings, type Starter } from '../../shared/contracts';
 import { shortenHome, type WorkspaceFolder } from '../../shared/folders';
@@ -15,10 +15,18 @@ import { NewProjectAdvanced } from './NewProjectAdvanced';
 import { PackPicker } from './PackPicker';
 import { RunSettings } from './RunSettings';
 import { ProjectGrid } from './ProjectGrid';
-import { parseDraft, toDraft } from './SettingsFields';
-import { BrandMark } from './StudioTopbar';
-import { ClarifyForm, ComposerChips, imageFiles, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
-import { FirstRunPanel, HomeToast, StarterGallery, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
+import { reportAppStart } from '../perfTelemetry';
+import { prefetchScreensWhenIdle } from '../screens';
+import { parseDraft, toDraft } from '../settingsDraft';
+import { BrandMark } from './BrandMark';
+import { ComposerChips, imageFiles, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
+import { HomeToast, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
+
+const startersChunk = import('./HomeStarters');
+const StarterGallery = lazy(() => startersChunk.then((m) => ({ default: m.StarterGallery })));
+const FirstRunPanel = lazy(() => startersChunk.then((m) => ({ default: m.FirstRunPanel })));
+const clarifyChunk = import('./ClarifyForm');
+const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyForm })));
 
 type Busy = 'create' | 'import' | 'ask' | null;
 
@@ -183,6 +191,12 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const [toast, setToast] = useState<HomeToastState | null>(null);
   const onboarding = useOnboarding();
   const { projects, setProjects, listError, loadProjects, searchRef } = useHomeProjects();
+  const listed = projects !== null || listError !== null;
+  useEffect(() => {
+    if (!listed) return;
+    reportAppStart('home');
+    prefetchScreensWhenIdle();
+  }, [listed]);
   const { images, references, dragging, fileRef, addImages, removeImage, removeReference, onPromptPaste, dropHandlers } = useComposerAttachments(setFormError);
   const showToast = useCallback((next: Omit<HomeToastState, 'id'>) => setToast({ ...next, id: Date.now() }), []);
   const clearToast = useCallback(() => setToast(null), []);
@@ -335,16 +349,18 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
             </div>
           </form>
           {questions && (
-            <ClarifyForm
-              questions={questions}
-              busy={busy === 'create'}
-              onBuild={(answers) => void build(formatAnswers(prompt, answers))}
-              onSkip={() => void build(prompt.trim())}
-              onCancel={() => {
-                setQuestions(null);
-                focusPrompt(homeRef.current);
-              }}
-            />
+            <Suspense fallback={null}>
+              <ClarifyForm
+                questions={questions}
+                busy={busy === 'create'}
+                onBuild={(answers) => void build(formatAnswers(prompt, answers))}
+                onSkip={() => void build(prompt.trim())}
+                onCancel={() => {
+                  setQuestions(null);
+                  focusPrompt(homeRef.current);
+                }}
+              />
+            </Suspense>
           )}
           <LocationField
             folders={workspaces?.folders ?? []}
@@ -370,8 +386,10 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <Disclosure className="home-disclosure" />
           <OpenFolder busy={busy !== null} path={importPath} homeDir={homeDir} chooser={chooser} onPath={setImportPath} onImport={(p) => void importFolder(p)} />
         </section>
-        {onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}
-        {projects !== null && projects.length === 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
+        <Suspense fallback={null}>
+          {onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}
+          {projects !== null && projects.length === 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
+        </Suspense>
         <HiddenProjectsNote homeDir={homeDir} onMoved={() => void loadProjects()} />
         <FoldersSection
           list={workspaces}
@@ -396,7 +414,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           searchRef={searchRef}
           filter={filterFolder ? { label: filterFolder.label, onClear: () => setFolderFilter(null) } : null}
         />
-        {projects !== null && projects.length > 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
+        <Suspense fallback={null}>{projects !== null && projects.length > 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}</Suspense>
       </main>
       <HomeToast toast={toast} onDone={clearToast} />
     </div>

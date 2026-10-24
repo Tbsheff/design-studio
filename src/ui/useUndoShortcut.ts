@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { noteHandledShortcut, recentDesktopCommand, useDesktopCommand } from './desktop';
-import { isTypingTarget } from './usePanZoom';
+import { isTypingTarget } from './typingTarget';
 
 export const PREVIEW_HISTORY_EVENT = 'studio:preview-history';
 

@@ -4,7 +4,7 @@ import { reorderMoveOf } from '../shared/reorder';
 import { api, errorText } from './api';
 import { useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import type { LayerTree } from './layersTree';
-import { isTypingTarget } from './usePanZoom';
+import { isTypingTarget } from './typingTarget';
 
 const RESELECT_MS = 5000;
 const NODE_WAIT_MS = 2000;

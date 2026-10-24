@@ -1,6 +1,9 @@
-import type { ChangeEvent } from 'react';
+import { lazy, Suspense, useState, type ChangeEvent } from 'react';
+import type { SettingsDraft } from '../settingsDraft';
 import { Icon } from './Icon';
-import { SettingsFields, type SettingsDraft } from './SettingsFields';
+
+const loadFields = () => import('./SettingsFields');
+const SettingsFields = lazy(() => loadFields().then((m) => ({ default: m.SettingsFields })));
 
 interface Props {
   draft: SettingsDraft;
@@ -11,6 +14,7 @@ interface Props {
 }
 
 export function NewProjectAdvanced(props: Props) {
+  const [open, setOpen] = useState(false);
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -22,13 +26,17 @@ export function NewProjectAdvanced(props: Props) {
   };
 
   return (
-    <details className="advanced">
-      <summary>
+    <details className="advanced" onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary onPointerEnter={() => void loadFields()} onFocus={() => void loadFields()}>
         <Icon name="chevronRight" size={14} />
         Advanced
       </summary>
       <div className="advanced-body">
-        <SettingsFields draft={props.draft} onChange={props.onDraft} />
+        {open && (
+          <Suspense fallback={null}>
+            <SettingsFields draft={props.draft} onChange={props.onDraft} />
+          </Suspense>
+        )}
         <label className="field">
           <span>DESIGN.md (optional). The agent reads it before the first run.</span>
           <textarea

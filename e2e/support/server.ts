@@ -1,7 +1,7 @@
-import { spawn } from 'node:child_process';
-import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnDetachedToLog } from './logged-spawn';
 import { claudeHomeFor, writeSkillsFixture } from './skills-fixture';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -66,34 +66,34 @@ export function projectsDirFor(dataDir: string): string {
 
 export async function startServer(dataDir: string): Promise<{ pid: number; listenMs: number }> {
   mkdirSync(LOG_DIR, { recursive: true });
-  const log = createWriteStream(path.join(LOG_DIR, `server-${Date.now()}.log`));
   const claudeHome = process.env.STUDIO_E2E_CLAUDE_HOME ?? claudeHomeFor(dataDir);
   writeSkillsFixture(claudeHome);
   const started = Date.now();
   const command = serverCommand();
-  const child = spawn(command.file, command.args, {
-    cwd: ROOT,
-    detached: true,
-    env: {
-      ...process.env,
-      ...command.env,
-      STUDIO_AGENT: 'mock',
-      STUDIO_FETCH_ALLOW_LOOPBACK: '1',
-      STUDIO_DATA_DIR: dataDir,
-      STUDIO_PROJECTS_DIR: projectsDirFor(dataDir),
-      STUDIO_CLAUDE_HOME: claudeHome,
-      STUDIO_PORT: String(STUDIO_PORT),
-      STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),
-      STUDIO_VITE_PORT_BASE: String(VITE_PORT_BASE),
+  const child = spawnDetachedToLog(
+    command.file,
+    command.args,
+    {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        ...command.env,
+        STUDIO_AGENT: 'mock',
+        STUDIO_FETCH_ALLOW_LOOPBACK: '1',
+        STUDIO_DATA_DIR: dataDir,
+        STUDIO_PROJECTS_DIR: projectsDirFor(dataDir),
+        STUDIO_CLAUDE_HOME: claudeHome,
+        STUDIO_PORT: String(STUDIO_PORT),
+        STUDIO_PREVIEW_PORT: String(PREVIEW_PORT),
+        STUDIO_VITE_PORT_BASE: String(VITE_PORT_BASE),
+      },
     },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+    path.join(LOG_DIR, `server-${Date.now()}.log`),
+  );
   let alive = true;
   child.on('exit', () => {
     alive = false;
   });
-  child.stdout.pipe(log);
-  child.stderr.pipe(log);
   child.unref();
   await waitForHttp(`${BASE_URL}/`, 90_000, () => alive);
   if (child.pid === undefined) throw new Error('studio server has no pid');

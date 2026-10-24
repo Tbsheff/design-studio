@@ -356,3 +356,86 @@ Before: `/tmp/polish-r4/before-inspector-h1.png`, `before-inspector-card.png`, `
 ### Commits
 
 `5f0ad41` restart log fix · `fa3a83e`, `467ec72` desktop Esc test fix · `6e7bce3` shared contracts · `d150d35` shot script · `22cb677`–`b9eae04` undo and redo · `0d4d14f`–`e8c67b3` layers and resize · `2ca527e`–`a0ecf01` inspector fields · `a617c3b`–`4d7a148` batch, breadcrumb, Copy CSS, Other styles · `ca50a08`, `cc00ae0` inline edit · `c640d55`, `c082976` chat Esc fix · `da219cf`–`0bc4715` multi-select · `06c4455`–`6159582` merge fixes · `3d2ab27`, `5035ef7`, `915aa74` polish · `7e66bb0` latency spec · then the docs.
+
+## Round 5 — Speed (2026-10-24)
+
+Method: every number is p50 / p95 in ms on this machine (14 cores). BEFORE is `9d9facc` (end of Round 4), AFTER is the Round 5 head. Load averages are in the result files (`e2e/results/latency.json`, `perf-r5.json`, `desktop-start-*.json`). Specs: `e2e/latency.spec.ts` (20 samples; 12 for Send and edit), `e2e/perf-r5.spec.ts` (12 samples; 6 for the versions panel), `e2e/edit-latency-r4.spec.ts` (7 per edit type), `scripts/perf/desktop-start.ts` (10 launches, fresh temp data each).
+
+### BEFORE / AFTER
+
+| Metric | Target | BEFORE p50 / p95 | AFTER p50 / p95 | Proof |
+|---|---|---|---|---|
+| Home usable, web, cold browser context | < 800 | 114 / 243 | 94 / 97 (98 / 110 in the full suite at load 10) | `perf-r5` |
+| Home JS (entry + preloads) | < 300 kB | 876 kB, one chunk | 299.3 kB (292 KiB) | `perf-r5` |
+| Open: studio reload to first preview paint | < 1000 (was 2000) | 96 / 97 | 79–95 / 95 | `latency` |
+| Open: Home card click to first preview paint | < 1000 | 63 / 64 | 61 / 63 | `perf-r5` |
+| HTML write to preview paint | < 150 (was 250) | 56 / 61 | 64–66 p95 | `latency` |
+| React write to HMR paint | < 400 (was 750) | 61 / 79 | 72–81 p95 | `latency` |
+| Click to selection outline | < 50 (was 100) | 30 / 31 | 29–32 p95 | `latency` |
+| Cmd+Enter to user message in chat | < 50 | 30 / 79 | 4 / 5 (`perf-r5`), 14–17 p95 (`latency`) | `latency`, `perf-r5` R5-5 |
+| Cmd+Enter to first token, mock agent | < 1500 | 46 / 95 | 47 / 52–116 | `latency` |
+| Direct edit: Enter to bytes on disk | < 200 | 6 / 65 (R4 font size) | 15–21 p95 | `latency`, `edit-latency-r4` |
+| Versions: GET at 100 versions | < 300 | 27 / 68 | 22–25 / 40–50 | `perf-r5` |
+| Versions panel at 100 versions | < 300 | 88 / 143 | 51–85 / 62–97 | `perf-r5` |
+| Home grid scroll, 54–90 cards with thumbnails, 3 s | p95 ≤ 16.7, none > 32 | p95 16.8, max 16.8, 0 > 32 | p95 16.7–16.8, max 16.8, 0 > 32, no long task | `perf-r5` |
+| Desktop dev: launch to Home composer | < 1500 | 668 / 1612 (first launch) | 674 / 1311 (first launch) | `desktop-start` |
+| Desktop packaged: launch to Home composer | < 1500 | 629 / 1255 (warm p95 817) | 575 / 2664 (first launch after the repack; warm p95 606) | `desktop-start` |
+| Desktop packaged: main process start to Home painted (`app.start`) | < 1500 | not measured | 504 / 734 | `desktop-start` |
+
+Under synthetic load (12 `yes` processes, load average 24) `latency` still passed: open 109, HTML 69, React 93, select 29, user message 17, first token 53, edit 71 ms p95.
+
+### Bottlenecks found and fixes
+
+- **No startup or first-token numbers.** New telemetry kinds `app.start`, `run.first_token` (server and visible), `edit.commit`, `frame.long`; app samples without a project go to `<data>/telemetry.jsonl` (`GET /api/telemetry?scope=app`). The run details Latency list shows first token and long frames. Desktop main logs boot phases and hands them to the UI.
+- **One 876 kB UI chunk parsed on every start.** Studio, the design systems library and New design system are lazy; Home-only parts that are not on screen at first are their own chunks. Home JS 299.3 kB, of which React DOM is 200 kB.
+- **Found while measuring the split: React 19 reveals a suspended boundary no sooner than 300 ms after it suspends.** The first lazy version made card click to paint 362 ms (p50) instead of 63. Fix: `screens.tsx` preloads on Home idle, the card click waits for the chunk, and a loaded screen renders without suspending. Back to 61 ms.
+- **The user message waited for the send round trip** (p95 79 ms, up to 2 s while a stopped run settles). Optimistic Send adds the message and "Starting" in the same frame as Cmd+Enter.
+- **Flash of "Connecting…" and "Loading project…" text** on fast loads. The text now shows only after 300 ms.
+- **Desktop phases (packaged, warm):** app ready 80 ms, data folder and git 20 ms, login-shell PATH and Claude lookup about 115 ms before the server spawns, server spawn to ready about 125 ms (200 ms in dev), window to ready-to-show about 135 ms. Tried: create the window while the server starts. It was slower (server ready +120 ms from CPU contention, Home +60–120 ms), so I reverted it.
+- Already fast before this round and not changed: HTML and React preview paths, select, first token with the mock, direct edits, versions (the one-git-process fix and the other ranked fixes in `optimizations.md` landed earlier). R5-4 proof: one EventSource per project on every open (`perf-r5`).
+
+### Features and polish
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R5-1 Measure what matters | Each new kind has a sample after one mock run and one direct edit | `perf-r5` R5-1, `telemetry-routes.test.ts`, `lifecycle.test.ts`, `desktop.spec.ts` | Pass. First token shows "N ms (server N ms)" in Details |
+| R5-2 Tighter gates | `latency` passes 3 times in a row | 3 runs at load 5–6, then the full suite at load 12, then load 24 | Pass |
+| R5-3 Smoothness | Pan, zoom, 10k-token stream, Home grid | R2-2, R3-12, `perf-r5` | Pass with a 17.5 ms tolerance for p95 (headless rAF ticks at 16.7–16.8 ms); 0 frames > 32 ms |
+| R5-4 Known perf fixes | Gates pass; one EventSource per project | `perf-r5` | Pass (fixes landed before R5) |
+| R5-5 Optimistic Send | User message < 50 ms after Cmd+Enter | `latency`, `perf-r5` R5-5 (send held, then failed) | Pass. Failed send removes the row and restores the draft |
+| R5-6 Lazy Studio | Home JS < 300 kB; Home usable < 800 ms web | `perf-r5` | Pass (299.3 kB; 97 ms) |
+| R5-7 Versions at 100 | Panel < 300 ms | `perf-r5` | Pass (≤ 97 ms) |
+| R1 leftover: Home grid trace | p95 ≤ 16.7, none > 32 | `perf-r5` | p95 16.7–16.8, 0 > 32 (see R5-3) |
+
+Premium-feel pass on the touched screens (chat pending row, boot text, Home): the pending row is the same markup as a starting run (no shift when the real run replaces it); no spinner or text flash under 300 ms; tabular numbers on the timer. Screenshot: `/tmp/polish-r5/after-optimistic-send.png`.
+
+### Gates tightened
+
+`e2e/latency.spec.ts` TARGETS: open 2000 → 1000, html 250 → 150, react 750 → 400, select 100 → 50; new: userMessage 50, firstToken 1500, edit 200. At load 24 every gate keeps at least 1.7× margin; select is the tightest (29 of 50).
+
+### Left for later rounds
+
+- Desktop: the login-shell PATH lookup (about 115 ms) blocks the server spawn. A cached PATH would save it, but a stale PATH can hide a newly installed `claude`; not done.
+- First launch after install or repack is 1.2–2.6 s (cold disk cache); not under our control in the app.
+- Real-agent first token (target < 3 s p50) is not measured this round (tests use the mock only).
+- Home JS has little room: 299.3 kB of 300. The next Home feature should be a lazy chunk.
+- The smooth p95 ≤ 16.7 ms is met only to rAF precision (16.7–16.8 ms); the gates use 17.5 ms.
+- Select is about 2 frames (31 ms); going lower needs an overlay drawn outside React.
+
+### Regressions found
+
+- Found while measuring: the React 19 Suspense reveal delay (see above).
+- `desktop.spec.ts` checked `studioDesktop` with `toEqual` and failed once `boot` was added; it now checks the boot marks too.
+- Infra, not the app: one full run lost Chrome in `edit-latency-r4` resize ("Mach rendezvous failed"); the spec passed alone and in the next full run.
+
+### Test runs (final, on `d291350`)
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 106 files, 819 tests passed (6 new: `telemetry-routes.test.ts`, first-token tests in `lifecycle.test.ts`, `shownPending` in `runState.test.ts`).
+- `npm run build:ui`: built.
+- Playwright `STUDIO_E2E_GROUP=r5 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 119 of 119 (load 17 at the start; new: `perf-r5.spec.ts` 7 tests; `latency.spec.ts` now also gates user message, first token and direct edit); `ac-core` 7 of 7; `ac-edit` 19 of 19; `ac-safety` 10 of 10 (AC-48 passed).
+- `npm run e2e:desktop`: 22 of 22 (1 new: app.start with the boot phases).
+
+### Commits
+
+`eaac241` telemetry · `9bd4ca9`, `175ce7f` optimistic Send · `03ee2e2` code split · `7dcdce6`, `ec05cea` perf and latency specs · `f6adbb9` desktop boot marks and start script · `e9c5261` desktop spec · `5ada5cd` boot text delay · `a2045f2`, `d291350` docs · then this log.

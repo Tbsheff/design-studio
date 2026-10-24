@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ToolDiff } from '../../shared/contracts';
 import { Action, ActionContent, ActionIcon, ActionLabel, ActionTrigger } from '../ai/components/ai/action';
 import {
   ChainOfThought,
@@ -10,7 +11,7 @@ import { Chip } from '../ai/components/ai/chip';
 import { Loader } from '../ai/components/ai/loader';
 import { formatMs } from '../format';
 import type { RunView, ToolRow } from '../runState';
-import { SKILL_TOOL, prettyToolName, skillToolName, toolLabel, toolTarget } from '../toolLabels';
+import { SKILL_TOOL, toolSubject, toolVerb } from '../toolLabels';
 import { Icon, type IconName } from './Icon';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -23,9 +24,10 @@ const TOOL_ICON: Record<string, IconName> = {
   Glob: 'search',
   WebFetch: 'globe',
   Skill: 'book',
+  TodoWrite: 'check',
 };
 
-const TOOL_VERB: Record<string, string> = {
+const LIVE_VERB: Record<string, string> = {
   Write: 'Writing',
   Edit: 'Editing',
   MultiEdit: 'Editing',
@@ -34,6 +36,7 @@ const TOOL_VERB: Record<string, string> = {
   Grep: 'Searching',
   Glob: 'Finding',
   Skill: 'Loading skill',
+  TodoWrite: 'Updating todos',
 };
 
 type ToolState = 'pending' | 'done' | 'error';
@@ -54,38 +57,117 @@ function shortName(target: string): string {
   return parts[parts.length - 1] || target;
 }
 
+interface RowGroup {
+  tool: ToolRow;
+  count: number;
+  durationMs: number | null;
+}
+
+function groupRepeats(tools: ToolRow[], workTree: string | null): RowGroup[] {
+  const groups: RowGroup[] = [];
+  for (const tool of tools) {
+    const last = groups.at(-1);
+    const same =
+      last &&
+      !last.tool.diff &&
+      !tool.diff &&
+      toolState(last.tool) === 'done' &&
+      toolState(tool) === 'done' &&
+      last.tool.name === tool.name &&
+      toolSubject(last.tool.name, last.tool.input, workTree) === toolSubject(tool.name, tool.input, workTree);
+    if (same) {
+      last.count += 1;
+      last.durationMs = (last.durationMs ?? 0) + (tool.durationMs ?? 0);
+    } else groups.push({ tool, count: 1, durationMs: tool.durationMs });
+  }
+  return groups;
+}
+
 function ToolStateIcon({ tool, state }: { tool: ToolRow; state: ToolState }) {
   if (state === 'pending') return <span className="spinner" />;
   return <Icon name={state === 'error' ? 'alert' : (TOOL_ICON[tool.name] ?? 'code')} size={14} />;
 }
 
-function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; state: ToolState }) {
-  const detail = tool.summary || (state === 'pending' ? 'Running' : '');
+export function DiffBadge({ added, removed }: { added: number; removed: number }) {
   return (
-    <div className="flex flex-col gap-1 text-xs">
-      {target && <span className="font-mono break-all text-foreground">{target}</span>}
-      {detail && <span className={state === 'error' ? 'text-destructive' : ''}>{detail}</span>}
+    <span className="diff-badge tabular-nums" aria-label={`${added} lines added, ${removed} removed`}>
+      {(added > 0 || removed === 0) && <span className="diff-plus">+{added}</span>}
+      {removed > 0 && <span className="diff-minus">−{removed}</span>}
+    </span>
+  );
+}
+
+export function DiffView({ diff }: { diff: ToolDiff }) {
+  if (diff.hunks.length === 0) return <p className="diff-empty text-xs">{diff.truncated ? 'The file is too large to show a diff.' : 'No line changes.'}</p>;
+  return (
+    <div className="diff-view" data-testid="diff-view">
+      {diff.hunks.map((hunk, index) => {
+        let oldLine = hunk.oldStart;
+        let newLine = hunk.newStart;
+        return (
+          <div key={`${hunk.oldStart}-${hunk.newStart}-${index}`} className="diff-hunk">
+            {index > 0 && <div className="diff-gap" aria-hidden="true">⋯</div>}
+            {hunk.lines.map((line, lineIndex) => {
+              const oldNo = line.kind === 'add' ? '' : String(oldLine++);
+              const newNo = line.kind === 'del' ? '' : String(newLine++);
+              return (
+                <div key={lineIndex} className={`diff-line ${line.kind}`} data-kind={line.kind}>
+                  <span className="diff-no" aria-hidden="true">{oldNo}</span>
+                  <span className="diff-no" aria-hidden="true">{newNo}</span>
+                  <span className="diff-sign" aria-hidden="true">{line.kind === 'add' ? '+' : line.kind === 'del' ? '−' : ' '}</span>
+                  <span className="diff-text">
+                    {line.kind !== 'same' && <span className="sr-only">{line.kind === 'add' ? 'Added: ' : 'Removed: '}</span>}
+                    {line.text || ' '}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+      {diff.truncated && <p className="diff-empty text-xs">The diff is cut short.</p>}
     </div>
   );
 }
 
-function ToolItem({ tool, workTree }: { tool: ToolRow; workTree: string | null }) {
-  const state = toolState(tool);
-  const isSkill = tool.name === SKILL_TOOL;
-  const target = isSkill ? '' : toolTarget(tool.input, workTree);
+function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; state: ToolState }) {
+  if (tool.diff) return <DiffView diff={tool.diff} />;
+  const detail = tool.summary || (state === 'pending' ? 'Running' : '');
   return (
-    <Action className={`tool-row ${state} ${isSkill ? 'skill-tool' : ''}`} data-state={state} data-tool={tool.name} title={tool.summary || target || tool.name}>
-      <ActionTrigger className="max-w-full min-w-0 py-0.5 text-xs">
+    <div className="flex flex-col gap-1 text-xs">
+      {target && <span className="font-mono break-all text-foreground">{target}</span>}
+      {detail && <span className={state === 'error' ? 'text-destructive wrap-anywhere' : 'wrap-anywhere'}>{detail}</span>}
+    </div>
+  );
+}
+
+function ToolItem({ group, workTree }: { group: RowGroup; workTree: string | null }) {
+  const { tool, count } = group;
+  const state = toolState(tool);
+  const [open, setOpen] = useState<boolean | null>(null);
+  const isSkill = tool.name === SKILL_TOOL;
+  const target = toolSubject(tool.name, tool.input, workTree);
+  return (
+    <Action
+      className={`tool-row ${state} ${isSkill ? 'skill-tool' : ''}`}
+      data-state={state}
+      data-tool={tool.name}
+      open={open ?? state === 'error'}
+      onOpenChange={(next) => setOpen(next)}
+    >
+      <ActionTrigger className="tool-trigger max-w-full min-w-0 py-0.5 text-xs" title={tool.summary || target || tool.name}>
         <ActionIcon className={STATE_TONE[state]}>
           <ToolStateIcon tool={tool} state={state} />
         </ActionIcon>
-        <ActionLabel className={`font-medium ${state === 'error' ? 'text-destructive' : isSkill ? 'text-primary' : ''}`}>{toolLabel(tool.name, tool.input)}</ActionLabel>
+        <ActionLabel className={`tool-verb font-medium ${state === 'error' ? 'text-destructive' : isSkill ? 'text-primary' : ''}`}>{toolVerb(tool.name)}</ActionLabel>
         {target && (
-          <Chip size="sm" className="min-w-0 truncate font-mono">
-            {shortName(target)}
+          <Chip size="sm" className="tool-target min-w-0 truncate font-mono">
+            {isSkill ? target : shortName(target)}
           </Chip>
         )}
-        {state !== 'pending' && <span className="shrink-0 tabular-nums">{formatMs(tool.durationMs)}</span>}
+        {count > 1 && <span className="tool-count tabular-nums">×{count}</span>}
+        {tool.diff && <DiffBadge added={tool.diff.added} removed={tool.diff.removed} />}
+        {state !== 'pending' && <span className="tool-ms shrink-0 tabular-nums">{formatMs(group.durationMs)}</span>}
         {state === 'error' && <span className="sr-only">Error</span>}
       </ActionTrigger>
       <ActionContent className="pl-6">
@@ -109,10 +191,20 @@ function GroupSummary({ tools }: { tools: ToolRow[] }) {
   );
 }
 
+const COLLAPSE_AFTER = 5;
+
 export function ToolChips({ tools, running, workTree }: { tools: ToolRow[]; running: boolean; workTree: string | null }) {
   const [open, setOpen] = useState<boolean | null>(null);
   if (tools.length === 0) return null;
-  const expanded = open ?? (running || tools.length <= 4);
+  const rows = (
+    <div className="tool-list flex flex-col gap-0.5">
+      {groupRepeats(tools, workTree).map((group) => (
+        <ToolItem key={group.tool.toolUseId} group={group} workTree={workTree} />
+      ))}
+    </div>
+  );
+  if (tools.length < COLLAPSE_AFTER) return <div className="tools tool-chips">{rows}</div>;
+  const expanded = open ?? (running || tools.some((t) => t.isError));
   return (
     <ChainOfThought className="tools -ml-2" open={expanded} onOpenChange={(next) => setOpen(next)}>
       <ChainOfThoughtHeader className="tools-toggle text-xs">
@@ -122,13 +214,45 @@ export function ToolChips({ tools, running, workTree }: { tools: ToolRow[]; runn
         <GroupSummary tools={tools} />
       </ChainOfThoughtHeader>
       <ChainOfThoughtContent className="tool-chips">
-        <div className="ml-4 flex flex-col gap-0.5 border-l border-border pl-3">
-          {tools.map((t) => (
-            <ToolItem key={t.toolUseId} tool={t} workTree={workTree} />
-          ))}
-        </div>
+        <div className="ml-4 border-l border-border pl-3">{rows}</div>
       </ChainOfThoughtContent>
     </ChainOfThought>
+  );
+}
+
+export interface FileChange {
+  path: string;
+  added: number;
+  removed: number;
+}
+
+export function fileChanges(tools: ToolRow[]): FileChange[] {
+  const byPath = new Map<string, FileChange>();
+  for (const tool of tools) {
+    if (!tool.diff || tool.isError) continue;
+    const entry = byPath.get(tool.diff.path) ?? { path: tool.diff.path, added: 0, removed: 0 };
+    entry.added += tool.diff.added;
+    entry.removed += tool.diff.removed;
+    byPath.set(tool.diff.path, entry);
+  }
+  return [...byPath.values()];
+}
+
+export function RunChanges({ tools }: { tools: ToolRow[] }) {
+  const changes = fileChanges(tools);
+  if (changes.length === 0) return null;
+  return (
+    <ul className="run-changes" aria-label="Changed files" data-testid="run-changes">
+      {changes.map((change) => (
+        <li key={change.path} className="run-change">
+          <Icon name="file" size={12} />
+          <span className="run-change-path font-mono truncate" title={change.path}>
+            {change.path}
+          </span>
+          <DiffBadge added={change.added} removed={change.removed} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -142,23 +266,29 @@ function useElapsed(since: number, active: boolean): number {
   return Math.max(0, now - since);
 }
 
-function statusLabel(run: RunView, hasText: boolean, workTree: string | null): string {
+function statusLabel(run: RunView, workTree: string | null, now: number): string {
+  if (run.permissions.length > 0) return 'Waiting for your answer';
+  if (run.retry) {
+    const seconds = Math.max(0, Math.ceil((run.retry.until - now) / 1000));
+    return `Retrying in ${seconds}s (${run.retry.attempt}/${run.retry.max})`;
+  }
   const pending = [...run.tools].reverse().find((t) => t.durationMs === null);
   if (pending) {
-    const target = pending.name === SKILL_TOOL ? skillToolName(pending.input) : toolTarget(pending.input, workTree);
-    return `${TOOL_VERB[pending.name] ?? `Using ${prettyToolName(pending.name).toLowerCase()}`}${target ? ` ${shortName(target)}` : ''}`;
+    const target = toolSubject(pending.name, pending.input, workTree);
+    return `${LIVE_VERB[pending.name] ?? toolVerb(pending.name)}${target ? ` ${shortName(target)}` : ''}`;
   }
-  if (hasText) return 'Writing a reply';
-  if (run.thinking) return 'Thinking';
-  return run.tools.length > 0 ? 'Working' : 'Starting';
+  const last = run.parts.at(-1);
+  if (last?.kind === 'thinking' && last.open) return 'Thinking';
+  if (last?.kind === 'text' && last.open) return 'Writing a reply';
+  return run.parts.length > 0 ? 'Working' : 'Starting';
 }
 
-export function LiveStatus({ run, hasText, workTree }: { run: RunView; hasText: boolean; workTree: string | null }) {
+export function LiveStatus({ run, workTree }: { run: RunView; workTree: string | null }) {
   const elapsed = useElapsed(run.startedAt, true);
   return (
-    <div className="live-status flex min-w-0 items-center gap-2 text-sm">
+    <div className="live-status flex min-w-0 items-center gap-2 text-sm" data-testid="live-status">
       <Loader variant="shimmer" dots className="min-w-0 truncate text-foreground">
-        {statusLabel(run, hasText, workTree)}
+        {statusLabel(run, workTree, run.startedAt + elapsed)}
       </Loader>
       <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">{Math.floor(elapsed / 1000)}s</span>
     </div>

@@ -1,17 +1,22 @@
+import { readFileSync, statSync } from 'node:fs';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, RunSentRecord, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
+import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, RunPart, RunSentRecord, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
+import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
+import { diffLines } from '../../shared/line-diff.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
 
 export interface DriverSink {
   textDelta(text: string): void;
   text(text: string): void;
+  thinkingDelta(text: string): void;
   thinking(text: string): void;
   toolStarted(toolUseId: string, name: string, input: unknown): void;
   toolFinished(toolUseId: string, isError: boolean, summary: string): void;
+  beforeWrite(toolUseId: string, name: string, input: unknown): void;
   sessionStarted(sessionId: string): Promise<void>;
   sent(message: SentMessage): void;
 }
@@ -104,6 +109,40 @@ function toolFilePath(input: unknown, workTree: string): string | null {
   return relative.split(path.sep).join('/');
 }
 
+const DIFF_MAX_BYTES = 1_000_000;
+
+type FileText = { kind: 'missing' } | { kind: 'text'; text: string } | { kind: 'skip' };
+
+function readFileText(file: string): FileText {
+  try {
+    if (statSync(file).size > DIFF_MAX_BYTES) return { kind: 'skip' };
+    const text = readFileSync(file, 'utf8');
+    return text.includes('\u0000') ? { kind: 'skip' } : { kind: 'text', text };
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? { kind: 'missing' } : { kind: 'skip' };
+  }
+}
+
+interface Before {
+  relative: string;
+  absolute: string;
+  content: FileText;
+}
+
+function writeTarget(input: unknown, workTree: string): { relative: string; absolute: string } | null {
+  const relative = toolFilePath(input, workTree);
+  if (relative === null || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  return { relative, absolute: path.join(workTree, relative) };
+}
+
+export function toolDiff(before: Before): ToolDiff | null {
+  const after = readFileText(before.absolute);
+  if (before.content.kind === 'skip' || after.kind === 'skip') return null;
+  const old = before.content.kind === 'text' ? before.content.text : '';
+  const next = after.kind === 'text' ? after.text : '';
+  return { path: before.relative, created: before.content.kind === 'missing', ...diffLines(old, next) };
+}
+
 function sessionNoteOf(direction: Direction): { sessionNote?: string } {
   if (direction.sessionId || !direction.sessionResetReason) return {};
   return { sessionNote: `New agent session after ${direction.sessionResetReason}` };
@@ -164,13 +203,18 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       });
     }
 
+    let parts: RunPart[] = [];
+
     function publish(body: StudioEventBody): void {
+      if (isPartEvent(body)) parts = applyPartEvent(parts, body);
       const event = deps.bus.emit({ ...body, projectId, directionId });
       const line = `${JSON.stringify(event)}\n`;
       enqueue(() => appendFile(eventsPath, line));
     }
 
+    type DeltaType = 'run.text.delta' | 'run.thinking.delta';
     let pendingDelta = '';
+    let pendingType: DeltaType = 'run.text.delta';
     let deltaTimer: ReturnType<typeof setTimeout> | null = null;
 
     function closeDeltaWindow(): void {
@@ -182,7 +226,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       if (!pendingDelta) return false;
       const text = pendingDelta;
       pendingDelta = '';
-      publish({ type: 'run.text.delta', runId, text } as StudioEventBody);
+      publish({ type: pendingType, runId, text } as StudioEventBody);
       return true;
     }
 
@@ -195,9 +239,13 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       deltaTimer = publishPendingDelta() ? setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS) : null;
     }
 
-    function addDelta(text: string): void {
+    function addDelta(text: string, type: DeltaType = 'run.text.delta'): void {
+      if (type !== pendingType) {
+        publishPendingDelta();
+        pendingType = type;
+      }
       if (!deltaTimer) {
-        publish({ type: 'run.text.delta', runId, text } as StudioEventBody);
+        publish({ type, runId, text } as StudioEventBody);
         deltaTimer = setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS);
         return;
       }
@@ -238,6 +286,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     const startedAt = Date.now();
     const toolCalls: ToolCallRecord[] = [];
     const toolIndex = new Map<string, ToolCallRecord>();
+    const befores = new Map<string, Before>();
     let toolMs = 0;
     let lastText = '';
     let sessionId: string | null = ctx.direction.sessionId;
@@ -275,6 +324,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         lastText = text;
         emitRun({ type: 'run.text', text });
       },
+      thinkingDelta(text) {
+        if (text) addDelta(text, 'run.thinking.delta');
+      },
       thinking(text) {
         if (text) emitRun({ type: 'run.thinking', text });
       },
@@ -288,13 +340,23 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         const record = toolIndex.get(toolUseId);
         const finishedAt = Date.now();
         const durationMs = record ? finishedAt - record.startedAt : 0;
+        const before = befores.get(toolUseId);
+        befores.delete(toolUseId);
+        const diff = before && !isError ? toolDiff(before) : null;
         if (record) {
           record.finishedAt = finishedAt;
           record.isError = isError;
+          record.summary = resultSummary;
+          if (diff) record.diff = diff;
           if (!isError) recordFileWrite(record, durationMs, finishedAt);
         }
         toolMs += durationMs;
-        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs });
+        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}) });
+      },
+      beforeWrite(toolUseId, name, input) {
+        if (!FILE_WRITE_TOOLS.has(name) || befores.has(toolUseId)) return;
+        const target = writeTarget(input, ctx.direction.workTree);
+        if (target) befores.set(toolUseId, { ...target, content: readFileText(target.absolute) });
       },
       sent(message) {
         flushDelta();
@@ -376,6 +438,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       summary.toolMs = toolMs;
       summary.sessionId = sessionId;
       summary.finalText = outcome?.finalText || lastText;
+      summary.parts = withFinalText(closeParts(parts), summary.finalText);
 
       writeSummary(summary);
       emitRun({ type: 'run.finished', summary });

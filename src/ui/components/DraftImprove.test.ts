@@ -1,18 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { RunSummary } from '../../shared/contracts';
-import type { RunView } from '../runState';
+import { emptyRun, type RunView } from '../runState';
 import { improvePassed, improveRequest, lastImproveRun } from './DraftImprove';
 
 const view = (task: 'design-system' | undefined, summary: Partial<RunSummary> | null = null, startedAt = 1): RunView => ({
-  runId: `r${startedAt}`,
-  directionId: 'main',
-  request: { prompt: 'x', mode: 'edit', ...(task ? { task } : {}) },
-  startedAt,
+  ...emptyRun(`r${startedAt}`, 'main', startedAt, { prompt: 'x', mode: 'edit', ...(task ? { task } : {}) }),
   status: summary?.status ?? 'running',
-  textBlocks: [],
-  pendingText: '',
-  thinking: '',
-  tools: [],
   summary: summary as RunSummary | null,
 });
 

@@ -57,3 +57,36 @@ export function toolLabel(name: string, input: unknown): string {
   const skill = skillToolName(input);
   return skill ? `Skill · ${skill}` : 'Skill';
 }
+
+const TOOL_VERBS: Record<string, string> = {
+  Read: 'Read',
+  Write: 'Write',
+  Edit: 'Edit',
+  MultiEdit: 'Edit',
+  Bash: 'Run',
+  Grep: 'Search',
+  Glob: 'Find',
+  WebFetch: 'Fetch',
+  TodoWrite: 'Update todos',
+  Skill: 'Skill',
+  mcp__studio__render_check: 'Render check',
+  mcp__studio__screenshot: 'Screenshot',
+  mcp__studio__design_review: 'Design review',
+  mcp__studio__define_tweaks: 'Define tweaks',
+  mcp__studio__design_system_check: 'Design system check',
+};
+
+export function toolVerb(name: string): string {
+  return TOOL_VERBS[name] ?? prettyToolName(name);
+}
+
+export function toolSubject(name: string, input: unknown, workTree: string | null): string {
+  if (name === SKILL_TOOL) return skillToolName(input);
+  if (name === 'TodoWrite') return '';
+  if (input && typeof input === 'object') {
+    const record = input as Record<string, unknown>;
+    if (typeof record['viewport'] === 'string') return record['viewport'];
+    if (name.startsWith('mcp__') && !pathInput(input)) return '';
+  }
+  return toolTarget(input, workTree);
+}

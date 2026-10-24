@@ -320,6 +320,26 @@ export interface RunUsage {
   cacheWriteTokens: number;
 }
 
+export interface DiffLine {
+  kind: 'same' | 'add' | 'del';
+  text: string;
+}
+
+export interface DiffHunk {
+  oldStart: number;
+  newStart: number;
+  lines: DiffLine[];
+}
+
+export interface ToolDiff {
+  path: string;
+  added: number;
+  removed: number;
+  hunks: DiffHunk[];
+  created: boolean;
+  truncated: boolean;
+}
+
 export interface ToolCallRecord {
   toolUseId: string;
   name: string;
@@ -327,6 +347,38 @@ export interface ToolCallRecord {
   startedAt: number;
   finishedAt: number | null;
   isError: boolean;
+  summary?: string;
+  diff?: ToolDiff;
+}
+
+export type RunPart =
+  | { kind: 'text'; text: string; open?: boolean }
+  | { kind: 'thinking'; text: string; open?: boolean }
+  | { kind: 'tool'; toolUseId: string }
+  | { kind: 'user'; id: string; text: string };
+
+export interface QueuedMessage {
+  id: string;
+  text: string;
+}
+
+export interface PermissionRequest {
+  id: string;
+  toolUseId: string | null;
+  toolName: string;
+  input: unknown;
+  title: string;
+  detail: string;
+}
+
+export type PermissionDecision = { allow: true } | { allow: false; note?: string };
+
+export type TodoStatus = 'pending' | 'in_progress' | 'completed';
+
+export interface TodoItem {
+  content: string;
+  activeForm?: string;
+  status: TodoStatus;
 }
 
 export interface RunSummary {
@@ -354,6 +406,9 @@ export interface RunSummary {
   versionId: string | null;
   error: string | null;
   finalText: string;
+  parts?: RunPart[];
+  todos?: TodoItem[];
+  contextTokens?: number;
 }
 
 interface EventBase {
@@ -367,9 +422,17 @@ export type StudioEventBody =
   | { type: 'run.started'; runId: string; request: RunRequest }
   | { type: 'run.text.delta'; runId: string; text: string }
   | { type: 'run.text'; runId: string; text: string }
+  | { type: 'run.thinking.delta'; runId: string; text: string }
   | { type: 'run.thinking'; runId: string; text: string }
   | { type: 'run.tool.started'; runId: string; toolUseId: string; name: string; input: unknown }
-  | { type: 'run.tool.finished'; runId: string; toolUseId: string; isError: boolean; summary: string; durationMs: number }
+  | { type: 'run.tool.finished'; runId: string; toolUseId: string; isError: boolean; summary: string; durationMs: number; diff?: ToolDiff }
+  | { type: 'run.user'; runId: string; id: string; text: string }
+  | { type: 'run.queue'; runId: string; items: QueuedMessage[] }
+  | { type: 'run.permission'; runId: string; request: PermissionRequest }
+  | { type: 'run.permission.resolved'; runId: string; requestId: string; allow: boolean }
+  | { type: 'run.todos'; runId: string; todos: TodoItem[] }
+  | { type: 'run.usage'; runId: string; contextTokens: number }
+  | { type: 'run.retry'; runId: string; attempt: number; max: number; delayMs: number; error: string }
   | { type: 'run.finished'; runId: string; summary: RunSummary }
   | { type: 'files.changed'; paths: string[]; changedAt: number }
   | { type: 'version.created'; version: Version }

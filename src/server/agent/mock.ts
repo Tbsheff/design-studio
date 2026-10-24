@@ -54,6 +54,7 @@ function escapeJsxText(value: string): string {
 }
 
 const SKILL_TAG = /\[skill:([^\]\s]+)\]/g;
+const MOCK_TAGS = /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry)\]/g;
 const SKILL_LINE = /^Use the (\S+) skill\.$/gm;
 
 export function mockSkillRequests(prompt: string): string[] {
@@ -62,7 +63,7 @@ export function mockSkillRequests(prompt: string): string[] {
 }
 
 export function cleanPrompt(prompt: string): string {
-  return prompt.replace(/\[(slow|fail|tweaks|ds-fail-once|ds-fail-always)\]/g, '').replace(SKILL_TAG, '').replace(SKILL_LINE, '').replace(/\s+/g, ' ').trim();
+  return prompt.replace(MOCK_TAGS, '').replace(SKILL_TAG, '').replace(SKILL_LINE, '').replace(/\s+/g, ' ').trim();
 }
 
 async function exists(file: string): Promise<boolean> {
@@ -162,6 +163,15 @@ class MockSession {
     this.sink.text(text);
   }
 
+  async think(text: string): Promise<void> {
+    for (const word of text.split(' ')) {
+      throwIfAborted(this.signal);
+      this.sink.thinkingDelta(`${word} `);
+      await sleep(DELTA_DELAY_MS / 2, this.signal);
+    }
+    this.sink.thinking(text);
+  }
+
   async fakeTool(name: string, input: Record<string, unknown>, summary: string): Promise<void> {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
@@ -185,6 +195,7 @@ class MockSession {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     this.sink.toolStarted(toolUseId, toolName, { file_path: absolute });
+    this.sink.beforeWrite(toolUseId, toolName, { file_path: absolute });
     try {
       await mkdir(path.dirname(absolute), { recursive: true });
       if (this.flags.slow) {
@@ -394,6 +405,17 @@ async function writeHtmlChange(session: MockSession, indexPath: string, text: st
   return 'Added a paragraph to `index.html`.';
 }
 
+async function runHeadingEdit(session: MockSession, workTree: string, text: string): Promise<string> {
+  const indexPath = path.join(workTree, 'index.html');
+  const source = await readFile(indexPath, 'utf8');
+  await session.say(`Changing the heading to "${text}".`);
+  const next = source.replace(/(<h1\b[^>]*>)[^<\n]*(<\/h1>)/, `$1${escapeHtml(text)}$2`);
+  await session.writeFileAsTool('Edit', 'index.html', next);
+  const finalText = 'Changed the heading in `index.html`.';
+  await session.say(finalText);
+  return finalText;
+}
+
 async function runHtmlEdit(session: MockSession, workTree: string, text: string): Promise<string> {
   const finalText = await writeHtmlChange(session, path.join(workTree, 'index.html'), text);
   await session.say(finalText);
@@ -475,6 +497,7 @@ function runMockEdit(input: DriverInput, session: MockSession): Promise<string> 
   if (ctx.request.comments?.length) return runCommentEdit(session, workTree, ctx.request.comments);
   const selection = ctx.request.selection;
   if (selection?.length) return runSelectionEdit(session, workTree, selection, prompt);
+  if (ctx.project.kind === 'html' && prompt.includes('[edit1]')) return runHeadingEdit(session, workTree, text);
   if (ctx.project.kind === 'html') return runHtmlEdit(session, workTree, text);
   return runReactEdit(session, workTree, text);
 }
@@ -487,6 +510,11 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
   await input.sink.sessionStarted(input.ctx.direction.sessionId ?? `mock-${input.ctx.direction.id}-${input.runId}`);
   input.sink.sent({ text: buildUserText(input.ctx), imageCount: input.ctx.attachments.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId });
   for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
+  if (prompt.includes('[think]')) {
+    await session.think('Thinking A: the page needs a clear heading first.');
+    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');
+    await session.think('Thinking B: keep the cards, then write the change.');
+  }
   const finalText = await runMockScenario(input, session);
   const outcome: DriverOutcome = {
     status: 'completed',

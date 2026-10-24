@@ -467,7 +467,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     settings: ISOLATION_SETTINGS,
     ...skillOptions(skills),
     canUseTool: createCanUseTool(policy, options.onPermission),
-    hooks: { PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal))], timeout: BASELINE_GATE_TIMEOUT_S }] },
+    hooks: { PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal), (toolUseId, name, toolInput) => input.sink.beforeWrite(toolUseId, name, toolInput))], timeout: BASELINE_GATE_TIMEOUT_S }] },
     permissionMode: 'default',
     ...(config.agentBudgetUsd !== null ? { maxBudgetUsd: config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0) } : {}),
     maxTurns: config.maxTurns,
@@ -486,7 +486,9 @@ function handleStreamEvent(message: StreamEventMessage, state: StreamState, sink
   trackStreamUsage(message, state);
   if (message.parent_tool_use_id) return;
   const event = message.event;
-  if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') sink.textDelta(event.delta.text);
+  if (event.type !== 'content_block_delta') return;
+  if (event.delta.type === 'text_delta') sink.textDelta(event.delta.text);
+  else if (event.delta.type === 'thinking_delta') sink.thinkingDelta(event.delta.thinking);
 }
 
 function handleAssistant(message: AssistantMessage, state: StreamState, sink: DriverSink): void {

@@ -289,6 +289,7 @@ export function createPreToolUseGuard(
   policy: ToolPolicy,
   onDecision?: (toolName: string, result: PermissionResult) => void,
   beforeChange?: () => Promise<void>,
+  onAllowed?: (toolUseId: string, toolName: string, input: Record<string, unknown>) => void,
 ): HookCallback {
   return async (hookInput) => {
     if (hookInput.hook_event_name !== 'PreToolUse') return {};
@@ -298,6 +299,7 @@ export function createPreToolUseGuard(
     onDecision?.(hookInput.tool_name, result);
     if (result.behavior === 'allow') {
       if (beforeChange && canChangePreview(hookInput.tool_name)) await beforeChange();
+      onAllowed?.(hookInput.tool_use_id, hookInput.tool_name, record);
       return {};
     }
     return {

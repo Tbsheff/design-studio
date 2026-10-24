@@ -3,7 +3,7 @@ import type { Project, RunRequest, StudioEvent, Version, WorkTreeStatus } from '
 import { api, errorText } from './api';
 import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
-import { applyRunEvent, runFromSummary, type RunMap } from './runState';
+import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
 import { uiStore, useUi } from './storage';
 
 export interface BuildError {
@@ -179,21 +179,7 @@ export function useStudioData(projectId: string): StudioData {
     setRuns((prev) => {
       const existing = prev[runId];
       if (existing) return { ...prev, [runId]: { ...existing, directionId: existing.directionId ?? did, request: existing.request ?? request } };
-      return {
-        ...prev,
-        [runId]: {
-          runId,
-          directionId: did,
-          request,
-          startedAt: Date.now(),
-          status: 'running',
-          textBlocks: [],
-          pendingText: '',
-          thinking: '',
-          tools: [],
-          summary: null,
-        },
-      };
+      return { ...prev, [runId]: emptyRun(runId, did, Date.now(), request) };
     });
   }, []);
 

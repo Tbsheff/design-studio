@@ -5,7 +5,9 @@ import { Markdown } from '../ai/components/ai/markdown';
 import { Message, MessageContent, MessageText } from '../ai/components/ai/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '../ai/components/ai/reasoning';
 import { formatMs, formatTime, formatUsd } from '../format';
-import type { RunView } from '../runState';
+import { runText, type RunView } from '../runState';
+import { splitMarkdownBlocks } from '../markdownBlocks';
+import { CopyButton } from './CopyButton';
 import { skillDisplayName, skillsFromPrompt, withoutSkillLines } from '../skills';
 import { Icon } from './Icon';
 import { levelHint, levelLabel } from './LevelControl';
@@ -13,7 +15,7 @@ import { levelHint, levelLabel } from './LevelControl';
 const STATUS_LABEL: Record<RunStatus, string> = {
   running: 'Running',
   completed: 'Completed',
-  canceled: 'Canceled',
+  canceled: 'Stopped',
   failed: 'Failed',
   budget_exceeded: 'Spending limit reached',
 };
@@ -58,9 +60,12 @@ export function UserMessage({ run }: { run: RunView }) {
           )}
         </div>
         {text && (
-          <MessageText variant="bubble" className="msg-body max-w-[92%] whitespace-pre-wrap wrap-anywhere">
-            {text}
-          </MessageText>
+          <div className="msg-user-row">
+            <CopyButton text={req.prompt} label="Copy message" className="msg-copy" />
+            <MessageText variant="bubble" className="msg-body max-w-[92%] whitespace-pre-wrap wrap-anywhere">
+              {text}
+            </MessageText>
+          </div>
         )}
         {skills.length > 0 && (
           <div className="skill-chips msg-skills" aria-label="Skills requested">
@@ -77,23 +82,39 @@ export function UserMessage({ run }: { run: RunView }) {
   );
 }
 
-export const AssistantText = memo(function AssistantText({ text }: { text: string }) {
+const MarkdownBlock = memo(function MarkdownBlock({ text }: { text: string }) {
+  return <Markdown>{text}</Markdown>;
+});
+
+export const AssistantText = memo(function AssistantText({ text, streaming = false }: { text: string; streaming?: boolean }) {
+  const blocks = splitMarkdownBlocks(text);
   return (
-    <MessageText className="msg-body wrap-anywhere">
-      <Markdown>{text}</Markdown>
+    <MessageText className="msg-body assistant-text wrap-anywhere" data-streaming={streaming || undefined}>
+      {blocks.map((block, index) => (
+        <MarkdownBlock key={index} text={block} />
+      ))}
     </MessageText>
   );
 });
 
-export function Thinking({ text, running }: { text: string; running: boolean }) {
-  if (!text) return null;
+export const Thinking = memo(function Thinking({ text, live }: { text: string; live: boolean }) {
+  if (!text && !live) return null;
   return (
-    <Reasoning className="thinking">
-      <ReasoningTrigger className="text-xs">{running ? 'Thinking…' : 'Thought'}</ReasoningTrigger>
+    <Reasoning className="thinking" data-testid="thinking">
+      <ReasoningTrigger className="text-xs">{live ? 'Thinking…' : 'Thought'}</ReasoningTrigger>
       <ReasoningContent>
-        <p className="whitespace-pre-wrap text-xs">{text}</p>
+        <p className="thinking-text whitespace-pre-wrap text-xs">{text}</p>
       </ReasoningContent>
     </Reasoning>
+  );
+});
+
+export function SentWhileRunning({ text }: { text: string }) {
+  return (
+    <div className="msg-inline-user" data-testid="sent-while-running">
+      <span className="msg-inline-label">You, while it ran</span>
+      <p className="whitespace-pre-wrap wrap-anywhere">{text}</p>
+    </div>
   );
 }
 
@@ -127,9 +148,12 @@ export function RunFoot({ run, onDetails }: { run: RunView; onDetails: () => voi
           {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}
         </span>
       )}
-      <button type="button" className="btn ghost small run-foot-details" onClick={onDetails}>
-        Details
-      </button>
+      <span className="run-foot-actions">
+        {run.status !== 'running' && runText(run) && <CopyButton text={() => runText(run)} label="Copy reply" className="reply-copy" />}
+        <button type="button" className="btn ghost small run-foot-details" onClick={onDetails}>
+          Details
+        </button>
+      </span>
     </div>
   );
 }

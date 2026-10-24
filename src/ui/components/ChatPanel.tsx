@@ -3,10 +3,10 @@ import type { Direction } from '../../shared/contracts';
 import { Conversation, ConversationContent, ConversationScrollButton } from '../ai/components/ai/conversation';
 import { Message, MessageContent } from '../ai/components/ai/message';
 import { canPolishRun } from '../polish';
-import { runText, type RunView } from '../runState';
-import { AssistantText, PolishThis, RunError, RunFoot, Thinking, UserMessage } from './ChatParts';
+import type { RunView, ToolRow } from '../runState';
+import { AssistantText, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
 import { Icon } from './Icon';
-import { LiveStatus, ToolChips } from './ToolChips';
+import { LiveStatus, RunChanges, ToolChips } from './ToolChips';
 
 interface PolishProps {
   headVersionId: string | null;
@@ -14,21 +14,61 @@ interface PolishProps {
   onPolish: () => void;
 }
 
+type Segment =
+  | { kind: 'text'; key: string; text: string; open: boolean }
+  | { kind: 'thinking'; key: string; text: string; open: boolean }
+  | { kind: 'tools'; key: string; tools: ToolRow[] }
+  | { kind: 'user'; key: string; text: string };
+
+function segmentsOf(run: RunView): Segment[] {
+  const byId = new Map(run.tools.map((tool) => [tool.toolUseId, tool]));
+  const segments: Segment[] = [];
+  run.parts.forEach((part, index) => {
+    if (part.kind === 'tool') {
+      const tool = byId.get(part.toolUseId);
+      if (!tool) return;
+      const last = segments.at(-1);
+      if (last?.kind === 'tools') last.tools.push(tool);
+      else segments.push({ kind: 'tools', key: `tools-${part.toolUseId}`, tools: [tool] });
+    } else if (part.kind === 'user') segments.push({ kind: 'user', key: `user-${part.id}`, text: part.text });
+    else segments.push({ kind: part.kind, key: `${part.kind}-${index}`, text: part.text, open: Boolean(part.open) });
+  });
+  return segments;
+}
+
+const ToolSegment = memo(
+  function ToolSegment({ tools, running, workTree }: { tools: ToolRow[]; running: boolean; workTree: string | null }) {
+    return <ToolChips tools={tools} running={running} workTree={workTree} />;
+  },
+  (a, b) => a.running === b.running && a.workTree === b.workTree && a.tools.length === b.tools.length && a.tools.every((tool, index) => tool === b.tools[index]),
+);
+
+function RunParts({ run, running, workTree }: { run: RunView; running: boolean; workTree: string | null }) {
+  return (
+    <>
+      {segmentsOf(run).map((segment) => {
+        if (segment.kind === 'tools') return <ToolSegment key={segment.key} tools={segment.tools} running={running} workTree={workTree} />;
+        if (segment.kind === 'user') return <SentWhileRunning key={segment.key} text={segment.text} />;
+        if (segment.kind === 'thinking') return <Thinking key={segment.key} text={segment.text} live={running && segment.open} />;
+        return <AssistantText key={segment.key} text={segment.text} streaming={running && segment.open} />;
+      })}
+    </>
+  );
+}
+
 const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish }: { run: RunView; latest: boolean; workTree: string | null; onDetails: (runId: string) => void; polish: PolishProps }) {
-  const text = runText(run);
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
   const running = run.status === 'running';
   return (
-    <div className="run flex min-w-0 flex-col gap-3">
+    <div className="run flex min-w-0 flex-col gap-3" data-run-id={runId}>
       <UserMessage run={run} />
       <Message type="incoming" className="msg assistant">
-        <MessageContent className="gap-2">
-          <Thinking text={run.thinking} running={running && !text} />
-          <ToolChips tools={run.tools} running={running} workTree={workTree} />
-          {text && <AssistantText text={text} />}
-          {running && <LiveStatus run={run} hasText={Boolean(text)} workTree={workTree} />}
+        <MessageContent className="run-body gap-2">
+          <RunParts run={run} running={running} workTree={workTree} />
+          {running && <LiveStatus run={run} workTree={workTree} />}
           <RunError run={run} latest={latest} />
+          {!running && <RunChanges tools={run.tools} />}
           <RunFoot run={run} onDetails={details} />
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
         </MessageContent>

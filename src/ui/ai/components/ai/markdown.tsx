@@ -9,6 +9,7 @@ import {
   CodeBlockTitle,
 } from "./code-block";
 import { cn } from "../../lib/utils";
+import { CopyButton } from "../../../components/CopyButton";
 
 type MarkdownProps = React.ComponentProps<"div"> & {
   children: string;
@@ -40,8 +41,9 @@ const defaultComponents: Components = {
 
     return (
       <CodeBlock className="not-prose my-3">
-        <CodeBlockHeader>
+        <CodeBlockHeader className="code-block-head">
           <CodeBlockTitle>{language}</CodeBlockTitle>
+          <CopyButton text={source} label="Copy code" className="code-copy" />
         </CodeBlockHeader>
         <CodeBlockContent>
           <pre className="whitespace-pre-wrap wrap-break-word">{source}</pre>

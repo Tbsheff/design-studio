@@ -54,7 +54,7 @@ describe('delta batcher', () => {
     expect(h.updates()).toBe(1);
     h.frame();
     expect(h.updates()).toBe(2);
-    expect(h.runs().r1?.pendingText).toBe('a b c d');
+    expect(runText(h.runs().r1!)).toBe('a b c d');
   });
 
   it('flushes pending deltas before a non-delta run event so order holds', () => {
@@ -83,8 +83,8 @@ describe('delta batcher', () => {
     const h = harness();
     for (const event of events) h.batcher.push(event);
     h.frame();
-    expect(h.runs().r1?.pendingText).toBe('ab');
-    expect(h.runs().r2?.pendingText).toBe('xy');
+    expect(runText(h.runs().r1!)).toBe('ab');
+    expect(runText(h.runs().r2!)).toBe('xy');
   });
 
   it('skips updates for non-run events when nothing is pending', () => {

@@ -231,7 +231,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       return bytes;
     },
     async version(projectId, versionId, signal) {
-      const name = `${assertSafeId(versionId, 'versionId')}.png`;
+      const name = `v-${assertSafeId(versionId, 'versionId')}.png`;
       const file = path.join(thumbsDir(projectId), name);
       const cached = await readCached(file);
       if (cached) return cached;

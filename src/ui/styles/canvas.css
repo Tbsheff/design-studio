@@ -449,6 +449,163 @@ body.frame-dragging .frame {
   transform-origin: 0 0;
 }
 
+.compare {
+  position: relative;
+}
+
+.compare.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.compare-modes {
+  margin-left: var(--s-2);
+}
+
+.compare-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-width: 0;
+  height: 28px;
+}
+
+.compare-labels .compare-label {
+  flex: 0 1 auto;
+}
+
+.compare-label.end {
+  flex-direction: row-reverse;
+}
+
+.compare-board.locked {
+  position: relative;
+  touch-action: none;
+  user-select: none;
+}
+
+.compare-board.locked iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.compare-board.slider {
+  cursor: ew-resize;
+}
+
+.compare-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.compare-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  width: 28px;
+  display: grid;
+  place-items: center;
+  outline: none;
+  cursor: ew-resize;
+}
+
+.compare-handle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 13px;
+  width: 2px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.12);
+}
+
+.compare-knob {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.08), 0 2px 8px -2px oklch(0 0 0 / 0.24);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.compare-board.dragging .compare-knob {
+  transform: scale(0.96);
+}
+
+.compare-handle:focus-visible .compare-knob {
+  box-shadow: var(--ring);
+}
+
+.compare-mask {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.compare-overlay-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+}
+
+.compare-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-status.error {
+  color: var(--danger);
+}
+
+.compare-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.compare-toggle input {
+  margin: 0;
+}
+
+.compare-opacity {
+  width: 96px;
+  height: 28px;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.compare-opacity-value {
+  width: 4ch;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compare-board.dragging .compare-knob,
+  .version-thumb:active {
+    transform: none;
+  }
+}
+
 .canvas-body {
   flex: 1;
   min-height: 0;

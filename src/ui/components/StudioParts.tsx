@@ -12,6 +12,7 @@ interface CenterProps {
   compareOpen: boolean;
   left: Version | undefined;
   right: Version | undefined;
+  versions?: Version[];
   onCloseCompare: () => void;
   canvas: ComponentProps<typeof Canvas>;
   grid?: ReactNode;
@@ -21,7 +22,7 @@ export function CenterView(props: CenterProps) {
   const { left, right } = props;
   if (props.grid) return <>{props.grid}</>;
   if (props.compareOpen && left && right) {
-    return <CompareView projectId={props.projectId} kind={props.kind} left={left} right={right} onClose={props.onCloseCompare} />;
+    return <CompareView projectId={props.projectId} kind={props.kind} left={left} right={right} versions={props.versions} onClose={props.onCloseCompare} />;
   }
   return <Canvas {...props.canvas} />;
 }

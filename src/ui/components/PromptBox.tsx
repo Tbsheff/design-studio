@@ -2,6 +2,7 @@ import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEve
 import type { CompiledTokenEntry, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions } from '../useMentions';
+import { HistorySearch, useHistorySearch } from './HistorySearch';
 import { ContextMeter } from './ContextMeter';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
@@ -172,8 +173,15 @@ export function PromptBox(props: Props) {
 
   const uploading = files.some((f) => !f.attachment && !f.error);
   const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft });
+  const historySearch = useHistorySearch(props.history ?? []);
   const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).matches('[data-slot="composer-input"]') && mentions.onKeyDown(event)) return;
+    const inInput = (event.target as HTMLElement).matches('[data-slot="composer-input"]');
+    if (inInput && event.ctrlKey && !event.metaKey && event.key === 'r') {
+      event.preventDefault();
+      historySearch.start();
+      return;
+    }
+    if (inInput && mentions.onKeyDown(event)) return;
     keys.onKeyDown(event);
   };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
@@ -251,6 +259,14 @@ export function PromptBox(props: Props) {
       {error && <div className="alert error">{error}</div>}
       {runLevel.error && <div className="alert error">{runLevel.error}</div>}
       <QueuedMessages items={keys.queue} onChange={keys.setQueue} />
+      <HistorySearch
+        search={historySearch}
+        onPick={(prompt) => {
+          historySearch.close();
+          setDraft(prompt);
+          window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]')?.focus());
+        }}
+      />
       {mentions.picker.open && <MentionList shown={mentions.picker.shown} current={mentions.picker.current} loading={mentions.loading} onPick={mentions.pick} onHover={mentions.picker.setActive} />}
       {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} />}
       <Composer

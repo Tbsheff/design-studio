@@ -80,6 +80,13 @@ test('R3-1, R3-3, R3-4: event order with both thinking blocks, a one-line diff, 
   await expect(composer(page)).toHaveValue('Harbor Lane Roasters [edit1]');
   await composer(page).press('ArrowUp');
   await expect(composer(page)).toHaveValue('Order probe [think]');
+  await composer(page).fill('');
+  await composer(page).press('Control+r');
+  const search = page.getByTestId('history-search');
+  await search.getByLabel('Search past prompts').fill('think');
+  await search.getByLabel('Search past prompts').press('Enter');
+  await expect(composer(page)).toHaveValue('Order probe [think]');
+  await expect(search).toHaveCount(0);
   void mainDirection(project);
 });
 

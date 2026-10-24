@@ -173,6 +173,10 @@ describe('POST /api/packs/import', { timeout: 30000 }, () => {
     const renamedEntries = (await packEntries('user-house', 'user-house')).map((entry) =>
       entry.name.endsWith('/pack.json') ? { ...entry, data: Buffer.from(JSON.stringify({ ...JSON.parse(entry.data.toString()), name: 'Other name' })) } : entry,
     );
+    const draftPack = await ok<PackSummary>(call('PATCH', '/api/packs/user-house', { draft: true }));
+    expect(draftPack.draft).toBe(true);
+    const replacedDraft = await ok<ImportPackResult>(importZip(zip, 'replace'));
+    expect(replacedDraft.pack.draft).toBe(true);
     const byId = await failure(importZip(zipFiles(renamedEntries)));
     expect(byId.body.existing?.id).toBe('user-house');
     const badMode = await failure(importZip(zip, 'merge'));
@@ -220,8 +224,22 @@ describe('POST /api/packs/:id/editor', { timeout: 30000 }, () => {
     const packs = await userPacks();
     expect(packs.find((pack) => pack.id === copy.id)?.draft).toBeUndefined();
     const info = await ok<{ packId: string; coverage: unknown; check: DesignSystemCheckResult }>(call('GET', `/api/projects/${project.id}/design-system-draft`));
-    expect(info).toMatchObject({ packId: copy.id, coverage: null, check: { passed: true } });
+    expect(info).toMatchObject({ packId: copy.id, coverage: { grade: 'excellent', score: 100, fallbacks: [] }, check: { passed: true } });
     expect((await ok<Project[]>(call('GET', '/api/projects'))).filter((item) => item.designSystemFor === copy.id)).toHaveLength(1);
+  });
+
+  it('does not reopen the backing project of a deleted pack for a new pack with the same id', async () => {
+    const first = await ok<PackSummary>(call('POST', '/api/packs/editorial/duplicate', { name: 'Reborn' }));
+    expect(first.copiedFrom).toBe('editorial');
+    const opened = await ok<OpenPackEditorResult>(call('POST', `/api/packs/${first.id}/editor`));
+    await ok(call('DELETE', `/api/packs/${first.id}`));
+    const old = await ok<Project>(call('GET', `/api/projects/${opened.project.id}`));
+    expect(old).toMatchObject({ designSystemFor: first.id, designSystemDeleted: true });
+    const second = await ok<PackSummary>(call('POST', '/api/packs/editorial/duplicate', { name: 'Reborn' }));
+    expect(second.id).toBe(first.id);
+    const reopened = await ok<OpenPackEditorResult>(call('POST', `/api/packs/${second.id}/editor`));
+    expect(reopened.created).toBe(true);
+    expect(reopened.project.id).not.toBe(opened.project.id);
   });
 
   it('refuses built-in and unknown packs', async () => {

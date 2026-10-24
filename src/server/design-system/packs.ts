@@ -42,6 +42,7 @@ export const manifestSchema = z
       })
       .strict(),
     draft: z.literal(true).optional(),
+    copiedFrom: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/).optional(),
   })
   .strict();
 

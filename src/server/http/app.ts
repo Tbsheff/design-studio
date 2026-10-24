@@ -940,7 +940,15 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   const library = createPackLibrary(packs);
-  registerPackRoutes(app, { library, editDeps: { bus, projects, versions, runner }, readBody, withDirection });
+  registerPackRoutes(app, {
+    library,
+    editDeps: { bus, projects, versions, runner },
+    readBody,
+    withDirection,
+    onDeleted: async (packId) => {
+      for (const project of await projects.list()) if (project.designSystemFor === packId && !project.designSystemDeleted) await projects.markDesignSystemDeleted(project.id);
+    },
+  });
 
   registerDesignSystemRoutes(app, {
     library,

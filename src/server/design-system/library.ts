@@ -34,6 +34,7 @@ const fieldsSchema = z
     tags: z.array(z.string().min(1).max(40)).max(20).optional(),
     license: z.string().trim().min(1).max(40).optional(),
     draft: z.boolean().optional(),
+    copiedFrom: manifestSchema.shape.copiedFrom,
   })
   .strict();
 
@@ -87,6 +88,7 @@ export function buildPackFiles(id: string, input: CreateUserPackInput): PackFile
     provenance: input.provenance,
     fonts: input.fonts,
     ...(input.draft ? { draft: true } : {}),
+    ...(input.copiedFrom ? { copiedFrom: input.copiedFrom } : {}),
   };
   const manifest = manifestSchema.safeParse(candidate);
   if (!manifest.success) throw new BadRequestError(`invalid pack.json: ${formatIssues('pack.json', manifest.error).join('; ')}`);
@@ -114,6 +116,7 @@ function inputOf(pack: LoadedPack): CreateUserPackInput {
     tags: manifest.tags,
     license: manifest.license,
     ...(manifest.draft ? { draft: true } : {}),
+    ...(manifest.copiedFrom ? { copiedFrom: manifest.copiedFrom } : {}),
   };
 }
 
@@ -229,7 +232,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
     async duplicatePack(id, name) {
       const source = await requirePack(id);
       const copyName = name?.trim() || `${source.manifest.name.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
-      return create(parseFields({ ...inputOf(source), name: copyName, draft: false }, 'design system'));
+      return create(parseFields({ ...inputOf(source), name: copyName, draft: false, copiedFrom: source.manifest.id }, 'design system'));
     },
 
     async renamePack(id, name) {
@@ -258,7 +261,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
       const zip = readPackZip(bytes);
       const conflict = findImportConflict(await registry.list(), zip);
       if (conflict && mode === 'ask') throw new PackExistsError(conflict);
-      if (conflict && mode === 'replace') return { pack: await this.updateUserPack(conflict.id, zip.input), replaced: true };
+      if (conflict && mode === 'replace') return { pack: await this.updateUserPack(conflict.id, { ...zip.input, draft: conflict.draft === true }), replaced: true };
       return { pack: await create(parseFields(zip.input, 'design system')), replaced: false };
     },
 

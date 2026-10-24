@@ -55,6 +55,11 @@ const defaults: UiState = {
   layersOpen: false,
 };
 
+function libraryFromOf(value: unknown): LibraryFrom | null {
+  const from = value as Partial<LibraryFrom> | null | undefined;
+  return typeof from?.projectId === 'string' && typeof from.directionId === 'string' ? { projectId: from.projectId, directionId: from.directionId } : null;
+}
+
 function loadUiState(): UiState {
   try {
     const raw = localStorage.getItem(KEY);
@@ -63,7 +68,7 @@ function loadUiState(): UiState {
     return {
       activeProjectId: parsed.activeProjectId ?? null,
       screen: parsed.screen && SCREENS.includes(parsed.screen) ? parsed.screen : 'home',
-      libraryFrom: null,
+      libraryFrom: parsed.screen === 'design-systems' ? libraryFromOf(parsed.libraryFrom) : null,
       returnTo: parsed.returnTo === 'design-systems' ? 'design-systems' : 'home',
       directionByProject: parsed.directionByProject ?? {},
       viewport: parsed.viewport ?? defaults.viewport,

@@ -13,6 +13,7 @@ interface PackRouteDeps {
   editDeps: ProjectPackDeps;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
+  onDeleted?: (packId: string) => Promise<void>;
 }
 
 const FORM_OVERHEAD_BYTES = 64 * 1024;
@@ -68,7 +69,9 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
   });
 
   app.delete('/api/packs/:id', async (c) => {
-    await library.deletePack(packId(c));
+    const id = packId(c);
+    await library.deletePack(id);
+    await deps.onDeleted?.(id);
     return c.json({ ok: true });
   });
 

@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Frame, type Page } from '@playwright/test';
 import { differenceEuclidean, parse } from 'culori';
-import type { DesignSystemState, Project } from '../src/shared/contracts';
+import type { DesignSystemState, PackSummary, Project } from '../src/shared/contracts';
+import { readState } from './support/server';
 import { type StudioApi, frontFrame, mainDirection, openHome, selectInFrame } from './support/studio';
 
 const deltaE = differenceEuclidean('oklab');
@@ -270,4 +271,59 @@ test('R6-2: the Components tab lists Button and Card with thumbnails and a click
     { kind: 'component', name: 'Button', file: 'src/components/Button.tsx', selector: expect.stringContaining('src/components/Button.tsx:') },
     { kind: 'component', name: 'Card', file: 'src/components/Card.tsx', selector: expect.stringContaining('src/components/Card.tsx:') },
   ]);
+});
+
+test('R6 open questions: save as new, problems notice, Apply after reload, Copy badge', async ({ page }) => {
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
+  const api = await openHome(page);
+  const stamp = Date.now().toString(36);
+  const base = await api.call<PackSummary>('POST', '/api/packs/editorial/duplicate', { name: `Base ${stamp}` });
+  const { project } = await api.call<{ project: Project }>('POST', '/api/projects', { kind: 'html', prompt: 'Save as new target', packId: base.id, startRun: false });
+  await page.evaluate((id) => {
+    const raw = localStorage.getItem('design-studio.ui.v1');
+    localStorage.setItem('design-studio.ui.v1', JSON.stringify({ ...(raw ? JSON.parse(raw) : {}), activeProjectId: id, screen: 'home' }));
+  }, project.id);
+  await page.reload();
+
+  const chip = page.locator('.topbar').getByRole('button', { name: `Design system: Base ${stamp}` });
+  await chip.click();
+  await page.getByRole('dialog', { name: 'Design system' }).getByRole('button', { name: 'Save to library…' }).click();
+  const save = page.getByRole('dialog', { name: 'Save to library' });
+  await save.getByRole('radio', { name: 'Save as a new design system' }).check();
+  await save.getByLabel('Design system name').fill(`Fork ${stamp}`);
+  await save.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(save).toBeHidden();
+  await expect(page.locator('.topbar').getByRole('button', { name: `Design system: Fork ${stamp}` })).toBeVisible();
+  const packs = await api.call<PackSummary[]>('GET', '/api/packs');
+  const fork = packs.find((pack) => pack.name === `Fork ${stamp}`);
+  expect(fork?.id).toBe(`user-fork-${stamp}`);
+  expect(packs.find((pack) => pack.id === base.id)?.name).toBe(`Base ${stamp}`);
+  await expect.poll(async () => (await api.project(project.id)).packId).toBe(fork?.id);
+
+  const broken = path.join(readState().dataDir, 'packs', `user-broken-${stamp}`);
+  mkdirSync(broken, { recursive: true });
+  writeFileSync(path.join(broken, 'pack.json'), '{"id": "nope"}');
+  try {
+    await page.locator('.topbar').getByRole('button', { name: `Design system: Fork ${stamp}` }).click();
+    await page.getByRole('dialog', { name: 'Design system' }).getByRole('button', { name: 'Change design system…' }).click();
+    await page.getByRole('button', { name: 'Manage…' }).click();
+    await expect(page.getByRole('heading', { name: 'Design systems', level: 1 })).toBeVisible();
+    const notice = page.locator('.lib-problems');
+    await expect(notice.locator('summary')).toHaveText('1 design system could not load');
+    await notice.locator('summary').click();
+    await expect(notice).toContainText(`user-broken-${stamp}`);
+
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Design systems', level: 1 })).toBeVisible();
+    const yours = page.getByRole('region', { name: /^Yours/ });
+    await expect(yours.getByRole('button', { name: `Base ${stamp}`, exact: true })).toContainText('Copy');
+    await yours.getByRole('button', { name: `Base ${stamp}`, exact: true }).click();
+    const detail = page.getByRole('dialog', { name: `Base ${stamp} design system`, exact: true });
+    await detail.getByRole('button', { name: 'Apply to current project' }).click();
+    await expect(page.locator('.topbar').getByRole('button', { name: `Design system: Base ${stamp}` })).toBeVisible();
+    await expect.poll(async () => (await api.project(project.id)).packId).toBe(base.id);
+  } finally {
+    rmSync(broken, { recursive: true, force: true });
+    for (const id of [base.id, fork?.id]) if (id) await api.call('DELETE', `/api/packs/${id}`).catch(() => undefined);
+  }
 });

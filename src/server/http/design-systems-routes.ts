@@ -7,6 +7,7 @@ import { readCoverage } from '../design-system/draft-project.js';
 import { KIT_PAGE_FILE, renderKitPage } from '../design-system/extract/kit-page.js';
 import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, buildDraft, createFetcher, parseDraftRequest } from '../design-system/extract/draft.js';
 import type { Draft, DraftFile } from '../design-system/extract/draft.js';
+import { libraryCoverage } from '../design-system/extract/map.js';
 import type { Fetcher } from '../design-system/extract/url.js';
 import type { PackLibrary } from '../design-system/library.js';
 import type { LoadedPack } from '../design-system/packs.js';
@@ -111,7 +112,8 @@ function metaFile(source: BackingSource, pack: LoadedPack, attachments: Attachme
 
 function librarySource(pack: LoadedPack): BackingSource {
   const { name, mode, fonts } = pack.manifest;
-  return { name, kitHtml: renderKitPage({ name, mode, googleFontsUrl: fonts.googleFontsUrl }), files: [], inputs: { library: pack.manifest.id } };
+  const coverage = { path: COVERAGE_FILE, content: `${JSON.stringify(libraryCoverage(pack), null, 2)}\n` };
+  return { name, kitHtml: renderKitPage({ name, mode, googleFontsUrl: fonts.googleFontsUrl }), files: [coverage], inputs: { library: pack.manifest.id } };
 }
 
 function packParam(c: Context): string {
@@ -171,7 +173,7 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     if (!pack) throw new NotFoundError(`unknown pack: ${id}`);
     if (pack.source !== 'user') throw new BadRequestError(`${pack.manifest.name} is a built-in design system; make a copy to edit it`);
     const result: OpenPackEditorResult = await editorLock(id, async () => {
-      const existing = (await projects.list()).find((project) => project.designSystemFor === id);
+      const existing = (await projects.list()).find((project) => project.designSystemFor === id && !project.designSystemDeleted);
       if (existing) return { project: existing, created: false };
       return { project: await createBacking(librarySource(pack), pack, []), created: true };
     });

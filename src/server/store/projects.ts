@@ -45,6 +45,7 @@ export interface StudioProjectStore extends ProjectStore {
   mainDirection(project: Project): Direction;
   updateSettings(projectId: string, patch: Partial<ProjectSettings>): Promise<Project>;
   setPackId(projectId: string, packId: string | null): Promise<Project>;
+  markDesignSystemDeleted(projectId: string): Promise<Project>;
   createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designSystemFor?: string }): Promise<Project>;
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;
@@ -476,6 +477,16 @@ export function createProjectStore(
     },
 
     writeRaw: (project) => writeProject(project),
+
+    markDesignSystemDeleted(projectId: string): Promise<Project> {
+      return lock(projectId, async () => {
+        const project = await readProject(projectId);
+        project.designSystemDeleted = true;
+        project.updatedAt = Date.now();
+        await writeProject(project);
+        return project;
+      });
+    },
 
     setPackId(projectId: string, packId: string | null): Promise<Project> {
       return lock(projectId, async () => {

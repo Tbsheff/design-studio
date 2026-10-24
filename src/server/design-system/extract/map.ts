@@ -214,6 +214,24 @@ function manifestFonts(base: LoadedPack, picks: Picks, harvests: Harvest[]): Pac
   return { display, body, mono, ...(googleFontsUrl ? { googleFontsUrl } : {}) };
 }
 
+export function libraryCoverage(pack: LoadedPack): Coverage {
+  const tokens = pack.tokens as unknown as Record<string, unknown>;
+  const entries: CoverageEntry[] = requiredPaths().map((token) =>
+    nodeAt(tokens, token) ? { token, source: 'library', confidence: 'high', evidence: 'set in the saved design system' } : { token, source: 'base', confidence: 'fallback', evidence: 'missing' },
+  );
+  const score = scoreOf(entries);
+  return {
+    version: 1,
+    score,
+    grade: gradeOf(score),
+    basePackId: pack.manifest.id,
+    mode: pack.manifest.mode,
+    tokens: entries,
+    fallbacks: entries.filter((entry) => entry.confidence === 'fallback').map((entry) => entry.token),
+    sources: [],
+  };
+}
+
 export function mapDraft(base: LoadedPack, harvests: Harvest[], mode: 'light' | 'dark', sources: SourceReport[]): MappedDraft {
   const candidates = harvests.flatMap((harvest) => harvest.candidates);
   const picks: Picks = new Map();

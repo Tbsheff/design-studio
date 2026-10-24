@@ -137,6 +137,7 @@ export interface Project {
   imported: { sourcePath: string; created?: boolean } | null;
   packId?: string | null;
   designSystemFor?: string | null;
+  designSystemDeleted?: boolean;
   entry: string;
   settings: ProjectSettings;
   settingsVersion?: number;
@@ -894,6 +895,7 @@ export interface PackManifest {
   provenance: 'original' | 'imported' | 'extracted';
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string };
   draft?: boolean;
+  copiedFrom?: string;
 }
 
 export type PackSource = 'builtin' | 'user';
@@ -942,7 +944,7 @@ export type CoverageConfidence = 'high' | 'medium' | 'fallback';
 
 export interface CoverageEntry {
   token: string;
-  source: DraftSourceKind | 'derived' | 'base' | 'agent';
+  source: DraftSourceKind | 'derived' | 'base' | 'agent' | 'library';
   confidence: CoverageConfidence;
   evidence: string;
 }
@@ -1011,6 +1013,7 @@ export interface CreateUserPackInput {
   tags?: string[];
   license?: string;
   draft?: boolean;
+  copiedFrom?: string;
 }
 
 export type UpdateUserPackInput = Partial<CreateUserPackInput>;

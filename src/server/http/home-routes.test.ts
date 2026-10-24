@@ -204,6 +204,7 @@ describe('home routes', { timeout: 30000 }, () => {
     const second = await fromStarter('landing');
     const firstTree = projects.mainDirection(first).workTree;
     await waitFor(async () => (await projects.get(first.id)).thumbnail);
+    await waitFor(async () => (await projects.get(second.id)).thumbnail);
     const a = await call<TrashedProject>('DELETE', `/api/projects/${first.id}`);
     await new Promise((resolve) => setTimeout(resolve, 5));
     const b = await call<TrashedProject>('DELETE', `/api/projects/${second.id}`);

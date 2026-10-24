@@ -6,7 +6,7 @@ import { getSession } from '../session';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
 
-type Confirm = { kind: 'one'; item: TrashItem } | { kind: 'all'; count: number };
+type Confirm = { kind: 'one'; item: TrashItem } | { kind: 'all'; count: number; folderStays: boolean };
 
 const trashApi = {
   list: () => json<TrashItem[]>('GET', '/api/trash'),
@@ -71,7 +71,7 @@ function ConfirmDelete({ confirm, busy, error, onCancel, onConfirm }: { confirm:
   const dialog = useModalDialog(() => (busy ? false : onCancel()));
   const title = confirm.kind === 'one' ? `Delete “${confirm.item.name}” forever?` : 'Empty the trash?';
   const what = confirm.kind === 'one' ? 'Its versions, runs and comments leave the app. You cannot undo this.' : `${confirm.count === 1 ? '1 project' : `${confirm.count} projects`} and their versions, runs and comments leave the app. You cannot undo this.`;
-  const folders = confirm.kind === 'one' ? confirm.item.folderStays : true;
+  const folders = confirm.kind === 'one' ? confirm.item.folderStays : confirm.folderStays;
   return (
     <dialog ref={dialog.ref} className="modal trash-confirm" aria-label={title} onMouseDown={dialog.onMouseDown}>
       <div className="modal-head">
@@ -217,7 +217,7 @@ export default function HomeTrash({ onClose, onRestored }: { onClose: () => void
           disabled={count === 0 || busy !== null}
           onClick={() => {
             setConfirmError(null);
-            setConfirm({ kind: 'all', count });
+            setConfirm({ kind: 'all', count, folderStays: (items ?? []).every((item) => item.folderStays) });
           }}
         >
           Empty trash…

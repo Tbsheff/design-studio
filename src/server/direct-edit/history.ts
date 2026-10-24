@@ -32,7 +32,7 @@ interface Stacks {
   redo: EditRecord[];
 }
 
-const STALE_MESSAGE = 'The file changed after this edit, so it cannot be undone here. Undo history was cleared.';
+const STALE_MESSAGE = 'The file changed after this edit. Undo history was cleared.';
 const STEP_WORD: Record<HistoryStep, string> = { undo: 'Undo', redo: 'Redo' };
 
 function lastFor(records: EditRecord[], directionId: string): number {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import { anchorQueryOf, targetFromSelection } from '../shared/comments';
-import type { AnchorQuery, EditHistoryState, SelectionContext, Version } from '../shared/contracts';
+import type { AnchorQuery, Direction, EditHistoryState, SelectionContext, Version } from '../shared/contracts';
 import { api, errorText } from './api';
 import { useProjectEvents } from './events';
 import { historyKeyOf, type HistoryKind, type RedoShortcut } from './useUndoShortcut';
@@ -10,16 +10,25 @@ export const PREVIEW_PAINTED_EVENT = 'studio:preview-painted';
 const EMPTY: EditHistoryState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null };
 const TOAST_MS = 2400;
 const REFRESH_WINDOW_MS = 3000;
+const NOTHING_TO_UNDO = 'Nothing more to undo';
 
 type Describe = (anchors: AnchorQuery[]) => Promise<(SelectionContext | null)[]>;
 
 interface Options {
   projectId: string;
   directionId: string | null;
+  direction: Direction | null;
+  versions: Version[];
   locked: boolean;
   before: () => Promise<void>;
   onStepped: (version: Version) => void;
   onError: (message: string) => void;
+}
+
+const HISTORY_STEP_TITLE = /^(Undo|Redo): /;
+
+export function isHistoryStep(version: Version | undefined): boolean {
+  return version !== undefined && version.meta.kind === 'manual' && HISTORY_STEP_TITLE.test(version.title);
 }
 
 export function stepToast(kind: HistoryKind, label: string | null): string {
@@ -107,9 +116,11 @@ export function useEditHistory(o: Options) {
   );
 
   const redo: RedoShortcut = { enabled: state.canRedo && !o.locked, onRedo: () => step('redo') };
+  const head = o.versions.find((version) => version.id === o.direction?.headVersionId);
+  const versionFallback = (fallback: () => void) => (isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback);
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
     canUndo: canUndo || (state.canUndo && !o.locked),
-    onUndo: () => step('undo', fallback),
+    onUndo: () => step('undo', versionFallback(fallback)),
   });
   return { state, toast, step, undoChain, redo };
 }

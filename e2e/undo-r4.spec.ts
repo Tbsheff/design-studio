@@ -58,6 +58,9 @@ test('Cmd+Z undoes three direct edits to the exact start bytes and Shift+Cmd+Z r
   await expect.poll(read).toBe(states[0]);
   await expect(frontFrame(page).locator('h1')).toHaveText('Harbor Undo Stack');
   await expect(frontFrame(page).locator('h1')).not.toHaveCSS('font-size', '48px');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(page.locator('.ds-toast')).toHaveText('Nothing more to undo');
+  expect(read()).toBe(states[0]);
 
   await selectInFrame(page, 'h1');
   await expect(fontSize).not.toHaveValue('48px');

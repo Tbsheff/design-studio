@@ -136,6 +136,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const editHistory = useEditHistory({
     projectId,
     directionId,
+    direction,
+    versions,
     locked: activeRun !== null,
     before: async () => {
       await editControl.current?.settle();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { SelectionContext } from '../shared/contracts';
-import { refreshedSelection, stepToast } from './useEditHistory';
+import type { SelectionContext, Version } from '../shared/contracts';
+import { isHistoryStep, refreshedSelection, stepToast } from './useEditHistory';
 import { historyKeyOf, routeHistoryCommand, type ShortcutState } from './useUndoShortcut';
 
 function key(over: Partial<KeyboardEvent>): Pick<KeyboardEvent, 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'key'> {
@@ -53,6 +53,15 @@ describe('edit history helpers', () => {
     expect(stepToast('undo', 'Edit h1: color')).toBe('Undid edit h1: color');
     expect(stepToast('redo', 'Update tokens: --primary')).toBe('Redid update tokens: --primary');
     expect(stepToast('undo', null)).toBe('Undid the last edit');
+  });
+
+  it('knows a history step version so a later Cmd+Z does not version-undo it', () => {
+    const version = (title: string, kind: Version['meta']['kind']) => ({ title, meta: { kind } }) as Version;
+    expect(isHistoryStep(version('Undo: Edit h1: color', 'manual'))).toBe(true);
+    expect(isHistoryStep(version('Redo: Update tokens: --primary', 'manual'))).toBe(true);
+    expect(isHistoryStep(version('Edit h1: color', 'manual'))).toBe(false);
+    expect(isHistoryStep(version('Undo: Edit h1: color', 'undo'))).toBe(false);
+    expect(isHistoryStep(undefined)).toBe(false);
   });
 
   it('refreshes styles and text of the selected elements from the preview', () => {

@@ -95,7 +95,9 @@ export function runFromSummary(summary: RunSummary): RunView {
   };
 }
 
-function finishedView(prev: RunView | undefined, summary: RunSummary): RunView {
+function finishedView(prev: RunView | undefined, event: RunSummary): RunView {
+  const title = event.title ?? prev?.summary?.title;
+  const summary = title ? { ...event, title } : event;
   const finished = runFromSummary(summary);
   if (!prev) return finished;
   const parts = summary.parts ?? withFinalText(closeParts(prev.parts), summary.finalText);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RunSummary, StudioEvent } from '../shared/contracts';
-import { applyRunEvent, emptyRun, runText, shownPending, type RunMap } from './runState';
+import { applyRunEvent, emptyRun, runFromSummary, runText, shownPending, type RunMap } from './runState';
 
 let seq = 0;
 const ev = (body: Record<string, unknown>): StudioEvent => ({ seq: ++seq, ts: 1000 + seq, projectId: 'p', directionId: 'd', runId: 'r1', ...body }) as unknown as StudioEvent;
@@ -65,5 +65,13 @@ describe('shownPending', () => {
   it('hides the pending send in another direction or when there is none', () => {
     expect(shownPending(pending, [], 'alt')).toBeNull();
     expect(shownPending(null, [], 'main')).toBeNull();
+  });
+
+  it('keeps a stored run title when a replayed run.finished has none', () => {
+    const plain = { id: 'r9', directionId: 'd', request: { prompt: 'x', mode: 'edit' }, startedAt: 1, status: 'completed', toolCalls: [], finalText: 'Done' } as unknown as RunSummary;
+    const stored = runFromSummary({ ...plain, title: 'Menu pass' });
+    const replayed = applyRunEvent({ r9: stored }, ev({ type: 'run.finished', runId: 'r9', summary: plain }));
+    expect(replayed.r9?.summary?.title).toBe('Menu pass');
+    expect(applyRunEvent({}, ev({ type: 'run.finished', runId: 'r9', summary: plain })).r9?.summary?.title).toBeUndefined();
   });
 });

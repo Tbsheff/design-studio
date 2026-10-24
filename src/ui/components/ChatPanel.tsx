@@ -1,10 +1,15 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Direction } from '../../shared/contracts';
+import { forkBaseOf, runMatches, runQueryTerms } from '../../shared/rewind';
+import { renameRun } from '../runHistoryApi';
+import type { RewindControl } from '../useRewind';
 import { Conversation, ConversationContent, ConversationScrollButton, useConversation } from '../ai/components/ai/conversation';
 import { Message, MessageContent } from '../ai/components/ai/message';
 import { canPolishRun } from '../polish';
 import type { RunView, ToolRow } from '../runState';
 import { AssistantText, PlanCard, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
+import { UserTurn, type TurnActions } from './ChatRewind';
+import { ChatSearch } from './ChatSearch';
 import { Icon } from './Icon';
 import { LiveStatus, RunChanges, ToolChips } from './ToolChips';
 import { PermissionPrompt } from './PermissionPrompt';
@@ -59,13 +64,31 @@ function RunParts({ run, running, workTree }: { run: RunView; running: boolean; 
   );
 }
 
-const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish }: { run: RunView; latest: boolean; workTree: string | null; onDetails: (runId: string) => void; polish: PolishProps }) {
+interface TurnProps {
+  title: string | undefined;
+  restoreTip: string | null;
+  restoreVersionId: string | null;
+  forkBase: string | null;
+  editTip: string | null;
+  actions: TurnActions | null;
+}
+
+interface EntryProps extends TurnProps {
+  run: RunView;
+  latest: boolean;
+  workTree: string | null;
+  onDetails: (runId: string) => void;
+  polish: PolishProps;
+}
+
+const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
   const running = run.status === 'running';
+  const rewind = useMemo(() => ({ restoreTip, restoreVersionId, forkBase, editTip }), [restoreTip, restoreVersionId, forkBase, editTip]);
   return (
     <div className="run flex min-w-0 flex-col gap-3" data-run-id={runId}>
-      <UserMessage run={run} />
+      <UserTurn run={run} title={title} rewind={actions ? rewind : null} actions={actions} />
       <Message type="incoming" className="msg assistant">
         <MessageContent className="run-body gap-2">
           <RunParts run={run} running={running} workTree={workTree} />
@@ -126,7 +149,42 @@ function EmptyChat() {
   );
 }
 
+const WAIT_TIP = 'Wait for the run to finish';
+
+function turnProps(run: RunView, rewind: RewindControl | undefined, title: string | undefined, actions: TurnActions | null): TurnProps {
+  if (!rewind || !actions) return { title, restoreTip: null, restoreVersionId: null, forkBase: null, editTip: null, actions: null };
+  const running = run.status === 'running' || !run.summary;
+  const versionId = run.summary?.versionId ?? null;
+  const forkBase = running ? null : forkBaseOf({ versionId, startedAt: run.startedAt }, rewind.versions);
+  const restoreTip = running || rewind.locked ? WAIT_TIP : versionId === null ? 'This message made no version' : versionId === rewind.headVersionId || versionId === rewind.headRestoredFrom ? 'The code is already at this message' : null;
+  const editTip = running ? WAIT_TIP : forkBase === null ? 'No earlier version to start from' : null;
+  return { title, restoreTip, restoreVersionId: restoreTip === null ? versionId : null, forkBase, editTip, actions };
+}
+
+function useRunSearch(runs: RunView[], titles: Record<string, string>) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const terms = useMemo(() => runQueryTerms(query), [query]);
+  const shown = useMemo(
+    () => (terms.length === 0 ? runs : runs.filter((run) => runMatches(terms, run.request?.prompt ?? '', titles[run.runId] ?? run.summary?.title))),
+    [runs, terms, titles],
+  );
+  return {
+    open,
+    query,
+    shown,
+    active: terms.length > 0,
+    onOpen: () => setOpen(true),
+    onClose: () => {
+      setOpen(false);
+      setQuery('');
+    },
+    onQuery: setQuery,
+  };
+}
+
 interface Props {
+  rewind?: RewindControl;
   runs: RunView[];
   pending?: RunView | null;
   direction: Direction | null;
@@ -138,7 +196,7 @@ interface Props {
   onApprovePlan?: (run: RunView) => void;
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan }: Props) {
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -151,19 +209,43 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   const startPolish = useCallback(() => polishRef.current(), [polishRef]);
   const polishing = running || busy;
   const polish = useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry, onApprovePlan: approve }), [headVersionId, polishing, startPolish, retry, approve]);
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  const rewindRef = useLatest(rewind);
+  const hasRewind = rewind !== undefined;
+  const actions = useMemo<TurnActions | null>(
+    () =>
+      hasRewind
+        ? {
+            onRestore: (versionId) => rewindRef.current?.onRestore(versionId),
+            onEditResend: (run, prompt, base) => rewindRef.current?.onEditResend(run, prompt, base) ?? Promise.resolve(),
+            dirtyCount: () => rewindRef.current?.dirtyCount ?? 0,
+            onRename: async (runId, title) => {
+              const summary = await renameRun(runId, title);
+              setTitles((prev) => ({ ...prev, [runId]: summary.title ?? '' }));
+            },
+          }
+        : null,
+    [hasRewind, rewindRef],
+  );
+  const search = useRunSearch(runs, titles);
+  const lastId = runs.at(-1)?.runId;
   return (
-    <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="">
-      <ConversationContent className="chat">
-        {runs.length === 0 && !pending && <EmptyChat />}
-        {runs.map((r, i) => (
-          <RunEntry key={r.runId} run={r} latest={i === runs.length - 1} workTree={workTree} onDetails={openDetails} polish={polish} />
-        ))}
-        {pending && <PendingEntry run={pending} workTree={workTree} />}
-      </ConversationContent>
-      <StickOnNewRun runId={pending?.runId ?? runs.at(-1)?.runId ?? null} />
-      <ConversationScrollButton className="icon-btn chat-scroll-btn">
-        <Icon name="chevronDown" size={16} />
-      </ConversationScrollButton>
-    </Conversation>
+    <div className="chat-wrap">
+      {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
+      <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
+        <ConversationContent className="chat">
+          {runs.length === 0 && !pending && <EmptyChat />}
+          {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
+          {search.shown.map((r) => (
+            <RunEntry key={r.runId} run={r} latest={r.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} {...turnProps(r, rewind, titles[r.runId] ?? r.summary?.title, actions)} />
+          ))}
+          {pending && <PendingEntry run={pending} workTree={workTree} />}
+        </ConversationContent>
+        <StickOnNewRun runId={pending?.runId ?? runs.at(-1)?.runId ?? null} />
+        <ConversationScrollButton className="icon-btn chat-scroll-btn">
+          <Icon name="chevronDown" size={16} />
+        </ConversationScrollButton>
+      </Conversation>
+    </div>
   );
 }

@@ -35,6 +35,7 @@ import { useRunControls } from '../useRunControls';
 import { emptyRun, shownPending, type RunView } from '../runState';
 import { randomToken } from '../session';
 import { useChatState } from '../useChatState';
+import { useRewind } from '../useRewind';
 import { setTelemetryScope } from '../perfTelemetry';
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
@@ -197,6 +198,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     }
   }, []);
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
+  const rewind = useRewind({ projectId, direction, versions, status, busy, running: activeRun, act, guard, seedRun: data.seedRun, setDirectionId: data.setDirectionId, refreshVersions: data.refreshVersions });
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
 
@@ -326,7 +328,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           columnsRef={columnsRef}
           tab={panel.tab}
           onTab={panel.choose}
-          chat={{ runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
+          chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,

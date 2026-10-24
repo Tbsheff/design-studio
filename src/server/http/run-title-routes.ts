@@ -4,11 +4,10 @@ import path from 'node:path';
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import type { RunSummary } from '../../shared/contracts.js';
+import { RUN_TITLE_MAX } from '../../shared/rewind.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import type { AgentRunner } from '../types.js';
-
-export const RUN_TITLE_MAX = 80;
 
 const titleSchema = z.object({ title: z.string().trim().max(RUN_TITLE_MAX) }).strict();
 

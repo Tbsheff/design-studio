@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, type ReactNode } from 'react';
 import type { RunLevel, RunStatus } from '../../shared/contracts';
 import { Exception, ExceptionHeader, ExceptionMessage, ExceptionType } from '../ai/components/ai/exception';
 import { Markdown } from '../ai/components/ai/markdown';
@@ -33,7 +33,25 @@ function LevelChip({ level }: { level: RunLevel | null }) {
   );
 }
 
-export function UserMessage({ run }: { run: RunView }) {
+interface UserMessageSlots {
+  title?: string | undefined;
+  tools?: ReactNode;
+  replaceBody?: ReactNode;
+  titleSlot?: ReactNode;
+  onRename?: () => void;
+}
+
+function RunTitle({ title, slot, onRename }: { title: string | undefined; slot: ReactNode; onRename: (() => void) | undefined }) {
+  if (slot) return slot;
+  if (!title) return null;
+  return (
+    <span className="run-title" data-testid="run-title" title={onRename ? `${title} (double-click to rename)` : title} onDoubleClick={onRename}>
+      {title}
+    </span>
+  );
+}
+
+export function UserMessage({ run, title, tools, replaceBody, titleSlot, onRename }: { run: RunView } & UserMessageSlots) {
   const req = run.request;
   if (!req) return null;
   if (req.retryOf) {
@@ -52,6 +70,7 @@ export function UserMessage({ run }: { run: RunView }) {
     <Message type="outgoing" className="msg user">
       <MessageContent>
         <div className="msg-meta flex items-center gap-2 text-xs text-muted-foreground tabular-nums">
+          <RunTitle title={title} slot={titleSlot} onRename={onRename} />
           <span className={`badge mode-tag ${req.plan ? 'plan' : req.mode} ${critique ? 'warn' : ''}`}>{critique ? 'Critique' : req.plan ? 'Plan' : 'Edit'}</span>
           <LevelChip level={runLevel(run)} />
           {selected > 0 && (
@@ -67,8 +86,10 @@ export function UserMessage({ run }: { run: RunView }) {
             </span>
           )}
         </div>
-        {text && (
+        {replaceBody}
+        {text && !replaceBody && (
           <div className="msg-user-row">
+            {tools}
             <CopyButton text={req.prompt} label="Copy message" className="msg-copy" />
             <MessageText variant="bubble" className="msg-body max-w-[92%] whitespace-pre-wrap wrap-anywhere">
               {text}

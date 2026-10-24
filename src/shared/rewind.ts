@@ -1,5 +1,7 @@
 import type { Version } from './contracts.js';
 
+export const RUN_TITLE_MAX = 80;
+
 export interface RewindRun {
   versionId: string | null;
   startedAt: number;

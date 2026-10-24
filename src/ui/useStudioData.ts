@@ -106,7 +106,11 @@ export function useStudioData(projectId: string): StudioData {
         setRunsLoaded(true);
         setRuns((prev) => {
           const next: RunMap = { ...prev };
-          for (const s of list) if (!next[s.id]?.summary) next[s.id] = runFromSummary(s);
+          for (const s of list) {
+            const known = next[s.id];
+            if (!known?.summary) next[s.id] = runFromSummary(s);
+            else if (s.title && !known.summary.title) next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
+          }
           return next;
         });
         for (const s of list.filter((r) => r.status === 'running')) {

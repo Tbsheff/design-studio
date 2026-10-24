@@ -217,7 +217,7 @@ Fix (`211fc4c`): on `ready`, walk the work tree and report every file with an mt
 | Item | Acceptance check | Proof | Result |
 |---|---|---|---|
 | R3-1 Correct transcript (P0) | A mock run with thinking A, tool 1, thinking B, text shows that order and both thinking blocks | `e2e/chat-r3.spec.ts` "R3-1, R3-3, R3-4"; `src/shared/run-parts.test.ts`; `src/ui/runState.test.ts`; `src/server/agent/mock-r3.test.ts` | Pass. Order `thinking, Read, thinking, text`, 2 thinking blocks, same order after reload (`RunSummary.parts`). A finished or stopped run keeps its live parts and streamed text |
-| R3-2 Esc, queue and steer (P0) | A message queued in a 3-tool run reaches the agent before tool 3; Esc stops in < 500 ms and done tool rows stay; focus in studio and iframe | `e2e/chat-r3.spec.ts` "R3-2" (3 tests) | Pass. Queued text is in the run's sent records before the third tool starts (PostToolUse `additionalContext`). Esc to "Stopped" < 500 ms with focus in the composer and in the preview; done rows stay, no row keeps spinning. Cmd+Enter while running steers: the turn ends and the next run starts with that text. Stop puts unsent queued text back in the composer |
+| R3-2 Esc, queue and steer (P0) | A message queued in a 3-tool run reaches the agent before tool 3; Esc stops in < 500 ms and done tool rows stay; focus in studio and iframe | `e2e/chat-r3.spec.ts` "R3-2" (3 tests) | Pass. Queued text is in the run's sent records before the third tool starts (PostToolUse `additionalContext`). Esc to "Stopped" < 500 ms with focus in the composer and in the preview (real agent: 11 ms); done rows stay, no row keeps spinning. Cmd+Enter while running steers: the turn ends and the next run starts with that text. Stop puts unsent queued text back in the composer |
 | R3-3 Diffs in chat (P0) | A one-line edit shows `+1 −1` with the exact old and new line | `e2e/chat-r3.spec.ts`; `src/shared/line-diff.test.ts` | Pass. Badge `+1−1`, old `<h1>Harbor Lane Coffee</h1>`, new `<h1>Harbor Lane Roasters</h1>`; per-file totals on the run card |
 | R3-4 Copy (P0) | Copy puts the exact markdown or code on the clipboard | `e2e/chat-r3.spec.ts` | Pass. Message copy equals the reply markdown; code block copy equals the code |
 | R3-5 Permission prompts, part 1 (P1) | A mock Bash call shows the prompt; Deny with "use npm" sends the note and nothing runs | `e2e/chat-r3.spec.ts` "R3-5"; `src/server/agent/ask-gate.test.ts` | Pass. Note in the sent records, no output file, the row shows "Denied". The mock calls the same gate as the SDK driver. Scope: Bash only; writes outside the project stay hard denies (no prompt) |
@@ -234,6 +234,15 @@ Fix (`211fc4c`): on `ready`, walk the work tree and report every file with an mt
 | R3-11 Tool rows | 3 reads of one file show one row "Read ×3" | `src/ui/components/ToolChips.test.ts` | Pass. One verb and target format (`toolLabels.ts`); errors open; errors, running tools and diffs never group. New: "Stopped" state (X icon, no time) for tools cut by a stop, "Denied" tag for refused prompts |
 | R3-12 Smooth streaming | 10k-token mock reply smooth; an open fence renders as code mid-stream | `e2e/chat-r3.spec.ts` "R3-12" | Pass. Headless rAF p95 ≤ 17.5 ms, 0 frames > 32 ms; `<pre>` present while the fence is open; a wheel scroll up during the stream stays within 2 px (not pulled back). Finished markdown blocks are memoized; only the open tail re-parses |
 | Premium-feel items | — | screenshots | Stop and Queue in the composer row with key hints; queued messages as gray cards with edit, remove and drag; tabular numbers in timers, meter and costs; a new run sticks the scroll to the bottom again; Stop and Queue keep a plain accessible name ("Stop", not "Stop Stop (Esc)") |
+
+### Real agent check
+
+`scripts/r3-real-smoke.ts` (`claude-haiku-5-5`, budget $0.15 per run, total $0.026 for the last pass; 4 passes in all, about $0.09):
+
+- Ordered parts and diffs on a real run: create run `Skill ×3, Glob, Write, render_check, screenshot ×2, Edit ×2, define_tweaks, render_check, text`; diffs `Write +175 −0`, `Edit +1 −1`. Context meter 41,068 tokens. No thinking blocks from Haiku, so thinking order is proven only on the mock.
+- Queue: a message queued with Enter after the first tool landed in the same run as a `user` part after the first Edit, and the agent made a second Edit for it.
+- Esc: 11 ms to "Stopped" after the fix (2055–2087 ms before). The cancel request went out 2 ms after the key.
+- Send right after the stop: the run started after 2099 ms (the server waited for the old run) and completed.
 
 ### Screenshots
 
@@ -257,4 +266,22 @@ After: `/tmp/polish-r3/after-chat-finished.png`, `after-chat-diff.png`, `after-c
 - Found in review: tool rows of a stopped run kept spinning, because only `durationMs === null` decided the state. They now show "Stopped" when the run is not running.
 - Found in review: a failed run rejected `handle.done`, and the follow-up chain for queued messages had no reject handler, so Node logged an unhandled rejection (`comments-routes.test.ts` showed it). Fixed in `http/app.ts`.
 - Found while testing: the Stop button's accessible name was "Stop Stop (Esc)" while its tooltip showed, so `getByRole('button', { name: 'Stop' })` and screen readers got the tooltip text. Stop and Queue now have a fixed `aria-label`.
+- Found in the real-agent smoke: Esc took 2055–2087 ms to show "Stopped" (the mock took < 50 ms, so the e2e passed). Cause: the UI waited for `run.finished`, and the SDK takes about 2 s to settle after an abort. First fix: a `run.stopping` event at cancel. It still took 2073 ms, because `eventHub.ts` subscribes to a hand-written list of SSE event names and the new name was not in it, so the browser dropped it with no error. Now the list is a typed `Record` over every event type (a missing type fails the typecheck). New mock tag `[slowstop]` settles 2 s after an abort; the R3-2 studio test uses it and failed at 2104 ms without the fix. A send right after a stop used to get a 409 while the old run settled; the server now waits for it.
 - Found while testing: after the user scrolled up, a new run did not scroll the chat back down. A new run now sticks the scroll to the bottom; scroll up during a stream is still not pulled back.
+- Open risk, not solved: React previews after the `f-restart` server restart. On `bc173ed`, 2 of 3 full main runs failed 3 tests each (`latency` and `variations` both times; also `home-r1` once and `folders` once). In the failing runs the restarted server logged no Vite build at all. The third run passed 84 of 84. Two full runs of the same suite on `b361bf5` (the commit before) passed 84 of 84, and so did one run of the new server code with the old `chat-r3.spec.ts`. The machine load average was 16–21 during all of these runs (Spotlight indexing). A short repro (`chat-r3`, `f-restart`, `latency`) passed. So the cause is not found: either a load flake in Vite start after a restart, or an effect of the new `[slowstop]` and send-after-stop test. Next step: run the full suite on an idle machine 3 times on each commit.
+- Seen in a server log, not a test failure: `[thumbnails] capture failed ... ENOENT ... thumbs` when a project is deleted while its thumbnail is queued.
+
+### Test runs (final)
+
+On `bc173ed` (last code commit):
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 92 files, 719 tests passed (30 new across `run-parts`, `line-diff`, `fuzzy`, `ask-gate`, `mock-r3`, `markdownBlocks`, `runState`, `ToolChips`, `watcher`). No unhandled errors.
+- `npm run build:ui`: built.
+- Playwright with `STUDIO_E2E_GROUP=r3 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 84 tests (12 new in `chat-r3.spec.ts`): 84 passed in the last full run; 81 and 80 passed in the two runs before it (see the open risk above). `chat-r3`, `e-cancel` and `ai-chat` passed twice each with `--repeat-each=2`. `ac-core` 7 passed, also right after the main suite in the same sequence (AC-14, 2 of 2). `ac-edit` 19 passed. `ac-safety` 10 passed.
+- `npm run e2e:desktop`: 20 passed.
+- Real agent: `scripts/r3-real-smoke.ts`, see Real agent check.
+
+### Commits
+
+`211fc4c` fix AC-14 watcher race · `e4fee6d` ordered parts, diffs, copy · `587935e` Esc, queue, steer, Bash prompt, history · `ec85ae4` streaming, scroll, grouped rows · `6e5f505` todos, meter, effort, retry · `21a850b` plan mode · `2dcc414` @ mentions · `32e1f1f` Ctrl+R · `71b5b76`, `c3b83c9` polish fixes · `8be3a8c` spec updates · `b361bf5` docs and smoke script · `bc173ed` real-agent stop fix · then this log update.

@@ -153,3 +153,48 @@ test('R3-5: a Bash call asks first; Deny with a note sends the note and runs not
   expect(existsSync(path.join(mainDirection(project).workTree, 'mock-bash-output.txt'))).toBe(false);
   await expect(prompt).toHaveCount(0);
 });
+
+test('R3-12: a 10k-token reply streams smoothly, an open fence renders as code, and scrolling up is not pulled back', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Stream Probe Cafe');
+  await page.evaluate(() => {
+    const w = window as unknown as { __frames: number[]; __long: number[]; __probe: boolean };
+    w.__frames = [];
+    w.__long = [];
+    w.__probe = true;
+    new PerformanceObserver((list) => list.getEntries().forEach((entry) => w.__long.push(entry.duration))).observe({ type: 'longtask', buffered: false });
+    let last = performance.now();
+    const tick = (now: number) => {
+      if (!w.__probe) return;
+      w.__frames.push(now - last);
+      last = now;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  await type(page, 'Write long notes [long]', 'Meta+Enter');
+  const streaming = page.locator('.assistant-text[data-streaming]');
+  await expect(streaming.locator('pre').first()).toBeVisible({ timeout: 10_000 });
+  await expect.poll(() => streaming.evaluate((el) => el.textContent?.length ?? 0)).toBeGreaterThan(6000);
+  const viewport = page.locator('[data-slot="conversation-content"]');
+  await viewport.hover();
+  await page.mouse.wheel(0, -600);
+  await page.waitForTimeout(150);
+  const afterWheel = await viewport.evaluate((el) => ({ top: el.scrollTop, gap: el.scrollHeight - el.scrollTop - el.clientHeight }));
+  await page.waitForTimeout(600);
+  const later = await viewport.evaluate((el) => ({ top: el.scrollTop, gap: el.scrollHeight - el.scrollTop - el.clientHeight }));
+  expect(afterWheel.gap).toBeGreaterThan(200);
+  expect(Math.abs(later.top - afterWheel.top)).toBeLessThanOrEqual(2);
+  expect(later.gap).toBeGreaterThan(afterWheel.gap);
+  await finishedRun(api, project.id, 'Write long notes [long]');
+  const stats = await page.evaluate(() => {
+    const w = window as unknown as { __frames: number[]; __long: number[]; __probe: boolean };
+    w.__probe = false;
+    const frames = w.__frames.slice(2).sort((a, b) => a - b);
+    return { count: frames.length, p95: frames[Math.floor(frames.length * 0.95)] ?? 0, max: frames.at(-1) ?? 0, over32: frames.filter((f) => f > 32).length, long: w.__long };
+  });
+  console.log('[r3] stream frames', JSON.stringify(stats));
+  expect(stats.count).toBeGreaterThan(120);
+  expect(stats.p95).toBeLessThanOrEqual(17.5);
+  expect(stats.over32).toBe(0);
+  expect(stats.long.filter((ms) => ms > 50)).toEqual([]);
+});

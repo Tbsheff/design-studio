@@ -130,6 +130,15 @@ export function ConversationContent({
         recompute();
         onScroll?.(event);
       },
+      onWheel: (event: React.WheelEvent<HTMLDivElement>) => {
+        if (event.deltaY < 0) wasAtBottomRef.current = false;
+      },
+      onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === "PageUp" || event.key === "ArrowUp" || event.key === "Home") wasAtBottomRef.current = false;
+      },
+      onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) wasAtBottomRef.current = false;
+      },
       className: cn(
         "overflow-y-auto overscroll-contain size-full",
         className,

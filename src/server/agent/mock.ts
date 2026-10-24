@@ -17,6 +17,18 @@ const DELTA_DELAY_MS = 20;
 const SLOW_STEP_MS = 1500;
 const STEP_TOOL_MS = 900;
 export const MOCK_BASH_OUTPUT = 'mock-bash-output.txt';
+const LONG_SECTIONS = 24;
+
+export function longReply(): string {
+  const sections: string[] = [];
+  for (let n = 1; n <= LONG_SECTIONS; n += 1) {
+    const code = Array.from({ length: 18 }, (_, line) => `  .card-${n}-${line} { padding: ${line * 2}px; border-radius: 8px; color: var(--ink); }`).join('\n');
+    sections.push(
+      `## Section ${n}: layout notes\n\nThe hero keeps one clear action and the cards keep a steady rhythm. This paragraph explains why the spacing scale matters for section ${n}, how the type sizes relate, and which tokens the page uses so that the reader can follow the change without opening the code.\n\n- Keep the heading short and specific.\n- Use one accent color for actions.\n- Check the mobile layout at 390 px.\n\n\`\`\`css\n${code}\n\`\`\`\n\nAfter the code, a short summary closes section ${n} and leads into the next one.`,
+    );
+  }
+  return sections.join('\n\n');
+}
 
 class MockAbortError extends Error {
   constructor() {
@@ -163,6 +175,15 @@ class MockSession {
       const chunk = words.slice(index, index + chunkSize).join(' ');
       this.sink.textDelta(index + chunkSize < words.length ? `${chunk} ` : chunk);
       await sleep(DELTA_DELAY_MS, this.signal);
+    }
+    this.sink.text(text);
+  }
+
+  async stream(text: string, chunkSize: number, delayMs: number): Promise<void> {
+    for (let index = 0; index < text.length; index += chunkSize) {
+      throwIfAborted(this.signal);
+      this.sink.textDelta(text.slice(index, index + chunkSize));
+      await sleep(delayMs, this.signal);
     }
     this.sink.text(text);
   }
@@ -547,6 +568,7 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
     await session.fakeTool('Glob', { pattern: '*.css' }, 'Glob *.css', STEP_TOOL_MS);
   }
   if (prompt.includes('[bash]')) await session.bash('npm test');
+  if (prompt.includes('[long]')) await session.stream(longReply(), 96, 8);
   if (prompt.includes('[think]')) {
     await session.think('Thinking A: the page needs a clear heading first.');
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');

@@ -63,7 +63,7 @@ interface RowGroup {
   durationMs: number | null;
 }
 
-function groupRepeats(tools: ToolRow[], workTree: string | null): RowGroup[] {
+export function groupRepeats(tools: ToolRow[], workTree: string | null): RowGroup[] {
   const groups: RowGroup[] = [];
   for (const tool of tools) {
     const last = groups.at(-1);

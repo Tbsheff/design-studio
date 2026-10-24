@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ProjectKind } from '../shared/contracts';
 import type { FilesChange } from './useStudioData';
 
@@ -69,12 +69,15 @@ export interface GateTarget {
   headVersionId: string | null;
 }
 
-export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange: FilesChange | null, hold: boolean): SwapGate {
+export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange: FilesChange | null, hold: boolean, liveDirectionId: string | null = null): SwapGate {
   const queue = useRef(new SwapQueue());
   const [version, bump] = useReducer((n: number) => n + 1, 0);
   const heads = useRef<Record<string, string>>({});
   const live = useRef(targets);
   live.current = targets;
+  const holdRef = useRef(hold);
+  holdRef.current = hold;
+  const [liveWait, setLiveWait] = useState(0);
   const gated = kind === 'html';
 
   const onSwapDone = useCallback((key: string) => {
@@ -83,10 +86,19 @@ export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange
 
   useEffect(() => {
     if (!gated || !lastChange) return;
+    if (lastChange.directionId === liveDirectionId && queue.current.hold(true)) setLiveWait((n) => n + 1);
     const hits = live.current.filter((target) => target.directionId === lastChange.directionId);
     for (const target of hits) queue.current.offer(target.key, lastChange);
     if (hits.length > 0) bump();
-  }, [gated, lastChange]);
+  }, [gated, lastChange, liveDirectionId]);
+
+  useEffect(() => {
+    if (liveWait === 0) return;
+    const timer = window.setTimeout(() => {
+      if (!holdRef.current && queue.current.hold(false)) bump();
+    }, SWAP_RELEASE_MS);
+    return () => window.clearTimeout(timer);
+  }, [liveWait]);
 
   const headKey = targets.map((target) => `${target.key}:${target.directionId}:${target.headVersionId ?? ''}`).join('|');
   useEffect(() => {

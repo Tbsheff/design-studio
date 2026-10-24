@@ -60,6 +60,12 @@ function onRadioGroupKey(event: KeyboardEvent<HTMLDivElement>) {
 function ViewportControls({ viewport }: { viewport: Viewport }) {
   const [customW, setCustomW] = useState(String(viewport.width));
   const [customH, setCustomH] = useState(String(viewport.height));
+  const [shown, setShown] = useState(`${viewport.width}x${viewport.height}`);
+  if (shown !== `${viewport.width}x${viewport.height}`) {
+    setShown(`${viewport.width}x${viewport.height}`);
+    setCustomW(String(viewport.width));
+    setCustomH(String(viewport.height));
+  }
 
   const applyCustom = () => {
     const w = Math.max(200, Math.min(4000, Number.parseInt(customW, 10) || viewport.width));

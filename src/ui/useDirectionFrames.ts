@@ -66,7 +66,7 @@ export function useDirectionFrames(o: Options) {
   const targets: GateTarget[] = resolved
     .filter((r) => r.directionId !== null && (r.directionId !== o.currentId || o.live))
     .map((r) => ({ key: r.frame.id, directionId: r.directionId as string, headVersionId: heads.get(r.directionId as string) ?? null }));
-  const gate = useSwapGate(o.kind, targets, o.lastChange, o.hold);
+  const gate = useSwapGate(o.kind, targets, o.lastChange, o.hold, o.live ? o.currentId : null);
 
   const slots: PassiveSlot[] = resolved.map(({ frame, directionId }) => {
     const token = tokens.current.get(frame.id) ?? randomToken();

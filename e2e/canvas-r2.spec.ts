@@ -181,6 +181,21 @@ test('R2-3: three frames keep their place after reload and Shift+1 fits all', as
   await expect(page.locator('[role="radiogroup"][aria-label="Viewport"] [aria-checked="true"]')).toHaveAttribute('aria-label', 'Mobile 390');
   await expect(frontFrame(page).locator('h1')).toHaveText('Frames Page');
   expect(await page.locator('.canvas-frame iframe').evaluateAll((els) => els.map((el) => el.getAttribute('width')).sort())).toEqual(['1440', '768']);
+
+  const tablet = page.locator('.canvas-frame[data-frame-id]').filter({ has: page.getByRole('button', { name: 'Tablet 768 frame', exact: true }) });
+  const beforeNudge = await tablet.getAttribute('style');
+  await page.getByRole('button', { name: 'Tablet 768 frame', exact: true }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => tablet.getAttribute('style')).not.toBe(beforeNudge);
+  const leftOf = (style: string | null) => Number(/left: (-?[\d.]+)px/.exec(style ?? '')?.[1]);
+  expect(leftOf(await tablet.getAttribute('style')) - leftOf(beforeNudge)).toBe(10);
+
+  await page.getByRole('button', { name: 'Desktop 1440 frame', exact: true }).hover();
+  await page.getByRole('button', { name: 'Remove Desktop 1440 frame', exact: true }).click();
+  await expect(page.locator('.frame-label')).toHaveCount(2);
+  await page.locator('.frame-undo').getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator('.frame-label')).toHaveCount(3);
+  await expect(page.locator('.frame-undo')).toHaveCount(0);
 });
 
 const COMMIT_PROBE = () => {
@@ -355,6 +370,9 @@ async function layersProject(page: Page) {
   if (!main) throw new Error('no direction');
   writeFileSync(path.join(main.workTree, 'index.html'), layersPage());
   await expect(frontFrame(page).locator('h1')).toHaveText('Layers Page');
+  await expect(page.locator('iframe.frame.back')).toHaveCount(0);
+  await page.waitForTimeout(400);
+  await expect(page.locator('iframe.frame.back')).toHaveCount(0);
   return api;
 }
 
@@ -446,6 +464,8 @@ test('R2-5: Enter, Shift+Enter and Tab move the selection, with focus in the pre
 
   await focusStudio(page);
   await frontFrame(page).locator('#b1').click();
+  const b1Box = await frontFrame(page).locator('#b1').boundingBox();
+  await expect.poll(async () => Math.abs(((await page.locator('.overlay .box.selected').boundingBox())?.x ?? 0) - (b1Box?.x ?? 0))).toBeLessThanOrEqual(2);
   await focusStudio(page);
   await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
   await page.keyboard.press('Tab');
@@ -460,6 +480,7 @@ test('R2-6: Alt over another element shows distances that match getBoundingClien
   await layersProject(page);
   await setSelectMode(page, true);
   await frontFrame(page).locator('#b1').click();
+  await expect(page.locator('.overlay .box.selected')).toHaveAttribute('style', /width: 120px; height: 80px/);
   const rects = await frontFrame(page).locator('body').evaluate(() => {
     const r = (id: string) => (document.getElementById(id) as HTMLElement).getBoundingClientRect();
     const b1 = r('b1');

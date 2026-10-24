@@ -5,7 +5,7 @@ import { uiStore, useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
 import { boundsOf, canAddFrame, frameName, type CanvasFrame } from '../canvasFrames';
 import { passiveSrc, unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
-import { AddFrameMenu, FrameLabel, PassiveFrame } from './CanvasFrames';
+import { AddFrameMenu, FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
@@ -256,7 +256,7 @@ export function Canvas(props: Props) {
   useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
-  const { labelProps, registerPassive, addFrameAt } = useFrameActions(canvasFrames, pz, artboardRef);
+  const { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo } = useFrameActions(canvasFrames, pz, artboardRef);
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
@@ -324,6 +324,7 @@ export function Canvas(props: Props) {
           <OtherFrames frames={layout.frames} active={active} src={passiveSrc(baseUrl, kind, live ? props.lastChange : null)} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         {capture && <div className="capture" data-testid="pan-capture" />}
+        <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
       </div>
       </div>
     </div>

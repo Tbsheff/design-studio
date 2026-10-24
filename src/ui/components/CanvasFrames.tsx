@@ -9,9 +9,12 @@ interface LabelProps {
   onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
   onActivate: (frame: CanvasFrame) => void;
   onRemove: (frame: CanvasFrame) => void;
+  onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
 }
 
-export function FrameLabel({ frame, active, removable, onPointerDown, onActivate, onRemove }: LabelProps) {
+const NUDGE: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+
+export function FrameLabel({ frame, active, removable, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
   const name = frameName(frame);
   return (
     <div className={`frame-label${active ? ' active' : ''}`} data-frame-id={frame.id}>
@@ -20,10 +23,15 @@ export function FrameLabel({ frame, active, removable, onPointerDown, onActivate
         className="frame-name"
         aria-pressed={active}
         aria-label={`${name} frame`}
-        data-tip={active ? 'Drag to move' : 'Click to edit, drag to move'}
+        data-tip={active ? 'Drag or use arrow keys to move' : 'Click to edit, drag to move'}
         onPointerDown={(e) => onPointerDown(e, frame)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          const step = NUDGE[e.key];
+          if (step) {
+            e.preventDefault();
+            const size = e.shiftKey ? 100 : 10;
+            onNudge(frame, step[0] * size, step[1] * size);
+          } else if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onActivate(frame);
           }
@@ -133,6 +141,23 @@ export function AddFrameMenu({ disabled, onAdd }: { disabled: boolean; onAdd: (s
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+export function FrameUndoBar({ onUndo, onDismiss }: { onUndo: (() => void) | null; onDismiss: () => void }) {
+  useEffect(() => {
+    if (!onUndo) return;
+    const timer = window.setTimeout(onDismiss, 8000);
+    return () => window.clearTimeout(timer);
+  }, [onUndo, onDismiss]);
+  if (!onUndo) return null;
+  return (
+    <div className="frame-undo" role="status">
+      <span>Frame removed.</span>
+      <button type="button" className="link" onClick={onUndo}>
+        Undo
+      </button>
     </div>
   );
 }

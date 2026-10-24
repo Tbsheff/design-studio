@@ -94,6 +94,7 @@ function LayerRow({ node, top, selected, collapsed, onToggle, onHover, onSelect 
       <span className="layers-tag">{node.tag}</span>
       {node.name && <span className="layers-name">{node.name}</span>}
       {node.text && <span className="layers-text">{node.text}</span>}
+      {node.hidden && <span className="layers-flag">Hidden</span>}
     </div>
   );
 }

@@ -277,20 +277,20 @@
   display: flex;
   align-items: center;
   gap: var(--s-1);
-  padding-bottom: var(--s-1);
+  padding-bottom: 0;
   transform: scale(var(--inv-zoom, 1));
   transform-origin: 0 100%;
   white-space: nowrap;
 }
 
 .frame-name {
-  height: 24px;
+  height: 28px;
   padding: 0 var(--s-1);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-3);
-  font: 500 var(--t-xs) / 24px var(--font);
+  font: 500 var(--t-xs) / 28px var(--font);
   font-variant-numeric: tabular-nums;
   cursor: grab;
   user-select: none;
@@ -319,8 +319,8 @@
 .frame-remove {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -460,14 +460,6 @@ body.frame-dragging .frame {
   min-height: 0;
   border-right: 1px solid var(--line);
   background: var(--surface);
-  animation: layers-in var(--dur-slow) var(--ease);
-}
-
-@keyframes layers-in {
-  from {
-    opacity: 0;
-    translate: -8px 0;
-  }
 }
 
 .layers-head {
@@ -558,7 +550,7 @@ body.frame-dragging .frame {
 }
 
 .layers-twisty .icon {
-  transition: rotate var(--dur) var(--ease);
+  transition: rotate var(--dur-fast) var(--ease);
 }
 
 .layers-twisty.open .icon {
@@ -637,11 +629,48 @@ body.frame-dragging .frame {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .layers {
-    animation: none;
-  }
-
   .layers-twisty .icon {
     transition: none;
   }
+}
+
+.layers-twisty {
+  position: relative;
+}
+
+.layers-twisty::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.frame-remove:active,
+.frame-name:active {
+  scale: 0.96;
+}
+
+.frame-remove {
+  transition-property: opacity, background-color, scale;
+}
+
+.layers-flag {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-3);
+}
+
+.frame-undo {
+  position: absolute;
+  left: 50%;
+  bottom: var(--s-4);
+  z-index: 4;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  font-size: var(--t-sm);
 }

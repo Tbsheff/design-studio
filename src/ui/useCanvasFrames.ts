@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { zoomKeyOf, type ProjectKind, type SelectionContext, type ZoomKey } from '../shared/contracts';
 import { activeFrame, addFrame, moveFrame, removeFrame, resizeActive, useCanvasLayout, viewportOf, type Box, type CanvasFrame, type CanvasLayout } from './canvasFrames';
 import { useDesktopCommand } from './desktop';
@@ -119,11 +119,26 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     frames.update((l) => addFrame(l, size));
   };
 
+  const [removed, setRemoved] = useState<CanvasLayout | null>(null);
   const removeFrameAt = (frame: CanvasFrame) => {
     pz.freeze();
     const next = removeFrame(layout, frame.id);
+    setRemoved(layout);
     frames.update(() => next);
     if (frame.id === layout.activeId) uiStore.set({ viewport: viewportOf(activeFrame(next)) });
+  };
+  const undoRemove = removed
+    ? () => {
+        frames.update(() => removed);
+        uiStore.set({ viewport: viewportOf(activeFrame(removed)) });
+        setRemoved(null);
+      }
+    : null;
+  const dismissUndo = useCallback(() => setRemoved(null), []);
+
+  const nudge = (frame: CanvasFrame, dx: number, dy: number) => {
+    pz.freeze();
+    frames.update((l) => moveFrame(l, frame.id, dx, dy));
   };
 
   const onFramePointerDown = (e: ReactPointerEvent, frame: CanvasFrame) => {
@@ -177,7 +192,8 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     onPointerDown: onFramePointerDown,
     onActivate: frames.activate,
     onRemove: removeFrameAt,
+    onNudge: nudge,
   });
 
-  return { labelProps, registerPassive, addFrameAt };
+  return { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo };
 }

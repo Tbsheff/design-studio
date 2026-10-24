@@ -42,29 +42,29 @@ All file paths are relative to the repo root. Status comes from a read-only code
 
 | Capability | Best in class: product and how | Design Studio status | P | Size |
 |---|---|---|---|---|
-| Ctrl-wheel and pinch zoom | pen.dev: Cmd+scroll, pinch, optional wheel-zooms setting [P1, P2] | has, `usePanZoom.ts:155`, iframe wheel forward `bridge.ts:262` | — | — |
-| Zoom keys | Figma and pen.dev: Shift+1 fit, Shift+2 selection [F2, P1]; Cmd+0 100% in pen.dev [P1]; Shift+0 100% in Figma [mem] | partial: Cmd+0 = fit, Cmd+1 = 100% (reverse of Figma), no Shift+1/2, no bare +/- (`shared/contracts.ts:535`) | P0 | S |
-| Menu zoom clash in desktop | — | bug risk: `desktop/menu.ts:105–107` registers resetZoom, zoomIn, zoomOut on the same keys as the canvas; untested | P0 | S |
-| Zoom to selection | Figma, pen.dev: Shift+2 [F2, P1] | missing | P0 | S |
-| Zoom % menu | Figma: type a %, presets 50/100/200 [F2] | has, `CanvasToolbar.tsx:ZoomControls`; empty "Fit" label bug `:184` | P2 | S |
-| Z-click and drag-to-zoom region | pen.dev: hold Z, click or drag a region [P1] | missing | P2 | S |
+| Ctrl-wheel and pinch zoom | pen.dev: Cmd+scroll, pinch, optional wheel-zooms setting [P1, P2] | has, `usePanZoom.ts` (wheel zoom commits state 160 ms after the last event), iframe wheel forward in `bridge.ts` | — | — |
+| Zoom keys | Figma and pen.dev: Shift+1 fit, Shift+2 selection [F2, P1]; Cmd+0 100% in pen.dev [P1]; Shift+0 100% in Figma [mem] | has (R2), Shift+1 fit, Shift+2 selection, Shift+0 and ⌘0 100%, ⌘1 fit, ⌘2 selection, bare + and −; studio and preview focus (`zoomKeyOf` in `shared/contracts.ts`) | P0 | S |
+| Menu zoom clash in desktop | — | fixed (R2), View menu items send `zoom` commands to the canvas; no Electron zoom roles; `webContents.getZoomFactor()` stays 1 (`desktop-native.spec.ts` R2-1) | P0 | S |
+| Zoom to selection | Figma, pen.dev: Shift+2 [F2, P1] | has (R2), Shift+2 and ⌘2 fit the selection, or the frame when nothing is selected | P0 | S |
+| Zoom % menu | Figma: type a %, presets 50/100/200 [F2] | has, `CanvasToolbar.tsx:ZoomControls`; the Fit option always has a label (R2) | P2 | S |
+| Z-click and drag-to-zoom region | pen.dev: hold Z, click or drag a region [P1] | partial (R2), Z+click 2×, Z+Alt+click 0.5×; no drag region | P2 | S |
 | Pan | pen.dev: Space-drag, middle mouse, Shift+scroll sideways [P1] | has, `usePanZoom.ts:162,180,203` | — | — |
 | Device sizes | pen.dev and Figma frame presets [mem] | has, `CanvasToolbar.tsx PRESETS` 1440/768/390/custom | — | — |
-| Many frames on one canvas | CD: canvas of artboards, drag, resize, align [CD2]; Figma, Paper, pen.dev | partial: one artboard; variations in a separate grid `VariationsGrid.tsx:216` | P0 | L |
+| Many frames on one canvas | CD: canvas of artboards, drag, resize, align [CD2]; Figma, Paper, pen.dev | partial (R2), add 1440/768/390 frames, drag by the name, arrow nudge, remove with Undo, kept per project; one frame is live and editable, the others are previews; no per-frame page yet | P0 | L |
 | Click select | all | has, V tool `Canvas.tsx:141`, `bridge.ts onClick` | — | — |
 | Shift multi-select | Figma [mem] | partial, `bridge.ts:721` adds, but Inspector edits one element | P1 | M |
 | Marquee select | pen.dev: Cmd+drag box-selects nested elements [P1] | missing | P2 | M |
-| Select parent / children | Figma, pen.dev: Enter children, Shift+Enter parent, Tab sibling [P1, mem] | missing, bridge handles only Escape `bridge.ts:727` | P1 | S |
-| Layers tree | Figma, pen.dev, Paper; CD: Cmd+\ panel with layer list [CD2] | missing | P0 | L |
+| Select parent / children | Figma, pen.dev: Enter children, Shift+Enter parent, Tab sibling [P1, mem] | has (R2), Enter, Shift+Enter, Tab, Shift+Tab in the preview and the studio; arrows and Enter in the layers tree | P1 | S |
+| Layers tree | Figma, pen.dev, Paper; CD: Cmd+\ panel with layer list [CD2] | partial (R2), read-only virtual tree of the live frame with hover, select, arrows, hidden flag (⌥1); rename, hide and reorder in R4 | P0 | L |
 | Hover outline | Figma; pen.dev color-codes components [P1] | has, `Canvas.tsx:234 .box.hover` | — | — |
-| Distance measurement | Figma: select, hold Alt, hover = red line and px [F3] | missing | P1 | M |
+| Distance measurement | Figma: select, hold Alt, hover = red line and px [F3] | has (R2), select, hold Alt, hover: red lines and px labels (`measure.ts`) | P1 | M |
 | Rulers and guides | Figma: Shift+R [mem]; CD: layout guides Shift+G [CD2] | missing | P2 | M |
 | Pixel grid | pen.dev: Cmd+' grid, Cmd+Shift+' snap [P1] | missing | P2 | S |
 | Snapping | pen.dev: edges, centers, equal spacing [P6]; Paper: snap to whole px [A6] | missing (needs drag-move first) | P2 | M |
 | Drag-move and resize elements | CD artboards [CD2]; Figma | missing, pointer events blocked `bridge.ts:792–799` | P1 | L |
 | Minimap | — (no leader ships one) | missing | P2 | S |
 | Frame thumbnails at low zoom | Paper: lighter memory, smoother pan in large files [A6] | missing | P2 | M |
-| Pan performance | pen.dev: WebGL, "thousands of layers stay smooth" (vendor claim) [P6] | partial: transform-only, `pointer-events:none` while panning `canvas.css:239`; but `setOffset` re-renders React on each pointermove `usePanZoom.ts:215`, no `will-change` | P0 | S |
+| Pan performance | pen.dev: WebGL, "thousands of layers stay smooth" (vendor claim) [P6] | has (R2), pan and wheel write the transform in a rAF with no React commit; 0 Canvas commits over a 3 s pan; headed p95 10.2 ms, max 10.4 ms on a 120 Hz display | P0 | S |
 
 ### 1.3 Chat and agent (benchmark: Claude Code)
 
@@ -252,16 +252,16 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Sample project | Home | Figma | P2 | S | R1-7 | — | A new user can try edits with no run cost |
 | Grid arrow keys | Home | Figma | P2 | S | R1-8 | — | Keyboard users |
 | Import from Figma | Home | Paper, pen.dev | P2 | L | defer | Paste a Figma frame; the preview shows it as HTML within 2% pixel diff of a Figma PNG export | Needs a Figma token and node mapping; low use for a local tool now |
-| Zoom keys like Figma, plus menu clash fix | Canvas | Figma, pen.dev | P0 | S | R2-1 | — | Users of every rival expect these keys; the clash can break zoom in desktop |
-| Pan with no React re-render | Canvas | pen.dev | P0 | S | R2-2 | — | Smooth pan |
-| Multi-frame canvas | Canvas | CD, Figma | P0 | L | R2-3 (frames, free place), R7-3 (variations and compare as frames) | — | All rivals show many screens at once |
-| Layers tree | Canvas | all | P0 | L | R2-4 (read-only, select, hover), R4-4 (rename, hide, reorder) | — | Nested and hidden elements cannot be selected without it |
-| Zoom to selection | Canvas | Figma | P0 | S | R2-1 | — | Core navigation |
-| Select parent / children keys | Canvas | Figma | P1 | S | R2-5 | — | Fast nested select |
-| Distance measurement | Canvas | Figma | P1 | M | R2-6 | — | Check spacing with no code |
+| Zoom keys like Figma, plus menu clash fix | Canvas | has (R2), Shift+1 fit, Shift+2 selection, Shift+0 and ⌘0 100%, ⌘1 fit, ⌘2 selection, bare + and −; studio and preview focus (`zoomKeyOf` in `shared/contracts.ts`) | P0 | S | R2-1 | — | Users of every rival expect these keys; the clash can break zoom in desktop |
+| Pan with no React re-render | Canvas | pen.dev | P0 | S | R2-2 (done) | — | Smooth pan |
+| Multi-frame canvas | Canvas | CD, Figma | P0 | L | R2-3 (done), R7-3 (variations and compare as frames) | — | All rivals show many screens at once |
+| Layers tree | Canvas | partial (R2), read-only virtual tree of the live frame with hover, select, arrows, hidden flag (⌥1); rename, hide and reorder in R4 | P0 | L | R2-4 (done), R4-4 (rename, hide, reorder) | — | Nested and hidden elements cannot be selected without it |
+| Zoom to selection | Canvas | has (R2), Shift+2 and ⌘2 fit the selection, or the frame when nothing is selected | P0 | S | R2-1 | — | Core navigation |
+| Select parent / children keys | Canvas | has (R2), Enter, Shift+Enter, Tab, Shift+Tab in the preview and the studio; arrows and Enter in the layers tree | P1 | S | R2-5 | — | Fast nested select |
+| Distance measurement | Canvas | has (R2), select, hold Alt, hover: red lines and px labels (`measure.ts`) | P1 | M | R2-6 | — | Check spacing with no code |
 | Drag resize | Canvas | CD, Figma | P1 | L | R4-4 | — | Direct control of size |
 | Free drag-move of elements | Canvas | CD, Figma | P2 | L | defer | Drag an absolute element 40 px; `left` in the source changes by 40 px | Most generated layouts are flow layouts; reorder (R4-4) covers the common case |
-| Z-click zoom | Canvas | pen.dev | P2 | S | R2-7 | — | Small speed gain |
+| Z-click zoom | Canvas | pen.dev | P2 | S | R2-7 (done) | — | Small speed gain |
 | Marquee select | Canvas | pen.dev | P2 | M | defer | Drag a box over 3 cards; all 3 are selected | Low value in flow layouts |
 | Rulers and guides | Canvas | Figma, CD | P2 | M | defer | Shift+R shows rulers; drag from a ruler makes a guide that survives reload | Measurement (R2-6) gives most of the value |
 | Pixel grid and snapping | Canvas | pen.dev, Paper | P2 | M | defer | At 800% a 1 px grid shows; a resize snaps to whole px | Needs free drag first |

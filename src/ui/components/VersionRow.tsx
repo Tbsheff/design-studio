@@ -210,7 +210,7 @@ export function VersionRow(props: VersionRowProps) {
                 }
               }}
             >
-              <span title={v.name ? `${v.name} (${autoTitle(v, props.index)}) · Double-click to rename` : `${v.meta.prompt ?? v.title} · Double-click to rename`}>{title}</span>
+              <span title={v.meta.prompt ?? v.title}>{title}</span>
             </button>
           )}
           {isHead && <span className="badge accent">Head</span>}

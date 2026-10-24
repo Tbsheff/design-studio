@@ -26,7 +26,7 @@ function useInView(ref: RefObject<HTMLElement | null>, enabled: boolean): boolea
 }
 
 export function VersionThumb({ projectId, versionId, active, label, onOpen }: Props) {
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLSpanElement>(null);
   const [result, setResult] = useState<ThumbResult | undefined>(() => cachedThumb(projectId, versionId));
   const [loaded, setLoaded] = useState(false);
   const inView = useInView(ref, active && result === undefined);
@@ -36,8 +36,8 @@ export function VersionThumb({ projectId, versionId, active, label, onOpen }: Pr
   }, [inView, result, projectId, versionId]);
   const state = result === undefined ? 'loading' : result === null ? 'none' : loaded ? 'ready' : 'loading';
   return (
-    <button ref={ref} type="button" className={`version-thumb ${state}`} data-testid="version-thumb" data-state={state} tabIndex={-1} aria-label={`Open ${label}`} onClick={onOpen}>
+    <span ref={ref} className={`version-thumb ${state}`} data-testid="version-thumb" data-state={state} aria-hidden="true" title={`Open ${label}`} onClick={onOpen}>
       {result ? <img src={result} alt="" draggable={false} onLoad={() => setLoaded(true)} /> : result === null ? <Icon name="file" size={14} /> : null}
-    </button>
+    </span>
   );
 }

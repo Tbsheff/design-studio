@@ -61,6 +61,7 @@ async function createdProject(api: StudioApi, before: Set<string>): Promise<Proj
 }
 
 test('new design system: website + DESIGN.md draft, kit page, save back, then use it in a new project', async ({ page }) => {
+  test.skip(Boolean(process.env.STUDIO_E2E_APP), 'the packaged app never allows a loopback fetch');
   const api = await openHome(page);
   const before = new Set((await api.projects()).map((project) => project.id));
   await openNewPage(page);

@@ -8,7 +8,9 @@ const RGB_TRIPLE = /^(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})$/;
 const OKLCH_BARE = /^(\d+(?:\.\d+)?%?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/;
 const COLOR_IN_TEXT = /#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|\b(?:oklch|oklab|rgba?|hsla?|lab|lch)\([^()]{3,80}\)/g;
 
-const SAFE_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 .\-_]{0,59}$/;
+const SAFE_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 .\-_]{0,31}$/;
+const MAX_FAMILY_WORDS = 4;
+const MAX_STACK = 4;
 const GENERIC_FAMILIES = new Set(['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded', 'math', 'emoji']);
 
 function round(value: number, places: number): string {
@@ -86,18 +88,23 @@ export function familiesOf(stack: string): string[] {
   return stack
     .split(',')
     .map((part) => part.trim().replace(/^["']|["']$/g, '').trim())
-    .filter((name) => name !== '' && SAFE_FAMILY.test(name));
+    .filter((name) => name !== '' && SAFE_FAMILY.test(name) && name.split(/\s+/).length <= MAX_FAMILY_WORDS);
 }
 
 export function primaryFamily(stack: string): string | null {
   return familiesOf(stack).find((name) => !GENERIC_FAMILIES.has(name.toLowerCase()) && !name.startsWith('-')) ?? null;
 }
 
+const FALLBACK_FAMILIES = new Set(['blinkmacsystemfont', 'segoe ui', 'roboto', 'helvetica neue', 'helvetica', 'arial', 'noto sans', 'georgia', 'times new roman', 'times', 'menlo', 'monaco', 'consolas', 'courier new', 'sfmono-regular', 'liberation mono', 'sf mono']);
+
 export function fontStack(stack: string, generic: 'sans-serif' | 'serif' | 'monospace'): string | null {
   const families = familiesOf(stack).filter((name) => !name.startsWith('-') && !/^(var|inherit|initial)$/i.test(name));
-  if (families.length === 0 || !families.some((name) => !GENERIC_FAMILIES.has(name.toLowerCase()))) return null;
-  const quoted = families.slice(0, 6).map((name) => (GENERIC_FAMILIES.has(name.toLowerCase()) ? name : `'${name}'`));
-  if (!families.some((name) => GENERIC_FAMILIES.has(name.toLowerCase()))) quoted.push(generic);
+  const primary = families.find((name) => !GENERIC_FAMILIES.has(name.toLowerCase()));
+  if (!primary) return null;
+  const rest = families.filter((name) => name !== primary && (GENERIC_FAMILIES.has(name.toLowerCase()) || FALLBACK_FAMILIES.has(name.toLowerCase())));
+  const kept = [primary, ...rest].slice(0, MAX_STACK);
+  const quoted = kept.map((name) => (GENERIC_FAMILIES.has(name.toLowerCase()) ? name : `'${name}'`));
+  if (!kept.some((name) => GENERIC_FAMILIES.has(name.toLowerCase()))) quoted.push(generic);
   return quoted.join(', ');
 }
 
@@ -125,11 +132,40 @@ export function lengthPx(value: string): number {
   return match[2] === 'px' ? size : size * 16;
 }
 
+function splitOutsideParens(text: string, separator: RegExp): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const char of text) {
+    if (char === '(') depth += 1;
+    if (char === ')') depth = Math.max(0, depth - 1);
+    if (depth === 0 && separator.test(char)) {
+      if (current.trim() !== '') parts.push(current.trim());
+      current = '';
+    } else current += char;
+  }
+  if (current.trim() !== '') parts.push(current.trim());
+  return parts;
+}
+
+const SHADOW_LENGTH = /^-?(\d+(\.\d+)?|\.\d+)(px|rem|em)?$/;
+
+function shadowLayer(layer: string): string | null {
+  const parts = splitOutsideParens(layer, /\s/);
+  const inset = parts.filter((part) => part.toLowerCase() === 'inset').length;
+  const rest = parts.filter((part) => part.toLowerCase() !== 'inset');
+  const lengths = rest.filter((part) => SHADOW_LENGTH.test(part));
+  const colors = rest.filter((part) => !SHADOW_LENGTH.test(part));
+  if (inset > 1 || lengths.length < 2 || lengths.length > 4 || colors.length !== 1 || !parse(colors[0]!)) return null;
+  return parts.join(' ');
+}
+
 export function normalizeShadow(raw: string): string | null {
   const text = raw.trim();
-  if (text === '' || /none/i.test(text) || text.length > 300 || /[;{}<>\\]|var\(|url\(/i.test(text)) return null;
-  if (!/\d/.test(text)) return null;
-  return text.replace(/\s+/g, ' ');
+  if (text === '' || text.length > 300 || /[;{}<>\\]|var\(|url\(/i.test(text)) return null;
+  const layers = splitOutsideParens(text, /,/).map(shadowLayer);
+  if (layers.length === 0 || layers.length > 4 || layers.some((layer) => layer === null)) return null;
+  return layers.join(', ');
 }
 
 export function safeGoogleFontsUrl(raw: string): string | null {

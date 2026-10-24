@@ -121,7 +121,7 @@ export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: 
   const dialogs = (
     <>
       {dialog === 'change' && <ChangePackDialog currentId={system.packId} onClose={() => setDialog(null)} onApply={actions.onApply} />}
-      {dialog === 'save' && <SavePackDialog defaultName={name} onClose={() => setDialog(null)} onSave={actions.onSave} />}
+      {dialog === 'save' && <SavePackDialog defaultName={name} updating={pack?.source === 'user'} onClose={() => setDialog(null)} onSave={actions.onSave} />}
     </>
   );
   if (!system.directionId) return null;

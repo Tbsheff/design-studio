@@ -65,11 +65,12 @@ export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
 
 interface SaveProps {
   defaultName: string;
+  updating: boolean;
   onClose: () => void;
   onSave: (name: string) => Promise<void>;
 }
 
-export function SavePackDialog({ defaultName, onClose, onSave }: SaveProps) {
+export function SavePackDialog({ defaultName, updating, onClose, onSave }: SaveProps) {
   const [name, setName] = useState(defaultName);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +100,11 @@ export function SavePackDialog({ defaultName, onClose, onSave }: SaveProps) {
         <div className="modal-head">
           <div className="titles">
             <h2>Save to library</h2>
-            <p>Saves this direction's tokens and DESIGN.md as a design system you can use in other projects.</p>
+            <p>
+              {updating
+                ? `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`
+                : "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects."}
+            </p>
           </div>
           <button type="button" className="icon-btn" aria-label="Close Save to library" onClick={onClose} disabled={busy}>
             <Icon name="close" />

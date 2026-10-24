@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { customAlphabet, nanoid } from 'nanoid';
 import { DEFAULT_SETTINGS, LEGACY_DEFAULT_BUDGET_USD, SETTINGS_VERSION } from '../../shared/contracts.js';
-import type { Attachment, Direction, Project, ProjectKind, ProjectSettings } from '../../shared/contracts.js';
+import type { Attachment, Direction, Project, ProjectKind, ProjectSettings, ProjectThumbnail } from '../../shared/contracts.js';
 import type { ProjectStore, ServerConfig, VersionStore } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from './errors.js';
 import { MAX_SLUG_SUFFIX, slugCandidate, slugify } from '../../shared/folders.js';
@@ -49,6 +49,12 @@ export interface StudioProjectStore extends ProjectStore {
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;
   discardCreated(projectId: string): Promise<void>;
+  rename(projectId: string, name: string): Promise<Project>;
+  setThumbnail(projectId: string, thumbnail: ProjectThumbnail): Promise<void>;
+  withLock<T>(projectId: string, task: () => Promise<T>): Promise<T>;
+  linkModules(workTree: string, sourceModules: string): Promise<void>;
+  reserveFolder(parentPath: string, name: string): Promise<string>;
+  writeRaw(project: Project): Promise<void>;
 }
 
 function migrateSettings(project: Pick<Project, 'settings' | 'settingsVersion'>): ProjectSettings {
@@ -438,6 +444,38 @@ export function createProjectStore(
         return project;
       });
     },
+
+    rename(projectId: string, name: string): Promise<Project> {
+      const trimmed = typeof name === 'string' ? name.trim() : '';
+      if (trimmed === '') throw new BadRequestError('name is required');
+      if (trimmed.length > 120) throw new BadRequestError('name must be 120 characters or less');
+      return lock(projectId, async () => {
+        const project = await readProject(projectId);
+        project.name = trimmed;
+        project.updatedAt = Date.now();
+        await writeProject(project);
+        return project;
+      });
+    },
+
+    setThumbnail(projectId: string, thumbnail: ProjectThumbnail): Promise<void> {
+      return lock(projectId, async () => {
+        if (!existsSync(projectFile(projectId))) return;
+        const project = await readProject(projectId);
+        project.thumbnail = thumbnail;
+        await writeProject(project);
+      });
+    },
+
+    withLock: (projectId, task) => lock(projectId, task),
+
+    linkModules: linkNodeModules,
+
+    async reserveFolder(parentPath: string, name: string): Promise<string> {
+      return makeNewSubfolder(await resolveUserFolder(parentPath), slugify(name));
+    },
+
+    writeRaw: (project) => writeProject(project),
 
     setPackId(projectId: string, packId: string | null): Promise<Project> {
       return lock(projectId, async () => {

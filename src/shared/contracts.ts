@@ -141,6 +141,38 @@ export interface Project {
   settings: ProjectSettings;
   settingsVersion?: number;
   directions: Direction[];
+  thumbnail?: ProjectThumbnail | null;
+}
+
+export interface ProjectThumbnail {
+  versionId: string;
+  at: number;
+}
+
+export interface Starter {
+  id: string;
+  name: string;
+  description: string;
+  prompt: string;
+}
+
+export interface ClarifyQuestion {
+  id: string;
+  question: string;
+  options: string[];
+}
+
+export interface ReferencePage {
+  url: string;
+  title: string;
+  text: string;
+  error?: string;
+}
+
+export interface TrashedProject {
+  trashId: string;
+  projectId: string;
+  name: string;
 }
 
 export type VersionKind = 'init' | 'run' | 'undo' | 'restore' | 'keep' | 'fork' | 'manual';
@@ -206,6 +238,7 @@ export interface RunRequest {
   attachmentIds?: string[];
   comments?: RunComment[];
   task?: RunTask;
+  referencePages?: ReferencePage[];
 }
 
 export type CommentStatus = 'draft' | 'queued' | 'sent' | 'resolved' | 'orphaned';

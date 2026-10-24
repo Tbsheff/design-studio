@@ -51,6 +51,10 @@ import { createWorkspaceStore, type WorkspaceStore } from '../store/workspaces.j
 import { createDefaultFolderStore, type DefaultFolderStore } from '../store/default-folder.js';
 import { createFolderPicker, type FolderPicker } from './pick-folder.js';
 import { nameFromPrompt } from '../../shared/folders.js';
+import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
+import { createProjectLibrary } from '../store/project-library.js';
+import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
+import { registerHomeRoutes } from './home-routes.js';
 
 interface AppDeps {
   config: ServerConfig;
@@ -65,6 +69,7 @@ interface AppDeps {
   workspaces?: WorkspaceStore;
   defaultFolder?: DefaultFolderStore;
   folderPicker?: FolderPicker;
+  thumbnails?: ThumbnailService;
 }
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
@@ -266,9 +271,9 @@ export function createApp(deps: AppDeps): Hono {
     return updated;
   };
 
-  const commitInit = async (project: Project, title?: string): Promise<Project> => {
+  const commitInit = async (project: Project, title?: string, kind: 'init' | 'manual' = 'init'): Promise<Project> => {
     const main = projects.mainDirection(project);
-    const version = await versions.commit(project, main, title ?? (project.imported && !project.imported.created ? 'Imported' : 'Starter template'), { kind: 'init' });
+    const version = await versions.commit(project, main, title ?? (project.imported && !project.imported.created ? 'Imported' : 'Starter template'), { kind });
     if (version) await recordVersion(project, main, version);
     return projects.get(project.id);
   };
@@ -324,6 +329,13 @@ export function createApp(deps: AppDeps): Hono {
       }
     }
     return null;
+  };
+
+  const addParentFolder = async (parentPath: string | undefined, created: Project): Promise<void> => {
+    const parent = path.dirname(projects.mainDirection(created).workTree);
+    if (parentPath !== undefined && parent !== (await defaultFolder.current())) {
+      await workspaces.add({ path: parent }).catch((error: unknown) => console.error('[http] could not save the parent folder', error));
+    }
   };
 
   const watchDirection = (project: Project, direction: Direction): void => {
@@ -386,17 +398,16 @@ export function createApp(deps: AppDeps): Hono {
     const shouldStartRun = parseStartRun(body.startRun);
     const parentPath = optionalString(body, 'parentPath');
     const name = optionalString(body, 'name') ?? nameFromPrompt(prompt);
+    const referenceUrls = parseReferenceUrls(body.referenceUrls, config.fetchAllowLoopback === true);
     const created = await projects.createInFolder({ parentPath: parentPath ?? (await defaultFolder.ensure()), name, kind, settings });
-    const parent = path.dirname(projects.mainDirection(created).workTree);
-    if (parentPath !== undefined && parent !== (await defaultFolder.current())) {
-      await workspaces.add({ path: parent }).catch((error: unknown) => console.error('[http] could not save the parent folder', error));
-    }
+    await addParentFolder(parentPath, created);
     await versions.ensureRepo(created);
     const project = await prepareCreated(created, pack, designMd);
     const main = projects.mainDirection(project);
     watchDirection(project, main);
     if (!shouldStartRun) return c.json({ project, runId: null });
-    const runId = await startRun(project, main, { prompt, mode: 'edit', ...(level ? { level } : {}) });
+    const referencePages = await Promise.all(referenceUrls.map((url) => captureReferencePage(url, config.fetchAllowLoopback === true)));
+    const runId = await startRun(project, main, { prompt, mode: 'edit', ...(level ? { level } : {}), ...(referencePages.length > 0 ? { referencePages } : {}) });
     return c.json({ project, runId });
   });
 
@@ -870,6 +881,19 @@ export function createApp(deps: AppDeps): Hono {
     watch: watchDirection,
     readBody,
     allowLoopback: config.fetchAllowLoopback === true,
+  });
+
+  registerHomeRoutes(app, {
+    config,
+    projects,
+    versions,
+    library: createProjectLibrary({ config, projects, versions, preview, runner, defaultFolder: () => defaultFolder.ensure() }),
+    thumbnails: deps.thumbnails ?? createThumbnailService({ projects, preview }),
+    defaultFolder,
+    readBody,
+    commitInit,
+    watch: (project) => watchDirection(project, projects.mainDirection(project)),
+    addParentFolder,
   });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });

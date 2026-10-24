@@ -3,6 +3,7 @@ import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { Attachment, RunComment, SelectionContext } from '../../shared/contracts.js';
 import type { AgentRunContext } from '../types.js';
 import { referenceBlock, variationBlock } from '../variations/message.js';
+import { referencePagesBlock } from '../reference-page.js';
 
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const;
 type ImageMime = (typeof IMAGE_MIMES)[number];
@@ -71,6 +72,8 @@ export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' 
   if (variation) blocks.push(variation);
   const reference = referenceBlock(ctx.request.reference);
   if (reference) blocks.push(reference);
+  const pages = referencePagesBlock(ctx.request.referencePages);
+  if (pages) blocks.push(pages);
   const selection = ctx.request.selection ?? [];
   if (selection.length) {
     blocks.push(['<selected-elements>', ...selection.map(formatSelection), '</selected-elements>'].join('\n'));

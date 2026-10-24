@@ -12,6 +12,7 @@ import { createProjectStore } from './store/projects.js';
 import { watchParent } from './parent-watch.js';
 import { desktopSender, linkDesktop } from './desktop-link.js';
 import { createVersionStore } from './store/versions.js';
+import { createThumbnailService, observeBus, wantsThumbnail } from './thumbnails.js';
 
 async function watchExisting(
   preview: ReturnType<typeof createPreviewService>,
@@ -54,11 +55,16 @@ async function main(): Promise<void> {
   const projects = createProjectStore(config, versions);
   const desktop = desktopSender();
   const baseBus = createEventBus(config.dataDir);
-  const bus = desktop ? linkDesktop(baseBus, desktop, { token: config.studioToken, dataDir: config.dataDir }) : baseBus;
+  const observed = observeBus(desktop ? linkDesktop(baseBus, desktop, { token: config.studioToken, dataDir: config.dataDir }) : baseBus);
+  const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
   const runner = createAgentRunner({ config, bus, projects, versions, preview });
+  const thumbnails = createThumbnailService({ projects, preview });
+  observed.observe((event) => {
+    if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
+  });
 
-  const app = createApp({ config, bus, projects, versions, runner, preview });
+  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails });
   const server = serve({ fetch: app.fetch, port: config.studioPort, hostname: '127.0.0.1' }, () => {
     console.log(`Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`);
   });

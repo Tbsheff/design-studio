@@ -13,6 +13,7 @@ const preferencesSchema = z
   .object({
     version: z.literal(1),
     projectsDir: z.string().min(1).max(MAX_PATH_LENGTH).refine((value) => path.isAbsolute(value), 'must be absolute').optional(),
+    onboardingDismissed: z.boolean().optional(),
   })
   .strict();
 
@@ -29,6 +30,8 @@ export interface DefaultFolderStore {
   current(): Promise<string>;
   ensure(): Promise<string>;
   set(raw: string): Promise<string>;
+  onboardingDismissed(): Promise<boolean>;
+  dismissOnboarding(): Promise<void>;
 }
 
 async function presentPath(target: string): Promise<string> {
@@ -98,6 +101,14 @@ export function createDefaultFolderStore(dataDir: string, fallback: string): Def
       if (insideDataDir(path.resolve(target))) throw new BadRequestError('the default projects folder cannot be inside the studio data dir');
       await mkdir(target, { recursive: true });
       return realpath(target);
+    },
+
+    async onboardingDismissed(): Promise<boolean> {
+      return (await read()).onboardingDismissed === true;
+    },
+
+    dismissOnboarding(): Promise<void> {
+      return lock('file', async () => write({ ...(await read()), version: 1, onboardingDismissed: true }));
     },
 
     async set(raw: string): Promise<string> {

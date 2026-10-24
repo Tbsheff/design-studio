@@ -13,10 +13,20 @@ export interface Candidate {
   evidence: string;
 }
 
+export interface ExtraToken {
+  group: string;
+  name: string;
+  type: 'color' | 'dimension' | 'fontFamily' | 'shadow';
+  value: string;
+  dark?: string;
+  evidence: string;
+}
+
 export interface Harvest {
   source: SourceKind;
   label: string;
   candidates: Candidate[];
+  extras?: ExtraToken[];
   googleFontsUrl?: string;
   darkHint?: boolean;
 }

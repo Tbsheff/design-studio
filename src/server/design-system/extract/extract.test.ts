@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { REQUIRED_TOKENS } from '../../../shared/contracts.js';
-import { compileTokens } from '../compile.js';
+import { compileTokens, parseTokenFile } from '../compile.js';
 import { buildPackFiles } from '../library.js';
 import { packRegistry } from '../packs.js';
 import type { LoadedPack } from '../packs.js';
@@ -355,6 +355,51 @@ describe('draft composition', () => {
     expect(JSON.parse(draft.files.find((file) => file.path === 'source/coverage.json')!.content)).toMatchObject({ version: 1, basePackId: 'modern-minimal' });
     expect(draft.kitHtml).toContain('href="design-system/tokens.css"');
     expect(draft.kitHtml).not.toMatch(/#[0-9a-f]{6}|oklch\(/i);
+  });
+
+  it('turns a globals.css with 10 custom properties into 10 tokens of the right types', async () => {
+    const css = `@import "tailwindcss";
+:root {
+  --background: #fbfaf7;
+  --foreground: #1c1917;
+  --primary: #0f766e;
+  --radius: 10px;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --brand-sand: #e7d8c1;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.12);
+  --breakpoint-md: 768px;
+  --spacing-gutter: 24px;
+  --text-hero: 56px;
+}
+.dark { --background: #0c0a09; --foreground: #fafaf9; --brand-sand: #57483a; }
+body { color: var(--foreground); }
+`;
+    const draft = await buildDraft(parseDraftRequest({ tokensFile: { name: 'globals.css', text: css } }, 0), deps(), { allowLoopback: false, imageCount: 0 });
+    expect(draft.name).toBe('Globals');
+    const files = buildPackFiles('user-globals', draft.pack);
+    const compiled = compileTokens(parseTokenFile(files.tokensText).file!, { mode: 'light' });
+    expect(compiled.errors).toEqual([]);
+    const byVar = new Map(compiled.entries.map((entry) => [entry.cssVar, entry]));
+    const expected: Array<[string, string, string]> = [
+      ['--background', '--bg', 'color'],
+      ['--foreground', '--fg', 'color'],
+      ['--primary', '--primary', 'color'],
+      ['--radius', '--radius-md', 'dimension'],
+      ['--font-sans', '--font-body', 'fontFamily'],
+      ['--brand-sand', '--brand-sand', 'color'],
+      ['--shadow-card', '--shadow-card', 'shadow'],
+      ['--breakpoint-md', '--breakpoint-md', 'dimension'],
+      ['--spacing-gutter', '--space-gutter', 'dimension'],
+      ['--text-hero', '--text-hero', 'dimension'],
+    ];
+    for (const [source, cssVar, type] of expected) expect(byVar.get(cssVar)?.type, `${source} -> ${cssVar}`).toBe(type);
+    expect(byVar.get('--bg')?.value).toBe(normalizeColor('#fbfaf7'));
+    expect(byVar.get('--brand-sand')?.darkValue).toBe(normalizeColor('#57483a'));
+    expect(byVar.get('--breakpoint-md')?.path).toBe('breakpoint.md');
+    expect(byVar.get('--breakpoint-md')?.value).toBe('768px');
+    expect(byVar.get('--radius-md')?.value).toBe('10px');
+    const coverage = JSON.parse(draft.files.find((file) => file.path === 'source/coverage.json')!.content) as { sources: Array<{ found: number }> };
+    expect(coverage.sources[0]?.found).toBe(10);
   });
 
   it('composes a template DESIGN.md with to-do marks when none is pasted, and marks tokens-file drafts imported', async () => {

@@ -22,7 +22,7 @@ export const DARK_SELECTOR = ':root[data-theme="dark"],\n.dark';
 export const SYSTEM_DARK_MEDIA = '@media (prefers-color-scheme: dark)';
 const SYSTEM_DARK_SELECTOR = ':root:not([data-theme="light"])';
 
-const CORE_GROUPS = ['color', 'font', 'text', 'space', 'radius', 'shadow'] as const;
+const CORE_GROUPS = ['color', 'font', 'text', 'space', 'radius', 'shadow', 'breakpoint'] as const;
 const GROUP_DEFAULT_TYPES: Record<string, TokenType> = {
   color: 'color',
   font: 'fontFamily',
@@ -30,6 +30,7 @@ const GROUP_DEFAULT_TYPES: Record<string, TokenType> = {
   space: 'dimension',
   radius: 'dimension',
   shadow: 'shadow',
+  breakpoint: 'dimension',
 };
 const TOKEN_TYPES = new Set<TokenType>(['color', 'dimension', 'fontFamily', 'fontWeight', 'number', 'shadow', 'duration']);
 const NAME_PATTERN = /^[A-Za-z0-9_-]+$/;

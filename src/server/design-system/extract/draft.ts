@@ -99,7 +99,7 @@ export function draftName(request: DraftRequest): string {
   if (given) return given;
   const fromUrl = request.urls.map(nameFromUrl).find((name): name is string => name !== null);
   const fromMd = request.designMd ? firstHeading(request.designMd) : null;
-  const fromFile = request.tokensFile ? titleCase(path.basename(request.tokensFile.name).replace(/\.(tokens\.)?json$/i, '').replace(/[^\w\s-]/g, ' ').trim()) || null : null;
+  const fromFile = request.tokensFile ? titleCase(path.basename(request.tokensFile.name).replace(/\.(tokens\.)?(json|css)$/i, '').replace(/[^\w\s-]/g, ' ').trim()) || null : null;
   const fromFolder = request.folderPath ? titleCase(path.basename(request.folderPath).replace(/[^\w\s-]/g, ' ').trim()) || null : null;
   return (fromUrl ?? fromMd ?? nameFromBrief(request.brief) ?? fromFile ?? fromFolder ?? 'New design system').slice(0, 80);
 }
@@ -185,7 +185,7 @@ function readTokensFile(file: NonNullable<DraftRequest['tokensFile']>, out: Harv
   try {
     const harvest = harvestTokensFile(file.text, label);
     out.harvests.push(harvest);
-    out.reports.push({ kind: 'tokens-file', label, ok: true, found: harvest.candidates.length });
+    out.reports.push({ kind: 'tokens-file', label, ok: true, found: harvest.candidates.length + (harvest.extras?.length ?? 0) });
   } catch (error) {
     if (error instanceof TokensFileError) throw new BadRequestError(`${label}: ${error.message}`);
     throw error;

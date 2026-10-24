@@ -1,7 +1,8 @@
 import { matchName } from './names.js';
 import type { ValueKind } from './names.js';
 import type { Candidate, Harvest } from './types.js';
-import { candidate } from './vars.js';
+import { candidate, harvestCssVars } from './vars.js';
+import { customProperties, parseCss } from './css.js';
 
 interface FlatToken {
   path: string[];
@@ -153,7 +154,21 @@ export function parseTokensJson(text: string): Record<string, unknown> {
   return raw;
 }
 
+function harvestCssFile(text: string, label: string): Harvest {
+  const found = harvestCssVars(customProperties(parseCss(text)), 'tokens-file', label);
+  if (found.candidates.length === 0 && found.extras.length === 0) throw new TokensFileError('the CSS file has no custom properties in :root, @theme or a dark block');
+  return { source: 'tokens-file', label, candidates: found.candidates, extras: found.extras };
+}
+
+export function isCssTokensFile(name: string, text: string): boolean {
+  return /\.css$/i.test(name) || (!/^\s*[{[]/.test(text) && /--[\w-]+\s*:/.test(text));
+}
+
 export function harvestTokensFile(text: string, label: string): Harvest {
+  return isCssTokensFile(label, text) ? harvestCssFile(text, label) : harvestJsonTokens(text, label);
+}
+
+function harvestJsonTokens(text: string, label: string): Harvest {
   const file = parseTokensJson(text);
   const studio = isTokensStudio(file);
   const flat: FlatToken[] = [];

@@ -128,7 +128,7 @@ function TokensDrop({ file, onChange }: { file: File | null; onChange: (file: Fi
       onDragLeave={() => setOver(false)}
       onDrop={onDrop}
     >
-      <input ref={input} type="file" accept=".json,application/json" hidden aria-label="Tokens file upload" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+      <input ref={input} type="file" accept=".json,application/json,.css,text/css" hidden aria-label="Tokens file upload" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
       {file ? (
         <div className="nds-row">
           <span className="nds-file truncate">{file.name}</span>
@@ -141,7 +141,7 @@ function TokensDrop({ file, onChange }: { file: File | null; onChange: (file: Fi
           Choose tokens file…
         </button>
       )}
-      {!file && <span className="hint">Or drop a DTCG or Tokens Studio JSON file here.</span>}
+      {!file && <span className="hint">Or drop a DTCG or Tokens Studio JSON file, or a CSS file like globals.css.</span>}
     </div>
   );
 }
@@ -285,7 +285,7 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
           <Section title="Brief" hint="A few words about the brand and mood.">
             <textarea aria-label="Brief" rows={3} maxLength={4000} placeholder="Calm, precise banking app for small teams" value={form.brief} onChange={(e) => set({ brief: e.target.value })} />
           </Section>
-          <Section title="Tokens file" hint="DTCG or Tokens Studio JSON. It wins over every other source.">
+          <Section title="Tokens file" hint="DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.">
             <TokensDrop file={form.tokensFile} onChange={(tokensFile) => set({ tokensFile })} />
           </Section>
           <Section title="Code folder" hint="Read only. The studio scans CSS, SCSS and Tailwind config files.">

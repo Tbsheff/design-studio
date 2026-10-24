@@ -1,7 +1,7 @@
 import type { PackManifest } from '../../../shared/contracts.js';
 import type { LoadedPack } from '../packs.js';
 import { requiredPaths } from './names.js';
-import type { Candidate, Coverage, CoverageEntry, CoverageGrade, Harvest, SourceKind, SourceReport } from './types.js';
+import type { Candidate, Coverage, CoverageEntry, CoverageGrade, ExtraToken, Harvest, SourceKind, SourceReport } from './types.js';
 import { contrast, googleFontsUrlFor, lightnessOf, primaryFamily, readableOn, shiftLightness } from './values.js';
 
 export const SOURCE_ORDER: SourceKind[] = ['tokens-file', 'folder', 'url', 'design-md', 'brief'];
@@ -214,6 +214,39 @@ function manifestFonts(base: LoadedPack, picks: Picks, harvests: Harvest[]): Pac
   return { display, body, mono, ...(googleFontsUrl ? { googleFontsUrl } : {}) };
 }
 
+function cssNameOf(group: string, name: string): string {
+  return group === 'color' ? `--${name}` : `--${group}-${name}`;
+}
+
+function takenNames(tokens: Record<string, unknown>): Set<string> {
+  const out = new Set<string>();
+  for (const [group, node] of Object.entries(tokens)) {
+    if (group.startsWith('$') || typeof node !== 'object' || node === null) continue;
+    const visit = (value: unknown, path: string[]) => {
+      if (typeof value !== 'object' || value === null) return;
+      if ('$value' in value) {
+        out.add(cssNameOf(group, path.join('-')));
+        return;
+      }
+      for (const [key, child] of Object.entries(value)) if (!key.startsWith('$')) visit(child, [...path, key]);
+    };
+    visit(node, []);
+  }
+  return out;
+}
+
+function addExtras(tokens: Record<string, unknown>, extras: ExtraToken[], mode: 'light' | 'dark'): void {
+  const taken = takenNames(tokens);
+  for (const extra of extras) {
+    const css = cssNameOf(extra.group, extra.name);
+    if (taken.has(css)) continue;
+    taken.add(css);
+    const group = (tokens[extra.group] ??= {}) as Record<string, unknown>;
+    const dark = mode === 'light' && extra.dark && extra.dark !== extra.value ? { $extensions: { 'studio.modes': { dark: extra.dark } } } : {};
+    group[extra.name] = { $value: mode === 'dark' && extra.dark ? extra.dark : extra.value, $type: extra.type, $description: `From ${extra.evidence}`, ...dark };
+  }
+}
+
 export function libraryCoverage(pack: LoadedPack): Coverage {
   const tokens = pack.tokens as unknown as Record<string, unknown>;
   const entries: CoverageEntry[] = requiredPaths().map((token) =>
@@ -245,6 +278,7 @@ export function mapDraft(base: LoadedPack, harvests: Harvest[], mode: 'light' | 
   const tokens = structuredClone(base.tokens) as unknown as Record<string, unknown>;
   if (mode === 'dark' && base.manifest.mode === 'light') flattenToDark(tokens);
   for (const [token, pick] of picks) if (pick.entry.source !== 'base') writeToken(tokens, token, mode === 'dark' ? { ...pick, dark: undefined } : pick);
+  addExtras(tokens, harvests.flatMap((harvest) => harvest.extras ?? []), mode);
   if (tokens.$description !== undefined) tokens.$description = 'Draft tokens made from your sources; gaps filled from the base pack.';
   const entries = requiredPaths().map((token) => picks.get(token)?.entry ?? { token, source: 'base' as const, confidence: 'fallback' as const, evidence: 'missing' });
   const score = scoreOf(entries);

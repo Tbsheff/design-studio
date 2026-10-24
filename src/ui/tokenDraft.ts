@@ -109,6 +109,7 @@ const SECTIONS: { id: string; label: string; groups: string[] }[] = [
   { id: 'space', label: 'Space', groups: ['space'] },
   { id: 'radius', label: 'Radius', groups: ['radius'] },
   { id: 'shadow', label: 'Shadow', groups: ['shadow'] },
+  { id: 'breakpoint', label: 'Breakpoints', groups: ['breakpoint'] },
 ];
 
 function matchesQuery(entry: CompiledTokenEntry, raw: RawToken, query: string): boolean {

@@ -70,6 +70,7 @@ function RenameInput({ initial, onDone }: { initial: string; onDone: (value: str
     <input
       className="layers-rename"
       aria-label="Layer name"
+      placeholder="Name this layer"
       value={value}
       maxLength={60}
       autoFocus

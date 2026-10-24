@@ -725,8 +725,8 @@ body.frame-dragging .frame {
 
 .layers-eye:focus-visible {
   opacity: 1;
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .layers-row.is-hidden .layers-eye {
@@ -749,7 +749,8 @@ body.frame-dragging .frame {
 }
 
 .layers-rename:focus-visible {
-  box-shadow: 0 0 0 2px var(--ring-soft);
+  border-color: var(--accent);
+  box-shadow: var(--ring-soft);
 }
 
 .layers-list.dragging,
@@ -855,6 +856,7 @@ body.frame-dragging .frame {
 }
 
 .canvas.text-editing .box.hover,
-.canvas.text-editing .measure {
+.canvas.text-editing .measure,
+.canvas.text-editing .resize-frame {
   display: none;
 }

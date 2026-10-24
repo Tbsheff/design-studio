@@ -17,6 +17,7 @@ import { mergeCommit, type DirectEditControl } from '../useDirectEdit';
 import type { CanvasSource } from './CanvasToolbar';
 import { chatWidthStyle } from './ChatSplitter';
 import { fixPrompt } from './ErrorsPanel';
+import { DraftBar } from './DraftBar';
 import { RightPanel } from './RightPanel';
 import { designSystemRef } from './DesignSystemChip';
 import { StudioTopbar } from './StudioTopbar';
@@ -172,6 +173,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       />
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
         <main className="center">
+          <DraftBar project={project} state={designSystem.state} lastChange={data.lastChange} onSave={packActions.actions.onSave} />
           <UnfinishedSlot
             visible={Boolean(status?.dirty) && !activeRun}
             count={status?.changed.length ?? 0}

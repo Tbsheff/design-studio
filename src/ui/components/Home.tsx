@@ -229,7 +229,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 onLevel={(defaultLevel) => setSettingsDraft((d) => ({ ...d, defaultLevel }))}
                 designs={{ value: designCount, max: maxDesigns, onChange: setDesigns, disabledReason: null }}
               />
-              <PackPicker state={packs} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} />
+              <PackPicker state={packs} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system' })} />
               <div className="spacer" />
               <button className="btn primary has-icon" type="submit" disabled={busy !== null || !prompt.trim()}>
                 {busy === 'create' ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}

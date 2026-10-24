@@ -9,8 +9,11 @@ export interface Viewport {
 
 export type ZoomSetting = 'fit' | number;
 
+export type Screen = 'home' | 'new-design-system';
+
 interface UiState {
   activeProjectId: string | null;
+  screen: Screen;
   directionByProject: Record<string, string>;
   viewport: Viewport;
   zoom: ZoomSetting;
@@ -24,6 +27,7 @@ const KEY = 'design-studio.ui.v1';
 
 const defaults: UiState = {
   activeProjectId: null,
+  screen: 'home',
   directionByProject: {},
   viewport: { preset: 'desktop', width: 1440, height: 900 },
   zoom: 'fit',
@@ -40,6 +44,7 @@ function loadUiState(): UiState {
     const parsed = JSON.parse(raw) as Partial<UiState>;
     return {
       activeProjectId: parsed.activeProjectId ?? null,
+      screen: parsed.screen === 'new-design-system' ? 'new-design-system' : 'home',
       directionByProject: parsed.directionByProject ?? {},
       viewport: parsed.viewport ?? defaults.viewport,
       zoom: parsed.zoom ?? defaults.zoom,

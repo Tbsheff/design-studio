@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { errorText } from '../api';
 import { usePacks } from '../packs';
+import { uiStore } from '../storage';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
 import { PackList } from './PackPicker';
@@ -51,6 +52,12 @@ export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
           </div>
         )}
         <PackList packs={state.packs} value={currentId} includeNone={false} onChoose={(pack) => void choose(pack?.id)} />
+      </div>
+      <div className="modal-foot">
+        <button type="button" className="btn ghost has-icon" disabled={busy} onClick={() => uiStore.set({ activeProjectId: null, screen: 'new-design-system' })}>
+          <Icon name="plus" size={14} />
+          New design system…
+        </button>
       </div>
     </dialog>
   );

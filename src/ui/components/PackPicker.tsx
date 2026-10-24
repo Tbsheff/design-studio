@@ -13,6 +13,7 @@ interface Props {
   state: PacksState;
   value: string | null;
   onChange: (packId: string | null) => void;
+  onNew?: () => void;
 }
 
 function columnsOf(list: HTMLElement | null): number {
@@ -166,7 +167,7 @@ export function PackList({ packs, value, includeNone, onChoose, onTab }: ListPro
   );
 }
 
-export function PackPicker({ state, value, onChange }: Props) {
+export function PackPicker({ state, value, onChange, onNew }: Props) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -206,6 +207,14 @@ export function PackPicker({ state, value, onChange }: Props) {
           </div>
           {state.error && <div className="alert error small">Could not load design systems. {state.error}</div>}
           <PackList packs={state.packs} value={value} includeNone onChoose={choose} onTab={() => setOpen(false)} />
+          {onNew && (
+            <div className="pack-popover-foot">
+              <button type="button" className="btn ghost small has-icon" onClick={onNew}>
+                <Icon name="plus" size={14} />
+                New design system…
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

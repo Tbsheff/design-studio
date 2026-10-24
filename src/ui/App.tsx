@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { errorText } from './api';
 import { Home } from './components/Home';
+import { NewDesignSystem } from './components/NewDesignSystem';
 import { Studio } from './components/Studio';
 import { loadSession } from './session';
 import { uiStore, useUi } from './storage';
@@ -46,6 +47,14 @@ export function App() {
           projectId={ui.activeProjectId}
           onExit={() => uiStore.set({ activeProjectId: null })}
         />
+      </>
+    );
+  }
+  if (ui.screen === 'new-design-system') {
+    return (
+      <>
+        {notice}
+        <NewDesignSystem onCancel={() => uiStore.set({ screen: 'home' })} onCreated={(id) => uiStore.set({ activeProjectId: id, screen: 'home' })} />
       </>
     );
   }

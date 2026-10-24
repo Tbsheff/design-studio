@@ -1,0 +1,238 @@
+.nds-main {
+  display: grid;
+  justify-items: center;
+  padding: var(--s-6) var(--s-6) var(--s-12);
+}
+
+.nds-form {
+  width: min(720px, 100%);
+  display: grid;
+  gap: var(--s-6);
+}
+
+.nds-head {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.nds-head h1 {
+  font-size: var(--t-2xl);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.nds-head p {
+  font-size: var(--t-md);
+  text-wrap: pretty;
+}
+
+.nds-basics {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr;
+  gap: var(--s-3);
+}
+
+.nds-section {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.nds-section-head {
+  display: grid;
+  gap: 2px;
+}
+
+.nds-section-head h2 {
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+
+.nds-section-head p {
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.nds-section textarea,
+.nds-section input:not([type='file']) {
+  width: 100%;
+}
+
+.nds-stack {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: start;
+}
+
+.nds-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.nds-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.nds-file {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-sm);
+}
+
+.nds-tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: var(--s-2);
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+}
+
+.nds-tab {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.nds-tab.on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+}
+
+.nds-preview {
+  max-height: 360px;
+  overflow: auto;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+}
+
+.nds-drop {
+  display: grid;
+  gap: var(--s-2);
+  justify-items: start;
+  padding: var(--s-4);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+}
+
+.nds-drop.over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.nds-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nds-images li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  max-width: 220px;
+  padding: 2px 4px 2px 10px;
+  font-size: var(--t-xs);
+  background: var(--surface-2);
+  border-radius: var(--r-full);
+}
+
+.nds-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+
+.pack-popover-foot {
+  display: flex;
+  justify-content: flex-start;
+  padding: var(--s-2) var(--s-1) 0;
+  margin-top: var(--s-2);
+  border-top: 1px solid var(--line);
+}
+
+.draft-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-2) var(--s-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.draft-main {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-sm);
+}
+
+.draft-grade {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.draft-grade.grade-excellent,
+.draft-grade.grade-usable {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.draft-grade.grade-needs-review {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.draft-grade.grade-rebuild {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.draft-fallbacks {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.draft-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+}
+
+@media (max-width: 720px) {
+  .nds-basics {
+    grid-template-columns: 1fr;
+  }
+}

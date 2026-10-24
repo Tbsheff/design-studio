@@ -37,9 +37,9 @@ export function usePackActions({ projectId, directionId, setProject, onCommitted
         onCommitted();
         show(result.notice ?? `${result.version.title}.`);
       },
-      onSave: async (name) => {
+      onSave: async (name, packId) => {
         if (!directionId) return;
-        const result = await api.savePack(projectId, directionId, { name });
+        const result = await api.savePack(projectId, directionId, packId ? { name, packId } : { name });
         refreshPacks();
         setProject(result.project);
         if (result.version) onCommitted();

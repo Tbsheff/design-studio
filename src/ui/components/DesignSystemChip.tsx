@@ -21,7 +21,7 @@ export function designSystemRef(projectId: string, directionId: string | null, p
 
 export interface DesignSystemActions {
   onApply: (packId: string) => Promise<void>;
-  onSave: (name: string) => Promise<void>;
+  onSave: (name: string, packId?: string) => Promise<void>;
 }
 
 type Load = { state: DesignSystemState | null; error: string | null };

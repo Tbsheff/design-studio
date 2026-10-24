@@ -13,6 +13,8 @@ import {
   type ProjectSettings,
   type ApplyPackResult,
   type SavePackResult,
+  type DesignSystemDraftInfo,
+  type DesignSystemDraftResult,
   type SkillCatalog,
   type RenderCheckResult,
   type RunLevel,
@@ -90,6 +92,8 @@ export const api = {
     return (await res.json()) as ApplyPackResult;
   },
   savePack: (pid: string, did: string, input: { name: string; packId?: string }) => json<SavePackResult>('POST', `${d(pid, did)}/design-system/save`, input),
+  createDesignSystemDraft: (form: FormData) => json<DesignSystemDraftResult>('POST', '/api/design-systems/draft', form),
+  getDesignSystemDraft: (pid: string) => json<DesignSystemDraftInfo>('GET', `${p(pid)}/design-system-draft`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {
     const res = await request('POST', `${d(pid, did)}/design-system/tokens`, req, pickMessage);
     return (await res.json()) as CreateTokenResult;

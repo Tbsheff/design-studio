@@ -10,6 +10,7 @@ export interface FetchPolicy {
   timeoutMs: number;
   maxBytes: number;
   maxRedirects: number;
+  deadline?: number;
   resolve?: (hostname: string) => Promise<LookupAddress[]>;
 }
 
@@ -140,6 +141,11 @@ function guardedLookup(policy: FetchPolicy): LookupFunction {
   };
 }
 
+function requestLimitMs(policy: FetchPolicy): number {
+  if (policy.deadline === undefined) return policy.timeoutMs;
+  return Math.max(1, Math.min(policy.timeoutMs, policy.deadline - Date.now()));
+}
+
 function requestOnce(url: URL, policy: FetchPolicy): Promise<{ status: number; location: string | null; contentType: string; body: Buffer }> {
   return new Promise((resolve, reject) => {
     const client = url.protocol === 'https:' ? https : http;
@@ -188,10 +194,11 @@ function requestOnce(url: URL, policy: FetchPolicy): Promise<{ status: number; l
         res.on('error', (error) => finish(error));
       },
     );
+    const limitMs = requestLimitMs(policy);
     const timer = setTimeout(() => {
       req.destroy();
-      finish(new FetchFailedError(`${url.href} did not answer within ${Math.round(policy.timeoutMs / 1000)} s`));
-    }, policy.timeoutMs);
+      finish(new FetchFailedError(`${url.href} did not answer within ${Math.max(1, Math.round(limitMs / 1000))} s`));
+    }, limitMs);
     req.on('error', (error) => finish(error instanceof FetchBlockedError || error instanceof FetchFailedError ? error : new FetchFailedError(`${url.host}: ${error.message}`)));
     req.end();
   });
@@ -200,6 +207,7 @@ function requestOnce(url: URL, policy: FetchPolicy): Promise<{ status: number; l
 export async function safeFetch(raw: string, policy: FetchPolicy): Promise<FetchedResource> {
   let url = checkUrl(raw, policy.allowLoopback);
   for (let hop = 0; ; hop += 1) {
+    if (policy.deadline !== undefined && Date.now() >= policy.deadline) throw new FetchFailedError(`${url.href}: the time limit for this site ran out`);
     const response = await requestOnce(url, policy);
     if (!REDIRECTS.has(response.status)) {
       if (response.status < 200 || response.status >= 300) throw new FetchFailedError(`${url.href} answered ${response.status}`);

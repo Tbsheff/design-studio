@@ -129,6 +129,33 @@ describe('fetched text never becomes token or DESIGN.md text', () => {
   });
 });
 
+describe('URL time limit', () => {
+  const page = (links: number) => `<!doctype html><html><head>${Array.from({ length: links }, (_v, index) => `<link rel="stylesheet" href="/s${index}.css">`).join('')}<style>:root { --primary: #1f6feb; }</style></head><body></body></html>`;
+
+  it('keeps what it read and lists the stylesheets left when the site limit runs out', async () => {
+    const deadlines: Array<number | undefined> = [];
+    const fetcher = async (url: string, kind: 'page' | 'css', deadline?: number) => {
+      deadlines.push(deadline);
+      if (kind === 'page') return { url, status: 200, contentType: 'text/html', body: Buffer.from(page(5)) };
+      if (url.endsWith('/s0.css')) return { url, status: 200, contentType: 'text/css', body: Buffer.from(':root { --accent: #e8590c; }') };
+      return new Promise<never>(() => undefined);
+    };
+    const started = Date.now();
+    const { harvest, snapshot } = await harvestUrl('https://slow.example/', fetcher, 250);
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(snapshot.stylesheets.map((sheet) => sheet.url)).toEqual(['https://slow.example/s0.css']);
+    expect(snapshot.failures.join('\n')).toMatch(/limit for this site ran out/);
+    expect(snapshot.failures.at(-1)).toMatch(/^3 stylesheet\(s\) not read/);
+    expect(pick(harvest.candidates, 'color.primary')?.value).toBe(normalizeColor('#1f6feb'));
+    expect(deadlines.every((value) => typeof value === 'number')).toBe(true);
+  });
+
+  it('fails the URL when the page itself does not answer within the limit', async () => {
+    const fetcher = () => new Promise<never>(() => undefined);
+    await expect(harvestUrl('https://stuck.example/', fetcher, 150)).rejects.toThrow(/did not answer within 1 s/);
+  });
+});
+
 describe('local folder extractor', () => {
   let root: string;
   let outside: string;

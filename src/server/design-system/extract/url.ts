@@ -11,9 +11,26 @@ import { chromaOf, colorsInText, lengthPx, lightnessOf, normalizeColor, normaliz
 type Node = DefaultTreeAdapterMap['node'];
 type Element = DefaultTreeAdapterMap['element'];
 
-export type Fetcher = (url: string, kind: 'page' | 'css') => Promise<FetchedResource>;
+export type Fetcher = (url: string, kind: 'page' | 'css', deadline?: number) => Promise<FetchedResource>;
 
 export const MAX_STYLESHEETS = 20;
+export const URL_TOTAL_MS = 20_000;
+
+export class SiteTimeLimitError extends Error {}
+
+function limitText(totalMs: number): string {
+  return `${Math.max(1, Math.round(totalMs / 1000))} s`;
+}
+
+function beforeDeadline<T>(work: Promise<T>, deadline: number, label: string): Promise<T> {
+  const left = deadline - Date.now();
+  if (left <= 0) return Promise.reject(new SiteTimeLimitError(label));
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new SiteTimeLimitError(label)), left);
+  });
+  return Promise.race([work, expired]).finally(() => clearTimeout(timer));
+}
 
 export interface UrlSnapshot {
   url: string;
@@ -87,25 +104,44 @@ function absolute(href: string, base: string): string | null {
   }
 }
 
-async function loadStylesheets(first: string[], base: string, fetcher: Fetcher, failures: string[]): Promise<Array<{ url: string; css: string }>> {
+interface SiteClock {
+  deadline: number;
+  totalMs: number;
+}
+
+function sheetFailure(url: string, error: unknown, clock: SiteClock): string {
+  if (error instanceof SiteTimeLimitError) return `${url}: stopped, the ${limitText(clock.totalMs)} limit for this site ran out`;
+  if (error instanceof FetchBlockedError) return `${url}: blocked (${error.message})`;
+  return `${url}: ${error instanceof Error ? error.message : String(error)}`;
+}
+
+async function readSheet(url: string, fetcher: Fetcher, clock: SiteClock): Promise<{ sheet: { url: string; css: string }; imports: string[] }> {
+  const fetched = await beforeDeadline(fetcher(url, 'css', clock.deadline), clock.deadline, url);
+  const css = fetched.body.toString('utf8');
+  const imports = cssImports(css)
+    .map((imported) => absolute(imported, fetched.url))
+    .filter((next): next is string => next !== null && !next.includes('fonts.googleapis.com'));
+  return { sheet: { url: fetched.url, css }, imports };
+}
+
+async function loadStylesheets(first: string[], base: string, fetcher: Fetcher, failures: string[], clock: SiteClock): Promise<Array<{ url: string; css: string }>> {
   const queue = first.map((href) => absolute(href, base)).filter((url): url is string => url !== null);
   const seen = new Set<string>();
   const out: Array<{ url: string; css: string }> = [];
   while (queue.length > 0 && seen.size < MAX_STYLESHEETS) {
     const url = queue.shift()!;
     if (seen.has(url)) continue;
+    if (Date.now() >= clock.deadline) {
+      failures.push(`${queue.length + 1} stylesheet(s) not read: the ${limitText(clock.totalMs)} limit for this site ran out`);
+      break;
+    }
     seen.add(url);
     try {
-      const fetched = await fetcher(url, 'css');
-      const css = fetched.body.toString('utf8');
-      out.push({ url: fetched.url, css });
-      for (const imported of cssImports(css)) {
-        const next = absolute(imported, fetched.url);
-        if (next && !next.includes('fonts.googleapis.com')) queue.push(next);
-      }
+      const { sheet, imports } = await readSheet(url, fetcher, clock);
+      out.push(sheet);
+      queue.push(...imports);
     } catch (error) {
-      if (error instanceof FetchBlockedError) failures.push(`${url}: blocked (${error.message})`);
-      else failures.push(`${url}: ${error instanceof Error ? error.message : String(error)}`);
+      failures.push(sheetFailure(url, error, clock));
     }
   }
   return out;
@@ -286,14 +322,24 @@ function usageCandidates(rules: CssRule[], root: Map<string, string>, page: Page
   return out;
 }
 
-export async function harvestUrl(url: string, fetcher: Fetcher): Promise<UrlHarvest> {
-  const page = await fetcher(url, 'page');
+async function fetchPage(url: string, fetcher: Fetcher, clock: SiteClock) {
+  try {
+    return await beforeDeadline(fetcher(url, 'page', clock.deadline), clock.deadline, url);
+  } catch (error) {
+    if (error instanceof SiteTimeLimitError) throw new Error(`${url} did not answer within ${limitText(clock.totalMs)}`);
+    throw error;
+  }
+}
+
+export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TOTAL_MS): Promise<UrlHarvest> {
+  const clock: SiteClock = { deadline: Date.now() + totalMs, totalMs };
+  const page = await fetchPage(url, fetcher, clock);
   const type = page.contentType.toLowerCase();
   if (type !== '' && !type.includes('html') && !type.includes('xml')) throw new Error(`${page.url} is not an HTML page (${type.split(';')[0]})`);
   const html = page.body.toString('utf8');
   const parts = pageParts(html);
   const failures: string[] = [];
-  const stylesheets = await loadStylesheets([...parts.links, ...parts.inline.flatMap((css) => cssImports(css))], page.url, fetcher, failures);
+  const stylesheets = await loadStylesheets([...parts.links, ...parts.inline.flatMap((css) => cssImports(css))], page.url, fetcher, failures, clock);
   const rules = [...parts.inline, ...stylesheets.map((sheet) => sheet.css)].flatMap((css) => parseCss(css)).concat(parts.styleAttrs);
   const props = customProperties(rules);
   const label = new URL(page.url).host;

@@ -103,6 +103,14 @@ describe('safeFetch', () => {
     await expect(safeFetch(`${base}/`, policy({ allowLoopback: true, timeoutMs: 200 }))).rejects.toThrow(/did not answer/);
   });
 
+  it('a site deadline cuts the request timer and stops before a new hop', async () => {
+    const base = await serve(() => undefined);
+    const started = Date.now();
+    await expect(safeFetch(`${base}/`, policy({ allowLoopback: true, timeoutMs: 10_000, deadline: Date.now() + 150 }))).rejects.toThrow(/did not answer/);
+    expect(Date.now() - started).toBeLessThan(2000);
+    await expect(safeFetch(`${base}/`, policy({ allowLoopback: true, deadline: Date.now() - 1 }))).rejects.toThrow(/time limit/);
+  });
+
   it('refuses a compressed body and non-2xx answers', async () => {
     const base = await serve((req, res) => {
       if (req.url === '/gz') res.writeHead(200, { 'content-encoding': 'gzip' }).end('x');

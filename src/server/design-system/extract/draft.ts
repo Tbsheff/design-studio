@@ -61,7 +61,7 @@ export interface DraftDeps {
 }
 
 export function createFetcher(allowLoopback: boolean): Fetcher {
-  return (url, kind) => safeFetch(url, { ...(kind === 'page' ? PAGE_POLICY : CSS_POLICY), allowLoopback });
+  return (url, kind, deadline) => safeFetch(url, { ...(kind === 'page' ? PAGE_POLICY : CSS_POLICY), allowLoopback, ...(deadline === undefined ? {} : { deadline }) });
 }
 
 export function parseDraftRequest(raw: unknown, imageCount: number): DraftRequest {

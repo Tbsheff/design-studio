@@ -152,12 +152,12 @@ test('R5 app start: Home usable in web, cold browser context each sample', async
   const s = stats(samples);
   const js = homeJsBytes();
   report('home usable (web, cold)', s, TARGETS.homeUsableWeb);
-  console.log(`[perf-r5] home js ${Math.round(js.bytes / 1024)} kB in ${js.files.length} files (target < ${TARGETS.homeJsKb} kB)`);
+  console.log(`[perf-r5] home js ${js.bytes} bytes in ${js.files.length} files (target < ${TARGETS.homeJsKb * 1000})`);
   const start = (await telemetry(api, 'scope=app')).filter((sample) => sample.kind === 'app.start');
   saveResult('homeUsableWeb', { ...s, homeJsBytes: js.bytes, homeJsFiles: js.files, appStartSamples: start.length });
   expect(start.length).toBeGreaterThan(0);
   expect(s.p95).toBeLessThan(TARGETS.homeUsableWeb);
-  expect(js.bytes / 1024).toBeLessThan(TARGETS.homeJsKb);
+  expect(js.bytes).toBeLessThan(TARGETS.homeJsKb * 1000);
 });
 
 test('R5 open from Home: card click to first preview paint, fresh page each sample, one EventSource per project', async ({ page }) => {

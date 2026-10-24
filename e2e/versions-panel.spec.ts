@@ -30,7 +30,7 @@ test('versions tab: readable titles, keyboard detail, tab choice persists', asyn
   const api = await openHome(page);
   const project = await seed(page, api);
   await expect(page.locator('.panel.left, .left-toggle')).toHaveCount(0);
-  await expect.poll(async () => (await page.getByRole('tab').allTextContents()).filter((name) => name !== 'Comments')).toEqual(['Chat', 'Design', 'Tweaks', 'Tokens', 'Versions']);
+  await expect.poll(async () => (await page.getByRole('tab').allTextContents()).filter((name) => name !== 'Comments')).toEqual(['Chat', 'Design', 'Tweaks', 'Tokens', 'Components', 'Versions']);
   await showVersions(page);
 
   const titles = page.locator('li.version .version-toggle');

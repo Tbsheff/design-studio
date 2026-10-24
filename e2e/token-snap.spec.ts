@@ -77,6 +77,7 @@ test('token snap: picker, auto-snap, raw badge, create token with apply, undo', 
 
   await selectInFrame(page, 'h1');
   await expect(page.locator('.ins-tag')).toHaveText('h1');
+  await expect(page.getByRole('region', { name: 'Token checks' })).toBeVisible();
   const snapToggle = page.getByRole('button', { name: 'Snap to tokens' });
   await expect(snapToggle).toHaveAttribute('aria-pressed', 'true');
   const color = page.getByLabel('Text color', { exact: true });

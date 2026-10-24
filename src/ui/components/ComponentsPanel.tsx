@@ -72,7 +72,7 @@ export function ComponentsPanel({ projectId, directionId, list, onMention }: Pro
           <input type="search" aria-label="Filter components" placeholder="Filter components" value={query} spellCheck={false} onChange={(event) => setQuery(event.target.value)} />
         </div>
       )}
-      <div className="ins-scroll cmp-scroll">
+      <div className="cmp-scroll">
         {list.error && (
           <p className="ins-error" role="alert">
             <Icon name="alert" size={13} />

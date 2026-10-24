@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { watchLongFrames } from './perfTelemetry';
 import './styles/tokens.css';
 import './styles/controls.css';
 import './styles/forms.css';
@@ -28,6 +29,8 @@ import './styles/shell.css';
 
 const desktop = (window as unknown as { studioDesktop?: { platform: string } }).studioDesktop;
 if (desktop?.platform === 'darwin') document.documentElement.dataset.shell = 'mac';
+
+watchLongFrames();
 
 const root = document.getElementById('root');
 if (root) {

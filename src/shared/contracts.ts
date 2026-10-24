@@ -473,9 +473,11 @@ export interface RunSentRecord {
 
 export type StudioEventInput = StudioEventBody & { projectId: string; directionId?: string };
 
+export type TelemetryKind = 'preview.latency' | 'select.latency' | 'studio.open' | 'file.write' | 'app.start' | 'run.first_token' | 'edit.commit' | 'frame.long';
+
 export interface TelemetrySample {
-  kind: 'preview.latency' | 'select.latency' | 'studio.open' | 'file.write';
-  projectId: string;
+  kind: TelemetryKind;
+  projectId?: string;
   directionId?: string;
   ms: number;
   ts: number;

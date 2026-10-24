@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
 import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
+import { reportAppStart } from './perfTelemetry';
 import { frameSrc, postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import { randomToken } from './session';
 import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
@@ -300,6 +301,7 @@ export function usePreviewFrames(o: Options) {
       lastPaintAt.current[frame.token] = Date.now();
       if (!openReported.current && isFront) {
         openReported.current = true;
+        reportAppStart('studio');
         sendTelemetry({ ...base, kind: 'studio.open', ms: Date.now() - mountedAt.current });
       }
       const swap = pendingSwap.current;

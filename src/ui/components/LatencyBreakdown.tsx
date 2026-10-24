@@ -6,6 +6,7 @@ import type { RunView } from '../runState';
 
 const FILE_WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit']);
 const PREVIEW_GRACE_MS = 15_000;
+const LONG_FRAME_FLUSH_GRACE_MS = 6000;
 
 function fileWriteMs(run: RunView): number {
   return run.tools.reduce((sum, t) => (FILE_WRITE_TOOLS.has(t.name) && !t.isError ? sum + (t.durationMs ?? 0) : sum), 0);
@@ -37,6 +38,26 @@ function previewText(samples: TelemetrySample[] | null): string {
   return samples.length === 1 ? formatMs(last.ms) : `${formatMs(last.ms)} last, ${formatMs(max)} max (${samples.length} updates)`;
 }
 
+function firstTokenText(samples: TelemetrySample[] | null, runId: string): string {
+  if (samples === null) return 'loading';
+  const ofRun = samples.filter((s) => s.kind === 'run.first_token' && s.detail?.runId === runId);
+  const visible = ofRun.find((s) => s.detail?.stage === 'visible');
+  const server = ofRun.find((s) => s.detail?.stage === 'server');
+  if (!visible && !server) return 'n/a';
+  if (visible && server) return `${formatMs(visible.ms)} (server ${formatMs(server.ms)})`;
+  return formatMs((visible ?? server)?.ms ?? 0);
+}
+
+function longFramesText(samples: TelemetrySample[] | null, run: RunView): string {
+  if (samples === null) return 'loading';
+  const finishedAt = run.summary?.finishedAt ?? null;
+  if (finishedAt === null) return 'n/a';
+  const during = samples.filter((s) => s.kind === 'frame.long' && s.ts >= run.startedAt && s.ts <= finishedAt + LONG_FRAME_FLUSH_GRACE_MS);
+  const count = during.reduce((sum, s) => sum + (typeof s.detail?.count === 'number' ? s.detail.count : 1), 0);
+  if (count === 0) return 'none';
+  return `${count}, longest ${formatMs(Math.max(...during.map((s) => s.ms)))}`;
+}
+
 export function LatencyBreakdown({ projectId, run }: { projectId: string; run: RunView }) {
   const [samples, setSamples] = useState<TelemetrySample[] | null>(null);
   const finishedAt = run.summary?.finishedAt ?? null;
@@ -45,7 +66,7 @@ export function LatencyBreakdown({ projectId, run }: { projectId: string; run: R
     let alive = true;
     api
       .getTelemetry(projectId)
-      .then((list) => alive && setSamples(previewSamplesForRun(list, run)))
+      .then((list) => alive && setSamples(list))
       .catch(() => alive && setSamples([]));
     return () => {
       alive = false;
@@ -58,7 +79,9 @@ export function LatencyBreakdown({ projectId, run }: { projectId: string; run: R
     ['Model', formatMs(s.modelMs)],
     ['Tools', formatMs(s.toolMs)],
     ['File writes', formatMs(fileWriteMs(run))],
-    ['Preview update', previewText(samples)],
+    ['First token', firstTokenText(samples, run.runId)],
+    ['Preview update', previewText(samples === null ? null : previewSamplesForRun(samples, run))],
+    ['Long frames', longFramesText(samples, run)],
   ];
   return (
     <>

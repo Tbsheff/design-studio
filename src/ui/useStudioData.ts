@@ -3,6 +3,7 @@ import type { Project, RunRequest, StudioEvent, Version, WorkTreeStatus } from '
 import { api, errorText } from './api';
 import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
+import { reportFirstToken } from './perfTelemetry';
 import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
 import { uiStore, useUi } from './storage';
 
@@ -41,6 +42,26 @@ interface StudioData {
   connection: ConnectionState;
   refreshVersions: () => void;
   seedRun: (runId: string, directionId: string, request: RunRequest, stopped?: boolean) => void;
+  noteSend: () => () => void;
+}
+
+interface SendTimes {
+  pending: number | null;
+  byRun: Map<string, number>;
+}
+
+function trackFirstToken(sends: SendTimes, projectId: string, event: StudioEvent): void {
+  if (event.type === 'run.started') {
+    if (sends.pending === null || event.ts < sends.pending - 1000) return;
+    sends.byRun.set(event.runId, sends.pending);
+    sends.pending = null;
+    return;
+  }
+  if (event.type !== 'run.text.delta' && event.type !== 'run.thinking.delta') return;
+  const sentAt = sends.byRun.get(event.runId);
+  if (sentAt === undefined) return;
+  sends.byRun.delete(event.runId);
+  reportFirstToken(projectId, event.directionId, event.runId, sentAt);
 }
 
 export function useStudioData(projectId: string): StudioData {
@@ -55,6 +76,7 @@ export function useStudioData(projectId: string): StudioData {
   const [lastChange, setLastChange] = useState<FilesChange | null>(null);
   const mountedAt = useRef(Date.now());
   const [batcher] = useState(() => createDeltaBatcher(setRuns, frameOrTimeout(100)));
+  const sends = useRef<SendTimes>({ pending: null, byRun: new Map() });
   useEffect(() => () => batcher.dispose(), [batcher]);
 
   const stored = ui.directionByProject[projectId];
@@ -134,6 +156,7 @@ export function useStudioData(projectId: string): StudioData {
       const live = event.ts >= mountedAt.current - 1000;
       const active = event.directionId === undefined || event.directionId === directionRef.current;
       batcher.push(event);
+      trackFirstToken(sends.current, projectId, event);
       switch (event.type) {
         case 'files.changed':
           if (live && event.directionId)
@@ -170,7 +193,7 @@ export function useStudioData(projectId: string): StudioData {
           break;
       }
     },
-    [addError, batcher],
+    [addError, batcher, projectId],
   );
 
   const connection = useProjectEvents(projectId, onEvent);
@@ -182,6 +205,14 @@ export function useStudioData(projectId: string): StudioData {
       if (existing) return { ...prev, [runId]: { ...existing, directionId: existing.directionId ?? did, request: existing.request ?? request, ...status } };
       return { ...prev, [runId]: { ...emptyRun(runId, did, Date.now(), request), ...status } };
     });
+  }, []);
+
+  const noteSend = useCallback(() => {
+    const at = Date.now();
+    sends.current.pending = at;
+    return () => {
+      if (sends.current.pending === at) sends.current.pending = null;
+    };
   }, []);
 
   return {
@@ -202,5 +233,6 @@ export function useStudioData(projectId: string): StudioData {
     connection,
     refreshVersions,
     seedRun,
+    noteSend,
   };
 }

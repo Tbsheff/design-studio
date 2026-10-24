@@ -1,7 +1,7 @@
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { StudioEvent } from '../../shared/contracts.js';
+import type { StudioEvent, TelemetrySample } from '../../shared/contracts.js';
 import type { AgentRunContext } from '../types.js';
 import { createRunLifecycle, DELTA_FLUSH_CHARS, DELTA_FLUSH_MS, type DriverSink, type RunDriver } from './lifecycle.js';
 import { createFakeBus, createFakeProjects, createFakeVersions, createTempProject } from './test-fakes.js';
@@ -31,7 +31,12 @@ async function runWith(script: (sink: DriverSink) => Promise<void>) {
   const summary = await runner.start(ctx).done;
   const lines = (await readFile(path.join(projects.projectDir('p1'), 'runs', `${summary.id}.jsonl`), 'utf8')).trim().split('\n');
   const logged = lines.map((line) => JSON.parse(line) as { type: string; text?: string; seq?: number });
-  return { events: bus.events, logged };
+  const telemetryFile = path.join(projects.projectDir('p1'), 'telemetry.jsonl');
+  const telemetry = (await readFile(telemetryFile, 'utf8').catch(() => ''))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as TelemetrySample);
+  return { events: bus.events, logged, telemetry, runId: summary.id };
 }
 
 function deltas(events: StudioEvent[]): string[] {
@@ -81,5 +86,26 @@ describe('run text delta coalescing', () => {
     expect(order).toEqual(['run.started', 'delta:one ', 'delta:two ', 'run.sent', 'delta:three ', 'delta:four', 'status.changed', 'run.finished']);
     await wait(DELTA_FLUSH_MS * 2);
     expect(events.at(-1)?.type).toBe('run.finished');
+  });
+});
+
+describe('run first token telemetry', () => {
+  it('records one run.first_token sample at the first text or thinking delta', async () => {
+    const { telemetry, runId } = await runWith(async (sink) => {
+      await wait(30);
+      sink.thinkingDelta('plan ');
+      sink.textDelta('hello ');
+      sink.textDelta('world');
+      sink.text('hello world');
+    });
+    const samples = telemetry.filter((sample) => sample.kind === 'run.first_token');
+    expect(samples).toHaveLength(1);
+    expect(samples[0]?.detail).toEqual({ runId, stage: 'server' });
+    expect(samples[0]?.ms).toBeGreaterThanOrEqual(25);
+  });
+
+  it('records nothing when the run sends no delta', async () => {
+    const { telemetry } = await runWith(async (sink) => sink.text('done'));
+    expect(telemetry.filter((sample) => sample.kind === 'run.first_token')).toEqual([]);
   });
 });

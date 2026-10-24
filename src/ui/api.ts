@@ -197,14 +197,10 @@ export const api = {
   keep: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/keep`),
   discard: (pid: string, did: string) => json<WorkTreeStatus>('POST', `${d(pid, did)}/discard`),
   directionPreview: (pid: string, did: string) => json<{ url: string }>('GET', `${d(pid, did)}/preview`),
-  directEdit: async (pid: string, did: string, req: DirectEditRequest) => {
-    const res = await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage);
-    return (await res.json()) as DirectEditResult;
-  },
-  directEditBatch: async (pid: string, did: string, batch: DirectEditBatch) => {
-    const res = await request('POST', `${d(pid, did)}/direct-edit`, batch, pickMessage);
-    return (await res.json()) as DirectEditBatchResult;
-  },
+  directEdit: (pid: string, did: string, req: DirectEditRequest) =>
+    timedEdit(pid, did, editKind(req), 1, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage)).json()) as DirectEditResult),
+  directEditBatch: (pid: string, did: string, batch: DirectEditBatch) =>
+    timedEdit(pid, did, 'batch', batch.edits.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, batch, pickMessage)).json()) as DirectEditBatchResult),
   workTreeFiles: (pid: string, did: string) => json<{ files: string[] }>('GET', `${d(pid, did)}/tree`),
   renderCheck: (pid: string, did: string) => json<RenderCheckResult[]>('POST', `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>
@@ -223,6 +219,20 @@ export const api = {
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
 };
+
+function editKind(req: DirectEditRequest): string {
+  if (req.move) return 'move';
+  if (req.text !== undefined) return 'text';
+  if (req.name !== undefined) return 'name';
+  return 'style';
+}
+
+async function timedEdit<T>(pid: string, did: string, kind: string, count: number, commit: () => Promise<T>): Promise<T> {
+  const started = performance.now();
+  const result = await commit();
+  sendTelemetry({ kind: 'edit.commit', projectId: pid, directionId: did, ms: Math.round(performance.now() - started), detail: { kind, count } });
+  return result;
+}
 
 export function sendTelemetry(sample: Omit<TelemetrySample, 'ts'>): void {
   api.postTelemetry({ ...sample, ts: Date.now() }).catch(() => undefined);

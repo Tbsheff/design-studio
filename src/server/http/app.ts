@@ -85,7 +85,8 @@ interface AppDeps {
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
 const HEARTBEAT_MS = 15_000;
-const TELEMETRY_KINDS = new Set<TelemetrySample['kind']>(['preview.latency', 'select.latency', 'studio.open', 'file.write']);
+const TELEMETRY_KINDS = new Set<TelemetrySample['kind']>(['preview.latency', 'select.latency', 'studio.open', 'file.write', 'app.start', 'run.first_token', 'edit.commit', 'frame.long']);
+const APP_TELEMETRY_KINDS = new Set<TelemetrySample['kind']>(['app.start', 'frame.long']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -273,6 +274,7 @@ export function createApp(deps: AppDeps): Hono {
   const projectsRoot = path.join(config.dataDir, 'projects');
   const runsDir = (projectId: string): string => path.join(projects.projectDir(projectId), 'runs');
   const telemetryFile = (projectId: string): string => path.join(projects.projectDir(projectId), 'telemetry.jsonl');
+  const appTelemetryFile = path.join(config.dataDir, 'telemetry.jsonl');
 
   const loadDirection = async (pid: string, did: string): Promise<{ project: Project; direction: Direction }> => {
     const project = await projects.get(pid);
@@ -890,19 +892,15 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     const kind = body.kind as TelemetrySample['kind'];
     if (!TELEMETRY_KINDS.has(kind)) throw new BadRequestError('unknown telemetry kind');
-    const projectId = requireString(body, 'projectId');
+    const projectId = APP_TELEMETRY_KINDS.has(kind) ? optionalString(body, 'projectId') : requireString(body, 'projectId');
     if (typeof body.ms !== 'number' || !Number.isFinite(body.ms)) throw new BadRequestError('ms must be a number');
-    await projects.get(projectId);
-    const sample: TelemetrySample = {
-      kind,
-      projectId,
-      ms: body.ms,
-      ts: typeof body.ts === 'number' ? body.ts : Date.now(),
-    };
+    if (projectId !== undefined) await projects.get(projectId);
+    const sample: TelemetrySample = { kind, ms: body.ms, ts: typeof body.ts === 'number' ? body.ts : Date.now() };
+    if (projectId !== undefined) sample.projectId = projectId;
     const directionId = optionalString(body, 'directionId');
     if (directionId !== undefined) sample.directionId = directionId;
     if (isRecord(body.detail)) sample.detail = body.detail;
-    const file = telemetryFile(projectId);
+    const file = projectId === undefined ? appTelemetryFile : telemetryFile(projectId);
     await mkdir(path.dirname(file), { recursive: true });
     await appendFile(file, `${JSON.stringify(sample)}\n`);
     return c.json({ ok: true });
@@ -910,10 +908,15 @@ export function createApp(deps: AppDeps): Hono {
 
   app.get('/api/telemetry', async (c) => {
     const projectId = c.req.query('projectId');
-    const ids = projectId ? [assertSafeId(projectId, 'projectId')] : (await projects.list()).map((project) => project.id);
+    const appOnly = c.req.query('scope') === 'app';
+    const files = appOnly
+      ? [appTelemetryFile]
+      : projectId
+        ? [telemetryFile(assertSafeId(projectId, 'projectId'))]
+        : [appTelemetryFile, ...(await projects.list()).map((project) => telemetryFile(project.id))];
     const samples: TelemetrySample[] = [];
-    for (const id of ids) {
-      const text = await readOptional(telemetryFile(id));
+    for (const file of files) {
+      const text = await readOptional(file);
       if (text !== null) samples.push(...parseJsonLines<TelemetrySample>(text));
     }
     samples.sort((a, b) => a.ts - b.ts);

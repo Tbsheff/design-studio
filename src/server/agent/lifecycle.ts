@@ -312,6 +312,16 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       enqueue(() => appendFile(telemetryPath, line));
     }
 
+    let firstTokenSeen = false;
+    function recordFirstToken(): void {
+      if (firstTokenSeen) return;
+      firstTokenSeen = true;
+      const now = Date.now();
+      const sample: TelemetrySample = { kind: 'run.first_token', projectId, directionId, ms: now - startedAt, ts: now, detail: { runId, stage: 'server' } };
+      const line = `${JSON.stringify(sample)}\n`;
+      enqueue(() => appendFile(telemetryPath, line));
+    }
+
     function writeSummary(summary: RunSummary): void {
       const json = `${JSON.stringify(summary, null, 2)}\n`;
       enqueue(() => writeFile(summaryPath, json));
@@ -353,7 +363,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     const sink: DriverSink = {
       textDelta(text) {
-        if (text) addDelta(text);
+        if (!text) return;
+        recordFirstToken();
+        addDelta(text);
       },
       text(text) {
         if (!text) return;
@@ -361,7 +373,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         emitRun({ type: 'run.text', text });
       },
       thinkingDelta(text) {
-        if (text) addDelta(text, 'run.thinking.delta');
+        if (!text) return;
+        recordFirstToken();
+        addDelta(text, 'run.thinking.delta');
       },
       thinking(text) {
         if (text) emitRun({ type: 'run.thinking', text });

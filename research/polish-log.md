@@ -203,3 +203,58 @@ On `fix(canvas)` (last code commit) and the test-only commits after it:
 ### Commits
 
 `336ac87` feat zoom keys, View menu zoom, rAF pan, multi-frame · `2ea8305` test R2-1–3 · `1998aa0` test desktop zoom · `f79e14e` feat layers, select keys, measure, Z-click · `4356937`, `297e3fc`, `39bf401`, `4ca22ce` polish · `9a5f6ed` unit tests · `c5dc30e` docs architecture and scorecard · `0810428` docs log · then the focus fix, the fit-timing test commits and this log update.
+
+## Round 3 — Chat and agent vs Claude Code (2026-10-24)
+
+### Item 0: the AC-14 race
+
+Cause: an app bug in `src/server/preview/watcher.ts`. The watcher uses chokidar with `ignoreInitial: true`, and nothing waited for its `ready` event. A mock run writes `index.html` a few hundred ms after `watch()`. Under load (right after the main suite) chokidar's first scan is slow, so the write lands during the scan, chokidar counts it as an initial file and sends no `add`. Then no `files.changed` goes out, and the frame that showed the 404 "Not found" page (no bridge) never reloads. Alone, the scan ends before the write, so the test passed.
+
+Fix (`211fc4c`): on `ready`, walk the work tree and report every file with an mtime at or after the `watch()` time. No added wait before the run starts, so first-token time does not change. Proof: `src/server/preview/watcher.test.ts` writes a file at once after `watch()` 20 times and gets `files.changed` each time (it failed before the fix). Back-to-back runs: see Test runs.
+
+### Features built
+
+| Item | Acceptance check | Proof | Result |
+|---|---|---|---|
+| R3-1 Correct transcript (P0) | A mock run with thinking A, tool 1, thinking B, text shows that order and both thinking blocks | `e2e/chat-r3.spec.ts` "R3-1, R3-3, R3-4"; `src/shared/run-parts.test.ts`; `src/ui/runState.test.ts`; `src/server/agent/mock-r3.test.ts` | Pass. Order `thinking, Read, thinking, text`, 2 thinking blocks, same order after reload (`RunSummary.parts`). A finished or stopped run keeps its live parts and streamed text |
+| R3-2 Esc, queue and steer (P0) | A message queued in a 3-tool run reaches the agent before tool 3; Esc stops in < 500 ms and done tool rows stay; focus in studio and iframe | `e2e/chat-r3.spec.ts` "R3-2" (3 tests) | Pass. Queued text is in the run's sent records before the third tool starts (PostToolUse `additionalContext`). Esc to "Stopped" < 500 ms with focus in the composer and in the preview; done rows stay, no row keeps spinning. Cmd+Enter while running steers: the turn ends and the next run starts with that text. Stop puts unsent queued text back in the composer |
+| R3-3 Diffs in chat (P0) | A one-line edit shows `+1 −1` with the exact old and new line | `e2e/chat-r3.spec.ts`; `src/shared/line-diff.test.ts` | Pass. Badge `+1−1`, old `<h1>Harbor Lane Coffee</h1>`, new `<h1>Harbor Lane Roasters</h1>`; per-file totals on the run card |
+| R3-4 Copy (P0) | Copy puts the exact markdown or code on the clipboard | `e2e/chat-r3.spec.ts` | Pass. Message copy equals the reply markdown; code block copy equals the code |
+| R3-5 Permission prompts, part 1 (P1) | A mock Bash call shows the prompt; Deny with "use npm" sends the note and nothing runs | `e2e/chat-r3.spec.ts` "R3-5"; `src/server/agent/ask-gate.test.ts` | Pass. Note in the sent records, no output file, the row shows "Denied". The mock calls the same gate as the SDK driver. Scope: Bash only; writes outside the project stay hard denies (no prompt) |
+| R3-6 @ mentions (P1) | List opens in < 100 ms; `@hdr` ranks `Header.tsx` first; chip content is in the sent prompt | `e2e/chat-r3.spec.ts` "R3-6"; `src/shared/fuzzy.test.ts` | Pass for files and tokens; the file text is in the prompt. Partial: layers are not in the list (left for later) |
+| R3-7 Todo list (P1) | "1 of 5" to "2 of 5" in place, no re-render of finished messages, list there after reload | `e2e/chat-r3.spec.ts` "R3-7" | Pass. 0 DOM mutations in finished messages during the update (MutationObserver); current item marked; kept after reload |
+| R3-8 Plan mode (P1) | A write is refused in plan mode; Approve switches mode and starts the build | `e2e/chat-r3.spec.ts` "R3-8" | Pass. Refused write, no new version; Approve runs the build and adds 1 version |
+| R3-9 Context meter, effort (P1) | Meter = input tokens / model window ±1%; the effort choice is in the next request | `e2e/chat-r3.spec.ts` "R3-9" | Pass. 24,000 of 200,000 = 12%; `request.effort` = `high`. Context = input + cache read + cache write of the last API call |
+| R3-10 History and retries (P1) | Up fills the last prompt; Retry adds no second user message | `e2e/chat-r3.spec.ts` "R3-1…" and "R3-10" | Pass. Up and Ctrl+R; "Retrying in Ns (1/5)" line from `system/api_retry`; Retry keeps one user message |
+
+### Polish
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R3-11 Tool rows | 3 reads of one file show one row "Read ×3" | `src/ui/components/ToolChips.test.ts` | Pass. One verb and target format (`toolLabels.ts`); errors open; errors, running tools and diffs never group. New: "Stopped" state (X icon, no time) for tools cut by a stop, "Denied" tag for refused prompts |
+| R3-12 Smooth streaming | 10k-token mock reply smooth; an open fence renders as code mid-stream | `e2e/chat-r3.spec.ts` "R3-12" | Pass. Headless rAF p95 ≤ 17.5 ms, 0 frames > 32 ms; `<pre>` present while the fence is open; a wheel scroll up during the stream stays within 2 px (not pulled back). Finished markdown blocks are memoized; only the open tail re-parses |
+| Premium-feel items | — | screenshots | Stop and Queue in the composer row with key hints; queued messages as gray cards with edit, remove and drag; tabular numbers in timers, meter and costs; a new run sticks the scroll to the bottom again; Stop and Queue keep a plain accessible name ("Stop", not "Stop Stop (Esc)") |
+
+### Screenshots
+
+Before (web, `scripts/chat-shots.ts`, 1440×900 at 2x): `/tmp/polish-r3/before-chat-finished.png`, `before-chat-live.png`, `before-chat-stopped.png`, `before-chat-error.png`, `before-composer-running.png`, `before-studio-finished.png`.
+
+After: `/tmp/polish-r3/after-chat-finished.png`, `after-chat-diff.png`, `after-chat-live.png`, `after-composer-running.png` (queued cards), `after-studio-running.png`, `after-chat-stopped.png`, `after-chat-permission.png`, `after-chat-permission-deny.png`, `after-composer-settings.png` (mode, effort), `after-chat-plan.png`, `after-composer-mention.png`, `after-composer-chip.png`, `after-chat-streaming.png`, `after-chat-error.png`, `after-studio-finished.png`. The diff, permission, plan, mention, todo and queue screens did not exist before.
+
+### Left for later rounds
+
+- Permission prompts part 2 (R8-5): "always allow" rules, a mode cycle, prompts for writes outside the project (those stay hard denies now, which is safer than a prompt).
+- Queue: Up on an empty composer does not pull a queued message back (CC does); edit the queue in place instead.
+- @ mentions: layers are not in the list yet (files and tokens only); the list does not show file previews.
+- Plan mode: the plan card is plain markdown; no per-step comments.
+- Context meter: the window is 1M for `[1m]` model ids and 200k for all others; it does not read the window from the SDK.
+- Retry: the auto-retry line shows only for SDK `api_retry` messages; a network drop between the studio and the server still shows as an error card.
+- Tool rows: Ctrl+O style "show all input and output" for every row at once.
+
+### Regressions found
+
+- Intended change: run text before a tool is now its own message part, and tool rows sit inline between the parts. `e2e/ai-chat.spec.ts` assumed one reply bubble and a "5 tool calls" toggle; `e2e/skills.spec.ts` assumed the label "Skill · name". Both specs now check the new layout (verb plus target chip, diff in the row detail).
+- Found in review: tool rows of a stopped run kept spinning, because only `durationMs === null` decided the state. They now show "Stopped" when the run is not running.
+- Found in review: a failed run rejected `handle.done`, and the follow-up chain for queued messages had no reject handler, so Node logged an unhandled rejection (`comments-routes.test.ts` showed it). Fixed in `http/app.ts`.
+- Found while testing: the Stop button's accessible name was "Stop Stop (Esc)" while its tooltip showed, so `getByRole('button', { name: 'Stop' })` and screen readers got the tooltip text. Stop and Queue now have a fixed `aria-label`.
+- Found while testing: after the user scrolled up, a new run did not scroll the chat back down. A new run now sticks the scroll to the bottom; scroll up during a stream is still not pulled back.

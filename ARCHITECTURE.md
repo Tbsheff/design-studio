@@ -478,6 +478,29 @@ stage (pointer + wheel)            Canvas render (React)
 - Bridge additions: `zoom-key {key, at}`, `hover {altKey, node, source}`, `select {node}`, `tree {nodes, truncated}`; parent sends `request-tree`, `hover-node`, `select-node`, `select-relative {selector, move}`. Node ids are a per-document counter in a WeakMap (`src/bridge/layers.ts`); tree labels are capped and parsed again in the parent (`layersTree.ts`) because preview pages are untrusted. In select mode the bridge handles Enter, Shift+Enter, Tab and Shift+Tab, and a click focuses the preview.
 - Layers panel: virtual list (28 px rows), re-requested 400 ms after `painted` while open. Measurement: `measure.ts` from the selected rect to the hovered rect, in frame px.
 
+## Chat and agent (Round 3)
+
+```
+SDK stream_event / assistant msg ──► lifecycle sink ──► run.* events (SSE) ──► runState reducer
+  content_block_start/delta: text, thinking       applyPartEvent (shared/run-parts.ts)
+  tool_use / tool_result                           one ordered RunView.parts list
+PreToolUse hook: policy guard ─► before-snapshot ─► Bash ask gate (prompt) ─► tool runs
+PostToolUse hook: take queued messages from the inbox ─► additionalContext (lands at the next tool boundary)
+tool result: after-snapshot ─► diffLines ─► run.tool.finished {diff, denied}
+run end: RunSummary.parts (tool refs by id) ─► same order after reload; old summaries use the old layout
+```
+
+- Parts: `text`, `thinking` and `tool` parts in event order. Each thinking block is its own part; a text delta after a tool opens a new text part. `run.finished` keeps the live parts and only fills the final text (`withFinalText`), so a cancel keeps streamed text.
+- Diffs: computed on the server (`shared/line-diff.ts`, capped, no binary). The before-snapshot is taken in the PreToolUse hook, because the CLI waits for it; `toolStarted` from the assistant message can come after the tool ran.
+- Queue and steer: `PUT /api/runs/:runId/queue` replaces the queue, `POST /api/runs/:runId/steer` ends the turn and the server starts the next run with that text (`handle.next()`, `continueWithNext` in `http/app.ts`). Undelivered queued text after the last tool also starts a next run. Stop never sends the queue; the UI puts it back in the composer.
+- Stop: `useEscapeStop` listens in the studio and takes `escape` from the bridge, only while a run is active and only when no popover, edit or comment mode took the key.
+- Permission prompts (part 1): only Bash, and only when settings allow Bash. The prompt lives in the hook path (`agent/ask-gate.ts`), keyed by tool-use id, so auto-allowed calls also ask. `POST /api/runs/:runId/permissions/:requestId` answers it; a cancel or the 280 s timeout answers deny. Hard denies (outside the work tree, executed config files) stay hard denies and never become prompts. The mock agent calls the same gate.
+- Plan mode: `RunRequest.plan`; `findToolProblem` refuses write tools, Bash and tweaks with `PLAN_MODE_DENY`. The run ends with a plan card; Approve starts a build run with the plan text.
+- Todos: `TodoWrite` is in the allowed tool list; the latest todo input of the direction pins above the composer and comes back after reload from the run summaries.
+- Context meter: input + cache-read + cache-write tokens of the last API call (`message_start` usage), over the model window. Effort goes in `RunRequest.effort` and the SDK `effort` option. `system/api_retry` messages become `run.retry` events.
+- Streaming: `markdownBlocks.ts` splits finished markdown blocks; each finished block is memoized and only the open tail re-parses. The chat scroll sticks to the bottom only while the user is at the bottom, and a new run sticks it again.
+- `@` mentions: the studio lists work-tree files (`listWorkTree` in `http/mentions.ts`) and the direction's tokens; `shared/fuzzy.ts` ranks them. `RunRequest.mentions` carries the picks; the server reads each picked file (capped) into the prompt, and a token goes in as its name and value.
+
 ## End-to-end tests
 
 `npm run e2e` (Playwright, installed Chrome). Each Playwright config has its own `outputDir` under `test-results/` and launches Chrome with site isolation off for tests only: Playwright maps clicks into an out-of-process iframe without the parent's CSS scale, and each project origin is its own site. Global setup builds the UI and starts the real server with `STUDIO_AGENT=mock`, a temp `STUDIO_DATA_DIR`, and ports 4270/4271/5300. The server gets `STUDIO_CLAUDE_HOME` set to a fixture home (`e2e/support/skills-fixture.ts`), so tests never read the real `~/.claude`. Specs `e2e/a-*.spec.ts` to `e2e/f-*.spec.ts` cover the release workflows; `e2e/latency.spec.ts` writes `e2e/results/latency.json`.

@@ -71,31 +71,31 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Capability | Best in class: product and how | Design Studio status | P | Size |
 |---|---|---|---|---|
 | Streaming text, markdown | CC: token stream, markdown, fences render mid-stream [CC1] | has, `runState.ts run.text.delta`, `deltaBatch.ts`, `ChatParts.tsx:AssistantText` | — | — |
-| Thinking display | CC: collapsed, Ctrl+O shows it muted italic [CC1, CC9] | partial, bug: `runState.ts case 'run.thinking'` replaces earlier blocks | P0 | S |
-| Run parts in true order | CC: transcript keeps text, thinking and tools in sequence [CC1] | bug: `ChatPanel.tsx:RunEntry` draws all thinking, then tools, then text | P0 | M |
-| Tool-call rows | CC: one summary row per call, repeats grouped, Ctrl+O full input/output [CC1] | has, `ToolChips.tsx` spinner, duration, `GroupSummary` | — | — |
-| File diffs in chat | CC desktop: `+12 -1` card, per-file diff, line comments, Cmd+Enter sends [CC7] | missing, `ToolDetail` shows path only | P0 | M |
-| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | missing, `server/agent/permissions.ts:createCanUseTool` is policy-only | P1 | L |
-| Interrupt | CC: Esc stops, keeps done work, sends queued next [CC1] | partial, Stop button `PromptBox.tsx:SendButton`; no Esc; Cmd+. desktop only (`desktop.ts:useDesktopCommand`) | P0 | S |
-| Queued messages | CC: Enter while running queues; lands at next tool boundary; Up pulls it back [CC1]; Cursor: drag to reorder [CC10] | missing in composer (`PromptBox canSend`, server `lifecycle.ts:147 run_in_progress`); comments can queue `useComments.ts` | P0 | M |
-| Steer mid-run | Cursor: "send now" at the next tool call [CC10]; OD: "Steer this turn" [OD3] | missing | P0 | M |
+| Thinking display | CC: collapsed, Ctrl+O shows it muted italic [CC1, CC9] | has (R3), every thinking block kept as its own part (`shared/run-parts.ts`) | P0 | S |
+| Run parts in true order | CC: transcript keeps text, thinking and tools in sequence [CC1] | has (R3), one ordered `parts` list per run, saved on `RunSummary.parts`, same order after reload | P0 | M |
+| Tool-call rows | CC: one summary row per call, repeats grouped, Ctrl+O full input/output [CC1] | has (R3), one verb and target format (`toolLabels.ts`), errors open, repeats as "×N", Stopped and Denied states | — | — |
+| File diffs in chat | CC desktop: `+12 -1` card, per-file diff, line comments, Cmd+Enter sends [CC7] | has (R3), `+N −M` badge per write or edit, red and green diff, per-file totals on the run card (`shared/line-diff.ts`) | P0 | M |
+| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | partial (R3), Bash asks: Allow once, or Deny with a note (`agent/ask-gate.ts`); always-rules and mode cycle in R8-5 | P1 | L |
+| Interrupt | CC: Esc stops, keeps done work, sends queued next [CC1] | has (R3), Esc in web and desktop with focus in the studio or the preview, < 500 ms; partial output stays, marked Stopped (`useEscapeStop.ts`) | P0 | S |
+| Queued messages | CC: Enter while running queues; lands at next tool boundary; Up pulls it back [CC1]; Cursor: drag to reorder [CC10] | has (R3), Enter while running queues; edit, remove, drag to reorder; sent at the next tool boundary; Stop puts the queue back in the composer (`QueuedMessages.tsx`) | P0 | M |
+| Steer mid-run | Cursor: "send now" at the next tool call [CC10]; OD: "Steer this turn" [OD3] | has (R3), Cmd+Enter while running stops the turn and starts the next one with that text | P0 | M |
 | Slash commands | CC: built-ins plus skills, fuzzy list, Tab completes [CC5, CC2] | partial, `/` opens `SkillPicker` only | P1 | M |
-| @ mentions | CC: `@` fuzzy file menu, chips [CC6]; OD: tabs for files, skills, MCP [OD3] | partial, canvas selection as `SelectionChips`, no `@` | P1 | M |
+| @ mentions | CC: `@` fuzzy file menu, chips [CC6]; OD: tabs for files, skills, MCP [OD3] | has (R3), `@` lists files and tokens with fuzzy rank (`shared/fuzzy.ts`), picks become chips, file text goes in the prompt | P1 | M |
 | Image paste and drop | CC: `[Image #N]` chip at cursor [CC1] | has, `PromptBox.tsx onPaste/onDrop`, `AttachmentThumbs` | — | — |
-| Plan mode | CC: read-only planning, approve then edit [CC4, CC7] | missing (closest: Critique mode `RunSettings.tsx MODE_LABEL`) | P1 | M |
-| Todo list | CC: live checklist, Ctrl+T, survives resume [CC1] | missing | P1 | M |
+| Plan mode | CC: read-only planning, approve then edit [CC4, CC7] | has (R3), write tools refused; the run ends with a plan card: Approve, Approve and accept edits, Keep planning | P1 | M |
+| Todo list | CC: live checklist, Ctrl+T, survives resume [CC1] | has (R3), pinned above the composer, "N of M", current item marked, kept after reload (`TodoPanel.tsx`) | P1 | M |
 | Resume and history | CC: `--continue`, `/resume` picker with search, `/rename` [CC5, CC11] | has, session ledger `lifecycle.ts`, runs per direction in `ChatPanel` | — | — |
 | Session list with search and rename | CC: `/resume` search, `/rename` [CC5] | partial, runs listed per direction; no search, no rename | P2 | S |
 | Rewind per message | CC: Esc Esc, restore code / chat / both, prompt back in input [CC3]; Cursor: preview checkpoint [CC10] | partial: versions undo/restore whole runs (`useUndoShortcut.ts`); no per-message, no code-only or chat-only | P1 | M |
-| Cost, tokens, context meter | CC: `/usage`, `/context` grid, status line `context_window.used_percentage` [CC5, CC12] | partial, `RunFoot` cost, `RunDetails.tsx` tokens; no context meter | P1 | S |
-| Model and effort picker | CC: `/model`, arrows set effort, Option+P [CC1] | partial, model in settings `SettingsFields.tsx`, `ModelTag`; no effort | P1 | S |
+| Cost, tokens, context meter | CC: `/usage`, `/context` grid, status line `context_window.used_percentage` [CC5, CC12] | has (R3), context meter in the composer row: last call's input tokens over the model window (`ContextMeter.tsx`) | P1 | S |
+| Model and effort picker | CC: `/model`, arrows set effort, Option+P [CC1] | has (R3), effort in run settings, sent with the next request | P1 | S |
 | Hooks | CC: 30+ events, PreToolUse can block [CC13] | partial, internal `PreToolUse` guard only `sdk-driver.ts:470` | P2 | M |
 | Background tasks and subagents | CC: Ctrl+B, `/tasks`, `name(task)` rows [CC1, CC8] | missing (variation fan-out is the only parallel work) | P2 | L |
 | Notify when done | CC: desktop notice when away [CC14] | partial, desktop only `desktop/native.ts:runFinished` | P2 | S |
-| Copy message and code block | claude.ai and CC desktop [mem] | missing (`ai/components/ai/code-block.tsx`) | P0 | S |
-| Retry and edit message | CC desktop: Edit and Retry; `/branch` fork [CC15, CC5] | missing | P1 | M |
-| Error and auto-retry | CC: backoff on 429/529 [CC15]; OD: failure card keeps Retry [OD2] | partial, `ChatParts.tsx:RunError`, `UnfinishedBanner.tsx`; no visible retry count | P1 | S |
-| Prompt history | CC: Up recalls, Ctrl+R searches [CC1] | missing, `storage.ts:useDraft` only | P1 | S |
+| Copy message and code block | claude.ai and CC desktop [mem] | has (R3), Copy on each message (markdown) and each code block (`CopyButton.tsx`) | P0 | S |
+| Retry and edit message | CC desktop: Edit and Retry; `/branch` fork [CC15, CC5] | partial (R3), Retry on the error card with no second user message; edit as fork in R7-4 | P1 | M |
+| Error and auto-retry | CC: backoff on 429/529 [CC15]; OD: failure card keeps Retry [OD2] | has (R3), "Retrying in Ns (k/5)" line, Retry on the error card | P1 | S |
+| Prompt history | CC: Up recalls, Ctrl+R searches [CC1] | has (R3), Up on an empty composer recalls; Ctrl+R searches (`HistorySearch.tsx`) | P1 | S |
 | Keep draft on failed send | OD 0.25.0: composer restores text if send fails [OD2] | has, `PromptBox.tsx:send` clears the draft only on success | — | — |
 | Prompt suggestion | CC desktop: ghost-text next prompt, Tab accepts [CC7] | missing | P2 | M |
 
@@ -140,7 +140,7 @@ Current gate: `e2e/latency.spec.ts` `TARGETS = { open: 2000, html: 250, react: 7
 | Click to selection outline | — | has gate: < 100 ms | < 50 ms | P1 | S |
 | Direct edit to source write and repaint | Lovable: no model call [L1] | missing measurement (`file.write` kind exists) | < 200 ms | P1 | S |
 | Pan and zoom frame rate | pen.dev claim: smooth with thousands of layers [P6] | not measured | 60 fps, smooth (section 3 definition) over 3 s of pan | P0 | S |
-| Streaming frame rate | — | not measured; finished messages re-parse markdown on each delta (`optimizations.md` rank 2) | no long task > 50 ms during a 10k-token stream | P0 | S |
+| Streaming frame rate | — | measured (R3): finished blocks memoized (`markdownBlocks.ts`), only the open tail re-parses; 10k-token mock stream in `chat-r3.spec.ts` R3-12 | no long task > 50 ms during a 10k-token stream | P0 | S |
 | UI bundle | — | 711 kB JS in `dist/ui`, one chunk, `App.tsx:4` static import (`optimizations.md` 06.1) | Home chunk < 300 kB | P2 | S |
 | Version list load | — | N+2 git spawns (`optimizations.md` 05.1) | < 300 ms at 100 versions | P2 | M |
 
@@ -196,7 +196,7 @@ Current gate: `e2e/latency.spec.ts` `TARGETS = { open: 2000, html: 250, react: 7
 | Drag folder from Finder into window | — | partial, dock `open-file` only `desktop/native.ts:52` | P1 | S |
 | Dock badge | — | missing | P2 | S |
 | Title bar | — | has, `hiddenInset` `desktop/window.ts:16` | — | — |
-| Stop works in web too | CC: Esc [CC1] | partial, Cmd+. desktop only (taken in R3-2) | P0 | S |
+| Stop works in web too | CC: Esc [CC1] | has (R3), Esc in web and desktop; Cmd+. in desktop | P0 | S |
 | Rebindable keys | CC: keybindings file [CC14] | missing | P2 | M |
 
 ### 1.9 Motion, typography, dark mode and accessibility
@@ -266,18 +266,18 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Rulers and guides | Canvas | Figma, CD | P2 | M | defer | Shift+R shows rulers; drag from a ruler makes a guide that survives reload | Measurement (R2-6) gives most of the value |
 | Pixel grid and snapping | Canvas | pen.dev, Paper | P2 | M | defer | At 800% a 1 px grid shows; a resize snaps to whole px | Needs free drag first |
 | Minimap, low-zoom frame thumbnails | Canvas | Paper | P2 | S–M | defer | At 10% zoom with 20 frames, pan stays smooth (definition in section 3) | Only matters with many frames |
-| Thinking kept in full | Chat | CC | P0 | S | R3-1 | — | Bug: only the last thinking block stays |
-| Run parts in true order | Chat | CC | P0 | M | R3-1 | — | Bug: the transcript shows a wrong order of events |
-| Esc interrupt in web and desktop | Chat | CC | P0 | S | R3-2 | — | The first thing a CC user tries |
-| Queue and steer while running | Chat | CC, Cursor, OD | P0 | M | R3-2 | — | The composer is locked during long runs |
-| File diffs in chat | Chat | CC desktop | P0 | M | R3-3 | — | Users must see what the agent changed |
-| Copy message and code | Chat | claude.ai | P0 | S | R3-4 | — | Basic |
-| Permission prompts | Chat | CC | P1 | L | R3-5 (allow once, deny with note), R8-5 (always-rules, mode cycle) | — | Safe Bash; CC parity |
-| @ mentions | Chat | CC, OD | P1 | M | R3-6 | — | Exact context for the agent |
-| Todo list | Chat | CC | P1 | M | R3-7 | — | Long runs need visible progress |
-| Plan mode | Chat | CC | P1 | M | R3-8 | — | Review the plan before a long run |
-| Context meter, effort picker | Chat | CC | P1 | S | R3-9 | — | Control of cost and quality |
-| Prompt history, auto-retry line, retry button | Chat | CC | P1 | S | R3-10 | — | Speed for heavy users; a silent wait looks like a hang |
+| Thinking kept in full | Chat | CC | P0 | S | R3-1 (done) | — | Bug: only the last thinking block stays |
+| Run parts in true order | Chat | CC | P0 | M | R3-1 (done) | — | Bug: the transcript shows a wrong order of events |
+| Esc interrupt in web and desktop | Chat | CC | P0 | S | R3-2 (done) | — | The first thing a CC user tries |
+| Queue and steer while running | Chat | CC, Cursor, OD | P0 | M | R3-2 (done) | — | The composer is locked during long runs |
+| File diffs in chat | Chat | CC desktop | P0 | M | R3-3 (done) | — | Users must see what the agent changed |
+| Copy message and code | Chat | claude.ai | P0 | S | R3-4 (done) | — | Basic |
+| Permission prompts | Chat | CC | P1 | L | R3-5 (done: allow once, deny with note), R8-5 (always-rules, mode cycle) | — | Safe Bash; CC parity |
+| @ mentions | Chat | CC, OD | P1 | M | R3-6 (done) | — | Exact context for the agent |
+| Todo list | Chat | CC | P1 | M | R3-7 (done) | — | Long runs need visible progress |
+| Plan mode | Chat | CC | P1 | M | R3-8 (done) | — | Review the plan before a long run |
+| Context meter, effort picker | Chat | CC | P1 | S | R3-9 (done) | — | Control of cost and quality |
+| Prompt history, auto-retry line, retry button | Chat | CC | P1 | S | R3-10 (done) | — | Speed for heavy users; a silent wait looks like a hang |
 | Slash commands | Chat | CC | P1 | M | R8-3 (one command registry with the palette) | — | Fast access to modes, skills and export |
 | Rewind per message, edit as fork | Chat | CC, Cursor | P1 | M | R7-4 | — | Undo one turn, not the whole run |
 | Session search and rename | Chat | CC | P2 | S | R7-7 | — | Find old runs |

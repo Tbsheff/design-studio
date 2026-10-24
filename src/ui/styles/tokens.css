@@ -31,6 +31,7 @@
   --stage-dot: oklch(0.86 0.006 var(--hue));
   --stage-text: oklch(0.45 0.01 var(--hue));
   --select: oklch(0.6 0.2 254);
+  --measure: oklch(0.54 0.2 25);
 
   --s-1: 4px;
   --s-2: 8px;

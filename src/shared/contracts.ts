@@ -541,8 +541,9 @@ export const BRIDGE_CHANGES_PATH = '/__studio/changes';
 export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
-  | { ns: 'studio'; token: string; type: 'hover'; rect: SelectionContext['rect'] | null; label?: string }
-  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number }
+  | { ns: 'studio'; token: string; type: 'hover'; rect: SelectionContext['rect'] | null; label?: string; altKey?: boolean; node?: number; source?: 'tree' }
+  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }
+  | { ns: 'studio'; token: string; type: 'tree'; nodes: LayerNode[]; truncated: boolean }
   | { ns: 'studio'; token: string; type: 'rects'; selectors: string[]; rects: (SelectionContext['rect'] | null)[] }
   | { ns: 'studio'; token: string; type: 'error'; kind: 'console' | 'runtime' | 'unhandledrejection'; message: string; stack?: string; source?: string; line?: number }
   | { ns: 'studio'; token: string; type: 'scroll' }
@@ -562,6 +563,28 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey; at: number }
   | { ns: 'studio'; token: string; type: 'anchor-rects'; anchors: AnchorReport[] }
   | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] };
+
+export interface LayerNode {
+  id: number;
+  depth: number;
+  tag: string;
+  name: string;
+  text: string;
+  childCount: number;
+  hidden: boolean;
+}
+
+export const LAYER_TREE_MAX = 5000;
+export const LAYER_LABEL_MAX = 60;
+
+export type SelectMove = 'child' | 'parent' | 'next' | 'prev';
+
+export function selectMoveOf(event: { key: string; shiftKey: boolean; metaKey: boolean; ctrlKey: boolean; altKey: boolean }): SelectMove | null {
+  if (event.metaKey || event.ctrlKey || event.altKey) return null;
+  if (event.key === 'Enter') return event.shiftKey ? 'parent' : 'child';
+  if (event.key === 'Tab') return event.shiftKey ? 'prev' : 'next';
+  return null;
+}
 
 export type ZoomKey = 'in' | 'out' | 'actual' | 'fit' | 'selection';
 
@@ -601,7 +624,11 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
-  | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] };
+  | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] }
+  | { ns: 'studio'; token: string; type: 'request-tree' }
+  | { ns: 'studio'; token: string; type: 'hover-node'; id: number | null }
+  | { ns: 'studio'; token: string; type: 'select-node'; id: number; additive: boolean }
+  | { ns: 'studio'; token: string; type: 'select-relative'; selector: string; move: SelectMove };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',

@@ -441,3 +441,207 @@ body.frame-dragging .frame {
   display: block;
   transform-origin: 0 0;
 }
+
+.canvas-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.canvas-body > .stage {
+  min-width: 0;
+}
+
+.layers {
+  width: 248px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  animation: layers-in var(--dur-slow) var(--ease);
+}
+
+@keyframes layers-in {
+  from {
+    opacity: 0;
+    translate: -8px 0;
+  }
+}
+
+.layers-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 40px;
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border-bottom: 1px solid var(--line);
+}
+
+.layers-title {
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.layers-frame {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.layers-list {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--s-1) 0;
+  outline: none;
+}
+
+.layers-list:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.layers-rows {
+  position: relative;
+}
+
+.layers-row {
+  position: absolute;
+  left: var(--s-1);
+  right: var(--s-1);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding-right: var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+
+.layers-row:hover {
+  background: var(--surface-hover);
+}
+
+.layers-row.selected {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.layers-list:focus-visible .layers-row.selected {
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+}
+
+.layers-row.is-hidden {
+  opacity: 0.55;
+}
+
+.layers-twisty {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+}
+
+.layers-twisty .icon {
+  transition: rotate var(--dur) var(--ease);
+}
+
+.layers-twisty.open .icon {
+  rotate: 90deg;
+}
+
+.layers-twisty:hover {
+  color: var(--text);
+}
+
+.layers-tag {
+  flex: none;
+  font-family: var(--mono);
+  color: var(--text-2);
+}
+
+.layers-row.selected .layers-tag {
+  color: inherit;
+}
+
+.layers-name {
+  flex: none;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.layers-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-3);
+}
+
+.layers-empty,
+.layers-note {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  text-wrap: balance;
+}
+
+.measure-target {
+  border: var(--stroke) dashed var(--measure);
+}
+
+.measure-line {
+  position: absolute;
+  background: var(--measure);
+}
+
+.measure-line.x {
+  height: var(--stroke);
+}
+
+.measure-line.y {
+  width: var(--stroke);
+}
+
+.measure-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  transform: scale(var(--inv-zoom, 1));
+  padding: 0 var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--measure);
+  color: oklch(1 0 0);
+  font: 500 var(--t-xs) / 20px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layers {
+    animation: none;
+  }
+
+  .layers-twisty .icon {
+    transition: none;
+  }
+}

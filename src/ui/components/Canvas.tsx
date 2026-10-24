@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
 import type { ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
-import { useUi } from '../storage';
+import { uiStore, useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, canAddFrame } from '../canvasFrames';
+import { boundsOf, canAddFrame, frameName, type CanvasFrame } from '../canvasFrames';
 import { passiveSrc, unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { AddFrameMenu, FrameLabel, PassiveFrame } from './CanvasFrames';
+import { ArtboardOverlay } from './ArtboardOverlay';
+import { CanvasLayersPanel, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { setCanvasFront, useTokenFrames } from '../tokenFrames';
@@ -115,26 +117,63 @@ function useRenderCheck(projectId: string, directionId: string | null) {
   return { checking, results, error, run, close };
 }
 
-interface OverlayProps {
-  hover: { rect: SelectionContext['rect']; label?: string } | null;
-  selection: SelectionContext[];
-  comments: ReactNode;
+function usePortSync(port: MutableRefObject<PreviewPort | null> | undefined, frames: PreviewPort | null, lastChange: FilesChange | null, kind: ProjectKind) {
+  useEffect(() => {
+    if (!port) return;
+    port.current = frames ? { post: frames.post, refreshRects: frames.refreshRects } : null;
+  });
+  useEffect(() => {
+    if (!lastChange || kind !== 'react') return;
+    const timers = RECT_REFRESH_MS.map((ms) => window.setTimeout(() => port?.current?.refreshRects(), ms));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [lastChange, kind, port]);
 }
 
-function ArtboardOverlay({ hover, selection, comments }: OverlayProps) {
-  return (
-    <div className="overlay">
-      {hover && (
-        <div className="box hover" style={{ left: hover.rect.x, top: hover.rect.y, width: hover.rect.width, height: hover.rect.height }}>
-          {hover.label && <span className="box-label">{hover.label}</span>}
-        </div>
-      )}
-      {selection.map((s) => (
-        <div key={s.selector} className="box selected" style={{ left: s.rect.x, top: s.rect.y, width: s.rect.width, height: s.rect.height }} />
-      ))}
-      {comments}
-    </div>
-  );
+interface SlotFrames {
+  slots: { token: string; src: string }[];
+  frontToken: string | null;
+  elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>;
+  onFrameLoad: (token: string) => void;
+}
+
+function PreviewSlots({ frames, sandbox, viewport }: { frames: SlotFrames; sandbox?: string; viewport: { width: number; height: number } }) {
+  return frames.slots.map((slot) => (
+    <iframe
+      key={slot.token}
+      ref={(el) => {
+        frames.elements.current[slot.token] = el;
+      }}
+      title="Design preview"
+      className={`frame ${slot.token === frames.frontToken ? 'front' : 'back'}`}
+      src={slot.src}
+      onLoad={() => frames.onFrameLoad(slot.token)}
+      sandbox={sandbox}
+      width={viewport.width}
+      height={viewport.height}
+    />
+  ));
+}
+
+function OtherFrames({ frames, active, src, sandbox, labelProps, register }: {
+  frames: CanvasFrame[];
+  active: CanvasFrame;
+  src: string | null;
+  sandbox?: string;
+  labelProps: (frame: CanvasFrame) => ComponentProps<typeof FrameLabel>;
+  register: (id: string, el: HTMLDivElement | null) => void;
+}) {
+  return frames
+    .filter((f) => f.id !== active.id)
+    .map((f) => <PassiveFrame key={f.id} frame={f} src={src} sandbox={sandbox} offset={active} label={labelProps(f)} register={register} />);
+}
+
+function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking: boolean): T | null {
+  return picking || hover?.fromTree ? hover : null;
+}
+
+function CheckResults({ projectId, check }: { projectId: string; check: ReturnType<typeof useRenderCheck> }) {
+  if (!check.results && !check.error) return null;
+  return <RenderCheckPanel projectId={projectId} results={check.results} error={check.error} onClose={check.close} />;
 }
 
 function stageCursor(pz: { panning: boolean; spaceHeld: boolean; zoomHeld: boolean }): string {
@@ -209,19 +248,12 @@ export function Canvas(props: Props) {
   useEffect(() => () => setCanvasFront(null, false), []);
 
   const live = source.kind === 'live';
-  const port = props.port;
-  useEffect(() => {
-    if (!port) return;
-    port.current = live ? { post: frames.post, refreshRects: frames.refreshRects } : null;
-  });
-
-  useEffect(() => {
-    if (!props.lastChange || kind !== 'react') return;
-    const timers = RECT_REFRESH_MS.map((ms) => window.setTimeout(() => port?.current?.refreshRects(), ms));
-    return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [props.lastChange, kind, port]);
+  usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
   useSelectKey(setSelectMode);
+  const layersOpen = ui.layersOpen && live;
+  useLayersWatch(frames.watchTree, layersOpen, frames.frontToken);
+  useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps, registerPassive, addFrameAt } = useFrameActions(canvasFrames, pz, artboardRef);
@@ -229,8 +261,6 @@ export function Canvas(props: Props) {
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
   const note = stageNote({ running: props.running, noRuns: props.noRuns, live, hasHead: headVersionId !== null, urlError });
-  const passiveFrames = layout.frames.filter((f) => f.id !== active.id);
-  const otherSrc = passiveFrames.length > 0 ? passiveSrc(baseUrl, kind, live ? props.lastChange : null) : null;
   return (
     <div className="canvas">
       <CanvasToolbar
@@ -253,8 +283,11 @@ export function Canvas(props: Props) {
         checking={check.checking}
         onCheck={check.run}
         addFrame={<AddFrameMenu disabled={!canAddFrame(layout)} onAdd={addFrameAt} />}
+        layers={<LayersToggle open={layersOpen} disabled={!live} />}
       />
-      {(check.results || check.error) && <RenderCheckPanel projectId={projectId} results={check.results} error={check.error} onClose={check.close} />}
+      <CheckResults projectId={projectId} check={check} />
+      <div className="canvas-body">
+      {layersOpen && <CanvasLayersPanel frames={frames} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
@@ -267,23 +300,9 @@ export function Canvas(props: Props) {
             visibility: note === 'empty' ? 'hidden' : undefined,
           }}
         >
-          {frames.slots.map((slot) => (
-            <iframe
-              key={slot.token}
-              ref={(el) => {
-                frames.elements.current[slot.token] = el;
-              }}
-              title="Design preview"
-              className={`frame ${slot.token === frames.frontToken ? 'front' : 'back'}`}
-              src={slot.src}
-              onLoad={() => frames.onFrameLoad(slot.token)}
-              sandbox={sandbox}
-              width={viewport.width}
-              height={viewport.height}
-            />
-          ))}
+          <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
           <ArtboardOverlay
-            hover={selectMode || commentMode ? frames.hover : null}
+            hover={overlayHover(frames.hover, selectMode || commentMode)}
             selection={props.selection}
             comments={
               comment.available && props.comments ? (
@@ -302,11 +321,10 @@ export function Canvas(props: Props) {
             }
           />
           {layout.frames.length > 1 && <FrameLabel {...labelProps(active)} />}
-          {passiveFrames.map((f) => (
-            <PassiveFrame key={f.id} frame={f} src={otherSrc} sandbox={sandbox} offset={active} label={labelProps(f)} register={registerPassive} />
-          ))}
+          <OtherFrames frames={layout.frames} active={active} src={passiveSrc(baseUrl, kind, live ? props.lastChange : null)} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         {capture && <div className="capture" data-testid="pan-capture" />}
+      </div>
       </div>
     </div>
   );

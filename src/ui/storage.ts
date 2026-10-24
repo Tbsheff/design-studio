@@ -31,6 +31,7 @@ interface UiState {
   lastLocation: string | null;
   snapByProject: Record<string, boolean>;
   homeSort: HomeSort;
+  layersOpen: boolean;
 }
 
 export type HomeSort = 'recent' | 'name' | 'created';
@@ -51,6 +52,7 @@ const defaults: UiState = {
   lastLocation: null,
   snapByProject: {},
   homeSort: 'recent',
+  layersOpen: false,
 };
 
 function loadUiState(): UiState {
@@ -71,6 +73,7 @@ function loadUiState(): UiState {
       lastLocation: typeof parsed.lastLocation === 'string' && parsed.lastLocation.startsWith('/') ? parsed.lastLocation : null,
       snapByProject: parsed.snapByProject && typeof parsed.snapByProject === 'object' ? parsed.snapByProject : {},
       homeSort: parsed.homeSort && HOME_SORTS.includes(parsed.homeSort) ? parsed.homeSort : 'recent',
+      layersOpen: parsed.layersOpen === true,
     };
   } catch {
     return defaults;

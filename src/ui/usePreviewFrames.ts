@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { BridgeToParent, ProjectKind, SelectionContext, ZoomKey } from '../shared/contracts';
+import type { BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
+import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
 import { frameSrc, postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import { randomToken } from './session';
@@ -18,10 +19,14 @@ interface PendingSwap {
   due: boolean;
 }
 
-interface HoverBox {
+export interface HoverBox {
   rect: SelectionContext['rect'];
   label?: string;
+  altKey?: boolean;
+  fromTree?: boolean;
 }
+
+const TREE_REFRESH_MS = 400;
 
 interface Options {
   projectId: string;
@@ -60,6 +65,10 @@ export function usePreviewFrames(o: Options) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [frontToken, setFrontToken] = useState<string | null>(null);
   const [hover, setHover] = useState<HoverBox | null>(null);
+  const [tree, setTree] = useState<LayerTree | null>(null);
+  const [selectedNode, setSelectedNode] = useState<number | null>(null);
+  const treeWanted = useRef(false);
+  const treeTimer = useRef<number | null>(null);
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const pendingSwap = useRef<PendingSwap | null>(null);
   const pendingReact = useRef<{ changedAt: number; receivedAt: number } | null>(null);
@@ -253,14 +262,37 @@ export function usePreviewFrames(o: Options) {
     [settleSwap],
   );
 
+  const scheduleTree = useCallback(() => {
+    if (treeTimer.current !== null) return;
+    treeTimer.current = window.setTimeout(() => {
+      treeTimer.current = null;
+      const f = frontFrame();
+      if (f && treeWanted.current) postToFrame(f, { type: 'request-tree' });
+    }, TREE_REFRESH_MS);
+  }, [frontFrame]);
+
+  const watchTree = useCallback(
+    (on: boolean) => {
+      treeWanted.current = on;
+      if (!on) return;
+      const f = frontFrame();
+      if (f) postToFrame(f, { type: 'request-tree' });
+    },
+    [frontFrame],
+  );
+
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
       switch (msg.type) {
         case 'hover':
-          if (cur.selectMode) setHover(msg.rect ? { rect: msg.rect, label: msg.label } : null);
+          if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
+          break;
+        case 'tree':
+          setTree(parseLayerTree(msg));
           break;
         case 'select':
+          setSelectedNode(typeof msg.node === 'number' ? msg.node : null);
           cur.setSelection((prev) => {
             if (msg.additive && prev.some((s) => s.selector === msg.selection.selector)) return prev;
             pendingSelectAt.current = msg.at;
@@ -292,8 +324,14 @@ export function usePreviewFrames(o: Options) {
   const onMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
-      if (msg.type === 'ready') return syncFrame(frame);
-      if (msg.type === 'painted') return onPainted(frame);
+      if (msg.type === 'ready') {
+        if (treeWanted.current && frame.token === frontRef.current) postToFrame(frame, { type: 'request-tree' });
+        return syncFrame(frame);
+      }
+      if (msg.type === 'painted') {
+        if (treeWanted.current && frame.token === frontRef.current) scheduleTree();
+        return onPainted(frame);
+      }
       if (msg.type === 'error') {
         frameErrorAt.current[frame.token] = Date.now();
         cur.onError({ directionId: cur.directionId, source: msg.kind, message: msg.message, file: msg.source, line: msg.line });
@@ -306,6 +344,10 @@ export function usePreviewFrames(o: Options) {
 
   useBridge(() => slotsRef.current.map(frameFor), onMessage);
 
+  useEffect(() => () => {
+    if (treeTimer.current !== null) window.clearTimeout(treeTimer.current);
+  }, []);
+
   const clearSelection = useCallback(() => {
     const f = frontFrame();
     if (f) postToFrame(f, { type: 'clear' });
@@ -316,5 +358,24 @@ export function usePreviewFrames(o: Options) {
     if (f) postToFrame(f, body);
   }, [frontFrame]);
 
-  return { slots, frontToken, hover, elements, onFrameLoad, clearSelection, post, refreshRects: () => requestRects(frontFrame()) };
+  const hoverNode = useCallback((id: number | null) => post({ type: 'hover-node', id }), [post]);
+  const selectNode = useCallback((id: number, additive: boolean) => post({ type: 'select-node', id, additive }), [post]);
+  const selectRelative = useCallback((selector: string, move: SelectMove) => post({ type: 'select-relative', selector, move }), [post]);
+
+  return {
+    slots,
+    frontToken,
+    hover,
+    elements,
+    onFrameLoad,
+    clearSelection,
+    post,
+    refreshRects: () => requestRects(frontFrame()),
+    tree,
+    selectedNode,
+    watchTree,
+    hoverNode,
+    selectNode,
+    selectRelative,
+  };
 }

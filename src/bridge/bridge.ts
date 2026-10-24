@@ -1,6 +1,7 @@
 import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, SelectionContext, SourceLoc } from '../shared/contracts.js';
 import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
 import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
+import { createLayerIndex, moveSelection } from './layers.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -10,6 +11,7 @@ import {
   TOKEN_PREVIEW_STYLE_ID,
   zoomKeyOf,
   isModZoomKey,
+  selectMoveOf,
 } from '../shared/contracts.js';
 
 type Rect = SelectionContext['rect'];
@@ -691,22 +693,33 @@ function startBridge(session: BridgeSession): void {
     });
   };
 
+  const layers = createLayerIndex();
+  let selected: Element | null = null;
+  let altHeld = false;
+  let lastAlt = false;
+
+  const postHover = (element: Element | null, source?: 'tree'): void => {
+    if (!element) {
+      post({ type: 'hover', rect: null, source });
+      return;
+    }
+    post({ type: 'hover', rect: rectOf(element), label: shortLabel(element), altKey: altHeld, node: layers.idOf(element), source });
+  };
+
   const flushHover = (): void => {
     hoverFrame = 0;
     const element = pendingHover;
     pendingHover = null;
     if (mode !== 'select') return;
-    if (element === lastHover && element) return;
+    if (element === lastHover && element && altHeld === lastAlt) return;
     lastHover = element;
-    if (!element) {
-      post({ type: 'hover', rect: null });
-      return;
-    }
-    post({ type: 'hover', rect: rectOf(element), label: shortLabel(element) });
+    lastAlt = altHeld;
+    postHover(element);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
     if (mode !== 'select') return;
+    altHeld = event.altKey;
     pendingHover = eventElement(event);
     if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
   };
@@ -718,21 +731,46 @@ function startBridge(session: BridgeSession): void {
     event.stopImmediatePropagation();
   };
 
+  const postSelect = (element: Element, additive: boolean): void => {
+    selected = element;
+    post({
+      type: 'select',
+      selection: selectionFor(element),
+      additive,
+      at: performance.timeOrigin + performance.now(),
+      node: layers.idOf(element),
+    });
+  };
+
   const onClick = (event: MouseEvent): void => {
     if (mode !== 'select') return;
     block(event);
     const element = eventElement(event);
     if (!element) return;
-    post({
-      type: 'select',
-      selection: selectionFor(element),
-      additive: event.shiftKey,
-      at: performance.timeOrigin + performance.now(),
-    });
+    window.focus();
+    postSelect(element, event.shiftKey);
+  };
+
+  const onAltChange = (event: KeyboardEvent): void => {
+    if (event.key !== 'Alt' || mode !== 'select') return;
+    altHeld = event.type === 'keydown';
+    if (altHeld === lastAlt || !lastHover) return;
+    lastAlt = altHeld;
+    postHover(lastHover);
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (mode !== 'select' || event.key !== 'Escape') return;
+    onAltChange(event);
+    if (mode !== 'select') return;
+    const move = selectMoveOf(event);
+    if (move && selected?.isConnected && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      event.stopPropagation();
+      const next = moveSelection(selected, move);
+      if (next) postSelect(next, false);
+      return;
+    }
+    if (event.key !== 'Escape') return;
     mode = 'none';
     lastHover = null;
     pendingHover = null;
@@ -761,8 +799,10 @@ function startBridge(session: BridgeSession): void {
       pendingHover = null;
     },
     'request-rects': (message) => {
-      const selectors = Array.isArray(message.selectors) ? message.selectors : [];
-      rects.track(selectors.filter((selector): selector is string => typeof selector === 'string'));
+      const selectors = (Array.isArray(message.selectors) ? message.selectors : []).filter((selector): selector is string => typeof selector === 'string');
+      const last = selectors.at(-1);
+      selected = last ? queryElement(last) : null;
+      rects.track(selectors);
     },
     clear: () => {
       lastHover = null;
@@ -775,6 +815,18 @@ function startBridge(session: BridgeSession): void {
     'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
     'set-theme': (message) => themeControl.set(message.theme),
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
+    'request-tree': () => post({ type: 'tree', ...layers.build() }),
+    'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
+    'select-node': (message) => {
+      const element = typeof message.id === 'number' ? layers.element(message.id) : null;
+      if (element) postSelect(element, message.additive === true);
+    },
+    'select-relative': (message) => {
+      const base = typeof message.selector === 'string' ? queryElement(message.selector) : null;
+      const valid = message.move === 'child' || message.move === 'parent' || message.move === 'next' || message.move === 'prev';
+      const next = base && valid ? moveSelection(base, message.move) : null;
+      if (next) postSelect(next, false);
+    },
     'describe-anchors': (message) => {
       if (typeof message.requestId !== 'string') return;
       const contexts = anchorQueries(message.anchors).map((query) => {
@@ -806,6 +858,7 @@ function startBridge(session: BridgeSession): void {
   window.addEventListener('auxclick', block, { capture: true });
   window.addEventListener('contextmenu', block, { capture: true });
   window.addEventListener('keydown', onKeyDown, { capture: true });
+  window.addEventListener('keyup', onAltChange, { capture: true });
   window.addEventListener('scroll', onScroll, { capture: true, passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
   forwardZoomInput(post);

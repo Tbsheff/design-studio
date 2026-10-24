@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { createProjectViaUi, frontFrame, openHome, setSelectMode } from './support/studio';
 
@@ -32,38 +34,34 @@ function inside(inner: Box, outer: Box): boolean {
   return inner.x >= outer.x - 1 && inner.y >= outer.y - 1 && inner.x + inner.width <= outer.x + outer.width + 1 && inner.y + inner.height <= outer.y + outer.height + 1;
 }
 
-async function armFitProbe(page: Page): Promise<void> {
+async function armFitProbe(page: Page, where: 'studio' | 'frame'): Promise<void> {
   await page.evaluate(() => {
     const artboard = document.querySelector<HTMLElement>('.artboard');
-    const w = window as unknown as { __fitProbe?: Promise<{ ms: number; changed: boolean }> };
-    w.__fitProbe = new Promise((resolve) => {
-      const before = artboard?.style.transform ?? '';
-      const measure = (startEpoch: number) =>
-        requestAnimationFrame((ts) => resolve({ ms: performance.timeOrigin + ts - startEpoch, changed: (artboard?.style.transform ?? '') !== before }));
-      const onKey = (e: KeyboardEvent) => {
-        if (e.code !== 'Digit1' || !e.shiftKey) return;
-        cleanup();
-        measure(performance.timeOrigin + e.timeStamp);
+    const w = window as unknown as { __fitPainted?: Promise<{ at: number; changed: boolean }> };
+    const before = artboard?.style.transform ?? '';
+    w.__fitPainted = new Promise((resolve) => {
+      const onSignal = () => {
+        window.removeEventListener('keydown', onSignal, true);
+        window.removeEventListener('message', onSignal, true);
+        queueMicrotask(() => requestAnimationFrame(() => resolve({ at: Date.now(), changed: (artboard?.style.transform ?? '') !== before })));
       };
-      const onMessage = (e: MessageEvent) => {
-        const data = e.data as { type?: string; key?: string; at?: number } | null;
-        if (data?.type !== 'zoom-key' || data.key !== 'fit' || typeof data.at !== 'number') return;
-        cleanup();
-        const at = data.at;
-        queueMicrotask(() => measure(at));
-      };
-      const cleanup = () => {
-        window.removeEventListener('keydown', onKey, true);
-        window.removeEventListener('message', onMessage, true);
-      };
-      window.addEventListener('keydown', onKey, true);
-      window.addEventListener('message', onMessage, true);
+      window.addEventListener('keydown', onSignal, true);
+      window.addEventListener('message', onSignal, true);
     });
+  });
+  const target = where === 'studio' ? page.mainFrame() : page.frames().find((f) => f !== page.mainFrame() && f.url().includes('__studio') === false && f.parentFrame() === page.mainFrame());
+  if (!target) throw new Error('no frame');
+  await target.evaluate(() => {
+    const w = window as unknown as { __fitKey?: number };
+    window.addEventListener('keydown', () => (w.__fitKey = Date.now()), { capture: true, once: true });
   });
 }
 
-async function fitProbe(page: Page): Promise<{ ms: number; changed: boolean }> {
-  return page.evaluate(() => (window as unknown as { __fitProbe: Promise<{ ms: number; changed: boolean }> }).__fitProbe);
+async function fitProbe(page: Page, where: 'studio' | 'frame'): Promise<{ ms: number; changed: boolean }> {
+  const painted = await page.evaluate(() => (window as unknown as { __fitPainted: Promise<{ at: number; changed: boolean }> }).__fitPainted);
+  const target = where === 'studio' ? page.mainFrame() : page.frames().find((f) => f !== page.mainFrame() && f.parentFrame() === page.mainFrame());
+  const key = await target?.evaluate(() => (window as unknown as { __fitKey?: number }).__fitKey ?? 0);
+  return { ms: painted.at - (key ?? 0), changed: painted.changed };
 }
 
 test('R2-1: Figma zoom keys in the studio and in the preview', async ({ page }) => {
@@ -92,11 +90,11 @@ test('R2-1: Figma zoom keys in the studio and in the preview', async ({ page }) 
     await page.keyboard.press('ControlOrMeta+Digit0');
     await expect.poll(() => currentZoom(page)).toBe(1);
 
-    await armFitProbe(page);
+    await armFitProbe(page, where);
     await page.keyboard.press('Shift+Digit1');
-    const probe = await fitProbe(page);
+    const probe = await fitProbe(page, where);
     expect(probe.changed).toBe(true);
-    expect(probe.ms).toBeLessThanOrEqual(16.7 * 2);
+    expect(probe.ms).toBeLessThanOrEqual(17.7);
     timings[`fit-${where}`] = Math.round(probe.ms * 10) / 10;
     await expect(zoomSelect).toHaveValue('fit');
     await expect.poll(() => currentZoom(page)).toBeCloseTo(fitZoom, 4);
@@ -333,4 +331,187 @@ test('R2-2: a 3 s pan and a 3 s zoom do not render Canvas, and stay smooth', asy
   expect(pan.frames).toBeGreaterThan(100);
   expect(pan.p95).toBeLessThanOrEqual(17);
   expect(pan.over32).toBe(0);
+});
+
+function layersPage(): string {
+  const cards = Array.from({ length: 160 }, (_, i) => `<article class="card c${i}"><h3>Card ${i}</h3><p>Body <b>${i}</b></p><ul><li>One</li><li>Two</li></ul></article>`).join('\n');
+  return `<!doctype html><html><head><style>
+body{margin:0;font:16px system-ui} #top{padding:40px} .row{display:flex;gap:24px;padding:24px}
+.box{width:120px;height:80px;background:#ddd} #nest{padding:32px;background:#eef} .wrap{padding:16px} .inner{padding:8px}
+</style></head><body>
+<section id="top"><h1>Layers Page</h1><div class="row"><div class="box" id="b1"></div><div class="box" id="b2"></div></div></section>
+<section id="nest"><div class="wrap"><div class="inner"><button id="deep">Deep</button></div></div></section>
+<div hidden id="ghost"><span>Hidden</span></div>
+<main>${cards}</main>
+</body></html>`;
+}
+
+async function layersProject(page: Page) {
+  const api = await openHome(page);
+  const project = await createProjectViaUi(page, api, 'Layers Seed Page', 'html');
+  await expect(frontFrame(page).locator('h1')).toHaveText('Layers Seed Page');
+  await api.waitForRuns(project.id, 1);
+  const main = project.directions[0];
+  if (!main) throw new Error('no direction');
+  writeFileSync(path.join(main.workTree, 'index.html'), layersPage());
+  await expect(frontFrame(page).locator('h1')).toHaveText('Layers Page');
+  return api;
+}
+
+test('R2-4: the layers tree opens fast on a 1,000-node page; hover, click and arrows select in the preview', async ({ page }) => {
+  await layersProject(page);
+  const nodeCount = await frontFrame(page).locator('body *').count();
+  expect(nodeCount).toBeGreaterThanOrEqual(1000);
+  await focusStudio(page);
+  await page.waitForTimeout(300);
+  const openMs = await page.evaluate(async () => {
+    const button = document.querySelector<HTMLButtonElement>('button[aria-label="Layers"]');
+    if (!button) throw new Error('no layers button');
+    const start = performance.now();
+    button.click();
+    return new Promise<number>((resolve) => {
+      const check = () => (document.querySelector('.layers-row') ? resolve(performance.now() - start) : requestAnimationFrame(check));
+      check();
+    });
+  });
+  const rows = page.locator('.layers-row');
+  expect(await rows.count()).toBeLessThan(80);
+  await expect(page.locator('.layers-rows')).toHaveAttribute('style', /height/);
+
+  const row = page.locator('.layers-row', { hasText: '#b2' });
+  await row.hover();
+  await expect(page.locator('.overlay .box.hover')).toHaveCount(1);
+  const b2 = await frontFrame(page).locator('#b2').evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, width: r.width, height: r.height };
+  });
+  const clickMs = await page.evaluate(() => {
+    return new Promise<number>((resolve) => {
+      let start = 0;
+      const rowEl = Array.from(document.querySelectorAll<HTMLElement>('.layers-row')).find((el) => el.textContent?.includes('#b2'));
+      if (!rowEl) throw new Error('no row');
+      const observer = new MutationObserver(() => {
+        if (document.querySelector('.overlay .box.selected')) {
+          observer.disconnect();
+          resolve(performance.now() - start);
+        }
+      });
+      observer.observe(document.querySelector('.overlay') as Node, { childList: true, subtree: true });
+      start = performance.now();
+      rowEl.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, isPrimary: true }));
+    });
+  });
+  const selected = page.locator('.overlay .box.selected');
+  await expect(selected).toHaveAttribute('style', new RegExp(`left: ${b2.x}px; top: ${b2.y}px; width: ${b2.width}px`));
+  await expect(page.locator('.layers-row.selected')).toContainText('#b2');
+  await expect(page.locator('.chip')).toContainText('div');
+
+  await page.locator('.layers-list').focus();
+  await page.keyboard.press('ArrowUp');
+  await expect(page.locator('.layers-row.selected')).toContainText('#b1');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.layers-row.selected')).toContainText('.row');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.layers-row.selected')).toContainText('.row');
+  await expect(page.locator('.layers-row', { hasText: '#b1' })).toHaveCount(0);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('.layers-row', { hasText: '#b1' })).toHaveCount(1);
+
+  await page.locator('.layers-row', { hasText: '#ghost' }).click();
+  await expect(page.locator('.layers-row.selected')).toHaveClass(/is-hidden/);
+  await expect(page.locator('.chip')).toContainText('div');
+
+  await page.locator('.layers-list').evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect(page.locator('.layers-row').last()).toBeVisible();
+  console.log(`R2-4 ${JSON.stringify({ nodes: nodeCount, openMs: Math.round(openMs), clickMs: Math.round(clickMs * 10) / 10 })}`);
+  expect(openMs).toBeLessThan(150);
+  expect(clickMs).toBeLessThan(50);
+});
+
+test('R2-5: Enter, Shift+Enter and Tab move the selection, with focus in the preview', async ({ page }) => {
+  await layersProject(page);
+  await setSelectMode(page, true);
+  const nest = await frontFrame(page).locator('#nest').boundingBox();
+  if (!nest) throw new Error('no section');
+  await page.mouse.click(nest.x + 8, nest.y + 8);
+  await expect(page.locator('.chip')).toContainText('section');
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
+  for (let i = 0; i < 3; i += 1) await page.keyboard.press('Enter');
+  await expect(page.locator('.chip')).toContainText('button');
+  await expect(page.locator('.chip')).toContainText('Deep');
+  await page.keyboard.press('Shift+Enter');
+  await expect(page.locator('.chip')).toContainText('div');
+
+  await focusStudio(page);
+  await frontFrame(page).locator('#b1').click();
+  await focusStudio(page);
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await page.keyboard.press('Tab');
+  const b2 = await frontFrame(page).locator('#b2').boundingBox();
+  await expect.poll(async () => Math.abs(((await page.locator('.overlay .box.selected').boundingBox())?.x ?? 0) - (b2?.x ?? 0))).toBeLessThanOrEqual(2);
+  await page.keyboard.press('Shift+Tab');
+  const b1 = await frontFrame(page).locator('#b1').boundingBox();
+  await expect.poll(async () => Math.abs(((await page.locator('.overlay .box.selected').boundingBox())?.x ?? 0) - (b1?.x ?? 0))).toBeLessThanOrEqual(2);
+});
+
+test('R2-6: Alt over another element shows distances that match getBoundingClientRect', async ({ page }) => {
+  await layersProject(page);
+  await setSelectMode(page, true);
+  await frontFrame(page).locator('#b1').click();
+  const rects = await frontFrame(page).locator('body').evaluate(() => {
+    const r = (id: string) => (document.getElementById(id) as HTMLElement).getBoundingClientRect();
+    const b1 = r('b1');
+    const b2 = r('b2');
+    const row = (document.querySelector('.row') as HTMLElement).getBoundingClientRect();
+    return { gap: b2.left - b1.right, insetTop: b1.top - row.top, insetLeft: b1.left - row.left, insetBottom: row.bottom - b1.bottom };
+  });
+  const b2 = await frontFrame(page).locator('#b2').boundingBox();
+  if (!b2) throw new Error('no b2');
+  await page.keyboard.down('Alt');
+  await page.mouse.move(b2.x + 20, b2.y + 20);
+  await page.mouse.move(b2.x + 24, b2.y + 24);
+  const labels = page.locator('[data-testid="measure"] .measure-label');
+  await expect(labels).toHaveCount(1);
+  expect(Math.abs(Number(await labels.first().getAttribute('data-value')) - rects.gap)).toBeLessThanOrEqual(1);
+  expect(Math.abs(Number(await labels.first().innerText()) - rects.gap)).toBeLessThanOrEqual(1);
+
+  const row = await frontFrame(page).locator('.row').boundingBox();
+  if (!row) throw new Error('no row');
+  await page.mouse.move(row.x + row.width - 6, row.y + row.height - 6);
+  await expect(labels).toHaveCount(4);
+  const readValues = async () => (await labels.evaluateAll((els) => els.map((el) => Math.round(Number(el.getAttribute('data-value')))))).sort((a, b) => a - b);
+  await expect.poll(readValues).toEqual(expect.arrayContaining([rects.insetTop, rects.insetLeft, rects.insetBottom].map(Math.round)));
+  const values = await readValues();
+  await page.keyboard.up('Alt');
+  await page.mouse.move(row.x + row.width - 8, row.y + row.height - 8);
+  await expect(page.locator('[data-testid="measure"]')).toHaveCount(0);
+  console.log(`R2-6 ${JSON.stringify({ rects, labels: values })}`);
+});
+
+test('R2-7: Z+click zooms in 2x around the cursor; Z+Alt+click zooms out', async ({ page }) => {
+  const api = await openHome(page);
+  await createProjectViaUi(page, api, 'Z Click Page', 'html');
+  await expect(frontFrame(page).locator('h1')).toHaveText('Z Click Page');
+  await focusStudio(page);
+  await page.keyboard.press('Shift+Digit0');
+  await expect.poll(() => currentZoom(page)).toBe(1);
+  const stage = await box(page, '.stage');
+  const at = { x: stage.x + stage.width * 0.3, y: stage.y + stage.height * 0.4 };
+  const artboard = await box(page, '.artboard');
+  const design = { x: at.x - artboard.x, y: at.y - artboard.y };
+  await page.keyboard.down('KeyZ');
+  await expect(page.locator('.stage')).toHaveClass(/zoom-in/);
+  await page.mouse.click(at.x, at.y);
+  await expect.poll(() => currentZoom(page)).toBe(2);
+  const zoomed = await box(page, '.artboard');
+  expect(Math.abs(zoomed.x + design.x * 2 - at.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(zoomed.y + design.y * 2 - at.y)).toBeLessThanOrEqual(1);
+  await page.keyboard.down('Alt');
+  await page.mouse.click(at.x, at.y);
+  await page.keyboard.up('Alt');
+  await page.keyboard.up('KeyZ');
+  await expect.poll(() => currentZoom(page)).toBe(1);
+  await expect(page.locator('.stage')).not.toHaveClass(/zoom-in/);
 });

@@ -93,7 +93,7 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Background tasks and subagents | CC: Ctrl+B, `/tasks`, `name(task)` rows [CC1, CC8] | missing (variation fan-out is the only parallel work) | P2 | L |
 | Notify when done | CC: desktop notice when away [CC14] | partial, desktop only `desktop/native.ts:runFinished` | P2 | S |
 | Copy message and code block | claude.ai and CC desktop [mem] | has (R3), Copy on each message (markdown) and each code block (`CopyButton.tsx`) | P0 | S |
-| Retry and edit message | CC desktop: Edit and Retry; `/branch` fork [CC15, CC5] | partial (R3), Retry on the error card with no second user message; edit as fork in R7-4 | P1 | M |
+| Retry and edit message | CC desktop: Edit and Retry; `/branch` fork [CC15, CC5] | has (R7), Retry on the error card; "Edit and rerun" on a message forks a direction from the version before that run; "Restore code here" per message | P1 | M |
 | Error and auto-retry | CC: backoff on 429/529 [CC15]; OD: failure card keeps Retry [OD2] | has (R3), "Retrying in Ns (k/5)" line, Retry on the error card | P1 | S |
 | Prompt history | CC: Up recalls, Ctrl+R searches [CC1] | has (R3), Up on an empty composer recalls; Ctrl+R searches (`HistorySearch.tsx`) | P1 | S |
 | Keep draft on failed send | OD 0.25.0: composer restores text if send fails [OD2] | has, `PromptBox.tsx:send` clears the draft only on success | — | — |
@@ -254,7 +254,7 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Import from Figma | Home | Paper, pen.dev | P2 | L | defer | Paste a Figma frame; the preview shows it as HTML within 2% pixel diff of a Figma PNG export | Needs a Figma token and node mapping; low use for a local tool now |
 | Zoom keys like Figma, plus menu clash fix | Canvas | has (R2), Shift+1 fit, Shift+2 selection, Shift+0 and ⌘0 100%, ⌘1 fit, ⌘2 selection, bare + and −; studio and preview focus (`zoomKeyOf` in `shared/contracts.ts`) | P0 | S | R2-1 | — | Users of every rival expect these keys; the clash can break zoom in desktop |
 | Pan with no React re-render | Canvas | pen.dev | P0 | S | R2-2 (done) | — | Smooth pan |
-| Multi-frame canvas | Canvas | CD, Figma | P0 | L | R2-3 (done), R7-3 (variations and compare as frames) | — | All rivals show many screens at once |
+| Multi-frame canvas | Canvas | CD, Figma | P0 | L | R2-3 (done), R7-3 (done for variations, page per frame and resize; compare as frames deferred) | — | All rivals show many screens at once |
 | Layers tree | Canvas | has (R4), rename, hide, drag and ⌥-arrow reorder | P0 | L | R2-4 (done), R4-4 (done) | — | Nested and hidden elements cannot be selected without it |
 | Zoom to selection | Canvas | has (R2), Shift+2 and ⌘2 fit the selection, or the frame when nothing is selected | P0 | S | R2-1 | — | Core navigation |
 | Select parent / children keys | Canvas | has (R2), Enter, Shift+Enter, Tab, Shift+Tab in the preview and the studio; arrows and Enter in the layers tree | P1 | S | R2-5 | — | Fast nested select |
@@ -279,8 +279,8 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Context meter, effort picker | Chat | CC | P1 | S | R3-9 (done) | — | Control of cost and quality |
 | Prompt history, auto-retry line, retry button | Chat | CC | P1 | S | R3-10 (done) | — | Speed for heavy users; a silent wait looks like a hang |
 | Slash commands | Chat | CC | P1 | M | R8-3 (one command registry with the palette) | — | Fast access to modes, skills and export |
-| Rewind per message, edit as fork | Chat | CC, Cursor | P1 | M | R7-4 | — | Undo one turn, not the whole run |
-| Session search and rename | Chat | CC | P2 | S | R7-7 | — | Find old runs |
+| Rewind per message, edit as fork | Chat | CC, Cursor | P1 | M | R7-4 (done) | — | Undo one turn, not the whole run |
+| Session search and rename | Chat | CC | P2 | S | R7-7 (done) | — | Find old runs |
 | Notify when done (web) | Chat | CC | P2 | S | R8-8 | — | Web parity with desktop |
 | Hooks for users | Chat | CC | P2 | M | defer | A user hook on PreToolUse that exits 2 blocks the tool and its reason shows in the transcript | The studio sets its own guards; few users need this |
 | Background tasks and subagent display | Chat | CC | P2 | L | defer | A backgrounded tool shows in a tasks list with elapsed time and Stop | The studio agent seldom runs long shell work |
@@ -304,10 +304,10 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Lint in the inspector | Design systems | — | P1 | S | R6-3 | — | Catch off-palette edits where they happen |
 | Import from `globals.css`, breakpoint tokens | Design systems | pen.dev, Paper | P2 | S | R6-4 | — | Completeness |
 | Extraction from Figma or PDF | Design systems | CD | P2 | L | defer | Give a 10-page brand PDF; a pack with its colors and fonts appears | Same reason as Figma import |
-| Version thumbnails and names | Versions | Figma | P1 | M | R7-1 | — | Find the right version fast |
-| Compare slider and diff overlay | Versions | Figma | P1 | M | R7-2 | — | The server already makes a pixel diff |
-| Freehand draw as feedback | Comments | OD, CD | P1 | M | R7-5 | — | Faster than words for layout notes |
-| Comment replies | Comments | Paper | P2 | M | R7-6 | — | Threads |
+| Version thumbnails and names | Versions | Figma | P1 | M | R7-1 (done) | — | Find the right version fast |
+| Compare slider and diff overlay | Versions | Figma | P1 | M | R7-2 (done) | — | The server already makes a pixel diff |
+| Freehand draw as feedback | Comments | OD, CD | P1 | M | R7-5 (done) | — | Faster than words for layout notes |
+| Comment replies | Comments | Paper | P2 | M | R7-6 (done) | — | Threads |
 | Share link | Collaboration | OD, CD | P2 | L | defer | Make a link; a signed-out browser shows the preview; a reviewer comment shows in the queue | Local-first app; needs hosting |
 | Multiplayer | Collaboration | Paper, Figma | P2 | L | defer | Two clients see each other's cursors within 100 ms | Single-user app now |
 | Command palette | Keyboard | Figma | P0 | M | R8-1 | — | One place for every action |

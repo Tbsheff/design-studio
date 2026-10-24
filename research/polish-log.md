@@ -514,3 +514,75 @@ Home JS 298,888 bytes in 1 file (gate < 300,000; Round 5 was 298,440, so +448). 
 ### Commits
 
 `70bdf58` canvas dark switch · `8bd418b` token checks · `85d8438` Components tab · `d5dc878`, `6809d4e` open questions · `fe5aa59` pack card swatches · `89ec0fc` DESIGN.md editor · `7dd52eb` CSS import and breakpoint · `48bc393` polish · `878347e` docs · `8a763cd` scroll class and test fixes · `c439457` thumbnails only while the tab is open · `6cade27` R6 spec fixes · then this log update.
+
+## Round 7 — Versions, variations, comments (2026-10-24)
+
+Five sub agents built the work in parallel, each in its own worktree with its own e2e port offset. Their commits were cherry-picked onto `feat/polish-rounds` with no conflicts. The worktrees and branches are removed.
+
+### Features
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R7-1 Version thumbnails and names | Each row shows a thumbnail; a new name is there after reload | `versions-r7` R7-1, `version-routes.test.ts` (7) | Pass. Thumbs render from the version snapshot on the first GET (one shot queue) and are cached as `thumbs/v-<vid>.png`. The panel fetches only rows in view while it is open, 2 at a time; a closed panel made 0 requests after a file write and a new version. Double-click or F2 renames; names in `version-names.json` |
+| R7-2 Compare slider and diff overlay | The overlay marks a changed button and nothing else | `versions-r7` R7-2 | Pass. 3 buttons, only `#b2` changes color; every changed mask pixel is inside `#b2` (±2 px). Modes: Side by side, Slider (keyboard, 28 px handle), Overlay (red mask, opacity, "x% changed") |
+| R7-3 Variations as frames | 3 variation frames; "Keep this one" removes the other 2 | `canvas-r7` R7-3, `variations.spec.ts` (HTML and React) | Pass. `VariationsGrid` removed. A click on a passive frame makes it live and its direction current (R2 leftover). Swap gate per frame: max 6 iframes for 5 frames. Directions are never deleted |
+| R7-4 Rewind per message, edit as fork | Restore at message 2 of 4 equals version 2; the edit makes a new direction and the old one stays | `run-rewind.test.ts`, `chat-r7` R7-4 (2) | Pass. The restore commit tree id equals version 2's tree id. Fork base: the version before that run (its parent), as in Claude Code. The button says "Edit and rerun": "Edit and resend" contains "send", and Playwright name matching then broke 5 tests that click Send |
+| R7-5 Freehand draw | A stroke plus a comment sends one attachment that shows the stroke | `comments-r7` Draw, `comments-routes.test.ts` (4), `drawing.test.ts` | Pass. `sent[0].imageCount` is 1; the PNG is red at the stroke point and transparent in the corner, at frame size. Pen tool key P, 4 colors, Undo stroke, Clear. Transparent strokes, not a screenshot (a screenshot needs headless Chrome, seconds) |
+| R7-6 Replies, resolve, Show resolved | A reply shows under its comment; the filter hides and shows resolved | `comments-r7` replies test | Pass. Old comment files still load. Show resolved is off by default |
+| R7-7 Run search and rename | Search finds a run by a word; a rename is there after reload | `chat-r7` R7-7, `run-rewind.test.ts` | Pass. In the chat panel (there is no separate run history list) |
+
+Leftovers from earlier rounds, also done:
+
+| Item | Proof | Result |
+|---|---|---|
+| Duplicate copies extra directions and comments (R1) | `home-routes.test.ts` duplicate test | Pass. Each direction at its own head, same ids, its comments |
+| Trash list screen (R1) | `home-r7` trash test, `home-routes.test.ts` | Pass. Lazy `HomeTrash` chunk, no request until it opens. Delete forever removes only the data-dir folder; the work tree stays |
+| Page per frame (R2) | `canvas-r7` page per frame | Pass. Relative paths only, HTML lists `.html` files |
+| Resize handles on frames (R2) | `canvas-r7` frame resize | Pass. W × H while dragging, Shift keeps ratio, min 240 |
+
+### Polish
+
+- Thumbnails: same-size placeholder (no layout shift), 160 ms fade, 1 px outline, 0.96 press scale.
+- Frame chips: Keep and the page chip show on hover or on the live frame; 28 px controls; tabular numbers.
+- Toolbar W and H inputs now follow the viewport when it changes elsewhere (before, a blur could set the old size back).
+- Chat: message actions show on hover and keyboard focus; the search bar floats over the chat so nothing moves; the restore confirm names the files restore replaces.
+- Comments: Resolve and Reopen buttons in the panel; pen icon on drawing pins; reduced-motion rules.
+- Trash: empty state, error with Retry, focus moves to the next row after an action, a screen-reader status line.
+
+### Bundle and latency
+
+- Home JS 299,247 bytes (gate 300,000; Round 6 was 298,888, so +359). Trash UI is its own chunk. `Studio` 272,760, `StudioParts` 132,630.
+- Latency p95 in the integrated full run (load 8–15): edit 49 ms, select 31 ms, html 65 ms, React 75 ms, open 112 ms, first token 53 ms. Per branch (load average 10–55): edit 23–76 ms, select 30–31 ms, html 66–118 ms. Html missed the 150 ms gate twice at high load, and the untouched base missed it too (199 ms).
+
+### Screenshots
+
+Before in `/tmp/polish-r7/before/` (13), after in `/tmp/polish-r7/after/` (28): `versions-*`, `canvas-*`, `chat-*`, `comments-*`, `home-*`. Some after shots of the Versions panel were taken while thumbnails were still loading.
+
+### Left for later rounds
+
+- Compare as frames (R7-3 title): compare still opens `CompareView`, not frames on the canvas.
+- Chat: a failed run start after "Edit and rerun" leaves an empty direction; a failed send loses the edited text.
+- Comments: replies can be added only from the popover; strokes keep the old frame size after a viewport change.
+- Overlay diff covers the first screen only; React version thumbs start a Vite server per snapshot (no test).
+- The page chip is only on frame labels, so a single frame has none.
+- Home card thumbnail (old bug): the head shot uses the live work tree after a delay, so a card can show a later state than its version.
+- Port 8021 (preview port of e2e offset 3750) is held by launchd on this machine; use another offset.
+
+### Regressions found
+
+- Integrated full run, 2 of 137 failed in `edit-latency-r4`:
+  - "resize handle drag": the card width stayed at 224 px after a 4 px drag on the east handle (wanted 228). Not seen on any branch run; not diagnosed. Possible cause: the Round 7 canvas or comment layer changes on the pointer path. This needs a check first in Round 8.
+  - "Alt+Down and Alt+Up move": move visible p95 315 ms against 200. This is the same load-sensitive kind as the Round 6 undo miss, but it was not rerun.
+- After that run, the rules changed: no new tests and no test runs. So there was no rerun, and `ac-core`, `ac-edit`, `ac-safety` were not run on the integrated head. `desktop/` did not change.
+
+### Test runs (final, on `cdca5c9`)
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 114 files, 868 tests passed (36 new).
+- `npm run build:ui`: built.
+- Playwright `STUDIO_E2E_GROUP=r7 STUDIO_E2E_PORT_OFFSET=3700`, `playwright.config.ts`: 135 of 137 passed (2 failures above). New specs `versions-r7`, `canvas-r7`, `chat-r7`, `comments-r7`, `home-r7` passed.
+- `ac-core`, `ac-edit`, `ac-safety`: not run on the integrated head (rule change). Each branch ran its own area; the chat branch ran all three (7, 19, 10 of 10; AC-48 passed on rerun).
+
+### Commits
+
+`6b0b49d`…`c23800b` duplicate and trash · `5cae5ba`, `1d4eb10` comments, drawing, replies · `0855251`…`117197d` rewind and run titles · `f1cb1cb`…`fc00219` version thumbs, names, compare · `7f1ba1e`, `fd53a9e`, `cdca5c9` variation frames, page per frame, resize · then the docs commit.

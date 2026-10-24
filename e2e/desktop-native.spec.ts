@@ -333,6 +333,56 @@ test('Reveal in Finder shows the work tree in the default projects folder and th
   await expect.poll(async () => (await recorded()).reveals).toContain(exported);
 });
 
+test('R3-2: Esc in the desktop window stops a run, with focus in the studio and in the preview', async () => {
+  const accelerators = await app.evaluate(({ Menu }) => {
+    const out: string[] = [];
+    const walk = (items: Electron.MenuItem[]) => {
+      for (const item of items) {
+        if (item.accelerator) out.push(String(item.accelerator));
+        if (item.submenu) walk(item.submenu.items);
+      }
+    };
+    walk(Menu.getApplicationMenu()?.items ?? []);
+    return out;
+  });
+  expect(accelerators.filter((key) => /^(Esc|Escape)$/i.test(key))).toEqual([]);
+  const native = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('Native undo check'));
+  if (!native) throw new Error('project missing');
+  const box = page.getByPlaceholder('Describe a change');
+  const stopsWithin = async (project: Project, prompt: string, press: () => Promise<void>) => {
+    await expect(page.locator('[data-run-id]').last().locator('.tool-row[data-state="done"]').first()).toBeVisible({ timeout: 20_000 });
+    await press();
+    await expect(page.locator('[data-run-id]').last().locator('.run-foot .status.canceled')).toBeVisible({ timeout: 2_000 });
+    await expect.poll(async () => (await call<RunSummary[]>('GET', `/api/projects/${project.id}/runs`)).find((run) => run.request.prompt === prompt)?.status).toBe('canceled');
+  };
+
+  await box.fill('Desktop Esc studio [steps]');
+  await box.press('Meta+Enter');
+  await stopsWithin(native, 'Desktop Esc studio [steps]', async () => {
+    await box.focus();
+    await page.keyboard.press('Escape');
+  });
+
+  const folder = site('esc folder');
+  await app.evaluate(({ dialog }, chosen) => {
+    dialog.showOpenDialog = (async () => ({ canceled: false, filePaths: [chosen] })) as unknown as typeof dialog.showOpenDialog;
+  }, folder);
+  await clickMenu('open-folder');
+  await expect.poll(openedProjectName).toContain('esc folder');
+  const frame = page.frameLocator('iframe.frame.front');
+  await expect(frame.locator('h1')).toHaveText('esc folder');
+  const fresh = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('esc folder'));
+  const main = fresh?.directions[0];
+  if (!fresh || !main) throw new Error('folder project missing');
+  await frame.locator('h1').click();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
+  await call('POST', `/api/projects/${fresh.id}/d/${main.id}/runs`, { prompt: 'Desktop Esc preview [steps]', mode: 'edit' });
+  await stopsWithin(fresh, 'Desktop Esc preview [steps]', async () => {
+    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
+    await page.keyboard.press('Escape');
+  });
+});
+
 test('window bounds are saved per display layout', async () => {
   const file = path.join(userData, 'window-state.json');
   await expect

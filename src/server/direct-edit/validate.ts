@@ -7,6 +7,8 @@ const MAX_VALUE = 200;
 const MAX_TEXT = 5000;
 const UNSAFE_VALUE = /[;{}<>\\\u0000-\u001f\u007f]/;
 const SCRIPT_URL = /javascript\s*:|expression\s*\(/i;
+const MAX_NAME = 60;
+const UNSAFE_NAME = /["'`<>{}&\\\u0000-\u001f\u007f]/;
 
 const styleValueSchema = z
   .string()
@@ -21,6 +23,14 @@ const styleSchema = z
   .partial()
   .strict();
 
+const nameSchema = z
+  .string()
+  .min(1)
+  .max(MAX_NAME)
+  .refine((value) => value.trim() === value && value !== '', 'name must not start or end with a space')
+  .refine((value) => !UNSAFE_NAME.test(value), 'name has a character that is not allowed')
+  .nullable();
+
 const requestSchema = z
   .object({
     source: z
@@ -34,9 +44,18 @@ const requestSchema = z
     tag: z.string().max(100).regex(/^[a-z][a-z0-9-]*$/, 'tag must be a lowercase tag name').optional(),
     style: styleSchema.optional(),
     text: z.string().max(MAX_TEXT).optional(),
+    name: nameSchema.optional(),
+    move: z.enum(['up', 'down']).optional(),
   })
   .strict()
-  .refine((request) => request.text !== undefined || Object.keys(request.style ?? {}).length > 0, 'style or text is required');
+  .refine(
+    (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || Object.keys(request.style ?? {}).length > 0,
+    'style, text, name or move is required',
+  )
+  .refine(
+    (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined),
+    'move must be the only change',
+  );
 
 export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   const parsed = requestSchema.safeParse(raw);
@@ -52,5 +71,7 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
     request.style = style;
   }
   if (parsed.data.text !== undefined) request.text = parsed.data.text;
+  if (parsed.data.name !== undefined) request.name = parsed.data.name;
+  if (parsed.data.move !== undefined) request.move = parsed.data.move;
   return request;
 }

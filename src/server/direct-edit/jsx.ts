@@ -5,6 +5,7 @@ import MagicString from 'magic-string';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
 import { leadingWhitespaceStart } from './splice.js';
+import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
 
 interface JsxPatchOptions {
   typescript?: boolean;
@@ -265,6 +266,28 @@ function patchText(magic: MagicString, source: string, element: t.JSXElement, te
   throw new DirectEditError('text_not_editable', TEXT_NOT_EDITABLE_MESSAGE);
 }
 
+function patchName(magic: MagicString, source: string, element: t.JSXElement, name: string | null): void {
+  const attribute = jsxNameAttribute(element);
+  if (!attribute) {
+    if (name !== null) magic.appendLeft(endOf(element.openingElement.name), ` ${NAME_ATTR}="${name}"`);
+    return;
+  }
+  if (name === null) {
+    magic.remove(leadingWhitespaceStart(source, startOf(attribute)), endOf(attribute));
+    return;
+  }
+  const literal = jsxNameLiteral(attribute);
+  const quote = source[startOf(literal)] === "'" ? "'" : '"';
+  magic.overwrite(startOf(literal), endOf(literal), `${quote}${name}${quote}`);
+}
+
+function movedPosition(code: string, offset: number, typescript: boolean): SourcePosition {
+  const moved = jsxElementAt(parseSource(code, typescript).program, offset);
+  const start = moved?.openingElement.loc?.start;
+  if (!start) throw new DirectEditError('cannot_move', 'The moved element could not be found again');
+  return { line: start.line, col: start.column + 1 };
+}
+
 export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, options: JsxPatchOptions = {}): PatchResult {
   const ast = parseSource(source, options.typescript ?? true);
   const element = findJsxElement(ast.program, loc);
@@ -272,7 +295,13 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   const name = element.openingElement.name;
   assertSameTag(edit.tag, name.type === 'JSXIdentifier' ? name.name : null);
   const tag = hostTagName(element);
+  const typescript = options.typescript ?? true;
+  if (edit.move !== undefined) {
+    const plan = planJsxMove(source, element, jsxAncestors(ast.program, element), edit.move);
+    return { code: plan.code, tag, applied: { style: [], text: false }, moved: movedPosition(plan.code, plan.movedStart, typescript) };
+  }
   const magic = new MagicString(source);
+  if (edit.name !== undefined) patchName(magic, source, element, edit.name);
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
   if (styleKeys.length > 0) patchStyle(magic, source, element, style);

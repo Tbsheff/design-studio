@@ -99,7 +99,7 @@ async function resolveSource(workTree: string, file: string): Promise<ResolvedSo
 
 function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
   const extension = path.extname(relative).toLowerCase();
-  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag };
+  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move };
   const position = { line: request.source.line, col: request.source.col };
   if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit);
   return patchJsx(source, position, edit, { typescript: extension === '.tsx' });
@@ -117,7 +117,21 @@ export async function writeAtomic(file: string, content: string): Promise<void> 
   }
 }
 
-function editTitle(tag: string, applied: PatchResult['applied']): string {
+function visibilityTitle(tag: string, style: DirectEditRequest['style']): string | null {
+  const entries = Object.entries(style ?? {});
+  if (entries.length !== 1 || entries[0]?.[0] !== 'display') return null;
+  const value = entries[0][1];
+  if (value === 'none') return `Hide ${tag}`;
+  return value === null ? `Show ${tag}` : null;
+}
+
+function editTitle(tag: string, applied: PatchResult['applied'], request: DirectEditRequest): string {
+  if (request.move !== undefined) return `Move ${tag} ${request.move}`;
+  const visibility = visibilityTitle(tag, request.style);
+  if (visibility && request.text === undefined && request.name === undefined) return visibility;
+  if (request.name !== undefined && applied.style.length === 0 && !applied.text) {
+    return request.name === null ? `Remove name of ${tag}` : `Rename ${tag} to ${request.name}`;
+  }
   if (applied.style.length === 0) return `Edit text of ${tag}`;
   const parts = applied.text ? [...applied.style, 'text'] : applied.style;
   return `Edit ${tag}: ${parts.join(', ')}`;
@@ -129,6 +143,8 @@ export function editSummary(request: DirectEditRequest): string {
     const text = request.text.length > MAX_SUMMARY_TEXT ? `${request.text.slice(0, MAX_SUMMARY_TEXT - 1)}…` : request.text;
     parts.push(`text: "${text}"`);
   }
+  if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
+  if (request.move !== undefined) parts.push(`move ${request.move}`);
   return `Direct edit of ${request.source.file}:${request.source.line}:${request.source.col}: ${parts.join('; ')}`;
 }
 
@@ -164,7 +180,7 @@ async function writeAndCommit(
   const meta: VersionMeta = { kind: 'manual', prompt: editSummary(request) };
   let version: Version | null;
   try {
-    version = await deps.versions.commitFile(project, direction, target.relative, editTitle(patch.tag, patch.applied), meta);
+    version = await deps.versions.commitFile(project, direction, target.relative, editTitle(patch.tag, patch.applied, request), meta);
   } catch (error) {
     await writeAtomic(target.file, original);
     throw error;
@@ -208,5 +224,9 @@ export async function applyDirectEdit(deps: DirectEditDeps, project: Project, di
     files: [{ file: target.file, relative: target.relative, before: original, after: patch.code }],
   });
   await publishVersion(deps, project, direction, version);
-  return { file: target.relative, version, applied: patch.applied };
+  return { file: target.relative, version, applied: patch.applied, ...movedLoc(request.source.file, patch) };
+}
+
+function movedLoc(file: string, patch: PatchResult): Pick<DirectEditResult, 'moved'> {
+  return patch.moved ? { moved: { file, line: patch.moved.line, col: patch.moved.col } } : {};
 }

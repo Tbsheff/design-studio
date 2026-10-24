@@ -245,4 +245,25 @@ describe('direct edit route', { timeout: 30000 }, () => {
     await call('POST', `/api/projects/${project.id}/d/main/undo`);
     expect(await readFile(path.join(workTree, 'src', 'A.tsx'), 'utf8')).toBe(tsx);
   });
+
+  it('renames, hides, shows and moves with clear version titles', async () => {
+    const { project, workTree } = await setupProject();
+    const file = path.join(workTree, 'index.html');
+    const title = async (body: unknown) => {
+      const response = await directEdit(project, body);
+      expect(response.status).toBe(200);
+      return (await response.json()) as DirectEditResult;
+    };
+    expect((await title({ source: H1, selector: 'h1', tag: 'h1', name: 'Hero title' })).version.title).toBe('Rename h1 to Hero title');
+    expect(await readFile(file, 'utf8')).toContain('<h1 data-name="Hero title" class="t">');
+    expect((await title({ source: P, selector: 'p', tag: 'p', style: { display: 'none' } })).version.title).toBe('Hide p');
+    expect((await title({ source: P, selector: 'p', tag: 'p', style: { display: null } })).version.title).toBe('Show p');
+    const moved = await title({ source: P, selector: 'p', tag: 'p', move: 'up' });
+    expect(moved.version.title).toBe('Move p up');
+    expect(moved.moved).toEqual(H1);
+    expect(await readFile(file, 'utf8')).toBe(PAGE.replace('<h1 class="t">Hello</h1>\n  <p>One <b>two</b></p>', '<p>One <b>two</b></p>\n  <h1 data-name="Hero title" class="t">Hello</h1>'));
+    const refused = await directEdit(project, { source: H1, selector: 'p', tag: 'p', move: 'up' });
+    expect(refused.status).toBe(422);
+    expect(await refused.json()).toEqual({ error: 'cannot_move', message: 'This element is already first among its siblings' });
+  });
 });

@@ -7,6 +7,8 @@ type DirectEditErrorCode =
   | 'not_host_element'
   | 'style_not_literal'
   | 'text_not_editable'
+  | 'cannot_move'
+  | 'attribute_not_literal'
   | 'no_change'
   | 'stale_selection'
   | 'no_base_version'
@@ -55,12 +57,16 @@ export interface SourceEdit {
   tag?: string;
   style?: Record<string, string | null>;
   text?: string;
+  name?: string | null;
+  move?: 'up' | 'down';
 }
 
 export interface PatchResult {
   code: string;
   tag: string;
   applied: { style: string[]; text: boolean };
+  title?: string;
+  moved?: SourcePosition;
 }
 
 const STALE_SELECTION_MESSAGE = 'The page changed since you selected this element. Select it again.';

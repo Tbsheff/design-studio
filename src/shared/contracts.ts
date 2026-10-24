@@ -712,7 +712,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'select-relative'; selector: string; move: SelectMove }
   | { ns: 'studio'; token: string; type: 'text-edit-allowed'; allowed: boolean }
   | { ns: 'studio'; token: string; type: 'text-edit-stop' }
-  | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string };
+  | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
+  | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -785,6 +786,7 @@ export interface DirectEditResult {
   file: string;
   version: Version;
   applied: { style: string[]; text: boolean };
+  moved?: SourceLoc;
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

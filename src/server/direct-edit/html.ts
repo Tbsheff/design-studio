@@ -4,6 +4,7 @@ import { applyDeclarationChanges, parseDeclarations, serializeDeclarations } fro
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
 import { applySplices, leadingWhitespaceStart, type Splice } from './splice.js';
+import { htmlNameSplice, htmlPositionAt, planHtmlMove } from './structure.js';
 
 type ParentNode = DefaultTreeAdapterMap['parentNode'];
 type ChildNode = DefaultTreeAdapterMap['childNode'];
@@ -70,9 +71,28 @@ function startTagOf(element: Element): NonNullable<NonNullable<Element['sourceCo
   return startTag;
 }
 
+const HIDDEN_PREFIX = 'display: none; ';
+
+function visibilitySplice(source: string, location: { startOffset: number; endOffset: number }, value: string | null, hasDisplay: boolean): Splice | null {
+  const raw = source.slice(location.startOffset, location.endOffset);
+  const quote = /^style\s*=\s*["']/i.exec(raw);
+  if (!quote) return null;
+  const at = location.startOffset + quote[0].length;
+  if (value === 'none' && !hasDisplay) return { start: at, end: at, text: HIDDEN_PREFIX };
+  const rest = raw.slice(quote[0].length, -1);
+  if (value === null && rest.startsWith(HIDDEN_PREFIX) && rest.length > HIDDEN_PREFIX.length) return { start: at, end: at + HIDDEN_PREFIX.length, text: '' };
+  return null;
+}
+
 function styleSplice(source: string, element: Element, style: Record<string, string | null>): Splice | null {
   const attr = element.attrs.find((entry) => entry.name === 'style');
   const attrLocation = element.sourceCodeLocation?.attrs?.style;
+  const keys = Object.keys(style);
+  if (attr && attrLocation && keys.length === 1 && keys[0] === 'display') {
+    const hasDisplay = parseDeclarations(attr.value).some((entry) => entry.prop === 'display');
+    const quick = visibilitySplice(source, attrLocation, style.display ?? null, hasDisplay);
+    if (quick) return quick;
+  }
   const declarations = applyDeclarationChanges(attr ? parseDeclarations(attr.value) : [], style);
   const serialized = serializeDeclarations(declarations);
   if (attr && attrLocation) {
@@ -121,7 +141,15 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit)
   const element = findElementAt(document, loc);
   if (!element) throw new DirectEditError('element_not_found', `No element starts at line ${loc.line}, column ${loc.col}`);
   assertSameTag(edit.tag, element.tagName);
+  if (edit.move !== undefined) {
+    const plan = planHtmlMove(source, element, edit.move);
+    return { code: plan.code, tag: element.tagName, applied: { style: [], text: false }, moved: htmlPositionAt(plan.code, plan.movedStart) };
+  }
   const splices: Splice[] = [];
+  if (edit.name !== undefined) {
+    const splice = htmlNameSplice(source, element, edit.name);
+    if (splice) splices.push(splice);
+  }
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
   if (styleKeys.length > 0) {

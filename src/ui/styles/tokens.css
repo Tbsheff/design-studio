@@ -230,6 +230,16 @@ button {
   color: var(--text-2);
 }
 
+.boot.muted {
+  animation: boot-reveal var(--dur) var(--ease) 300ms both;
+}
+
+@keyframes boot-reveal {
+  from {
+    color: transparent;
+  }
+}
+
 .boot-card {
   display: grid;
   gap: var(--s-3);

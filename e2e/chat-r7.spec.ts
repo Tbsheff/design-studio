@@ -39,7 +39,7 @@ test('R7-4: restore code at message 2 of 4, with a confirm for unfinished change
 
   await expect(await action(page, 3, 'Restore code here')).toHaveAttribute('aria-disabled', 'true');
   await expect(await action(page, 3, 'Restore code here')).toHaveAttribute('data-tip', 'The code is already at this message');
-  await expect(await action(page, 0, 'Edit and resend')).toHaveAttribute('data-tip', 'No earlier version to start from');
+  await expect(await action(page, 0, 'Edit and rerun')).toHaveAttribute('data-tip', 'No earlier version to start from');
 
   writeFileSync(file, `${files[3]}<!-- my unsaved edit -->\n`);
   writeFileSync(path.join(workTree, 'my-notes.txt'), 'keep me\n');
@@ -70,7 +70,7 @@ test('R7-4: restore code at message 2 of 4, with a confirm for unfinished change
 
 test('R7-4: edit and resend forks a new direction from the version before that message; the old chat stays', async ({ page }) => {
   const { api, project, files } = await fourMessages(page);
-  await (await action(page, 2, 'Edit and resend')).click();
+  await (await action(page, 2, 'Edit and rerun')).click();
   const editor = page.getByTestId('message-editor');
   const box = editor.getByRole('textbox', { name: 'Edit message' });
   await expect(box).toBeFocused();
@@ -78,7 +78,7 @@ test('R7-4: edit and resend forks a new direction from the version before that m
   await box.press('Escape');
   await expect(editor).toHaveCount(0);
 
-  await (await action(page, 2, 'Edit and resend')).click();
+  await (await action(page, 2, 'Edit and rerun')).click();
   await box.fill('Add weekend hours');
   await box.press('Enter');
 

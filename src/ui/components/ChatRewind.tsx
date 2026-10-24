@@ -138,7 +138,7 @@ export function UserTurn({ run, title, rewind, actions }: { run: RunView; title:
   const tools = (
     <span className="msg-actions" data-testid="message-actions">
       <TurnButton label="Restore code here" icon="restore" tip={rewind.restoreTip} onClick={restore} />
-      <TurnButton label="Edit and resend" icon="branch" tip={rewind.editTip} onClick={() => setMode('edit')} />
+      <TurnButton label="Edit and rerun" icon="branch" tip={rewind.editTip} onClick={() => setMode('edit')} />
       <TurnButton label="Rename" icon="pencil" tip={null} onClick={() => setMode('rename')} />
     </span>
   );

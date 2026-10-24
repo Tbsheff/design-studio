@@ -305,6 +305,26 @@ DraftBar  [What should the AI focus on?] [Improve with AI]   check: "Check passe
 - Mock: `task: 'design-system'` fills the `_To do:` lines, edits tokens.json, emits two screenshots (light, dark) and a check call. `[ds-fail-once]` leaves one to-do line for the first studio round; `[ds-fail-always]` never fixes it.
 - Real smoke: `npx tsx scripts/design-system-real.ts` (temp data dir, DTCG draft, `SMOKE_MODEL` default Haiku, `SMOKE_BUDGET` default $0.45).
 
+## Design systems: library screen (slice 4)
+
+```
+Home "Design systems" · chip Change dialog "Manage…" (libraryFrom = {projectId, directionId})
+  → uiStore.screen = 'design-systems' → DesignSystems: Yours (user, drafts with a Draft badge) then Built-in, preview cards
+      card → PackDetailDialog: GET /api/packs/:id (entries) + GET /api/packs/:id/check
+            token preview (pack CSS variables set inline on each preview surface, light and dark), type scale, DESIGN.md (Markdown, no raw HTML)
+            actions: Apply to current project (libraryFrom only) · Use in new project (Home, lastPackId) · Open in editor | Make a copy to edit
+                     Duplicate · Rename · Export (api blob → downloadBlob, Electron will-download) · Delete (confirm)
+  Import… → POST /api/packs/import (multipart file, mode) → 409 pack_exists {existing} → "Replace" (mode replace) or "Keep both" (mode copy)
+```
+
+- Preview: the app and packs share names such as `--bg`, `--surface` and `--shadow-md`. The preview sets the pack values inline on its own surfaces, so they shadow the app values only inside the preview. No pack CSS goes into the app document and no frame is used. Card fonts use the pack font stacks; the screen does not load Google Fonts (if the browser already has a font, the card uses it).
+- Check (`GET /api/packs/:id/check`): `checkDesignSystemFiles(files, {kitPage: false})` skips `kit-colors` and the kit page `<link>` font rules and keeps the pack.json-vs-tokens font rules. Every built-in pack passes.
+- Import (`pack-import.ts`, reader in `zip.ts`, no dependency): the central directory is the truth. Refused: more than 2 MB (content-length first, then the file), more than 3 entries, encryption, zip64, methods other than store and deflate, folder or non-regular entries, duplicate names, any name that is not `<id>/pack.json|tokens.json|DESIGN.md` under one folder that matches the pack id rule (this stops `..`, absolute paths and backslashes), a declared size over 512 KB, inflate output over the cap (`maxOutputLength`) and a bad CRC. pack.json must pass `manifestSchema`; then `createUserPack` validates tokens and DESIGN.md as usual. The new pack is `user-<slug of name>` with provenance `imported` and no draft flag. A conflict is a user pack with the zip folder id or the same name (case-insensitive); `replace` keeps that pack id (`updateUserPack`).
+- Open in editor (`POST /api/packs/:id/editor`, user packs only, keyed mutex per pack): the project whose `designSystemFor` is the pack id, else a new backing project made with the slice 2 path (kit page from `renderKitPage`, `source/meta.json` with `inputs: {library: id}`, no coverage). The draft flag does not change. The DraftBar shows no grade when there is no coverage.
+- Save as a new design system: the Save dialog in the chip offers it when the direction uses a user pack and the project is not a backing project. `POST .../design-system/save {name, asNew: true}` always creates a pack; the direction (and `project.packId` for main) then names the new pack.
+- Problems: `GET /api/packs/problems` shows as a closed `<details>` notice ("1 design system could not load").
+- Known gap: delete a user pack, then make or import one with the same name, and it gets the same id; an old backing project for the deleted pack then matches Open in editor.
+
 ## Design systems (phase 3): live token editing
 
 ```

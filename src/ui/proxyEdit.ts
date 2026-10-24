@@ -12,6 +12,7 @@ export function proxyEdit(
   return {
     ...edit,
     values: { ...edit.values, [slot]: value },
+    mixed: real.some((prop) => edit.mixed.has(prop)) ? new Set([slot]) : new Set<DirectStyleProperty>(),
     preview: (patch) => {
       const next = patch[slot];
       if (next !== undefined) edit.preview(write(next));

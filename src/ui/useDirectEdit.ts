@@ -43,6 +43,8 @@ export function mergeCommit(prev: SelectionContext[], commit: DirectEditCommit):
   );
 }
 
+export const NO_MIXED: ReadonlySet<DirectStyleProperty> = new Set();
+
 const DEBOUNCE_MS = 250;
 const AGENT_RUNNING_MESSAGE = 'Agent is running. Wait or cancel.';
 
@@ -270,7 +272,7 @@ export function useDirectEdit(o: Options) {
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
-  return { values, text, status, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
+  return { values, mixed: NO_MIXED, text, status, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

@@ -63,7 +63,7 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
         value={shown}
         spellCheck={false}
         autoComplete="off"
-        placeholder="—"
+        placeholder={edit.mixed.has(prop) ? 'Mixed' : '—'}
         onChange={(event) => {
           const next = event.target.value;
           setText(next);
@@ -104,7 +104,7 @@ export function SelectField({ prop, label, short, edit, options }: FieldProps & 
           edit.revert([prop]);
         }}
       >
-        {value === '' && <option value="">—</option>}
+        {value === '' && <option value="">{edit.mixed.has(prop) ? 'Mixed' : '—'}</option>}
         {list.map((option) => (
           <option key={option} value={option}>
             {option}

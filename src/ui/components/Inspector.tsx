@@ -4,6 +4,7 @@ import type { PreviewPort } from '../bridge';
 import { textEditability } from '../cssValues';
 import type { DesignTokens } from '../useDesignSystemState';
 import { useAuthoredCss, type AuthoredCssState } from '../useAuthoredCss';
+import { useDirectEdits } from '../useDirectEdits';
 import { useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
 import { TokenUiContext, type TokenUi } from '../useTokenSnap';
 import { BoxModel } from './BoxModel';
@@ -15,6 +16,7 @@ import { AutoLayoutSection, SizeSection } from './InspectorLayout';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { CreateTokenHost, FontField, SnapToggle, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { MultiCreateTokenHost, MultiNote, MultiSizeSection } from './InspectorMulti';
 import { NumberField } from './NumberField';
 
 interface InspectorProps {
@@ -38,8 +40,8 @@ export function isDirectEditable(source: { kind: string }, compareOpen: boolean)
 }
 
 export function inspectorEmptyReason(selection: SelectionContext[], editable: boolean): string | null {
-  if (selection.length !== 1) return 'Select one element to edit its style. Press V, then click an element in the preview.';
-  if (!selection[0]?.source) return 'This element has no source location. Ask the agent to change it in Chat.';
+  if (selection.length === 0) return 'Select an element to edit its style. Press V, then click an element in the preview. Shift-click to add more.';
+  if (selection.length === 1 && !selection[0]?.source) return 'This element has no source location. Ask the agent to change it in Chat.';
   if (!editable) return 'Switch the canvas to Live to edit styles directly.';
   return null;
 }
@@ -204,9 +206,63 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
   );
 }
 
+function MultiEditor(props: InspectorProps) {
+  const first = props.selection[0] as SelectionContext;
+  const scope = { projectId: props.projectId, directionId: props.directionId, selection: first, tokens: props.tokens, onCommitted: props.onCommitted };
+  const tk = useInspectorTokens(scope);
+  const edit = useDirectEdits({
+    projectId: props.projectId,
+    directionId: props.directionId,
+    selections: props.selection,
+    port: props.port,
+    control: props.control,
+    onCommitted: props.onCommitted,
+    onStale: props.onStale,
+    rewrite: tk.ui ? tk.snap.rewrite : undefined,
+  });
+  const keepRaw = (raw: Partial<typeof edit.values>) => {
+    tk.snap.keepRaw(raw);
+    edit.preview(raw);
+    edit.commit();
+  };
+  return (
+    <TokenUiContext.Provider value={tk.ui}>
+    <div className="inspector" aria-label="Design inspector">
+      <div className="ins-header">
+        <span className="ins-tag ins-count">{props.selection.length} elements</span>
+        <span className="ins-header-end" role="status" aria-live="polite">
+          <StatusText status={edit.status} />
+        </span>
+        <SnapToggle ui={tk.ui} />
+        <button type="button" className="btn ghost small" onClick={edit.reset} disabled={edit.blocked !== null}>
+          Reset
+        </button>
+      </div>
+      <div className="ins-scroll">
+        <MultiNote reason={edit.blocked} />
+        <ErrorLine status={edit.status} />
+        <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
+          <AutoLayoutSection edit={edit} />
+          <MultiSizeSection edit={edit} />
+          <InspectorSection title="Spacing">
+            <BoxModel edit={edit} />
+          </InspectorSection>
+          <TypographySection edit={edit} ui={tk.ui} />
+          <FillSection edit={edit} />
+          <EffectsSection edit={edit} />
+        </fieldset>
+      </div>
+      <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
+    </div>
+    <MultiCreateTokenHost projectId={props.projectId} directionId={props.directionId} tokens={props.tokens} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
+    </TokenUiContext.Provider>
+  );
+}
+
 export function Inspector(props: InspectorProps) {
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
+  if (props.selection.length > 1) return <MultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
   return <Editor key={target.selector} {...props} target={target} />;
 }

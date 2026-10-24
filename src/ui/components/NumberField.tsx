@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode
 import type { DirectStyleProperty } from '../../shared/contracts';
 import { formatNumber, normalizeLength, parseNumber, stepValue } from '../cssValues';
 import { resolveNumberInput } from '../mathInput';
+import { dependsOnCurrent } from '../mixedValues';
 import { lengthToPx, resolveTokenValue, varName } from '../../shared/token-match';
 import type { DirectEdit } from '../useDirectEdit';
 import { useTokenUi, type TokenUi } from '../useTokenSnap';
@@ -53,10 +54,13 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
   const unit = spec.unit ?? 'px';
   const current = plainLength(edit.values[prop], ui);
   const shown = text ?? current;
+  const mixed = edit.mixed.has(prop);
+  const refused = mixed && text !== null && dependsOnCurrent(text, unit);
 
   const apply = (raw: string) => {
     if (start.current === null) start.current = current;
     setText(raw);
+    if (mixed && dependsOnCurrent(raw, unit)) return;
     const math = resolveNumberInput(raw, start.current, unit);
     if (math === null && /[-+*/(]\s*$/.test(raw)) return;
     edit.preview(patchFor(spec, clamp(math ?? normalizeLength(raw, unit), spec)));
@@ -71,6 +75,7 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
+      if (mixed) return;
       const delta = stepOf(event, spec) * (event.key === 'ArrowUp' ? 1 : -1);
       start.current = null;
       const next = clamp(stepValue(shown, delta, unit), spec);
@@ -97,7 +102,9 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
       value={shown}
       spellCheck={false}
       autoComplete="off"
-      placeholder="—"
+      placeholder={mixed ? 'Mixed' : '—'}
+      aria-invalid={refused || undefined}
+      title={refused ? 'Values differ. Type a number, not a change.' : undefined}
       onChange={(event) => apply(event.target.value)}
       onKeyDown={onKeyDown}
       onBlur={settle}
@@ -112,6 +119,7 @@ function useScrub(spec: NumberSpec) {
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
     event.preventDefault();
+    if (spec.edit.mixed.has(spec.prop)) return;
     const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? { value: 0, unit };
     start.current = { x: event.clientX, value: parsed.value, unit: parsed.unit || unit };
     event.currentTarget.setPointerCapture(event.pointerId);

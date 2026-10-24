@@ -82,7 +82,7 @@ function LayerBlur({ edit }: { edit: DirectEdit }) {
 }
 
 export function EffectsSection({ edit }: { edit: DirectEdit }) {
-  const list = parseShadows(edit.values['box-shadow']);
+  const list = edit.mixed.has('box-shadow') ? null : parseShadows(edit.values['box-shadow']);
   const add = (
     <button
       type="button"
@@ -99,7 +99,7 @@ export function EffectsSection({ edit }: { edit: DirectEdit }) {
       {list === null ? (
         <div className="ins-custom">
           <code className="ins-custom-value" title={edit.values['box-shadow']}>
-            {edit.values['box-shadow']}
+            {edit.values['box-shadow'] || 'Mixed'}
           </code>
           <button type="button" className="btn ghost small" onClick={() => writeShadows(edit, [])}>
             Clear

@@ -168,7 +168,7 @@ export function FontField({ ui, edit }: { ui: TokenUi | null; edit: DirectEdit }
         title={value}
         spellCheck={false}
         autoComplete="off"
-        placeholder="—"
+        placeholder={edit.mixed.has(prop) ? 'Mixed' : '—'}
         onChange={(event) => {
           setText(event.target.value);
           if (event.target.value.trim()) edit.preview({ [prop]: event.target.value.trim() });

@@ -122,7 +122,7 @@ function CreateButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
   const working = busy === 'create' || busy === 'ask';
   const label = busy === 'create' ? 'Creating…' : busy === 'ask' ? 'Thinking…' : 'Create';
   return (
-    <button className="btn primary has-icon" type="submit" disabled={disabled}>
+    <button className="btn primary has-icon" type="submit" disabled={disabled} title="Create (⌘↩)">
       {working ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
       {label}
     </button>
@@ -246,13 +246,8 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const openStarter = async (starter: Starter) => {
-    setFormError(null);
-    try {
-      const { project } = await api.createFromStarter(starter.id, location ?? undefined);
-      onOpen(project.id);
-    } catch (err) {
-      setFormError(errorText(err));
-    }
+    const { project } = await api.createFromStarter(starter.id, location ?? undefined);
+    onOpen(project.id);
   };
 
   const openSample = async () => {
@@ -341,7 +336,10 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
               busy={busy === 'create'}
               onBuild={(answers) => void build(formatAnswers(prompt, answers))}
               onSkip={() => void build(prompt.trim())}
-              onCancel={() => setQuestions(null)}
+              onCancel={() => {
+                setQuestions(null);
+                focusPrompt(homeRef.current);
+              }}
             />
           )}
           <LocationField

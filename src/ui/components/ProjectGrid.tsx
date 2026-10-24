@@ -44,7 +44,7 @@ export interface CardActions {
   onDelete: (project: Project) => void;
 }
 
-type MenuAt = { x: number; y: number } | 'button' | null;
+type MenuAt = { x: number; y: number } | 'button' | 'keys' | null;
 
 function CardMenu({ project, at, onClose, onPick }: { project: Project; at: Exclude<MenuAt, null>; onClose: (refocus: boolean) => void; onPick: (action: 'open' | 'rename' | 'duplicate' | 'delete') => void }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -70,7 +70,8 @@ function CardMenu({ project, at, onClose, onPick }: { project: Project; at: Excl
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
   };
-  const style = at === 'button' ? undefined : { left: at.x, top: at.y, right: 'auto' };
+  const style = typeof at === 'string' ? undefined : { left: at.x, top: at.y, right: 'auto' };
+  const mode = typeof at === 'string' ? (at === 'keys' ? ' instant' : '') : ' at-pointer';
   const item = (action: 'open' | 'rename' | 'duplicate' | 'delete', label: string, icon: Parameters<typeof Icon>[0]['name'], keys: string, danger = false) => (
     <button type="button" role="menuitem" className={danger ? 'danger' : undefined} onClick={() => onPick(action)}>
       <Icon name={icon} size={14} />
@@ -79,7 +80,7 @@ function CardMenu({ project, at, onClose, onPick }: { project: Project; at: Excl
     </button>
   );
   return (
-    <div ref={ref} className="project-menu" role="menu" aria-label={`Actions for ${project.name}`} style={style} onKeyDown={onKeyDown} onContextMenu={(event) => event.preventDefault()}>
+    <div ref={ref} className={`project-menu${mode}`} role="menu" aria-label={`Actions for ${project.name}`} style={style} onKeyDown={onKeyDown} onContextMenu={(event) => event.preventDefault()}>
       {item('open', 'Open', 'chevronRight', '↩')}
       {item('rename', 'Rename', 'pencil', 'F2')}
       {item('duplicate', 'Duplicate', 'copy', '⌘D')}
@@ -145,7 +146,7 @@ function ProjectCard({ project, pack, active, actions, onFocusCard }: CardProps)
   };
 
   const pick = (action: 'open' | 'rename' | 'duplicate' | 'delete') => {
-    setMenu(null);
+    closeMenu(action === 'duplicate');
     if (action === 'open') actions.onOpen(project);
     if (action === 'rename') setRenaming(true);
     if (action === 'duplicate') actions.onDuplicate(project);
@@ -165,7 +166,7 @@ function ProjectCard({ project, pack, active, actions, onFocusCard }: CardProps)
       setRenaming(true);
     } else if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
       event.preventDefault();
-      setMenu('button');
+      setMenu('keys');
     } else if (mod && event.key.toLowerCase() === 'd') {
       event.preventDefault();
       actions.onDuplicate(project);
@@ -360,10 +361,10 @@ function useGridFocus(shown: Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-function ListHeading({ filter, total, shownCount, searching }: { filter: { label: string; onClear: () => void } | null; total: number; shownCount: number; searching: boolean }) {
+function ListHeading({ filter, total, shownCount, searching, sort }: { filter: { label: string; onClear: () => void } | null; total: number; shownCount: number; searching: boolean; sort: HomeSort }) {
   return (
     <>
-      <h2 id="projects-heading">{filter ? `Projects in ${filter.label}` : 'Recent projects'}</h2>
+      <h2 id="projects-heading">{filter ? `Projects in ${filter.label}` : sort === 'recent' ? 'Recent projects' : 'Projects'}</h2>
       {total > 0 && <span className="count">{searching ? `${shownCount} of ${total}` : total}</span>}
       {filter && (
         <button type="button" className="link home-list-clear" onClick={filter.onClear}>
@@ -380,11 +381,25 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
   const { gridRef, active, setActiveId, focusAt, onGridKey } = useGridFocus(shown);
   const total = projects?.length ?? 0;
   const first = shown[0];
+  const gridActions: CardActions = {
+    ...actions,
+    onDelete: (project) => {
+      const index = shown.findIndex((item) => item.id === project.id);
+      const hadFocus = gridRef.current?.contains(document.activeElement) ?? false;
+      actions.onDelete(project);
+      if (!hadFocus) return;
+      window.requestAnimationFrame(() => {
+        const buttons = gridRef.current?.querySelectorAll<HTMLButtonElement>('.project-open');
+        if (buttons && buttons.length > 0) buttons[Math.min(index, buttons.length - 1)]?.focus();
+        else searchRef.current?.focus();
+      });
+    },
+  };
 
   return (
     <section className="home-list" aria-labelledby="projects-heading">
       <div className="home-list-head">
-        <ListHeading filter={filter} total={total} shownCount={shown.length} searching={query.trim() !== ''} />
+        <ListHeading filter={filter} total={total} shownCount={shown.length} searching={query.trim() !== ''} sort={homeSort} />
         <div className="spacer" />
         {total > 0 && <ProjectListTools query={query} onQuery={onQuery} searchRef={searchRef} onFirst={() => focusAt(0)} onOpenFirst={() => first && actions.onOpen(first)} canOpen={first !== undefined} />}
       </div>
@@ -392,7 +407,7 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
       {shown.length > 0 && (
         <div className="project-grid" ref={gridRef} onKeyDown={onGridKey}>
           {shown.map((project) => (
-            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} active={project.id === active} actions={actions} onFocusCard={() => setActiveId(project.id)} />
+            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} active={project.id === active} actions={gridActions} onFocusCard={() => setActiveId(project.id)} />
           ))}
         </div>
       )}

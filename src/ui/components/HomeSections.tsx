@@ -17,6 +17,7 @@ const STARTER_IMAGES: Record<string, string> = {
 export function StarterGallery({ disabled, onPick }: { disabled: boolean; onPick: (starter: Starter) => Promise<void> }) {
   const [starters, setStarters] = useState<Starter[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     api
       .starters()
@@ -26,8 +27,11 @@ export function StarterGallery({ disabled, onPick }: { disabled: boolean; onPick
   if (starters !== null && starters.length === 0) return null;
   const pick = async (starter: Starter) => {
     setBusy(starter.id);
+    setError(null);
     try {
       await onPick(starter);
+    } catch (err) {
+      setError(`Could not open ${starter.name}: ${errorText(err)}`);
     } finally {
       setBusy(null);
     }
@@ -35,7 +39,7 @@ export function StarterGallery({ disabled, onPick }: { disabled: boolean; onPick
   return (
     <section className="home-starters" id="home-starters" aria-labelledby="starters-heading">
       <div className="home-list-head">
-        <h2 id="starters-heading">Start from a starter</h2>
+        <h2 id="starters-heading">Starters</h2>
         <span className="home-section-hint">Opens at once, no agent run</span>
       </div>
       <ul className="starter-grid">
@@ -53,6 +57,11 @@ export function StarterGallery({ disabled, onPick }: { disabled: boolean; onPick
         ))}
         {starters === null && [0, 1, 2, 3, 4, 5].map((index) => <li key={index} className="starter-card skeleton" aria-hidden="true" />)}
       </ul>
+      {error && (
+        <p className="home-section-error" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   );
 }
@@ -89,7 +98,7 @@ export function FirstRunPanel({ onClose, onSample }: { onClose: () => void; onSa
     <section className="first-run" aria-labelledby="first-run-heading">
       <div className="first-run-head">
         <h2 id="first-run-heading">New here? Three steps to a first design</h2>
-        <button type="button" className="icon-btn" aria-label="Close getting started" title="Close" onClick={onClose}>
+        <button type="button" className="icon-btn" aria-label="Close first steps" title="Close" onClick={onClose}>
           <Icon name="close" size={14} />
         </button>
       </div>
@@ -142,16 +151,24 @@ export interface HomeToastState {
 const TOAST_MS = 8000;
 
 export function HomeToast({ toast, onDone }: { toast: HomeToastState | null; onDone: () => void }) {
+  const [held, setHeld] = useState(false);
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || held || toast.action || toast.error) return;
     const timer = window.setTimeout(onDone, TOAST_MS);
     return () => window.clearTimeout(timer);
-  }, [toast, onDone]);
+  }, [toast, held, onDone]);
   return (
     <div className="ds-toast-slot" role="status" aria-live="polite">
       {toast && (
-        <div key={toast.id} className={`ds-toast home-toast${toast.error ? ' error' : ''}`}>
-          <span className="truncate">{toast.text}</span>
+        <div
+          key={toast.id}
+          className={`ds-toast home-toast${toast.error ? ' error' : ''}`}
+          onMouseEnter={() => setHeld(true)}
+          onMouseLeave={() => setHeld(false)}
+          onFocus={() => setHeld(true)}
+          onBlur={() => setHeld(false)}
+        >
+          <span className="home-toast-text">{toast.text}</span>
           {toast.action && (
             <button
               type="button"

@@ -47,7 +47,7 @@ test('R1-6, R1-7: a fresh data folder shows the first-run panel; the sample open
   expect(await api.runs(sample.id)).toHaveLength(0);
 
   await goHome(page);
-  await page.getByRole('button', { name: 'Close getting started' }).click();
+  await page.getByRole('button', { name: 'Close first steps' }).click();
   await expect(panel).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'New project' })).toBeVisible();
@@ -144,14 +144,15 @@ test('R1-3: a 5-word prompt shows the question form before any file write, and t
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   const form = page.getByRole('form', { name: 'A few quick questions' });
   await expect(form).toBeVisible();
-  const groups = form.getByRole('group');
+  const groups = form.getByRole('radiogroup');
   expect(await groups.count()).toBeGreaterThan(0);
   expect(await groups.count()).toBeLessThanOrEqual(3);
   expect((await api.projects()).length).toBe(before);
   expect(readdirSync(projectsDir).sort()).toEqual(filesBefore);
 
-  await groups.first().getByRole('button').first().click();
-  const answer = (await groups.first().getByRole('button').first().textContent()) ?? '';
+  await groups.first().getByRole('radio').first().click();
+  await expect(groups.first().getByRole('radio').first()).toHaveAttribute('aria-checked', 'true');
+  const answer = (await groups.first().getByRole('radio').first().textContent()) ?? '';
   await form.getByRole('button', { name: 'Build with answers' }).click();
   await expect(page.locator('.topbar')).toBeVisible();
   const created = (await api.projects()).find((project) => project.name.toLowerCase().includes('bakery'));

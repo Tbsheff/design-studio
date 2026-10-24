@@ -21,19 +21,31 @@ function chip(page: Page, name: string) {
   return page.locator('.topbar').getByRole('button', { name: `Design system: ${name}` });
 }
 
+async function deleteUserPackIfPresent(api: StudioApi, id: string): Promise<void> {
+  const packs = await api.call<PackSummary[]>('GET', '/api/packs');
+  if (packs.some((pack) => pack.id === id)) await api.call('DELETE', `/api/packs/${id}`);
+}
+
 async function previewPrimary(page: Page): Promise<string> {
-  return frontFrame(page)
-    .locator('body')
-    .evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--primary').trim());
+  return (await frontFrame(page).locator('html').evaluate((el) => getComputedStyle(el).getPropertyValue('--primary'))).trim();
+}
+
+async function expectPreviewPrimary(page: Page, check: (primary: string) => void): Promise<string> {
+  let primary = '';
+  await expect(async () => {
+    primary = await previewPrimary(page);
+    check(primary);
+  }).toPass({ timeout: 20_000 });
+  return primary;
 }
 
 test('design-system library: save to library, switch packs, restore through versions', async ({ page }) => {
   const api = await openHome(page);
+  await deleteUserPackIfPresent(api, 'user-house-editorial');
   const project = await openProject(page, api, { prompt: 'Library Journal', packId: 'editorial', designMd: 'Keep these notes.' });
   const tree = mainDirection(project).workTree;
   const editorialCss = readFileSync(path.join(tree, 'design-system/tokens.css'), 'utf8');
-  await expect.poll(() => previewPrimary(page)).not.toBe('');
-  const editorialPrimary = await previewPrimary(page);
+  const editorialPrimary = await expectPreviewPrimary(page, (primary) => expect(primary).not.toBe(''));
 
   await chip(page, 'Editorial').click();
   await page.getByRole('dialog', { name: 'Design system' }).getByRole('button', { name: 'Save to library…' }).click();
@@ -57,7 +69,7 @@ test('design-system library: save to library, switch packs, restore through vers
   await expect(change).toBeHidden();
   await expect(page.locator('.ds-toast', { hasText: 'Switch to Brutalist design system.' })).toBeVisible();
   await expect(chip(page, 'Brutalist')).toBeVisible();
-  await expect.poll(() => previewPrimary(page)).not.toBe(editorialPrimary);
+  await expectPreviewPrimary(page, (primary) => expect(primary).not.toBe(editorialPrimary));
   expect(readFileSync(path.join(tree, 'design-system/tokens.css'), 'utf8')).not.toBe(editorialCss);
   expect(readFileSync(path.join(tree, 'DESIGN.md'), 'utf8')).toContain('## Project notes\n\nKeep these notes.');
 
@@ -69,7 +81,7 @@ test('design-system library: save to library, switch packs, restore through vers
   expect(before.title).toBe('Save House Editorial to library');
   await versionRow(page, before.title).first().getByRole('button', { name: 'Restore' }).click();
   await expect(chip(page, 'House Editorial')).toBeVisible();
-  await expect.poll(() => previewPrimary(page)).toBe(editorialPrimary);
+  await expectPreviewPrimary(page, (primary) => expect(primary).toBe(editorialPrimary));
   expect(readFileSync(path.join(tree, 'design-system/tokens.css'), 'utf8')).toBe(editorialCss);
   await expect.poll(async () => (await api.project(project.id)).packId).toBe('user-house-editorial');
 });

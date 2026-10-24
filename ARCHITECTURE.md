@@ -232,6 +232,26 @@ design-system/tokens.json  (source of truth, DTCG)  ──compileTokens──►
 - A work tree has a studio design system only when both `design-system/tokens.json` and `design-system/pack.json` exist. So an imported folder with its own `design-system/tokens.json` gets no recompile, injection, warning or prompt block.
 - Not in phase 1: imported projects get no automatic link or import; Tailwind `@theme`; colors inside shadow values are not converted to hex.
 
+## Design systems: user library (add a design system, slice 1)
+
+Plan: `research/add-design-system-plan.md`.
+
+```
+<dataDir>/packs/user-<slug>/{pack.json,tokens.json,DESIGN.md}   (user packs, same three files as built-ins)
+        │
+        ├─ packRegistry(builtinDir, {userDir})  built-ins loaded once; user folders re-read when mtime/size of a file changes, invalidate() after a store write
+        ├─ library.ts  create / update / duplicate / rename / delete / export (zip)   (one mutex, staged in .tmp-<rand>, then rename)
+        └─ project-pack.ts  apply or switch on a direction (one version)  ·  save a direction to the library
+```
+
+- Ids: a user pack folder is `user-<slugify(name)>`, `-2`, `-3` … on a clash, so the id = folder rule holds. A user folder without the `user-` prefix, an id that a built-in has, or any file that fails the built-in checks (zod manifest, tokens compile, DESIGN.md present) is skipped and listed by `GET /api/packs/problems`. Built-ins are read-only (400). `PackSummary.source` is `builtin | user`; it is never written into `pack.json`.
+- Store writes validate everything first (manifest schema, `parseTokenFile`, `compileTokens` errors, non-empty DESIGN.md, 512 KB caps) and answer 400 with the reason. Update replaces the folder with two renames (old folder to `.old-<rand>`, staged folder to the id). Rename changes `name` only; the id stays, because projects store `packId`. A user pack DESIGN.md is pack prose only: the studio token block is cut on write. Export is a deflate zip (`zip.ts`, no dependency) of `<id>/pack.json`, `<id>/tokens.json`, `<id>/DESIGN.md`.
+- Apply (`POST .../design-system/apply {packId}`, per-direction mutex, 409 `run_in_progress`): notes are the `## Project notes` body when the work tree already has a studio design system, else the whole old DESIGN.md. `applyPack` writes tokens.json, pack.json, tokens.css and DESIGN.md (`composeDesignMd`); a created React project also gets the `main.tsx` import and the studio Google Fonts block, replaced (or removed) on a switch. Only those paths are committed (`commitFile`), as one manual version "Apply <name> design system" or "Switch to <name> design system"; a failure restores the old files. 422 `no_change` when the pack is already applied. Imported React projects (not `created`) get the files only: the result has `wired: false` and a `notice`. HTML relies on the preview link injection and the render check.
+- `splitDesignMd` is the inverse of `composeDesignMd`: it cuts the `studio:tokens` block and the `## Project notes` section (outside code fences, up to the next `#`/`##` heading). A test checks the round trip for every built-in pack.
+- Save (`POST .../design-system/save {name, packId?}`): reads the direction's tokens.json (verbatim), pack.json (must pass `manifestSchema`, else 400) and the DESIGN.md prose; creates a new user pack, or updates `packId` when it is a user pack (400 for a built-in). Provenance stays `imported`, else becomes `extracted`. The project files do not change.
+- Pack identity follows the files: `DesignSystemState.packId` is the work tree's `pack.json` id (null when the direction has no studio design system). `project.packId` is set when a pack is applied to the main direction and is synced from main's `pack.json` after undo and restore. Other directions only have their files.
+- UI: the top bar chip popover has "Change design system…" (modal with `PackList`, no "No design system" option) and "Save to library…" (name prompt). With no design system the top bar shows "Add design system". A toast (`.ds-toast`, `role="status"`) shows the result. `refreshPacks()` clears the `usePacks` cache after a save. Pickers show user packs after built-ins with a "Yours" marker.
+
 ## Design systems (phase 3): live token editing
 
 ```

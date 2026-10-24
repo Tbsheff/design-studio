@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } fr
 import os from 'node:os';
 import path from 'node:path';
 import { expect, test, type ElectronApplication, type Frame, type Page } from '@playwright/test';
-import type { Project, RenderCheckResult, RunSummary, Version } from '../src/shared/contracts';
+import type { Project, RenderCheckResult, RunSummary, TelemetrySample, Version } from '../src/shared/contracts';
 import { alive, groupMembers, listProcesses, processCommandAndEnv, processEnvKeys, type ProcessRow } from './support/processes';
 import { APP_BINARY, desktopEnv, launchDesktop, SERVER_MARKER } from './support/desktop-app';
 import { clickCreate } from './support/studio';
@@ -96,8 +96,20 @@ test('window loads the studio with a locked-down renderer', async () => {
     desktop: (window as unknown as { studioDesktop?: { version: string; platform: string } }).studioDesktop,
   }));
   expect(renderer.hasRequire).toBe(false);
-  expect(renderer.desktop).toEqual({ version: '0.1.0', platform: process.platform });
+  expect(renderer.desktop).toEqual({ version: '0.1.0', platform: process.platform, boot: { startedAt: expect.any(Number), marks: expect.objectContaining({ appReady: expect.any(Number), serverReady: expect.any(Number), window: expect.any(Number) }) } });
   expect(await call<Project[]>('GET', '/api/projects')).toEqual([]);
+});
+
+test('app.start telemetry has the desktop start time and the boot phases', async () => {
+  let start: TelemetrySample | undefined;
+  await expect
+    .poll(async () => (start = (await call<TelemetrySample[]>('GET', '/api/telemetry?scope=app')).find((sample) => sample.kind === 'app.start'))?.ms ?? null)
+    .not.toBeNull();
+  expect(start?.detail).toMatchObject({ surface: 'desktop', screen: 'home', appReady: expect.any(Number), serverReady: expect.any(Number) });
+  const marks = start?.detail as Record<string, number>;
+  expect(marks.appReady).toBeLessThan(marks.serverReady as number);
+  expect(start?.ms).toBeGreaterThan(marks.serverReady as number);
+  expect(start?.ms).toBeLessThan(30_000);
 });
 
 test('external links open in the default browser, not in the app', async () => {

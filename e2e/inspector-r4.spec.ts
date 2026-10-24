@@ -6,8 +6,8 @@ import { type StudioApi, frontFrame, mainDirection, openHome, selectInFrame, set
 
 const SHOTS = process.env.STUDIO_R4_SHOTS ?? '';
 
-async function openProject(page: Page, api: StudioApi, prompt: string): Promise<Project> {
-  const { project } = await api.call<{ project: Project }>('POST', '/api/projects', { prompt, kind: 'html' });
+async function openProject(page: Page, api: StudioApi, prompt: string, packId?: string): Promise<Project> {
+  const { project } = await api.call<{ project: Project }>('POST', '/api/projects', { prompt, kind: 'html', ...(packId ? { packId } : {}) });
   await api.waitForRuns(project.id, 1);
   await page.evaluate((id) => {
     const raw = localStorage.getItem('design-studio.ui.v1');
@@ -73,6 +73,15 @@ test('Inspector R4: auto layout, sizing, align self and timing', async ({ page }
   await selectCards(page);
   const layout = page.getByRole('region', { name: 'Auto layout' });
   await expect(layout.getByRole('button', { name: /Add auto layout/ })).toBeVisible();
+  const before = lineOf(file, 'aria-label="Highlights"');
+  const composer = page.locator('.prompt textarea');
+  await composer.click();
+  await page.keyboard.press('Shift+A');
+  await expect(composer).toHaveValue('A');
+  await page.waitForTimeout(300);
+  expect(lineOf(file, 'aria-label="Highlights"')).toBe(before);
+  await composer.fill('');
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('Shift+A');
   await expect.poll(() => lineOf(file, 'aria-label="Highlights"')).toContain('display: flex');
   await settled(page);
@@ -218,4 +227,29 @@ test('Inspector R4: math, per-corner radius, shadow read back and scroll', async
     expect(reach, `${width}x${height}`).toMatchObject({ hit: true });
     expect(reach.bottom, `${width}x${height}`).toBeLessThanOrEqual(reach.promptTop);
   }
+});
+
+test('Inspector R4: a shadow color token stays a token after reload', async ({ page }) => {
+  const api = await openHome(page);
+  const project = await openProject(page, api, 'Kiln Token Shadow', 'editorial');
+  const file = path.join(mainDirection(project).workTree, 'index.html');
+  await selectInFrame(page, 'h1');
+  await page.getByRole('region', { name: 'Effects' }).getByRole('button', { name: 'Add shadow' }).click();
+  await expect.poll(() => lineOf(file, '<h1')).toContain('box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.12)');
+  await settled(page);
+  const opener = page.getByRole('button', { name: 'Choose shadow 1 color token' });
+  await opener.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await opener.click();
+  await page.getByRole('listbox', { name: 'Shadow 1 color tokens' }).getByRole('option', { name: /--primary\b/ }).first().click();
+  await expect.poll(() => lineOf(file, '<h1')).toMatch(/box-shadow: 0 4px 12px 0 var\(--primary\)/);
+  await settled(page);
+  expect(lineOf(file, '<h1')).not.toMatch(/(^|[^-])color: var\(--primary\)/);
+  await expect(page.getByRole('button', { name: 'Shadow 1 color: token --primary' })).toBeVisible();
+
+  await page.reload();
+  await expect(frontFrame(page).locator('h1')).toHaveText('Kiln Token Shadow');
+  await selectInFrame(page, 'h1');
+  await expect(page.getByLabel('Shadow 1 color', { exact: true })).toHaveValue('var(--primary)');
+  await expect(page.getByRole('button', { name: 'Shadow 1 color: token --primary' })).toBeVisible();
+  await expect(page.getByLabel('Shadow 1 y offset', { exact: true })).toHaveValue('4px');
 });

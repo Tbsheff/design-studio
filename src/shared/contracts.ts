@@ -136,6 +136,7 @@ export interface Project {
   updatedAt: number;
   imported: { sourcePath: string; created?: boolean } | null;
   packId?: string | null;
+  designSystemFor?: string | null;
   entry: string;
   settings: ProjectSettings;
   settingsVersion?: number;
@@ -444,6 +445,8 @@ export const API_ROUTES = {
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
   importProject: 'POST /api/projects/import {path} -> {project}',
+  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult (draft user pack + backing HTML project "<name> design system" with a kit page and source/; one version; 400 no source, blocked URL, bad tokens file or folder)',
+  getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
   addWorkspace: 'POST /api/workspaces {path, label?} -> WorkspaceFolder (realpath, must be a folder; same path returns the saved entry)',
@@ -688,6 +691,61 @@ export interface PackProblem {
   id: string;
   source: PackSource;
   errors: string[];
+}
+
+export type DraftSourceKind = 'tokens-file' | 'folder' | 'url' | 'design-md' | 'brief';
+
+export interface DraftSourceReport {
+  kind: DraftSourceKind | 'images';
+  label: string;
+  ok: boolean;
+  found: number;
+  error?: string;
+}
+
+export type CoverageConfidence = 'high' | 'medium' | 'fallback';
+
+export interface CoverageEntry {
+  token: string;
+  source: DraftSourceKind | 'derived' | 'base';
+  confidence: CoverageConfidence;
+  evidence: string;
+}
+
+export type CoverageGrade = 'excellent' | 'usable' | 'needs-review' | 'rebuild';
+
+export interface DesignSystemCoverage {
+  version: 1;
+  score: number;
+  grade: CoverageGrade;
+  basePackId: string;
+  mode: 'light' | 'dark';
+  tokens: CoverageEntry[];
+  fallbacks: string[];
+  sources: DraftSourceReport[];
+}
+
+export interface DesignSystemDraftRequest {
+  name?: string;
+  mode?: 'light' | 'dark' | 'auto';
+  basePackId?: string;
+  urls?: string[];
+  designMd?: string;
+  brief?: string;
+  folderPath?: string;
+  tokensFile?: { name: string; text: string };
+}
+
+export interface DesignSystemDraftResult {
+  project: Project;
+  pack: PackSummary;
+  coverage: DesignSystemCoverage;
+  ms: number;
+}
+
+export interface DesignSystemDraftInfo {
+  packId: string;
+  coverage: DesignSystemCoverage | null;
 }
 
 export interface CreateUserPackInput {

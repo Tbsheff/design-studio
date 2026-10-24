@@ -27,6 +27,7 @@ export interface ServerConfig {
   agentMode: 'sdk' | 'mock';
   studioOrigin: string;
   previewOrigin: string;
+  fetchAllowLoopback?: boolean;
 }
 
 export interface EventBus {

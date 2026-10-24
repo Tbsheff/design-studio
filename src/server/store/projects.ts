@@ -45,7 +45,7 @@ export interface StudioProjectStore extends ProjectStore {
   mainDirection(project: Project): Direction;
   updateSettings(projectId: string, patch: Partial<ProjectSettings>): Promise<Project>;
   setPackId(projectId: string, packId: string | null): Promise<Project>;
-  createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings> }): Promise<Project>;
+  createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designSystemFor?: string }): Promise<Project>;
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;
 }
@@ -250,12 +250,13 @@ export function createProjectStore(
     throw new ConflictError(`no free folder name for ${slug} in ${parent}`);
   };
 
-  const registerFolder = async (folder: string, input: { name: string; kind: ProjectKind; created: boolean; settings?: Partial<ProjectSettings> }): Promise<Project> => {
+  const registerFolder = async (folder: string, input: { name: string; kind: ProjectKind; created: boolean; settings?: Partial<ProjectSettings>; designSystemFor?: string }): Promise<Project> => {
     const id = nanoid(10);
     const now = Date.now();
     const project = newProject(id, input.name, input.kind, newDirection(MAIN_DIRECTION_ID, 'Main', folder, now), now);
     project.imported = input.created ? { sourcePath: folder, created: true } : { sourcePath: folder };
     project.settings = { ...project.settings, ...input.settings };
+    if (input.designSystemFor) project.designSystemFor = input.designSystemFor;
     await mkdir(attachmentsDir(id), { recursive: true });
     await writeProject(project);
     return project;
@@ -316,7 +317,7 @@ export function createProjectStore(
       return registerFolder(folder, { name: path.basename(folder), kind: isVite ? 'react' : 'html', created: false });
     },
 
-    async createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings> }): Promise<Project> {
+    async createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designSystemFor?: string }): Promise<Project> {
       if (input.kind !== 'html' && input.kind !== 'react') throw new BadRequestError('kind must be html or react');
       if (typeof input.parentPath !== 'string' || !path.isAbsolute(input.parentPath)) throw new BadRequestError('parentPath must be an absolute path');
       const parent = await resolveUserFolder(input.parentPath);
@@ -328,7 +329,7 @@ export function createProjectStore(
           await cp(templateDir, folder, { recursive: true });
           await linkNodeModules(folder, await ensureTemplateModules());
         }
-        project = await registerFolder(folder, { name, kind: input.kind, created: true, settings: input.settings });
+        project = await registerFolder(folder, { name, kind: input.kind, created: true, settings: input.settings, designSystemFor: input.designSystemFor });
         return project;
       } catch (error) {
         await rm(folder, { recursive: true, force: true });

@@ -40,6 +40,7 @@ import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeErro
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
+import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { registerPackRoutes } from './packs-routes.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, ServerConfig, VersionStore } from '../types.js';
@@ -847,7 +848,19 @@ export function createApp(deps: AppDeps): Hono {
     startRun,
   });
 
-  registerPackRoutes(app, { library: createPackLibrary(packs), editDeps: { bus, projects, versions, runner }, readBody, withDirection });
+  const library = createPackLibrary(packs);
+  registerPackRoutes(app, { library, editDeps: { bus, projects, versions, runner }, readBody, withDirection });
+
+  registerDesignSystemRoutes(app, {
+    library,
+    projects,
+    versions,
+    projectsFolder: () => defaultFolder.ensure(),
+    finishCreate: (project, pack) => applyPackOnCreate(project, pack, undefined),
+    watch: watchDirection,
+    readBody,
+    allowLoopback: config.fetchAllowLoopback === true,
+  });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

@@ -40,5 +40,6 @@ export function loadConfig(): ServerConfig {
     agentMode: readAgentMode(),
     studioOrigin: `http://127.0.0.1:${studioPort}`,
     previewOrigin: `http://127.0.0.1:${previewPort}`,
+    fetchAllowLoopback: process.env.STUDIO_FETCH_ALLOW_LOOPBACK === '1' && !resourcesDir(),
   };
 }

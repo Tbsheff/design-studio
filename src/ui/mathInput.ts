@@ -94,16 +94,18 @@ export function evaluateMath(raw: string): { value: number; unit: string } | nul
   return { value: result.value, unit: [...result.units][0] ?? '' };
 }
 
+const RELATIVE_RE = /^(\+=?|-=)/;
+
 export function resolveNumberInput(raw: string, current: string, defaultUnit: string): string | null {
   const text = raw.trim();
   if (!OPERATOR_RE.test(text)) return null;
-  const relative = /^[+-]/.test(text);
-  const result = evaluateMath(relative ? text.slice(1) : text);
+  const relative = RELATIVE_RE.exec(text)?.[0] ?? '';
+  const result = evaluateMath(text.slice(relative.length));
   if (!result) return null;
   const base = parseNumber(current);
   const unit = result.unit || base?.unit || defaultUnit;
   if (!relative) return formatNumber(result.value, unit);
   if (base && result.unit && base.unit && base.unit !== result.unit) return null;
   const start = base?.value ?? 0;
-  return formatNumber(text.startsWith('-') ? start - result.value : start + result.value, unit);
+  return formatNumber(relative === '-=' ? start - result.value : start + result.value, unit);
 }

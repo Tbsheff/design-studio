@@ -158,6 +158,15 @@ test('Inspector R4: math, per-corner radius, shadow read back and scroll', async
   await size.press('Enter');
   await expect.poll(() => lineOf(file, '<h1')).toContain('font-size: 24px');
   await settled(page);
+  await size.fill('-=4');
+  await size.press('Enter');
+  await expect.poll(() => lineOf(file, '<h1')).toContain('font-size: 20px');
+  await settled(page);
+  const spacing = page.getByLabel('Letter spacing', { exact: true });
+  await spacing.fill('-1');
+  await spacing.press('Enter');
+  await expect.poll(() => lineOf(file, '<h1')).toContain('letter-spacing: -1px');
+  await settled(page);
 
   await selectCard(page);
   await page.getByRole('button', { name: 'Independent corners' }).click();

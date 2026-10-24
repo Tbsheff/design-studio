@@ -34,12 +34,21 @@ describe('resolveNumberInput', () => {
     expect(resolveNumberInput('0.5*3', '1', '')).toBe('1.5');
   });
 
-  it('adds or subtracts a leading signed value from the current value', () => {
+  it('adds a leading +N or +=N and subtracts -=N from the current value', () => {
     expect(resolveNumberInput('+8', '16px', 'px')).toBe('24px');
-    expect(resolveNumberInput('-4', '16px', 'px')).toBe('12px');
+    expect(resolveNumberInput('+=8', '16px', 'px')).toBe('24px');
+    expect(resolveNumberInput('-=4', '16px', 'px')).toBe('12px');
+    expect(resolveNumberInput('-= 2*3', '16px', 'px')).toBe('10px');
     expect(resolveNumberInput('+2*3', '1rem', 'px')).toBe('7rem');
     expect(resolveNumberInput('+8', 'normal', 'px')).toBe('8px');
     expect(resolveNumberInput('+1rem', '16px', 'px')).toBeNull();
+  });
+
+  it('reads a leading -N as a plain negative number', () => {
+    expect(resolveNumberInput('-4', '16px', 'px')).toBe('-4px');
+    expect(resolveNumberInput('-0.02em', '0em', 'px')).toBe('-0.02em');
+    expect(resolveNumberInput('-4*2', '1px', 'px')).toBe('-8px');
+    expect(resolveNumberInput('-=1rem', '16px', 'px')).toBeNull();
   });
 
   it('leaves plain values and non-math text to the caller', () => {
@@ -48,5 +57,7 @@ describe('resolveNumberInput', () => {
     expect(resolveNumberInput('var(--space-2)', '0px', 'px')).toBeNull();
     expect(resolveNumberInput('10px; color: red', '0px', 'px')).toBeNull();
     expect(resolveNumberInput('+', '16px', 'px')).toBeNull();
+    expect(resolveNumberInput('-=', '16px', 'px')).toBeNull();
+    expect(resolveNumberInput('+=+', '16px', 'px')).toBeNull();
   });
 });

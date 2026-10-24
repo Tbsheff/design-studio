@@ -3,6 +3,7 @@ import type { SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import { textEditability } from '../cssValues';
 import type { DesignTokens } from '../useDesignSystemState';
+import { useAuthoredCss, type AuthoredCssState } from '../useAuthoredCss';
 import { useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
 import { TokenUiContext, type TokenUi } from '../useTokenSnap';
 import { BoxModel } from './BoxModel';
@@ -11,6 +12,8 @@ import { RadiusField } from './InspectorCorners';
 import { EffectsSection } from './InspectorEffects';
 import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
 import { AutoLayoutSection, SizeSection } from './InspectorLayout';
+import { InspectorBreadcrumb } from './InspectorBreadcrumb';
+import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { CreateTokenHost, FontField, SnapToggle, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { NumberField } from './NumberField';
 
@@ -65,7 +68,7 @@ function StatusText({ status }: { status: SaveStatus }) {
   return null;
 }
 
-function Header({ selection, edit, ui }: { selection: SelectionContext; edit: DirectEdit; ui: TokenUi | null }) {
+function Header({ selection, edit, ui, authored }: { selection: SelectionContext; edit: DirectEdit; ui: TokenUi | null; authored: AuthoredCssState }) {
   const source = selection.source;
   const where = source ? `${source.file}:${source.line}` : '';
   return (
@@ -78,6 +81,7 @@ function Header({ selection, edit, ui }: { selection: SelectionContext; edit: Di
         <StatusText status={edit.status} />
       </span>
       <SnapToggle ui={ui} />
+      <CopyCssButton authored={authored} />
       <button type="button" className="btn ghost small" onClick={edit.reset}>
         Reset
       </button>
@@ -169,6 +173,7 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
     onStale: props.onStale,
     rewrite: tk.ui ? tk.snap.rewrite : undefined,
   });
+  const authored = useAuthoredCss(props.port, props.target.selector);
   const keepRaw = (raw: Partial<typeof edit.values>) => {
     tk.snap.keepRaw(raw);
     edit.preview(raw);
@@ -177,7 +182,8 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
   return (
     <TokenUiContext.Provider value={tk.ui}>
     <div className="inspector" aria-label="Design inspector">
-      <Header selection={props.target} edit={edit} ui={tk.ui} />
+      <InspectorBreadcrumb selection={props.target} port={props.port} />
+      <Header selection={props.target} edit={edit} ui={tk.ui} authored={authored} />
       <div className="ins-scroll">
         <ErrorLine status={edit.status} />
         <TextSection selection={props.target} edit={edit} />
@@ -189,6 +195,7 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
         <TypographySection edit={edit} ui={tk.ui} />
         <FillSection edit={edit} />
         <EffectsSection edit={edit} />
+        <InspectorOtherStyles css={authored.css} />
       </div>
       <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
     </div>

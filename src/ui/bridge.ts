@@ -22,6 +22,7 @@ export type ParentMessageBody = ParentToBridge extends infer M ? (M extends Pare
 export interface PreviewPort {
   post: (body: ParentMessageBody) => void;
   refreshRects: () => void;
+  listen?: (handler: (message: BridgeToParent) => void) => () => void;
 }
 
 function urlOrigin(url: string): string {

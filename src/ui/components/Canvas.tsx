@@ -122,7 +122,7 @@ function useRenderCheck(projectId: string, directionId: string | null) {
 function usePortSync(port: MutableRefObject<PreviewPort | null> | undefined, frames: PreviewPort | null, lastChange: FilesChange | null, kind: ProjectKind) {
   useEffect(() => {
     if (!port) return;
-    port.current = frames ? { post: frames.post, refreshRects: frames.refreshRects } : null;
+    port.current = frames ? { post: frames.post, refreshRects: frames.refreshRects, listen: frames.listen } : null;
   });
   useEffect(() => {
     if (!lastChange || kind !== 'react') return;

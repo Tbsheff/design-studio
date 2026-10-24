@@ -89,6 +89,7 @@ export function usePreviewFrames(o: Options) {
   const lastPaintAt = useRef<Record<string, number>>({});
   const frameErrorAt = useRef<Record<string, number>>({});
   const hmrFallback = useRef<number | null>(null);
+  const listeners = useRef(new Set<(message: BridgeToParent) => void>());
 
   const opts = useRef(o);
   opts.current = o;
@@ -298,6 +299,7 @@ export function usePreviewFrames(o: Options) {
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
+      for (const listener of listeners.current) listener(msg);
       switch (msg.type) {
         case 'hover':
           if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
@@ -383,6 +385,12 @@ export function usePreviewFrames(o: Options) {
     if (f) postToFrame(f, body);
   }, [frontFrame]);
 
+  const listen = useCallback((handler: (message: BridgeToParent) => void) => {
+    listeners.current.add(handler);
+    return () => {
+      listeners.current.delete(handler);
+    };
+  }, []);
   const hoverNode = useCallback((id: number | null) => post({ type: 'hover-node', id }), [post]);
   const selectNode = useCallback((id: number, additive: boolean) => post({ type: 'select-node', id, additive }), [post]);
   const selectRelative = useCallback((selector: string, move: SelectMove) => post({ type: 'select-relative', selector, move }), [post]);
@@ -396,6 +404,7 @@ export function usePreviewFrames(o: Options) {
     clearSelection,
     post,
     refreshRects: () => requestRects(frontFrame()),
+    listen,
     tree,
     selectedNode,
     watchTree,

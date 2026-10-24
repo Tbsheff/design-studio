@@ -2,6 +2,7 @@ import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, Selecti
 import { forwardHistoryKeys } from './history-key.js';
 import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
 import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
+import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
@@ -306,6 +307,7 @@ type StyledElement = HTMLElement | SVGElement;
 
 interface StyleBackup {
   hadAttribute: boolean;
+  attribute: string | null;
   props: Map<string, { value: string; priority: string }>;
 }
 
@@ -313,6 +315,7 @@ interface LivePreview {
   previewStyle(selector: unknown, style: unknown): void;
   previewText(selector: unknown, text: unknown): void;
   reset(): void;
+  authoredInline(element: Element): string;
 }
 
 const PREVIEW_STYLE_KEYS = new Set<string>(DIRECT_STYLE_PROPERTIES);
@@ -359,7 +362,7 @@ function createLivePreview(): LivePreview {
   const backupFor = (element: StyledElement): StyleBackup => {
     const existing = styleBackups.get(element);
     if (existing) return existing;
-    const created: StyleBackup = { hadAttribute: element.hasAttribute('style'), props: new Map() };
+    const created: StyleBackup = { hadAttribute: element.hasAttribute('style'), attribute: element.getAttribute('style'), props: new Map() };
     styleBackups.set(element, created);
     return created;
   };
@@ -397,7 +400,12 @@ function createLivePreview(): LivePreview {
     styleBackups.clear();
   };
 
-  return { previewStyle, previewText, reset };
+  const authoredInline = (element: Element): string => {
+    const backup = isStyledElement(element) ? styleBackups.get(element) : undefined;
+    return (backup ? backup.attribute : element.getAttribute('style')) ?? '';
+  };
+
+  return { previewStyle, previewText, reset, authoredInline };
 }
 
 const MAX_TOKEN_PREVIEW_CSS = 200_000;
@@ -756,7 +764,7 @@ function startBridge(session: BridgeSession): void {
     selectedAt = performance.now();
     post({
       type: 'select',
-      selection: selectionFor(element),
+      selection: { ...selectionFor(element), path: ancestorPath(element, layers.idOf) },
       additive,
       at: performance.timeOrigin + performance.now(),
       node: layers.idOf(element),
@@ -857,7 +865,12 @@ function startBridge(session: BridgeSession): void {
     },
     'text-edit-allowed': () => undefined,
     'text-edit-stop': () => undefined,
-    'request-authored': () => undefined,
+    'request-authored': (message) => {
+      if (typeof message.requestId !== 'string' || typeof message.selector !== 'string') return;
+      const element = queryElement(message.selector);
+      const rules = element ? authoredRules(element) : [];
+      post({ type: 'authored', requestId: message.requestId, rules, inline: element ? livePreview.authoredInline(element).slice(0, AUTHORED_MAX_BYTES) : '' });
+    },
     'select-source': (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);

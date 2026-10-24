@@ -70,6 +70,19 @@ function releaseToolbarFocus(): void {
   if (active instanceof HTMLButtonElement && active.closest('.toolbar')) active.blur();
 }
 
+type SelectMessage = Extract<BridgeToParent, { type: 'select' }>;
+
+export function nextSelection(prev: SelectionContext[], picked: SelectionContext, additive: boolean): SelectionContext[] {
+  if (!additive) return [picked];
+  const has = prev.some((s) => s.selector === picked.selector);
+  return has ? prev.filter((s) => s.selector !== picked.selector) : [...prev, picked];
+}
+
+function nodeAfterSelect(msg: SelectMessage, selection: SelectionContext[]): number | null {
+  if (msg.additive && selection.some((s) => s.selector === msg.selection.selector)) return null;
+  return typeof msg.node === 'number' ? msg.node : null;
+}
+
 function applyRects(
   prev: SelectionContext[],
   selectors: string[],
@@ -345,11 +358,11 @@ export function usePreviewFrames(o: Options) {
           break;
         case 'select':
           releaseToolbarFocus();
-          setSelectedNode(typeof msg.node === 'number' ? msg.node : null);
+          setSelectedNode(nodeAfterSelect(msg, cur.selection));
           cur.setSelection((prev) => {
-            if (msg.additive && prev.some((s) => s.selector === msg.selection.selector)) return prev;
-            pendingSelectAt.current = msg.at;
-            return msg.additive ? [...prev, msg.selection] : [msg.selection];
+            const next = nextSelection(prev, msg.selection, msg.additive);
+            if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
+            return next;
           });
           break;
         case 'rects':

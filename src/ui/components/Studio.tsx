@@ -214,7 +214,10 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const startRun = async (request: RunRequest, optimistic = false) => {
     if (!did) return;
     const pending = optimistic ? emptyRun(`pending-${randomToken()}`, did, Date.now(), request) : null;
-    if (pending) setPendingRun(pending);
+    if (pending) {
+      setPendingRun(pending);
+      panel.show('chat');
+    }
     const cancelSend = data.noteSend();
     try {
       const { runId, stopped } = await trackSend(() => api.startRun(projectId, did, request));

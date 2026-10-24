@@ -192,6 +192,45 @@ test('R5 open from Home: card click to first preview paint, fresh page each samp
   expect(s.p95).toBeLessThan(TARGETS.openFromHome);
 });
 
+test('R5-5 optimistic Send: message and Starting before the server answers; a failed send puts the draft back', async ({ page }) => {
+  const api = await openHome(page);
+  const project = await createProjectViaUi(page, api, 'Optimistic probe page', 'html');
+  await expect(frontFrame(page).locator('h1')).toHaveText('Optimistic probe page');
+  await api.waitForRuns(project.id, 1);
+  const composer = page.locator('.prompt [data-slot="composer-input"]');
+  let release: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route(/\/d\/[^/]+\/runs$/, async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback();
+    await held;
+    await route.fallback();
+  });
+  await composer.fill('Optimistic heading');
+  await composer.press('Meta+Enter');
+  const pending = page.locator('[data-pending-run]');
+  await expect(pending.locator('.msg.user')).toContainText('Optimistic heading');
+  await expect(pending.getByTestId('live-status')).toContainText('Starting');
+  await expect(composer).toHaveValue('');
+  mkdirSync('/tmp/polish-r5', { recursive: true });
+  await page.locator('.chat-conversation').screenshot({ path: '/tmp/polish-r5/after-optimistic-send.png' });
+  release();
+  await api.waitForRuns(project.id, 2);
+  await expect(pending).toHaveCount(0);
+  await expect(page.locator('.msg.user', { hasText: 'Optimistic heading' })).toHaveCount(1);
+  await page.unroute(/\/d\/[^/]+\/runs$/);
+
+  await page.route(/\/d\/[^/]+\/runs$/, (route) =>
+    route.request().method() === 'POST' ? route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'boom', message: 'Server failed' }) }) : route.fallback(),
+  );
+  await composer.fill('This send fails');
+  await composer.press('Meta+Enter');
+  await expect(composer).toHaveValue('This send fails');
+  await expect(pending).toHaveCount(0);
+  await expect(page.locator('.msg.user', { hasText: 'This send fails' })).toHaveCount(0);
+  await page.unroute(/\/d\/[^/]+\/runs$/);
+  expect((await api.runs(project.id)).length).toBe(2);
+});
+
 test('R5 versions panel: 100 versions load and render', async ({ page }) => {
   test.setTimeout(300_000);
   const api = await openHome(page);

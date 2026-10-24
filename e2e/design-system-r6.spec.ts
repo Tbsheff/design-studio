@@ -62,8 +62,9 @@ test('R6-1: the canvas dark switch repaints every frame in under 100 ms and leav
   const project = await openPackProject(page, api, 'Mode Preview Page');
   const main = mainDirection(project);
   writeFileSync(path.join(main.workTree, 'index.html'), PROBE_PAGE);
-  await expect(frontFrame(page).locator('h1')).toHaveText('Mode probe');
   await api.call('POST', `/api/projects/${project.id}/d/main/keep`).catch(() => undefined);
+  await page.reload();
+  await expect(frontFrame(page).locator('h1')).toHaveText('Mode probe');
   for (const size of ['Tablet 768', 'Mobile 390']) {
     await page.getByRole('button', { name: 'Add frame', exact: true }).click();
     await page.getByRole('menuitem', { name: new RegExp(size) }).click();
@@ -390,6 +391,7 @@ test('R6-6: the DESIGN.md editor has an outline and a live preview, and asks to 
   await dialog.getByRole('button', { name: 'Close DESIGN.md' }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: 'DESIGN.md', exact: true }).click();
+  await expect(editor).toBeEnabled();
   await editor.press('ControlOrMeta+End');
   await editor.pressSequentially('\nOne more line.\n');
   await page.mouse.click(5, 5);

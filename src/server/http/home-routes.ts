@@ -76,6 +76,20 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
 
   app.delete('/api/projects/:pid', async (c) => c.json(await library.trash(c.req.param('pid'))));
 
+  app.get('/api/trash', async (c) => c.json(await library.listTrash()));
+
+  app.get('/api/trash/:trashId/thumbnail', async (c) => {
+    const bytes = await library.trashThumbnail(c.req.param('trashId'));
+    return new Response(new Uint8Array(bytes), { headers: { 'content-type': 'image/png', 'cache-control': 'private, no-store' } });
+  });
+
+  app.delete('/api/trash/:trashId', async (c) => {
+    await library.deleteForever(c.req.param('trashId'));
+    return c.json({ deleted: 1 });
+  });
+
+  app.delete('/api/trash', async (c) => c.json({ deleted: await library.emptyTrash() }));
+
   app.post('/api/trash/:trashId/restore', async (c) => c.json({ project: await library.restore(c.req.param('trashId')) }));
 
   app.get('/api/projects/:pid/thumbnail/:vid', async (c) => {

@@ -176,6 +176,12 @@ export interface TrashedProject {
   name: string;
 }
 
+export interface TrashItem extends TrashedProject {
+  trashedAt: number;
+  thumbnail: boolean;
+  folderStays: boolean;
+}
+
 export type VersionKind = 'init' | 'run' | 'undo' | 'restore' | 'keep' | 'fork' | 'manual';
 
 export interface VersionMeta {

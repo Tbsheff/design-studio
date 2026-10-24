@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { cp, mkdir, readFile, readdir, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { Direction, Project, TrashedProject } from '../../shared/contracts.js';
+import type { Direction, Project, TrashItem, TrashedProject } from '../../shared/contracts.js';
 import type { AgentRunner, PreviewService, ServerConfig, VersionStore } from '../types.js';
 import type { StudioProjectStore } from './projects.js';
 import { ConflictError, NotFoundError, assertSafeId } from './errors.js';
@@ -23,6 +23,10 @@ export interface ProjectLibrary {
   duplicate(projectId: string): Promise<Project>;
   trash(projectId: string): Promise<TrashedProject>;
   restore(trashId: string): Promise<Project>;
+  listTrash(): Promise<TrashItem[]>;
+  trashThumbnail(trashId: string): Promise<Buffer>;
+  deleteForever(trashId: string): Promise<void>;
+  emptyTrash(): Promise<number>;
 }
 
 export function copyName(name: string): string {
@@ -62,6 +66,12 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
     if (existsSync(modules)) await projects.linkModules(folder, await realpath(modules));
   };
 
+  const listTrash = async (): Promise<TrashItem[]> => {
+    const entries = existsSync(trashRoot) ? await readdir(trashRoot) : [];
+    const items = await Promise.all(entries.map((entry) => readTrashItem(trashRoot, entry, config.dataDir)));
+    return items.filter((item): item is TrashItem => item !== null).sort((a, b) => b.trashedAt - a.trashedAt);
+  };
+
   return {
     async duplicate(projectId: string): Promise<Project> {
       const source = await projects.get(projectId);
@@ -86,6 +96,12 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
         const direction: Direction = { ...main, workTree: folder, sessionId: null, sessionCostUsd: 0, createdAt: now };
         delete direction.sessionResetReason;
         delete direction.variation;
+        const extras = source.directions.filter((candidate) => candidate.id !== main.id);
+        const copies = extras.map((extra): Direction => {
+          const copy: Direction = { ...extra, workTree: path.join(toDir, 'directions', assertSafeId(extra.id, 'directionId')), sessionId: null, sessionCostUsd: 0, createdAt: now };
+          delete copy.sessionResetReason;
+          return copy;
+        });
         const project: Project = {
           ...source,
           id,
@@ -93,11 +109,23 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
           createdAt: now,
           updatedAt: now,
           imported: { sourcePath: folder, created: true },
-          directions: [direction],
+          directions: [direction, ...copies],
           thumbnail: thumb && existsSync(thumb) ? source.thumbnail : null,
         };
         if (main.headVersionId) await versions.checkoutInto(project, main.headVersionId, folder);
         await linkSourceModules(main, folder);
+        for (const [index, copy] of copies.entries()) {
+          const extra = extras[index] as Direction;
+          await mkdir(copy.workTree, { recursive: true });
+          if (copy.headVersionId) await versions.checkoutInto(project, copy.headVersionId, copy.workTree);
+          await linkSourceModules(extra, copy.workTree);
+        }
+        for (const copied of project.directions) {
+          const comments = path.join(fromDir, 'comments', `${assertSafeId(copied.id, 'directionId')}.json`);
+          if (!existsSync(comments)) continue;
+          await mkdir(path.join(toDir, 'comments'), { recursive: true });
+          await cp(comments, path.join(toDir, 'comments', path.basename(comments)));
+        }
         await projects.writeRaw(project);
         await versions.ensureRepo(project);
         watchAll(project);
@@ -124,6 +152,28 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
       return { trashId, projectId: project.id, name: project.name };
     },
 
+    listTrash,
+
+    async trashThumbnail(trashId: string): Promise<Buffer> {
+      const project = await readTrashedProject(trashDir(trashId));
+      const versionId = project?.thumbnail?.versionId;
+      const file = versionId ? path.join(trashDir(trashId), 'thumbs', `${assertSafeId(versionId, 'versionId')}.png`) : null;
+      if (!file || !existsSync(file)) throw new NotFoundError(`no thumbnail for trash item ${trashId}`);
+      return readFile(file);
+    },
+
+    async deleteForever(trashId: string): Promise<void> {
+      const dir = trashDir(trashId);
+      if (!existsSync(path.join(dir, TRASH_RECORD))) throw new NotFoundError(`trash item ${trashId} not found`);
+      await rm(dir, { recursive: true, force: true });
+    },
+
+    async emptyTrash(): Promise<number> {
+      const items = await listTrash();
+      for (const item of items) await rm(trashDir(item.trashId), { recursive: true, force: true });
+      return items.length;
+    },
+
     async restore(trashId: string): Promise<Project> {
       const from = trashDir(trashId);
       if (!existsSync(path.join(from, 'project.json'))) throw new NotFoundError(`trash item ${trashId} not found`);
@@ -142,6 +192,40 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
       return project;
     },
   };
+}
+
+async function readTrashedProject(dir: string): Promise<Project | null> {
+  try {
+    return JSON.parse(await readFile(path.join(dir, 'project.json'), 'utf8')) as Project;
+  } catch {
+    return null;
+  }
+}
+
+function insideDir(file: string, dir: string): boolean {
+  const relative = path.relative(dir, file);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+async function readTrashItem(root: string, trashId: string, dataDir: string): Promise<TrashItem | null> {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(trashId)) return null;
+  const dir = path.join(root, trashId);
+  try {
+    const record = JSON.parse(await readFile(path.join(dir, TRASH_RECORD), 'utf8')) as { projectId?: unknown; name?: unknown; trashedAt?: unknown };
+    const project = await readTrashedProject(dir);
+    const main = project?.directions.find((direction) => direction.id === 'main') ?? project?.directions[0];
+    const versionId = project?.thumbnail?.versionId;
+    return {
+      trashId,
+      projectId: typeof record.projectId === 'string' ? record.projectId : (project?.id ?? trashId),
+      name: project?.name ?? (typeof record.name === 'string' ? record.name : 'Untitled'),
+      trashedAt: typeof record.trashedAt === 'number' ? record.trashedAt : 0,
+      thumbnail: typeof versionId === 'string' && existsSync(path.join(dir, 'thumbs', `${versionId}.png`)),
+      folderStays: main ? !insideDir(path.resolve(main.workTree), path.resolve(dataDir)) : false,
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function mergeGhost(ghost: string, trashed: string): Promise<void> {

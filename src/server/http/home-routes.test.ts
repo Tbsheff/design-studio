@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { ClarifyQuestion, Project, ProjectThumbnail, TrashedProject, Version } from '../../shared/contracts.js';
+import type { ClarifyQuestion, DesignComment, Direction, Project, ProjectThumbnail, TrashItem, TrashedProject, Version } from '../../shared/contracts.js';
 import { createFakePreview } from '../agent/test-fakes.js';
 import { buildUserText } from '../agent/user-message.js';
 import { createEventBus } from '../store/events.js';
@@ -158,6 +158,84 @@ describe('home routes', { timeout: 30000 }, () => {
     expect(history[0]?.id).toBe(head(project));
     const again = await call<{ project: Project }>('POST', `/api/projects/${copy.id}/duplicate`);
     expect(again.project.name).toBe('Docs copy 2');
+  });
+
+  it('duplicates every direction at its own head with its comments, and never writes into the source', async () => {
+    const project = await fromStarter('docs');
+    const sourceTree = projects.mainDirection(project).workTree;
+    const extra = await call<Direction>('POST', `/api/projects/${project.id}/directions`, { name: 'Bold' });
+    await projects.updateDirection(project.id, extra.id, { variation: { groupId: 'g1', index: 1, count: 2, prompt: 'p', label: 'B', title: 'Bold', brief: 'louder' } });
+    await writeFile(path.join(extra.workTree, 'index.html'), '<h1>Bold direction</h1>\n');
+    const withExtra = await projects.get(project.id);
+    const extraNow = withExtra.directions.find((direction) => direction.id === extra.id) as Direction;
+    const bold = await versions.commit(withExtra, extraNow, 'Bold run', { kind: 'run' });
+    await projects.updateDirection(project.id, extra.id, { headVersionId: bold.id });
+    const target = { selector: 'h1', tag: 'h1', textSnippet: 'x', rectHint: { x: 0, y: 0, width: 10, height: 10 } };
+    for (const did of ['main', extra.id]) await call('POST', `/api/projects/${project.id}/d/${did}/comments`, { text: `note on ${did}`, target });
+    const source = await projects.get(project.id);
+    expect(source.directions.find((direction) => direction.id === extra.id)?.headVersionId).not.toBe(head(source));
+    const sourceListing = (await readdir(sourceTree)).sort();
+    const sourceDirections = (await readdir(path.join(projects.projectDir(project.id), 'directions'))).sort();
+
+    const { project: copy } = await call<{ project: Project }>('POST', `/api/projects/${project.id}/duplicate`);
+    expect(copy.directions.map((direction) => [direction.id, direction.name, direction.headVersionId, direction.branch])).toEqual(source.directions.map((direction) => [direction.id, direction.name, direction.headVersionId, direction.branch]));
+    const copiedExtra = copy.directions.find((direction) => direction.id === extra.id) as Direction;
+    expect(copiedExtra.variation?.title).toBe('Bold');
+    expect(copiedExtra.sessionId).toBeNull();
+    expect(copiedExtra.workTree).toBe(path.join(projects.projectDir(copy.id), 'directions', extra.id));
+    expect(await readFile(path.join(copiedExtra.workTree, 'index.html'), 'utf8')).toBe('<h1>Bold direction</h1>\n');
+    expect(await readFile(path.join(projects.mainDirection(copy).workTree, 'index.html'), 'utf8')).toBe(await readFile(path.join(sourceTree, 'index.html'), 'utf8'));
+    for (const direction of source.directions) {
+      const status = await call<{ changed: string[] }>('GET', `/api/projects/${copy.id}/d/${direction.id}/status`);
+      expect(status.changed).toEqual([]);
+      const before = await call<DesignComment[]>('GET', `/api/projects/${project.id}/d/${direction.id}/comments`);
+      const after = await call<DesignComment[]>('GET', `/api/projects/${copy.id}/d/${direction.id}/comments`);
+      expect(after).toHaveLength(1);
+      expect(after).toEqual(before);
+    }
+    expect((await readdir(sourceTree)).sort()).toEqual(sourceListing);
+    expect((await readdir(path.join(projects.projectDir(project.id), 'directions'))).sort()).toEqual(sourceDirections);
+    expect(await readFile(path.join(extra.workTree, 'index.html'), 'utf8')).toBe('<h1>Bold direction</h1>\n');
+  });
+
+  it('lists the trash, deletes one item or all of them forever, and keeps the work tree', async () => {
+    expect(await call<TrashItem[]>('GET', '/api/trash')).toEqual([]);
+    const first = await fromStarter('form');
+    const second = await fromStarter('landing');
+    const firstTree = projects.mainDirection(first).workTree;
+    await waitFor(async () => (await projects.get(first.id)).thumbnail);
+    const a = await call<TrashedProject>('DELETE', `/api/projects/${first.id}`);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    const b = await call<TrashedProject>('DELETE', `/api/projects/${second.id}`);
+    const list = await call<TrashItem[]>('GET', '/api/trash');
+    expect(list.map((item) => item.trashId)).toEqual([b.trashId, a.trashId]);
+    expect(list[1]).toMatchObject({ projectId: first.id, name: 'Form', thumbnail: true, folderStays: true });
+    expect(list[1]?.trashedAt).toBeGreaterThan(0);
+    const png = await app.request(`/api/trash/${a.trashId}/thumbnail`, { headers: { 'x-studio-token': config.studioToken } });
+    expect(png.status).toBe(200);
+    expect(png.headers.get('content-type')).toBe('image/png');
+
+    for (const bad of ['..', '.', '..%2F..', 'a%2F..%2F..']) {
+      const response = await app.request(`/api/trash/${bad}`, { method: 'DELETE', headers: { 'x-studio-token': config.studioToken } });
+      expect([400, 404]).toContain(response.status);
+    }
+    await call('DELETE', '/api/trash/nope-123', undefined, 404);
+    expect((await app.request(`/api/trash/${a.trashId}`, { method: 'DELETE' })).status).toBe(403);
+    expect((await app.request('/api/trash', { method: 'DELETE' })).status).toBe(403);
+    expect((await app.request('/api/trash')).status).toBe(403);
+    expect(existsSync(path.join(config.dataDir, 'trash', 'projects', a.trashId))).toBe(true);
+    expect(existsSync(path.join(config.dataDir, 'projects'))).toBe(true);
+
+    expect(await call<{ deleted: number }>('DELETE', `/api/trash/${a.trashId}`)).toEqual({ deleted: 1 });
+    expect(existsSync(path.join(config.dataDir, 'trash', 'projects', a.trashId))).toBe(false);
+    expect(existsSync(path.join(firstTree, 'index.html'))).toBe(true);
+    expect((await call<TrashItem[]>('GET', '/api/trash')).map((item) => item.trashId)).toEqual([b.trashId]);
+    await call('POST', `/api/trash/${a.trashId}/restore`, undefined, 404);
+
+    expect(await call<{ deleted: number }>('DELETE', '/api/trash')).toEqual({ deleted: 1 });
+    expect(await call<TrashItem[]>('GET', '/api/trash')).toEqual([]);
+    expect(existsSync(path.join(projects.mainDirection(second).workTree, 'index.html'))).toBe(true);
+    expect(existsSync(path.join(config.dataDir, 'trash', 'projects'))).toBe(true);
   });
 
   it('moves a deleted project to the trash and restores it, even after a late event', async () => {

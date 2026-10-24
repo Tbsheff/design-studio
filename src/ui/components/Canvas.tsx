@@ -257,7 +257,7 @@ export function Canvas(props: Props) {
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken);
   useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
-  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode, treeWanted: layersOpen, frames, selection: props.selection });
+  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
   const resize = useResizeHandles({
     projectId,
     directionId,

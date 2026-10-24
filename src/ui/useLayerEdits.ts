@@ -9,6 +9,8 @@ import { isTypingTarget } from './usePanZoom';
 const RESELECT_MS = 5000;
 const NODE_WAIT_MS = 2000;
 const NOTICE_MS = 4000;
+const SELECT_AGAIN = 'The element moved. Select it again.';
+const HIDDEN_ELSEWHERE = 'Its CSS or a parent hides this element, so Show cannot change it here.';
 
 export interface LayerFrames {
   slots: { token: string; src: string }[];
@@ -27,8 +29,10 @@ interface Options {
   enabled: boolean;
   selectMode: boolean;
   treeWanted: boolean;
+  headVersionId: string | null;
   frames: LayerFrames;
   selection: SelectionContext[];
+  setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
 }
 
 type LayerChange = { name: string | null } | { hidden: boolean } | { move: ReorderMove };
@@ -120,35 +124,52 @@ export function useLayerEdits(o: Options): LayerEdits {
     setHidden(new Map());
   }, [o.frames.tree]);
 
+  const expire = useCallback(
+    (pending: Reselect) => {
+      if (reselect.current !== pending) return;
+      reselect.current = null;
+      setReselecting(false);
+      if (!pending.move) return;
+      live.current.setSelection(() => []);
+      notify(SELECT_AGAIN);
+    },
+    [notify],
+  );
+
   const sendReselect = useCallback(() => {
     const pending = reselect.current;
     const cur = live.current;
     if (!pending) return;
     if (Date.now() > pending.until) {
-      reselect.current = null;
-      setReselecting(false);
+      expire(pending);
       return;
     }
     if (pending.newFrame && cur.frames.frontToken === pending.token) return;
     cur.frames.post({ type: 'select-source', sourceLoc: pending.loc, tag: pending.tag, text: pending.move ? pending.text : '' });
+  }, [expire]);
+
+  const resolveReselect = useCallback((token: string, selection: SelectionContext) => {
+    const pending = reselect.current;
+    if (!pending || !selection.source || locKey(selection.source) !== pending.loc) return;
+    if (pending.newFrame && token === pending.token) return;
+    reselect.current = null;
+    setReselecting(false);
   }, []);
 
   useEffect(() => {
     const pending = reselect.current;
     const last = o.selection.at(-1);
     if (!pending) return;
-    const found = last?.source && locKey(last.source) === pending.loc && (!pending.newFrame || o.frames.frontToken !== pending.token);
-    const elsewhere = last !== undefined && last.selector !== pending.fromSelector && !found;
-    if (found || elsewhere || !last) {
+    if (!last || last.selector !== pending.fromSelector) {
       reselect.current = null;
       setReselecting(false);
     }
-  }, [o.selection, o.frames.frontToken]);
+  }, [o.selection]);
 
   useEffect(sendReselect, [o.frames.frontToken, sendReselect]);
 
   const apply = useCallback(
-    async (target: SelectionContext, change: LayerChange) => {
+    async (target: SelectionContext, change: LayerChange, nodeId: number | null = null) => {
       const cur = live.current;
       if (!cur.enabled || !cur.directionId || busyRef.current) return;
       if (!target.source) {
@@ -160,9 +181,17 @@ export function useLayerEdits(o: Options): LayerEdits {
       setInflight(true);
       if ('hidden' in change) cur.frames.post({ type: 'preview-style', selector: target.selector, style: { display: change.hidden ? 'none' : null } });
       const token = cur.frames.frontToken;
+      const head = cur.headVersionId;
       try {
         const result = await api.directEdit(cur.projectId, cur.directionId, requestFor(target, target.source, change));
         const move = 'move' in change;
+        if (result.version.id === head) {
+          if (nodeId !== null) setHidden((prev) => (prev.delete(nodeId) ? new Map(prev) : prev));
+          if ('hidden' in change && !change.hidden) notify(HIDDEN_ELSEWHERE);
+          return;
+        }
+        const moved = result.moved;
+        if (moved) live.current.setSelection((prev) => prev.map((s) => (s.selector === target.selector ? { ...s, source: moved } : s)));
         reselect.current = {
           loc: locKey(result.moved ?? target.source),
           tag: target.tag.toLowerCase(),
@@ -175,11 +204,7 @@ export function useLayerEdits(o: Options): LayerEdits {
         };
         const pending = reselect.current;
         setReselecting(true);
-        window.setTimeout(() => {
-          if (reselect.current !== pending) return;
-          reselect.current = null;
-          setReselecting(false);
-        }, RESELECT_MS);
+        window.setTimeout(() => expire(pending), RESELECT_MS);
         sendReselect();
       } catch (err) {
         if ('hidden' in change) cur.frames.post({ type: 'preview-style', selector: target.selector, style: { display: change.hidden ? null : 'none' } });
@@ -189,7 +214,7 @@ export function useLayerEdits(o: Options): LayerEdits {
         setInflight(false);
       }
     },
-    [notify, sendReselect],
+    [notify, sendReselect, expire],
   );
 
   const forNode = useCallback((id: number, run: (target: SelectionContext) => void) => {
@@ -237,7 +262,7 @@ export function useLayerEdits(o: Options): LayerEdits {
   const setNodeHidden = useCallback(
     (id: number, value: boolean) => {
       setHidden((prev) => new Map(prev).set(id, value));
-      forNode(id, (target) => void apply(target, { hidden: value }));
+      forNode(id, (target) => void apply(target, { hidden: value }, id));
     },
     [apply, forNode],
   );
@@ -263,6 +288,7 @@ export function useLayerEdits(o: Options): LayerEdits {
       if (frame.token !== live.current.frames.frontToken) return;
       if (msg.type === 'tree') setTreeToken(frame.token);
       if (msg.type === 'painted') sendReselect();
+      if (msg.type === 'select' && msg.selection && typeof msg.selection === 'object') resolveReselect(frame.token, msg.selection);
       if (msg.type !== 'reorder-key' || (msg.move !== 'up' && msg.move !== 'down')) return;
       const last = live.current.selection.at(-1);
       if (last && last.selector === msg.selector) moveSelected(msg.move);

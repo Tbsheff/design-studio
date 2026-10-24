@@ -46,8 +46,16 @@ async function htmlProject(page: Page, title: string): Promise<{ api: StudioApi;
   const file = path.join(main.workTree, 'index.html');
   writeFileSync(file, PAGE);
   await expect(frontFrame(page).locator('#c1')).toHaveText('Card one');
+  await keepFixture(page);
   await expect(page.locator('iframe.frame.back')).toHaveCount(0);
   return { api, file, pid: project.id, did: main.id };
+}
+
+async function keepFixture(page: Page): Promise<void> {
+  const banner = page.locator('.banner', { hasText: 'Unfinished changes' });
+  await expect(banner).toBeVisible();
+  await banner.getByRole('button', { name: 'Keep', exact: true }).click();
+  await expect(banner).toHaveCount(0);
 }
 
 async function focusStudio(page: Page): Promise<void> {
@@ -152,6 +160,7 @@ test('R4-9: Alt+Down moves a literal card in a TSX file', async ({ page }) => {
   const file = path.join(main.workTree, 'src', 'App.tsx');
   writeFileSync(file, APP);
   await expect(frontFrame(page).locator('#c1')).toHaveText('Card one');
+  await keepFixture(page);
   await selectInFrame(page, '#c1');
   await expect(page.locator('.ins-source')).toContainText('App.tsx');
 
@@ -181,10 +190,10 @@ test('R4-4: rename writes data-name, hide and show restore the bytes, drag reord
   await input.fill('Hero title');
   await input.press('Enter');
   await expect.poll(() => readFileSync(file, 'utf8')).toContain('<h2 data-name="Hero title">Section title</h2>');
-  await expect(page.locator('.layers-row', { hasText: 'Hero title' })).toHaveCount(1);
   await expect.poll(() => latestTitle(api, pid, did)).toBe('Rename h2 to Hero title');
-
   await layersSettled(page);
+  await expect(frontFrame(page).locator('h2[data-name="Hero title"]')).toHaveCount(1);
+  await expect(page.locator('.layers-row', { hasText: 'Hero title' })).toHaveCount(1);
   const beforeHide = readFileSync(file, 'utf8');
   const promo = page.locator('.layers-row', { hasText: '#promo' });
   await promo.hover();

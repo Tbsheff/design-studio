@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { SkillCatalog } from '../src/shared/contracts';
 import { ROOT, readState } from './support/server';
 import { claudeHomeFor, FIXTURE_SKILLS } from './support/skills-fixture';
-import { mainDirection, openHome, type StudioApi } from './support/studio';
+import { mainDirection, openHome, type StudioApi, clickCreate } from './support/studio';
 
 const SHOTS = path.join(ROOT, 'design-review');
 
@@ -28,7 +28,7 @@ async function createWithAdvanced(page: Page, api: StudioApi) {
   await list.getByLabel(`Skill ${FIXTURE_SKILLS.brand}`).uncheck();
   await expect(list).toContainText('2 of 3 on');
   await expect(list.locator('.skill-tag')).toHaveText(['Needs shell']);
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const project = (await api.projects()).find((p) => p.name === 'Bakery landing page');
   if (!project) throw new Error('project not created');
@@ -136,7 +136,7 @@ test('skills: empty state names ~/.claude/skills', async ({ page }) => {
     await page.getByLabel('Describe the design').fill('Empty skills page');
     await page.locator('details.advanced > summary').click();
     await expect(page.locator('details.advanced').getByTestId('skills-empty')).toContainText('~/.claude/skills');
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await clickCreate(page);
     await expect(page.locator('.topbar')).toBeVisible();
     await expect(page.getByTestId('skills-indicator')).toHaveText('0 skills');
     await page.getByRole('button', { name: 'Skills', exact: true }).click();
@@ -198,7 +198,7 @@ test('skills: a long skill list scrolls inside the picker and fits the panel', a
   try {
     const api = await openHome(page);
     await page.getByLabel('Describe the design').fill('Long skills page');
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await clickCreate(page);
     await expect(page.locator('.topbar')).toBeVisible();
     const project = (await api.projects()).find((p) => p.name === 'Long skills page');
     if (!project) throw new Error('project not created');

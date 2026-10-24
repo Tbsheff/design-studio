@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { expect, type ElectronApplication, type Page } from '@playwright/test';
 import { desktopEnv, launchDesktop } from '../e2e/support/desktop-app';
+import { clickCreate } from '../e2e/support/studio';
 
 const out = path.resolve(process.argv[2] ?? 'design-review/shots');
 mkdirSync(out, { recursive: true });
@@ -57,7 +58,7 @@ async function main(): Promise<void> {
 
   await page.getByLabel('Describe the design').fill('Harbor coffee landing page');
   await page.getByRole('radio', { name: 'HTML' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   await expect(page.frameLocator('iframe.frame.front').locator('h1')).toBeVisible({ timeout: 60_000 });
   await page.waitForTimeout(2500);

@@ -5,6 +5,7 @@ import { expect, test, type ElectronApplication, type Page } from '@playwright/t
 import type { Project, Version } from '../src/shared/contracts';
 import { desktopEnv, launchDesktop, PACKAGED_EXECUTABLE } from './support/desktop-app';
 import { listProcesses, processCommandAndEnv } from './support/processes';
+import { clickCreate } from './support/studio';
 
 let app: ElectronApplication | null = null;
 
@@ -48,7 +49,7 @@ test('setup screen lists the checks, then the studio opens with bundled git and 
 
   await page.getByLabel('Describe the design').fill('Bundled git check');
   await page.getByRole('radio', { name: 'HTML' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.frameLocator('iframe.frame.front').locator('h1')).toHaveText('Bundled git check', { timeout: 60_000 });
   const [project] = await api<Project[]>(origin, token, '/api/projects');
   const main = project?.directions[0];

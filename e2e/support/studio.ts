@@ -1,5 +1,6 @@
 import { expect, type FrameLocator, type Page } from '@playwright/test';
 import type { Direction, Project, RunSummary, Version, WorkTreeStatus } from '../../src/shared/contracts';
+import { needsQuestions } from '../../src/shared/clarify';
 import { BASE_URL } from './server';
 
 export class StudioApi {
@@ -67,11 +68,17 @@ export async function openFolderByPath(page: Page, folder: string): Promise<void
   await page.getByRole('button', { name: 'Open', exact: true }).click();
 }
 
+export async function clickCreate(page: Page): Promise<void> {
+  const prompt = await page.getByLabel('Describe the design').inputValue();
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  if (needsQuestions(prompt)) await page.getByRole('button', { name: 'Skip questions' }).click();
+}
+
 export async function createProjectViaUi(page: Page, api: StudioApi, prompt: string, kind: 'html' | 'react'): Promise<Project> {
   const before = new Set((await api.projects()).map((project) => project.id));
   await page.getByLabel('Describe the design').fill(prompt);
   await page.getByRole('radio', { name: kind === 'html' ? 'HTML' : 'React + Vite' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const created = (await api.projects()).find((project) => !before.has(project.id));
   if (!created) throw new Error('created project not found');

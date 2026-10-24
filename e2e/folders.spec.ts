@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 import type { Project } from '../src/shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../src/shared/folders';
 import { projectsDirFor, readState, ROOT } from './support/server';
-import { openHome, type StudioApi } from './support/studio';
+import { openHome, type StudioApi, clickCreate } from './support/studio';
 
 const SHOTS = process.env.STUDIO_FOLDERS_SHOTS === '1';
 const SHOT_DIR = path.join(ROOT, 'design-review');
@@ -82,7 +82,7 @@ test('create a project in a chosen folder: new subfolder only, listed under Fold
   });
 
   const before = new Set((await api.projects()).map((project) => project.id));
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const project = (await api.projects()).find((candidate) => !before.has(candidate.id)) as Project;
   const folder = path.join(parent, 'folder-pricing-page-2');
@@ -200,7 +200,7 @@ test('create with no location: a readable folder in the default Design Studio fo
   await page.getByLabel('Describe the design').fill('Default folder landing');
   await expect(page.getByTestId('location-target')).toContainText('Design Studio/default-folder-landing');
   const before = new Set((await api.projects()).map((project) => project.id));
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const project = (await api.projects()).find((candidate) => !before.has(candidate.id)) as Project;
   const folder = path.join(realpathSync(projectsDirFor(readState().dataDir)), 'default-folder-landing');

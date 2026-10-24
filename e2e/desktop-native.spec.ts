@@ -4,6 +4,7 @@ import path from 'node:path';
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test';
 import type { Project, RunSummary, Version } from '../src/shared/contracts';
 import { desktopEnv, launchDesktop } from './support/desktop-app';
+import { clickCreate } from './support/studio';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -173,7 +174,7 @@ test('Undo goes to the text field when typing and to version undo on the canvas'
   await clickMenu('new-project');
   await page.getByLabel('Describe the design').fill('Native undo check');
   await page.getByRole('radio', { name: 'HTML' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const project = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('Native undo check'));
   const main = project?.directions[0];
@@ -291,7 +292,7 @@ test('the app uses the native folder dialog for Location and Open Folder, attach
   expect(locationCall).toMatchObject({ parented: true, title: 'Choose where to save the new project' });
   expect(locationCall?.properties).toEqual(expect.arrayContaining(['openDirectory', 'createDirectory']));
 
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect.poll(openedProjectName).toContain('Desktop folder page');
   const created = (await call<Project[]>('GET', '/api/projects')).find((project) => project.name === 'Desktop folder page');
   expect(created?.imported).toEqual({ sourcePath: path.join(realParent, 'desktop-folder-page'), created: true });

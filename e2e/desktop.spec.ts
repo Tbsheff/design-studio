@@ -5,6 +5,7 @@ import { expect, test, type ElectronApplication, type Frame, type Page } from '@
 import type { Project, RenderCheckResult, RunSummary, Version } from '../src/shared/contracts';
 import { alive, groupMembers, listProcesses, processCommandAndEnv, processEnvKeys, type ProcessRow } from './support/processes';
 import { APP_BINARY, desktopEnv, launchDesktop, SERVER_MARKER } from './support/desktop-app';
+import { clickCreate } from './support/studio';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -48,7 +49,7 @@ async function createProject(prompt: string, kind: 'html' | 'react'): Promise<Pr
   const before = new Set((await call<Project[]>('GET', '/api/projects')).map((project) => project.id));
   await page.getByLabel('Describe the design').fill(prompt);
   await page.getByRole('radio', { name: kind === 'html' ? 'HTML' : 'React + Vite' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await clickCreate(page);
   await expect(page.locator('.topbar')).toBeVisible();
   const created = (await call<Project[]>('GET', '/api/projects')).find((project) => !before.has(project.id));
   if (!created) throw new Error('created project not found');

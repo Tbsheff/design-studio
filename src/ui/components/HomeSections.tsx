@@ -225,7 +225,7 @@ export function useProjectActions({ onOpen, setProjects, loadProjects, showToast
   };
 }
 
-const POLL_MS = 1500;
+const POLL_MS = 1000;
 const RECENT_MS = 120_000;
 
 function isEditable(target: EventTarget | null): boolean {

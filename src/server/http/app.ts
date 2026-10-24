@@ -640,7 +640,10 @@ export function createApp(deps: AppDeps): Hono {
   };
 
   app.post('/api/projects/:pid/d/:did/runs', async (c) => {
-    const request = parseRunRequest(await readBody(c));
+    const body = await readBody(c);
+    const request = parseRunRequest(body);
+    const referenceUrls = parseReferenceUrls(body.referenceUrls, config.fetchAllowLoopback === true);
+    if (referenceUrls.length > 0) request.referencePages = await Promise.all(referenceUrls.map((url) => captureReferencePage(url, config.fetchAllowLoopback === true)));
     const runId = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       if (runner.isRunning(project.id, direction.id)) throw new ConflictError('run_in_progress');
       return startRun(project, direction, await withTaskInputs(project, direction, request));

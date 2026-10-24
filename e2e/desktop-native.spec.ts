@@ -160,7 +160,10 @@ test('R2-1: zoom keys and View menu zoom the canvas, never the page', async () =
       const before = artboard?.style.transform ?? '';
       const w = window as unknown as { __fitPainted?: Promise<number> };
       w.__fitPainted = new Promise((resolve) => {
-        const onSignal = () => {
+        const onSignal = (e: Event) => {
+          const isFitKey = e instanceof KeyboardEvent && e.code === 'Digit1' && e.shiftKey;
+          const isFitMessage = e instanceof MessageEvent && (e.data as { type?: string; key?: string } | null)?.type === 'zoom-key' && (e.data as { key?: string }).key === 'fit';
+          if (!isFitKey && !isFitMessage) return;
           window.removeEventListener('keydown', onSignal, true);
           window.removeEventListener('message', onSignal, true);
           queueMicrotask(() => requestAnimationFrame(() => resolve((artboard?.style.transform ?? '') !== before ? Date.now() : -1)));
@@ -170,7 +173,9 @@ test('R2-1: zoom keys and View menu zoom the canvas, never the page', async () =
       });
     });
     const keyFrame = where === 'studio' ? page.mainFrame() : page.frames().find((f) => f.parentFrame() === page.mainFrame());
-    await keyFrame?.evaluate(() => window.addEventListener('keydown', () => ((window as unknown as { __fitKey: number }).__fitKey = Date.now()), { capture: true, once: true }));
+    await keyFrame?.evaluate(() => window.addEventListener('keydown', (e) => {
+      if (e.code === 'Digit1') (window as unknown as { __fitKey: number }).__fitKey = Date.now();
+    }, { capture: true }));
     await page.keyboard.press('Shift+Digit1');
     const painted = await page.evaluate(() => (window as unknown as { __fitPainted: Promise<number> }).__fitPainted);
     const pressed = (await keyFrame?.evaluate(() => (window as unknown as { __fitKey?: number }).__fitKey ?? 0)) ?? 0;

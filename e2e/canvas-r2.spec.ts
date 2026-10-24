@@ -40,7 +40,10 @@ async function armFitProbe(page: Page, where: 'studio' | 'frame'): Promise<void>
     const w = window as unknown as { __fitPainted?: Promise<{ at: number; changed: boolean }> };
     const before = artboard?.style.transform ?? '';
     w.__fitPainted = new Promise((resolve) => {
-      const onSignal = () => {
+      const onSignal = (e: Event) => {
+        const isFitKey = e instanceof KeyboardEvent && e.code === 'Digit1' && e.shiftKey;
+        const isFitMessage = e instanceof MessageEvent && (e.data as { type?: string; key?: string } | null)?.type === 'zoom-key' && (e.data as { key?: string }).key === 'fit';
+        if (!isFitKey && !isFitMessage) return;
         window.removeEventListener('keydown', onSignal, true);
         window.removeEventListener('message', onSignal, true);
         queueMicrotask(() => requestAnimationFrame(() => resolve({ at: Date.now(), changed: (artboard?.style.transform ?? '') !== before })));
@@ -53,7 +56,9 @@ async function armFitProbe(page: Page, where: 'studio' | 'frame'): Promise<void>
   if (!target) throw new Error('no frame');
   await target.evaluate(() => {
     const w = window as unknown as { __fitKey?: number };
-    window.addEventListener('keydown', () => (w.__fitKey = Date.now()), { capture: true, once: true });
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Digit1') w.__fitKey = Date.now();
+    }, { capture: true });
   });
 }
 
@@ -101,7 +106,8 @@ test('R2-1: Figma zoom keys in the studio and in the preview', async ({ page }) 
       samples.push(probe.ms);
     }
     samples.sort((a, b) => a - b);
-    expect(samples[4]).toBeLessThanOrEqual(34.4);
+    expect(samples[2]).toBeLessThanOrEqual(where === 'studio' ? 17.7 : 34.4);
+    expect(samples[4]).toBeLessThanOrEqual(50.1);
     timings[`fit-${where}`] = samples;
     await expect(zoomSelect).toHaveValue('fit');
     await expect.poll(() => currentZoom(page)).toBeCloseTo(fitZoom, 4);

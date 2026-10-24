@@ -50,6 +50,18 @@ async function htmlProject(page: Page, title: string): Promise<{ api: StudioApi;
   return { api, file, pid: project.id, did: main.id };
 }
 
+async function focusStudio(page: Page): Promise<void> {
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+}
+
+async function focusPreview(page: Page): Promise<void> {
+  const frame = await (await page.locator('iframe.frame.front').elementHandle())?.contentFrame();
+  if (!frame) throw new Error('no preview frame');
+  await frame.evaluate(() => window.focus());
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
+}
+
 async function layersSettled(page: Page): Promise<void> {
   await expect(page.locator('.layers-list')).toHaveAttribute('aria-busy', 'false');
 }
@@ -101,6 +113,7 @@ test('R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await selectInFrame(page, '#c1');
   const before = await versionCount(api, pid, did);
 
+  await focusStudio(page);
   await page.keyboard.press('Alt+ArrowDown');
   await expect.poll(() => order(readFileSync(file, 'utf8'))).toEqual(['c2', 'c1', 'c3']);
   const once = readFileSync(file, 'utf8');
@@ -110,11 +123,12 @@ test('R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await expect.poll(() => latestTitle(api, pid, did)).toBe('Move article down');
   await expect(page.locator('.ins-source')).toHaveText('index.html:12');
 
+  await focusPreview(page);
   await page.keyboard.press('Alt+ArrowDown');
   await expect.poll(() => order(readFileSync(file, 'utf8'))).toEqual(['c2', 'c3', 'c1']);
   await expect(page.locator('.ins-source')).toHaveText('index.html:13');
   await expect(page.getByLabel('Text content')).toHaveValue('Card one');
-  expect(await versionCount(api, pid, did)).toBe(before + 2);
+  await expect.poll(() => versionCount(api, pid, did)).toBe(before + 2);
 
   await page.keyboard.press('Alt+ArrowDown');
   await expect(page.locator('.edit-notice')).toHaveText('This element is already last among its siblings');
@@ -126,7 +140,7 @@ test('R4-9: Alt+Down moves a card in the HTML source, twice, and the selection f
   await page.keyboard.press('Alt+ArrowUp');
   await expect.poll(() => order(readFileSync(file, 'utf8'))).toEqual(['c2', 'c1', 'c3']);
   await expect(page.locator('.layers-row.selected')).toContainText('#c1');
-  expect(await versionCount(api, pid, did)).toBe(before + 3);
+  await expect.poll(() => versionCount(api, pid, did)).toBe(before + 3);
 });
 
 test('R4-9: Alt+Down moves a literal card in a TSX file', async ({ page }) => {
@@ -141,6 +155,7 @@ test('R4-9: Alt+Down moves a literal card in a TSX file', async ({ page }) => {
   await selectInFrame(page, '#c1');
   await expect(page.locator('.ins-source')).toContainText('App.tsx');
 
+  await focusPreview(page);
   await page.keyboard.press('Alt+ArrowDown');
   await expect.poll(() => readFileSync(file, 'utf8')).toBe(
     APP.replace(
@@ -150,6 +165,7 @@ test('R4-9: Alt+Down moves a literal card in a TSX file', async ({ page }) => {
   );
   await expect(frontFrame(page).locator('main > article').nth(1)).toHaveText('Card one');
   await expect(page.locator('.ins-source')).toHaveText('src/App.tsx:5');
+  await focusStudio(page);
   await page.keyboard.press('Alt+ArrowDown');
   await expect.poll(() => order(readFileSync(file, 'utf8'))).toEqual(['c2', 'c3', 'c1']);
   await expect(page.getByLabel('Text content')).toHaveValue('Card one');

@@ -14,11 +14,7 @@ interface Props {
   resize?: ResizeControl;
 }
 
-const EDGES: { edge: ResizeEdge; label: string }[] = [
-  { edge: 'e', label: 'Resize width' },
-  { edge: 's', label: 'Resize height' },
-  { edge: 'se', label: 'Resize width and height' },
-];
+const EDGES: ResizeEdge[] = ['e', 's', 'se'];
 
 function ResizeHandles({ control, rect }: { control: ResizeControl; rect: SelectionContext['rect'] }) {
   const live = control.live;
@@ -28,8 +24,8 @@ function ResizeHandles({ control, rect }: { control: ResizeControl; rect: Select
       data-testid="resize-frame"
       style={{ left: rect.x, top: rect.y, width: live?.boxWidth ?? rect.width, height: live?.boxHeight ?? rect.height }}
     >
-      {EDGES.map(({ edge, label }) => (
-        <div key={edge} className={`resize-handle ${edge}`} data-edge={edge} aria-label={label} onPointerDown={(e) => control.onHandleDown(edge, e)} />
+      {EDGES.map((edge) => (
+        <div key={edge} className={`resize-handle ${edge}`} aria-hidden="true" onPointerDown={(e) => control.onHandleDown(edge, e)} />
       ))}
       {live && (
         <span className="resize-label" data-testid="resize-label">

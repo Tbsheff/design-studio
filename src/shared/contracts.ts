@@ -231,6 +231,8 @@ export type RunTask = 'tweaks' | 'design-system';
 export type RunEffort = 'low' | 'medium' | 'high';
 export const RUN_EFFORTS: readonly RunEffort[] = ['low', 'medium', 'high'];
 
+export type RunMention = { kind: 'file'; path: string } | { kind: 'token'; name: string; value: string };
+
 export interface RunRequest {
   prompt: string;
   mode: RunMode;
@@ -238,6 +240,7 @@ export interface RunRequest {
   effort?: RunEffort;
   retryOf?: string;
   plan?: boolean;
+  mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
   reference?: ReferenceElement;
   selection?: SelectionContext[];

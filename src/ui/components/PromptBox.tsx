@@ -1,5 +1,7 @@
 import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
-import type { Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import type { CompiledTokenEntry, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
+import { MentionChips, MentionList } from './MentionPicker';
+import { useMentions } from '../useMentions';
 import { ContextMeter } from './ContextMeter';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
@@ -26,7 +28,7 @@ interface Props {
   onRemoveSelection: (selector: string) => void;
   running: boolean;
   disabled: boolean;
-  onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) => Promise<void>;
+  onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) => Promise<void>;
   onCancel: () => void;
   variations?: VariationsPromptProps;
   queued?: boolean;
@@ -35,6 +37,8 @@ interface Props {
   onSteer?: (text: string) => void;
   history?: string[];
   contextTokens?: number | null;
+  directionId?: string | null;
+  tokens?: CompiledTokenEntry[];
 }
 
 interface VariationsPromptProps {
@@ -167,6 +171,11 @@ export function PromptBox(props: Props) {
     });
 
   const uploading = files.some((f) => !f.attachment && !f.error);
+  const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft });
+  const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).matches('[data-slot="composer-input"]') && mentions.onKeyDown(event)) return;
+    keys.onKeyDown(event);
+  };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
   const canSend = !props.running && !props.disabled && !sending && !uploading && (draft.trim().length > 0 || skillIds.length > 0);
 
@@ -179,7 +188,8 @@ export function PromptBox(props: Props) {
       const prompt = [draft.trim(), skillInstruction(skillIds)].filter(Boolean).join('\n\n');
       const fanOut = mode === 'edit' && props.variations && props.variations.count > 1 && props.selection.length === 0;
       if (fanOut && props.variations) await props.variations.onSend(prompt, runLevel.level, ids);
-      else await props.onSend(prompt, mode, ids, runLevel.level, effort);
+      else await props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
+      mentions.clear();
       files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       setFiles([]);
       setSkillIds([]);
@@ -229,7 +239,7 @@ export function PromptBox(props: Props) {
       }}
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
-      onKeyDownCapture={keys.onKeyDown}
+      onKeyDownCapture={onKeyCapture}
     >
       {files
         .filter((f) => f.error)
@@ -241,6 +251,7 @@ export function PromptBox(props: Props) {
       {error && <div className="alert error">{error}</div>}
       {runLevel.error && <div className="alert error">{runLevel.error}</div>}
       <QueuedMessages items={keys.queue} onChange={keys.setQueue} />
+      {mentions.picker.open && <MentionList shown={mentions.picker.shown} current={mentions.picker.current} loading={mentions.loading} onPick={mentions.pick} onHover={mentions.picker.setActive} />}
       {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} />}
       <Composer
         className={`composer cursor-text ${dragging ? 'bg-accent ring-2 ring-primary/40' : ''}`}
@@ -248,6 +259,7 @@ export function PromptBox(props: Props) {
       >
         <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
         <AttachmentThumbs files={files} onRemove={removeFile} />
+        <MentionChips mentions={mentions.mentions} onRemove={mentions.remove} />
         <SkillChips ids={skillIds} onRemove={(id) => setSkillIds((prev) => prev.filter((x) => x !== id))} />
         <ComposerInput
           className="min-h-16"

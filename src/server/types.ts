@@ -85,6 +85,13 @@ export interface AgentRunContext {
   designMd: string | null;
   designSystem?: DesignSystemPromptContext | null;
   previewUrl: string | null;
+  mentionFiles?: MentionFile[];
+}
+
+export interface MentionFile {
+  path: string;
+  text: string;
+  truncated: boolean;
 }
 
 export interface AgentRunner {

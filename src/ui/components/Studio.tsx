@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, variationsGrid } from './VariationsLayer';
-import type { RunEffort, RunLevel, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { downloadBlob } from '../format';
@@ -38,6 +38,37 @@ function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: Re
     const intent = homeVariations.take(projectId);
     if (intent) void propose(intent.prompt, intent.level, [], intent.count);
   }, [ready, projectId, propose]);
+}
+
+interface ComposeInput {
+  prompt: string;
+  mode: ComposerMode;
+  attachmentIds: string[];
+  level: RunLevel;
+  effort: RunEffort | null;
+  mentions: RunMention[];
+  selection: SelectionContext[];
+}
+
+function composeRequest(input: ComposeInput): RunRequest {
+  return {
+    prompt: input.prompt,
+    ...modeOf(input.mode),
+    level: input.level,
+    ...effortOf(input.effort),
+    ...(input.mentions.length > 0 ? { mentions: input.mentions } : {}),
+    selection: input.selection.length > 0 ? input.selection : undefined,
+    attachmentIds: input.attachmentIds.length > 0 ? input.attachmentIds : undefined,
+  };
+}
+
+function buildPlanRequest(run: RunView): RunRequest {
+  const level = run.request?.level;
+  return { prompt: 'Build the plan above.', mode: 'edit', ...(level ? { level } : {}) };
+}
+
+function tokenEntries(tokens: { entries: CompiledTokenEntry[] } | null): CompiledTokenEntry[] {
+  return tokens?.entries ?? [];
 }
 
 function modeOf(mode: ComposerMode): Pick<RunRequest, 'mode' | 'plan'> {
@@ -159,18 +190,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     panel.show('chat');
   };
 
-  const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null) =>
-    startRun({
-      prompt,
-      ...modeOf(mode),
-      level,
-      ...effortOf(effort),
-      selection: selection.length > 0 ? selection : undefined,
-      attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
-    });
+  const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) =>
+    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection }));
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
-  const approvePlan = (run: RunView) => void act(() => startRun({ prompt: 'Build the plan above.', mode: 'edit', ...(run.request?.level ? { level: run.request.level } : {}) }));
+  const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
   const retryRun = (run: RunView) => {
     const request = run.request;
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
@@ -262,6 +286,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             ...runControls,
             history: chatState.history,
             contextTokens: chatState.contextTokens,
+            directionId: did,
+            tokens: tokenEntries(tokens),
             variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
           }}
           inspector={{

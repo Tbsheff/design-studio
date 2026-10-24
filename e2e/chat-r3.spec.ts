@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { RunSentRecord, RunSummary, StudioEvent } from '../src/shared/contracts';
@@ -269,4 +269,35 @@ test('R3-8: plan mode refuses a write, then Approve starts the build', async ({ 
   expect(built.status).toBe('completed');
   expect(built.request.plan).toBeUndefined();
   expect((await api.versions(project.id, mainDirection(project).id)).length).toBe(before + 1);
+});
+
+test('R3-6: @ lists files fast, @hdr ranks Header.tsx first, and the chip content is in the sent prompt', async ({ page }) => {
+  const { api, project } = await newProject(page, 'Mention Probe Lab');
+  const workTree = mainDirection(project).workTree;
+  mkdirSync(path.join(workTree, 'src', 'components'), { recursive: true });
+  mkdirSync(path.join(workTree, 'src', 'hooks'), { recursive: true });
+  writeFileSync(path.join(workTree, 'src', 'components', 'Header.tsx'), 'export const HEADER_MARKER = "mention-probe-123";\n');
+  writeFileSync(path.join(workTree, 'src', 'components', 'HeroDisplay.tsx'), 'export {};\n');
+  writeFileSync(path.join(workTree, 'src', 'hooks', 'useData.ts'), 'export {};\n');
+  await composer(page).focus();
+  await page.waitForTimeout(300);
+  await composer(page).pressSequentially('Use ');
+  const typedAt = Date.now();
+  await composer(page).press('@');
+  const openAt = await page.waitForFunction(() => (document.querySelector('[data-testid="mention-list"] [role="option"]') ? Date.now() : 0), undefined, { polling: 'raf' });
+  const openMs = (await openAt.jsonValue()) - typedAt;
+  console.log('[r3] mention list open ms', openMs);
+  expect(openMs).toBeLessThan(100);
+  await composer(page).pressSequentially('hdr');
+  await expect(page.locator('[data-testid="mention-list"] [role="option"]').first()).toContainText('Header.tsx');
+  await composer(page).press('Enter');
+  await expect(page.getByTestId('mention-chip')).toHaveText('Header.tsx');
+  await expect(composer(page)).toHaveValue('Use ');
+  await composer(page).pressSequentially('for the nav');
+  await composer(page).press('Meta+Enter');
+  const run = await finishedRun(api, project.id, 'Use for the nav');
+  expect(run.request.mentions).toEqual([{ kind: 'file', path: 'src/components/Header.tsx' }]);
+  const detail = await api.call<{ sent: RunSentRecord[] }>('GET', `/api/runs/${run.id}`);
+  expect(detail.sent[0]?.text).toContain('mention-probe-123');
+  await expect(page.getByTestId('mention-chip')).toHaveCount(0);
 });

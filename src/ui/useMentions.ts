@@ -1,0 +1,73 @@
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import type { CompiledTokenEntry, RunMention } from '../shared/contracts';
+import { api } from './api';
+import { mentionKey, mentionQueryOf, useMentionPicker, type MentionOption } from './components/MentionPicker';
+
+const fileCache = new Map<string, Promise<string[]>>();
+
+function loadFiles(projectId: string, directionId: string, fresh: boolean): Promise<string[]> {
+  const key = `${projectId}/${directionId}`;
+  const known = fileCache.get(key);
+  if (known && !fresh) return known;
+  const next = api.workTreeFiles(projectId, directionId).then((result) => result.files, () => []);
+  fileCache.set(key, next);
+  return next;
+}
+
+interface Options {
+  projectId: string;
+  directionId: string | null | undefined;
+  tokens: readonly CompiledTokenEntry[] | undefined;
+  draft: string;
+  setDraft: (value: string) => void;
+}
+
+export function useMentions({ projectId, directionId, tokens, draft, setDraft }: Options) {
+  const [files, setFiles] = useState<string[] | null>(null);
+  const [mentions, setMentions] = useState<RunMention[]>([]);
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const rawQuery = mentionQueryOf(draft);
+  const query = rawQuery !== null && draft !== dismissed ? rawQuery : null;
+
+  const refresh = (fresh: boolean) => {
+    if (directionId) void loadFiles(projectId, directionId, fresh).then(setFiles);
+  };
+  useEffect(() => refresh(false), [projectId, directionId]);
+  useEffect(() => {
+    if (query === '' ) refresh(true);
+  }, [query === '']);
+
+  const options = useMemo<MentionOption[]>(() => {
+    const picked = new Set(mentions.map(mentionKey));
+    const fileOptions = (files ?? []).map((path): MentionOption => ({ key: `file:${path}`, label: path.split('/').pop() ?? path, detail: path, mention: { kind: 'file', path } }));
+    const tokenOptions = (tokens ?? []).map((entry): MentionOption => ({ key: `token:${entry.cssVar}`, label: entry.cssVar, detail: entry.value, mention: { kind: 'token', name: entry.cssVar, value: entry.value } }));
+    return [...fileOptions, ...tokenOptions].filter((option) => !picked.has(option.key));
+  }, [files, tokens, mentions]);
+  const picker = useMentionPicker(options, query);
+
+  const pick = (option: MentionOption) => {
+    setMentions((prev) => [...prev, option.mention]);
+    setDraft(draft.replace(/@[^\s@]*$/, '').replace(/\s+$/, (space) => (space ? ' ' : '')));
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): boolean => {
+    if (!picker.open) return false;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') picker.move(event.key === 'ArrowDown' ? 1 : -1);
+    else if ((event.key === 'Enter' || event.key === 'Tab') && picker.current && !event.metaKey && !event.ctrlKey) pick(picker.current);
+    else if (event.key === 'Escape') setDismissed(draft);
+    else return false;
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  };
+
+  return {
+    picker,
+    loading: files === null,
+    mentions,
+    pick,
+    onKeyDown,
+    remove: (key: string) => setMentions((prev) => prev.filter((mention) => mentionKey(mention) !== key)),
+    clear: () => setMentions([]),
+  };
+}

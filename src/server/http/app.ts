@@ -41,6 +41,7 @@ import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
 import { registerRunControlRoutes } from './run-control-routes.js';
+import { listWorkTree, parseMentions, readMentionFiles } from './mentions.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { draftAttachmentIds } from '../design-system/draft-project.js';
 import { registerPackRoutes } from './packs-routes.js';
@@ -125,14 +126,16 @@ function parseLevel(raw: unknown): RunLevel | undefined {
   return raw;
 }
 
-function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan'> {
-  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan'> = {};
+function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'mentions'> {
+  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'mentions'> = {};
   if (body.plan === true) extras.plan = true;
   if (body.effort !== undefined) {
     if (!RUN_EFFORTS.includes(body.effort as RunEffort)) throw new BadRequestError('effort must be low, medium or high');
     extras.effort = body.effort as RunEffort;
   }
   if (body.retryOf !== undefined) extras.retryOf = assertSafeId(String(body.retryOf), 'retryOf');
+  const mentions = parseMentions(body.mentions);
+  if (mentions?.length) extras.mentions = mentions;
   return extras;
 }
 
@@ -324,7 +327,8 @@ export function createApp(deps: AppDeps): Hono {
       console.error('[http] preview url failed', error);
       return null;
     });
-    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl });
+    const mentionFiles = await readMentionFiles(direction.workTree, request.mentions);
+    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle));
     return handle.runId;
@@ -806,6 +810,11 @@ export function createApp(deps: AppDeps): Hono {
   app.get('/api/projects/:pid/d/:did/preview', async (c) => {
     const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
     return c.json({ url: await preview.directionUrl(project, direction) });
+  });
+
+  app.get('/api/projects/:pid/d/:did/tree', async (c) => {
+    const { direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
+    return c.json({ files: await listWorkTree(direction.workTree) });
   });
 
   app.post('/api/projects/:pid/d/:did/check', async (c) => {

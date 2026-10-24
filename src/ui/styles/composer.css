@@ -611,3 +611,23 @@
   width: 10px;
   height: 10px;
 }
+
+.mention-pop {
+  max-height: min(320px, 50vh);
+}
+
+.mention-opt .skill-opt-head {
+  min-width: 0;
+}
+
+.mention-label {
+  flex-shrink: 0;
+}
+
+.mention-detail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+}

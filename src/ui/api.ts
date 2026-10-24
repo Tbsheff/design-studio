@@ -193,6 +193,7 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage);
     return (await res.json()) as DirectEditResult;
   },
+  workTreeFiles: (pid: string, did: string) => json<{ files: string[] }>('GET', `${d(pid, did)}/tree`),
   renderCheck: (pid: string, did: string) => json<RenderCheckResult[]>('POST', `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>
     json<{ url: string }>('GET', `${p(pid)}/versions/${encodeURIComponent(vid)}/preview`),

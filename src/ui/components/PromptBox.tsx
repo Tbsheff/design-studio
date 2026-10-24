@@ -52,7 +52,7 @@ interface VariationsPromptProps {
 function StopButton({ running, onStop }: { running: boolean; onStop: () => void }) {
   if (!running) return null;
   return (
-    <button type="button" className="btn small stop-btn has-icon" onClick={onStop} data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
+    <button type="button" className="btn small stop-btn has-icon" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
       <Icon name="stop" size={14} />
       Stop
     </button>
@@ -63,7 +63,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
   if (props.running) {
     if (!props.canQueue) return null;
     return (
-      <button type="button" className="btn small has-icon send-btn" onClick={props.onQueue} data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`} data-tip-side="top" data-tip-align="end">
+      <button type="button" className="btn small has-icon send-btn" onClick={props.onQueue} aria-label="Queue" data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`} data-tip-side="top" data-tip-align="end">
         <Icon name="plus" size={14} />
         Queue
       </button>

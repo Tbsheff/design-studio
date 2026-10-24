@@ -41,6 +41,14 @@ async function main(): Promise<void> {
   await shot(page, 'canvas-select');
 
   if (await exists(page, '[aria-label="Layers"]')) {
+    const cta = await page.frameLocator('iframe.frame.front').locator('a, button').filter({ hasText: /\w/ }).nth(1).boundingBox();
+    if (cta) {
+      await page.keyboard.down('Alt');
+      await page.mouse.move(cta.x + cta.width / 2, cta.y + cta.height / 2);
+      await page.mouse.move(cta.x + cta.width / 2 + 2, cta.y + cta.height / 2);
+      await shot(page, 'canvas-measure');
+      await page.keyboard.up('Alt');
+    }
     await page.getByRole('button', { name: 'Layers', exact: true }).click();
     await page.locator('.layers-row').first().waitFor();
     await shot(page, 'canvas-layers');

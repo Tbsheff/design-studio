@@ -3,6 +3,8 @@ import type { SelectionContext } from '../../shared/contracts';
 import { formatMeasure, measureBetween, type MeasureLine } from '../measure';
 import type { HoverBox } from '../usePreviewFrames';
 
+const LABEL_ROOM = 24;
+
 interface Props {
   hover: HoverBox | null;
   selection: SelectionContext[];
@@ -36,7 +38,7 @@ export function ArtboardOverlay({ hover, selection, comments }: Props) {
     <div className="overlay">
       {hover && !measuring && (
         <div className="box hover" style={{ left: hover.rect.x, top: hover.rect.y, width: hover.rect.width, height: hover.rect.height }}>
-          {hover.label && <span className="box-label">{hover.label}</span>}
+          {hover.label && <span className={`box-label${hover.rect.y < LABEL_ROOM ? ' inside' : ''}`}>{hover.label}</span>}
         </div>
       )}
       {selection.map((s) => (

@@ -114,13 +114,23 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
   const { library, projects, versions } = deps;
   const fetcher = deps.fetcher ?? createFetcher(deps.allowLoopback);
 
-  const createBacking = async (draft: Draft, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
-    const created = await projects.createInFolder({ parentPath: await deps.projectsFolder(), name: `${draft.name} design system`, kind: 'html', designSystemFor: pack.manifest.id });
+  const fillBacking = async (created: Project, draft: Draft, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
     await versions.ensureRepo(created);
     const attachments = await Promise.all(images.map((image) => projects.saveAttachment(created.id, image)));
     const workTree = projects.mainDirection(created).workTree;
     await writeDraftFiles(workTree, [{ path: KIT_PAGE_FILE, content: draft.kitHtml }, ...draft.files, metaFile(draft, pack, attachments)]);
-    const project = await deps.finishCreate(created, pack);
+    return deps.finishCreate(created, pack);
+  };
+
+  const createBacking = async (draft: Draft, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
+    const created = await projects.createInFolder({ parentPath: await deps.projectsFolder(), name: `${draft.name} design system`, kind: 'html', designSystemFor: pack.manifest.id });
+    let project: Project;
+    try {
+      project = await fillBacking(created, draft, pack, images);
+    } catch (error) {
+      await projects.discardCreated(created.id).catch((cleanup: unknown) => console.error('[design-systems] could not remove the half-made backing project', cleanup));
+      throw error;
+    }
     deps.watch(project, projects.mainDirection(project));
     return project;
   };

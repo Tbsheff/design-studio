@@ -48,6 +48,7 @@ export interface StudioProjectStore extends ProjectStore {
   createInFolder(input: { parentPath: string; name: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designSystemFor?: string }): Promise<Project>;
   isHidden(project: Project): boolean;
   moveIntoFolder(projectId: string, parentPath: string): Promise<Project>;
+  discardCreated(projectId: string): Promise<void>;
 }
 
 function migrateSettings(project: Pick<Project, 'settings' | 'settingsVersion'>): ProjectSettings {
@@ -340,6 +341,15 @@ export function createProjectStore(
 
     isHidden(project: Project): boolean {
       return project.imported === null && isInsideDataDir(path.resolve(mainDirection(project).workTree));
+    },
+
+    async discardCreated(projectId: string): Promise<void> {
+      await lock(projectId, async () => {
+        const project = await readProject(projectId);
+        const folder = project.imported?.created ? project.imported.sourcePath : null;
+        if (folder) await rm(folder, { recursive: true, force: true });
+        await rm(projectDir(projectId), { recursive: true, force: true });
+      });
     },
 
     async moveIntoFolder(projectId: string, parentPath: string): Promise<Project> {

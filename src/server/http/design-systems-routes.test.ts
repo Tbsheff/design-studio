@@ -1,5 +1,5 @@
 import { existsSync, realpathSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
@@ -13,7 +13,7 @@ import { createEventBus } from '../store/events.js';
 import { createProjectStore } from '../store/projects.js';
 import { makeTempConfig } from '../store/testConfig.js';
 import { createVersionStore } from '../store/versions.js';
-import type { AgentRunner, ServerConfig } from '../types.js';
+import type { AgentRunner, ServerConfig, VersionStore } from '../types.js';
 import { createApp } from './app.js';
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'design-system', 'extract', '__fixtures__');
@@ -30,8 +30,8 @@ const runner: AgentRunner = {
   isRunning: () => false,
 };
 
-function makeApp(allowLoopback: boolean): ReturnType<typeof createApp> {
-  const versions = createVersionStore(config);
+function makeApp(allowLoopback: boolean, patchVersions: (store: VersionStore) => VersionStore = (store) => store): ReturnType<typeof createApp> {
+  const versions = patchVersions(createVersionStore(config));
   const projects = createProjectStore(config, versions);
   return createApp({ config: { ...config, fetchAllowLoopback: allowLoopback }, bus: createEventBus(config.dataDir), projects, versions, runner, preview: { ...createFakePreview(), directionUrl: async () => 'http://127.0.0.1:0/' } });
 }
@@ -134,6 +134,26 @@ describe('POST /api/design-systems/draft', { timeout: 30000 }, () => {
     }
     expect(await userPacks()).toEqual([]);
     expect(await ok<Project[]>(call('GET', '/api/projects'))).toEqual([]);
+  });
+
+  it('removes the draft pack, the backing project and its folder when create fails after the pack is made', async () => {
+    const projectsDir = config.projectsDir;
+    let during: string[] = [];
+    app = makeApp(true, (store) => ({
+      ...store,
+      commit: async () => {
+        during = await readdir(projectsDir);
+        throw new Error('disk full');
+      },
+    }));
+    const before = existsSync(projectsDir) ? await readdir(projectsDir) : [];
+    const res = await call('POST', '/api/design-systems/draft', { name: 'Broken Kit', tokensFile: { name: 'dtcg.tokens.json', text: await readFile(path.join(FIXTURES, 'dtcg.tokens.json'), 'utf8') } });
+    expect(res.status).toBe(500);
+    expect(during).toEqual([...before, 'broken-kit-design-system']);
+    expect(await userPacks()).toEqual([]);
+    expect(await ok<Project[]>(call('GET', '/api/projects'))).toEqual([]);
+    expect(await readdir(projectsDir)).toEqual(before);
+    expect(await readdir(path.join(config.dataDir, 'projects')).catch(() => [])).toEqual([]);
   });
 
   it('needs a source and checks uploads', async () => {

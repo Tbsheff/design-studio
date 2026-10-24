@@ -366,7 +366,7 @@ Method: every number is p50 / p95 in ms on this machine (14 cores). BEFORE is `9
 | Metric | Target | BEFORE p50 / p95 | AFTER p50 / p95 | Proof |
 |---|---|---|---|---|
 | Home usable, web, cold browser context | < 800 | 114 / 243 | 94 / 97 (98 / 110 in the full suite at load 10) | `perf-r5` |
-| Home JS (entry + preloads) | < 300 kB | 876 kB, one chunk | 299.3 kB (292 KiB) | `perf-r5` |
+| Home JS (entry + preloads), bytes | < 300,000 | 876,422, one chunk | 298,440 | `perf-r5` |
 | Open: studio reload to first preview paint | < 1000 (was 2000) | 96 / 97 | 79–95 / 95 | `latency` |
 | Open: Home card click to first preview paint | < 1000 | 63 / 64 | 61 / 63 | `perf-r5` |
 | HTML write to preview paint | < 150 (was 250) | 56 / 61 | 64–66 p95 | `latency` |
@@ -378,16 +378,19 @@ Method: every number is p50 / p95 in ms on this machine (14 cores). BEFORE is `9
 | Versions: GET at 100 versions | < 300 | 27 / 68 | 22–25 / 40–50 | `perf-r5` |
 | Versions panel at 100 versions | < 300 | 88 / 143 | 51–85 / 62–97 | `perf-r5` |
 | Home grid scroll, 54–90 cards with thumbnails, 3 s | p95 ≤ 16.7, none > 32 | p95 16.8, max 16.8, 0 > 32 | p95 16.7–16.8, max 16.8, 0 > 32, no long task | `perf-r5` |
-| Desktop dev: launch to Home composer | < 1500 | 668 / 1612 (first launch) | 674 / 1311 (first launch) | `desktop-start` |
-| Desktop packaged: launch to Home composer | < 1500 | 629 / 1255 (warm p95 817) | 575 / 2664 (first launch after the repack; warm p95 606) | `desktop-start` |
+| Desktop dev: launch to Home composer | < 1500 | 668 / 1612 (first launch)¹ | 674 / 1311 (first launch) | `desktop-start` |
+| Desktop packaged: launch to Home composer | < 1500 | 629 / 1255 (warm p95 817)² | 575 / 2664 (first launch after the repack; warm p95 606) | `desktop-start` |
 | Desktop packaged: main process start to Home painted (`app.start`) | < 1500 | not measured | 504 / 734 | `desktop-start` |
+
+¹ Old main process with the new UI (global setup had rebuilt `dist/ui`). ² The packaged app from Oct 23, before Round 4. The only desktop change kept this round is instrumentation, so the desktop rows are a baseline, not a gain.
 
 Under synthetic load (12 `yes` processes, load average 24) `latency` still passed: open 109, HTML 69, React 93, select 29, user message 17, first token 53, edit 71 ms p95.
 
 ### Bottlenecks found and fixes
 
 - **No startup or first-token numbers.** New telemetry kinds `app.start`, `run.first_token` (server and visible), `edit.commit`, `frame.long`; app samples without a project go to `<data>/telemetry.jsonl` (`GET /api/telemetry?scope=app`). The run details Latency list shows first token and long frames. Desktop main logs boot phases and hands them to the UI.
-- **One 876 kB UI chunk parsed on every start.** Studio, the design systems library and New design system are lazy; Home-only parts that are not on screen at first are their own chunks. Home JS 299.3 kB, of which React DOM is 200 kB.
+- **One 876 kB UI chunk parsed on every start.** Studio, the design systems library and New design system are lazy; Home-only parts that are not on screen at first are their own chunks (Advanced settings fields and the design system list load on hover or open; starter gallery, first-run panel, clarifying questions and the card menu start loading when Home's module runs, so they download in parallel but stay out of the gate). Studio also preloads on card hover and focus. Home JS 298,440 bytes, of which React DOM is about 209,000.
+- **A failed lazy chunk would unmount the app** (for example a tab left open across a UI rebuild). Screens and Home now sit in an error boundary with a Reload button.
 - **Found while measuring the split: React 19 reveals a suspended boundary no sooner than 300 ms after it suspends.** The first lazy version made card click to paint 362 ms (p50) instead of 63. Fix: `screens.tsx` preloads on Home idle, the card click waits for the chunk, and a loaded screen renders without suspending. Back to 61 ms.
 - **The user message waited for the send round trip** (p95 79 ms, up to 2 s while a stopped run settles). Optimistic Send adds the message and "Starting" in the same frame as Cmd+Enter.
 - **Flash of "Connecting…" and "Loading project…" text** on fast loads. The text now shows only after 300 ms.
@@ -399,13 +402,15 @@ Under synthetic load (12 `yes` processes, load average 24) `latency` still passe
 | Item | Check | Proof | Result |
 |---|---|---|---|
 | R5-1 Measure what matters | Each new kind has a sample after one mock run and one direct edit | `perf-r5` R5-1, `telemetry-routes.test.ts`, `lifecycle.test.ts`, `desktop.spec.ts` | Pass. First token shows "N ms (server N ms)" in Details |
-| R5-2 Tighter gates | `latency` passes 3 times in a row | 3 runs at load 5–6, then the full suite at load 12, then load 24 | Pass |
+| R5-2 Tighter gates | `latency` passes 3 times in a row | With the new targets: the full suite at load 12, the run at load 24, and the two final full suites (load 17 and below) | Pass |
 | R5-3 Smoothness | Pan, zoom, 10k-token stream, Home grid | R2-2, R3-12, `perf-r5` | Pass with a 17.5 ms tolerance for p95 (headless rAF ticks at 16.7–16.8 ms); 0 frames > 32 ms |
 | R5-4 Known perf fixes | Gates pass; one EventSource per project | `perf-r5` | Pass (fixes landed before R5) |
 | R5-5 Optimistic Send | User message < 50 ms after Cmd+Enter | `latency`, `perf-r5` R5-5 (send held, then failed) | Pass. Failed send removes the row and restores the draft |
-| R5-6 Lazy Studio | Home JS < 300 kB; Home usable < 800 ms web | `perf-r5` | Pass (299.3 kB; 97 ms) |
+| R5-6 Lazy Studio | Home JS < 300 kB; Home usable < 800 ms web | `perf-r5` | Pass (298,440 bytes; 97 ms) |
 | R5-7 Versions at 100 | Panel < 300 ms | `perf-r5` | Pass (≤ 97 ms) |
 | R1 leftover: Home grid trace | p95 ≤ 16.7, none > 32 | `perf-r5` | p95 16.7–16.8, 0 > 32 (see R5-3) |
+
+Skills: `vercel-react-best-practices` (applied bundle-dynamic-imports, bundle-preload on hover and focus, conditional loading of Advanced fields; no re-render issue found in the pending row, which reuses the memoized entries) and `better-interface` (pending row, boot text, error card, lazy fallbacks: no finding at HIGH or MEDIUM; the error card has `role="alert"` and one way out; the boot text fade is color only and the global reduced-motion rule cuts it; the rename fallback keeps the name so the card does not shift).
 
 Premium-feel pass on the touched screens (chat pending row, boot text, Home): the pending row is the same markup as a starting run (no shift when the real run replaces it); no spinner or text flash under 300 ms; tabular numbers on the timer. Screenshot: `/tmp/polish-r5/after-optimistic-send.png`.
 
@@ -418,7 +423,7 @@ Premium-feel pass on the touched screens (chat pending row, boot text, Home): th
 - Desktop: the login-shell PATH lookup (about 115 ms) blocks the server spawn. A cached PATH would save it, but a stale PATH can hide a newly installed `claude`; not done.
 - First launch after install or repack is 1.2–2.6 s (cold disk cache); not under our control in the app.
 - Real-agent first token (target < 3 s p50) is not measured this round (tests use the mock only).
-- Home JS has little room: 299.3 kB of 300. The next Home feature should be a lazy chunk.
+- Home JS has little room: 298,440 of 300,000 bytes. The next Home feature should be a lazy chunk.
 - The smooth p95 ≤ 16.7 ms is met only to rAF precision (16.7–16.8 ms); the gates use 17.5 ms.
 - Select is about 2 frames (31 ms); going lower needs an overlay drawn outside React.
 
@@ -428,14 +433,14 @@ Premium-feel pass on the touched screens (chat pending row, boot text, Home): th
 - `desktop.spec.ts` checked `studioDesktop` with `toEqual` and failed once `boot` was added; it now checks the boot marks too.
 - Infra, not the app: one full run lost Chrome in `edit-latency-r4` resize ("Mach rendezvous failed"); the spec passed alone and in the next full run.
 
-### Test runs (final, on `d291350`)
+### Test runs (final, on `0094194`)
 
 - `npx tsc --noEmit -p tsconfig.json`: clean.
 - `npx vitest run`: 106 files, 819 tests passed (6 new: `telemetry-routes.test.ts`, first-token tests in `lifecycle.test.ts`, `shownPending` in `runState.test.ts`).
 - `npm run build:ui`: built.
-- Playwright `STUDIO_E2E_GROUP=r5 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 119 of 119 (load 17 at the start; new: `perf-r5.spec.ts` 7 tests; `latency.spec.ts` now also gates user message, first token and direct edit); `ac-core` 7 of 7; `ac-edit` 19 of 19; `ac-safety` 10 of 10 (AC-48 passed).
+- Playwright `STUDIO_E2E_GROUP=r5 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 119 of 119 (also 119 of 119 on `d291350` at load 17; new: `perf-r5.spec.ts` 7 tests; `latency.spec.ts` now also gates user message, first token and direct edit); `ac-core` 7 of 7; `ac-edit` 19 of 19; `ac-safety` 10 of 10 (AC-48 passed).
 - `npm run e2e:desktop`: 22 of 22 (1 new: app.start with the boot phases).
 
 ### Commits
 
-`eaac241` telemetry · `9bd4ca9`, `175ce7f` optimistic Send · `03ee2e2` code split · `7dcdce6`, `ec05cea` perf and latency specs · `f6adbb9` desktop boot marks and start script · `e9c5261` desktop spec · `5ada5cd` boot text delay · `a2045f2`, `d291350` docs · then this log.
+`eaac241` telemetry · `9bd4ca9`, `175ce7f` optimistic Send · `03ee2e2` code split · `7dcdce6`, `ec05cea` perf and latency specs · `f6adbb9` desktop boot marks and start script · `e9c5261` desktop spec · `5ada5cd` boot text delay · `a2045f2`, `d291350`, `c199cd5` docs · `7a30751` card menu chunk and hover preload · `2ca10b6` screen error boundary · `0094194` byte gate · then this log update.

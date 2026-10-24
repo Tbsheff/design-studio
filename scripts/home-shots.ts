@@ -29,7 +29,7 @@ async function main(): Promise<void> {
   await page.getByLabel('Describe the design').fill('Bakery landing page');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await page.getByRole('heading', { name: 'A few quick questions' }).waitFor();
-  await page.locator('.clarify-q').first().getByRole('button').first().click();
+  await page.locator('.clarify-q').first().getByRole('radio').first().click();
   await shot(page, 'home-questions');
   await page.keyboard.press('Escape');
 

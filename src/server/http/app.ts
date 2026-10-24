@@ -47,6 +47,7 @@ import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
 import { registerRunControlRoutes } from './run-control-routes.js';
+import { registerRunTitleRoutes } from './run-title-routes.js';
 import { listWorkTree, parseMentions, readMentionFiles } from './mentions.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { draftAttachmentIds } from '../design-system/draft-project.js';
@@ -882,6 +883,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   registerRunControlRoutes(app, runner);
+  registerRunTitleRoutes(app, { runner, findRunProject, runsDir });
 
   app.post('/api/runs/:runId/cancel', (c) => {
     const handle = runner.get(assertSafeId(c.req.param('runId'), 'runId'));

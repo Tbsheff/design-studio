@@ -462,6 +462,7 @@ export interface RunSummary {
   parts?: RunPart[];
   todos?: TodoItem[];
   contextTokens?: number;
+  title?: string;
 }
 
 interface EventBase {

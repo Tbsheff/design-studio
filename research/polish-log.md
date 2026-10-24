@@ -444,3 +444,73 @@ Premium-feel pass on the touched screens (chat pending row, boot text, Home): th
 ### Commits
 
 `eaac241` telemetry · `9bd4ca9`, `175ce7f` optimistic Send · `03ee2e2` code split · `7dcdce6`, `ec05cea` perf and latency specs · `f6adbb9` desktop boot marks and start script · `e9c5261` desktop spec · `5ada5cd` boot text delay · `a2045f2`, `d291350`, `c199cd5` docs · `7a30751` card menu chunk and hover preload · `2ca10b6` screen error boundary · `0094194` byte gate · then this log update.
+
+## Round 6 — Design systems and tokens (2026-10-24)
+
+### Features
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R6-1 Mode preview on canvas | All frames repaint < 100 ms; source unchanged | `design-system-r6` R6-1 (3 frames: Desktop front, Tablet and Mobile passive; `Date.now()` at click vs. each frame's flip mark; work tree bytes and version count compared) | Pass. Slowest frame per click 18–31 ms (4 clicks) |
+| R6-2 Component inventory, part 1 | `Button` and `Card` listed with thumbnails; click adds `@Button` | `design-system-r6` R6-2, `inventory.test.ts` (2), `user-message.test.ts` | Pass. Project source only (React components with a source-loc host, HTML named layers and repeated classes) |
+| R6-3 Lint in the inspector | `#ff0001` names the nearest token with ΔE; one click writes `var(--token)` | `design-system-r6` R6-3, `tokenLint.test.ts` (5) | Pass. "Off palette. Nearest is --danger, ΔE 18.5"; the file then has `var(--danger)` |
+
+ΔE is OKLab Euclidean distance × 100 (the same distance as Snap). The old "Close to … Snap" note stays for the field you edit; the token checks list covers authored values on the selection.
+
+### Open questions from the design-system build
+
+| Question | Fix | Proof |
+|---|---|---|
+| Deleted then recreated pack id matched an old backing project | Delete marks backing projects `designSystemDeleted`; Open in editor skips them | `packs-library-routes.test.ts` |
+| "Apply to current project" lost after reload | `libraryFrom` persists beside the screen and is checked on load | `design-system-r6` open questions |
+| Built-in copy said "Made here" | Copies keep `copiedFrom`; the badge says Copy | `design-system-r6` open questions, `packs-library-routes.test.ts` |
+| Replace on a draft published it | Replace keeps the draft flag | `packs-library-routes.test.ts` |
+| No grade for "Open in editor" projects | The backing project gets a coverage file from the saved pack (how complete it is) | `packs-library-routes.test.ts` |
+| No e2e for Save as new and the problems notice | Added | `design-system-r6` open questions |
+
+### Polish
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R6-4 `globals.css` import, breakpoint type | 10 custom properties give 10 tokens of the right types | `extract.test.ts` "globals.css with 10 custom properties" | Pass. Unmapped vars stay as extra tokens; `breakpoint` is a core group (dimension) |
+| R6-5 Light and dark swatches on pack cards | Every built-in card shows both | `design-system-r6` R6-5 (every card: two rows, same y, touching) | Pass. Dark swatches come from the server; drawn only in the `DesignSystems` chunk |
+| R6-6 DESIGN.md editor | Close with changes asks to save | `design-system-r6` R6-6, `designMdOutline.test.ts` | Pass. Close, Cancel, Esc and backdrop all ask |
+
+Skill passes on the touched screens (`impeccable`, `make-interfaces-feel-better`, `emil-design-eng`, `better-interface`, `better-colors`), changes made:
+- Token checks: show 3, then "Show N more"; padding and margin rows name the sides ("Padding top and bottom"); hints wrap instead of cutting off.
+- Components tab: card hover only on fine pointers; press scale 0.96; thumbnail outline is neutral black at 10%; the error has "Try again"; the tooltip names the file.
+- Pack cards: the dark swatch panel uses a new `--surface-inverse` token, not a literal color.
+- DESIGN.md preview: heading sizes and spacing on the type scale; HTML comments do not show.
+- The dark switch flips with no animation (it is a mode preview, used often).
+
+Screenshots: `/tmp/polish-r6/before-*.png` and `after-*.png` (studio, canvas toolbar, tokens panel, canvas dark, components panel, inspector, DESIGN.md, DESIGN.md guard, library, pack detail).
+
+### Bundle
+
+Home JS 298,888 bytes in 1 file (gate < 300,000; Round 5 was 298,440, so +448). The new UI loads in the Studio chunks (`Studio` 268,976, `StudioParts` 96,346) and `DesignSystems` (17,127).
+
+### Left for later rounds
+
+- R6-2: kit-page parts are not in the Components tab; instance editing (change `Button` once, every use and the thumbnail update) is not done.
+- Light/dark only; no extra theme axes.
+- The token checks list appears when the authored CSS arrives, a moment after selection, and moves the inspector down once. A fixed slot would stop the shift.
+
+### Regressions found
+
+- The Components tab used the `.ins-scroll` class, so tests that scroll the inspector matched two elements (`direct-edit`, `inspector-r4`). It has its own scroll class now.
+- `token-snap` clicked the text color picker while the token checks list was still coming in, and the click missed. The test now waits for the list.
+- `versions-panel` lists the tabs; it now includes Components (intended).
+- Found by `latency`: direct edit p95 went from 22 ms to about 300 ms with the Components tab. The hidden tab stayed mounted and rendered every thumbnail in the headless browser after each file change. Thumbnails now load only while the tab is open: 18 ms. A/B on the Round 5 head and a bisect (`8bd418b` 21 ms, `85d8438` 304 ms) found it.
+- Load-sensitive, passed on rerun: `home-r1` R1-3 (2,217 ms vs 2,000) and `edit-latency-r4` undo, in full runs at load average 11–19 (other apps on the machine).
+
+### Test runs (final, on `6cade27`)
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 109 files, 832 tests passed (13 new: `tokenLint.test.ts` 5, `inventory.test.ts` 2, `designMdOutline.test.ts` 1, `extract.test.ts`, `packs-library-routes.test.ts`, `user-message.test.ts`).
+- `npm run build:ui`: built.
+- Playwright `STUDIO_E2E_GROUP=r6 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 125 of 125 (new: `design-system-r6.spec.ts` 6 tests, also 18 of 18 with `--repeat-each 3`); `ac-core` 7 of 7; `ac-edit` 19 of 19; `ac-safety` 10 of 10 (AC-48 passed). Latency p95 in the last full run: edit 15 ms, select 31 ms, html 102 ms.
+- `npm run e2e:desktop`: not run; `desktop/` did not change.
+
+### Commits
+
+`70bdf58` canvas dark switch · `8bd418b` token checks · `85d8438` Components tab · `d5dc878`, `6809d4e` open questions · `fe5aa59` pack card swatches · `89ec0fc` DESIGN.md editor · `7dd52eb` CSS import and breakpoint · `48bc393` polish · `878347e` docs · `8a763cd` scroll class and test fixes · `c439457` thumbnails only while the tab is open · `6cade27` R6 spec fixes · then this log update.

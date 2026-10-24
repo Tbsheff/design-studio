@@ -145,7 +145,7 @@ function guardContrast(picks: Picks): void {
   fix('color.accent', 'color.accent-fg', 4.5, 0);
 }
 
-function scoreOf(entries: CoverageEntry[]): number {
+export function scoreOf(entries: CoverageEntry[]): number {
   let total = 0;
   for (const [group, weight] of Object.entries(GROUP_WEIGHTS)) {
     const inGroup = entries.filter((entry) => entry.token.startsWith(`${group}.`));

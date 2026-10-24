@@ -1,7 +1,7 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { Direction, FinalCheck, LoopSummary, Project, RunSentRecord, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
+import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, RunSentRecord, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
@@ -47,6 +47,7 @@ export interface DriverOutcome {
   criticCostUsd?: number;
   finalCheck?: FinalCheck;
   loop?: LoopSummary;
+  designSystemCheck?: DesignSystemRunCheck;
   sessionTotals?: SessionTotals;
   durationMs: number | null;
   modelMs: number;
@@ -110,6 +111,16 @@ function sessionNoteOf(direction: Direction): { sessionNote?: string } {
 
 function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+function copyOutcome(summary: RunSummary, outcome: DriverOutcome): void {
+  summary.usage = outcome.usage;
+  summary.costUsd = outcome.costUsd;
+  if (outcome.criticCostUsd) summary.criticCostUsd = outcome.criticCostUsd;
+  if (outcome.finalCheck) summary.finalCheck = outcome.finalCheck;
+  if (outcome.loop) summary.loop = outcome.loop;
+  if (outcome.designSystemCheck) summary.designSystemCheck = outcome.designSystemCheck;
+  summary.modelMs = outcome.modelMs;
 }
 
 type RunEventBody = StudioEventBody & { runId: string };
@@ -348,14 +359,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
       let status: RunStatus = canceled ? 'canceled' : outcome ? outcome.status : 'failed';
       summary.error = canceled ? null : (outcome?.error ?? failure);
-      if (outcome) {
-        summary.usage = outcome.usage;
-        summary.costUsd = outcome.costUsd;
-        if (outcome.criticCostUsd) summary.criticCostUsd = outcome.criticCostUsd;
-        if (outcome.finalCheck) summary.finalCheck = outcome.finalCheck;
-        if (outcome.loop) summary.loop = outcome.loop;
-        summary.modelMs = outcome.modelMs;
-      }
+      if (outcome) copyOutcome(summary, outcome);
 
       try {
         await recordSessionTotals(outcome);

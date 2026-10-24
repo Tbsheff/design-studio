@@ -7,6 +7,8 @@ import { checkPathInside } from './permissions.js';
 import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
 import { buildUserText } from './user-message.js';
 import { runVariationMock } from '../variations/mock-pages.js';
+import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
+import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-system.js';
 
 const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
 const DELTA_DELAY_MS = 20;
@@ -60,7 +62,7 @@ export function mockSkillRequests(prompt: string): string[] {
 }
 
 export function cleanPrompt(prompt: string): string {
-  return prompt.replace(/\[(slow|fail|tweaks)\]/g, '').replace(SKILL_TAG, '').replace(SKILL_LINE, '').replace(/\s+/g, ' ').trim();
+  return prompt.replace(/\[(slow|fail|tweaks|ds-fail-once|ds-fail-always)\]/g, '').replace(SKILL_TAG, '').replace(SKILL_LINE, '').replace(/\s+/g, ' ').trim();
 }
 
 async function exists(file: string): Promise<boolean> {
@@ -455,6 +457,7 @@ function wantsTweaks(input: DriverInput): boolean {
 }
 
 async function runMockScenario(input: DriverInput, session: MockSession): Promise<string> {
+  if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt);
   const tweaksOnly = input.ctx.request.task === 'tweaks';
   let finalText = tweaksOnly ? '' : await runMockEdit(input, session);
   if (wantsTweaks(input)) finalText = `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();
@@ -485,7 +488,7 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
   input.sink.sent({ text: buildUserText(input.ctx), imageCount: input.ctx.attachments.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId });
   for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
   const finalText = await runMockScenario(input, session);
-  return {
+  const outcome: DriverOutcome = {
     status: 'completed',
     usage: { ...MOCK_USAGE },
     costUsd: 0,
@@ -494,6 +497,17 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
     finalText,
     error: null,
   };
+  if (!wantsDesignSystemCheck(input.ctx)) return outcome;
+  return enforceDesignSystemCheck({
+    workTree: input.ctx.direction.workTree,
+    first: outcome,
+    signal: input.signal,
+    continueWith: async (text, round, total) => {
+      input.sink.sent({ text, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId, continuation: round });
+      const fixed = await runMockDesignSystemFix(session, input.ctx.direction.workTree, prompt);
+      return { ...total, finalText: fixed, durationMs: Date.now() - startedAt };
+    },
+  });
 }
 
 export function createMockDriver(): RunDriver {

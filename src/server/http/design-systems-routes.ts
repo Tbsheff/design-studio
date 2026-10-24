@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import type { Attachment, DesignSystemCoverage, DesignSystemDraftInfo, DesignSystemDraftResult, Direction, Project } from '../../shared/contracts.js';
 import { checkDesignSystem } from '../design-system/check.js';
+import { readCoverage } from '../design-system/draft-project.js';
 import { KIT_PAGE_FILE } from '../design-system/extract/kit-page.js';
 import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, buildDraft, createFetcher, parseDraftRequest } from '../design-system/extract/draft.js';
 import type { Draft, DraftFile } from '../design-system/extract/draft.js';
@@ -98,17 +99,6 @@ function metaFile(draft: Draft, pack: LoadedPack, attachments: Attachment[]): Dr
     files: [KIT_PAGE_FILE, ...draft.files.map((file) => file.path)],
   };
   return { path: META_FILE, content: `${JSON.stringify(meta, null, 2)}\n` };
-}
-
-async function readCoverage(workTree: string): Promise<DesignSystemCoverage | null> {
-  try {
-    const parsed = JSON.parse(await readFile(path.join(workTree, COVERAGE_FILE), 'utf8')) as DesignSystemCoverage;
-    return parsed && parsed.version === 1 && Array.isArray(parsed.tokens) ? parsed : null;
-  } catch (error) {
-    if (isNodeError(error) && error.code === 'ENOENT') return null;
-    if (error instanceof SyntaxError) return null;
-    throw error;
-  }
 }
 
 export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDeps): void {

@@ -6,6 +6,7 @@ import type { AgentRunContext, ServerConfig } from '../types.js';
 import { createAgentRunner } from './index.js';
 import { createFakeBus, createFakePreview, createFakeProjects, createFakeVersions, createTempProject } from './test-fakes.js';
 import { cleanPrompt, mockSkillRequests } from './mock.js';
+import { writeTestDraft } from '../design-system/test-draft.js';
 
 const roots: string[] = [];
 
@@ -243,5 +244,34 @@ describe('mock agent levels', () => {
     expect(polish.names).toContain('mcp__studio__design_review');
     expect(polish.names.at(-1)).toBe('mcp__studio__render_check');
     expect(env.versions.commits.map((commit) => commit.meta.level)).toEqual(['wireframe', 'prototype', 'polish']);
+  });
+});
+
+describe('mock design system run', () => {
+  async function backing() {
+    const t = await setup();
+    t.projects.current.designSystemFor = 'user-kit';
+    await writeTestDraft(t.workTree, { todos: 3 });
+    return t;
+  }
+
+  it('fills DESIGN.md, fails the check once, fixes it in a studio round and commits', async () => {
+    const t = await backing();
+    const summary = await t.runner.start(t.context({ prompt: 'Improve this design system. [ds-fail-once]', mode: 'edit', task: 'design-system' })).done;
+    expect(summary.status).toBe('completed');
+    expect(summary.designSystemCheck).toEqual({ passed: true, problems: [], rounds: 1 });
+    expect(summary.toolCalls.map((call) => call.name).filter((name) => name.startsWith('mcp__'))).toEqual(['mcp__studio__screenshot', 'mcp__studio__screenshot', 'mcp__studio__design_system_check', 'mcp__studio__design_system_check']);
+    expect(await readFile(path.join(t.workTree, 'DESIGN.md'), 'utf8')).not.toMatch(/^_To do:/m);
+    expect(JSON.parse(await readFile(path.join(t.workTree, 'design-system', 'tokens.json'), 'utf8')).$description).toMatch(/Improve with AI/);
+    expect(t.versions.commits).toHaveLength(1);
+  });
+
+  it('finishes failed with the problems after the max rounds when the check never passes', async () => {
+    const t = await backing();
+    const summary = await t.runner.start(t.context({ prompt: 'Improve this design system. [ds-fail-always]', mode: 'edit', task: 'design-system' })).done;
+    expect(summary.status).toBe('failed');
+    expect(summary.error).toMatch(/^Design system check failed: 1 problem\(s\) after 3 fix round\(s\)\. DESIGN\.md still has a to-do line/);
+    expect(summary.designSystemCheck).toMatchObject({ passed: false, rounds: 3 });
+    expect(t.versions.commits).toHaveLength(0);
   });
 });

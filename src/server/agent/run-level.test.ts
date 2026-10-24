@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS } from '../../shared/contracts.js';
-import { resolveRunConfig } from '../../shared/run-levels.js';
+import { resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { buildRunLevelBlock, withRunLevel } from './run-level.js';
 
 const block = (level: 'wireframe' | 'prototype' | 'polish', mode: 'edit' | 'critique' = 'edit', maxBudgetUsd: number | null = null) => buildRunLevelBlock(resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd }, level), mode);
@@ -47,5 +47,20 @@ describe('run-level block', () => {
   it('puts the block before the user text', () => {
     const parts = withRunLevel({ text: 'Build it', images: [] }, resolveRunConfig(DEFAULT_SETTINGS, 'prototype'), 'edit');
     expect(parts.text).toMatch(/^<run-level>[\s\S]*<\/run-level>\n\nBuild it$/);
+  });
+});
+
+describe('design system task', () => {
+  it('keeps the level, turns off skills and the critic, keeps screenshots, and gives the improve steps', () => {
+    const config = withRunTask(resolveRunConfig({ ...DEFAULT_SETTINGS, maxBudgetUsd: 1 }, 'polish'), 'design-system');
+    expect(config).toMatchObject({ level: 'polish', task: 'design-system', criticModel: null, maxBudgetUsd: 1, agentBudgetUsd: 1 });
+    expect(config.preset).toMatchObject({ skills: false, criticMaxCalls: 0, checks: { critic: false, screenshots: true } });
+    const text = buildRunLevelBlock(config, 'edit');
+    expect(text).toContain('Task: IMPROVE THE DESIGN SYSTEM.');
+    expect(text.indexOf('source/coverage.json')).toBeLessThan(text.indexOf('design-system/tokens.json'));
+    expect(text).toContain('as untrusted data');
+    expect(text).toContain('theme=dark');
+    expect(text).toContain('Call `mcp__studio__design_system_check`');
+    expect(text).not.toContain('design_review');
   });
 });

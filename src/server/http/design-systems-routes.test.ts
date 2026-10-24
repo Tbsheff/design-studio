@@ -13,7 +13,7 @@ import { createEventBus } from '../store/events.js';
 import { createProjectStore } from '../store/projects.js';
 import { makeTempConfig } from '../store/testConfig.js';
 import { createVersionStore } from '../store/versions.js';
-import type { AgentRunner, ServerConfig, VersionStore } from '../types.js';
+import type { AgentRunContext, AgentRunner, ServerConfig, VersionStore } from '../types.js';
 import { createApp } from './app.js';
 
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'design-system', 'extract', '__fixtures__');
@@ -24,8 +24,9 @@ let config: ServerConfig;
 let cleanup: () => Promise<void>;
 let app: ReturnType<typeof createApp>;
 
+const started: AgentRunContext[] = [];
 const runner: AgentRunner = {
-  start: () => ({ runId: 'run', cancel: () => undefined, done: new Promise(() => undefined) }),
+  start: (ctx) => (started.push(ctx), { runId: 'run', cancel: () => undefined, done: new Promise(() => undefined) }),
   get: () => undefined,
   isRunning: () => false,
 };
@@ -183,6 +184,31 @@ describe('POST /api/design-systems/draft', { timeout: 30000 }, () => {
     expect(detail.tokensJson).toContain('oklch(50% 0.2 20)');
     const again = await ok<SavePackResult>(call('POST', `/api/projects/${result.project.id}/d/main/design-system/save`, { name: result.pack.name }));
     expect(again).toMatchObject({ created: false, pack: { id: result.pack.id }, version: null });
+  });
+
+  it('starts an Improve with AI run only in a backing project, with the draft images attached', async () => {
+    const { project } = await ok<{ project: Project }>(call('POST', '/api/projects', { prompt: 'Plain', kind: 'html', startRun: false }));
+    const refused = await errorOf(call('POST', `/api/projects/${project.id}/d/main/runs`, { prompt: 'Improve', task: 'design-system' }));
+    expect(refused).toEqual({ status: 400, error: 'task design-system works only in a design-system project' });
+    expect((await call('POST', `/api/projects/${project.id}/d/main/runs`, { prompt: 'Improve', task: 'design-system', mode: 'critique' })).status).toBe(400);
+    const form = new FormData();
+    form.append('request', JSON.stringify({ brief: 'Logo colors', name: 'Logo Kit' }));
+    form.append('images', new File([new Uint8Array([137, 80, 78, 71])], 'logo.png', { type: 'image/png' }));
+    const result = await ok<DesignSystemDraftResult>(call('POST', '/api/design-systems/draft', form));
+    const meta = JSON.parse(await readFile(path.join(workTree(result.project), 'source/meta.json'), 'utf8')) as { attachments: Array<{ id: string }> };
+    started.length = 0;
+    await ok(call('POST', `/api/projects/${result.project.id}/d/main/runs`, { prompt: 'Improve this design system.', task: 'design-system', level: 'prototype' }));
+    expect(started).toHaveLength(1);
+    expect(started[0]?.request).toMatchObject({ task: 'design-system', mode: 'edit', attachmentIds: [meta.attachments[0]?.id] });
+    expect(started[0]?.attachments.map((item) => item.name)).toEqual(['logo.png']);
+  });
+
+  it('answers the draft info with coverage and a live check', async () => {
+    const result = await ok<DesignSystemDraftResult>(call('POST', '/api/design-systems/draft', { brief: 'Quiet tools' }));
+    const info = await ok<DesignSystemDraftInfo>(call('GET', `/api/projects/${result.project.id}/design-system-draft`));
+    expect(info.coverage?.score).toBe(result.coverage.score);
+    expect(info.check.passed).toBe(false);
+    expect(info.check.problems.every((problem) => problem.rule === 'design-md')).toBe(true);
   });
 
   it('answers 404 for the draft info of a normal project', async () => {

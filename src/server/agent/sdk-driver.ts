@@ -10,6 +10,8 @@ import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '
 import { captureBaseline, type RunToolState } from './check-tool.js';
 import { runFinalCheck } from './final-check.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
+import { SOURCE_DIR } from '../design-system/extract/draft.js';
+import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
 import { buildSystemPrompt } from './prompt.js';
 import { withRunLevel } from './run-level.js';
 import { loadTasteRules, type TasteRule } from './taste.js';
@@ -347,6 +349,7 @@ function buildPolicy(input: DriverInput, skills: PreparedSkills, config: Resolve
     allowInstall: settings.allowInstall,
     skills: skills.enabled,
     skillDirs: skills.readableDirs,
+    ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
   };
 }
 
@@ -634,6 +637,24 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     }
   }
 
+  async function continueDesignSystem(input: DriverInput, segment: AttemptSegment, first: { state: StreamState; outcome: DriverOutcome }): Promise<DriverOutcome> {
+    let current = first;
+    return enforceDesignSystemCheck({
+      workTree: input.ctx.direction.workTree,
+      first: first.outcome,
+      signal: input.signal,
+      continueWith: async (text, round, total) => {
+        const sessionId = current.state.sessionId;
+        if (!sessionId) return null;
+        input.sink.sent({ text, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: round });
+        segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
+        const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };
+        current = await runSegment(input, segment, { text, images: [] }, prior);
+        return mergeOutcomes(total, current.outcome);
+      },
+    });
+  }
+
   async function attempt(input: DriverInput, parts: UserMessageParts, resume: string | null): Promise<AttemptResult> {
     const { sink, signal } = input;
     const setup = await setupAttempt(input);
@@ -648,7 +669,8 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const segment: AttemptSegment = { setup, sdkOptions, promptHash, spentUsd: 0, maxBudgetUsd: sdkOptions.maxBudgetUsd ?? null };
     const first = await runSegment(input, segment, sent, prior);
     const looped = wantsLoop(setup.config, input.ctx.request.mode) ? await continueLoop(input, segment, first) : null;
-    const outcome = looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : first.outcome;
+    const checked = wantsDesignSystemCheck(input.ctx) ? await continueDesignSystem(input, segment, first) : first.outcome;
+    const outcome = looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : checked;
     addCriticCost(outcome, setup.run.criticCostUsd);
     if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId });
     return { sawInit: first.state.sawInit, outcome };

@@ -194,7 +194,7 @@ export interface Attachment {
 }
 
 export type RunMode = 'edit' | 'critique';
-export type RunTask = 'tweaks';
+export type RunTask = 'tweaks' | 'design-system';
 
 export interface RunRequest {
   prompt: string;
@@ -309,6 +309,7 @@ export interface RunSummary {
   criticCostUsd?: number;
   finalCheck?: FinalCheck;
   loop?: LoopSummary;
+  designSystemCheck?: DesignSystemRunCheck;
   sessionNote?: string;
   sessionId: string | null;
   usage: RunUsage;
@@ -708,7 +709,7 @@ export type CoverageConfidence = 'high' | 'medium' | 'fallback';
 
 export interface CoverageEntry {
   token: string;
-  source: DraftSourceKind | 'derived' | 'base';
+  source: DraftSourceKind | 'derived' | 'base' | 'agent';
   confidence: CoverageConfidence;
   evidence: string;
 }
@@ -758,7 +759,6 @@ export interface DesignSystemCheckResult {
 
 export interface DesignSystemRunCheck extends DesignSystemCheckResult {
   rounds: number;
-  ranBy: 'agent' | 'studio';
 }
 
 export interface DesignSystemDraftInfo {

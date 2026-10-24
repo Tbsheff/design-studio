@@ -41,6 +41,7 @@ import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
+import { draftAttachmentIds } from '../design-system/draft-project.js';
 import { registerPackRoutes } from './packs-routes.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, ServerConfig, VersionStore } from '../types.js';
@@ -136,8 +137,8 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
     request.attachmentIds = body.attachmentIds as string[];
   }
   if (body.task !== undefined) {
-    if (body.task !== 'tweaks') throw new BadRequestError('task must be tweaks');
-    if (mode !== 'edit') throw new BadRequestError('task tweaks needs mode edit');
+    if (body.task !== 'tweaks' && body.task !== 'design-system') throw new BadRequestError('task must be tweaks or design-system');
+    if (mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
     request.task = body.task;
   }
   return request;
@@ -618,11 +619,20 @@ export function createApp(deps: AppDeps): Hono {
     return c.json(await versions.status(project, direction));
   });
 
+  const withTaskInputs = async (project: Project, direction: Direction, request: RunRequest): Promise<RunRequest> => {
+    if (request.task !== 'design-system') return request;
+    if (!project.designSystemFor) throw new BadRequestError('task design-system works only in a design-system project');
+    const exists = (id: string) => projects.getAttachment(project.id, id).then(() => true, () => false);
+    const fromDraft = await draftAttachmentIds(direction.workTree, exists);
+    const attachmentIds = [...new Set([...(request.attachmentIds ?? []), ...fromDraft])];
+    return attachmentIds.length > 0 ? { ...request, attachmentIds } : request;
+  };
+
   app.post('/api/projects/:pid/d/:did/runs', async (c) => {
     const request = parseRunRequest(await readBody(c));
     const runId = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       if (runner.isRunning(project.id, direction.id)) throw new ConflictError('run_in_progress');
-      return startRun(project, direction, request);
+      return startRun(project, direction, await withTaskInputs(project, direction, request));
     });
     return c.json({ runId });
   });

@@ -111,7 +111,13 @@ export function levelOf(request: { level?: RunLevel }, settings?: Partial<Pick<P
 const TWEAKS_TASK_BUDGET_USD = 0.25;
 const TWEAKS_TASK_TURNS = 14;
 
+function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
+  const checks: LevelChecks = { ...config.preset.checks, screenshots: true, critic: false };
+  return { ...config, agentBudgetUsd: config.maxBudgetUsd, criticModel: null, preset: { ...config.preset, skills: false, checks, criticModel: null, criticBudgetUsd: 0, criticMaxCalls: 0 }, task: 'design-system' };
+}
+
 export function withRunTask(config: ResolvedRunConfig, task: RunTask | undefined): ResolvedRunConfig {
+  if (task === 'design-system') return designSystemTask(config);
   if (task !== 'tweaks') return config;
   const maxBudgetUsd = config.maxBudgetUsd === null ? null : Math.min(TWEAKS_TASK_BUDGET_USD, config.maxBudgetUsd);
   const checks: LevelChecks = { ...config.preset.checks, viewports: ['desktop', 'mobile'], quality: false, screenshots: false, critic: false, fixLoops: 1 };

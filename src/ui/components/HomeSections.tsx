@@ -242,7 +242,8 @@ export function useProjectActions({ onOpen, setProjects, loadProjects, showToast
   };
 }
 
-const POLL_MS = 1000;
+const POLL_FAST_MS = 500;
+const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
 function isEditable(target: EventTarget | null): boolean {
@@ -269,14 +270,15 @@ export function useHomeProjects() {
     void loadProjects();
   }, [loadProjects]);
 
-  const watching = projects?.some((project) => thumbnailPending(project) || Date.now() - project.updatedAt < RECENT_MS) ?? false;
+  const lagging = projects?.some(thumbnailPending) ?? false;
+  const watching = lagging || (projects?.some((project) => Date.now() - project.updatedAt < RECENT_MS) ?? false);
   useEffect(() => {
     if (!watching) return;
     const timer = window.setInterval(() => {
       if (document.visibilityState === 'visible') void loadProjects();
-    }, POLL_MS);
+    }, lagging ? POLL_FAST_MS : POLL_MS);
     return () => window.clearInterval(timer);
-  }, [watching, loadProjects]);
+  }, [watching, lagging, loadProjects]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

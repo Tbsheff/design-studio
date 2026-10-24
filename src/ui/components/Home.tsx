@@ -232,7 +232,11 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     e.preventDefault();
     const text = prompt.trim();
     if (!text || busy !== null) return;
-    if (questions === null && needsQuestions(text)) {
+    if (questions !== null) {
+      document.querySelector<HTMLFormElement>('form.clarify')?.requestSubmit();
+      return;
+    }
+    if (needsQuestions(text)) {
       setBusy('ask');
       setFormError(null);
       const asked = await api.clarify(text).catch(() => ({ questions: [] as ClarifyQuestion[] }));

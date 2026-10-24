@@ -24,7 +24,7 @@ Decisions:
 - The sample project is an action in the first-run panel, not a seed in every new data folder. A seed would add a project to every e2e server and write to the user's projects folder without a request.
 - Clarifying questions run on Home before the project exists. Mock mode returns 3 fixed questions. Real mode makes one Haiku call (no tools, 12 s timeout) and falls back to the fixed questions. "Skip questions" builds at once.
 - A pasted lone URL becomes a "Use as reference" chip and is not put in the prompt text. The server reads the page with `safeFetch` (same SSRF guard as design-system import), keeps headings and text (6000 characters max), and adds it to the run prompt in a `<reference-pages>` block marked as untrusted.
-- Thumbnails: on each `version.created` of kind init, run, undo, restore or keep on the main direction, one worker shoots the first 1280×800 viewport of the head and stores a 640×400 PNG in `projects/<pid>/thumbs/` (outside the work tree). Only the newest file is kept. `updatedAt` does not change. The UI loads the image with the token and keeps it by project and version. Home polls the list every 1 s while a thumbnail is behind the head or a project changed in the last 2 min.
+- Thumbnails: on each `version.created` of kind init, run, undo, restore or keep on the main direction, one worker shoots the first 1280×800 viewport of the head and stores a 640×400 PNG in `projects/<pid>/thumbs/` (outside the work tree). Only the newest file is kept. `updatedAt` does not change. The UI loads the image with the token and keeps it by project and version. Home polls the list every 500 ms while a thumbnail is behind the head, and every 1.5 s while a project changed in the last 2 min.
 
 ### Polish changes
 
@@ -90,9 +90,14 @@ After (web, `scripts/home-shots.ts`, 1440×900 at 2x): `/tmp/polish-r1/after-hom
 ### Regressions found
 
 - The clarifying questions catch every Home create under 12 words, so the shared e2e helpers and specs now click "Skip questions" (`clickCreate` in `e2e/support/studio.ts`). No product regression.
-- One AC-14 failure in the first `ac-core` run ("Not found" in the preview). It passed in the rerun and in 4 repeats. The likely cause: I rebuilt `dist/ui` while that suite ran. Not reproduced.
+- One AC-14 failure in the first `ac-core` run ("Not found" in the preview). It passed in the rerun, in 4 repeats and in the final full run. Likely causes: I rebuilt `dist/ui` while that suite ran, and my screenshot server on port 4970 was running at the same time. Not reproduced.
+- Found in review: ⌘↩ in the prompt with the questions open built without the answers. Fixed (it now submits the questions form); the R1-3 e2e uses ⌘↩.
+- Process note: I stopped my screenshot server twice with `pkill -f "tsx src/server/index.ts"`, a pattern that matches any Studio server on the machine. Afterwards no other Studio server was running.
 
 ### Test runs (final)
+
+The full runs below are on `721622f`. Later commits (card image radius, ⌘↩ with the questions open, faster thumbnail polling) were rechecked with `home-r1`, `folders` and `skills` specs, typecheck and vitest.
+
 
 - `npx tsc --noEmit -p tsconfig.json`: clean.
 - `npx vitest run`: 80 files, 678 tests passed.

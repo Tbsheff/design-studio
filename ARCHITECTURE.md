@@ -30,7 +30,8 @@ Browser (studio UI, http://127.0.0.1:4170; all origins use 127.0.0.1)
 ```
 studio-data/
   workspaces.json                saved work folders {version: 1, folders: [{id, path, label, addedAt}]} (zod-checked; bad entries dropped on read)
-  preferences.json               {version: 1, projectsDir?} the saved default projects folder (zod-checked; a bad file is ignored)
+  trash/projects/<pid>-<time>/   deleted projects (whole projects/<pid> folder plus trashed.json)
+  preferences.json               {version: 1, projectsDir?, onboardingDismissed?} the saved default projects folder (zod-checked; a bad file is ignored)
   projects/<pid>/
     project.json                 Project (contracts.ts)
     git/                         shadow GIT_DIR, shared by all directions of the project
@@ -42,6 +43,7 @@ studio-data/
     events.jsonl                 project event log (seq order) for SSE replay
     telemetry.jsonl              TelemetrySample lines
     attachments/<id>.<ext>       user images
+    thumbs/<versionId>.png       640x400 image of the main head (Home card)
     comments/<did>.json          pinned comments per direction ({nextN, comments}); never in the work tree, so never in a version
 ```
 

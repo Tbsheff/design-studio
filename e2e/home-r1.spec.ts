@@ -153,7 +153,7 @@ test('R1-3: a 5-word prompt shows the question form before any file write, and t
   await groups.first().getByRole('radio').first().click();
   await expect(groups.first().getByRole('radio').first()).toHaveAttribute('aria-checked', 'true');
   const answer = (await groups.first().getByRole('radio').first().textContent()) ?? '';
-  await form.getByRole('button', { name: 'Build with answers' }).click();
+  await page.getByLabel('Describe the design').press('ControlOrMeta+Enter');
   await expect(page.locator('.topbar')).toBeVisible();
   const created = (await api.projects()).find((project) => project.name.toLowerCase().includes('bakery'));
   if (!created) throw new Error('bakery project missing');

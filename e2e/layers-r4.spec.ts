@@ -180,6 +180,31 @@ test('R4-9: Alt+Down moves a literal card in a TSX file', async ({ page }) => {
   await expect(page.getByLabel('Text content')).toHaveValue('Card one');
 });
 
+test('R4-4: Enter on a layers row selects the first child, Shift+Enter the parent, F2 renames', async ({ page }) => {
+  const { file } = await htmlProject(page, 'Layers Keys Page');
+  await page.getByRole('button', { name: 'Layers', exact: true }).click();
+  const tree = page.getByRole('tree', { name: 'Layers' });
+  const promo = page.locator('.layers-row', { hasText: '#promo' });
+  await promo.click();
+  await expect(promo).toHaveAttribute('aria-selected', 'true');
+  await expect(tree).toBeFocused();
+  await page.keyboard.press('Enter');
+  const child = page.locator('.layers-row', { hasText: 'Promo' }).filter({ hasNotText: '#promo' });
+  await expect(child).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.ins-tag')).toHaveText('p');
+  await expect(page.getByLabel('Layer name')).toHaveCount(0);
+  await page.keyboard.press('Shift+Enter');
+  await expect(promo).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.ins-tag')).toHaveText('section');
+  const before = readFileSync(file, 'utf8');
+  await page.keyboard.press('F2');
+  const input = page.getByLabel('Layer name');
+  await expect(input).toBeFocused();
+  await input.press('Escape');
+  await expect(input).toHaveCount(0);
+  expect(readFileSync(file, 'utf8')).toBe(before);
+});
+
 test('R4-4: rename writes data-name, hide and show restore the bytes, drag reorders once', async ({ page }) => {
   const { api, file, pid, did } = await htmlProject(page, 'Layers Edit Page');
   await page.getByRole('button', { name: 'Layers', exact: true }).click();

@@ -248,7 +248,7 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
       edits.onMoveSelected(move);
       return true;
     }
-    if (e.key === 'F2' || (e.key === 'Enter' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey)) {
+    if (e.key === 'F2' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
       setEditing(selectedRow.id);
       return true;
     }

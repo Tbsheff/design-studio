@@ -114,4 +114,15 @@ test('Multi-select: Shift+click toggles, Mixed radius, one batch write, one undo
   await expect(boxes).toHaveCount(1);
   await expect(page.locator('.ins-tag')).toHaveText('article');
   expect(await textSelection(page)).toBe('');
+
+  await page.keyboard.press('Alt+1');
+  const cardRows = page.locator('.layers-row[title="article .card"]');
+  await expect(cardRows).toHaveCount(3);
+  await cardRows.nth(0).click({ modifiers: ['Shift'] });
+  await expect(boxes).toHaveCount(2);
+  await expect(page.locator('.ins-count')).toHaveText('2 elements');
+  await cardRows.nth(0).click({ modifiers: ['Shift'] });
+  await expect(boxes).toHaveCount(1);
+  await cardRows.nth(1).click();
+  await expect(boxes).toHaveCount(1);
 });

@@ -1,0 +1,21 @@
+{
+  "global": {
+    "colors": {
+      "blue": { "value": "#2563eb", "type": "color" },
+      "primary": { "value": "{colors.blue}", "type": "color" },
+      "danger": { "value": "#dc2626", "type": "color" }
+    },
+    "fontFamilies": {
+      "heading": { "value": "Playfair Display", "type": "fontFamilies" },
+      "body": { "value": "Lato", "type": "fontFamilies" }
+    },
+    "borderRadius": { "md": { "value": "10", "type": "borderRadius" } },
+    "spacing": { "2": { "value": "8", "type": "spacing" } },
+    "boxShadow": { "lg": { "value": { "x": "0", "y": "12", "blur": "32", "spread": "-8", "color": "rgba(0,0,0,0.2)", "type": "dropShadow" }, "type": "boxShadow" } }
+  },
+  "dark": {
+    "colors": { "primary": { "value": "#93c5fd", "type": "color" } }
+  },
+  "$themes": [],
+  "$metadata": { "tokenSetOrder": ["global", "dark"] }
+}

@@ -1,0 +1,19 @@
+@import url("/extra.css");
+:root {
+  --brand: #1f6feb;
+  --color-accent: #e8590c;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --brand: #58a6ff; }
+}
+body { background-color: #fbfaf7; color: #1c1b19; font-family: var(--font-sans); }
+h1, h2, h3 { font-family: "Fraunces", Georgia, serif; }
+code, pre { font-family: "JetBrains Mono", monospace; }
+.btn-primary { background-color: var(--brand); color: #ffffff; border-radius: 8px; }
+a { color: var(--brand); }
+.muted { color: #6b665c; }
+input { border: 1px solid #cfc8b8; border-radius: 6px; }
+.modal { box-shadow: 0 24px 48px -12px rgba(0,0,0,.25); border-radius: 16px; }
+.pill { border-radius: 9999px; }
+.popover { box-shadow: 0 6px 16px -4px rgba(0,0,0,.15); }

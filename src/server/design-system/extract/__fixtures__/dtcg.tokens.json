@@ -1,0 +1,24 @@
+{
+  "color": {
+    "$type": "color",
+    "brand": { "$value": "#0a7d5a" },
+    "background": { "$value": "#ffffff", "$extensions": { "studio.modes": { "dark": "#0b1210" } } },
+    "foreground": { "$value": "{color.ink}" },
+    "ink": { "$value": "#10201b" },
+    "primary": { "$value": "{color.brand}" },
+    "accent": { "$value": { "colorSpace": "srgb", "components": [1, 0.85, 0.3] } }
+  },
+  "font": {
+    "body": { "$type": "fontFamily", "$value": ["Source Sans 3", "sans-serif"] },
+    "mono": { "$type": "fontFamily", "$value": "Fira Code, monospace" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "sm": { "$value": { "value": 3, "unit": "px" } },
+    "md": { "$value": "6px" }
+  },
+  "space": { "$type": "dimension", "4": { "$value": "1rem" } },
+  "shadow": {
+    "md": { "$type": "shadow", "$value": { "color": "#00000026", "offsetX": "0px", "offsetY": "4px", "blur": "12px", "spread": "0px" } }
+  }
+}

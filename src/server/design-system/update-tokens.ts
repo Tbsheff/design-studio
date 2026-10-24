@@ -13,6 +13,7 @@ import { readDesignSystemState } from './state.js';
 import { buildErrorMessage, syncDesignSystem } from './sync.js';
 import { applyTokenChanges, changeVarNames, parseTokenChanges, validateTokenChanges } from './token-changes.js';
 import { editTokensText } from './token-edit.js';
+import { recordTokenEdit, snapshotChanges } from './token-history.js';
 import { invalidateTokenSource } from './token-preview.js';
 
 const TITLE_NAMES = 4;
@@ -53,6 +54,7 @@ async function writeAndCommit(deps: DirectEditDeps, project: Project, direction:
     const paths = DESIGN_FILES.filter((relative) => existsSync(path.join(workTree, relative)));
     const version = await deps.versions.commitFile(project, direction, paths, updateTitle(changes), updateMeta(changes));
     if (version === null) throw new DirectEditError('no_change', 'The token changes did not change any tracked file');
+    recordTokenEdit(deps, project, direction, version, await snapshotChanges(workTree, snapshots));
     return version;
   } catch (error) {
     await restoreSnapshots(workTree, snapshots);

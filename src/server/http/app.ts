@@ -31,11 +31,13 @@ import { createPackLibrary } from '../design-system/library.js';
 import { applyPack, packRegistry } from '../design-system/packs.js';
 import type { LoadedPack, PackRegistry } from '../design-system/packs.js';
 import { loadDesignSystemPromptContext, readDesignSystemState } from '../design-system/state.js';
-import { invalidateTokenSourceOnChange, previewTokens } from '../design-system/token-preview.js';
+import { invalidateTokenSource, invalidateTokenSourceOnChange, previewTokens } from '../design-system/token-preview.js';
 import { updateTokens } from '../design-system/update-tokens.js';
 import { commitTweaks } from '../tweaks/commit.js';
 import { readTweaksState } from '../tweaks/store.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
+import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
+import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
@@ -74,6 +76,7 @@ interface AppDeps {
   defaultFolder?: DefaultFolderStore;
   folderPicker?: FolderPicker;
   thumbnails?: ThumbnailService;
+  editHistory?: EditHistory;
 }
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
@@ -259,6 +262,8 @@ export function createApp(deps: AppDeps): Hono {
   const allowedOrigins = new Set([config.studioOrigin, ...(resourcesDir() ? [] : DEV_UI_ORIGINS)]);
   const runProjectIndex = new Map<string, string>();
   const directionLock = createKeyedMutex();
+  const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
+  const editDeps = { bus, projects, versions, runner, history: editHistory };
   const app = new Hono();
 
   const projectsRoot = path.join(config.dataDir, 'projects');
@@ -735,7 +740,7 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     try {
       const result = await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        commitTweaks({ bus, projects, versions, runner }, project, direction, body),
+        commitTweaks(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {
@@ -748,7 +753,7 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     try {
       const result = await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        updateTokens({ bus, projects, versions, runner }, project, direction, body),
+        updateTokens(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {
@@ -761,7 +766,7 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     try {
       const result = await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        createToken({ bus, projects, versions, runner }, project, direction, body),
+        createToken(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {
@@ -774,7 +779,7 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     try {
       const result = await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        applyDirectEdit({ bus, projects, versions, runner }, project, direction, body),
+        applyDirectEdit(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {
@@ -944,6 +949,8 @@ export function createApp(deps: AppDeps): Hono {
     watch: (project) => watchDirection(project, projects.mainDirection(project)),
     addParentFolder,
   });
+
+  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

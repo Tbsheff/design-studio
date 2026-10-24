@@ -1,0 +1,162 @@
+import { readFile, realpath } from 'node:fs/promises';
+import path from 'node:path';
+import type { Direction, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
+import { isNodeError } from '../store/errors.js';
+import type { EventBus } from '../types.js';
+import { DirectEditError } from './errors.js';
+import { assertCanEdit, publishVersion, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
+
+export const HISTORY_LIMIT = 100;
+
+export type HistoryStep = 'undo' | 'redo';
+
+export interface EditStepResult {
+  state: EditHistoryState;
+  version: Version;
+}
+
+export interface EditHistory extends EditRecorder {
+  state(projectId: string, directionId: string): EditHistoryState;
+  step(kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult>;
+  clear(projectId: string, directionId?: string): void;
+}
+
+interface HistoryOptions {
+  bus: Pick<EventBus, 'emit'>;
+  onRestored?: (workTree: string, relatives: string[]) => void;
+  limit?: number;
+}
+
+interface Stacks {
+  undo: EditRecord[];
+  redo: EditRecord[];
+}
+
+const STALE_MESSAGE = 'The file changed after this edit, so it cannot be undone here. Undo history was cleared.';
+const STEP_WORD: Record<HistoryStep, string> = { undo: 'Undo', redo: 'Redo' };
+
+function lastFor(records: EditRecord[], directionId: string): number {
+  for (let index = records.length - 1; index >= 0; index -= 1) if (records[index]?.directionId === directionId) return index;
+  return -1;
+}
+
+function stale(): DirectEditError {
+  return new DirectEditError('history_stale', STALE_MESSAGE);
+}
+
+async function readOrNull(file: string): Promise<string | null> {
+  try {
+    return await readFile(file, 'utf8');
+  } catch (error) {
+    if (isNodeError(error) && (error.code === 'ENOENT' || error.code === 'ENOTDIR')) return null;
+    throw error;
+  }
+}
+
+async function resolveFiles(workTree: string, record: EditRecord): Promise<string[] | null> {
+  const root = await realpath(workTree);
+  const files: string[] = [];
+  for (const change of record.files) {
+    const candidate = path.resolve(root, change.relative);
+    if (!candidate.startsWith(root + path.sep)) return null;
+    const real = await realpath(candidate).catch(() => null);
+    if (real === null || !real.startsWith(root + path.sep)) return null;
+    files.push(real);
+  }
+  return files;
+}
+
+async function writeAll(files: string[], texts: string[]): Promise<void> {
+  for (const [index, file] of files.entries()) await writeAtomic(file, texts[index] ?? '');
+}
+
+function stepMeta(kind: HistoryStep, record: EditRecord): VersionMeta {
+  return { kind: 'manual', prompt: `${STEP_WORD[kind]} of "${record.label}" (${record.files.map((change) => change.relative).join(', ')})` };
+}
+
+export function createEditHistory(options: HistoryOptions): EditHistory {
+  const limit = options.limit ?? HISTORY_LIMIT;
+  const projects = new Map<string, Stacks>();
+
+  const stacksOf = (projectId: string): Stacks => {
+    let stacks = projects.get(projectId);
+    if (!stacks) {
+      stacks = { undo: [], redo: [] };
+      projects.set(projectId, stacks);
+    }
+    return stacks;
+  };
+
+  const changed = (projectId: string, directionId: string): void => {
+    options.bus.emit({ type: 'edit-history.changed', projectId, directionId });
+  };
+
+  const push = (records: EditRecord[], record: EditRecord): void => {
+    records.push(record);
+    if (records.length > limit) records.splice(0, records.length - limit);
+  };
+
+  const state = (projectId: string, directionId: string): EditHistoryState => {
+    const stacks = projects.get(projectId);
+    const undo = stacks ? stacks.undo[lastFor(stacks.undo, directionId)] : undefined;
+    const redo = stacks ? stacks.redo[lastFor(stacks.redo, directionId)] : undefined;
+    return { canUndo: undo !== undefined, canRedo: redo !== undefined, undoLabel: undo?.label ?? null, redoLabel: redo?.label ?? null };
+  };
+
+  const clear = (projectId: string, directionId?: string): void => {
+    const stacks = projects.get(projectId);
+    if (!stacks) return;
+    stacks.undo.length = 0;
+    stacks.redo.length = 0;
+    if (directionId !== undefined) changed(projectId, directionId);
+  };
+
+  const commitStep = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction, record: EditRecord, files: string[]): Promise<Version> => {
+    const wanted = (change: EditFileChange) => (kind === 'undo' ? change.before : change.after);
+    const current = (change: EditFileChange) => (kind === 'undo' ? change.after : change.before);
+    try {
+      await writeAll(files, record.files.map(wanted));
+      const relatives = record.files.map((change) => change.relative);
+      const version = await deps.versions.commitFile(project, direction, relatives, `${STEP_WORD[kind]}: ${record.label}`, stepMeta(kind, record));
+      if (version === null) throw new DirectEditError('no_change', 'The undo did not change any tracked file');
+      return version;
+    } catch (error) {
+      await writeAll(files, record.files.map(current)).catch((restoreError: unknown) => console.error('[history] could not restore files', restoreError));
+      throw error;
+    }
+  };
+
+  const step = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult> => {
+    assertCanEdit(deps, project, direction);
+    const stacks = stacksOf(project.id);
+    const from = kind === 'undo' ? stacks.undo : stacks.redo;
+    const index = lastFor(from, direction.id);
+    const record = from[index];
+    if (!record) throw new DirectEditError('history_empty', kind === 'undo' ? 'Nothing to undo' : 'Nothing to redo');
+    const files = await resolveFiles(direction.workTree, record);
+    const texts = files === null ? [] : await Promise.all(files.map(readOrNull));
+    const expected = record.files.map((change) => (kind === 'undo' ? change.after : change.before));
+    if (files === null || texts.some((text, position) => text !== expected[position])) {
+      clear(project.id, direction.id);
+      throw stale();
+    }
+    const version = await commitStep(kind, deps, project, direction, record, files);
+    from.splice(index, 1);
+    push(kind === 'undo' ? stacks.redo : stacks.undo, { ...record, versionId: version.id });
+    options.onRestored?.(direction.workTree, record.files.map((change) => change.relative));
+    await publishVersion(deps, project, direction, version);
+    changed(project.id, direction.id);
+    return { state: state(project.id, direction.id), version };
+  };
+
+  const record = (entry: EditRecord): void => {
+    const files = entry.files.filter((change) => change.before !== change.after);
+    if (files.length === 0) return;
+    const stacks = stacksOf(entry.projectId);
+    push(stacks.undo, { ...entry, files });
+    for (let index = stacks.redo.length - 1; index >= 0; index -= 1) if (stacks.redo[index]?.directionId === entry.directionId) stacks.redo.splice(index, 1);
+    changed(entry.projectId, entry.directionId);
+  };
+
+  return { record, state, step, clear };
+}

@@ -16,13 +16,14 @@ import type {
   VersionMeta,
 } from '../../shared/contracts.js';
 import { DirectEditError, assertCanEdit, editSummary, parseDirectEditRequest, planDirectEdit, publishVersion, writeAtomic } from '../direct-edit/index.js';
-import type { DirectEditDeps, PlannedEdit } from '../direct-edit/index.js';
+import type { DirectEditDeps, EditFileChange, PlannedEdit } from '../direct-edit/index.js';
 import { compileTokens, cssVarFor, parseTokenFile } from './compile.js';
 import { DESIGN_MD_FILE, writeFileAtomic } from './packs.js';
 import { readDesignSystemState } from './state.js';
 import { buildErrorMessage, readDesignSystemFiles, syncDesignSystem } from './sync.js';
 import type { DesignSystemFiles } from './sync.js';
 import { insertToken } from './token-insert.js';
+import { recordTokenEdit, snapshotChanges } from './token-history.js';
 
 const MAX_NAME = 40;
 const MAX_VALUE = 200;
@@ -71,7 +72,7 @@ interface ParsedCreate {
   edit: DirectEditRequest | null;
 }
 
-interface FileSnapshot {
+export interface FileSnapshot {
   relative: string;
   content: string | null;
 }
@@ -176,6 +177,12 @@ async function writeAll(workTree: string, input: CommitInput): Promise<string[]>
   return [...paths, input.plan.target.relative];
 }
 
+async function createdChanges(workTree: string, snapshots: FileSnapshot[], plan: PlannedEdit | null): Promise<EditFileChange[] | null> {
+  const changes = await snapshotChanges(workTree, snapshots);
+  if (changes === null || plan === null || plan.patch.code === plan.original) return changes;
+  return [...changes, { file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.patch.code }];
+}
+
 async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, input: CommitInput): Promise<Version> {
   const workTree = direction.workTree;
   const snapshots = await Promise.all(DESIGN_FILES.map((relative) => readSnapshot(workTree, relative)));
@@ -183,6 +190,7 @@ async function writeAndCommit(deps: DirectEditDeps, project: Project, direction:
     const paths = await writeAll(workTree, input);
     const version = await deps.versions.commitFile(project, direction, paths, createTitle(input.cssVar, input.plan), createMeta(input.token, input.plan));
     if (version === null) throw new DirectEditError('no_change', 'The token did not change any tracked file');
+    recordTokenEdit(deps, project, direction, version, await createdChanges(workTree, snapshots, input.plan));
     return version;
   } catch (error) {
     await restoreSnapshots(workTree, snapshots);

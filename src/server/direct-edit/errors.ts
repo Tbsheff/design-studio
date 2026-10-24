@@ -19,10 +19,13 @@ type DirectEditErrorCode =
   | 'no_tweaks'
   | 'unknown_tweak'
   | 'invalid_tweak_value'
-  | 'tweak_not_declared';
+  | 'tweak_not_declared'
+  | 'history_empty'
+  | 'history_stale';
 
 const STATUS_FOR_CODE: Partial<Record<DirectEditErrorCode, 404 | 409>> = {
   run_in_progress: 409,
+  history_stale: 409,
   token_exists: 409,
   no_design_system: 404,
   no_tweaks: 404,

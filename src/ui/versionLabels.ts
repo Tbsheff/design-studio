@@ -32,7 +32,8 @@ export function indexVersions(versions: Version[]): VersionIndex {
   return new Map(versions.map((v) => [v.id, v]));
 }
 
-function manualSort(title: string): keyof typeof EDIT_INFO {
+function manualSort(raw: string): keyof typeof EDIT_INFO {
+  const title = raw.replace(/^(Undo|Redo): /, '');
   if (/^(Update tokens|Add token)\b/.test(title)) return 'tokens';
   if (title.startsWith('Update DESIGN.md')) return 'design-md';
   if (/^(Apply|Switch to) .+ design system$/.test(title)) return 'design-system';

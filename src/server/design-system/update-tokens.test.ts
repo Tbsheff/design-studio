@@ -309,4 +309,15 @@ describe('token update', { timeout: 30000 }, () => {
     const changes = ['a', 'b', 'c', 'd', 'e', 'f'].map((name) => ({ path: `space.${name}`, value: '1px' }));
     expect(updateTitle(changes)).toBe('Update tokens: --space-a, --space-b, --space-c, --space-d +2 more');
   });
+  it('undoes and redoes a token update through the edit history with exact bytes', async () => {
+    const { project, workTree } = await setup();
+    const before = await readAll(workTree);
+    expect((await update(project, [{ path: 'radius.md', value: '12px' }])).status).toBe(200);
+    expect((await update(project, [{ path: 'radius.md', value: '16px' }])).status).toBe(200);
+    const end = await readAll(workTree);
+    for (let index = 0; index < 2; index += 1) expect((await call('POST', `/api/projects/${project.id}/d/main/edit-history/undo`)).status).toBe(200);
+    expect(await readAll(workTree)).toEqual(before);
+    for (let index = 0; index < 2; index += 1) expect((await call('POST', `/api/projects/${project.id}/d/main/edit-history/redo`)).status).toBe(200);
+    expect(await readAll(workTree)).toEqual(end);
+  });
 });

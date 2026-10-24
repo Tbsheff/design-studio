@@ -450,7 +450,8 @@ export type StudioEventBody =
   | { type: 'direction.updated'; direction: Direction }
   | { type: 'status.changed'; status: WorkTreeStatus }
   | { type: 'preview.build-error'; message: string; file?: string; line?: number; frame?: string }
-  | { type: 'comments.changed'; comments: DesignComment[] };
+  | { type: 'comments.changed'; comments: DesignComment[] }
+  | { type: 'edit-history.changed' };
 
 export type StudioEvent = EventBase & StudioEventBody;
 

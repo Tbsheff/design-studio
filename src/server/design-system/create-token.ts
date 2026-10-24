@@ -180,7 +180,7 @@ async function writeAll(workTree: string, input: CommitInput): Promise<string[]>
 async function createdChanges(workTree: string, snapshots: FileSnapshot[], plan: PlannedEdit | null): Promise<EditFileChange[] | null> {
   const changes = await snapshotChanges(workTree, snapshots);
   if (changes === null || plan === null || plan.patch.code === plan.original) return changes;
-  return [...changes, { file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.patch.code }];
+  return [{ file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.patch.code }, ...changes];
 }
 
 async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, input: CommitInput): Promise<Version> {

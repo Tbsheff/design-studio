@@ -66,8 +66,8 @@ async function resolveFiles(workTree: string, record: EditRecord): Promise<strin
   return files;
 }
 
-async function writeAll(files: string[], texts: string[]): Promise<void> {
-  for (const [index, file] of files.entries()) await writeAtomic(file, texts[index] ?? '');
+async function writeInReverse(files: string[], texts: string[]): Promise<void> {
+  for (let index = files.length - 1; index >= 0; index -= 1) await writeAtomic(files[index] ?? '', texts[index] ?? '');
 }
 
 function stepMeta(kind: HistoryStep, record: EditRecord): VersionMeta {
@@ -115,13 +115,13 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     const wanted = (change: EditFileChange) => (kind === 'undo' ? change.before : change.after);
     const current = (change: EditFileChange) => (kind === 'undo' ? change.after : change.before);
     try {
-      await writeAll(files, record.files.map(wanted));
+      await writeInReverse(files, record.files.map(wanted));
       const relatives = record.files.map((change) => change.relative);
       const version = await deps.versions.commitFile(project, direction, relatives, `${STEP_WORD[kind]}: ${record.label}`, stepMeta(kind, record));
       if (version === null) throw new DirectEditError('no_change', 'The undo did not change any tracked file');
       return version;
     } catch (error) {
-      await writeAll(files, record.files.map(current)).catch((restoreError: unknown) => console.error('[history] could not restore files', restoreError));
+      await writeInReverse(files, record.files.map(current)).catch((restoreError: unknown) => console.error('[history] could not restore files', restoreError));
       throw error;
     }
   };

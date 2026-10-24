@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { zoomKeyOf, type ProjectKind, type SelectionContext, type ZoomKey } from '../shared/contracts';
-import { activeFrame, addFrame, moveFrame, removeFrame, resizeActive, useCanvasLayout, viewportOf, type Box, type CanvasFrame, type CanvasLayout } from './canvasFrames';
+import { activeFrame, addFrame, canvasStore, defaultLayout, followDirection, moveFrame, removeFrame, resizeActive, useCanvasLayout, viewportOf, type Box, type CanvasFrame, type CanvasLayout } from './canvasFrames';
 import { useDesktopCommand } from './desktop';
 import { uiStore, useUi } from './storage';
 import { blocksZoomKey, type PanZoom } from './usePanZoom';
 import type { FilesChange } from './useStudioData';
+import { useFrameResize } from './useFrameResize';
 
 const ZOOM_ECHO_MS = 150;
 const DRAG_THRESHOLD = 3;
@@ -35,7 +36,7 @@ export interface CanvasFrames {
   activate: (frame: CanvasFrame) => void;
 }
 
-export function useCanvasFrames(projectId: string): CanvasFrames {
+export function useCanvasFrames(projectId: string, directionId: string | null = null, onDirection?: (id: string) => void, knownIds?: string[]): CanvasFrames {
   const { viewport } = useUi();
   const [layout, update] = useCanvasLayout(projectId, viewport);
   const active = activeFrame(layout);
@@ -49,10 +50,22 @@ export function useCanvasFrames(projectId: string): CanvasFrames {
     }
     if (prev.w !== viewport.width || prev.h !== viewport.height) update((l) => resizeActive(l, viewport.width, viewport.height));
   });
+  useLayoutEffect(() => {
+    if (!directionId) return;
+    const current = canvasStore.get(projectId) ?? defaultLayout(viewport);
+    const bound = activeFrame(current).directionId;
+    if (bound && knownIds && !knownIds.includes(bound)) return;
+    const next = followDirection(current, directionId);
+    if (next === current) return;
+    canvasStore.set(projectId, next);
+    const a = activeFrame(next);
+    if (a.width !== viewport.width || a.height !== viewport.height) uiStore.set({ viewport: viewportOf(a) });
+  }, [projectId, directionId, layout]);
   const activate = (frame: CanvasFrame) => {
     if (frame.id === layout.activeId) return;
     update((l) => ({ ...l, activeId: frame.id }));
     uiStore.set({ viewport: viewportOf(frame) });
+    if (frame.directionId && frame.directionId !== directionId) onDirection?.(frame.directionId);
   };
   return { layout, active, update, activate };
 }
@@ -185,15 +198,18 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     target.addEventListener('pointercancel', end);
   };
 
+  const onResizeStart = useFrameResize(frames, pz, artboardRef, passiveRefs);
   const labelProps = (frame: CanvasFrame) => ({
     frame,
     active: frame.id === layout.activeId,
     removable: layout.frames.length > 1,
+    directionId: null as string | null,
     onPointerDown: onFramePointerDown,
     onActivate: frames.activate,
     onRemove: removeFrameAt,
     onNudge: nudge,
+    onResizeStart,
   });
 
-  return { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo };
+  return { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart };
 }

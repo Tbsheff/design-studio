@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
-import { BRIDGE_PASSIVE_PARAM, type ProjectKind, type RenderCheckResult, type SelectionContext } from '../../shared/contracts';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
+import type { Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { uiStore, useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, canAddFrame, frameName, type CanvasFrame } from '../canvasFrames';
-import { passiveSrc, unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
+import { boundsOf, canAddFrame, frameDirection, frameName, setFramePath, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
+import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
+import { FramePageMenu, FrameResizeHandles, VariationControls, type FrameVariation } from './FrameControls';
 import { AddFrameMenu, FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
-import { HTML_FRAME_SANDBOX, frameSrc, type PreviewPort } from '../bridge';
-import { randomToken } from '../session';
+import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
 import type { BuildError, FilesChange } from '../useStudioData';
@@ -41,6 +42,13 @@ interface Props {
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
+  directions?: CanvasDirections;
+}
+
+export interface CanvasDirections {
+  list: Direction[];
+  onActivate: (directionId: string) => void;
+  variationOf: (directionId: string) => FrameVariation | undefined;
 }
 
 const RECT_REFRESH_MS = [300, 1200];
@@ -168,34 +176,12 @@ function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   return { dark, onToggle: () => broadcastTheme(dark ? null : 'dark') };
 }
 
-interface PassiveSlot {
-  id: string;
-  token: string;
-  src: string;
-}
-
-function usePassiveSlots(frames: CanvasFrame[], activeId: string, src: string | null, kind: ProjectKind) {
-  const tokens = useRef(new Map<string, string>());
-  const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
-  const ids = frames.filter((f) => f.id !== activeId).map((f) => f.id).join(' ');
-  const slots = useMemo<PassiveSlot[]>(() => {
-    if (!src || ids === '') return [];
-    return ids.split(' ').map((id) => {
-      const token = tokens.current.get(id) ?? randomToken();
-      tokens.current.set(id, token);
-      return { id, token, src: frameSrc(src, token, { [BRIDGE_PASSIVE_PARAM]: '1' }) };
-    });
-  }, [ids, src]);
-  useTokenFrames(slots, elements, kind);
-  return { slots, elements };
-}
-
 function OtherFrames({ frames, active, passive, sandbox, labelProps, register }: {
   frames: CanvasFrame[];
   active: CanvasFrame;
-  passive: ReturnType<typeof usePassiveSlots>;
+  passive: DirectionFrames;
   sandbox?: string;
-  labelProps: (frame: CanvasFrame) => ComponentProps<typeof FrameLabel>;
+  labelProps: (frame: CanvasFrame, directionId: string | null) => ComponentProps<typeof FrameLabel>;
   register: (id: string, el: HTMLDivElement | null) => void;
 }) {
   return frames
@@ -207,16 +193,69 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
           key={f.id}
           frame={f}
           src={slot?.src ?? null}
+          nextSrc={slot?.nextSrc ?? null}
           sandbox={sandbox}
           offset={active}
-          label={labelProps(f)}
+          label={labelProps(f, slot?.directionId ?? null)}
           register={register}
           frameRef={(el) => {
             if (slot) passive.elements.current[slot.token] = el;
           }}
+          onNextLoad={passive.onSwapDone}
         />
       );
     });
+}
+
+function livePageUrl(baseUrl: string | null, active: CanvasFrame): string | null {
+  return baseUrl ? withFramePath(baseUrl, active.path) : null;
+}
+
+function knownList(directions: CanvasDirections | undefined): Direction[] | undefined {
+  return directions?.list;
+}
+
+function activateOf(directions: CanvasDirections | undefined): ((id: string) => void) | undefined {
+  return directions?.onActivate;
+}
+
+function knownIds(directions: CanvasDirections | undefined): string[] | undefined {
+  return directions?.list.map((d) => d.id);
+}
+
+interface LabelInput {
+  projectId: string;
+  kind: ProjectKind;
+  directionId: string | null;
+  activeId: string;
+  directions: CanvasDirections | undefined;
+  selection: SelectionContext[];
+  setSelection: Props['setSelection'];
+  frames: ReturnType<typeof useCanvasFrames>;
+  baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
+}
+
+function useFrameLabels(o: LabelInput) {
+  const { projectId } = o;
+  const listPages = useCallback(
+    (did: string) => () => api.workTreeFiles(projectId, did).then(({ files }) => files.filter((f) => f.endsWith('.html')).sort()),
+    [projectId],
+  );
+  return (frame: CanvasFrame, did: string | null) => {
+    const variation = did ? o.directions?.variationOf(did) : undefined;
+    const isActive = frame.id === o.activeId;
+    return {
+      ...o.baseLabel(frame),
+      directionId: did,
+      badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
+      extras: (
+        <>
+          {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
+          <FramePageMenu path={frame.path ?? ''} listPages={o.kind === 'html' && did ? listPages(did) : null} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
+        </>
+      ),
+    };
+  };
 }
 
 function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking: boolean): T | null {
@@ -273,7 +312,7 @@ export function Canvas(props: Props) {
   const ui = useUi();
   const stageRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
-  const canvasFrames = useCanvasFrames(projectId);
+  const canvasFrames = useCanvasFrames(projectId, directionId, activateOf(props.directions), knownIds(props.directions));
   const { layout, active } = canvasFrames;
   const viewport = { width: active.width, height: active.height };
   const selectionRef = useRef(props.selection);
@@ -294,6 +333,7 @@ export function Canvas(props: Props) {
   const draw = useCanvasDraw(comment, selectMode, setSelectMode);
 
   const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const liveUrl = livePageUrl(baseUrl, active);
   const live = source.kind === 'live';
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
@@ -303,7 +343,7 @@ export function Canvas(props: Props) {
     projectId,
     directionId,
     kind,
-    baseUrl,
+    baseUrl: liveUrl,
     live,
     lastChange: props.lastChange,
     selectMode: selectMode || commentMode,
@@ -322,7 +362,18 @@ export function Canvas(props: Props) {
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
-  const passive = usePassiveSlots(layout.frames, active.id, passiveSrc(baseUrl, kind, live ? props.lastChange : null), kind);
+  const passive = useDirectionFrames({
+    projectId,
+    kind,
+    frames: layout.frames,
+    activeId: active.id,
+    currentId: directionId,
+    currentUrl: baseUrl,
+    live,
+    lastChange: props.lastChange,
+    hold: frames.slots.length > 1,
+    directions: knownList(props.directions),
+  });
   const theme = useCanvasTheme();
   useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);
   useEffect(() => () => setCanvasFront(null, false), []);
@@ -347,7 +398,8 @@ export function Canvas(props: Props) {
   });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
-  const { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo } = useFrameActions(canvasFrames, pz, artboardRef);
+  const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
+  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel });
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
@@ -388,6 +440,7 @@ export function Canvas(props: Props) {
           ref={artboardRef}
           className="artboard"
           data-frame-id={active.id}
+          data-direction-id={directionId || undefined}
           style={{
             width: viewport.width,
             height: viewport.height,
@@ -414,7 +467,8 @@ export function Canvas(props: Props) {
               />
             }
           />
-          {layout.frames.length > 1 && <FrameLabel {...labelProps(active)} />}
+          {layout.frames.length > 1 && <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />}
+          <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         <DrawBar draw={draw} />

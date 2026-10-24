@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { VARIATION_MIN, type Direction, type Project, type RunLevel, type RunRequest, type SelectionContext, type VariationBrief, type VariationBriefsResult } from '../shared/contracts';
 import { resolveRunConfig } from '../shared/run-levels';
 import { errorText } from './api';
+import { showVariationFrames } from './canvasVariations';
 import { maxVariationsFor, variationsApi } from './variationsApi';
 
 export interface BriefDraft {
@@ -48,7 +49,7 @@ export function budgetFor(project: Project | null, level: RunLevel, count: numbe
 export function useVariations(o: Options) {
   const [count, setCountState] = useState(storedCount);
   const [draft, setDraft] = useState<BriefDraft | null>(null);
-  const [gridGroupId, setGridGroupId] = useState<string | null>(null);
+  const [groupId, setGroupId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [kept, setKept] = useState<string | null>(null);
   const opts = useRef(o);
@@ -65,13 +66,13 @@ export function useVariations(o: Options) {
 
   useEffect(() => {
     setDraft(null);
-    setGridGroupId(null);
+    setGroupId(null);
     setNotice(null);
     setKept(null);
   }, [o.projectId]);
 
   const startWith = useCallback(async (current: BriefDraft, briefs: VariationBrief[]) => {
-    const { projectId, seedRun } = opts.current;
+    const { projectId, seedRun, direction, setDirectionId } = opts.current;
     setDraft({ ...current, starting: true, error: null });
     try {
       const result = await variationsApi.start(projectId, {
@@ -89,7 +90,11 @@ export function useVariations(o: Options) {
       const failed = result.items.filter((item) => item.error);
       setNotice(failed.length ? failed.map((item) => `${item.label}: ${item.error}`).join(' ') : null);
       setDraft(null);
-      setGridGroupId(result.groupId);
+      setGroupId(result.groupId);
+      const ids = result.items.map((item) => item.directionId).filter((id): id is string => Boolean(id));
+      const currentId = direction?.id ?? null;
+      const live = showVariationFrames(projectId, ids, currentId, !direction?.headVersionId);
+      if (live && live !== currentId) setDirectionId(live);
     } catch (err) {
       setDraft({ ...current, starting: false, autoStart: false, error: errorText(err) });
     }
@@ -166,12 +171,8 @@ export function useVariations(o: Options) {
       autoStartRef.current = false;
       setDraft(null);
     },
-    gridGroupId,
-    openGrid: (groupId: string) => {
-      setKept(null);
-      setGridGroupId(groupId);
-    },
-    closeGrid: () => setGridGroupId(null),
+    groupId,
+    setGroupId,
     notice,
     clearNotice: () => setNotice(null),
     kept,

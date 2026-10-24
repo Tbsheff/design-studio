@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 import type { Project, ProjectKind, Version } from '../../shared/contracts';
 import { Canvas } from './Canvas';
 import { CompareView } from './CompareView';
@@ -15,12 +15,10 @@ interface CenterProps {
   versions?: Version[];
   onCloseCompare: () => void;
   canvas: ComponentProps<typeof Canvas>;
-  grid?: ReactNode;
 }
 
 export function CenterView(props: CenterProps) {
   const { left, right } = props;
-  if (props.grid) return <>{props.grid}</>;
   if (props.compareOpen && left && right) {
     return <CompareView projectId={props.projectId} kind={props.kind} left={left} right={right} versions={props.versions} onClose={props.onCloseCompare} />;
   }

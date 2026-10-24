@@ -1,79 +1,119 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Direction, ProjectKind } from '../shared/contracts';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
+import type { ProjectKind } from '../shared/contracts';
 import type { FilesChange } from './useStudioData';
 
 const SWAP_RELEASE_MS = 4000;
 
-interface SwapGate {
-  changeFor: (directionId: string) => FilesChange | null;
-  onSwapDone: (directionId: string) => void;
+export class SwapQueue {
+  readonly shown = new Map<string, FilesChange>();
+  readonly next = new Map<string, FilesChange>();
+  private readonly waiting = new Map<string, FilesChange>();
+  private flying: string | null = null;
+  private held = false;
+  flights = 0;
+
+  get inFlight(): string | null {
+    return this.flying;
+  }
+
+  offer(key: string, change: FilesChange): void {
+    this.waiting.set(key, change);
+    this.pump();
+  }
+
+  done(directionId: string): boolean {
+    if (this.flying !== directionId) return false;
+    const change = this.next.get(directionId);
+    if (change) this.shown.set(directionId, change);
+    this.next.delete(directionId);
+    this.flying = null;
+    this.pump();
+    return true;
+  }
+
+  hold(on: boolean): boolean {
+    if (this.held === on) return false;
+    this.held = on;
+    const id = this.flying;
+    if (on && id !== null) {
+      const change = this.next.get(id);
+      if (change && !this.waiting.has(id)) this.waiting.set(id, change);
+      this.next.delete(id);
+      this.flying = null;
+    }
+    if (!on) this.pump();
+    return true;
+  }
+
+  private pump(): void {
+    if (this.held || this.flying !== null) return;
+    const first = this.waiting.entries().next();
+    if (first.done) return;
+    const [id, change] = first.value;
+    this.waiting.delete(id);
+    this.flying = id;
+    this.flights += 1;
+    this.next.set(id, change);
+  }
 }
 
-export function useSwapGate(kind: ProjectKind, directions: Direction[], lastChange: FilesChange | null): SwapGate {
-  const [delivered, setDelivered] = useState<Record<string, FilesChange>>({});
-  const queue = useRef(new Map<string, FilesChange>());
-  const inFlight = useRef<string | null>(null);
-  const timer = useRef<number | null>(null);
-  const heads = useRef<Record<string, string | null>>({});
-  const ids = directions.map((direction) => direction.id);
-  const idKey = ids.join(',');
+export interface SwapGate {
+  shownFor: (key: string) => FilesChange | null;
+  nextFor: (key: string) => FilesChange | null;
+  onSwapDone: (key: string) => void;
+}
 
-  const pumpRef = useRef<() => void>(() => undefined);
+export interface GateTarget {
+  key: string;
+  directionId: string;
+  headVersionId: string | null;
+}
 
-  const release = useCallback((directionId: string) => {
-    if (inFlight.current !== directionId) return;
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    timer.current = null;
-    inFlight.current = null;
-    pumpRef.current();
+export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange: FilesChange | null, hold: boolean): SwapGate {
+  const queue = useRef(new SwapQueue());
+  const [version, bump] = useReducer((n: number) => n + 1, 0);
+  const heads = useRef<Record<string, string>>({});
+  const live = useRef(targets);
+  live.current = targets;
+  const gated = kind === 'html';
+
+  const onSwapDone = useCallback((key: string) => {
+    if (queue.current.done(key)) bump();
   }, []);
 
-  pumpRef.current = () => {
-    if (inFlight.current !== null) return;
-    const next = queue.current.entries().next();
-    if (next.done) return;
-    const [directionId, change] = next.value;
-    queue.current.delete(directionId);
-    inFlight.current = directionId;
-    timer.current = window.setTimeout(() => release(directionId), SWAP_RELEASE_MS);
-    setDelivered((prev) => ({ ...prev, [directionId]: change }));
-  };
-
-  const offer = useCallback(
-    (change: FilesChange) => {
-      if (kind === 'react') {
-        setDelivered((prev) => ({ ...prev, [change.directionId]: change }));
-        return;
-      }
-      queue.current.set(change.directionId, change);
-      pumpRef.current();
-    },
-    [kind],
-  );
-
   useEffect(() => {
-    if (!lastChange || !idKey.split(',').includes(lastChange.directionId)) return;
-    offer(lastChange);
-  }, [lastChange, idKey, offer]);
+    if (!gated || !lastChange) return;
+    const hits = live.current.filter((target) => target.directionId === lastChange.directionId);
+    for (const target of hits) queue.current.offer(target.key, lastChange);
+    if (hits.length > 0) bump();
+  }, [gated, lastChange]);
 
-  const headKey = directions.map((direction) => `${direction.id}:${direction.headVersionId ?? ''}`).join('|');
+  const headKey = targets.map((target) => `${target.key}:${target.directionId}:${target.headVersionId ?? ''}`).join('|');
   useEffect(() => {
-    for (const direction of directions) {
-      const previous = heads.current[direction.id];
-      heads.current[direction.id] = direction.headVersionId;
-      if (previous === undefined || previous === direction.headVersionId || kind === 'react') continue;
+    for (const target of live.current) {
+      const head = `${target.directionId}:${target.headVersionId ?? ''}`;
+      const previous = heads.current[target.key];
+      heads.current[target.key] = head;
+      if (!gated || previous === undefined || previous === head || !previous.startsWith(`${target.directionId}:`)) continue;
       const now = Date.now();
-      offer({ directionId: direction.id, changedAt: now, receivedAt: now, paths: [] });
+      queue.current.offer(target.key, { directionId: target.directionId, changedAt: now, receivedAt: now, paths: [] });
+      bump();
     }
-  }, [headKey]);
+  }, [headKey, gated]);
 
-  useEffect(
-    () => () => {
-      if (timer.current !== null) window.clearTimeout(timer.current);
-    },
-    [],
-  );
+  useEffect(() => {
+    if (queue.current.hold(hold)) bump();
+  }, [hold]);
 
-  const changeFor = useCallback((directionId: string) => delivered[directionId] ?? null, [delivered]);
-  return { changeFor, onSwapDone: release };
+  const flying = queue.current.inFlight;
+  const flight = queue.current.flights;
+  useEffect(() => {
+    if (flying === null) return;
+    const timer = window.setTimeout(() => onSwapDone(flying), SWAP_RELEASE_MS);
+    return () => window.clearTimeout(timer);
+  }, [flying, flight, onSwapDone]);
+
+  const shownFor = useCallback((directionId: string) => queue.current.shown.get(directionId) ?? null, [version]);
+  const nextFor = useCallback((directionId: string) => queue.current.next.get(directionId) ?? null, [version]);
+  return { shownFor, nextFor, onSwapDone };
 }

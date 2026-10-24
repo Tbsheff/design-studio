@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
-import { VariationsTop, variationsGrid } from './VariationsLayer';
+import { VariationsTop, canvasVariations } from './VariationsLayer';
 import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
@@ -292,7 +292,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             }))}
             onDiscard={() => withDid((id) => act(async () => data.setStatus(await api.discard(projectId, id))))}
           />
-          <VariationsTop state={variations} project={project} direction={direction} />
+          <VariationsTop state={variations} project={project} direction={direction} runs={runs} />
           <CenterView
             projectId={projectId}
             kind={project.kind}
@@ -301,7 +301,6 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             right={right}
             versions={versions}
             onCloseCompare={() => setCompareOpen(false)}
-            grid={variationsGrid({ state: variations, project, runs, lastChange: data.lastChange, currentDirectionId: did, setDirectionId: data.setDirectionId, onError: data.addError })}
             canvas={{
               projectId,
               directionId: did,
@@ -318,6 +317,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               running: activeRun !== null,
               noRuns: neverRan(data.runsLoaded, directionRuns),
               darkPreview: hasDarkMode(tokens),
+              directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
               onTextCommit: (selector, text) => {
                 const target = selection.length === 1 ? selection[0] : undefined;
                 if (target?.selector === selector && editControl.current?.commitText(selector, text)) return;

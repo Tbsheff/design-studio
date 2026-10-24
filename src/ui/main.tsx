@@ -24,6 +24,7 @@ import './styles/token-pop.css';
 import './styles/tokens-panel.css';
 import './styles/tweaks.css';
 import './styles/variations.css';
+import './styles/frames.css';
 import './styles/responsive.css';
 import './styles/shell.css';
 

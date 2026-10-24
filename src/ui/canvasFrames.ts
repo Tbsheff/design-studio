@@ -7,6 +7,8 @@ export interface CanvasFrame {
   height: number;
   x: number;
   y: number;
+  directionId?: string;
+  path?: string;
 }
 
 export interface CanvasLayout {
@@ -37,6 +39,10 @@ export const FRAME_PRESETS: FramePreset[] = [
 export const FRAME_GAP = 80;
 const MAX_FRAMES = 12;
 const MIN_SIDE = 200;
+export const RESIZE_MIN = 240;
+const ROW_GAP = FRAME_GAP * 2;
+const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const PATH_MAX = 200;
 const MAX_SIDE = 4000;
 const MAX_COORD = 100_000;
 const KEY = 'design-studio.canvas.v1';
@@ -97,6 +103,86 @@ export function removeFrame(layout: CanvasLayout, id: string): CanvasLayout {
   return { frames, activeId };
 }
 
+export function resizeFrame(layout: CanvasLayout, id: string, width: number, height: number): CanvasLayout {
+  const w = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, width)));
+  const h = Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, height)));
+  const frame = layout.frames.find((f) => f.id === id);
+  if (!frame || (frame.width === w && frame.height === h)) return layout;
+  return { ...layout, frames: layout.frames.map((f) => (f.id === id ? { ...f, width: w, height: h } : f)) };
+}
+
+export function cleanFramePath(raw: string): string | null {
+  const path = raw.trim().replace(/^\/+/, '');
+  if (path === '') return '';
+  if (path.length > PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(path)) return null;
+  if (path.split('/').some((part) => part === '..' || part === '.')) return null;
+  return path;
+}
+
+export function setFramePath(layout: CanvasLayout, id: string, raw: string): CanvasLayout {
+  const path = cleanFramePath(raw);
+  const frame = layout.frames.find((f) => f.id === id);
+  if (path === null || !frame || (frame.path ?? '') === path) return layout;
+  return { ...layout, frames: layout.frames.map((f) => (f.id !== id ? f : path ? { ...f, path } : withoutKey(f, 'path'))) };
+}
+
+export function withFramePath(url: string, path: string | undefined): string {
+  if (!path) return url;
+  const base = new URL(url, globalThis.location?.href);
+  if (!base.pathname.endsWith('/')) base.pathname = base.pathname.replace(/[^/]*$/, '');
+  const next = new URL(path, base);
+  next.search = base.search;
+  return next.toString();
+}
+
+function withoutKey<K extends 'path' | 'directionId'>(frame: CanvasFrame, key: K): CanvasFrame {
+  const copy = { ...frame };
+  delete copy[key];
+  return copy;
+}
+
+export function frameDirection(frame: CanvasFrame, currentId: string | null): string | null {
+  return frame.directionId ?? currentId;
+}
+
+export function placeDirections(layout: CanvasLayout, directionIds: string[], currentId: string | null, dropCurrent: boolean): CanvasLayout {
+  const size = activeFrame(layout);
+  let frames = layout.frames.map((f) => (f.directionId || !currentId ? f : { ...f, directionId: currentId }));
+  if (dropCurrent && currentId && !directionIds.includes(currentId)) frames = frames.filter((f) => f.directionId !== currentId);
+  const missing = directionIds.filter((id) => !frames.some((f) => f.directionId === id));
+  const group = frames.filter((f) => f.directionId && directionIds.includes(f.directionId));
+  const others = frames.filter((f) => !group.includes(f));
+  const row = group.length > 0 ? boundsOf(group) : null;
+  const rest = boundsOf(others);
+  let x = row ? row.x + row.width + FRAME_GAP : rest.x;
+  const y = row ? row.y : others.length > 0 ? rest.y + rest.height + ROW_GAP : 0;
+  for (const id of missing) {
+    if (frames.length >= MAX_FRAMES) break;
+    frames = [...frames, { id: nextId(frames), width: size.width, height: size.height, x, y, directionId: id }];
+    x += size.width + FRAME_GAP;
+  }
+  if (frames.length === 0) return layout;
+  const activeId = frames.some((f) => f.id === layout.activeId) ? layout.activeId : (frames[0] as CanvasFrame).id;
+  return { frames, activeId };
+}
+
+export function keepDirection(layout: CanvasLayout, keepId: string, groupIds: string[]): CanvasLayout {
+  const frames = layout.frames.filter((f) => !f.directionId || f.directionId === keepId || !groupIds.includes(f.directionId));
+  const kept = frames.find((f) => f.directionId === keepId);
+  if (frames.length === 0) return layout;
+  const activeId = kept?.id ?? (frames.some((f) => f.id === layout.activeId) ? layout.activeId : (frames[0] as CanvasFrame).id);
+  if (frames.length === layout.frames.length && activeId === layout.activeId) return layout;
+  return { frames, activeId };
+}
+
+export function followDirection(layout: CanvasLayout, currentId: string | null): CanvasLayout {
+  const active = activeFrame(layout);
+  if (!currentId || frameDirection(active, currentId) === currentId) return layout;
+  const match = layout.frames.find((f) => f.directionId === currentId) ?? layout.frames.find((f) => !f.directionId);
+  if (match) return { ...layout, activeId: match.id };
+  return { ...layout, frames: layout.frames.map((f) => (f.id === active.id ? { ...f, directionId: currentId } : f)) };
+}
+
 export function resizeActive(layout: CanvasLayout, width: number, height: number): CanvasLayout {
   const active = activeFrame(layout);
   if (active.width === width && active.height === height) return layout;
@@ -120,7 +206,11 @@ export function parseLayout(raw: unknown): CanvasLayout | null {
     const f = item as Record<string, unknown>;
     if (typeof f.id !== 'string' || !/^f\d{1,4}$/.test(f.id) || frames.some((other) => other.id === f.id)) continue;
     if (!isSide(f.width) || !isSide(f.height) || !isCoord(f.x) || !isCoord(f.y)) continue;
-    frames.push({ id: f.id, width: f.width, height: f.height, x: f.x, y: f.y });
+    const frame: CanvasFrame = { id: f.id, width: f.width, height: f.height, x: f.x, y: f.y };
+    if (typeof f.directionId === 'string' && ID_RE.test(f.directionId)) frame.directionId = f.directionId;
+    const path = typeof f.path === 'string' ? cleanFramePath(f.path) : null;
+    if (path) frame.path = path;
+    frames.push(frame);
   }
   if (frames.length === 0) return null;
   const activeId = frames.some((f) => f.id === record.activeId) ? record.activeId : (frames[0] as CanvasFrame).id;

@@ -1,29 +1,42 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { FRAME_PRESETS, frameName, type CanvasFrame } from '../canvasFrames';
+import { FrameResizeHandles, type ResizeEdge } from './FrameControls';
 import { Icon } from './Icon';
+
+export interface FrameBadge {
+  label: string;
+  title: string;
+  current: boolean;
+}
 
 interface LabelProps {
   frame: CanvasFrame;
   active: boolean;
   removable: boolean;
+  directionId: string | null;
+  badge?: FrameBadge;
+  extras?: ReactNode;
   onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
   onActivate: (frame: CanvasFrame) => void;
   onRemove: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
+  onResizeStart: (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void;
 }
 
 const NUDGE: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
 
-export function FrameLabel({ frame, active, removable, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
-  const name = frameName(frame);
+export function FrameLabel({ frame, active, removable, directionId, badge, extras, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
+  const size = frameName(frame);
+  const name = badge ? `Variation ${badge.label}` : size;
+  const classes = ['frame-label', active ? 'active' : '', badge ? 'variation' : '', badge?.current ? 'current' : ''].filter(Boolean).join(' ');
   return (
-    <div className={`frame-label${active ? ' active' : ''}`} data-frame-id={frame.id}>
+    <div className={classes} data-frame-id={frame.id} data-direction-id={directionId ?? undefined} data-testid={badge ? 'variation-frame' : undefined}>
       <button
         type="button"
         className="frame-name"
         aria-pressed={active}
         aria-label={`${name} frame`}
-        data-tip={active ? 'Drag or use arrow keys to move' : 'Click to edit, drag to move'}
+        data-tip={active ? `${badge ? `${size} · ` : ''}Drag or use arrow keys to move` : `${badge ? `${size} · ` : ''}Click to edit, drag to move`}
         onPointerDown={(e) => onPointerDown(e, frame)}
         onKeyDown={(e) => {
           const step = NUDGE[e.key];
@@ -37,8 +50,16 @@ export function FrameLabel({ frame, active, removable, onPointerDown, onActivate
           }
         }}
       >
-        {name}
+        {badge ? (
+          <>
+            <span className="badge accent">{badge.label}</span>
+            <span className="frame-title">{badge.title}</span>
+          </>
+        ) : (
+          size
+        )}
       </button>
+      {extras}
       {removable && (
         <button type="button" className="frame-remove" aria-label={`Remove ${name} frame`} data-tip="Remove frame" onClick={() => onRemove(frame)}>
           <Icon name="close" size={12} />
@@ -51,25 +72,44 @@ export function FrameLabel({ frame, active, removable, onPointerDown, onActivate
 interface PassiveProps {
   frame: CanvasFrame;
   src: string | null;
+  nextSrc: string | null;
   sandbox?: string;
   offset: { x: number; y: number };
   label: LabelProps;
   register: (id: string, el: HTMLDivElement | null) => void;
   frameRef?: (el: HTMLIFrameElement | null) => void;
+  onNextLoad: (id: string) => void;
 }
 
-export function PassiveFrame({ frame, src, sandbox, offset, label, register, frameRef }: PassiveProps) {
-  const name = frameName(frame);
+export function PassiveFrame({ frame, src, nextSrc, sandbox, offset, label, register, frameRef, onNextLoad }: PassiveProps) {
+  const name = label.badge ? `Variation ${label.badge.label}` : frameName(frame);
   return (
     <div
       ref={(el) => register(frame.id, el)}
       className="canvas-frame"
       data-frame-id={frame.id}
+      data-direction-id={label.directionId ?? undefined}
       style={{ left: frame.x - offset.x, top: frame.y - offset.y, width: frame.width, height: frame.height }}
     >
-      {src && <iframe ref={frameRef} title={`${name} preview`} className="frame passive" src={src} sandbox={sandbox} width={frame.width} height={frame.height} tabIndex={-1} />}
+      {[src, nextSrc].map((url, index) =>
+        url ? (
+          <iframe
+            key={url}
+            ref={index === 0 ? frameRef : undefined}
+            title={`${name} preview`}
+            className={index === 0 ? 'frame passive' : 'frame passive next'}
+            src={url}
+            sandbox={sandbox}
+            width={frame.width}
+            height={frame.height}
+            tabIndex={-1}
+            onLoad={index === 0 ? undefined : () => onNextLoad(frame.id)}
+          />
+        ) : null,
+      )}
       <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => label.onPointerDown(e, frame)} />
       <FrameLabel {...label} />
+      <FrameResizeHandles onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)} />
     </div>
   );
 }

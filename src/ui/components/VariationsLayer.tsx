@@ -1,16 +1,134 @@
-import type { Direction, Project } from '../../shared/contracts';
+import { useState, useSyncExternalStore } from 'react';
+import type { Direction, Project, RunStatus } from '../../shared/contracts';
+import { errorText } from '../api';
+import { canvasStore } from '../canvasFrames';
+import { framesOnCanvas, keepVariationFrame, showVariationFrames } from '../canvasVariations';
 import type { RunMap } from '../runState';
-import type { BuildError, FilesChange } from '../useStudioData';
-import type { VariationsState } from '../useVariations';
+import { budgetFor, money, type VariationsState } from '../useVariations';
+import { groupOf } from '../variationsApi';
+import type { CanvasDirections } from './Canvas';
 import { Icon } from './Icon';
 import { VariationBriefCard } from './VariationBriefCard';
-import { VariationBar, VariationsGrid } from './VariationsGrid';
 
-export function VariationsTop({ state, project, direction }: { state: VariationsState; project: Project; direction: Direction | null }) {
+interface GroupRun {
+  status: RunStatus | null;
+  costUsd: number;
+  running: boolean;
+}
+
+function groupRun(runs: RunMap, directionId: string): GroupRun {
+  const list = Object.values(runs)
+    .filter((run) => run.directionId === directionId)
+    .sort((a, b) => a.startedAt - b.startedAt);
+  const latest = list[list.length - 1];
+  const costUsd = list.reduce((sum, run) => sum + (run.summary?.costUsd ?? 0), 0);
+  return { status: latest?.status ?? null, costUsd, running: list.some((run) => run.status === 'running') };
+}
+
+function labelOf(direction: Direction): string {
+  return direction.variation?.label ?? direction.name.slice(0, 1);
+}
+
+function keptText(direction: Direction | undefined): string {
+  return `Kept ${direction?.name ?? 'this variation'}. The other variations stay in Versions as directions.`;
+}
+
+function useShownGroup(project: Project, state: VariationsState, direction: Direction | null): Direction[] {
+  const groupId = direction?.variation?.groupId ?? state.groupId;
+  const group = groupOf(project, groupId);
+  const ids = group.map((d) => d.id);
+  const onCanvas = useSyncExternalStore(canvasStore.subscribe, () => framesOnCanvas(project.id, ids));
+  return direction?.variation || onCanvas > 0 ? group : [];
+}
+
+interface TopProps {
+  state: VariationsState;
+  project: Project;
+  direction: Direction | null;
+  runs?: RunMap;
+}
+
+function VariationBar({ state, project, direction, group, runs }: TopProps & { group: Direction[] }) {
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const first = group[0]?.variation;
+  if (!first) return null;
+  const variation = direction?.variation?.groupId === first.groupId ? direction.variation : null;
+  const groupRuns = group.map((d) => groupRun(runs ?? {}, d.id));
+  const total = groupRuns.reduce((sum, run) => sum + run.costUsd, 0);
+  const anyRunning = groupRuns.some((run) => run.running);
+  const firstRun = Object.values(runs ?? {}).find((run) => run.request?.variation && group.some((d) => d.id === run.directionId));
+  const budget = budgetFor(project, firstRun?.request?.level ?? project.settings.defaultLevel, group.length);
+  const showAll = () => {
+    state.keepNotice(null);
+    showVariationFrames(
+      project.id,
+      group.map((d) => d.id),
+      direction?.id ?? null,
+      false,
+    );
+  };
+  const cancelAll = async () => {
+    setCancelError(null);
+    try {
+      await state.cancelAll(first.groupId);
+    } catch (err) {
+      setCancelError(`Could not cancel the runs. ${errorText(err)} Try again.`);
+    }
+  };
   return (
     <>
-      {direction?.variation && !state.gridGroupId && <VariationBar direction={direction} onShow={() => direction.variation && state.openGrid(direction.variation.groupId)} />}
-      {state.kept && !state.gridGroupId && (
+      <div className="variation-bar" data-testid="variation-bar">
+        {variation ? (
+          <>
+            <span className="badge accent">{variation.label}</span>
+            <span className="truncate">
+              {variation.title} · one of {variation.count} variations
+            </span>
+          </>
+        ) : (
+          <>
+            <Icon name="compare" size={14} />
+            <strong className="variation-bar-title">{group.length} variations</strong>
+            <span className="truncate variation-bar-prompt" title={first.prompt}>
+              {first.prompt}
+            </span>
+          </>
+        )}
+        <div className="spacer" />
+        <span className="variation-bar-total" data-testid="variations-total">
+          {money(total)}
+          {budget.total === null ? ' spent' : ` of ${money(budget.total)}`}
+        </span>
+        {anyRunning && (
+          <button className="btn small danger has-icon" onClick={() => void cancelAll()}>
+            <Icon name="stop" size={14} />
+            Cancel all
+          </button>
+        )}
+        <button className="btn small has-icon" onClick={showAll} data-tip="Put every variation back on the canvas">
+          <Icon name="compare" size={14} />
+          Show all
+        </button>
+      </div>
+      {(state.notice || cancelError) && (
+        <div className="variations-notice alert inline" role="status">
+          <span>{cancelError ?? state.notice}</span>
+          <button className="icon-btn small" aria-label="Dismiss" onClick={() => (cancelError ? setCancelError(null) : state.clearNotice())}>
+            <Icon name="close" size={12} />
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
+export function VariationsTop(props: TopProps) {
+  const { state, project, direction } = props;
+  const group = useShownGroup(project, state, direction);
+  return (
+    <>
+      {group.length > 0 && <VariationBar {...props} group={group} />}
+      {state.kept && (
         <div className="variations-notice alert inline" role="status" data-testid="variation-kept">
           <span>{state.kept}</span>
           <button className="icon-btn small" aria-label="Dismiss" onClick={() => state.keepNotice(null)}>
@@ -27,45 +145,43 @@ export function VariationsTop({ state, project, direction }: { state: Variations
   );
 }
 
-interface GridProps {
+interface CanvasProps {
   state: VariationsState;
   project: Project;
   runs: RunMap;
-  lastChange: FilesChange | null;
-  currentDirectionId: string | null;
   setDirectionId: (id: string) => void;
-  onError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
 }
 
-export function variationsGrid(props: GridProps) {
-  const { state, project } = props;
-  const groupId = state.gridGroupId;
-  if (!groupId) return undefined;
-  const nameOf = (id: string) => project.directions.find((direction) => direction.id === id)?.name ?? 'this variation';
-  return (
-    <VariationsGrid
-      project={project}
-      groupId={groupId}
-      runs={props.runs}
-      lastChange={props.lastChange}
-      currentDirectionId={props.currentDirectionId}
-      notice={state.notice}
-      onClearNotice={state.clearNotice}
-      onOpen={(id) => {
-        props.setDirectionId(id);
-        state.closeGrid();
-      }}
-      onKeep={(id) => {
-        props.setDirectionId(id);
-        state.closeGrid();
-        state.keepNotice(`Kept ${nameOf(id)}. The other variations stay in Versions as directions.`);
-      }}
-      onClose={state.closeGrid}
-      onCancelAll={() => state.cancelAll(groupId)}
-      onMix={async (from, to, element) => {
-        await state.mix(from, to, element, project.settings.defaultLevel);
-      }}
-      onError={props.onError}
-    />
-  );
+export function canvasVariations({ state, project, runs, setDirectionId }: CanvasProps): CanvasDirections {
+  return {
+    list: project.directions,
+    onActivate: setDirectionId,
+    variationOf: (directionId) => {
+      const direction = project.directions.find((d) => d.id === directionId);
+      const variation = direction?.variation;
+      if (!direction || !variation) return undefined;
+      const group = groupOf(project, variation.groupId);
+      const run = groupRun(runs, directionId);
+      return {
+        label: variation.label,
+        title: variation.title,
+        status: run.status,
+        costText: `${money(run.costUsd)} spent`,
+        siblings: group.filter((d) => d.id !== directionId).map((d) => ({ id: d.id, label: labelOf(d), title: d.variation?.title ?? d.name })),
+        onKeep: () => {
+          keepVariationFrame(
+            project.id,
+            directionId,
+            group.map((d) => d.id),
+          );
+          setDirectionId(directionId);
+          state.setGroupId(variation.groupId);
+          state.keepNotice(keptText(direction));
+        },
+        onMix: async (to, element) => {
+          await state.mix(directionId, to, element, project.settings.defaultLevel);
+        },
+      };
+    },
+  };
 }

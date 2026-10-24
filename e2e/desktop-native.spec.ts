@@ -351,7 +351,22 @@ test('R3-2: Esc in the desktop window stops a run, with focus in the studio and 
   const box = page.getByPlaceholder('Describe a change');
   const stopsWithin = async (project: Project, prompt: string, press: () => Promise<void>) => {
     await expect(page.locator('[data-run-id]').last().locator('.tool-row[data-state="done"]').first()).toBeVisible({ timeout: 20_000 });
+    const overlays = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]')).filter((el) => el.getClientRects().length > 0).map((el) => el.outerHTML.slice(0, 120)));
+    const focus = await page.evaluate(() => `${document.activeElement?.tagName}.${(document.activeElement as HTMLElement | null)?.className ?? ''} hasFocus=${document.hasFocus()}`);
+    console.log(`R3-2 desktop before Esc (${prompt}): focus ${focus} overlays ${JSON.stringify(overlays)}`);
+    await page.evaluate(() => {
+      const w = window as unknown as { __esc: string[] };
+      w.__esc = [];
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') w.__esc.push(`capture prevented=${e.defaultPrevented}`); }, { capture: true, once: true });
+      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') w.__esc.push(`bubble prevented=${e.defaultPrevented}`); }, { once: true });
+    });
+    const cancels: string[] = [];
+    const onRequest = (request: { url: () => string }) => { if (request.url().includes('/cancel')) cancels.push(request.url()); };
+    page.on('request', onRequest);
     await press();
+    await page.waitForTimeout(300);
+    console.log(`R3-2 desktop after Esc (${prompt}): keys ${JSON.stringify(await page.evaluate(() => (window as unknown as { __esc: string[] }).__esc))} cancels ${cancels.length}`);
+    page.off('request', onRequest);
     await expect(page.locator('[data-run-id]').last().locator('.run-foot .status.canceled')).toBeVisible({ timeout: 2_000 });
     await expect.poll(async () => (await call<RunSummary[]>('GET', `/api/projects/${project.id}/runs`)).find((run) => run.request.prompt === prompt)?.status).toBe('canceled');
   };

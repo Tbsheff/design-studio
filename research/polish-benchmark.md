@@ -75,12 +75,12 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Run parts in true order | CC: transcript keeps text, thinking and tools in sequence [CC1] | has (R3), one ordered `parts` list per run, saved on `RunSummary.parts`, same order after reload | P0 | M |
 | Tool-call rows | CC: one summary row per call, repeats grouped, Ctrl+O full input/output [CC1] | has (R3), one verb and target format (`toolLabels.ts`), errors open, repeats as "×N", Stopped and Denied states | — | — |
 | File diffs in chat | CC desktop: `+12 -1` card, per-file diff, line comments, Cmd+Enter sends [CC7] | has (R3), `+N −M` badge per write or edit, red and green diff, per-file totals on the run card (`shared/line-diff.ts`) | P0 | M |
-| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | partial (R3), Bash asks: Allow once, or Deny with a note (`agent/ask-gate.ts`); always-rules and mode cycle in R8-5 | P1 | L |
+| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | partial (R3), Bash only asks: Allow once, or Deny with a note (`agent/ask-gate.ts`); writes outside the project stay hard denies; always-rules and mode cycle in R8-5 | P1 | L |
 | Interrupt | CC: Esc stops, keeps done work, sends queued next [CC1] | has (R3), Esc in web and desktop with focus in the studio or the preview, < 500 ms; partial output stays, marked Stopped (`useEscapeStop.ts`) | P0 | S |
 | Queued messages | CC: Enter while running queues; lands at next tool boundary; Up pulls it back [CC1]; Cursor: drag to reorder [CC10] | has (R3), Enter while running queues; edit, remove, drag to reorder; sent at the next tool boundary; Stop puts the queue back in the composer (`QueuedMessages.tsx`) | P0 | M |
 | Steer mid-run | Cursor: "send now" at the next tool call [CC10]; OD: "Steer this turn" [OD3] | has (R3), Cmd+Enter while running stops the turn and starts the next one with that text | P0 | M |
 | Slash commands | CC: built-ins plus skills, fuzzy list, Tab completes [CC5, CC2] | partial, `/` opens `SkillPicker` only | P1 | M |
-| @ mentions | CC: `@` fuzzy file menu, chips [CC6]; OD: tabs for files, skills, MCP [OD3] | has (R3), `@` lists files and tokens with fuzzy rank (`shared/fuzzy.ts`), picks become chips, file text goes in the prompt | P1 | M |
+| @ mentions | CC: `@` fuzzy file menu, chips [CC6]; OD: tabs for files, skills, MCP [OD3] | partial (R3), `@` lists files and tokens with fuzzy rank (`shared/fuzzy.ts`), picks become chips, file text goes in the prompt; no layers yet | P1 | M |
 | Image paste and drop | CC: `[Image #N]` chip at cursor [CC1] | has, `PromptBox.tsx onPaste/onDrop`, `AttachmentThumbs` | — | — |
 | Plan mode | CC: read-only planning, approve then edit [CC4, CC7] | has (R3), write tools refused; the run ends with a plan card: Approve, Approve and accept edits, Keep planning | P1 | M |
 | Todo list | CC: live checklist, Ctrl+T, survives resume [CC1] | has (R3), pinned above the composer, "N of M", current item marked, kept after reload (`TodoPanel.tsx`) | P1 | M |
@@ -196,7 +196,7 @@ Current gate: `e2e/latency.spec.ts` `TARGETS = { open: 2000, html: 250, react: 7
 | Drag folder from Finder into window | — | partial, dock `open-file` only `desktop/native.ts:52` | P1 | S |
 | Dock badge | — | missing | P2 | S |
 | Title bar | — | has, `hiddenInset` `desktop/window.ts:16` | — | — |
-| Stop works in web too | CC: Esc [CC1] | has (R3), Esc in web and desktop; Cmd+. in desktop | P0 | S |
+| Stop works in web too | CC: Esc [CC1] | has (R3), Esc in web and desktop, studio and preview focus (`chat-r3.spec.ts`, `desktop-native.spec.ts` R3-2; one unexplained desktop miss in 9 runs); no menu item takes Escape; Cmd+. in desktop | P0 | S |
 | Rebindable keys | CC: keybindings file [CC14] | missing | P2 | M |
 
 ### 1.9 Motion, typography, dark mode and accessibility
@@ -273,7 +273,7 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | File diffs in chat | Chat | CC desktop | P0 | M | R3-3 (done) | — | Users must see what the agent changed |
 | Copy message and code | Chat | claude.ai | P0 | S | R3-4 (done) | — | Basic |
 | Permission prompts | Chat | CC | P1 | L | R3-5 (done: allow once, deny with note), R8-5 (always-rules, mode cycle) | — | Safe Bash; CC parity |
-| @ mentions | Chat | CC, OD | P1 | M | R3-6 (done) | — | Exact context for the agent |
+| @ mentions | Chat | CC, OD | P1 | M | R3-6 (partial: files and tokens, no layers) | — | Exact context for the agent |
 | Todo list | Chat | CC | P1 | M | R3-7 (done) | — | Long runs need visible progress |
 | Plan mode | Chat | CC | P1 | M | R3-8 (done) | — | Review the plan before a long run |
 | Context meter, effort picker | Chat | CC | P1 | S | R3-9 (done) | — | Control of cost and quality |

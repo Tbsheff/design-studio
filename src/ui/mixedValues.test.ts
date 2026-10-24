@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SelectionContext } from '../shared/contracts';
 import { valuesFromStyles } from './cssValues';
 import { batchEdits, dependsOnCurrent, mergeValues, multiBlockReason } from './mixedValues';
+import { nextSelection } from './usePreviewFrames';
 
 function card(line: number, styles: Record<string, string>, source = true): SelectionContext {
   return {
@@ -79,5 +80,14 @@ describe('dependsOnCurrent', () => {
     expect(dependsOnCurrent('8', 'px')).toBe(false);
     expect(dependsOnCurrent('8*2', 'px')).toBe(false);
     expect(dependsOnCurrent('', 'px')).toBe(false);
+  });
+});
+
+describe('nextSelection', () => {
+  it('replaces on a plain click, adds and removes on Shift+click', () => {
+    const [a, b] = [card(3, {}), card(4, {})];
+    expect(nextSelection([a], b, false)).toEqual([b]);
+    expect(nextSelection([a], b, true)).toEqual([a, b]);
+    expect(nextSelection([a, b], { ...a }, true)).toEqual([b]);
   });
 });

@@ -42,7 +42,7 @@ function RestoreConfirm({ count, onCancel, onConfirm }: { count: number; onCance
   return (
     <div className="msg-confirm" role="alertdialog" aria-label="Restore code here" data-testid="restore-confirm">
       <p>
-        Unfinished changes in {count} file{count === 1 ? '' : 's'} will be replaced. Files no version tracks stay.
+        Unfinished changes in {count} file{count === 1 ? '' : 's'}. Restore replaces edits to files a version tracks; other files stay.
       </p>
       <div className="msg-confirm-actions">
         <button type="button" className="btn ghost small" onClick={onCancel}>

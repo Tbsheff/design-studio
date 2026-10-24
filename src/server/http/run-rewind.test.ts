@@ -134,6 +134,8 @@ describe('R7-7 run titles', { timeout: 60_000 }, () => {
     expect((await call('PATCH', `/api/runs/${summary.id}`, { title: 'ok', extra: 1 })).status).toBe(400);
     expect((await call('PATCH', `/api/runs/${summary.id}`, 'not json')).status).toBe(400);
     expect((await call('PATCH', '/api/runs/nope', { title: 'a' })).status).toBe(404);
+    const anonymous = await app.request(`/api/runs/${summary.id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ title: 'x' }) });
+    expect(anonymous.status).toBe(403);
 
     const cleared = await call<RunSummary>('PATCH', `/api/runs/${summary.id}`, { title: '' });
     expect(cleared.data.title).toBeUndefined();

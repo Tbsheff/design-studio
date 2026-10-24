@@ -47,7 +47,7 @@ test('R7-4: restore code at message 2 of 4, with a confirm for unfinished change
 
   await (await action(page, 1, 'Restore code here')).click();
   const confirm = page.getByTestId('restore-confirm');
-  await expect(confirm).toContainText('Unfinished changes in 2 files will be replaced');
+  await expect(confirm).toContainText('Unfinished changes in 2 files. Restore replaces edits to files a version tracks');
   await confirm.getByRole('button', { name: 'Cancel' }).click();
   await expect(confirm).toHaveCount(0);
   expect(readFileSync(file, 'utf8')).toContain('my unsaved edit');

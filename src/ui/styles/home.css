@@ -1193,3 +1193,123 @@
   margin-left: var(--s-2);
   vertical-align: 1px;
 }
+
+.trash-modal {
+  width: min(640px, 100%);
+}
+
+.trash-body {
+  min-height: 120px;
+  align-content: start;
+  padding-inline: var(--s-4);
+}
+
+.trash-list {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2);
+  border-radius: var(--r-lg);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.trash-row:hover,
+.trash-row:focus-within {
+  background: var(--surface-2);
+}
+
+.trash-thumb {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 40px;
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  color: var(--text-3);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.trash-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  outline: 1px solid oklch(0 0 0 / 0.1);
+  outline-offset: -1px;
+  border-radius: inherit;
+}
+
+.trash-text {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.trash-name {
+  overflow: hidden;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.trash-meta {
+  overflow: hidden;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.trash-actions {
+  flex: none;
+  display: flex;
+  gap: var(--s-2);
+}
+
+.trash-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  padding: var(--s-8) var(--s-4);
+  color: var(--text-3);
+  font-size: var(--t-sm);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.trash-empty strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.trash-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.trash-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.trash-confirm {
+  width: min(440px, 100%);
+}
+
+.trash-confirm .modal-head h2 {
+  text-wrap: balance;
+}

@@ -169,7 +169,7 @@ describe('home routes', { timeout: 30000 }, () => {
     const withExtra = await projects.get(project.id);
     const extraNow = withExtra.directions.find((direction) => direction.id === extra.id) as Direction;
     const bold = await versions.commit(withExtra, extraNow, 'Bold run', { kind: 'run' });
-    await projects.updateDirection(project.id, extra.id, { headVersionId: bold.id });
+    await projects.updateDirection(project.id, extra.id, { headVersionId: bold?.id ?? null });
     const target = { selector: 'h1', tag: 'h1', textSnippet: 'x', rectHint: { x: 0, y: 0, width: 10, height: 10 } };
     for (const did of ['main', extra.id]) await call('POST', `/api/projects/${project.id}/d/${did}/comments`, { text: `note on ${did}`, target });
     const source = await projects.get(project.id);

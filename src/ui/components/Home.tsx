@@ -27,6 +27,8 @@ const StarterGallery = lazy(() => startersChunk.then((m) => ({ default: m.Starte
 const FirstRunPanel = lazy(() => startersChunk.then((m) => ({ default: m.FirstRunPanel })));
 const clarifyChunk = import('./ClarifyForm');
 const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyForm })));
+const loadTrash = () => import('./HomeTrash');
+const HomeTrash = lazy(loadTrash);
 
 type Busy = 'create' | 'import' | 'ask' | null;
 
@@ -189,6 +191,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
   const [query, setQuery] = useState('');
   const [toast, setToast] = useState<HomeToastState | null>(null);
+  const [trashOpen, setTrashOpen] = useState(false);
   const onboarding = useOnboarding();
   const { projects, setProjects, listError, loadProjects, searchRef } = useHomeProjects();
   const listed = projects !== null || listError !== null;
@@ -296,6 +299,10 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <button type="button" className="btn ghost small has-icon" onClick={() => uiStore.set({ screen: 'design-systems', libraryFrom: null })}>
             <Icon name="palette" size={14} />
             Design systems
+          </button>
+          <button type="button" className="btn ghost small has-icon" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
+            <Icon name="trash" size={14} />
+            Trash
           </button>
         </nav>
       </header>
@@ -416,6 +423,11 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
         />
         <Suspense fallback={null}>{projects !== null && projects.length > 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}</Suspense>
       </main>
+      {trashOpen && (
+        <Suspense fallback={null}>
+          <HomeTrash onClose={() => setTrashOpen(false)} onRestored={() => void loadProjects()} />
+        </Suspense>
+      )}
       <HomeToast toast={toast} onDone={clearToast} />
     </div>
   );

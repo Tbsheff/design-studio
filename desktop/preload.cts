@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 const VERSION_FLAG = '--studio-version=';
+const BOOT_FLAG = '--studio-boot=';
 const COMMAND_CHANNEL = 'studio:command';
 const CONTEXT_CHANNEL = 'studio:context';
 const PICK_FOLDER_CHANNEL = 'studio:pick-folder';
@@ -10,6 +11,23 @@ type Command = { type: string } & Record<string, unknown>;
 function appVersion(): string {
   const arg = process.argv.find((value) => value.startsWith(VERSION_FLAG));
   return arg ? arg.slice(VERSION_FLAG.length) : '';
+}
+
+interface Boot {
+  startedAt: number;
+  marks: Record<string, number>;
+}
+
+function bootTimes(): Boot | null {
+  const arg = process.argv.find((value) => value.startsWith(BOOT_FLAG));
+  if (!arg) return null;
+  try {
+    const parsed = JSON.parse(arg.slice(BOOT_FLAG.length)) as Partial<Boot>;
+    if (typeof parsed.startedAt !== 'number' || typeof parsed.marks !== 'object' || parsed.marks === null) return null;
+    return { startedAt: parsed.startedAt, marks: { ...parsed.marks } };
+  } catch {
+    return null;
+  }
 }
 
 const queued: Command[] = [];
@@ -38,4 +56,4 @@ async function pickFolder(options: unknown): Promise<string | null> {
   return typeof chosen === 'string' ? chosen : null;
 }
 
-contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), onCommand, setContext, pickFolder }));
+contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder }));

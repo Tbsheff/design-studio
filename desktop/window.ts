@@ -8,6 +8,7 @@ export interface WindowOptions {
   preload: string;
   stateFile: string;
   version: string;
+  boot?: { startedAt: number; marks: Record<string, number> };
 }
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
@@ -80,7 +81,7 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
       sandbox: true,
       nodeIntegration: false,
       webSecurity: true,
-      additionalArguments: [`--studio-version=${options.version}`],
+      additionalArguments: [`--studio-version=${options.version}`, ...(options.boot ? [`--studio-boot=${JSON.stringify(options.boot)}`] : [])],
     },
   });
   if (saved?.maximized) window.maximize();

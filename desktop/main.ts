@@ -25,6 +25,14 @@ import { Updater } from './updater.js';
 declare const __STUDIO_RELEASE__: boolean | undefined;
 const RELEASE_BUILD = typeof __STUDIO_RELEASE__ !== 'undefined' && __STUDIO_RELEASE__ === true;
 
+const PROCESS_STARTED_AT = Date.now() - Math.round(process.uptime() * 1000);
+const bootMarks: Record<string, number> = {};
+
+function markBoot(name: string): void {
+  bootMarks[name] ??= Date.now() - PROCESS_STARTED_AT;
+  console.log(`[desktop] boot ${name} ${bootMarks[name]}ms`);
+}
+
 const OWN_DIR = path.dirname(fileURLToPath(import.meta.url));
 const APP_NAME = 'Design Studio';
 const SETUP_MODE_ENV = 'STUDIO_DESKTOP_SETUP';
@@ -137,6 +145,7 @@ async function launchServer(current: Prepared): Promise<Runtime> {
   const claudePath = (await locateClaude(current))?.path ?? null;
   const env = buildServerEnv(process.env, current.knownPath, await serverOverrides(current, ports, claudePath));
   const server = startServer({ cwd: layout.serverCwd, args: layout.serverArgs, execPath: process.execPath, env, studioOrigin: url, logFile: logFile(), echo: !layout.packaged });
+  markBoot('serverSpawned');
   writeServerPid(userDataFile('server.pid'), server.pid);
   serveChild(renderHost, server.child);
   serverLink.attach(server.child, url);
@@ -144,6 +153,7 @@ async function launchServer(current: Prepared): Promise<Runtime> {
   runtime = next;
   void server.exited.then((exit) => onServerExit(next, exit));
   await server.ready;
+  markBoot('serverReady');
   next.ready = true;
   return next;
 }
@@ -184,7 +194,9 @@ async function onServerExit(owner: Runtime, exit: ServerExit): Promise<void> {
 
 function openWindow(current: Runtime): BrowserWindow {
   console.log(`[desktop] window: studio ${current.url}`);
-  const window = createMainWindow({ url: current.url, preload: path.join(OWN_DIR, 'preload.cjs'), stateFile: userDataFile('window-state.json'), version: app.getVersion() });
+  markBoot('window');
+  const window = createMainWindow({ url: current.url, preload: path.join(OWN_DIR, 'preload.cjs'), stateFile: userDataFile('window-state.json'), version: app.getVersion(), boot: { startedAt: PROCESS_STARTED_AT, marks: { ...bootMarks } } });
+  window.once('ready-to-show', () => markBoot('readyToShow'));
   native.trackWindow(window);
   return window;
 }
@@ -249,6 +261,7 @@ async function firstRun(current: Prepared): Promise<void> {
 
 async function boot(): Promise<void> {
   await app.whenReady();
+  markBoot('appReady');
   updater = new Updater({ activeRuns: () => serverLink.activeRuns().length, logFile: userDataFile('logs', 'updater.log'), resourcesPath: process.resourcesPath });
   native.install();
   guardPermissions(session.defaultSession);
@@ -258,6 +271,7 @@ async function boot(): Promise<void> {
   registerSetupIpc();
   await cleanStaleServer(userDataFile('server.pid'));
   prepared = await prepare();
+  markBoot('prepared');
   if (!prepared) {
     app.exit(0);
     return;

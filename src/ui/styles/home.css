@@ -482,7 +482,7 @@
   place-items: center;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-xs);
   background: var(--surface-2);
 }
 
@@ -771,7 +771,7 @@
   aspect-ratio: 16 / 10;
   margin-bottom: var(--s-2);
   overflow: hidden;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-xs);
   background: var(--surface-2);
 }
 

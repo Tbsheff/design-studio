@@ -208,7 +208,37 @@ UI inspector → preview-style / preview-text to the bridge (live, not saved)
 ```
 
 - 409 `run_in_progress` while a run is active on the direction. 422 `{error, message}` when the request or source cannot be patched: bad value, path outside the tree, element not found, `style` not an object literal, text on an element with child elements, no base version yet.
-- Undo is the normal `POST .../undo`; each direct edit is one version.
+- Each user action is one version: a direct edit, a batch, a resize on pointerup, a rename, a move.
+- Request forms: `style` and/or `text`; `name` (sets or removes `data-name`); `move: 'up' | 'down'` alone (swaps the element's source range with its previous or next element sibling, other bytes unchanged; refuses at the ends, next to expression siblings and inside `.map()`, code `cannot_move`; the result has `moved`, the new location, and the parent sends `select-source`). `DirectEditBatch {edits}` on the same route (1–50 style/text edits, `batch.ts`): all planned first, each file written atomically, one version, all originals back on any failure.
+- Explicit commits (Enter, blur, clicks, pointerup) write at once; only arrow steps and the color drag keep the 250 ms debounce.
+
+### Edit history (Round 4)
+
+```
+applyDirectEdit / batch / token edits ──record({files: [{before, after}]})──► direct-edit/history.ts (per project, in memory, cap 100)
+⌘Z / ⇧⌘Z (studio keys, bridge `history-key`, desktop Edit menu) → useEditHistory → POST /api/projects/:pid/d/:did/edit-history/undo|redo
+  → mutex + run check → every file's bytes must equal the record's after (undo) / before (redo), else 409 history_stale and the stack clears
+  → write all files (temp + rename) → one version "Undo: <label>" → edit-history.changed
+```
+
+- Steps use the newest record of the current direction; a new edit clears that direction's redo. Token edits record through `design-system/token-history.ts`; a token edit that creates a file and tweak commits are not recorded.
+- One ⌘Z path in `Studio.tsx`: unsaved token draft, unsaved tweaks, edit history, then the old version undo (which skips a head that is an Undo or Redo step). Text fields keep native undo.
+- The old `POST .../undo` (whole version) stays for the versions panel.
+
+### Inspector (Round 4)
+
+- Sections, each its own component taking the `DirectEdit` shape: Text, Auto layout (`InspectorLayout.tsx`: Display, direction, wrap, align grid, gap, ⇧A), Size (hug `fit-content` / fill `flex: 1` on the parent's main axis, `align-self: stretch` on its cross axis, `100%` outside flex / fixed px; align-self), Spacing (`BoxModel`), Typography, Fill and border (`InspectorCorners.tsx` per-corner radius), Effects (`InspectorEffects.tsx`, `shadows.ts`), Other styles. Header: breadcrumb (`InspectorBreadcrumb.tsx`, walks up with `select-relative` parent), Copy CSS.
+- The bridge adds read-only `parent-display`, `parent-flex-direction`, `used-width`, `used-height` to `selection.styles`, and prefers the authored inline value for `box-shadow`, `filter`, `flex`, `align-self` and keyword or percent sizes (`bridge/inlineStyle.ts`), so a token color reads back as the token.
+- Authored CSS: `request-authored` → `authored {rules, inline}` (`bridge/authored.ts`): style rules from `document.styleSheets` that match the element (matching `@media` only, try/catch per sheet and selector, size caps); the parent parses the reply again (`authoredCss.ts`). Feeds Copy CSS and Other styles.
+- Number fields: `mathInput.ts` (no `eval`): `+ − * /`, brackets, `+N` / `+=N` add, `-=N` subtracts, a leading `-N` is a value.
+- Multi-select: `useDirectEdits.ts` returns the same shape with a Mixed marker; one `DirectEditBatch` per change; elements with no source or a shared source refuse writes with a note.
+
+### Canvas edits (Round 4)
+
+- Inline text (`bridge/text-edit.ts`, `useInlineTextEdit.ts`): leaf elements only; dblclick or Enter starts `contenteditable="plaintext-only"`; the bridge owns Enter, Esc and Tab while open; `text-commit {selector, text, at}` → direct edit at once. The parent sends `text-edit-allowed` (off during a run, outside Live, in comment mode) and `text-edit-stop`; the HTML frame swap waits while an edit is open.
+- Resize handles (`useResizeHandles.ts`, drawn in `ArtboardOverlay`): pointer delta ÷ canvas zoom, live `preview-style`, one commit on pointerup, Shift keeps the ratio.
+- Layers edits (`useLayerEdits.ts`): rename (double-click or F2), hide (⇧⌘H), drag and ⌥↑/⌥↓ (also from the preview as `reorder-key`, `bridge/reorder.ts`).
+- Shift+click toggles an element in the selection (canvas and layers rows).
 - The HTTP routes for run start, undo, restore, keep, discard and direct edit hold one per-direction mutex (`${pid}/${did}`), so they never interleave. The version store lock is the inner lock. Run start and direct edit check `runner.isRunning(projectId, directionId)` inside it. The runner keys active runs by `${projectId}/${directionId}`.
 
 ## Design systems (phase 1)

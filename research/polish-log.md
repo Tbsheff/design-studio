@@ -286,3 +286,72 @@ On `bc173ed` (last code commit):
 ### Commits
 
 `211fc4c` fix AC-14 watcher race · `e4fee6d` ordered parts, diffs, copy · `587935e` Esc, queue, steer, Bash prompt, history · `ec85ae4` streaming, scroll, grouped rows · `6e5f505` todos, meter, effort, retry · `21a850b` plan mode · `2dcc414` @ mentions · `32e1f1f` Ctrl+R · `71b5b76`, `c3b83c9` polish fixes · `8be3a8c` spec updates · `b361bf5` docs and smoke script · `bc173ed` real-agent stop fix · then this log update.
+
+## Round 4 — Inspector and direct edits vs Figma (2026-10-24)
+
+### Item 0: the two Round 3 flakes
+
+- **React previews after the server restart (test bug).** The global setup starts the first server from the Playwright runner. `f-restart` starts the new server from a Playwright worker and piped its stdout and stderr through that worker. Playwright replaces the worker after any failed test, so the pipe then had no reader. The Vite children use `stdio: 'inherit'` and share the dead pipe; the first Vite write (a Babel note about react-dom) got EPIPE and the child exited with code 1. HTML previews do not use Vite, so only React specs after the restart failed, and "no Vite build logged" was the dead log writer. Proof: a spec that always fails, put between `f-restart` and `latency`, made `latency` fail every time (Vite child on port 43300 ready, then exit 1, retry exit 1); after the fix the same order passed with 5 Vite children alive until teardown. Fix (`5f0ad41`): `e2e/support/logged-spawn.ts` opens the log file and gives its descriptor to the child, so no pipe goes through a worker. `e2e/support/logged-spawn.test.ts` fails with the old pipe setup. The full main suite then passed 3 runs in a row (84 of 84 each). Not confirmed: which earlier test failed first in the Round 3 runs and started the cascade (`folders` or `home-r1` most likely); neither failed in any Round 4 run.
+- **Desktop Esc miss (test bug).** R3-2 waited for a finished tool row in `[data-run-id]` `.last()`. On the shared project that matched an older finished run, so Esc could arrive before the send returned the new run id, when the studio had no active run and no Esc handler. A 1.5 s hold on the send reproduced it every time. Fix (`fa3a83e`): the test opens its own project, takes the run id from the send response and waits on that run's card. `--repeat-each=10`: 10 of 10; full desktop 21 of 21. The probe is removed.
+- **App gap found by 0b, fixed in this round** (`c640d55`): Esc while a send waits for its response did nothing (the server can hold a send about 2 s while a stopped run settles). Now Esc in that window stops the run as soon as its id arrives. `e2e/chat-r4.spec.ts` holds the send before and after the server starts the run; both end "Stopped" with no tool finished, about 21 ms after the later of Esc and the response. Without the fix the test times out.
+
+### Features built
+
+| Item | Acceptance check | Proof | Result |
+|---|---|---|---|
+| R4-1 Inline text edit (P0) | An `h1` edited in the preview is in the source < 200 ms, no model call | `e2e/inline-text-r4.spec.ts` (6 tests), `e2e/edit-latency-r4.spec.ts` | Pass. ⌘↵ → bytes on disk p95 22–30 ms (HTML), 21–23 ms (React); dblclick → caret 13–14 ms; run count unchanged. Esc cancels without leaving select mode or stopping a run; blur commits; Enter on an element with children still selects the child; off during a run, and a run that starts cancels an open edit. Found and fixed: a second edit right after a commit was lost when the HTML frame swapped; the swap now waits for the edit to end |
+| R4-2 Flex controls (P0) | Row → column writes `flex-direction: column`, repaint < 250 ms; Fill writes `flex: 1` (or `width: 100%` outside flex) | `e2e/inspector-r4.spec.ts`, `edit-latency-r4` | Pass. Click → preview style p95 33–34 ms, click → disk p95 41–45 ms. Auto layout section: Display, direction, wrap, 3×3 align grid, gap; Size: hug / fill / fixed for W and H; ⇧A adds flex (also with focus in the preview, not in text fields) |
+| R4-3 Undo and redo (P0) | 3 edits + 3 ⌘Z → bytes equal the start; 3 ⇧⌘Z → all 3 again | `e2e/undo-r4.spec.ts`, `src/server/direct-edit/history.test.ts` (6), `update-tokens.test.ts`, `src/ui/editHistory.test.ts` (7) | Pass, exact bytes both ways, once with focus in the preview. ⌘Z → disk p95 4–7 ms. One stack per project (steps use the newest record of the current direction), direct edits and token edits, also from the desktop Edit menu. A file changed by anyone else refuses the step (409 `history_stale`) and clears the stack; 409 during a run |
+| R4-4 Layers part 2 and resize (P1) | 40 px handle drag changes the W field and the file by 40 px; Alt+Down moves a card one place down in the source | `e2e/layers-r4.spec.ts` (5), `src/server/direct-edit/structure.test.ts` | Pass at 50% zoom (20 screen px = 40 px): W 300 → 340, one version, other bytes the same. Alt+↓/↑ in HTML and TSX, from the studio and from the preview, selection stays on the moved card. Rename (double-click or F2) writes `data-name`; hide writes `display: none`, show restores the exact bytes; a row drag commits once. `.map()` siblings and first/last places refuse with a clear message |
+| R4-5 Shadow and effects (P1) | An added shadow writes one `box-shadow` that reads back into the same fields | `e2e/inspector-r4.spec.ts`, `src/ui/shadows` tests | Pass, including a token color (`var(--primary)`) after reload; layer blur writes `filter: blur(2px)` |
+| R4-6 Math in inputs (P1) | `12+4` → `16px`; `+8` on 16 → `24px` | `inspector-r4`, `mathInput` tests | Pass. Also `-=N` subtracts; a leading `-N` stays a plain negative number (margin −8, letter spacing −1, shadow x −4 tested) |
+| R4-7 Mixed values (P1) | 3 cards with 2 radii show "Mixed"; 8 writes `8px` to all 3 | `e2e/multi-select-r4.spec.ts`, `src/ui/mixedValues.test.ts` (10) | Pass. One batch request, one version, one ⌘Z restores all 3 (bytes equal the start). Shift+click now also removes from the selection (canvas and layers rows) |
+| R4-8 Breadcrumb and Copy CSS (P1) | Breadcrumb lists each ancestor, a click selects it; Copy CSS gives the authored rules | `e2e/inspector-extras-r4.spec.ts`, `src/ui/authoredCss.test.ts` (12) | Pass. Rules come from `document.styleSheets` in the bridge (matching `@media` only), then the inline block |
+
+### Polish
+
+| Item | Check | Proof | Result |
+|---|---|---|---|
+| R4-9 Per-corner radius, align, Other styles, Alt+arrow | `border-radius: a b c d`; align-center writes `align-self: center`; an authored style the panel does not cover shows under Other styles | `inspector-r4`, `inspector-extras-r4`, `layers-r4` | Pass. The benchmark example `filter: blur(2px)` is now covered by Effects, so the check uses `transform: rotate(2deg)` and `mix-blend-mode: multiply`, and asserts `filter` does not show |
+| R4-10 Inspector CSS | 0 raw padding, margin or gap px in `inspector.css`; fields 28 px; one label baseline | `src/ui/styles/inspector-css.test.ts`; measured in the polish pass | Pass. One 36 px label column, thin select chevron, two weights per panel |
+| Premium-feel checklist | see below | screenshots | Inspector, Layers panel, canvas selection / resize / inline edit: pass on spacing, field height, type sizes and weights, tabular numbers, truncation, states, icons, key glyphs, copy, motion. Fixed in the pass: `.select` app rule leaked into inspector selects; invalid focus ring values on the layers eye and rename field (no ring showed); "Disp" label; resize handles shown during inline edit |
+
+Explicit commits (Enter, blur, button, select and toggle clicks, pointerup) now write at once; only arrow-key steps and the color picker drag keep the 250 ms debounce.
+
+### Edit latency (target: visible ≤ 200 ms)
+
+`e2e/edit-latency-r4.spec.ts`, 7 samples per type, 3 runs with nothing else running, p95 in ms (visible / bytes on disk): font size 14–18 / 9–16; flex direction 33–34 / 41–45; inline text HTML 13–14 caret / 22–30; inline text React 13–14 / 21–23; resize 21–24 live / 20–24; rename 11–13 / 8–9; Alt+arrow move 79–86 (new frame in front) / 6–11; ⌘Z 84–87 (new frame in front) / 4–7. Move and undo have no live preview, so "visible" is the reloaded frame. Visible times use the browser clock; disk times use the Node clock and include Playwright send time.
+
+### Screenshots
+
+Before: `/tmp/polish-r4/before-inspector-h1.png`, `before-inspector-card.png`, `before-inspector-card-bottom.png`, `before-layers.png`, `before-canvas-selected.png` (no multi-select existed). After: `/tmp/polish-r4/after-inspector-{top,h1,card,card-bottom,autolayout,autolayout-empty,size,effects,corners,typography,other,mixed}.png`, `after-layers.png`, `after-layers-{hover,rename}.png`, `after-canvas-{selected,resize,inline-edit}.png`, `after-undo-toast.png`, `after-multi-{mixed,shared}.png`. Script: `scripts/inspector-shots.ts`.
+
+### Left for later rounds
+
+- The edit history is in memory; a server restart clears it. A token edit that creates a new file and tweak commits are not recorded.
+- Relative math (`+8`) on a Mixed field is refused (red field and tooltip, no note on screen); arrow keys and scrub do nothing on Mixed; with many elements, Size shows only W and H. The layers panel highlights one row in a multi-selection.
+- Reorder moves one place per step (a long drag moves one place). After an undo of a move, the selection keeps the old source location until the next select.
+- "Show" cannot unhide an element that CSS or a parent hides (it says so).
+- Copy CSS on React pages can show the inline style from before an edit until the preview resets.
+- Inline edit: Shift+Enter does nothing (a source line break reads as a space; a `<br>` would make the element not editable). Editing an `h1` that contains an `em` edits the `em`.
+- The 3×3 align grid is 84 px tall next to 64 px of controls (shorter cells would go under the 28 px hit area). Size values can show decimals (`641.69px`).
+- Free drag-move of absolute elements (P2) stays deferred.
+
+### Regressions found
+
+- Intended change: the Display select moved into Auto layout; the old Layout section is gone. Enter on a layers row still selects the child; rename is double-click or F2.
+- Found in the merge: `inspector-r4` "auto layout … timing" failed on the merged branch and on its own branch (3 of 3). Cause: the test helper `selectInFrame` waited for any selected box, so a Fill write went to the section from the step before. The overlay box now has `data-selector` and the helper waits for the box of the bridge's select message (`06c4455`).
+- Found in the merge: a leading `-4` subtracted, so negative values could not be typed. Now `-N` is a value and `-=N` subtracts (`6807776`).
+- Found while testing (ac configs): they keep state in a fixed temp file, so parallel runs stop each other's servers. A private `TMPDIR` per run avoids it (logged as a papercut; not changed).
+
+### Test runs (final, on `7e66bb0`)
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npx vitest run`: 813 passed (94 new this round).
+- `npm run build:ui`: built.
+- Playwright `STUDIO_E2E_GROUP=r4 STUDIO_E2E_PORT_OFFSET=3700`: `playwright.config.ts` 113 of 113 (new: `inspector-r4`, `inspector-extras-r4`, `multi-select-r4`, `layers-r4`, `undo-r4`, `inline-text-r4`, `chat-r4`, `edit-latency-r4`); `ac-core` 7 of 7; `ac-edit` 19 of 19; `ac-safety` 10 of 10 (AC-48 passed).
+- `npm run e2e:desktop`: 21 of 21.
+
+### Commits
+
+`5f0ad41` restart log fix · `fa3a83e`, `467ec72` desktop Esc test fix · `6e7bce3` shared contracts · `d150d35` shot script · `22cb677`–`b9eae04` undo and redo · `0d4d14f`–`e8c67b3` layers and resize · `2ca527e`–`a0ecf01` inspector fields · `a617c3b`–`4d7a148` batch, breadcrumb, Copy CSS, Other styles · `ca50a08`, `cc00ae0` inline edit · `c640d55`, `c082976` chat Esc fix · `da219cf`–`0bc4715` multi-select · `06c4455`–`6159582` merge fixes · `3d2ab27`, `5035ef7`, `915aa74` polish · `7e66bb0` latency spec · then the docs.

@@ -52,16 +52,16 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Device sizes | pen.dev and Figma frame presets [mem] | has, `CanvasToolbar.tsx PRESETS` 1440/768/390/custom | — | — |
 | Many frames on one canvas | CD: canvas of artboards, drag, resize, align [CD2]; Figma, Paper, pen.dev | partial (R2), add 1440/768/390 frames, drag by the name, arrow nudge, remove with Undo, kept per project; one frame is live and editable, the others are previews; no per-frame page yet | P0 | L |
 | Click select | all | has, V tool `Canvas.tsx:141`, `bridge.ts onClick` | — | — |
-| Shift multi-select | Figma [mem] | partial, `bridge.ts:721` adds, but Inspector edits one element | P1 | M |
+| Shift multi-select | Figma [mem] | has (R4), Shift+click adds and removes on the canvas and in the layers rows; the inspector edits all of them with "Mixed" values and one batch write | P1 | M |
 | Marquee select | pen.dev: Cmd+drag box-selects nested elements [P1] | missing | P2 | M |
 | Select parent / children | Figma, pen.dev: Enter children, Shift+Enter parent, Tab sibling [P1, mem] | has (R2), Enter, Shift+Enter, Tab, Shift+Tab in the preview and the studio; arrows and Enter in the layers tree | P1 | S |
-| Layers tree | Figma, pen.dev, Paper; CD: Cmd+\ panel with layer list [CD2] | partial (R2), read-only virtual tree of the live frame with hover, select, arrows, hidden flag (⌥1); rename, hide and reorder in R4 | P0 | L |
+| Layers tree | Figma, pen.dev, Paper; CD: Cmd+\ panel with layer list [CD2] | has (R4), virtual tree with hover, select, arrows (R2); rename (double-click or F2, writes `data-name`), hide and show (`display: none`, exact bytes back), drag and ⌥↑/⌥↓ reorder in the source | P0 | L |
 | Hover outline | Figma; pen.dev color-codes components [P1] | has, `Canvas.tsx:234 .box.hover` | — | — |
 | Distance measurement | Figma: select, hold Alt, hover = red line and px [F3] | has (R2), select, hold Alt, hover: red lines and px labels (`measure.ts`) | P1 | M |
 | Rulers and guides | Figma: Shift+R [mem]; CD: layout guides Shift+G [CD2] | missing | P2 | M |
 | Pixel grid | pen.dev: Cmd+' grid, Cmd+Shift+' snap [P1] | missing | P2 | S |
 | Snapping | pen.dev: edges, centers, equal spacing [P6]; Paper: snap to whole px [A6] | missing (needs drag-move first) | P2 | M |
-| Drag-move and resize elements | CD artboards [CD2]; Figma | missing, pointer events blocked `bridge.ts:792–799` | P1 | L |
+| Drag-move and resize elements | CD artboards [CD2]; Figma | partial (R4), W and H resize handles on the selection (zoom-aware, one version on release); free drag-move deferred | P1 | L |
 | Minimap | — (no leader ships one) | missing | P2 | S |
 | Frame thumbnails at low zoom | Paper: lighter memory, smoother pan in large files [A6] | missing | P2 | M |
 | Pan performance | pen.dev: WebGL, "thousands of layers stay smooth" (vendor claim) [P6] | has (R2), pan and wheel write the transform in a rAF with no React commit; 0 Canvas commits over a 3 s pan; headed p95 10.2 ms, max 10.4 ms on a 120 Hz display | P0 | S |
@@ -103,25 +103,25 @@ All file paths are relative to the repo root. Status comes from a read-only code
 
 | Capability | Best in class: product and how | Design Studio status | P | Size |
 |---|---|---|---|---|
-| Inline text edit on canvas | CD: Return on a text layer edits in place [CD2]; Figma | partial, panel textarea `Inspector.tsx:TextSection`; dblclick blocked `bridge.ts:797` | P0 | M |
+| Inline text edit on canvas | CD: Return on a text layer edits in place [CD2]; Figma | has (R4), dblclick or Enter edits in place, Esc cancels, ⌘↵ or blur writes the source (p95 22–30 ms to disk) (`bridge/text-edit.ts`) | P0 | M |
 | Box model | Paper: real CSS box model [A7] | has, `BoxModel.tsx` | — | — |
-| Flex / auto layout | pen.dev: Shift+A adds flex; direction, gap, padding, align grid, hug/fill [P2] | partial, display and gap only (`contracts.ts:555`) | P0 | M |
+| Flex / auto layout | pen.dev: Shift+A adds flex; direction, gap, padding, align grid, hug/fill [P2] | has (R4), Display, direction, wrap, 3×3 align grid, gap, hug / fill / fixed for W and H, ⇧A adds flex (`InspectorLayout.tsx`) | P0 | M |
 | Size W/H, hug/fill | pen.dev: Hug, Fill [P2] | partial, W/H only | P1 | S |
 | Color with tokens | Paper: oklch, P3, hex per element; selection-colors panel [A7, A6] | has, `InspectorFields.tsx:ColorField`, `TokenControl` | — | — |
 | Typography | Figma [mem] | has (family, size, weight, line height, tracking, align) | — | — |
-| Border and radius | Figma: per-corner radius [mem] | partial, single radius | P2 | S |
-| Shadow and effects | pen.dev: blur, drop shadow, stacked [P7] | missing | P1 | M |
+| Border and radius | Figma: per-corner radius [mem] | has (R4), per-corner fields write `border-radius: a b c d`; align-self buttons | P2 | S |
+| Shadow and effects | pen.dev: blur, drop shadow, stacked [P7] | has (R4), stacked shadows (x, y, blur, spread, color token, inset) and layer blur (`shadows.ts`, `InspectorEffects.tsx`) | P1 | M |
 | Opacity | all | has | — | — |
 | Scrub numeric inputs | Figma: drag label [mem] | has, `NumberField.tsx:useScrub` | — | — |
-| Math in inputs | Figma: + − * / and brackets [mem] | missing, `cssValues.ts:normalizeLength` | P1 | S |
+| Math in inputs | Figma: + − * / and brackets [mem] | has (R4), `+ − * /` and brackets, `+N` / `+=N` / `-=N` relative (`mathInput.ts`) | P1 | S |
 | Arrow step 1 / Shift 10 | Figma: configurable nudge [F9]; pen.dev same [P2] | has for fields `NumberField.tsx:43`; no element nudge | P2 | S |
-| Mixed values in multi-select | Figma: "Mixed" [mem] | missing, empty state when >1 selected | P1 | M |
+| Mixed values in multi-select | Figma: "Mixed" [mem] | has (R4), "Mixed" per field, one batch write and one undo step (`useDirectEdits.ts`) | P1 | M |
 | Token binding | Figma variables on fields [F6] | has, `InspectorTokens.tsx:SnapToggle`, `e2e/token-snap.spec.ts` | — | — |
-| Undo / redo of each direct edit | Figma: per-change undo stack [mem] | partial, undo is per version and needs ≥2 versions `useUndoShortcut.ts`; no redo | P0 | M |
-| Copy CSS / code view | pen.dev: Cmd+Alt+C HTML [P1]; Paper: copy React CSS or Tailwind [A6]; Figma Dev Mode | missing | P1 | S |
-| Element breadcrumb | Figma: ancestor path [mem] | missing, header shows tag and file:line `Inspector.tsx:66` | P1 | S |
+| Undo / redo of each direct edit | Figma: per-change undo stack [mem] | has (R4), one edit history per project for direct and token edits, ⌘Z and ⇧⌘Z from canvas, preview and the Edit menu, exact bytes (`direct-edit/history.ts`) | P0 | M |
+| Copy CSS / code view | pen.dev: Cmd+Alt+C HTML [P1]; Paper: copy React CSS or Tailwind [A6]; Figma Dev Mode | has (R4), Copy CSS in the inspector header: authored rules in cascade order, then inline (`bridge/authored.ts`) | P1 | S |
+| Element breadcrumb | Figma: ancestor path [mem] | has (R4), ancestor breadcrumb above the header; a click selects the ancestor | P1 | S |
 | Align buttons | pen.dev: Option+W/A/S/D/H/V [P1] | missing | P2 | S |
-| Other styles view | Paper: "Other styles" shows CSS agents add [A7] | missing | P2 | S |
+| Other styles view | Paper: "Other styles" shows CSS agents add [A7] | has (R4), collapsed "Other styles" lists authored declarations the panel does not cover | P2 | S |
 | Edits without a model call | Lovable Visual Edits: no model call [L1] | has, direct edits write source | — | — |
 
 ### 1.5 Speed
@@ -255,11 +255,11 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Zoom keys like Figma, plus menu clash fix | Canvas | has (R2), Shift+1 fit, Shift+2 selection, Shift+0 and ⌘0 100%, ⌘1 fit, ⌘2 selection, bare + and −; studio and preview focus (`zoomKeyOf` in `shared/contracts.ts`) | P0 | S | R2-1 | — | Users of every rival expect these keys; the clash can break zoom in desktop |
 | Pan with no React re-render | Canvas | pen.dev | P0 | S | R2-2 (done) | — | Smooth pan |
 | Multi-frame canvas | Canvas | CD, Figma | P0 | L | R2-3 (done), R7-3 (variations and compare as frames) | — | All rivals show many screens at once |
-| Layers tree | Canvas | partial (R2), read-only virtual tree of the live frame with hover, select, arrows, hidden flag (⌥1); rename, hide and reorder in R4 | P0 | L | R2-4 (done), R4-4 (rename, hide, reorder) | — | Nested and hidden elements cannot be selected without it |
+| Layers tree | Canvas | has (R4), rename, hide, drag and ⌥-arrow reorder | P0 | L | R2-4 (done), R4-4 (done) | — | Nested and hidden elements cannot be selected without it |
 | Zoom to selection | Canvas | has (R2), Shift+2 and ⌘2 fit the selection, or the frame when nothing is selected | P0 | S | R2-1 | — | Core navigation |
 | Select parent / children keys | Canvas | has (R2), Enter, Shift+Enter, Tab, Shift+Tab in the preview and the studio; arrows and Enter in the layers tree | P1 | S | R2-5 | — | Fast nested select |
 | Distance measurement | Canvas | has (R2), select, hold Alt, hover: red lines and px labels (`measure.ts`) | P1 | M | R2-6 | — | Check spacing with no code |
-| Drag resize | Canvas | CD, Figma | P1 | L | R4-4 | — | Direct control of size |
+| Drag resize | Canvas | CD, Figma | P1 | L | R4-4 (done) | — | Direct control of size |
 | Free drag-move of elements | Canvas | CD, Figma | P2 | L | defer | Drag an absolute element 40 px; `left` in the source changes by 40 px | Most generated layouts are flow layouts; reorder (R4-4) covers the common case |
 | Z-click zoom | Canvas | pen.dev | P2 | S | R2-7 (done) | — | Small speed gain |
 | Marquee select | Canvas | pen.dev | P2 | M | defer | Drag a box over 3 cards; all 3 are selected | Low value in flow layouts |
@@ -285,14 +285,14 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Hooks for users | Chat | CC | P2 | M | defer | A user hook on PreToolUse that exits 2 blocks the tool and its reason shows in the transcript | The studio sets its own guards; few users need this |
 | Background tasks and subagent display | Chat | CC | P2 | L | defer | A backgrounded tool shows in a tasks list with elapsed time and Stop | The studio agent seldom runs long shell work |
 | Prompt suggestion | Chat | CC desktop | P2 | M | defer | After a run, a gray next prompt shows; Tab accepts it | Nice to have |
-| Inline text edit | Inspector | CD, Figma | P0 | M | R4-1 | — | The most common edit |
-| Flex controls, hug / fill | Inspector | pen.dev | P0 | M | R4-2 | — | Layout is about half of all edits |
-| Per-change undo and redo | Inspector | Figma | P0 | M | R4-3 | — | Users try edits only when undo is safe |
-| Shadow and effects | Inspector | pen.dev | P1 | M | R4-5 | — | Depth is a common polish edit |
-| Math in inputs | Inspector | Figma | P1 | S | R4-6 | — | Speed for pro users |
-| Mixed values in multi-select | Inspector | Figma | P1 | M | R4-7 | — | Change 5 cards at once |
-| Breadcrumb and Copy CSS | Inspector | Figma, pen.dev | P1 | S | R4-8 | — | Nested navigation and handoff |
-| Per-corner radius, align buttons, other styles, reorder nudge | Inspector | Figma, pen.dev, Paper | P2 | S | R4-9 | — | Completeness |
+| Inline text edit | Inspector | CD, Figma | P0 | M | R4-1 (done) | — | The most common edit |
+| Flex controls, hug / fill | Inspector | pen.dev | P0 | M | R4-2 (done) | — | Layout is about half of all edits |
+| Per-change undo and redo | Inspector | Figma | P0 | M | R4-3 (done) | — | Users try edits only when undo is safe |
+| Shadow and effects | Inspector | pen.dev | P1 | M | R4-5 (done) | — | Depth is a common polish edit |
+| Math in inputs | Inspector | Figma | P1 | S | R4-6 (done) | — | Speed for pro users |
+| Mixed values in multi-select | Inspector | Figma | P1 | M | R4-7 (done) | — | Change 5 cards at once |
+| Breadcrumb and Copy CSS | Inspector | Figma, pen.dev | P1 | S | R4-8 (done) | — | Nested navigation and handoff |
+| Per-corner radius, align buttons, other styles, reorder nudge | Inspector | Figma, pen.dev, Paper | P2 | S | R4-9 (done) | — | Completeness |
 | Startup and first-token telemetry | Speed | — | P0 | S | R5-1 | — | We cannot improve what we do not measure |
 | Tighter latency gates | Speed | — | P0 | M | R5-2 | — | Proof of "faster" |
 | Smoothness gates | Speed | — | P0 | S | R5-3 | — | Proof of "smooth" |

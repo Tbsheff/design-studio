@@ -89,6 +89,7 @@ export interface TileRequest {
   from: number;
   maxTiles: number;
   outPrefix: string;
+  theme?: 'light' | 'dark';
 }
 
 export interface TileResult {
@@ -106,6 +107,8 @@ export function planTiles(pageHeight: number, tileHeight: number, from: number, 
   }
   return tiles;
 }
+
+const DARK_THEME_EXPRESSION = `(() => { document.documentElement.setAttribute('data-theme', 'dark'); document.documentElement.classList.add('dark'); return true; })()`;
 
 const EMPTY_PROBE: LayoutProbeResult = { findings: [], total: 0 };
 
@@ -178,6 +181,10 @@ export class BrowserPool {
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
     return this.withPage(url, request.viewport, async (page) => {
+      if (request.theme === 'dark') {
+        await page.evaluate(DARK_THEME_EXPRESSION);
+        await settle(page);
+      }
       const pageHeight = await page.evaluate<number>(PAGE_HEIGHT_EXPRESSION);
       const tiles = planTiles(pageHeight, request.tileHeight, request.from, request.maxTiles);
       await mkdir(path.dirname(request.outPrefix), { recursive: true });

@@ -5,7 +5,8 @@ import { TOKENS_CSS_FILE } from '../../shared/contracts.js';
 import type { RunMode } from '../../shared/contracts.js';
 import { TWEAKS_FILE, TWEAKS_TOOL } from '../../shared/tweaks.js';
 
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks'] as const;
+export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
@@ -48,6 +49,7 @@ export interface ToolPolicy {
   skills?: string[];
   skillDirs?: string[];
   skillsOff?: string;
+  readOnlyDirs?: string[];
 }
 
 type ToolSet = Pick<ToolPolicy, 'mode' | 'allowBash' | 'skills'>;
@@ -171,6 +173,19 @@ function isTweaksFile(workTree: string, raw: string): boolean {
   return relativeToRoot(workTree, raw) === TWEAKS_FILE.toLowerCase();
 }
 
+function checkReadOnlyDirs(policy: ToolPolicy, input: Record<string, unknown>): string | null {
+  const dirs = (policy.readOnlyDirs ?? []).map((dir) => dir.toLowerCase());
+  if (dirs.length === 0) return null;
+  for (const field of PATH_FIELDS) {
+    const value = input[field];
+    if (typeof value !== 'string') continue;
+    const relative = relativeToRoot(policy.workTree, value);
+    const inside = dirs.find((dir) => relative === dir || relative.startsWith(`${dir}/`));
+    if (inside) return `${inside}/ holds the untrusted source material of this design system. It is read only; change the design-system files instead.`;
+  }
+  return null;
+}
+
 function checkGeneratedFile(workTree: string, input: Record<string, unknown>): string | null {
   for (const field of PATH_FIELDS) {
     const value = input[field];
@@ -241,7 +256,7 @@ function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<str
     if (problem) return problem;
   }
   if (WRITE_PATH_TOOLS.has(toolName)) {
-    const problem = checkExecutedConfig(policy.workTree, input) ?? checkGeneratedFile(policy.workTree, input);
+    const problem = checkExecutedConfig(policy.workTree, input) ?? checkGeneratedFile(policy.workTree, input) ?? checkReadOnlyDirs(policy, input);
     if (problem) return problem;
   }
   if (toolName === TWEAKS_TOOL && policy.mode === 'critique') return 'define_tweaks is not available in critique runs.';
@@ -264,7 +279,7 @@ export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: str
   };
 }
 
-const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review']);
+const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL]);
 
 export function canChangePreview(toolName: string): boolean {
   return !NO_CHANGE_TOOLS.has(toolName);

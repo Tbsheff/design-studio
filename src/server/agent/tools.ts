@@ -11,6 +11,7 @@ import { criticImages, criticOutPrefix, describeCriticResult, runCritic } from '
 import type { TasteRule } from './taste.js';
 import { tweakControlSchema } from '../tweaks/schema.js';
 import { defineTweaks } from '../tweaks/store.js';
+import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -73,18 +74,19 @@ function firstMobileFrom(counters: StudioToolCounters, viewport: ViewportName, f
   return { from: 0, note: ' The first mobile screenshot of a run always starts at the top, so from was set to 0.' };
 }
 
-export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: { viewport: ViewportName; from: number }) {
+export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: { viewport: ViewportName; from: number; theme?: 'light' | 'dark' }) {
   const { viewport } = args;
   if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
   if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
   if (deps.run?.log) recordShot(deps.run.log, viewport);
-  const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}`);
+  const dark = args.theme === 'dark';
+  const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {
     await mkdir(deps.runsDir, { recursive: true });
-    const tiles = await deps.preview.screenshotTiles(deps.ctx.previewUrl, { viewport: VIEWPORTS[viewport], ...TILE_PLAN[viewport], from: start.from, outPrefix });
-    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `${describeTiles(viewport, tiles)}${start.note}` }] };
+    const tiles = await deps.preview.screenshotTiles(deps.ctx.previewUrl, { viewport: VIEWPORTS[viewport], ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}) });
+    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles)}${start.note}` }] };
   } catch (error) {
     return errorText(`Screenshot failed: ${describeError(error)}`);
   }
@@ -150,6 +152,16 @@ export async function runDefineTweaks(deps: Pick<StudioToolDeps, 'ctx'>, control
   }
 }
 
+export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, 'ctx'>) {
+  if (!deps.ctx.project.designSystemFor) return errorText('design_system_check works only in a design-system project (the workbench of a design system).');
+  try {
+    const result = await checkDesignSystem(deps.ctx.direction.workTree);
+    return { content: [{ type: 'text' as const, text: describeCheck(result) }] };
+  } catch (error) {
+    return errorText(`design_system_check failed: ${describeError(error)}`);
+  }
+}
+
 export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSdkServerConfigWithInstance> {
   const { createSdkMcpServer, tool } = await import('@anthropic-ai/claude-agent-sdk');
   const counters: StudioToolCounters = deps.run ? (deps.run.counters ??= { shots: 0, checks: 0 }) : { shots: 0, checks: 0 };
@@ -160,6 +172,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     {
       viewport: z.enum(['desktop', 'mobile', 'tablet']).default('desktop'),
       from: z.number().int().min(0).default(0).describe('Page y offset in px where the first image starts.'),
+      theme: z.enum(['light', 'dark']).default('light').describe('dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'),
     },
     (args) => takeScreenshot(deps, counters, args),
     { annotations: { readOnlyHint: true } },
@@ -188,5 +201,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runDefineTweaks(deps, args.controls),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool] });
+  const designSystemCheck = tool(
+    'design_system_check',
+    'Design-system projects only. Checks the design system files and returns "passed" or a list of problems: required tokens present and valid (DTCG, OKLCH, dark values), WCAG AA contrast (4.5:1) for fg and fg-muted on bg, fg on surface and each X-fg on X in light and dark, the 9 DESIGN.md sections with no "_To do:" lines, no raw colors in the kit page index.html, and font tokens that match the Google Fonts link and pack.json.',
+    {},
+    () => runDesignSystemCheck(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck] });
 }

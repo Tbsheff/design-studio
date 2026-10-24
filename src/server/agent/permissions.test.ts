@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createCanUseTool, createPreToolUseGuard, isInstallCommand, permittedToolNames, type ToolPolicy } from './permissions.js';
+import { canChangePreview, createCanUseTool, createPreToolUseGuard, isInstallCommand, permittedToolNames, type ToolPolicy } from './permissions.js';
 
 let root: string;
 let workTree: string;
@@ -224,5 +224,21 @@ describe('skills', () => {
     expect((await decide('Read', { file_path: path.join(skillDir, '..', '..', 'outside', 'secret.txt') }, on())).behavior).toBe('deny');
     expect((await decide('Glob', { pattern: '../**', path: skillDir }, on())).behavior).toBe('deny');
     expect((await decide('Read', { file_path: path.join(skillDir, 'SKILL.md') })).behavior).toBe('deny');
+  });
+});
+
+describe('design system projects', () => {
+  it('keeps source/ read only, allows the other files, and permits the check tool without counting it as a change', async () => {
+    const readOnly = { readOnlyDirs: ['source'] };
+    expect(await decide('Write', { file_path: path.join(workTree, 'source', 'evidence.md') }, readOnly)).toMatchObject({ behavior: 'deny' });
+    expect(await decide('Edit', { file_path: 'source/url-1/page.html.txt' }, readOnly)).toMatchObject({ behavior: 'deny' });
+    expect(await decide('Write', { file_path: path.join(workTree, 'Source', 'x.md') }, readOnly)).toMatchObject({ behavior: 'deny' });
+    expect(await decide('Read', { file_path: path.join(workTree, 'source', 'evidence.md') }, readOnly)).toMatchObject({ behavior: 'allow' });
+    expect(await decide('Write', { file_path: path.join(workTree, 'DESIGN.md') }, readOnly)).toMatchObject({ behavior: 'allow' });
+    expect(await decide('Write', { file_path: path.join(workTree, 'sources.md') }, readOnly)).toMatchObject({ behavior: 'allow' });
+    expect(await decide('Write', { file_path: path.join(workTree, 'source', 'evidence.md') })).toMatchObject({ behavior: 'allow' });
+    expect(permittedToolNames(policy())).toContain('mcp__studio__design_system_check');
+    expect(await decide('mcp__studio__design_system_check', {})).toMatchObject({ behavior: 'allow' });
+    expect(canChangePreview('mcp__studio__design_system_check')).toBe(false);
   });
 });

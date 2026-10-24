@@ -6,7 +6,8 @@ import type { AgentRunContext } from '../types.js';
 import { createFakePreview, createTempProject } from './test-fakes.js';
 import { resolveRunConfig } from '../../shared/run-levels.js';
 import type { RunToolState } from './check-tool.js';
-import { describeTiles, runRenderCheck, takeScreenshot, type StudioToolDeps } from './tools.js';
+import { describeTiles, runDesignSystemCheck, runRenderCheck, takeScreenshot, type StudioToolDeps } from './tools.js';
+import { writeTestDraft } from '../design-system/test-draft.js';
 
 const roots: string[] = [];
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
@@ -153,5 +154,31 @@ describe('tiles', () => {
 
   it('describes the end of the page', () => {
     expect(describeTiles('desktop', { paths: ['a'], pageHeight: 700, from: 0, to: 700 })).toBe('desktop 1440x900: 1 image(s) cover y=0-700px of a 700px page. This is the end of the page.');
+  });
+});
+
+describe('design system tools', () => {
+  it('shoots the dark theme when asked and says so', async () => {
+    const requests: TileRequest[] = [];
+    const d = await deps(requests);
+    const result = await takeScreenshot(d, { shots: 0, checks: 0 }, { viewport: 'desktop', from: 0, theme: 'dark' });
+    expect(requests[0]).toMatchObject({ theme: 'dark' });
+    expect(requests[0]?.outPrefix).toBe(path.join(d.runsDir, 'r1-shot-1-desktop-dark'));
+    expect((result.content.at(-1) as { text: string }).text).toMatch(/^Dark theme\. desktop 1440x900/);
+    await takeScreenshot(d, { shots: 1, checks: 0 }, { viewport: 'desktop', from: 0, theme: 'light' });
+    expect(requests[1]).not.toHaveProperty('theme');
+  });
+
+  it('design_system_check lists the problems in a backing project and refuses other projects', async () => {
+    const d = await deps([]);
+    const refused = await runDesignSystemCheck(d);
+    expect(refused).toMatchObject({ isError: true });
+    const backing = { ...d, ctx: { ...d.ctx, project: { ...d.ctx.project, designSystemFor: 'user-kit' } } };
+    await writeTestDraft(backing.ctx.direction.workTree, { todos: 1 });
+    const failing = await runDesignSystemCheck(backing);
+    expect((failing.content[0] as { text: string }).text).toMatch(/^Design system check failed: 1 problem\(s\)\.\n- \[design-md\] DESIGN\.md still has a to-do line/);
+    await writeTestDraft(backing.ctx.direction.workTree, { todos: 0 });
+    const passing = await runDesignSystemCheck(backing);
+    expect((passing.content[0] as { text: string }).text).toMatch(/^Design system check passed/);
   });
 });

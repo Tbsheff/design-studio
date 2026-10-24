@@ -1,5 +1,6 @@
 import { watch } from 'chokidar';
 import type { FSWatcher } from 'chokidar';
+import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
 import type { EventBus, ProjectStore, VersionStore } from '../types.js';
@@ -72,6 +73,8 @@ export class WatcherManager {
       statusQueued: false,
       closed: false,
     };
+    const watchedAt = Date.now();
+    watcher.once('ready', () => void this.recordEarlyWrites(entry, watchedAt));
     const onPath = (target: string): void => this.record(entry, target);
     watcher.on('add', onPath);
     watcher.on('change', onPath);
@@ -111,6 +114,19 @@ export class WatcherManager {
         await entry.watcher.close();
       }),
     );
+  }
+
+  private async recordEarlyWrites(entry: DirectionWatch, since: number): Promise<void> {
+    const walk = async (dir: string): Promise<void> => {
+      const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
+      for (const item of items) {
+        const target = path.join(dir, item.name);
+        if (entry.closed || isIgnored(entry.root, target)) continue;
+        if (item.isDirectory()) await walk(target);
+        else if (item.isFile() && ((await stat(target).catch(() => null))?.mtimeMs ?? 0) >= since) this.record(entry, target);
+      }
+    };
+    await walk(entry.root);
   }
 
   private record(entry: DirectionWatch, target: string): void {

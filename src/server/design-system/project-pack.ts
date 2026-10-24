@@ -10,7 +10,7 @@ import type { StudioProjectStore } from '../store/projects.js';
 import { readSnapshot, restoreSnapshots } from './create-token.js';
 import { splitDesignMd } from './design-md.js';
 import type { PackLibrary } from './library.js';
-import { DESIGN_MD_FILE, WIRED_FILES, applyPack, formatIssues, manifestSchema, wiresReact } from './packs.js';
+import { DESIGN_MD_FILE, WIRED_FILES, applyPack, formatIssues, manifestSchema, wiresReact, writeFileAtomic } from './packs.js';
 import type { LoadedPack } from './packs.js';
 import { readDesignSystemState } from './state.js';
 import { hasTokensFile, readManifest } from './sync.js';
@@ -107,8 +107,33 @@ function parseManifestText(text: string): PackManifest {
   return parsed.data as PackManifest;
 }
 
-export async function saveDirectionPack(library: PackLibrary, direction: Direction, raw: unknown): Promise<SavePackResult> {
+async function saveTarget(library: PackLibrary, requested: string | undefined, onDisk: PackManifest): Promise<string | undefined> {
+  if (requested !== undefined) return requested;
+  const named = await library.registry.get(onDisk.id);
+  return named?.source === 'user' ? named.manifest.id : undefined;
+}
+
+async function pointAtSavedPack(deps: ProjectPackDeps, project: Project, direction: Direction, saved: LoadedPack): Promise<Version | null> {
+  const workTree = direction.workTree;
+  const snapshot = await readSnapshot(workTree, PACK_FILE);
+  let version: Version | null;
+  try {
+    await writeFileAtomic(path.join(workTree, PACK_FILE), `${JSON.stringify(saved.manifest, null, 2)}\n`);
+    version = await deps.versions.commitFile(project, direction, [PACK_FILE], `Save ${saved.manifest.name} to library`, { kind: 'manual', prompt: `Save ${saved.manifest.name} to library (${saved.manifest.id})` });
+  } catch (error) {
+    await restoreSnapshots(workTree, [snapshot]);
+    throw error;
+  }
+  if (deps.projects.mainDirection(project).id === direction.id && project.packId !== saved.manifest.id) await deps.projects.setPackId(project.id, saved.manifest.id);
+  if (version) await publishVersion(deps, project, direction, version);
+  return version;
+}
+
+export async function saveDirectionPack(deps: ProjectPackDeps, library: PackLibrary, project: Project, direction: Direction, raw: unknown): Promise<SavePackResult> {
   const request = parseSaveRequest(raw);
+  if (deps.runner.isRunning(project.id, direction.id)) {
+    throw new DirectEditError('run_in_progress', 'The agent is editing this direction; wait for the run to finish');
+  }
   const workTree = direction.workTree;
   const tokensText = await readOptional(path.join(workTree, TOKENS_FILE));
   const manifestText = await readOptional(path.join(workTree, PACK_FILE));
@@ -127,6 +152,8 @@ export async function saveDirectionPack(library: PackLibrary, direction: Directi
     tags: manifest.tags,
     license: manifest.license,
   };
-  if (request.packId === undefined) return { pack: (await library.createUserPack(input)).summary, created: true };
-  return { pack: (await library.updateUserPack(request.packId, input)).summary, created: false };
+  const target = await saveTarget(library, request.packId, manifest);
+  const saved = target === undefined ? await library.createUserPack(input) : await library.updateUserPack(target, input);
+  const version = await pointAtSavedPack(deps, project, direction, saved);
+  return { pack: saved.summary, created: target === undefined, project: await deps.projects.get(project.id), version };
 }

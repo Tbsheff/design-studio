@@ -44,8 +44,10 @@ test('design-system library: save to library, switch packs, restore through vers
   await expect(page.locator('.ds-toast', { hasText: 'Saved House Editorial to your library.' })).toBeVisible();
   const packs = await api.call<PackSummary[]>('GET', '/api/packs');
   expect(packs.at(-1)).toMatchObject({ id: 'user-house-editorial', source: 'user', provenance: 'extracted' });
+  await expect(chip(page, 'House Editorial')).toBeVisible();
+  await expect.poll(async () => (await api.project(project.id)).packId).toBe('user-house-editorial');
 
-  await chip(page, 'Editorial').click();
+  await chip(page, 'House Editorial').click();
   await page.getByRole('dialog', { name: 'Design system' }).getByRole('button', { name: 'Change design system…' }).click();
   const change = page.getByRole('dialog', { name: 'Change design system' });
   const list = change.getByRole('listbox', { name: 'Design systems' });
@@ -64,11 +66,12 @@ test('design-system library: save to library, switch packs, restore through vers
   const versions = await api.versions(project.id, 'main');
   const before = versions[1];
   if (!before) throw new Error('no version before the switch');
+  expect(before.title).toBe('Save House Editorial to library');
   await versionRow(page, before.title).first().getByRole('button', { name: 'Restore' }).click();
-  await expect(chip(page, 'Editorial')).toBeVisible();
+  await expect(chip(page, 'House Editorial')).toBeVisible();
   await expect.poll(() => previewPrimary(page)).toBe(editorialPrimary);
   expect(readFileSync(path.join(tree, 'design-system/tokens.css'), 'utf8')).toBe(editorialCss);
-  await expect.poll(async () => (await api.project(project.id)).packId).toBe('editorial');
+  await expect.poll(async () => (await api.project(project.id)).packId).toBe('user-house-editorial');
 });
 
 test('design-system library: add a design system to a project without one', async ({ page }) => {

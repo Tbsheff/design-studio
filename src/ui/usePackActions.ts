@@ -41,6 +41,8 @@ export function usePackActions({ projectId, directionId, setProject, onCommitted
         if (!directionId) return;
         const result = await api.savePack(projectId, directionId, { name });
         refreshPacks();
+        setProject(result.project);
+        if (result.version) onCommitted();
         show(`Saved ${result.pack.name} to your library.`);
       },
     }),

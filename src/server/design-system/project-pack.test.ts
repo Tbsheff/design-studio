@@ -173,13 +173,36 @@ describe('save a project design system to the library', { timeout: 30000 }, () =
   it('updates the same user pack on save-back and refuses built-in targets', async () => {
     const project = await create({ packId: 'editorial' });
     const first = await ok<SavePackResult>(save(project, { name: 'Mine' }));
-    await ok<ApplyPackResult>(apply(project, first.pack.id));
     const update = await ok<SavePackResult>(save(project, { name: 'Mine v2', packId: first.pack.id }));
     expect(update).toMatchObject({ created: false, pack: { id: 'user-mine', name: 'Mine v2' } });
     expect((await save(project, { name: 'X', packId: 'editorial' })).status).toBe(400);
     expect((await save(project, { name: '' })).status).toBe(400);
     const plain = await create({});
     expect((await save(plain, { name: 'Nothing' })).status).toBe(404);
+  });
+
+  it('points pack.json at the saved pack so a second save updates it in place', async () => {
+    const project = await create({ packId: 'editorial' });
+    const first = await ok<SavePackResult>(save(project, { name: 'Field Notes' }));
+    expect(first).toMatchObject({ created: true, pack: { id: 'user-field-notes' }, version: { title: 'Save Field Notes to library', changedFiles: [PACK_FILE] } });
+    expect(JSON.parse(await read(project, PACK_FILE))).toMatchObject({ id: 'user-field-notes', name: 'Field Notes', provenance: 'extracted' });
+    expect(first.project.packId).toBe('user-field-notes');
+    const state = await ok<{ packId: string }>(call('GET', `/api/projects/${project.id}/d/main/design-system`));
+    expect(state.packId).toBe('user-field-notes');
+
+    const again = await ok<SavePackResult>(save(project, { name: 'Field Notes' }));
+    expect(again).toMatchObject({ created: false, pack: { id: 'user-field-notes' }, version: null });
+    const renamed = await ok<SavePackResult>(save(project, { name: 'Field Notes 2' }));
+    expect(renamed).toMatchObject({ created: false, pack: { id: 'user-field-notes', name: 'Field Notes 2' }, version: { title: 'Save Field Notes 2 to library' } });
+    const ids = (await ok<PackSummary[]>(call('GET', '/api/packs'))).filter((pack) => pack.source === 'user').map((pack) => pack.id);
+    expect(ids).toEqual(['user-field-notes']);
+  });
+
+  it('refuses to save while a run edits the direction', async () => {
+    const project = await create({ packId: 'editorial' });
+    running.add(`${project.id}/main`);
+    const response = await save(project, { name: 'Busy' });
+    expect(response.status).toBe(409);
   });
 
   it('rejects an edited pack.json that no longer matches the schema', async () => {

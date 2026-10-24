@@ -438,7 +438,7 @@ export const API_ROUTES = {
   deletePack: 'DELETE /api/packs/:id -> {ok} (user packs only; 400 built-in, 404 unknown; projects that use it keep their files)',
   exportPack: 'GET /api/packs/:id/export -> application/zip (<id>/pack.json, <id>/tokens.json, <id>/DESIGN.md)',
   applyPack: 'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
-  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?} -> SavePackResult (new user pack, or updates packId when it is a user pack; 400 built-in packId or invalid files, 404 no design system)',
+  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?} -> SavePackResult (updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active)',
   getDesignSystem: 'GET /api/projects/:pid/d/:did/design-system -> DesignSystemState',
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
@@ -716,6 +716,8 @@ export interface ApplyPackResult {
 export interface SavePackResult {
   pack: PackSummary;
   created: boolean;
+  project: Project;
+  version: Version | null;
 }
 
 export interface CompiledTokenEntry {

@@ -70,6 +70,11 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
 
   app.post('/api/projects/:pid/d/:did/design-system/save', async (c) => {
     const body = await readBody(c);
-    return c.json(await withDirection(c.req.param('pid'), c.req.param('did'), (_project, direction) => saveDirectionPack(library, direction, body)));
+    try {
+      return c.json(await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => saveDirectionPack(editDeps, library, project, direction, body)));
+    } catch (error) {
+      if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
   });
 }

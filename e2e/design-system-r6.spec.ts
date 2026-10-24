@@ -4,7 +4,7 @@ import path from 'node:path';
 import { expect, test, type Frame, type Page } from '@playwright/test';
 import { differenceEuclidean, parse } from 'culori';
 import type { DesignSystemState, Project } from '../src/shared/contracts';
-import { type StudioApi, frontFrame, mainDirection, openHome } from './support/studio';
+import { type StudioApi, frontFrame, mainDirection, openHome, selectInFrame } from './support/studio';
 
 const deltaE = differenceEuclidean('oklab');
 
@@ -145,4 +145,37 @@ test('R6-1: the canvas dark switch repaints every frame in under 100 ms and leav
 
   expect(treeHash(main.workTree)).toBe(before);
   expect((await api.versions(project.id, 'main')).length).toBe(versionsBefore);
+});
+
+const LINT_PAGE = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Lint</title><link rel="stylesheet" href="design-system/tokens.css">
+<style>
+.cta { display: inline-block; padding: 12px 20px; background: var(--primary); color: #ff0001; border-radius: var(--radius-md); }
+</style></head>
+<body style="background:var(--bg);color:var(--fg)"><main><h1>Lint probe</h1><a class="cta" href="#">Start</a></main></body>
+</html>
+`;
+
+test('R6-3: an off-palette color shows the nearest token with ΔE and Use token writes var()', async ({ page }) => {
+  const api = await openHome(page);
+  const project = await openPackProject(page, api, 'Lint Page');
+  const main = mainDirection(project);
+  const file = path.join(main.workTree, 'index.html');
+  writeFileSync(file, LINT_PAGE);
+  await api.call('POST', `/api/projects/${project.id}/d/main/keep`);
+  await expect(frontFrame(page).locator('h1')).toHaveText('Lint probe');
+  await selectInFrame(page, '.cta');
+  await page.getByRole('tab', { name: /^Design/ }).click();
+  const row = page.getByTestId('token-lint').filter({ hasText: 'Text color' });
+  await expect(row).toBeVisible();
+  await expect(row).toContainText('#ff0001');
+  const hint = (await row.locator('.tk-lint-hint').textContent()) ?? '';
+  const match = /Nearest is (--[a-z0-9-]+), ΔE (\d+\.\d)/.exec(hint);
+  expect(match, hint).not.toBeNull();
+  const cssVar = match![1]!;
+  console.log(`R6-3 lint: ${hint}`);
+  await row.getByRole('button', { name: `Use ${cssVar} for text color` }).click();
+  await expect.poll(() => readFileSync(file, 'utf8')).toContain(`color: var(${cssVar})`);
+  await expect(page.getByTestId('token-lint').filter({ hasText: 'Text color' })).toHaveCount(0);
 });

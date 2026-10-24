@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { DirectStyleProperty, SelectionContext } from '../../shared/contracts';
-import { cssVarFor, varName } from '../../shared/token-match';
+import { colorHex, cssVarFor, varName } from '../../shared/token-match';
+import type { AuthoredCss } from '../authoredCss';
+import { lintValues, type LintIssue } from '../tokenLint';
 import { api } from '../api';
 import type { StyleValues } from '../cssValues';
 import type { DesignTokens } from '../useDesignSystemState';
 import { buildEditRequest, type DirectEdit, type DirectEditCommit } from '../useDirectEdit';
-import { snapTarget, useSnapSetting, useTokenSnap, type CreateRequest, type SnapNote, type TokenUi } from '../useTokenSnap';
+import { useSnapSetting, useTokenSnap, type CreateRequest, type SnapNote, type TokenUi } from '../useTokenSnap';
 import { CreateTokenDialog, type CreateTokenSubmit } from './CreateTokenDialog';
 import { Icon } from './Icon';
 import { TokenControl } from './TokenControl';
@@ -46,17 +48,6 @@ export function SnapToggle({ ui }: { ui: TokenUi | null }) {
   );
 }
 
-function hintFor(edit: DirectEdit, ui: TokenUi): { cssVar: string; props: DirectStyleProperty[] } | null {
-  for (const prop of [...edit.dirty].reverse()) {
-    const value = edit.values[prop];
-    const cssVar = snapTarget(prop, value, ui.entries, ui.mode);
-    if (!cssVar) continue;
-    const props = edit.dirty.filter((p) => edit.values[p] === value && snapTarget(p, value, ui.entries, ui.mode) === cssVar);
-    return { cssVar, props };
-  }
-  return null;
-}
-
 function NoteBar({ children, onClose }: { children: ReactNode; onClose: () => void }) {
   return (
     <div className="tk-note" role="status">
@@ -69,9 +60,8 @@ function NoteBar({ children, onClose }: { children: ReactNode; onClose: () => vo
   );
 }
 
-export function TokenNotes(props: { ui: TokenUi | null; edit: DirectEdit; note: SnapNote | null; onKeepRaw: (raw: Partial<StyleValues>) => void; onDismiss: () => void }) {
-  const { ui, edit, note } = props;
-  const [hidden, setHidden] = useState<string | null>(null);
+export function TokenNotes(props: { ui: TokenUi | null; note: SnapNote | null; onKeepRaw: (raw: Partial<StyleValues>) => void; onDismiss: () => void }) {
+  const { ui, note } = props;
   if (!ui) return null;
   if (note) {
     return (
@@ -86,26 +76,73 @@ export function TokenNotes(props: { ui: TokenUi | null; edit: DirectEdit; note: 
       </NoteBar>
     );
   }
-  const hint = hintFor(edit, ui);
-  const key = hint ? `${hint.cssVar}:${hint.props.join(',')}:${edit.values[hint.props[0] ?? 'color']}` : null;
-  if (!hint || key === hidden) return null;
+  return null;
+}
+
+const PROP_LABEL: Partial<Record<DirectStyleProperty, string>> = {
+  color: 'Text color',
+  'background-color': 'Fill',
+  'border-color': 'Border',
+  'font-family': 'Font',
+  'font-size': 'Font size',
+  gap: 'Gap',
+  'border-radius': 'Radius',
+};
+
+function propsLabel(props: DirectStyleProperty[]): string {
+  const first = props[0] ?? 'color';
+  if (first.startsWith('padding-')) return 'Padding';
+  if (first.startsWith('margin-')) return 'Margin';
+  return PROP_LABEL[first] ?? first;
+}
+
+function shownValue(issue: LintIssue): string {
+  if (issue.kind === 'color') return colorHex(issue.value) ?? issue.value;
+  if (issue.kind === 'font') return issue.value.split(',')[0]?.trim().replace(/^['"]|['"]$/g, '') ?? issue.value;
+  return issue.value;
+}
+
+function issueText(issue: LintIssue): ReactNode {
+  const exact = issue.token.exact;
+  const token = <code>{issue.token.cssVar}</code>;
+  if (issue.kind === 'color' && !exact) return <>Off palette. Nearest is {token}, ΔE {issue.deltaE?.toFixed(1)}</>;
+  if (issue.kind === 'font' && !exact) return <>Not a font token. Use {token}</>;
+  if (exact) return <>Same as {token}, but typed raw</>;
+  return <>Near {token} ({issue.token.value})</>;
+}
+
+export function TokenLint({ ui, edit, css }: { ui: TokenUi | null; edit: DirectEdit; css: AuthoredCss | null }) {
+  const issues = useMemo(() => (ui ? lintValues(edit.values, ui.entries, ui.mode, css, edit.dirty) : []), [ui, edit.values, edit.dirty, css]);
+  if (!ui || issues.length === 0) return null;
+  const use = (issue: LintIssue) => {
+    edit.preview(Object.fromEntries(issue.props.map((p) => [p, `var(${issue.token.cssVar})`])));
+    edit.commit();
+  };
   return (
-    <NoteBar onClose={() => setHidden(key)}>
-      <span className="tk-note-text">
-        Close to <code>{hint.cssVar}</code>
-      </span>
-      <span className="tk-note-sep" aria-hidden="true">·</span>
-      <button
-        type="button"
-        className="tk-note-action"
-        onClick={() => {
-          edit.preview(Object.fromEntries(hint.props.map((p) => [p, `var(${hint.cssVar})`])));
-          edit.commit();
-        }}
-      >
-        Snap to {hint.cssVar}
-      </button>
-    </NoteBar>
+    <section className="tk-lint" aria-label="Token checks">
+      <h3 className="tk-lint-head">
+        <Icon name="alert" size={13} />
+        {issues.length === 1 ? '1 value is not a token' : `${issues.length} values are not tokens`}
+      </h3>
+      <ul className="tk-lint-list">
+        {issues.map((issue) => {
+          const label = propsLabel(issue.props);
+          return (
+            <li key={`${issue.props.join(',')}`} className="tk-lint-row" data-testid="token-lint">
+              <span className="tk-lint-text">
+                <span className="tk-lint-prop">
+                  {label} <span className="tk-lint-value">{shownValue(issue)}</span>
+                </span>
+                <span className="tk-lint-hint">{issueText(issue)}</span>
+              </span>
+              <button type="button" className="btn small" aria-label={`Use ${issue.token.cssVar} for ${label.toLowerCase()}`} onClick={() => use(issue)}>
+                Use token
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

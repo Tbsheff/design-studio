@@ -1,4 +1,4 @@
-import type { MutableRefObject } from 'react';
+import { useEffect, type MutableRefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import { textEditability } from '../cssValues';
@@ -15,7 +15,7 @@ import { AlignField, ColorField, InspectorSection, SelectField } from './Inspect
 import { AutoLayoutSection, SizeSection } from './InspectorLayout';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
-import { CreateTokenHost, FontField, SnapToggle, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { MultiCreateTokenHost, MultiNote, MultiSizeSection } from './InspectorMulti';
 import { NumberField } from './NumberField';
 
@@ -176,6 +176,11 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
     rewrite: tk.ui ? tk.snap.rewrite : undefined,
   });
   const authored = useAuthoredCss(props.port, props.target.selector);
+  const savedAt = edit.status.kind === 'saved' ? edit.status.at : 0;
+  const refreshAuthored = authored.request;
+  useEffect(() => {
+    if (savedAt) void refreshAuthored();
+  }, [savedAt, refreshAuthored]);
   const keepRaw = (raw: Partial<typeof edit.values>) => {
     tk.snap.keepRaw(raw);
     edit.preview(raw);
@@ -188,6 +193,7 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
       <Header selection={props.target} edit={edit} ui={tk.ui} authored={authored} />
       <div className="ins-scroll">
         <ErrorLine status={edit.status} />
+        <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
         <TextSection selection={props.target} edit={edit} />
         <AutoLayoutSection edit={edit} />
         <SizeSection edit={edit} selection={props.target} />
@@ -199,7 +205,7 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
         <EffectsSection edit={edit} />
         <InspectorOtherStyles css={authored.css} />
       </div>
-      <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
+      <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
     </div>
     <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
     </TokenUiContext.Provider>
@@ -252,7 +258,7 @@ function MultiEditor(props: InspectorProps) {
           <EffectsSection edit={edit} />
         </fieldset>
       </div>
-      <TokenNotes ui={tk.ui} edit={edit} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
+      <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
     </div>
     <MultiCreateTokenHost projectId={props.projectId} directionId={props.directionId} tokens={props.tokens} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
     </TokenUiContext.Provider>

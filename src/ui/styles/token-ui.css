@@ -226,3 +226,73 @@
   padding-left: 2px;
 }
 
+
+.tk-lint {
+  margin: var(--s-2) var(--s-3) 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--warn-line);
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+}
+
+.tk-lint-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.tk-lint-list {
+  margin: var(--s-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tk-lint-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) 0;
+}
+
+.tk-lint-row + .tk-lint-row {
+  border-top: 1px solid var(--warn-line);
+}
+
+.tk-lint-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--t-xs);
+}
+
+.tk-lint-prop {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.tk-lint-value {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.tk-lint-hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+
+.tk-lint-hint code {
+  font-family: var(--mono);
+}
+
+.tk-lint-row .btn {
+  flex: none;
+}

@@ -23,19 +23,19 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Capability | Best in class: product and how | Design Studio status | P | Size |
 |---|---|---|---|---|
 | Prompt box on home | OD: one prompt box, project-type chips, keeps the draft when you change type [OD2] | has, `Home.tsx:PromptArea` | — | — |
-| Project thumbnails | Figma: file cards show a live thumbnail [mem] | partial, `ProjectGrid.tsx:ProjectCard` (icon, time, swatches, no image) | P0 | M |
-| Search, sort, filter projects | Paper: search across folders, multi-select, duplicate [A6] | partial, `Home.tsx:141` fixed sort, `:169` folder filter, no search | P1 | S |
-| Rename, duplicate, delete project | Paper dashboard: duplicate and multi-select [A6]; Figma [mem] | missing, no API in `api.ts` | P0 | M |
-| Templates or starter gallery | OD: "Start with a template" picker plus 5 visual directions [OD1, OD3]; Figma Community [mem] | missing, `src/server/templates` has only the scaffold | P1 | M |
-| Import from URL (web clone) | OD: Web clone rebuilds a site from a URL [OD3]; pen.dev: built-in browser imports a page or one element as layers [P5] | missing | P1 | M |
-| Import from screenshot | OD: drop a screenshot, OD writes DESIGN.md [OD1]; CD: screenshots as context [CD1] | partial, images attach only inside Studio `PromptBox.tsx:169,177` | P1 | S |
+| Project thumbnails | Figma: file cards show a live thumbnail [mem] | has (R1), `src/server/thumbnails.ts` head screenshot after each run, `ProjectGrid.tsx` card image | P0 | M |
+| Search, sort, filter projects | Paper: search across folders, multi-select, duplicate [A6] | has (R1), search box with `/`, sort Recent / Name / Created, folder filter; no multi-select | P1 | S |
+| Rename, duplicate, delete project | Paper dashboard: duplicate and multi-select [A6]; Figma [mem] | has (R1), card menu and right-click, `home-routes.ts`, delete to `trash/` with Undo | P0 | M |
+| Templates or starter gallery | OD: "Start with a template" picker plus 5 visual directions [OD1, OD3]; Figma Community [mem] | has (R1), 6 starters in `src/server/templates/starters`, `StarterGallery` | P1 | M |
+| Import from URL (web clone) | OD: Web clone rebuilds a site from a URL [OD3]; pen.dev: built-in browser imports a page or one element as layers [P5] | partial (R1), a pasted link becomes a reference chip; the run gets the page text (`reference-page.ts`); no layer import | P1 | M |
+| Import from screenshot | OD: drop a screenshot, OD writes DESIGN.md [OD1]; CD: screenshots as context [CD1] | has (R1), drop, paste or attach images on the home prompt | P1 | S |
 | Import from Figma | Paper: Cmd+V pastes Figma objects [A3]; pen.dev: .fig import [P5]; OD: "From Figma" chip [OD3] | missing | P2 | L |
 | Import folder or Vite app | pen.dev: open a local .pen next to code [P4] | has, `FolderControls.tsx:OpenFolder`, `e2e/c-import-vite.spec.ts` | — | — |
-| Drag-drop onto home | Paper and pen.dev: drop images on the canvas [A3, P5] | missing on home (`Home.tsx` has no drop handler) | P1 | S |
-| Clarifying questions before the first build | CD: asks follow-up questions first [CD2]; OD: one-round question form, resumable [OD2] | missing | P1 | M |
-| First-run onboarding | pen.dev: dashboard Cmd+N, autosave [P3] | partial, `desktop/first-run.ts` setup check, text-only empty state `ProjectGrid.tsx:71` | P1 | S |
-| Sample project | Figma: sample files in drafts [mem] | missing | P2 | S |
-| Keyboard use of the grid | Figma: F6 moves between regions [F1] | partial, cards are buttons; no arrow keys | P2 | S |
+| Drag-drop onto home | Paper and pen.dev: drop images on the canvas [A3, P5] | has (R1), images and links drop on the home prompt | P1 | S |
+| Clarifying questions before the first build | CD: asks follow-up questions first [CD2]; OD: one-round question form, resumable [OD2] | has (R1), up to 3 questions for prompts under 12 words (`agent/clarify.ts`, `ClarifyForm`) | P1 | M |
+| First-run onboarding | pen.dev: dashboard Cmd+N, autosave [P3] | has (R1), 3-step first-run panel, dismissed in `preferences.json` | P1 | S |
+| Sample project | Figma: sample files in drafts [mem] | has (R1), "Open the sample project" in the first-run panel, 2 versions, no run | P2 | S |
+| Keyboard use of the grid | Figma: F6 moves between regions [F1] | has (R1), roving focus, arrow keys, Enter, F2, ⌘D, ⌘⌫, context menu key | P2 | S |
 | Design system pick at start | OD: pick 1 of 5 directions or a brand [OD1] | has, `PackPicker` in `Home.tsx`, DESIGN.md field in `NewProjectAdvanced.tsx` | — | — |
 
 ### 1.2 Canvas

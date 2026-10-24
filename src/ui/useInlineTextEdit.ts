@@ -22,6 +22,7 @@ export function useInlineTextEdit(allowed: boolean, onCommit: TextCommitHandler 
     if (!allowed) setEditing(false);
   }, [allowed]);
 
+
   const onMessage = useCallback((message: TextEditMessage) => {
     if (message.type === 'text-edit') {
       setEditing(message.state === 'start');
@@ -33,5 +34,7 @@ export function useInlineTextEdit(allowed: boolean, onCommit: TextCommitHandler 
     else live.current.onReject();
   }, []);
 
-  return { editing, onMessage };
+  const reset = useCallback(() => setEditing(false), []);
+
+  return { editing, onMessage, reset };
 }

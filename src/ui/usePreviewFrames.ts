@@ -101,6 +101,7 @@ export function usePreviewFrames(o: Options) {
   const frameErrorAt = useRef<Record<string, number>>({});
   const hmrFallback = useRef<number | null>(null);
   const listeners = useRef(new Set<(message: BridgeToParent) => void>());
+  const textEditing = useRef(false);
 
   const opts = useRef(o);
   opts.current = o;
@@ -164,6 +165,11 @@ export function usePreviewFrames(o: Options) {
     (token: string) => {
       const swap = pendingSwap.current;
       if (swap?.token !== token) return;
+      if (textEditing.current) {
+        swap.due = true;
+        swap.loaded = true;
+        return;
+      }
       window.clearTimeout(swap.timer);
       pendingSwap.current = null;
       swapTo(token);
@@ -316,6 +322,16 @@ export function usePreviewFrames(o: Options) {
     [frontFrame],
   );
 
+  const onTextMessage = useCallback(
+    (msg: TextEditMessage) => {
+      textEditing.current = msg.type === 'text-edit' && msg.state === 'start';
+      opts.current.onTextEdit?.(msg);
+      const swap = pendingSwap.current;
+      if (!textEditing.current && swap?.due && swap.loaded) settleSwap(swap.token);
+    },
+    [settleSwap],
+  );
+
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
@@ -360,11 +376,11 @@ export function usePreviewFrames(o: Options) {
           break;
         case 'text-edit':
         case 'text-commit':
-          cur.onTextEdit?.(msg);
+          onTextMessage(msg);
           break;
       }
     },
-    [requestRects],
+    [requestRects, onTextMessage],
   );
 
   const onMessage = useCallback(

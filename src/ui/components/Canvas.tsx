@@ -265,6 +265,8 @@ export function Canvas(props: Props) {
     textEditAllowed,
     onTextEdit: inline.onMessage,
   });
+  const resetInline = inline.reset;
+  useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
   useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);
   useEffect(() => () => setCanvasFront(null, false), []);

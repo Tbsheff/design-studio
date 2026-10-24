@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { ROOT } from './support/server';
 import { createProjectViaUi, frontFrame, mainDirection, openHome, selectInFrame, setSelectMode, type StudioApi } from './support/studio';
 
 const h1 = (page: Page) => frontFrame(page).locator('h1');
@@ -69,7 +70,27 @@ function stats(values: number[]): { median: number; max: number } {
   return { median: sorted[Math.floor(sorted.length / 2)] ?? 0, max: sorted.at(-1) ?? 0 };
 }
 
+function armCaretProbe(): void {
+  const w = window as unknown as { __caretMs?: number };
+  window.addEventListener(
+    'dblclick',
+    (event) => {
+      const from = event.timeStamp;
+      w.__caretMs = undefined;
+      const tick = (now: number) => {
+        const selection = window.getSelection();
+        const active = document.activeElement;
+        if (active instanceof HTMLElement && active.isContentEditable && selection && selection.rangeCount > 0) w.__caretMs = now - from;
+        else if (now - from < 2000) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    },
+    true,
+  );
+}
+
 test('R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 ms with no model call', async ({ page }) => {
+  await page.addInitScript(armCaretProbe);
   const { api, project, file } = await newProject(page, 'Inline Harbor', 'html');
   const runsBefore = await runCount(api, project.id);
   await selectInFrame(page, 'h1');
@@ -77,9 +98,12 @@ test('R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
   const fromKey: number[] = [];
   const fromCommit: number[] = [];
   const caret: number[] = [];
+  const caretInFrame: number[] = [];
   for (let i = 1; i <= 5; i += 1) {
     const text = `Inline Harbor ${i}`;
     caret.push(await editH1(page));
+    await expect.poll(() => h1(page).evaluate(() => (window as unknown as { __caretMs?: number }).__caretMs ?? null)).not.toBeNull();
+    caretInFrame.push(Math.round(await h1(page).evaluate(() => (window as unknown as { __caretMs: number }).__caretMs)));
     await page.keyboard.press('Meta+A');
     await page.keyboard.type(text);
     await armCommitProbe(page);
@@ -101,7 +125,9 @@ test('R4-1: dblclick, type, Cmd+Enter writes the h1 to the source in under 200 m
   const dbl = stats(caret);
   console.log(`[R4-1] key -> bytes on disk ms ${JSON.stringify(fromKey)} median ${key.median} max ${key.max}`);
   console.log(`[R4-1] text-commit -> bytes on disk ms ${JSON.stringify(fromCommit)} median ${commit.median} max ${commit.max}`);
-  console.log(`[R4-1] dblclick -> caret visible ms ${JSON.stringify(caret)} median ${dbl.median} max ${dbl.max}`);
+  const inFrame = stats(caretInFrame);
+  console.log(`[R4-1] dblclick -> caret visible ms, Playwright upper bound ${JSON.stringify(caret)} median ${dbl.median} max ${dbl.max}`);
+  console.log(`[R4-1] dblclick event -> first frame with caret ms, in frame ${JSON.stringify(caretInFrame)} median ${inFrame.median} max ${inFrame.max}`);
   expect(commit.max).toBeLessThan(200);
   expect(key.median).toBeLessThan(200);
   expect(await runCount(api, project.id)).toBe(runsBefore);
@@ -198,4 +224,89 @@ test('R4-1: React project, two inline edits in a row write App.tsx', async ({ pa
   await expect(h1(page)).toHaveText('Inline Orbit Two');
   await setSelectMode(page, false);
   expect(await runCount(api, project.id)).toBe(runsBefore);
+});
+
+async function boxMatchesH1(page: Page): Promise<number> {
+  const found = await page.locator('.overlay .box.selected').boundingBox();
+  const zoom = await page.locator('.artboard').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+  const height = await h1(page).evaluate((el) => el.getBoundingClientRect().height);
+  return found ? Math.abs(found.height - height * zoom) : Number.POSITIVE_INFINITY;
+}
+
+test('R4-1: a quick second edit survives the frame swap; the box follows growing text; Enter from the studio starts the edit', async ({ page }) => {
+  const { api, project, file } = await newProject(page, 'Inline Swap Probe', 'html');
+  const runsBefore = await runCount(api, project.id);
+  await selectInFrame(page, 'h1');
+
+  await editH1(page);
+  await page.keyboard.press('Meta+A');
+  await page.keyboard.type('Swap First');
+  await page.keyboard.press('Enter');
+  const lede = frontFrame(page).locator('p.lede');
+  await lede.dblclick();
+  await page.keyboard.press('Meta+A');
+  await page.keyboard.type('Lede typed while the frame reloads');
+  await bytesOnDisk(file, '<h1>Swap First</h1>');
+  await page.waitForTimeout(2000);
+  await expect(lede).toHaveAttribute('contenteditable', /.+/);
+  await expect(lede).toHaveText('Lede typed while the frame reloads');
+  await page.keyboard.press('Meta+Enter');
+  await bytesOnDisk(file, 'Lede typed while the frame reloads</p>');
+  await expect(page.locator('.canvas.text-editing')).toHaveCount(0);
+  await expect(page.locator('iframe.frame')).toHaveCount(1);
+  await expect(h1(page)).toHaveText('Swap First');
+
+  await selectInFrame(page, 'h1');
+  const before = await page.locator('.overlay .box.selected').boundingBox();
+  await editH1(page);
+  await expect(page.locator('.canvas.text-editing')).toHaveCount(1);
+  await page.keyboard.press('Meta+A');
+  await page.keyboard.type('A much longer heading that has to wrap onto a second and maybe a third line in this frame');
+  await expect.poll(() => boxMatchesH1(page)).toBeLessThan(2);
+  const after = await page.locator('.overlay .box.selected').boundingBox();
+  const shot = await page.locator('.overlay .box.selected').boundingBox();
+  if (shot) await page.screenshot({ path: path.join(ROOT, 'design-review', 'inline-text-editing.png'), clip: { x: shot.x - 24, y: shot.y - 24, width: shot.width + 48, height: shot.height + 48 } });
+  expect((after?.height ?? 0) > (before?.height ?? 0)).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(h1(page)).toHaveText('Swap First');
+  await expect.poll(() => boxMatchesH1(page)).toBeLessThan(2);
+
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+    window.focus();
+  });
+  await expect.poll(() => page.evaluate(() => document.activeElement === document.body)).toBe(true);
+  await page.keyboard.press('Enter');
+  await expect.poll(() => caretReady(page)).toBe(true);
+  await page.keyboard.type('From Studio Enter');
+  await page.keyboard.press('Enter');
+  await bytesOnDisk(file, '<h1>From Studio Enter</h1>');
+  expect(await runCount(api, project.id)).toBe(runsBefore);
+});
+
+test('R4-1: a failed write shows in the inspector and restores the text; a run start ends an open edit', async ({ page }) => {
+  const { api, project, file } = await newProject(page, 'Inline Error Probe', 'html');
+  const main = mainDirection(project);
+  const original = readFileSync(file, 'utf8');
+  await selectInFrame(page, 'h1');
+
+  await page.route(/\/direct-edit$/, (route) => route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: 'run_active', message: 'busy' }) }));
+  await editH1(page);
+  await page.keyboard.press('Meta+A');
+  await page.keyboard.type('Never Saved');
+  await page.keyboard.press('Meta+Enter');
+  await expect(page.locator('.ins-error')).toContainText('Agent is running');
+  await expect(h1(page)).toHaveText('Inline Error Probe');
+  expect(readFileSync(file, 'utf8')).toBe(original);
+  await page.unroute(/\/direct-edit$/);
+
+  await editH1(page);
+  await page.keyboard.type(' zzz');
+  await expect(page.locator('.canvas.text-editing')).toHaveCount(1);
+  await api.call('POST', `/api/projects/${project.id}/d/${main.id}/runs`, { prompt: 'Run while editing [steps]', mode: 'edit' });
+  await expect(frontFrame(page).locator('[contenteditable]')).toHaveCount(0);
+  await expect(page.locator('.canvas.text-editing')).toHaveCount(0);
+  await expect(h1(page)).not.toHaveText(/zzz/);
+  await api.waitForRuns(project.id, 2);
+  expect(readFileSync(file, 'utf8')).not.toContain('zzz');
 });

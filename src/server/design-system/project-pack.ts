@@ -25,7 +25,7 @@ export const NOT_WIRED_NOTICE = 'Design system files added. This imported projec
 const APPLY_FILES = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
 
 const applySchema = z.object({ packId: z.string().trim().min(1).max(64) }).strict();
-const saveSchema = z.object({ name: z.string().trim().min(1).max(80), packId: z.string().trim().min(1).max(64).optional() }).strict();
+const saveSchema = z.object({ name: z.string().trim().min(1).max(80), packId: z.string().trim().min(1).max(64).optional(), asNew: z.boolean().optional() }).strict();
 
 async function readOptional(file: string): Promise<string | null> {
   try {
@@ -42,7 +42,7 @@ export function parseApplyRequest(raw: unknown): { packId: string } {
   return parsed.data;
 }
 
-export function parseSaveRequest(raw: unknown): { name: string; packId?: string } {
+export function parseSaveRequest(raw: unknown): { name: string; packId?: string; asNew?: boolean } {
   const parsed = saveSchema.safeParse(raw);
   if (!parsed.success) throw new BadRequestError(`invalid request: ${formatIssues('', parsed.error).map((line) => line.trim()).join('; ')}`);
   return parsed.data;
@@ -153,7 +153,8 @@ export async function saveDirectionPack(deps: ProjectPackDeps, library: PackLibr
     license: manifest.license,
     draft: false,
   };
-  const target = await saveTarget(library, request.packId, manifest);
+  if (request.asNew && request.packId !== undefined) throw new BadRequestError('asNew and packId cannot be used together');
+  const target = request.asNew ? undefined : await saveTarget(library, request.packId, manifest);
   const saved = target === undefined ? await library.createUserPack(input) : await library.updateUserPack(target, input);
   const version = await pointAtSavedPack(deps, project, direction, saved);
   return { pack: saved.summary, created: target === undefined, project: await deps.projects.get(project.id), version };

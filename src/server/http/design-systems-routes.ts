@@ -1,16 +1,17 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
-import type { Attachment, DesignSystemCoverage, DesignSystemDraftInfo, DesignSystemDraftResult, Direction, Project } from '../../shared/contracts.js';
+import type { Attachment, DesignSystemCoverage, DesignSystemDraftInfo, DesignSystemDraftResult, Direction, OpenPackEditorResult, Project } from '../../shared/contracts.js';
 import { checkDesignSystem } from '../design-system/check.js';
 import { readCoverage } from '../design-system/draft-project.js';
-import { KIT_PAGE_FILE } from '../design-system/extract/kit-page.js';
+import { KIT_PAGE_FILE, renderKitPage } from '../design-system/extract/kit-page.js';
 import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, buildDraft, createFetcher, parseDraftRequest } from '../design-system/extract/draft.js';
 import type { Draft, DraftFile } from '../design-system/extract/draft.js';
 import type { Fetcher } from '../design-system/extract/url.js';
 import type { PackLibrary } from '../design-system/library.js';
 import type { LoadedPack } from '../design-system/packs.js';
 import { BadRequestError, NotFoundError, isNodeError } from '../store/errors.js';
+import { createKeyedMutex } from '../store/mutex.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { VersionStore } from '../types.js';
 
@@ -87,37 +88,57 @@ async function writeDraftFiles(workTree: string, files: DraftFile[]): Promise<vo
   }
 }
 
-function metaFile(draft: Draft, pack: LoadedPack, attachments: Attachment[]): DraftFile {
+interface BackingSource {
+  name: string;
+  kitHtml: string;
+  files: DraftFile[];
+  inputs: Record<string, unknown>;
+}
+
+function metaFile(source: BackingSource, pack: LoadedPack, attachments: Attachment[]): DraftFile {
   const meta = {
     version: 1,
     kind: 'design-system-draft',
     packId: pack.manifest.id,
-    name: draft.name,
+    name: source.name,
     createdAt: new Date().toISOString(),
-    inputs: draft.inputs,
+    inputs: source.inputs,
     attachments: attachments.map((item) => ({ id: item.id, name: item.name, mime: item.mime })),
-    files: [KIT_PAGE_FILE, ...draft.files.map((file) => file.path)],
+    files: [KIT_PAGE_FILE, ...source.files.map((file) => file.path)],
   };
   return { path: META_FILE, content: `${JSON.stringify(meta, null, 2)}\n` };
+}
+
+function librarySource(pack: LoadedPack): BackingSource {
+  const { name, mode, fonts } = pack.manifest;
+  return { name, kitHtml: renderKitPage({ name, mode, googleFontsUrl: fonts.googleFontsUrl }), files: [], inputs: { library: pack.manifest.id } };
+}
+
+function packParam(c: Context): string {
+  const id = c.req.param('id') ?? '';
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(id)) throw new BadRequestError('invalid pack id');
+  return id;
 }
 
 export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDeps): void {
   const { library, projects, versions } = deps;
   const fetcher = deps.fetcher ?? createFetcher(deps.allowLoopback);
 
-  const fillBacking = async (created: Project, draft: Draft, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
+  const editorLock = createKeyedMutex();
+
+  const fillBacking = async (created: Project, source: BackingSource, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
     await versions.ensureRepo(created);
     const attachments = await Promise.all(images.map((image) => projects.saveAttachment(created.id, image)));
     const workTree = projects.mainDirection(created).workTree;
-    await writeDraftFiles(workTree, [{ path: KIT_PAGE_FILE, content: draft.kitHtml }, ...draft.files, metaFile(draft, pack, attachments)]);
+    await writeDraftFiles(workTree, [{ path: KIT_PAGE_FILE, content: source.kitHtml }, ...source.files, metaFile(source, pack, attachments)]);
     return deps.finishCreate(created, pack);
   };
 
-  const createBacking = async (draft: Draft, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
-    const created = await projects.createInFolder({ parentPath: await deps.projectsFolder(), name: `${draft.name} design system`, kind: 'html', designSystemFor: pack.manifest.id });
+  const createBacking = async (source: BackingSource, pack: LoadedPack, images: ImageInput[]): Promise<Project> => {
+    const created = await projects.createInFolder({ parentPath: await deps.projectsFolder(), name: `${source.name} design system`, kind: 'html', designSystemFor: pack.manifest.id });
     let project: Project;
     try {
-      project = await fillBacking(created, draft, pack, images);
+      project = await fillBacking(created, source, pack, images);
     } catch (error) {
       await projects.discardCreated(created.id).catch((cleanup: unknown) => console.error('[design-systems] could not remove the half-made backing project', cleanup));
       throw error;
@@ -135,12 +156,25 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     const pack = await library.createUserPack(draft.pack);
     let project: Project;
     try {
-      project = await createBacking(draft, pack, body.images);
+      project = await createBacking({ name: draft.name, kitHtml: draft.kitHtml, files: draft.files, inputs: draft.inputs }, pack, body.images);
     } catch (error) {
       await library.deletePack(pack.manifest.id).catch((cleanup: unknown) => console.error('[design-systems] could not remove the draft pack', cleanup));
       throw error;
     }
     const result: DesignSystemDraftResult = { project, pack: pack.summary, coverage: draft.coverage, ms: Date.now() - started };
+    return c.json(result);
+  });
+
+  app.post('/api/packs/:id/editor', async (c) => {
+    const id = packParam(c);
+    const pack = await library.registry.get(id);
+    if (!pack) throw new NotFoundError(`unknown pack: ${id}`);
+    if (pack.source !== 'user') throw new BadRequestError(`${pack.manifest.name} is a built-in design system; make a copy to edit it`);
+    const result: OpenPackEditorResult = await editorLock(id, async () => {
+      const existing = (await projects.list()).find((project) => project.designSystemFor === id);
+      if (existing) return { project: existing, created: false };
+      return { project: await createBacking(librarySource(pack), pack, []), created: true };
+    });
     return c.json(result);
   });
 

@@ -3,15 +3,17 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { z } from 'zod';
-import type { CreateUserPackInput, PackDetail, PackManifest, UpdateUserPackInput } from '../../shared/contracts.js';
+import type { CreateUserPackInput, DesignSystemCheckResult, PackDetail, PackManifest, UpdateUserPackInput } from '../../shared/contracts.js';
 import { MAX_SLUG_SUFFIX, slugCandidate, slugify } from '../../shared/folders.js';
 import { BadRequestError, NotFoundError, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { buildErrorMessage } from './sync.js';
+import { checkDesignSystemFiles } from './check.js';
 import { compileTokens, parseTokenFile } from './compile.js';
 import { removeTokenBlock } from './design-md.js';
 import { DESIGN_MD_FILE, USER_PACK_PREFIX, formatIssues, manifestSchema } from './packs.js';
 import type { LoadedPack, PackRegistry } from './packs.js';
+import { PackExistsError, findImportConflict, readPackZip, type ImportMode } from './pack-import.js';
 import { zipFiles } from './zip.js';
 
 const MAX_TOKENS_BYTES = 512 * 1024;
@@ -55,6 +57,8 @@ export interface PackLibrary {
   renamePack(id: string, name: string): Promise<LoadedPack>;
   deletePack(id: string): Promise<void>;
   exportPack(id: string): Promise<PackExport>;
+  importPack(bytes: Buffer, mode: ImportMode): Promise<{ pack: LoadedPack; replaced: boolean }>;
+  checkPack(id: string): Promise<DesignSystemCheckResult>;
 }
 
 function parseFields(raw: unknown, label: string): CreateUserPackInput {
@@ -207,7 +211,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
 
     async detail(id) {
       const pack = await requirePack(id);
-      return { summary: pack.summary, tokensJson: pack.tokensText, designMd: pack.designMd };
+      return { summary: pack.summary, tokensJson: pack.tokensText, designMd: pack.designMd, entries: pack.entries };
     },
 
     async createUserPack(raw) {
@@ -248,6 +252,19 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
       const names = ['pack.json', 'tokens.json', DESIGN_MD_FILE];
       const entries = await Promise.all(names.map(async (name) => ({ name: `${id}/${name}`, data: await readFile(path.join(pack.dir, name)) })));
       return { fileName: `${id}.zip`, bytes: zipFiles(entries) };
+    },
+
+    async importPack(bytes, mode) {
+      const zip = readPackZip(bytes);
+      const conflict = findImportConflict(await registry.list(), zip);
+      if (conflict && mode === 'ask') throw new PackExistsError(conflict);
+      if (conflict && mode === 'replace') return { pack: await this.updateUserPack(conflict.id, zip.input), replaced: true };
+      return { pack: await create(parseFields(zip.input, 'design system')), replaced: false };
+    },
+
+    async checkPack(id) {
+      const pack = await requirePack(id);
+      return checkDesignSystemFiles({ tokensText: pack.tokensText, manifestText: JSON.stringify(pack.manifest), designMd: pack.designMd, kitHtml: null }, { kitPage: false });
     },
   };
 }

@@ -439,8 +439,11 @@ export const API_ROUTES = {
   duplicatePack: 'POST /api/packs/:id/duplicate {name?} -> PackSummary (built-in or user; default name "<name> copy")',
   deletePack: 'DELETE /api/packs/:id -> {ok} (user packs only; 400 built-in, 404 unknown; projects that use it keep their files)',
   exportPack: 'GET /api/packs/:id/export -> application/zip (<id>/pack.json, <id>/tokens.json, <id>/DESIGN.md)',
+  importPack: 'POST /api/packs/import (multipart: file = zip in the export format, mode = ask | replace | copy) -> ImportPackResult (new user pack, provenance imported; 409 pack_exists {existing} when mode is ask and a user pack has the same id or name; 400 bad zip, extra entries, path outside the folder, larger than 2 MB, invalid files)',
+  checkPack: 'GET /api/packs/:id/check -> DesignSystemCheckResult (tokens, contrast, DESIGN.md and pack fonts; no kit page rules)',
+  openPackEditor: 'POST /api/packs/:id/editor -> OpenPackEditorResult (the backing project whose designSystemFor is the pack id, else a new one with a kit page; 400 built-in)',
   applyPack: 'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
-  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?} -> SavePackResult (updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active)',
+  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?, asNew?} -> SavePackResult (asNew creates a new user pack; else updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active)',
   getDesignSystem: 'GET /api/projects/:pid/d/:did/design-system -> DesignSystemState',
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
@@ -687,6 +690,19 @@ export interface PackDetail {
   summary: PackSummary;
   tokensJson: string;
   designMd: string;
+  entries: CompiledTokenEntry[];
+}
+
+export type ImportPackMode = 'ask' | 'replace' | 'copy';
+
+export interface ImportPackResult {
+  pack: PackSummary;
+  replaced: boolean;
+}
+
+export interface OpenPackEditorResult {
+  project: Project;
+  created: boolean;
 }
 
 export interface PackProblem {

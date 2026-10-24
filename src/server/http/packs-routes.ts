@@ -3,6 +3,7 @@ import type { Direction, Project } from '../../shared/contracts.js';
 import { DirectEditError } from '../direct-edit/index.js';
 import type { PackLibrary } from '../design-system/library.js';
 import { packProblems } from '../design-system/packs.js';
+import { MAX_IMPORT_ZIP_BYTES, PackExistsError, parseImportMode } from '../design-system/pack-import.js';
 import { applyPackToDirection, parseApplyRequest, saveDirectionPack } from '../design-system/project-pack.js';
 import type { ProjectPackDeps } from '../design-system/project-pack.js';
 import { BadRequestError } from '../store/errors.js';
@@ -12,6 +13,19 @@ interface PackRouteDeps {
   editDeps: ProjectPackDeps;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
+}
+
+const FORM_OVERHEAD_BYTES = 64 * 1024;
+
+async function readImportForm(c: Context): Promise<{ bytes: Buffer; mode: unknown }> {
+  if (!(c.req.header('content-type') ?? '').toLowerCase().startsWith('multipart/form-data')) throw new BadRequestError('send the zip as multipart/form-data with a file field');
+  const length = Number(c.req.header('content-length') ?? '0');
+  if (length > MAX_IMPORT_ZIP_BYTES + FORM_OVERHEAD_BYTES) throw new BadRequestError('the zip is larger than 2 MB');
+  const form = await c.req.parseBody();
+  const file = form.file;
+  if (!(file instanceof File)) throw new BadRequestError('add a .zip file in the file field');
+  if (file.size > MAX_IMPORT_ZIP_BYTES) throw new BadRequestError('the zip is larger than 2 MB');
+  return { bytes: Buffer.from(await file.arrayBuffer()), mode: form.mode };
 }
 
 function packId(c: Context): string {
@@ -30,7 +44,20 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
 
   app.post('/api/packs', async (c) => c.json((await library.createUserPack(await readBody(c))).summary));
 
+  app.post('/api/packs/import', async (c) => {
+    const { bytes, mode } = await readImportForm(c);
+    try {
+      const { pack, replaced } = await library.importPack(bytes, parseImportMode(mode));
+      return c.json({ pack: pack.summary, replaced });
+    } catch (error) {
+      if (error instanceof PackExistsError) return c.json({ error: 'pack_exists', message: error.message, existing: error.existing }, 409);
+      throw error;
+    }
+  });
+
   app.get('/api/packs/:id', async (c) => c.json(await library.detail(packId(c))));
+
+  app.get('/api/packs/:id/check', async (c) => c.json(await library.checkPack(packId(c))));
 
   app.patch('/api/packs/:id', async (c) => c.json((await library.updateUserPack(packId(c), await readBody(c))).summary));
 

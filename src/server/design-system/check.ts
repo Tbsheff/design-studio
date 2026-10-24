@@ -244,12 +244,14 @@ function sameName(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
-function checkFonts(entries: CompiledTokenEntry[], fontLinks: string[], manifest: PackManifest | null, problems: Problems): void {
+function checkFonts(entries: CompiledTokenEntry[], fontLinks: string[] | null, manifest: PackManifest | null, problems: Problems): void {
   const families = tokenFamilies(entries);
   const web = [...new Set(Object.values(families).map(webFamily).filter((name): name is string => name !== null))];
-  const linked = familiesInFontLinks(fontLinks);
-  for (const name of web) if (!linked.some((item) => sameName(item, name))) problems.add('fonts', `The font ${name} is in tokens.json but not in the Google Fonts <link> of ${KIT_PAGE_FILE}.`);
-  for (const name of linked) if (!web.some((item) => sameName(item, name))) problems.add('fonts', `The Google Fonts <link> of ${KIT_PAGE_FILE} loads ${name}, which no font token uses.`);
+  if (fontLinks !== null) {
+    const linked = familiesInFontLinks(fontLinks);
+    for (const name of web) if (!linked.some((item) => sameName(item, name))) problems.add('fonts', `The font ${name} is in tokens.json but not in the Google Fonts <link> of ${KIT_PAGE_FILE}.`);
+    for (const name of linked) if (!web.some((item) => sameName(item, name))) problems.add('fonts', `The Google Fonts <link> of ${KIT_PAGE_FILE} loads ${name}, which no font token uses.`);
+  }
   if (!manifest) return;
   for (const role of ['display', 'body', 'mono'] as const) {
     const token = families[role];
@@ -259,7 +261,7 @@ function checkFonts(entries: CompiledTokenEntry[], fontLinks: string[], manifest
   for (const name of web) if (!packLinked.some((item) => sameName(item, name))) problems.add('fonts', `${PACK_FILE} fonts.googleFontsUrl does not load ${name}.`);
 }
 
-export function checkDesignSystemFiles(files: DesignSystemFiles): DesignSystemCheckResult {
+export function checkDesignSystemFiles(files: DesignSystemFiles, options: { kitPage?: boolean } = {}): DesignSystemCheckResult {
   const problems = new Problems();
   const manifest = readManifest(files.manifestText, problems);
   const mode: Mode = manifest?.mode ?? 'light';
@@ -269,7 +271,7 @@ export function checkDesignSystemFiles(files: DesignSystemFiles): DesignSystemCh
     checkContrast(compiled.entries, mode, problems);
   }
   checkDesignMd(files.designMd, problems);
-  const fontLinks = checkKitColors(files.kitHtml, problems);
+  const fontLinks = options.kitPage === false ? null : checkKitColors(files.kitHtml, problems);
   if (compiled) checkFonts(compiled.entries, fontLinks, manifest, problems);
   const list = problems.finish();
   return { passed: list.length === 0, problems: list };

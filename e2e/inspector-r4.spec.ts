@@ -176,6 +176,11 @@ test('Inspector R4: math, per-corner radius, shadow read back and scroll', async
   await spacing.press('Enter');
   await expect.poll(() => lineOf(file, '<h1')).toContain('letter-spacing: -1px');
   await settled(page);
+  const marginTop = page.getByLabel('Margin top', { exact: true });
+  await marginTop.fill('-8');
+  await marginTop.press('Enter');
+  await expect.poll(() => lineOf(file, '<h1')).toContain('margin-top: -8px');
+  await settled(page);
 
   await selectCard(page);
   await page.getByRole('button', { name: 'Independent corners' }).click();
@@ -203,10 +208,15 @@ test('Inspector R4: math, per-corner radius, shadow read back and scroll', async
   await y.press('Enter');
   await expect.poll(() => lineOf(file, 'First idea')).toContain('box-shadow: 0 8px 12px 0 rgb(0 0 0 / 0.12)');
   await settled(page);
+  const x = page.getByLabel('Shadow 1 x offset', { exact: true });
+  await x.fill('-4');
+  await x.press('Enter');
+  await expect.poll(() => lineOf(file, 'First idea')).toContain('box-shadow: -4px 8px 12px 0 rgb(0 0 0 / 0.12)');
+  await settled(page);
   const color = page.getByLabel('Shadow 1 color', { exact: true });
   await color.fill('var(--line)');
   await color.press('Enter');
-  await expect.poll(() => lineOf(file, 'First idea')).toContain('box-shadow: 0 8px 12px 0 var(--line)');
+  await expect.poll(() => lineOf(file, 'First idea')).toContain('box-shadow: -4px 8px 12px 0 var(--line)');
   await settled(page);
   await page.getByLabel('Layer blur', { exact: true }).fill('2');
   await page.getByLabel('Layer blur', { exact: true }).press('Enter');
@@ -219,7 +229,7 @@ test('Inspector R4: math, per-corner radius, shadow read back and scroll', async
   const fields = ['Shadow 1 x offset', 'Shadow 1 y offset', 'Shadow 1 blur', 'Shadow 1 spread', 'Shadow 1 color', 'Layer blur'];
   const read = () => Promise.all(fields.map((label) => page.getByLabel(label, { exact: true }).inputValue()));
   const before = await read();
-  expect(before).toEqual(['0', '8px', '12px', '0', 'var(--line)', '2px']);
+  expect(before).toEqual(['-4px', '8px', '12px', '0', 'var(--line)', '2px']);
 
   await page.reload();
   await expect(frontFrame(page).locator('h1')).toHaveText('Kiln Effects');

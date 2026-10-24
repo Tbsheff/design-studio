@@ -83,7 +83,7 @@ function isInside(root: string, target: string): boolean {
   return target.startsWith(root + path.sep);
 }
 
-async function resolveSource(workTree: string, file: string): Promise<ResolvedSource> {
+export async function resolveSource(workTree: string, file: string): Promise<ResolvedSource> {
   assertEditablePath(file);
   const root = await realpath(workTree);
   const candidate = path.resolve(root, file);
@@ -97,7 +97,7 @@ async function resolveSource(workTree: string, file: string): Promise<ResolvedSo
   return { file: real, relative: segments.join('/') };
 }
 
-function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
+export function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
   const extension = path.extname(relative).toLowerCase();
   const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move };
   const position = { line: request.source.line, col: request.source.col };

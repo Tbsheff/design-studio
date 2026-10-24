@@ -9,6 +9,8 @@ import {
   type CreateTokenRequest,
   type CreateTokenResult,
   type DesignSystemState,
+  type DirectEditBatch,
+  type DirectEditBatchResult,
   type DirectEditResult,
   type EditHistoryState,
   type Direction,
@@ -198,6 +200,10 @@ export const api = {
   directEdit: async (pid: string, did: string, req: DirectEditRequest) => {
     const res = await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage);
     return (await res.json()) as DirectEditResult;
+  },
+  directEditBatch: async (pid: string, did: string, batch: DirectEditBatch) => {
+    const res = await request('POST', `${d(pid, did)}/direct-edit`, batch, pickMessage);
+    return (await res.json()) as DirectEditBatchResult;
   },
   workTreeFiles: (pid: string, did: string) => json<{ files: string[] }>('GET', `${d(pid, did)}/tree`),
   renderCheck: (pid: string, did: string) => json<RenderCheckResult[]>('POST', `${d(pid, did)}/check`),

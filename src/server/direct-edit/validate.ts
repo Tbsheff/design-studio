@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
-import type { DirectEditRequest } from '../../shared/contracts.js';
+import type { DirectEditBatch, DirectEditRequest } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
 
 const MAX_VALUE = 200;
@@ -74,4 +74,32 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.name !== undefined) request.name = parsed.data.name;
   if (parsed.data.move !== undefined) request.move = parsed.data.move;
   return request;
+}
+
+const MAX_BATCH = 50;
+const batchSchema = z.object({ edits: z.array(z.unknown()).min(1).max(MAX_BATCH) }).strict();
+
+export function isDirectEditBatch(raw: unknown): boolean {
+  return typeof raw === 'object' && raw !== null && 'edits' in raw;
+}
+
+export function parseDirectEditBatch(raw: unknown): DirectEditBatch {
+  const parsed = batchSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new DirectEditError('invalid_request', `Invalid direct edit batch: send 1 to ${MAX_BATCH} edits`);
+  }
+  const edits = parsed.data.edits.map((entry, index) => {
+    let request: DirectEditRequest;
+    try {
+      request = parseDirectEditRequest(entry);
+    } catch (error) {
+      if (error instanceof DirectEditError) throw new DirectEditError('invalid_request', `Edit ${index + 1}: ${error.message}`);
+      throw error;
+    }
+    if (request.name !== undefined || request.move !== undefined) {
+      throw new DirectEditError('invalid_request', `Edit ${index + 1}: a batch can only change style and text`);
+    }
+    return request;
+  });
+  return { edits };
 }

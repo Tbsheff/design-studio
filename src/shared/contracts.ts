@@ -597,7 +597,7 @@ export const API_ROUTES = {
   deleteComment: 'DELETE /api/projects/:pid/d/:did/comments/:cid -> {ok}',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched)',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   getRun: 'GET /api/runs/:runId -> {summary, events}',
@@ -788,6 +788,12 @@ export interface DirectEditResult {
   version: Version;
   applied: { style: string[]; text: boolean };
   moved?: SourceLoc;
+}
+
+export interface DirectEditBatchResult {
+  files: string[];
+  version: Version;
+  applied: { file: string; style: string[]; text: boolean }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

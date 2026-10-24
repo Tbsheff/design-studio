@@ -37,6 +37,7 @@ import { randomToken } from '../session';
 import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
 import { setTelemetryScope } from '../perfTelemetry';
+import { renameVersion } from '../versionsApi';
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
   return texts.find((text) => typeof text === 'string') ?? null;
@@ -253,7 +254,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
   };
 
-  const [left, right] = compare;
+  const [left, right] = compare.map((picked) => versions.find((v) => v.id === picked.id) ?? picked);
 
 
   return (
@@ -298,6 +299,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             compareOpen={compareOpen}
             left={left}
             right={right}
+            versions={versions}
             onCloseCompare={() => setCompareOpen(false)}
             grid={variationsGrid({ state: variations, project, runs, lastChange: data.lastChange, currentDirectionId: did, setDirectionId: data.setDirectionId, onError: data.addError })}
             canvas={{
@@ -378,7 +380,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               const version = versions.find((v) => v.id === versionId);
               if (!version) return;
               setCompareOpen(false);
-              setSource({ kind: 'version', versionId, title: version.title });
+              setSource({ kind: 'version', versionId, title: version.name ?? version.title });
             },
           }}
           tokens={studioTokens.panel}
@@ -409,6 +411,9 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
             onCompare: () => setCompareOpen(true),
             onPolish: polish,
+            active: panel.tab === 'versions',
+            onRename: (v, name) =>
+              act(() => renameVersion(projectId, v.id, name).finally(data.refreshVersions)),
           }}
         />
       </div>

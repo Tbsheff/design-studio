@@ -21,6 +21,8 @@ interface Props {
   onToggleCompare: (v: Version) => void;
   onCompare: () => void;
   onPolish: () => void;
+  active?: boolean;
+  onRename?: (v: Version, name: string | null) => Promise<void>;
 }
 
 interface ForkFormProps {
@@ -175,8 +177,22 @@ export function VersionsPanel(props: Props) {
   const direction = project.directions.find((x) => x.id === directionId) ?? null;
   const fork = useFork(direction?.name, props.onNewDirection);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const sorted = useMemo(() => [...versions].sort((a, b) => b.createdAt - a.createdAt), [versions]);
-  const index = useMemo(() => indexVersions(versions), [versions]);
+  const [renamed, setRenamed] = useState<{ source: Version[]; names: Map<string, string | null> } | null>(null);
+  const named = useMemo(() => {
+    if (!renamed || renamed.source !== versions) return versions;
+    return versions.map((v) => {
+      if (!renamed.names.has(v.id)) return v;
+      const { name: _old, ...rest } = v;
+      const name = renamed.names.get(v.id);
+      return name ? { ...rest, name } : rest;
+    });
+  }, [versions, renamed]);
+  const sorted = useMemo(() => [...named].sort((a, b) => b.createdAt - a.createdAt), [named]);
+  const index = useMemo(() => indexVersions(named), [named]);
+  const rename = (v: Version, name: string | null) => {
+    setRenamed((prev) => ({ source: versions, names: new Map(prev?.source === versions ? prev.names : []).set(v.id, name) }));
+    void props.onRename?.(v, name);
+  };
   const locked = props.busy || props.running;
   const headVersionId = direction?.headVersionId ?? null;
 
@@ -190,6 +206,8 @@ export function VersionsPanel(props: Props) {
           {sorted.map((v) => (
             <VersionRow
               key={v.id}
+              projectId={project.id}
+              active={props.active ?? true}
               version={v}
               index={index}
               isHead={v.id === headVersionId}
@@ -205,6 +223,7 @@ export function VersionsPanel(props: Props) {
               onExport={() => props.onExport(v)}
               onBranch={() => fork.start(v.id)}
               onPolish={props.onPolish}
+              onRename={(name) => rename(v, name)}
             />
           ))}
         </ul>

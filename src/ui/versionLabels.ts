@@ -54,12 +54,17 @@ export function originOf(v: Version, index: VersionIndex): Version | null {
 }
 
 function plainTitle(v: Version): string {
+  if (v.name) return v.name;
   return v.meta.kind === 'run' ? runTitle(v.title) : v.title;
 }
 
 export function displayTitle(v: Version, index: VersionIndex): string {
+  return v.name ?? autoTitle(v, index);
+}
+
+export function autoTitle(v: Version, index: VersionIndex): string {
   const kind = v.meta.kind;
-  if (!isRestoreKind(kind)) return plainTitle(v);
+  if (!isRestoreKind(kind)) return v.meta.kind === 'run' ? runTitle(v.title) : v.title;
   const origin = originOf(v, index);
   return restoreTitle(kind, origin ? plainTitle(origin) : baseTitle(v.title, kind));
 }

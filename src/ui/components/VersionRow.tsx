@@ -1,10 +1,16 @@
+import { useRef, useState, type KeyboardEvent } from 'react';
 import type { Version } from '../../shared/contracts';
 import { formatRelative, formatTime } from '../format';
-import { displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
+import { autoTitle, displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
 import { Icon, type IconName } from './Icon';
 import { levelHint, levelLabel } from './LevelControl';
+import { VersionThumb } from './VersionThumb';
+
+const NAME_MAX = 80;
 
 interface VersionRowProps {
+  projectId: string;
+  active: boolean;
   version: Version;
   index: VersionIndex;
   isHead: boolean;
@@ -20,6 +26,48 @@ interface VersionRowProps {
   onExport: () => void;
   onBranch: () => void;
   onPolish: () => void;
+  onRename: (name: string | null) => void;
+}
+
+function RenameField({ initial, fallback, onDone }: { initial: string; fallback: string; onDone: (name: string | null | undefined) => void }) {
+  const [value, setValue] = useState(initial);
+  const done = useRef(false);
+  const finish = (name: string | null | undefined) => {
+    if (done.current) return;
+    done.current = true;
+    onDone(name);
+  };
+  const commit = () => {
+    const name = value.trim().replace(/\s+/g, ' ');
+    if (name === initial) return finish(undefined);
+    finish(name === '' || name === fallback ? null : name);
+  };
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commit();
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      finish(undefined);
+    }
+  };
+  return (
+    <input
+      className="version-rename"
+      aria-label="Version name"
+      autoFocus
+      value={value}
+      maxLength={NAME_MAX}
+      placeholder={fallback}
+      spellCheck={false}
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={onKeyDown}
+      onBlur={commit}
+    />
+  );
 }
 
 function RowAction(props: { label: string; icon: IconName; tip: string; onClick: () => void; disabled?: boolean; pressed?: boolean; testId?: string }) {
@@ -113,8 +161,8 @@ function VersionMeta({ version: v }: { version: Version }) {
       <time dateTime={new Date(v.createdAt).toISOString()} title={formatTime(v.createdAt)}>
         {formatRelative(v.createdAt)}
       </time>
-      <span className="dot" />
-      <span>
+      <span className="dot version-file-count-dot" />
+      <span className="version-file-count" title={v.changedFiles.join('\n')}>
         {files} file{files === 1 ? '' : 's'}
       </span>
     </div>
@@ -130,14 +178,41 @@ export function VersionRow(props: VersionRowProps) {
   const { version: v, isHead, picked } = props;
   const title = displayTitle(v, props.index);
   const detailId = `version-detail-${v.id.slice(0, 12)}`;
+  const [renaming, setRenaming] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const endRename = (name: string | null | undefined) => {
+    setRenaming(false);
+    if (name !== undefined) props.onRename(name);
+    requestAnimationFrame(() => toggle.current?.focus({ preventScroll: true }));
+  };
   return (
     <li className={rowClasses(props)}>
       <span className="version-node" aria-hidden="true" />
+      <VersionThumb projectId={props.projectId} versionId={v.id} active={props.active} label={title} onOpen={props.onOpen} />
       <div className="version-main">
         <div className="version-title">
-          <button type="button" className="version-toggle" aria-expanded={props.expanded} aria-controls={props.expanded ? detailId : undefined} onClick={props.onExpand}>
-            <span title={v.meta.prompt ?? v.title}>{title}</span>
-          </button>
+          {renaming ? (
+            <RenameField initial={title} fallback={autoTitle(v, props.index)} onDone={endRename} />
+          ) : (
+            <button
+              ref={toggle}
+              type="button"
+              className="version-toggle"
+              aria-expanded={props.expanded}
+              aria-controls={props.expanded ? detailId : undefined}
+              aria-keyshortcuts="F2"
+              onClick={props.onExpand}
+              onDoubleClick={() => setRenaming(true)}
+              onKeyDown={(event) => {
+                if (event.key === 'F2') {
+                  event.preventDefault();
+                  setRenaming(true);
+                }
+              }}
+            >
+              <span title={v.name ? `${v.name} (${autoTitle(v, props.index)}) · Double-click to rename` : `${v.meta.prompt ?? v.title} · Double-click to rename`}>{title}</span>
+            </button>
+          )}
           {isHead && <span className="badge accent">Head</span>}
         </div>
         <VersionMeta version={v} />

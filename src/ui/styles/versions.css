@@ -16,7 +16,7 @@
   position: relative;
   scroll-margin-top: 48px;
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 82px;
+  grid-template-columns: 20px 56px minmax(0, 1fr) 82px;
   column-gap: var(--s-2);
   padding: 8px var(--s-2) 10px;
   border-radius: var(--r-md);
@@ -66,6 +66,70 @@
   display: grid;
   gap: 3px;
   min-width: 0;
+  container-type: inline-size;
+}
+
+.version-thumb {
+  position: relative;
+  width: 56px;
+  height: 35px;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--surface-2);
+  color: var(--text-3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.version-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1);
+  pointer-events: none;
+}
+
+.version-thumb:active {
+  transform: scale(0.96);
+}
+
+.version-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.version-thumb.ready img {
+  opacity: 1;
+}
+
+.version:hover .version-thumb,
+.version:focus-within .version-thumb {
+  background: var(--surface-active);
+}
+
+.version-rename {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  margin: -2px 0 -2px -6px;
+  padding: 0 var(--s-1) 0 6px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  box-shadow: var(--ring);
+  outline: none;
 }
 
 .version-title {
@@ -122,6 +186,18 @@
   color: var(--text-3);
   font-size: var(--t-xs);
   font-variant-numeric: tabular-nums;
+}
+
+.version-meta > * {
+  flex: none;
+  white-space: nowrap;
+}
+
+@container (max-width: 240px) {
+  .version-meta .version-file-count,
+  .version-meta .version-file-count-dot {
+    display: none;
+  }
 }
 
 .version-meta .dot {

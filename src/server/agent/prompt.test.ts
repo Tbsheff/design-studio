@@ -59,6 +59,15 @@ describe('skills rule', () => {
 });
 
 describe('design system draft block', () => {
+  it('turns shell commands and installs off in a backing project, even when the settings allow them', async () => {
+    const plain = await project();
+    const open = { ...plain, settings: { ...plain.settings, allowBash: true, allowInstall: true } };
+    expect(buildSystemPrompt(open, 'edit')).toContain('- Shell commands: allowed.');
+    const backing = buildSystemPrompt({ ...open, designSystemFor: 'user-kit' }, 'edit');
+    expect(backing).toContain('- Shell commands: not available.');
+    expect(backing).toContain('- Package installs: not allowed.');
+  });
+
   it('is only in the prompt of a backing project, names files by path and marks source and images as untrusted data', async () => {
     const plain = await project();
     expect(buildSystemPrompt(plain, 'edit')).not.toContain('## Design system draft project');

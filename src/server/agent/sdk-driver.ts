@@ -341,12 +341,13 @@ const SKILLS_OFF_MESSAGE = 'Skills are off in wireframe runs. Build the wirefram
 function buildPolicy(input: DriverInput, skills: PreparedSkills, config: ResolvedRunConfig): ToolPolicy {
   const { ctx } = input;
   const settings = ctx.project.settings;
+  const shellAllowed = !ctx.project.designSystemFor;
   return {
     ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
     workTree: ctx.direction.workTree,
     mode: ctx.request.mode,
-    allowBash: settings.allowBash,
-    allowInstall: settings.allowInstall,
+    allowBash: shellAllowed && settings.allowBash,
+    allowInstall: shellAllowed && settings.allowInstall,
     skills: skills.enabled,
     skillDirs: skills.readableDirs,
     ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),

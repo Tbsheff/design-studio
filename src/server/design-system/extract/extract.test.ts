@@ -376,3 +376,19 @@ describe('draft composition', () => {
     await expect(buildDraft(parseDraftRequest({ tokensFile: { name: 'x.json', text: '[]' } }, 0), deps(), { allowLoopback: false, imageCount: 0 })).rejects.toThrow(/JSON object/);
   });
 });
+
+describe('resolveVars limits', () => {
+  it('stops a var() fan-out from growing without bound', () => {
+    const scope = new Map<string, string>([['--v0', '#123']]);
+    for (let level = 1; level <= 12; level += 1) scope.set(`--v${level}`, Array.from({ length: 8 }, () => `var(--v${level - 1})`).join(' '));
+    const started = Date.now();
+    const out = resolveVars('var(--v12)', [scope]);
+    expect(Date.now() - started).toBeLessThan(500);
+    expect(out.length).toBeLessThanOrEqual(4096);
+  });
+
+  it('still resolves normal chains', () => {
+    const scope = new Map<string, string>([['--a', 'var(--b)'], ['--b', 'oklch(0.5 0.1 200)']]);
+    expect(resolveVars('var(--a)', [scope])).toBe('oklch(0.5 0.1 200)');
+  });
+});

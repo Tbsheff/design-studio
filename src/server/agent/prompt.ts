@@ -151,15 +151,16 @@ export function buildSystemPrompt(
   tasteRules: TasteRule[] = [],
 ): string {
   const kindRules = project.kind === 'html' ? HTML_RULES : REACT_RULES;
+  const shellAllowed = !project.designSystemFor;
   const policy = `## Project policy
 - Entry file: \`${project.entry}\`.
-- Shell commands: ${project.settings.allowBash ? 'allowed' : 'not available'}.
-- Package installs: ${project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.`;
+- Shell commands: ${shellAllowed && project.settings.allowBash ? 'allowed' : 'not available'}.
+- Package installs: ${shellAllowed && project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.`;
   const sections =
     mode === 'critique'
       ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES]
       : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, EDIT_REPLY_RULES];
-  if (skillCount > 0) sections.push(skillsRule(skillCount, project.settings.allowBash && mode !== 'critique'));
+  if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));
   const draft = buildDesignSystemDraftBlock(project);

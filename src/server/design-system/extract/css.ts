@@ -149,14 +149,20 @@ export function customProperties(rules: CssRule[]): CustomProperties {
   return { root, dark };
 }
 
+const MAX_RESOLVED_LENGTH = 4096;
+const MAX_SUBSTITUTIONS = 64;
+
 export function resolveVars(value: string, scopes: Array<Map<string, string>>, depth = 0): string {
   if (depth > 8 || !value.includes('var(')) return value;
+  let substitutions = 0;
   const next = value.replace(/var\(\s*(--[\w-]+)\s*(?:,\s*([^()]*(?:\([^()]*\)[^()]*)*))?\)/g, (whole, name: string, fallback: string | undefined) => {
+    if (++substitutions > MAX_SUBSTITUTIONS) return whole;
     for (const scope of scopes) {
       const found = scope.get(name);
       if (found !== undefined) return found;
     }
     return fallback?.trim() ?? whole;
   });
+  if (next.length > MAX_RESOLVED_LENGTH) return value;
   return next === value ? value : resolveVars(next, scopes, depth + 1);
 }

@@ -51,6 +51,137 @@ async function clearSelection(page: Page): Promise<void> {
   await page.mouse.move(10, 10);
 }
 
+async function shotOf(page: Page, target: Locator, name: string, pad = 8): Promise<void> {
+  await page.waitForTimeout(400);
+  await target.scrollIntoViewIfNeeded(SHORT);
+  const box = await target.boundingBox();
+  if (!box) throw new Error(`${name} has no box`);
+  const clip = { x: Math.max(0, box.x - pad), y: Math.max(0, box.y - pad), width: box.width + pad * 2, height: Math.min(box.height + pad * 2, 900 - Math.max(0, box.y - pad)) };
+  await page.screenshot({ path: path.join(out, `${prefix}-${name}.png`), clip });
+  console.log(`${prefix}-${name}.png`);
+}
+
+const section = (page: Page, title: string) => page.locator(`.inspector section[aria-label="${title}"]`).first();
+
+async function selectCard(page: Page, selector: string): Promise<void> {
+  await clearSelection(page);
+  await selectInFrame(page, frame(page).locator(selector).first());
+  await openInspector(page);
+  await page.mouse.move(720, 880);
+}
+
+async function r4Inspector(page: Page): Promise<void> {
+  await step('inspector-top', async () => {
+    await selectCard(page, '.stat');
+    await shotOf(page, page.locator('.inspector').first(), 'inspector-top', 0);
+  });
+  await step('inspector-autolayout', async () => {
+    await selectCard(page, '.hero .actions');
+    await shotOf(page, section(page, 'Auto layout'), 'inspector-autolayout');
+  });
+  await step('inspector-size', async () => {
+    await shotOf(page, section(page, 'Size'), 'inspector-size');
+  });
+  await step('inspector-autolayout-empty', async () => {
+    await selectCard(page, '.stat');
+    await shotOf(page, section(page, 'Auto layout'), 'inspector-autolayout-empty');
+  });
+  await step('inspector-effects', async () => {
+    const effects = section(page, 'Effects');
+    if ((await effects.locator('.ins-shadow').count()) === 0) await effects.getByRole('button', { name: 'Add shadow' }).click(SHORT);
+    await effects.locator('.ins-shadow').first().waitFor(SHORT);
+    await page.mouse.move(720, 880);
+    await shotOf(page, effects, 'inspector-effects');
+  });
+  await step('undo-toast', async () => {
+    await page.mouse.click(700, 150);
+    await page.keyboard.press('Meta+z');
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(out, `${prefix}-undo-toast.png`) });
+    console.log(`${prefix}-undo-toast.png`);
+  });
+  await step('inspector-corners', async () => {
+    await selectCard(page, '.stat');
+    const fill = section(page, 'Fill and border');
+    await fill.getByRole('button', { name: 'Independent corners' }).click(SHORT);
+    await page.mouse.move(720, 880);
+    await shotOf(page, fill, 'inspector-corners');
+    await fill.getByRole('button', { name: 'Independent corners' }).click(SHORT);
+  });
+  await step('inspector-typography', async () => {
+    await selectCard(page, 'h1');
+    await shotOf(page, section(page, 'Typography'), 'inspector-typography');
+  });
+  await step('inspector-other', async () => {
+    await selectCard(page, '.hero .btn-solid');
+    const other = page.locator('.inspector .ins-other').first();
+    const toggle = other.locator('.ins-other-toggle');
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click(SHORT);
+    await page.mouse.move(720, 880);
+    await shotOf(page, other, 'inspector-other');
+  });
+  await step('inspector-mixed', async () => {
+    await clearSelection(page);
+    await selectInFrame(page, frame(page).locator('.stat').first());
+    await selectInFrame(page, frame(page).locator('.hero h1').first(), ['Shift']);
+    await openInspector(page);
+    await page.mouse.move(720, 880);
+    await page.locator('.inspector .ins-count').first().waitFor(SHORT);
+    await shotOf(page, page.locator('.inspector').first(), 'inspector-mixed', 0);
+  });
+}
+
+async function r4Layers(page: Page): Promise<void> {
+  const layersButton = page.getByRole('button', { name: 'Layers', exact: true });
+  await step('layers-hover', async () => {
+    await clearSelection(page);
+    await selectInFrame(page, frame(page).locator('h1').first());
+    if ((await page.locator('aside.layers').count()) === 0) await layersButton.click(SHORT);
+    const rows = page.locator('.layers-row');
+    await rows.nth(3).waitFor(SHORT);
+    await rows.nth(3).hover();
+    await shotOf(page, page.locator('aside.layers').first(), 'layers-hover', 0);
+  });
+  await step('layers-rename', async () => {
+    await page.locator('.layers-row').nth(3).dblclick(SHORT);
+    await page.locator('.layers-rename').waitFor(SHORT);
+    await shotOf(page, page.locator('aside.layers').first(), 'layers-rename', 0);
+    await page.keyboard.press('Escape');
+  });
+  await step('layers-close', async () => {
+    if ((await page.locator('aside.layers').count()) > 0) await layersButton.click(SHORT);
+    await page.locator('.layers-row').first().waitFor({ state: 'detached', timeout: 3000 }).catch(() => undefined);
+  });
+}
+
+async function r4Canvas(page: Page): Promise<void> {
+  await step('canvas-inline-edit', async () => {
+    await clearSelection(page);
+    const h1 = frame(page).locator('h1').first();
+    await selectInFrame(page, h1);
+    const box = await h1.boundingBox();
+    if (!box) throw new Error('h1 has no box');
+    await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+    await page.locator('.canvas.text-editing').waitFor(SHORT);
+    await shot(page, 'canvas-inline-edit');
+    await page.keyboard.press('Escape');
+  });
+  await step('canvas-resize', async () => {
+    await selectCard(page, '.stat');
+    const handle = page.locator('.resize-handle.se').first();
+    await handle.waitFor(SHORT);
+    const box = await handle.boundingBox();
+    if (!box) throw new Error('handle has no box');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 20, box.y + 12, { steps: 4 });
+    await page.mouse.move(box.x + 40, box.y + 24, { steps: 4 });
+    await page.locator('.resize-label').waitFor(SHORT);
+    await shot(page, 'canvas-resize');
+    await page.mouse.up();
+  });
+}
+
 async function main(): Promise<void> {
   const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--disable-site-isolation-trials', '--disable-features=IsolateOrigins,site-per-process'] });
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
@@ -146,6 +277,10 @@ async function main(): Promise<void> {
     await page.mouse.move(720, 880);
     await shot(page, 'inspector-multi');
   });
+
+  await r4Inspector(page);
+  await r4Layers(page);
+  await r4Canvas(page);
 
   await browser.close();
 }

@@ -86,11 +86,11 @@
 
 .frame-chip.page {
   max-width: 180px;
-  font-family: var(--mono);
   opacity: 0;
 }
 
 .frame-chip.page .frame-path {
+  font-family: var(--mono);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -277,5 +277,22 @@ body[class*='frame-resize-'] .frame {
 
   .frame-chip:active {
     scale: none;
+  }
+}
+
+.frame-label.variation .frame-chip.keep {
+  opacity: 0;
+}
+
+.frame-label.variation:hover .frame-chip.keep,
+.frame-label.variation.active .frame-chip.keep,
+.frame-chip.keep:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .frame-chip.page,
+  .frame-label.variation .frame-chip.keep {
+    opacity: 1;
   }
 }

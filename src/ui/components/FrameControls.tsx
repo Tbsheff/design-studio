@@ -145,7 +145,7 @@ export function VariationControls({ variation, active, element, onMixed }: { var
         {status ? STATUS_TEXT[status] : 'No run'}
       </span>
       {active && element && variation.siblings.length > 0 && <UseInMenu siblings={variation.siblings} busy={mixing} onPick={(id) => void mix(id)} />}
-      <button type="button" className="frame-chip" onPointerDown={stop} onClick={variation.onKeep} data-tip="Keep this one and remove the other variation frames">
+      <button type="button" className="frame-chip keep" onPointerDown={stop} onClick={variation.onKeep} data-tip="Keep this one and remove the other variation frames">
         Keep this one
       </button>
       {error && (

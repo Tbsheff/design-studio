@@ -6,7 +6,7 @@ const toOklch = converter('oklch');
 const HSL_TRIPLE = /^(-?\d+(?:\.\d+)?)(?:deg)?\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%(?:\s*\/\s*([\d.]+%?))?$/;
 const RGB_TRIPLE = /^(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})$/;
 const OKLCH_BARE = /^(\d+(?:\.\d+)?%?)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/;
-const COLOR_IN_TEXT = /#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|\b(?:oklch|oklab|rgba?|hsla?|lab|lch)\([^()]{3,80}\)/g;
+export const COLOR_IN_TEXT = /#[0-9a-fA-F]{8}\b|#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3,4}\b|\b(?:oklch|oklab|rgba?|hsla?|lab|lch)\([^()]{3,80}\)/g;
 
 const SAFE_FAMILY = /^[A-Za-z0-9][A-Za-z0-9 .\-_]{0,31}$/;
 const MAX_FAMILY_WORDS = 4;

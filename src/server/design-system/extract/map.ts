@@ -10,7 +10,7 @@ const GROUP_WEIGHTS: Record<string, number> = { color: 0.5, font: 0.2, radius: 0
 const TOKEN_WEIGHTS: Record<string, number> = { 'color.bg': 2, 'color.fg': 2, 'color.primary': 2, 'color.success': 0.5, 'color.warning': 0.5, 'color.danger': 0.5 };
 const CONFIDENCE_SCORE = { high: 1, medium: 0.75, derived: 0.6, fallback: 0 };
 const BRAND_COLORS = new Set(['color.primary', 'color.ring', 'color.success', 'color.warning', 'color.danger']);
-const SYSTEM_FAMILIES = new Set(['arial', 'helvetica', 'helvetica neue', 'segoe ui', 'blinkmacsystemfont', 'menlo', 'monaco', 'consolas', 'courier', 'courier new', 'georgia', 'times', 'times new roman', 'verdana', 'tahoma', 'trebuchet ms', 'sf pro', 'sf pro text', 'sf pro display', 'sf mono', 'apple color emoji', 'segoe ui emoji', 'ui-monospace', 'sfmono-regular', 'liberation mono']);
+export const SYSTEM_FAMILIES = new Set(['arial', 'helvetica', 'helvetica neue', 'segoe ui', 'blinkmacsystemfont', 'menlo', 'monaco', 'consolas', 'courier', 'courier new', 'georgia', 'times', 'times new roman', 'verdana', 'tahoma', 'trebuchet ms', 'sf pro', 'sf pro text', 'sf pro display', 'sf mono', 'apple color emoji', 'segoe ui emoji', 'ui-monospace', 'sfmono-regular', 'liberation mono']);
 
 export interface Pick {
   value: string;

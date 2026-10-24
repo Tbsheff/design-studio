@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import type { Attachment, DesignSystemCoverage, DesignSystemDraftInfo, DesignSystemDraftResult, Direction, Project } from '../../shared/contracts.js';
+import { checkDesignSystem } from '../design-system/check.js';
 import { KIT_PAGE_FILE } from '../design-system/extract/kit-page.js';
 import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, buildDraft, createFetcher, parseDraftRequest } from '../design-system/extract/draft.js';
 import type { Draft, DraftFile } from '../design-system/extract/draft.js';
@@ -156,7 +157,8 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
   app.get('/api/projects/:pid/design-system-draft', async (c) => {
     const project = await projects.get(c.req.param('pid'));
     if (!project.designSystemFor) throw new NotFoundError('This project is not a design-system project');
-    const info: DesignSystemDraftInfo = { packId: project.designSystemFor, coverage: await readCoverage(projects.mainDirection(project).workTree) };
+    const workTree = projects.mainDirection(project).workTree;
+    const info: DesignSystemDraftInfo = { packId: project.designSystemFor, coverage: await readCoverage(workTree), check: await checkDesignSystem(workTree) };
     return c.json(info);
   });
 }

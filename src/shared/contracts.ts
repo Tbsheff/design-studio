@@ -744,9 +744,27 @@ export interface DesignSystemDraftResult {
   ms: number;
 }
 
+export type DesignSystemCheckRule = 'tokens' | 'contrast' | 'design-md' | 'kit-colors' | 'fonts';
+
+export interface DesignSystemCheckProblem {
+  rule: DesignSystemCheckRule;
+  message: string;
+}
+
+export interface DesignSystemCheckResult {
+  passed: boolean;
+  problems: DesignSystemCheckProblem[];
+}
+
+export interface DesignSystemRunCheck extends DesignSystemCheckResult {
+  rounds: number;
+  ranBy: 'agent' | 'studio';
+}
+
 export interface DesignSystemDraftInfo {
   packId: string;
   coverage: DesignSystemCoverage | null;
+  check: DesignSystemCheckResult;
 }
 
 export interface CreateUserPackInput {

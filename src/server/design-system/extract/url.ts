@@ -44,7 +44,7 @@ export interface UrlHarvest {
   snapshot: UrlSnapshot;
 }
 
-interface PageParts {
+export interface PageParts {
   links: string[];
   inline: string[];
   styleAttrs: CssRule[];
@@ -68,7 +68,7 @@ function walk(node: Node, visit: (element: Element) => void): void {
   if ('content' in node && node.content) walk(node.content as Node, visit);
 }
 
-function pageParts(html: string): PageParts {
+export function pageParts(html: string): PageParts {
   const parts: PageParts = { links: [], inline: [], styleAttrs: [], themeColor: null, fontLinks: [], darkHint: false };
   walk(parse(html), (element) => {
     const tag = element.tagName;

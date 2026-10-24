@@ -39,16 +39,21 @@ const LIVE_VERB: Record<string, string> = {
   TodoWrite: 'Updating todos',
 };
 
-type ToolState = 'pending' | 'done' | 'error';
+type ToolState = 'pending' | 'done' | 'error' | 'stopped' | 'denied';
 
 const STATE_TONE: Record<ToolState, string> = {
   pending: 'text-primary',
   done: 'text-muted-foreground',
   error: 'text-destructive',
+  stopped: 'text-muted-foreground',
+  denied: 'text-muted-foreground',
 };
 
-function toolState(tool: ToolRow): ToolState {
-  if (tool.durationMs === null) return 'pending';
+const STATE_WORD: Partial<Record<ToolState, string>> = { error: 'Error', stopped: 'Stopped', denied: 'Denied' };
+
+function toolState(tool: ToolRow, running = true): ToolState {
+  if (tool.durationMs === null) return running ? 'pending' : 'stopped';
+  if (tool.denied) return 'denied';
   return tool.isError ? 'error' : 'done';
 }
 
@@ -85,6 +90,7 @@ export function groupRepeats(tools: ToolRow[], workTree: string | null): RowGrou
 
 function ToolStateIcon({ tool, state }: { tool: ToolRow; state: ToolState }) {
   if (state === 'pending') return <span className="spinner" />;
+  if (state === 'stopped' || state === 'denied') return <Icon name="close" size={14} />;
   return <Icon name={state === 'error' ? 'alert' : (TOOL_ICON[tool.name] ?? 'code')} size={14} />;
 }
 
@@ -141,9 +147,9 @@ function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; st
   );
 }
 
-function ToolItem({ group, workTree }: { group: RowGroup; workTree: string | null }) {
+function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: string | null; running: boolean }) {
   const { tool, count } = group;
-  const state = toolState(tool);
+  const state = toolState(tool, running);
   const [open, setOpen] = useState<boolean | null>(null);
   const isSkill = tool.name === SKILL_TOOL;
   const target = toolSubject(tool.name, tool.input, workTree);
@@ -167,8 +173,9 @@ function ToolItem({ group, workTree }: { group: RowGroup; workTree: string | nul
         )}
         {count > 1 && <span className="tool-count tabular-nums">×{count}</span>}
         {tool.diff && <DiffBadge added={tool.diff.added} removed={tool.diff.removed} />}
-        {state !== 'pending' && <span className="tool-ms shrink-0 tabular-nums">{formatMs(group.durationMs)}</span>}
-        {state === 'error' && <span className="sr-only">Error</span>}
+        {state !== 'pending' && state !== 'stopped' && <span className="tool-ms shrink-0 tabular-nums">{formatMs(group.durationMs)}</span>}
+        {state === 'denied' && <span className="tool-denied">Denied</span>}
+        {STATE_WORD[state] && state !== 'denied' && <span className="sr-only">{STATE_WORD[state]}</span>}
       </ActionTrigger>
       <ActionContent className="pl-6">
         <ToolDetail tool={tool} target={target} state={state} />
@@ -199,7 +206,7 @@ export function ToolChips({ tools, running, workTree }: { tools: ToolRow[]; runn
   const rows = (
     <div className="tool-list flex flex-col gap-0.5">
       {groupRepeats(tools, workTree).map((group) => (
-        <ToolItem key={group.tool.toolUseId} group={group} workTree={workTree} />
+        <ToolItem key={group.tool.toolUseId} group={group} workTree={workTree} running={running} />
       ))}
     </div>
   );
@@ -287,10 +294,10 @@ export function LiveStatus({ run, workTree }: { run: RunView; workTree: string |
   const elapsed = useElapsed(run.startedAt, true);
   return (
     <div className="live-status flex min-w-0 items-center gap-2 text-sm" data-testid="live-status">
-      <Loader variant="shimmer" dots className="min-w-0 truncate text-foreground">
+      <Loader variant="shimmer" dots className="live-label min-w-0 truncate tabular-nums text-foreground">
         {statusLabel(run, workTree, run.startedAt + elapsed)}
       </Loader>
-      <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">{Math.floor(elapsed / 1000)}s</span>
+      <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">{formatMs(Math.floor(elapsed / 1000) * 1000)}</span>
     </div>
   );
 }

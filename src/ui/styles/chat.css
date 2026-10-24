@@ -213,6 +213,15 @@
   color: var(--text-3);
 }
 
+.tool-denied {
+  flex-shrink: 0;
+  padding: 0 var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
 .diff-badge {
   display: inline-flex;
   gap: var(--s-1);

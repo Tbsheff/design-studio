@@ -130,6 +130,7 @@ for (const where of ['studio', 'iframe'] as const) {
     }
     await expect(run.locator('.run-foot')).toContainText('Stopped');
     await expect(run.locator('.tool-row[data-state="done"]').first()).toBeVisible();
+    await expect(run.locator('.tool-row[data-state="pending"]')).toHaveCount(0);
     expect((await finishedRun(api, project.id, prompt)).status).toBe('canceled');
   });
 }
@@ -156,7 +157,8 @@ test('R3-5: a Bash call asks first; Deny with a note sends the note and runs not
   const summary = await finishedRun(api, project.id, 'Run the tests [bash]');
   const detail = await api.call<{ sent: RunSentRecord[] }>('GET', `/api/runs/${summary.id}`);
   expect(detail.sent.some((record) => record.text.includes('use npm'))).toBe(true);
-  expect(summary.toolCalls.find((tool) => tool.name === 'Bash')?.isError).toBe(true);
+  expect(summary.toolCalls.find((tool) => tool.name === 'Bash')).toMatchObject({ isError: true, denied: true });
+  await expect(page.locator('.tool-denied')).toHaveText('Denied');
   expect(existsSync(path.join(mainDirection(project).workTree, 'mock-bash-output.txt'))).toBe(false);
   await expect(prompt).toHaveCount(0);
 });

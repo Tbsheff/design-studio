@@ -1,6 +1,6 @@
-import { memo, useCallback, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Direction } from '../../shared/contracts';
-import { Conversation, ConversationContent, ConversationScrollButton } from '../ai/components/ai/conversation';
+import { Conversation, ConversationContent, ConversationScrollButton, useConversation } from '../ai/components/ai/conversation';
 import { Message, MessageContent } from '../ai/components/ai/message';
 import { canPolishRun } from '../polish';
 import type { RunView, ToolRow } from '../runState';
@@ -82,6 +82,19 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
   );
 });
 
+function StickOnNewRun({ runId }: { runId: string | null }) {
+  const { stickToBottom } = useConversation();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (runId) stickToBottom();
+  }, [runId, stickToBottom]);
+  return null;
+}
+
 function useLatest<T>(value: T): { readonly current: T } {
   const ref = useRef(value);
   ref.current = value;
@@ -132,6 +145,7 @@ export function ChatPanel({ runs, direction, onDetails, running, busy, onPolish,
           <RunEntry key={r.runId} run={r} latest={i === runs.length - 1} workTree={workTree} onDetails={openDetails} polish={polish} />
         ))}
       </ConversationContent>
+      <StickOnNewRun runId={runs.at(-1)?.runId ?? null} />
       <ConversationScrollButton className="icon-btn chat-scroll-btn">
         <Icon name="chevronDown" size={16} />
       </ConversationScrollButton>

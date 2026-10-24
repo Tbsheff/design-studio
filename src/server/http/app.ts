@@ -330,7 +330,7 @@ export function createApp(deps: AppDeps): Hono {
     const mentionFiles = await readMentionFiles(direction.workTree, request.mentions);
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles });
     runProjectIndex.set(handle.runId, project.id);
-    if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle));
+    if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
   };
 

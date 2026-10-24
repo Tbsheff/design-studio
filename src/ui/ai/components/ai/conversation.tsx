@@ -31,8 +31,12 @@ function useConversationContext() {
 }
 
 export function useConversation() {
-  const { isAtBottom, scrollToBottom } = useConversationContext();
-  return { isAtBottom, scrollToBottom };
+  const { isAtBottom, scrollToBottom, wasAtBottomRef } = useConversationContext();
+  const stickToBottom = useCallback(() => {
+    wasAtBottomRef.current = true;
+    scrollToBottom("instant");
+  }, [scrollToBottom, wasAtBottomRef]);
+  return { isAtBottom, scrollToBottom, stickToBottom };
 }
 
 export function Conversation({

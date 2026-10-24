@@ -383,15 +383,17 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         const before = befores.get(toolUseId);
         befores.delete(toolUseId);
         const diff = before && !isError ? toolDiff(before) : null;
+        const denied = isError && deniedTools.has(toolUseId);
         if (record) {
           record.finishedAt = finishedAt;
           record.isError = isError;
           record.summary = resultSummary;
           if (diff) record.diff = diff;
+          if (denied) record.denied = true;
           if (!isError) recordFileWrite(record, durationMs, finishedAt);
         }
         toolMs += durationMs;
-        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}) });
+        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}), ...(denied ? { denied: true } : {}) });
       },
       usage(contextTokens) {
         if (!Number.isFinite(contextTokens) || contextTokens <= 0 || contextTokens === summary.contextTokens) return;
@@ -423,7 +425,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     let queue: QueuedMessage[] = [];
     let steerText: string | null = null;
-    const pendingAsks = new Map<string, (decision: PermissionDecision) => void>();
+    const pendingAsks = new Map<string, { toolUseId: string | null; resolve: (decision: PermissionDecision) => void }>();
+    const deniedTools = new Set<string>();
     let askCounter = 0;
 
     const inbox: RunInbox = {
@@ -439,11 +442,12 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     };
 
     function resolveAsk(id: string, decision: PermissionDecision): boolean {
-      const resolve = pendingAsks.get(id);
-      if (!resolve) return false;
+      const pending = pendingAsks.get(id);
+      if (!pending) return false;
       pendingAsks.delete(id);
+      if (!decision.allow && pending.toolUseId) deniedTools.add(pending.toolUseId);
       emitRun({ type: 'run.permission.resolved', requestId: id, allow: decision.allow });
-      resolve(decision);
+      pending.resolve(decision);
       return true;
     }
 
@@ -452,7 +456,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       askCounter += 1;
       const id = `${runId}-ask-${askCounter}`;
       return new Promise<PermissionDecision>((resolve) => {
-        pendingAsks.set(id, resolve);
+        pendingAsks.set(id, { toolUseId: request.toolUseId, resolve });
         emitRun({ type: 'run.permission', request: { ...request, id } });
       });
     }

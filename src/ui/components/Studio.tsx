@@ -18,6 +18,7 @@ import type { CanvasSource } from './CanvasToolbar';
 import { chatWidthStyle } from './ChatSplitter';
 import { fixPrompt } from './ErrorsPanel';
 import { DraftBar } from './DraftBar';
+import { ImproveControl, improveRequest, lastImproveRun } from './DraftImprove';
 import { RightPanel } from './RightPanel';
 import { designSystemRef } from './DesignSystemChip';
 import { StudioTopbar } from './StudioTopbar';
@@ -77,6 +78,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     [runs, directionId],
   );
   const activeRun = directionRuns.find((r) => r.status === 'running') ?? null;
+  const improveRun = lastImproveRun(directionRuns);
   const variations = useVariations({ projectId, project, direction, setDirectionId: data.setDirectionId, seedRun: data.seedRun });
   const canUndo = undoAllowed(directionId, busy || activeRun !== null, versions.length);
   useDesktopContext({ projectId, directionId, running: activeRun !== null });
@@ -173,7 +175,14 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       />
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
         <main className="center">
-          <DraftBar project={project} state={designSystem.state} lastChange={data.lastChange} onSave={packActions.actions.onSave} />
+          <DraftBar
+            project={project}
+            state={designSystem.state}
+            lastChange={data.lastChange}
+            onSave={packActions.actions.onSave}
+            lastRun={improveRun}
+            improve={<ImproveControl running={activeRun !== null} run={improveRun} onImprove={(focus) => act(() => startRun(improveRequest(focus, project.settings.defaultLevel)))} />}
+          />
           <UnfinishedSlot
             visible={Boolean(status?.dirty) && !activeRun}
             count={status?.changed.length ?? 0}

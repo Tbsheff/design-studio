@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import type { CoverageGrade, DesignSystemCoverage, DesignSystemState, Project } from '../../shared/contracts';
+import { useEffect, useId, useState, type ReactNode } from 'react';
+import type { CoverageGrade, DesignSystemCheckResult, DesignSystemCoverage, DesignSystemState, Project } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { findPack, usePacks } from '../packs';
+import type { RunView } from '../runState';
+import { CheckStatus, improvePassed } from './DraftImprove';
 
 const GRADE_LABELS: Record<CoverageGrade, string> = {
   excellent: 'Excellent',
@@ -12,18 +14,24 @@ const GRADE_LABELS: Record<CoverageGrade, string> = {
 
 const SHOWN_FALLBACKS = 6;
 
-function useDraftCoverage(projectId: string, lastChange: unknown): { coverage: DesignSystemCoverage | null; error: string | null } {
-  const [state, setState] = useState<{ coverage: DesignSystemCoverage | null; error: string | null }>({ coverage: null, error: null });
+interface DraftInfoState {
+  coverage: DesignSystemCoverage | null;
+  check: DesignSystemCheckResult | null;
+  error: string | null;
+}
+
+function useDraftInfo(projectId: string, lastChange: unknown, runStatus: string | undefined): DraftInfoState {
+  const [state, setState] = useState<DraftInfoState>({ coverage: null, check: null, error: null });
   useEffect(() => {
     let live = true;
     api
       .getDesignSystemDraft(projectId)
-      .then((info) => live && setState({ coverage: info.coverage, error: null }))
-      .catch((err) => live && setState({ coverage: null, error: errorText(err) }));
+      .then((info) => live && setState({ coverage: info.coverage, check: info.check, error: null }))
+      .catch((err) => live && setState({ coverage: null, check: null, error: errorText(err) }));
     return () => {
       live = false;
     };
-  }, [projectId, lastChange]);
+  }, [projectId, lastChange, runStatus]);
   return state;
 }
 
@@ -50,14 +58,16 @@ interface Props {
   lastChange: unknown;
   onSave: (name: string, packId: string) => Promise<void>;
   improve?: ReactNode;
+  lastRun?: RunView | null;
 }
 
-export function DraftBar({ project, state, lastChange, onSave, improve }: Props) {
+export function DraftBar({ project, state, lastChange, onSave, improve, lastRun = null }: Props) {
   const packId = project.designSystemFor ?? null;
   const { packs } = usePacks();
-  const { coverage, error } = useDraftCoverage(project.id, lastChange);
+  const { coverage, check, error } = useDraftInfo(project.id, lastChange, lastRun?.status);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const readyId = useId();
   if (!packId) return null;
   const name = state?.manifest?.name ?? findPack(packs, packId)?.name ?? project.name;
 
@@ -73,8 +83,14 @@ export function DraftBar({ project, state, lastChange, onSave, improve }: Props)
     }
   };
 
+  const ready = Boolean(check?.passed) && improvePassed(lastRun);
   return (
     <div className="draft-bar" role="region" aria-label="Design system draft">
+      {ready && (
+        <span id={readyId} className="sr-only">
+          The AI run passed the check. Save it to your library.
+        </span>
+      )}
       <div className="draft-main">
         <strong className="truncate">{name}</strong>
         {coverage && (
@@ -83,6 +99,7 @@ export function DraftBar({ project, state, lastChange, onSave, improve }: Props)
           </span>
         )}
         {coverage && <Fallbacks tokens={coverage.fallbacks} />}
+        <CheckStatus check={check} run={lastRun} />
         {error && <span className="draft-fallbacks">Could not load coverage. {error}</span>}
       </div>
       <div className="draft-actions">
@@ -92,7 +109,7 @@ export function DraftBar({ project, state, lastChange, onSave, improve }: Props)
           </span>
         )}
         {improve}
-        <button type="button" className="btn primary small" onClick={() => void save()} disabled={busy}>
+        <button type="button" className={`btn small${ready ? ' primary' : ''}`} onClick={() => void save()} disabled={busy} aria-describedby={ready ? readyId : undefined}>
           {busy ? 'Saving…' : 'Save to library'}
         </button>
       </div>

@@ -2,7 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, RunPart, RunSentRecord, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
+import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, PermissionDecision, PermissionRequest, QueuedMessage, RunPart, RunSentRecord, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
 import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
@@ -33,6 +33,12 @@ export interface PriorSession extends SessionTotals {
   sessionId: string;
 }
 
+export interface RunInbox {
+  take(): QueuedMessage[];
+}
+
+export type PermissionAsk = Omit<PermissionRequest, 'id'>;
+
 export interface DriverInput {
   ctx: AgentRunContext;
   runId: string;
@@ -40,6 +46,16 @@ export interface DriverInput {
   signal: AbortSignal;
   sink: DriverSink;
   prior?: PriorSession | null;
+  inbox?: RunInbox;
+  ask?: (request: PermissionAsk) => Promise<PermissionDecision>;
+}
+
+export function queuedText(items: readonly QueuedMessage[]): string {
+  return items.map((item) => item.text.trim()).filter(Boolean).join('\n\n');
+}
+
+export function deliveredContext(items: readonly QueuedMessage[]): string {
+  return `<user-message-during-run>\nThe user sent this while you were working. Take it into account from now on:\n${queuedText(items)}\n</user-message-during-run>`;
 }
 
 export type DriverStatus = Extract<RunStatus, 'completed' | 'failed' | 'budget_exceeded'>;
@@ -373,6 +389,46 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       },
     };
 
+    let queue: QueuedMessage[] = [];
+    let steerText: string | null = null;
+    const pendingAsks = new Map<string, (decision: PermissionDecision) => void>();
+    let askCounter = 0;
+
+    const inbox: RunInbox = {
+      take() {
+        if (queue.length === 0 || canceled) return [];
+        const taken = queue;
+        queue = [];
+        for (const item of taken) emitRun({ type: 'run.user', id: item.id, text: item.text });
+        emitRun({ type: 'run.queue', items: [] });
+        sink.sent({ text: deliveredContext(taken), imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'queued', resume: sessionId });
+        return taken;
+      },
+    };
+
+    function resolveAsk(id: string, decision: PermissionDecision): boolean {
+      const resolve = pendingAsks.get(id);
+      if (!resolve) return false;
+      pendingAsks.delete(id);
+      emitRun({ type: 'run.permission.resolved', requestId: id, allow: decision.allow });
+      resolve(decision);
+      return true;
+    }
+
+    function ask(request: PermissionAsk): Promise<PermissionDecision> {
+      if (canceled || controller.signal.aborted) return Promise.resolve({ allow: false, note: 'The run was stopped.' });
+      askCounter += 1;
+      const id = `${runId}-ask-${askCounter}`;
+      return new Promise<PermissionDecision>((resolve) => {
+        pendingAsks.set(id, resolve);
+        emitRun({ type: 'run.permission', request: { ...request, id } });
+      });
+    }
+
+    controller.signal.addEventListener('abort', () => {
+      for (const id of [...pendingAsks.keys()]) resolveAsk(id, { allow: false, note: 'The run was stopped.' });
+    });
+
     emitRun({ type: 'run.started', request: ctx.request });
     writeSummary({ ...summary, toolCalls: [] });
 
@@ -412,7 +468,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let failure: string | null = null;
       try {
         const prior = await loadPriorSession(runsDir, ctx.direction);
-        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior });
+        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask });
       } catch (error) {
         failure = describeError(error);
       }
@@ -459,6 +515,24 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         controller.abort();
       },
       done,
+      setQueue(items) {
+        if (driverSettled || canceled) return false;
+        queue = items.filter((item) => item.text.trim() !== '');
+        emitRun({ type: 'run.queue', items: queue });
+        return true;
+      },
+      steer(text) {
+        if (driverSettled || canceled) return false;
+        steerText = text;
+        handle.cancel();
+        return true;
+      },
+      answer: resolveAsk,
+      next() {
+        if (steerText !== null) return { text: [steerText, queuedText(queue)].filter(Boolean).join('\n\n'), reason: 'steer' };
+        if (canceled || queue.length === 0) return null;
+        return { text: queuedText(queue), reason: 'queue' };
+      },
     };
     handles.set(runId, handle);
     return handle;

@@ -27,6 +27,7 @@ import { useStudioTokens } from '../useStudioTokens';
 import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
 import { useComments } from '../useComments';
+import { useRunControls } from '../useRunControls';
 
 function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: ReturnType<typeof useVariations>['propose']): void {
   useEffect(() => {
@@ -34,6 +35,15 @@ function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: Re
     const intent = homeVariations.take(projectId);
     if (intent) void propose(intent.prompt, intent.level, [], intent.count);
   }, [ready, projectId, propose]);
+}
+
+function promptHistoryOf(runs: readonly { request: { prompt: string; task?: string; variation?: unknown } | null }[]): string[] {
+  const prompts: string[] = [];
+  for (const run of runs) {
+    const prompt = run.request && !run.request.task && !run.request.variation ? run.request.prompt.trim() : '';
+    if (prompt && prompts.at(-1) !== prompt) prompts.push(prompt);
+  }
+  return prompts;
 }
 
 function runById<T>(runs: Record<string, T>, id: string | null): T | null {
@@ -88,6 +98,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const { guard } = studioTokens;
   const detailsRun = runById(runs, detailsRunId);
   const comments = useComments(projectId, directionId, composerActive);
+  const promptHistory = useMemo(() => promptHistoryOf(directionRuns), [directionRuns]);
 
   useHomeVariationsHandoff(projectId, project !== null && direction !== null, variations.propose);
 
@@ -114,6 +125,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       setBusy(false);
     }
   }, []);
+  const runControls = useRunControls(activeRun, draft, act);
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
 
@@ -157,6 +169,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const polish = () => void act(() => startRun(POLISH_REQUEST));
 
   const [left, right] = compare;
+
 
   return (
     <div className="studio">
@@ -238,7 +251,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             running: activeRun !== null,
             disabled: !did,
             onSend: send,
-            onCancel: () => activeRun && void act(() => api.cancelRun(activeRun.runId)),
+            ...runControls,
+            history: promptHistory,
             variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
           }}
           inspector={{

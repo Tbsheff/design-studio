@@ -7,6 +7,7 @@ import type { RunView, ToolRow } from '../runState';
 import { AssistantText, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
 import { Icon } from './Icon';
 import { LiveStatus, RunChanges, ToolChips } from './ToolChips';
+import { PermissionPrompt } from './PermissionPrompt';
 
 interface PolishProps {
   headVersionId: string | null;
@@ -66,6 +67,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
       <Message type="incoming" className="msg assistant">
         <MessageContent className="run-body gap-2">
           <RunParts run={run} running={running} workTree={workTree} />
+          {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
           {running && <LiveStatus run={run} workTree={workTree} />}
           <RunError run={run} latest={latest} />
           {!running && <RunChanges tools={run.tools} />}

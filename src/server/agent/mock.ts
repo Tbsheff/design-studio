@@ -4,6 +4,8 @@ import type { RunComment, RunLevel, SelectionContext } from '../../shared/contra
 import { levelOf } from '../../shared/run-levels.js';
 import type { DriverInput, DriverOutcome, DriverSink, RunDriver } from './lifecycle.js';
 import { checkPathInside } from './permissions.js';
+import { createBashGate } from './ask-gate.js';
+import { queuedText } from './lifecycle.js';
 import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
 import { buildUserText } from './user-message.js';
 import { runVariationMock } from '../variations/mock-pages.js';
@@ -13,6 +15,8 @@ import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-syste
 const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
 const DELTA_DELAY_MS = 20;
 const SLOW_STEP_MS = 1500;
+const STEP_TOOL_MS = 900;
+export const MOCK_BASH_OUTPUT = 'mock-bash-output.txt';
 
 class MockAbortError extends Error {
   constructor() {
@@ -172,12 +176,37 @@ class MockSession {
     this.sink.thinking(text);
   }
 
-  async fakeTool(name: string, input: Record<string, unknown>, summary: string): Promise<void> {
+  async fakeTool(name: string, input: Record<string, unknown>, summary: string, ms = DELTA_DELAY_MS): Promise<void> {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     this.sink.toolStarted(toolUseId, name, input);
-    await sleep(DELTA_DELAY_MS, this.signal);
+    await sleep(ms, this.signal);
     this.sink.toolFinished(toolUseId, false, summary);
+    await this.deliverQueued();
+  }
+
+  async deliverQueued(): Promise<void> {
+    const taken = this.input.inbox?.take() ?? [];
+    if (taken.length > 0) await this.say(`Noted: ${queuedText(taken)}`);
+  }
+
+  async bash(command: string): Promise<void> {
+    this.toolCounter += 1;
+    const toolUseId = `mock_tool_${this.toolCounter}`;
+    const input = { command };
+    this.sink.toolStarted(toolUseId, 'Bash', input);
+    const gate = this.input.ask ? createBashGate(this.input.ask) : null;
+    const decision = gate ? await gate(toolUseId, input) : { behavior: 'allow' as const };
+    throwIfAborted(this.signal);
+    if (decision.behavior === 'deny') {
+      this.sink.toolFinished(toolUseId, true, decision.message);
+      this.sink.sent({ text: decision.message, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: null });
+      await this.say(`Okay, I will not run \`${command}\`. ${decision.message}`);
+      return;
+    }
+    await writeFile(path.join(this.workTree, MOCK_BASH_OUTPUT), `ran: ${command}\n`);
+    this.sink.toolFinished(toolUseId, false, `Bash ${command}`);
+    await this.deliverQueued();
   }
 
   async useSkill(skill: string): Promise<void> {
@@ -186,6 +215,7 @@ class MockSession {
     this.sink.toolStarted(toolUseId, 'Skill', { skill });
     await sleep(DELTA_DELAY_MS, this.signal);
     this.sink.toolFinished(toolUseId, false, `Skill ${skill}`);
+    await this.deliverQueued();
   }
 
   async writeFileAsTool(toolName: 'Write' | 'Edit', relativePath: string, content: string): Promise<void> {
@@ -210,6 +240,7 @@ class MockSession {
         await writeFile(absolute, content);
       }
       this.sink.toolFinished(toolUseId, false, `${toolName} ${relativePath}`);
+      await this.deliverQueued();
     } catch (error) {
       this.sink.toolFinished(toolUseId, true, `${toolName} ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
@@ -510,6 +541,12 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
   await input.sink.sessionStarted(input.ctx.direction.sessionId ?? `mock-${input.ctx.direction.id}-${input.runId}`);
   input.sink.sent({ text: buildUserText(input.ctx), imageCount: input.ctx.attachments.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId });
   for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
+  if (prompt.includes('[steps]')) {
+    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html', STEP_TOOL_MS);
+    await session.fakeTool('Grep', { pattern: 'h1' }, 'Grep h1', STEP_TOOL_MS);
+    await session.fakeTool('Glob', { pattern: '*.css' }, 'Glob *.css', STEP_TOOL_MS);
+  }
+  if (prompt.includes('[bash]')) await session.bash('npm test');
   if (prompt.includes('[think]')) {
     await session.think('Thinking A: the page needs a clear heading first.');
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');

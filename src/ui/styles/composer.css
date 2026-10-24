@@ -409,3 +409,79 @@
 .level-control [data-tip]:focus-visible::after {
   translate: 0 0;
 }
+
+.stop-btn {
+  color: var(--text);
+}
+
+.stop-btn svg {
+  color: var(--danger);
+}
+
+.queued {
+  display: grid;
+  gap: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+
+.queued-head {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.queued-list {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queued-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  padding: 2px 2px 2px var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--t-sm);
+}
+
+.queued-item[draggable='true'] {
+  cursor: grab;
+}
+
+.queued-grip {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  letter-spacing: -2px;
+  user-select: none;
+}
+
+.queued-text {
+  flex: 1;
+  min-width: 0;
+  padding: var(--s-1) 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.queued-edit {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-sm);
+}
+
+.queued-remove {
+  flex-shrink: 0;
+  color: var(--text-3);
+}

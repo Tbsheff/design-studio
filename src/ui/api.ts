@@ -1,3 +1,4 @@
+import type { PermissionDecision, QueuedMessage } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
@@ -202,6 +203,10 @@ export const api = {
   getRun: (runId: string) =>
     json<{ summary: RunSummary; events: StudioEvent[] }>('GET', `/api/runs/${encodeURIComponent(runId)}`),
   cancelRun: (runId: string) => json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/cancel`),
+  setQueue: (runId: string, items: QueuedMessage[]) => json<{ ok: boolean }>('PUT', `/api/runs/${encodeURIComponent(runId)}/queue`, { items }),
+  steerRun: (runId: string, text: string) => json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/steer`, { text }),
+  answerPermission: (runId: string, requestId: string, decision: PermissionDecision) =>
+    json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/permissions/${encodeURIComponent(requestId)}`, decision),
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
 };

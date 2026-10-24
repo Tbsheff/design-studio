@@ -290,7 +290,7 @@ test('AC-24 last completed design stays viewable while a new version generates',
   await expect(frame.locator('.card')).toHaveCount(3);
   await sendPrompt(page, '[slow] Generating a longer note');
   await expect.poll(async () => (await api.runs(project.id)).some((run) => run.status === 'running')).toBe(true);
-  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Stop', exact: true })).toBeVisible();
   await page.waitForTimeout(200);
   const runId = (await api.runs(project.id)).find((run) => run.status === 'running')?.id ?? '';
   await page.getByRole('radio', { name: 'Last completed' }).click();

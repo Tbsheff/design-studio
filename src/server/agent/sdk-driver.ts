@@ -1,9 +1,10 @@
 import os from 'node:os';
 import path from 'node:path';
-import type { Options, PermissionResult, SDKMessage, SDKResultMessage, query } from '@anthropic-ai/claude-agent-sdk';
+import type { HookCallback, Options, PermissionResult, SDKMessage, SDKResultMessage, query } from '@anthropic-ai/claude-agent-sdk';
+import { createBashGate, type ToolGate } from './ask-gate.js';
 import type { RunUsage } from '../../shared/contracts.js';
 import type { PreviewService } from '../types.js';
-import { EMPTY_USAGE, type DriverInput, type DriverOutcome, type DriverSink, type PriorSession, type RunDriver } from './lifecycle.js';
+import { EMPTY_USAGE, deliveredContext, type DriverInput, type DriverOutcome, type DriverSink, type PriorSession, type RunDriver } from './lifecycle.js';
 import { builtinToolNames, createCanUseTool, createPreToolUseGuard, type ToolPolicy } from './permissions.js';
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
@@ -421,6 +422,16 @@ interface AttemptSetup {
   config: ResolvedRunConfig;
   run: RunToolState;
   tasteRules: TasteRule[];
+  bashGate?: ToolGate;
+}
+
+export function createInboxHook(input: Pick<DriverInput, 'inbox'>): HookCallback {
+  return async (hookInput) => {
+    if (hookInput.hook_event_name !== 'PostToolUse') return {};
+    const taken = input.inbox?.take() ?? [];
+    if (taken.length === 0) return {};
+    return { hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: deliveredContext(taken) } };
+  };
 }
 
 const BASELINE_GATE_TIMEOUT_S = 300;
@@ -466,8 +477,11 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     tools: builtins,
     settings: ISOLATION_SETTINGS,
     ...skillOptions(skills),
-    canUseTool: createCanUseTool(policy, options.onPermission),
-    hooks: { PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal), (toolUseId, name, toolInput) => input.sink.beforeWrite(toolUseId, name, toolInput))], timeout: BASELINE_GATE_TIMEOUT_S }] },
+    canUseTool: createCanUseTool(policy, options.onPermission, setup.bashGate),
+    hooks: {
+      PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal), (toolUseId, name, toolInput) => input.sink.beforeWrite(toolUseId, name, toolInput), setup.bashGate)], timeout: BASELINE_GATE_TIMEOUT_S }],
+      PostToolUse: [{ hooks: [createInboxHook(input)] }],
+    },
     permissionMode: 'default',
     ...(config.agentBudgetUsd !== null ? { maxBudgetUsd: config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0) } : {}),
     maxTurns: config.maxTurns,
@@ -599,7 +613,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       log: newLoopLog(),
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
-    return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome) };
+    return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask ? { bashGate: createBashGate(input.ask) } : {}) };
   }
 
   async function runSegment(input: DriverInput, setup: AttemptSegment, sent: UserMessageParts, prior: PriorSession | null): Promise<{ state: StreamState; outcome: DriverOutcome }> {

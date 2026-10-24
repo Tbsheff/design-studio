@@ -4,6 +4,7 @@ import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
 import { frameSrc, postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import { randomToken } from './session';
+import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
 import type { BuildError, FilesChange } from './useStudioData';
 
 interface Slot {
@@ -321,6 +322,9 @@ export function usePreviewFrames(o: Options) {
           break;
         case 'zoom-key':
           cur.onZoomKey(msg.key);
+          break;
+        case 'escape':
+          window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
           break;
       }
     },

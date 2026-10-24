@@ -40,11 +40,12 @@ import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeErro
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
+import { registerRunControlRoutes } from './run-control-routes.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { draftAttachmentIds } from '../design-system/draft-project.js';
 import { registerPackRoutes } from './packs-routes.js';
 import type { StudioProjectStore } from '../store/projects.js';
-import type { AgentRunner, EventBus, PreviewService, ServerConfig, VersionStore } from '../types.js';
+import type { AgentRunner, EventBus, PreviewService, RunHandle, ServerConfig, VersionStore } from '../types.js';
 import { renderIndexHtml, serveStatic } from './static.js';
 import { registerVariationRoutes } from '../variations/routes.js';
 import { createWorkspaceStore, type WorkspaceStore } from '../store/workspaces.js';
@@ -313,7 +314,21 @@ export function createApp(deps: AppDeps): Hono {
     });
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl });
     runProjectIndex.set(handle.runId, project.id);
+    if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle));
     return handle.runId;
+  };
+
+  const continueWithNext = async (pid: string, did: string, previous: RunRequest, handle: RunHandle): Promise<void> => {
+    const next = handle.next?.();
+    if (!next) return;
+    try {
+      const project = await projects.get(pid);
+      const direction = project.directions.find((candidate) => candidate.id === did);
+      if (!direction || runner.isRunning(pid, did)) return;
+      await startRun(project, direction, { prompt: next.text, mode: previous.mode, ...(previous.level ? { level: previous.level } : {}) });
+    } catch (error) {
+      console.error(`[http] could not send the ${next.reason} message`, error);
+    }
   };
 
   const findRunProject = async (runId: string): Promise<string | null> => {
@@ -821,6 +836,8 @@ export function createApp(deps: AppDeps): Hono {
     const events = lines.filter((line): line is StudioEvent => line.type !== 'run.sent');
     return c.json({ summary, events, sent });
   });
+
+  registerRunControlRoutes(app, runner);
 
   app.post('/api/runs/:runId/cancel', (c) => {
     const handle = runner.get(assertSafeId(c.req.param('runId'), 'runId'));

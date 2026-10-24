@@ -4,6 +4,7 @@ import type { CanUseTool, HookCallback, PermissionResult } from '@anthropic-ai/c
 import { TOKENS_CSS_FILE } from '../../shared/contracts.js';
 import type { RunMode } from '../../shared/contracts.js';
 import { TWEAKS_FILE, TWEAKS_TOOL } from '../../shared/tweaks.js';
+import type { ToolGate } from './ask-gate.js';
 
 export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
 const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL] as const;
@@ -271,9 +272,10 @@ export function evaluateToolUse(policy: ToolPolicy, toolName: string, input: Rec
   return { behavior: 'allow', updatedInput: input };
 }
 
-export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: string, result: PermissionResult) => void): CanUseTool {
-  return async (toolName, input) => {
-    const result = evaluateToolUse(policy, toolName, input);
+export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: string, result: PermissionResult) => void, bashGate?: ToolGate): CanUseTool {
+  return async (toolName, input, options) => {
+    const checked = evaluateToolUse(policy, toolName, input);
+    const result = checked.behavior === 'allow' && toolName === 'Bash' && bashGate ? await bashGate(options.toolUseID, input) : checked;
     onDecision?.(toolName, result);
     return result;
   };
@@ -290,12 +292,14 @@ export function createPreToolUseGuard(
   onDecision?: (toolName: string, result: PermissionResult) => void,
   beforeChange?: () => Promise<void>,
   onAllowed?: (toolUseId: string, toolName: string, input: Record<string, unknown>) => void,
+  bashGate?: ToolGate,
 ): HookCallback {
   return async (hookInput) => {
     if (hookInput.hook_event_name !== 'PreToolUse') return {};
     const toolInput = hookInput.tool_input;
     const record = toolInput && typeof toolInput === 'object' ? (toolInput as Record<string, unknown>) : {};
-    const result = evaluateToolUse(policy, hookInput.tool_name, record);
+    const checked = evaluateToolUse(policy, hookInput.tool_name, record);
+    const result = checked.behavior === 'allow' && hookInput.tool_name === 'Bash' && bashGate ? await bashGate(hookInput.tool_use_id, record) : checked;
     onDecision?.(hookInput.tool_name, result);
     if (result.behavior === 'allow') {
       if (beforeChange && canChangePreview(hookInput.tool_name)) await beforeChange();

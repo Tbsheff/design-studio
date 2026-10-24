@@ -68,7 +68,7 @@ test('chat panel: markdown replies, tool rows, live status, error, composer', as
     runs += 1;
     await expect(chat.locator('.tool-row.pending')).toHaveCount(1);
     await expect(page.locator('.live-status [role=status]')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Stop', exact: true })).toBeVisible();
     await shoot(page, 'streaming', width, height);
     await api.waitForRuns(project.id, runs);
     await expect(chat.locator('.run .status.completed')).toHaveCount(runs);

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { RunRequest, RunSummary, SelectionContext, StudioEvent } from '../../shared/contracts.js';
 import type { AgentRunContext, ServerConfig } from '../types.js';
 import { createAgentRunner } from './index.js';
+import { MOCK_BASH_OUTPUT } from './mock.js';
 import { createFakeBus, createFakePreview, createFakeProjects, createFakeVersions, createTempProject } from './test-fakes.js';
 
 const roots: string[] = [];
@@ -77,4 +78,70 @@ describe('mock agent run, Round 3', () => {
     const finished = env.bus.events.find((event) => event.type === 'run.tool.finished' && event.runId === summary.id && event.toolUseId === edit?.toolUseId);
     expect(finished?.type === 'run.tool.finished' ? finished.diff?.added : null).toBe(1);
   });
+
+  it('delivers a queued message at the next tool boundary, before tool 3', async () => {
+    const env = await setup();
+    await env.runner.start(env.context({ prompt: 'Base page', mode: 'edit', level: 'wireframe' })).done;
+    const handle = env.runner.start(env.context({ prompt: 'Look around [steps]', mode: 'edit', level: 'wireframe' }));
+    await waitUntil(() => env.bus.events.some((event) => event.type === 'run.tool.started' && event.runId === handle.runId));
+    expect(handle.setQueue?.([{ id: 'q1', text: 'Use a serif heading' }])).toBe(true);
+    const summary = await handle.done;
+    const runEvents = env.bus.events.filter((event) => 'runId' in event && event.runId === handle.runId);
+    const delivered = runEvents.findIndex((event) => event.type === 'run.user');
+    const thirdTool = runEvents.filter((event) => event.type === 'run.tool.started')[2];
+    expect(delivered).toBeGreaterThan(-1);
+    expect(delivered).toBeLessThan(runEvents.indexOf(thirdTool!));
+    const lines = (await readFile(path.join(env.projects.projectDir('p1'), 'runs', `${handle.runId}.jsonl`), 'utf8')).trim().split('\n').map((line) => JSON.parse(line) as { type: string; text?: string });
+    expect(lines.some((line) => line.type === 'run.sent' && line.text?.includes('Use a serif heading'))).toBe(true);
+    expect(summary.parts?.some((part) => part.kind === 'user' && part.text === 'Use a serif heading')).toBe(true);
+    expect(handle.next?.()).toBeNull();
+  });
+
+  it('keeps a message queued after the last tool for the next run, and steer stops the run', async () => {
+    const env = await setup();
+    const handle = env.runner.start(env.context({ prompt: 'Steer me [steps]', mode: 'edit', level: 'wireframe' }));
+    await waitUntil(() => env.bus.events.some((event) => event.type === 'run.tool.started' && event.runId === handle.runId));
+    const stopAsked = Date.now();
+    expect(handle.steer?.('Make it blue instead')).toBe(true);
+    const summary = await handle.done;
+    expect(Date.now() - stopAsked).toBeLessThan(500);
+    expect(summary.status).toBe('canceled');
+    expect(handle.next?.()).toEqual({ text: 'Make it blue instead', reason: 'steer' });
+  });
+
+  it('asks before Bash; a deny with a note reaches the agent and no command runs', async () => {
+    const env = await setup();
+    const handle = env.runner.start(env.context({ prompt: 'Test it [bash]', mode: 'edit', level: 'wireframe' }));
+    await waitUntil(() => env.bus.events.some((event) => event.type === 'run.permission'));
+    const asked = env.bus.events.find((event) => event.type === 'run.permission');
+    if (asked?.type !== 'run.permission') throw new Error('no permission event');
+    expect(asked.request).toMatchObject({ toolName: 'Bash', detail: 'npm test' });
+    expect(handle.answer?.(asked.request.id, { allow: false, note: 'use npm' })).toBe(true);
+    const summary = await handle.done;
+    const bash = summary.toolCalls.find((tool) => tool.name === 'Bash');
+    expect(bash?.isError).toBe(true);
+    expect(bash?.summary).toContain('use npm');
+    const lines = (await readFile(path.join(env.projects.projectDir('p1'), 'runs', `${handle.runId}.jsonl`), 'utf8')).trim().split('\n').map((line) => JSON.parse(line) as { type: string; text?: string });
+    expect(lines.some((line) => line.type === 'run.sent' && line.text?.includes('use npm'))).toBe(true);
+    await expect(readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), 'utf8')).rejects.toThrow();
+  });
+
+  it('a stop while a prompt is open answers it as a deny', async () => {
+    const env = await setup();
+    const handle = env.runner.start(env.context({ prompt: 'Test it [bash]', mode: 'edit', level: 'wireframe' }));
+    await waitUntil(() => env.bus.events.some((event) => event.type === 'run.permission'));
+    handle.cancel();
+    const summary = await handle.done;
+    expect(summary.status).toBe('canceled');
+    expect(env.bus.events.some((event) => event.type === 'run.permission.resolved' && !event.allow)).toBe(true);
+    await expect(readFile(path.join(env.workTree, MOCK_BASH_OUTPUT), 'utf8')).rejects.toThrow();
+  });
 });
+
+async function waitUntil(check: () => boolean, ms = 5000): Promise<void> {
+  const deadline = Date.now() + ms;
+  while (!check()) {
+    if (Date.now() > deadline) throw new Error('timed out');
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}

@@ -3,9 +3,11 @@ import type {
   Attachment,
   CheckViewport,
   Direction,
+  PermissionDecision,
   Project,
   ProjectKind,
   ProjectSettings,
+  QueuedMessage,
   RenderCheckResult,
   RunRequest,
   RunSummary,
@@ -69,6 +71,10 @@ export interface RunHandle {
   runId: string;
   cancel(): void;
   done: Promise<RunSummary>;
+  setQueue?(items: QueuedMessage[]): boolean;
+  steer?(text: string): boolean;
+  answer?(requestId: string, decision: PermissionDecision): boolean;
+  next?(): { text: string; reason: 'queue' | 'steer' } | null;
 }
 
 export interface AgentRunContext {

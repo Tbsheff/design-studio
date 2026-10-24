@@ -272,6 +272,7 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Escape' && !event.repeat) post({ type: 'escape' });
     const key = zoomKeyOf(event);
     if (!key) return;
     const mod = isModZoomKey(event);

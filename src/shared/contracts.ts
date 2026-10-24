@@ -611,6 +611,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'error'; kind: 'console' | 'runtime' | 'unhandledrejection'; message: string; stack?: string; source?: string; line?: number }
   | { ns: 'studio'; token: string; type: 'scroll' }
   | { ns: 'studio'; token: string; type: 'mode-exited' }
+  | { ns: 'studio'; token: string; type: 'escape' }
   | {
       ns: 'studio';
       token: string;

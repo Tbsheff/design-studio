@@ -1,5 +1,7 @@
-import { useRef, useState, type ClipboardEvent, type DragEvent } from 'react';
-import type { Project, ProjectSettings, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
+import type { Project, ProjectSettings, QueuedMessage, RunLevel, RunMode, SelectionContext } from '../../shared/contracts';
+import { QueuedMessages } from './QueuedMessages';
+import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, ModelTag, SelectionChips, type PendingAttachment } from './ComposerParts';
@@ -27,6 +29,10 @@ interface Props {
   onCancel: () => void;
   variations?: VariationsPromptProps;
   queued?: boolean;
+  queue?: QueuedMessage[];
+  onQueueChange?: (items: QueuedMessage[]) => void;
+  onSteer?: (text: string) => void;
+  history?: string[];
 }
 
 interface VariationsPromptProps {
@@ -36,12 +42,23 @@ interface VariationsPromptProps {
   onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
 }
 
-function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; quiet: boolean; onCancel: () => void }) {
+function StopButton({ running, onStop }: { running: boolean; onStop: () => void }) {
+  if (!running) return null;
+  return (
+    <button type="button" className="btn small stop-btn has-icon" onClick={onStop} data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
+      <Icon name="stop" size={14} />
+      Stop
+    </button>
+  );
+}
+
+function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; quiet: boolean; canQueue: boolean; onQueue: () => void }) {
   if (props.running) {
+    if (!props.canQueue) return null;
     return (
-      <button type="button" className="btn small danger send-btn" onClick={props.onCancel}>
-        <Icon name="stop" size={14} />
-        Cancel
+      <button type="button" className="btn small has-icon send-btn" onClick={props.onQueue} data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`} data-tip-side="top" data-tip-align="end">
+        <Icon name="plus" size={14} />
+        Queue
       </button>
     );
   }
@@ -60,14 +77,24 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
   );
 }
 
-function KbdHint() {
+function KbdHint({ running }: { running: boolean }) {
+  const mod = MOD_LABEL === '⌘' ? <kbd>⌘</kbd> : <><kbd>Ctrl</kbd>+</>;
+  if (running) {
+    return (
+      <span className="kbd-hint" aria-hidden="true">
+        <kbd>↵</kbd> queue · {mod}
+        <kbd>↵</kbd> now
+      </span>
+    );
+  }
   return (
     <span className="kbd-hint" aria-hidden="true">
-      {MOD_LABEL === '⌘' ? <kbd>⌘</kbd> : <><kbd>Ctrl</kbd>+</>}
+      {mod}
       <kbd>↵</kbd>
     </span>
   );
 }
+
 
 function designsBlocker(mode: RunMode, selectionCount: number): string | null {
   if (mode === 'critique') return 'Critique makes one review.';
@@ -130,6 +157,7 @@ export function PromptBox(props: Props) {
     });
 
   const uploading = files.some((f) => !f.attachment && !f.error);
+  const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
   const canSend = !props.running && !props.disabled && !sending && !uploading && (draft.trim().length > 0 || skillIds.length > 0);
 
   const send = async () => {
@@ -146,6 +174,7 @@ export function PromptBox(props: Props) {
       setFiles([]);
       setSkillIds([]);
       setDraft('');
+      keys.resetHistory();
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -190,6 +219,7 @@ export function PromptBox(props: Props) {
       }}
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
+      onKeyDownCapture={keys.onKeyDown}
     >
       {files
         .filter((f) => f.error)
@@ -200,6 +230,7 @@ export function PromptBox(props: Props) {
         ))}
       {error && <div className="alert error">{error}</div>}
       {runLevel.error && <div className="alert error">{runLevel.error}</div>}
+      <QueuedMessages items={keys.queue} onChange={keys.setQueue} />
       {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} />}
       <Composer
         className={`composer cursor-text ${dragging ? 'bg-accent ring-2 ring-primary/40' : ''}`}
@@ -215,7 +246,10 @@ export function PromptBox(props: Props) {
           placeholder={mode === 'edit' ? 'Describe a change, or type / for skills' : 'Ask for a critique, or type / for skills'}
           maxRows={9}
           submitOnEnter={false}
-          onValueChange={onDraft}
+          onValueChange={(value) => {
+            keys.resetHistory();
+            onDraft(value);
+          }}
           onSubmit={() => void send()}
           onPaste={onPaste}
         />
@@ -269,8 +303,9 @@ export function PromptBox(props: Props) {
             }}
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
-            <KbdHint />
-            <SendButton running={props.running} sending={sending} canSend={canSend} quiet={Boolean(props.queued)} onCancel={props.onCancel} />
+            <KbdHint running={props.running} />
+            <StopButton running={props.running} onStop={props.onCancel} />
+            <SendButton running={props.running} sending={sending} canSend={canSend} quiet={Boolean(props.queued)} canQueue={keys.canQueue} onQueue={keys.queueDraft} />
           </ComposerToolbarSpacer>
         </ComposerToolbar>
       </Composer>

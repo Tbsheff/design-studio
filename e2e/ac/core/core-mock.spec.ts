@@ -226,7 +226,7 @@ test('AC-14: failed and canceled runs keep the last completed version', async ({
 
   await sendPrompt(page, '[slow] Add a long event schedule');
   await expect.poll(() => readFileSync(indexFile, 'utf8') !== completedHtml, { timeout: 15_000, intervals: [50] }).toBe(true);
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
   await expect.poll(async () => (await api.runs(project.id)).find((run) => run.request.prompt.startsWith('[slow]'))?.status).toBe('canceled');
   expect((await headVersion(api, project.id, main.id)).id).toBe(completed.id);
   expect(treeOf(completed.id)).toBe(completedTree);

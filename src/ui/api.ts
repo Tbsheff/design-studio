@@ -10,6 +10,7 @@ import {
   type CreateTokenResult,
   type DesignSystemState,
   type DirectEditResult,
+  type EditHistoryState,
   type Direction,
   type Project,
   type PackSummary,
@@ -184,6 +185,11 @@ export const api = {
   status: (pid: string, did: string) => json<WorkTreeStatus>('GET', `${d(pid, did)}/status`),
   startRun: (pid: string, did: string, req: RunRequest & { referenceUrls?: string[] }) => json<{ runId: string }>('POST', `${d(pid, did)}/runs`, req),
   undo: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/undo`),
+  editHistory: (pid: string, did: string) => json<EditHistoryState>('GET', `${p(pid)}/edit-history?did=${encodeURIComponent(did)}`),
+  editHistoryStep: async (pid: string, did: string, kind: 'undo' | 'redo') => {
+    const res = await request('POST', `${d(pid, did)}/edit-history/${kind}`, undefined, pickMessage);
+    return (await res.json()) as { state: EditHistoryState; version: Version };
+  },
   restore: (pid: string, did: string, versionId: string) =>
     json<Version>('POST', `${d(pid, did)}/restore`, { versionId }),
   keep: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/keep`),

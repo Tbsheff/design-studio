@@ -25,12 +25,17 @@ import { designSystemRef } from './DesignSystemChip';
 import { StudioTopbar } from './StudioTopbar';
 import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
+import { useEditHistory, useSelectionRefresh } from '../useEditHistory';
 import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
 import { useComments } from '../useComments';
 import { useRunControls } from '../useRunControls';
 import type { RunView } from '../runState';
 import { useChatState } from '../useChatState';
+
+function firstText(...texts: (string | null | undefined)[]): string | null {
+  return texts.find((text) => typeof text === 'string') ?? null;
+}
 
 function useHomeVariationsHandoff(projectId: string, ready: boolean, propose: ReturnType<typeof useVariations>['propose']): void {
   useEffect(() => {
@@ -126,11 +131,27 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const canUndo = undoAllowed(directionId, busy || activeRun !== null, versions.length);
   useDesktopContext({ projectId, directionId, running: activeRun !== null });
   const undoRef = useRef<() => void>(() => undefined);
+  const comments = useComments(projectId, directionId, composerActive);
+  const refreshSelection = useSelectionRefresh(selection, setSelection, comments.describeRef);
+  const editHistory = useEditHistory({
+    projectId,
+    directionId,
+    locked: activeRun !== null,
+    before: async () => {
+      await editControl.current?.settle();
+      port.current?.post({ type: 'preview-reset' });
+    },
+    onStepped: () => {
+      refreshSelection();
+      data.refreshVersions();
+    },
+    onError: setActionError,
+  });
   const tweaks = useTweaks({ projectId, project, directionId, lastChange: data.lastChange, onCommitted: () => data.refreshVersions() });
-  const studioTokens = useStudioTokens({ projectId, directionId, tokens, ...tweaks.undoChain(canUndo, () => undoRef.current()), onCommitted: () => data.refreshVersions() });
+  const historyChain = editHistory.undoChain(canUndo, () => undoRef.current());
+  const studioTokens = useStudioTokens({ projectId, directionId, tokens, ...tweaks.undoChain(historyChain.canUndo, historyChain.onUndo), redo: editHistory.redo, onCommitted: () => data.refreshVersions() });
   const { guard } = studioTokens;
   const detailsRun = runById(runs, detailsRunId);
-  const comments = useComments(projectId, directionId, composerActive);
   const chatState = useChatState(directionRuns);
 
   useHomeVariationsHandoff(projectId, project !== null && direction !== null, variations.propose);
@@ -358,7 +379,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onCloseDesign={() => setDesignOpen(false)}
         onCloseSettings={() => setSettingsOpen(false)}
       />
-      <StudioToast text={packActions.toast?.text ?? null} />
+      <StudioToast text={firstText(editHistory.toast, packActions.toast?.text)} />
     </div>
   );
 }

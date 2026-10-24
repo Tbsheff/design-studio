@@ -5,6 +5,8 @@ import { sendTelemetry } from './api';
 import { frameSrc, postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import { randomToken } from './session';
 import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
+import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
+import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import type { BuildError, FilesChange } from './useStudioData';
 
 interface Slot {
@@ -134,7 +136,11 @@ export function usePreviewFrames(o: Options) {
       setSlots((prev) => prev.filter((s) => s.token === token));
       setHover(null);
       const slot = slotsRef.current.find((s) => s.token === token);
-      if (slot) window.setTimeout(() => syncFrame(frameFor(slot)), 0);
+      if (slot)
+        window.setTimeout(() => {
+          syncFrame(frameFor(slot));
+          window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
+        }, 0);
     },
     [frameFor, syncFrame],
   );
@@ -326,6 +332,9 @@ export function usePreviewFrames(o: Options) {
         case 'escape':
           window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
           break;
+        case 'history-key':
+          if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
+          break;
       }
     },
     [requestRects],
@@ -339,6 +348,7 @@ export function usePreviewFrames(o: Options) {
         return syncFrame(frame);
       }
       if (msg.type === 'painted') {
+        if (frame.token === frontRef.current) window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
         if (treeWanted.current && frame.token === frontRef.current) scheduleTree();
         return onPainted(frame);
       }

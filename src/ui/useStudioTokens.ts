@@ -3,7 +3,7 @@ import type { Version } from '../shared/contracts';
 import { useTokenFrameSync } from './tokenFrames';
 import type { DesignTokens } from './useDesignSystemState';
 import { useTokenDraft } from './useTokenDraft';
-import { useUndoShortcut } from './useUndoShortcut';
+import { useUndoShortcut, type RedoShortcut } from './useUndoShortcut';
 
 interface Options {
   projectId: string;
@@ -11,13 +11,14 @@ interface Options {
   tokens: DesignTokens | null;
   canUndo: boolean;
   onUndo: () => void;
+  redo?: RedoShortcut;
   onCommitted: (version: Version) => void;
 }
 
 export function useStudioTokens(o: Options) {
   const draft = useTokenDraft(o);
   useTokenFrameSync();
-  useUndoShortcut(o.canUndo || draft.count > 0, () => (draft.count > 0 ? draft.undoLast() : o.onUndo()));
+  useUndoShortcut(o.canUndo || draft.count > 0, () => (draft.count > 0 ? draft.undoLast() : o.onUndo()), o.redo);
   const { confirmLeave } = draft;
   const guard = useCallback(
     <A extends unknown[]>(fn: (...args: A) => unknown) =>

@@ -1,4 +1,5 @@
 import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, SelectionContext, SourceLoc } from '../shared/contracts.js';
+import { forwardHistoryKeys } from './history-key.js';
 import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
 import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { createLayerIndex, moveSelection } from './layers.js';
@@ -877,6 +878,7 @@ function startBridge(session: BridgeSession): void {
   window.addEventListener('scroll', onScroll, { capture: true, passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
   forwardZoomInput(post);
+  forwardHistoryKeys(post);
 
   let paintScheduled = false;
   const schedulePainted = (): void => {

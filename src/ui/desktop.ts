@@ -12,7 +12,8 @@ type Handler = (command: DesktopCommand) => boolean;
 
 const handlers: Handler[] = [];
 const KEY_ECHO_MS = 400;
-const recentKeys = new Map<string, { at: number; event: KeyboardEvent }>();
+const recentKeys = new Map<string, { at: number; handled: () => boolean }>();
+const recentCommands = new Map<string, number>();
 let installed = false;
 
 function bridge(): DesktopBridge | undefined {
@@ -33,8 +34,9 @@ function shortcutName(event: KeyboardEvent): string | null {
 }
 
 function dispatchDesktopCommand(command: DesktopCommand): void {
+  recentCommands.set(command.type, Date.now());
   const pressed = recentKeys.get(command.type);
-  if (pressed && pressed.event.defaultPrevented && Date.now() - pressed.at < KEY_ECHO_MS) return;
+  if (pressed && pressed.handled() && Date.now() - pressed.at < KEY_ECHO_MS) return;
   for (const handler of [...handlers].reverse()) if (handler(command)) return;
 }
 
@@ -45,11 +47,20 @@ function install(): void {
     'keydown',
     (event) => {
       const name = shortcutName(event);
-      if (name) recentKeys.set(name, { at: Date.now(), event });
+      if (name) recentKeys.set(name, { at: Date.now(), handled: () => event.defaultPrevented });
     },
     true,
   );
   bridge()?.onCommand?.(dispatchDesktopCommand);
+}
+
+export function noteHandledShortcut(name: 'undo' | 'redo'): void {
+  recentKeys.set(name, { at: Date.now(), handled: () => true });
+}
+
+export function recentDesktopCommand(name: string): boolean {
+  const at = recentCommands.get(name);
+  return at !== undefined && Date.now() - at < KEY_ECHO_MS;
 }
 
 export function useDesktopCommand(handler: Handler): void {

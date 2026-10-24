@@ -38,6 +38,14 @@ const STYLE_KEYS = [
   'width',
   'height',
   'text-align',
+  'flex-direction',
+  'flex-wrap',
+  'justify-content',
+  'align-items',
+  'align-self',
+  'flex',
+  'box-shadow',
+  'filter',
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;
@@ -831,6 +839,9 @@ function startBridge(session: BridgeSession): void {
       const next = base && valid ? moveSelection(base, message.move) : null;
       if (next) postSelect(next, false);
     },
+    'text-edit-allowed': () => undefined,
+    'text-edit-stop': () => undefined,
+    'request-authored': () => undefined,
     'describe-anchors': (message) => {
       if (typeof message.requestId !== 'string') return;
       const contexts = anchorQueries(message.anchors).map((query) => {

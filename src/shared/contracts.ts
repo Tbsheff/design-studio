@@ -637,7 +637,12 @@ export type BridgeToParent =
     }
   | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey; at: number }
   | { ns: 'studio'; token: string; type: 'anchor-rects'; anchors: AnchorReport[] }
-  | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] };
+  | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] }
+  | { ns: 'studio'; token: string; type: 'text-edit'; selector: string; state: 'start' | 'cancel' }
+  | { ns: 'studio'; token: string; type: 'text-commit'; selector: string; text: string; at: number }
+  | { ns: 'studio'; token: string; type: 'history-key'; redo: boolean }
+  | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
+  | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string };
 
 export interface LayerNode {
   id: number;
@@ -703,7 +708,10 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'request-tree' }
   | { ns: 'studio'; token: string; type: 'hover-node'; id: number | null }
   | { ns: 'studio'; token: string; type: 'select-node'; id: number; additive: boolean }
-  | { ns: 'studio'; token: string; type: 'select-relative'; selector: string; move: SelectMove };
+  | { ns: 'studio'; token: string; type: 'select-relative'; selector: string; move: SelectMove }
+  | { ns: 'studio'; token: string; type: 'text-edit-allowed'; allowed: boolean }
+  | { ns: 'studio'; token: string; type: 'text-edit-stop' }
+  | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -731,6 +739,14 @@ export const DIRECT_STYLE_PROPERTIES = [
   'width',
   'height',
   'opacity',
+  'flex-direction',
+  'flex-wrap',
+  'justify-content',
+  'align-items',
+  'align-self',
+  'flex',
+  'box-shadow',
+  'filter',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];
@@ -741,6 +757,27 @@ export interface DirectEditRequest {
   tag?: string;
   style?: Partial<Record<DirectStyleProperty, string | null>>;
   text?: string;
+  name?: string | null;
+  move?: ReorderMove;
+}
+
+export type ReorderMove = 'up' | 'down';
+
+export interface DirectEditBatch {
+  edits: DirectEditRequest[];
+}
+
+export interface EditHistoryState {
+  canUndo: boolean;
+  canRedo: boolean;
+  undoLabel: string | null;
+  redoLabel: string | null;
+}
+
+export interface AuthoredRule {
+  selector: string;
+  css: string;
+  source: string | null;
 }
 
 export interface DirectEditResult {

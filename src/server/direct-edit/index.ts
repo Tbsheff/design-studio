@@ -14,11 +14,31 @@ import { parseDirectEditRequest } from './validate.js';
 export { DirectEditError } from './errors.js';
 export { parseDirectEditRequest } from './validate.js';
 
+export interface EditFileChange {
+  file: string;
+  relative: string;
+  before: string;
+  after: string;
+}
+
+export interface EditRecord {
+  projectId: string;
+  directionId: string;
+  label: string;
+  versionId: string;
+  files: EditFileChange[];
+}
+
+export interface EditRecorder {
+  record(entry: EditRecord): void;
+}
+
 export interface DirectEditDeps {
   bus: EventBus;
   projects: Pick<ProjectStore, 'updateDirection'>;
   versions: VersionStore;
   runner: Pick<AgentRunner, 'isRunning'>;
+  history?: EditRecorder;
 }
 
 export interface ResolvedSource {
@@ -180,6 +200,13 @@ export async function applyDirectEdit(deps: DirectEditDeps, project: Project, di
   const { target, original, patch } = plan;
   if (patch.code === original) return unchangedResult(deps, project, headVersionId, target.relative, patch);
   const version = await writeAndCommit(deps, project, direction, target, original, patch, request);
+  deps.history?.record({
+    projectId: project.id,
+    directionId: direction.id,
+    label: version.title,
+    versionId: version.id,
+    files: [{ file: target.file, relative: target.relative, before: original, after: patch.code }],
+  });
   await publishVersion(deps, project, direction, version);
   return { file: target.relative, version, applied: patch.applied };
 }

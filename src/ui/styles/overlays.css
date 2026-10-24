@@ -274,3 +274,143 @@
     transform: translateX(12px);
   }
 }
+
+.modal.dmd {
+  width: min(1180px, 100%);
+  height: min(760px, calc(100vh - 48px));
+}
+
+.dmd-body {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-4);
+  flex: 1;
+  min-height: 0;
+}
+
+.dmd-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dmd-pane-label {
+  flex: none;
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.dmd-pane .design-md {
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-md);
+}
+
+.dmd-preview {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.dmd-preview:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dmd-outline {
+  min-height: 0;
+  overflow: auto;
+}
+
+.dmd-outline ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dmd-outline-item {
+  display: flex;
+  width: 100%;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.dmd-outline-item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.dmd-outline-item.level-1 {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.dmd-outline-item.level-3 {
+  padding-left: var(--s-5);
+}
+
+.dmd-outline-empty {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--text-3);
+  text-wrap: pretty;
+}
+
+.dmd-dirty {
+  margin-left: var(--s-2);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-full);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.dmd-error {
+  margin: 0 var(--s-6) var(--s-3);
+}
+
+.dmd-unsaved {
+  background: var(--warn-soft);
+}
+
+.dmd-unsaved-text {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--warn);
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .dmd-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .dmd-outline {
+    display: none;
+  }
+}

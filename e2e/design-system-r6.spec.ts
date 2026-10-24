@@ -349,3 +349,52 @@ test('R6-5: every built-in pack card shows its light and dark swatches side by s
     expect((darkBox?.x ?? 0) - ((lightBox?.x ?? 0) + (lightBox?.width ?? 0))).toBeLessThan(1);
   }
 });
+
+test('R6-6: the DESIGN.md editor has an outline and a live preview, and asks to save on close', async ({ page }) => {
+  const api = await openHome(page);
+  const project = await openPackProject(page, api, 'Design Md Page');
+  const file = path.join(project.directions[0]!.workTree, 'DESIGN.md');
+  const before = readFileSync(file, 'utf8');
+  await page.getByRole('button', { name: 'DESIGN.md', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'DESIGN.md', exact: true });
+  const editor = dialog.getByLabel('DESIGN.md content');
+  await expect(editor).not.toBeEmpty();
+  const outline = dialog.getByRole('navigation', { name: 'Outline' });
+  await expect(outline.getByRole('button').first()).toBeVisible();
+
+  await editor.press('ControlOrMeta+End');
+  await editor.pressSequentially('\n\n## Review notes\n\nShip **bold** ideas.\n');
+  await expect(outline.getByRole('button', { name: 'Review notes' })).toBeVisible();
+  await expect(dialog.getByLabel('DESIGN.md preview').getByRole('heading', { name: 'Review notes' })).toBeVisible();
+  await expect(dialog.getByLabel('DESIGN.md preview').locator('strong', { hasText: 'bold' })).toBeVisible();
+  await outline.getByRole('button', { name: 'Review notes' }).click();
+  expect(await editor.evaluate((el) => (el as HTMLTextAreaElement).value.slice((el as HTMLTextAreaElement).selectionStart).startsWith('## Review notes'))).toBe(true);
+
+  const ask = dialog.getByRole('alertdialog', { name: 'Unsaved changes' });
+  await dialog.getByRole('button', { name: 'Close DESIGN.md' }).click();
+  await expect(ask).toBeVisible();
+  await ask.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(ask).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await editor.press('Escape');
+  await expect(ask).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(ask).toBeHidden();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await ask.getByRole('button', { name: 'Discard' }).click();
+  await expect(dialog).toBeHidden();
+  expect(readFileSync(file, 'utf8')).toBe(before);
+
+  await page.getByRole('button', { name: 'DESIGN.md', exact: true }).click();
+  await expect(editor).not.toBeEmpty();
+  await dialog.getByRole('button', { name: 'Close DESIGN.md' }).click();
+  await expect(dialog).toBeHidden();
+  await page.getByRole('button', { name: 'DESIGN.md', exact: true }).click();
+  await editor.press('ControlOrMeta+End');
+  await editor.pressSequentially('\nOne more line.\n');
+  await page.mouse.click(5, 5);
+  await expect(ask).toBeVisible();
+  await ask.getByRole('button', { name: 'Save' }).click();
+  await expect(dialog).toBeHidden();
+  await expect.poll(() => readFileSync(file, 'utf8')).toContain('One more line.');
+});

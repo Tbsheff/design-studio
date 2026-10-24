@@ -292,6 +292,27 @@ export interface DesignComment {
   status: CommentStatus;
   runId?: string;
   versionId?: string | null;
+  replies?: CommentReply[];
+  attachmentIds?: string[];
+  drawing?: CommentDrawing;
+}
+
+export interface CommentReply {
+  id: string;
+  text: string;
+  createdAt: number;
+}
+
+export interface DrawStroke {
+  color: string;
+  width: number;
+  points: number[];
+}
+
+export interface CommentDrawing {
+  frame: { width: number; height: number };
+  box: SelectionContext['rect'];
+  strokes: DrawStroke[];
 }
 
 export interface RunComment {
@@ -299,6 +320,7 @@ export interface RunComment {
   n: number;
   text: string;
   element: SelectionContext | null;
+  drawing?: { frame: CommentDrawing['frame']; box: CommentDrawing['box']; image: number };
 }
 
 export interface AnchorQuery {
@@ -615,9 +637,11 @@ export const API_ROUTES = {
   cancelVariations: 'POST /api/projects/:pid/variations/:gid/cancel -> {canceled: runId[]}',
   mixVariation: 'POST /api/projects/:pid/variations/mix VariationMixRequest -> {runId} (edit run on the target with the element as a <reference-element>)',
   listComments: 'GET /api/projects/:pid/d/:did/comments -> DesignComment[]',
-  createComment: 'POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued} -> DesignComment',
+  createComment: 'POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued, attachmentIds?, drawing?} -> DesignComment',
   updateComment: 'PATCH /api/projects/:pid/d/:did/comments/:cid {text?, status?, target?, context?} -> DesignComment (409 bad_transition)',
   deleteComment: 'DELETE /api/projects/:pid/d/:did/comments/:cid -> {ok}',
+  addCommentReply: 'POST /api/projects/:pid/d/:did/comments/:cid/replies {text} -> DesignComment',
+  deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
   directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version',

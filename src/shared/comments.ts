@@ -1,6 +1,9 @@
-import type { AnchorMatch, AnchorQuery, CommentStatus, CommentTarget, DesignComment, SelectionContext, SourceLoc } from './contracts.js';
+import type { AnchorMatch, AnchorQuery, CommentStatus, CommentTarget, DesignComment, DrawStroke, SelectionContext, SourceLoc } from './contracts.js';
 
 export const COMMENT_TEXT_MAX = 2000;
+export const COMMENT_REPLIES_MAX = 50;
+export const DRAW_STROKES_MAX = 200;
+export const DRAW_POINTS_MAX = 20_000;
 const TEXT_SNIPPET_MAX = 80;
 
 export type CommentActor = 'user' | 'server';
@@ -156,4 +159,34 @@ export function commentPrompt(comments: { n: number; text: string }[]): string {
   const lines = comments.map((comment) => `#${comment.n} ${normalizeText(comment.text)}`);
   const noun = comments.length === 1 ? 'comment' : 'comments';
   return [`Address ${comments.length} ${noun}:`, ...lines].join('\n');
+}
+
+export function agentText(comment: Pick<DesignComment, 'text' | 'replies'>): string {
+  const replies = comment.replies ?? [];
+  if (replies.length === 0) return comment.text;
+  return [comment.text, 'Replies:', ...replies.map((reply) => `- ${normalizeText(reply.text)}`)].join('\n');
+}
+
+export function strokesBox(strokes: DrawStroke[]): SelectionContext['rect'] | null {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const stroke of strokes) {
+    const pad = stroke.width / 2;
+    for (let i = 0; i + 1 < stroke.points.length; i += 2) {
+      const x = stroke.points[i] as number;
+      const y = stroke.points[i + 1] as number;
+      minX = Math.min(minX, x - pad);
+      minY = Math.min(minY, y - pad);
+      maxX = Math.max(maxX, x + pad);
+      maxY = Math.max(maxY, y + pad);
+    }
+  }
+  if (minX === Infinity) return null;
+  return { x: Math.round(minX), y: Math.round(minY), width: Math.round(maxX - minX), height: Math.round(maxY - minY) };
+}
+
+export function drawingTarget(box: SelectionContext['rect']): CommentTarget {
+  return { selector: 'body', sourceLoc: null, tag: 'body', textSnippet: '', rectHint: box };
 }

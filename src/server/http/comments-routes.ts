@@ -3,8 +3,8 @@ import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { RUN_LEVELS } from '../../shared/contracts.js';
-import type { DesignComment, Direction, Project, RunLevel, RunRequest, RunSummary } from '../../shared/contracts.js';
-import { COMMENT_TEXT_MAX, commentPrompt, isSendable } from '../../shared/comments.js';
+import type { DesignComment, Direction, Project, RunComment, RunLevel, RunRequest, RunSummary, SelectionContext } from '../../shared/contracts.js';
+import { COMMENT_TEXT_MAX, DRAW_POINTS_MAX, DRAW_STROKES_MAX, agentText, commentPrompt, isSendable } from '../../shared/comments.js';
 import type { CommentStore } from '../store/comments.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../store/errors.js';
 import type { AgentRunner, RunHandle } from '../types.js';
@@ -43,12 +43,39 @@ const targetSchema = z.object({
 
 const textSchema = z.string().trim().min(1, 'text is required').max(COMMENT_TEXT_MAX);
 
-const createSchema = z.object({
-  text: textSchema,
-  target: targetSchema,
-  context: selectionSchema.optional(),
-  status: z.enum(['draft', 'queued']).optional(),
-});
+const coordinate = z.number().finite().min(-10_000).max(100_000);
+
+const drawingSchema = z
+  .object({
+    frame: z.object({ width: z.number().int().min(1).max(10_000), height: z.number().int().min(1).max(100_000) }),
+    box: rectSchema,
+    strokes: z
+      .array(
+        z.object({
+          color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+          width: z.number().min(1).max(64),
+          points: z.array(coordinate).min(2).max(DRAW_POINTS_MAX),
+        }),
+      )
+      .min(1)
+      .max(DRAW_STROKES_MAX),
+  })
+  .refine((drawing) => drawing.strokes.reduce((sum, stroke) => sum + stroke.points.length, 0) <= DRAW_POINTS_MAX, 'drawing has too many points');
+
+const attachmentIdsSchema = z.array(z.string().regex(/^[A-Za-z0-9_-]{1,64}$/)).min(1).max(4);
+
+const createSchema = z
+  .object({
+    text: textSchema,
+    target: targetSchema,
+    context: selectionSchema.optional(),
+    status: z.enum(['draft', 'queued']).optional(),
+    attachmentIds: attachmentIdsSchema.optional(),
+    drawing: drawingSchema.optional(),
+  })
+  .refine((input) => !input.drawing || (input.attachmentIds?.length ?? 0) > 0, 'a drawing needs its image in attachmentIds');
+
+const replySchema = z.object({ text: textSchema }).strict();
 
 const updateSchema = z
   .object({
@@ -74,6 +101,7 @@ interface CommentRouteDeps {
   loadDirection: (pid: string, did: string) => Promise<{ project: Project; direction: Direction }>;
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   startRun: (project: Project, direction: Direction, request: RunRequest) => Promise<string>;
+  hasAttachment?: (projectId: string, attachmentId: string) => Promise<boolean>;
 }
 
 async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
@@ -100,6 +128,19 @@ async function readSummary(file: string): Promise<RunSummary | null> {
   } catch {
     return null;
   }
+}
+
+function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionContext> | undefined): Pick<RunRequest, 'comments' | 'attachmentIds'> {
+  const attachmentIds: string[] = [];
+  const comments = chosen.map((comment): RunComment => {
+    const own = (comment.attachmentIds ?? []).filter((id) => !attachmentIds.includes(id));
+    attachmentIds.push(...own);
+    const base = { id: comment.id, n: comment.n, text: agentText(comment) };
+    if (!comment.drawing) return { ...base, element: contexts?.[comment.id] ?? comment.context ?? null };
+    const image = attachmentIds.indexOf(comment.attachmentIds?.[0] ?? '') + 1;
+    return { ...base, element: null, drawing: { frame: comment.drawing.frame, box: comment.drawing.box, image } };
+  });
+  return { comments, ...(attachmentIds.length ? { attachmentIds } : {}) };
 }
 
 function chooseComments(all: DesignComment[], ids: string[] | undefined): DesignComment[] {
@@ -158,7 +199,21 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
   app.post(base, async (c) => {
     const input = await parseBody(c, createSchema);
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    for (const id of input.attachmentIds ?? []) {
+      if (deps.hasAttachment && !(await deps.hasAttachment(project.id, id))) throw new NotFoundError(`attachment ${id} not found`);
+    }
     return c.json(await comments.create(project.id, direction.id, input));
+  });
+
+  app.post(`${base}/:cid/replies`, async (c) => {
+    const { text } = await parseBody(c, replySchema);
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    return c.json(await comments.addReply(project.id, direction.id, c.req.param('cid'), text));
+  });
+
+  app.delete(`${base}/:cid/replies/:rid`, async (c) => {
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    return c.json(await comments.removeReply(project.id, direction.id, c.req.param('cid'), c.req.param('rid')));
   });
 
   app.post(`${base}/reorder`, async (c) => {
@@ -181,12 +236,7 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
         prompt: commentPrompt(chosen),
         mode: 'edit',
         ...(input.level ? { level: input.level } : {}),
-        comments: chosen.map((comment) => ({
-          id: comment.id,
-          n: comment.n,
-          text: comment.text,
-          element: input.contexts?.[comment.id] ?? comment.context ?? null,
-        })),
+        ...runPayload(chosen, input.contexts),
       };
       const runId = await deps.startRun(project, direction, request);
       const handle = runner.get(runId);

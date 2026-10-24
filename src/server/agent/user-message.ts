@@ -49,7 +49,14 @@ function formatSelection(selection: SelectionContext, index: number): string {
 const COMMENTS_INSTRUCTION =
   'The user pinned these comments on elements in the preview. Address each one, and change only what each comment asks for. In your final reply, list the numbers you did (for example "Done: #1, #3") and say why for any you did not do.';
 
+function formatDrawing(drawing: NonNullable<RunComment['drawing']>): string {
+  const { box, frame } = drawing;
+  const which = drawing.image > 0 ? `attached image ${drawing.image}` : 'an attached image';
+  return `<drawing>The user drew on the preview. The strokes are in ${which}: a transparent ${frame.width}×${frame.height} PNG at the preview viewport size, so pixel (x, y) is the point (x, y) of the viewport as the user saw it. The strokes cover x ${box.x}–${box.x + box.width}, y ${box.y}–${box.y + box.height}. Find the elements under the strokes in the code.</drawing>`;
+}
+
 function formatComment(comment: RunComment): string {
+  if (comment.drawing) return [`<comment number="${comment.n}">`, `request: ${trim(comment.text, 2000)}`, formatDrawing(comment.drawing), '</comment>'].join('\n');
   const element = comment.element ? formatSelection(comment.element, comment.n - 1) : '<element>(the element was not found in the preview)</element>';
   return [`<comment number="${comment.n}">`, `request: ${trim(comment.text, 2000)}`, element, '</comment>'].join('\n');
 }

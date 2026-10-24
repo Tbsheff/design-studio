@@ -932,6 +932,7 @@ export function createApp(deps: AppDeps): Hono {
     loadDirection,
     withDirection,
     startRun,
+    hasAttachment: (pid, id) => projects.getAttachment(pid, id).then(() => true, () => false),
   });
 
   registerComponentRoutes(app, {

@@ -3,8 +3,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../../shared/contracts.js';
-import { canTransition, isSendable, statusAfterRun, type CommentActor } from '../../shared/comments.js';
+import type { CommentDrawing, CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../../shared/contracts.js';
+import { COMMENT_REPLIES_MAX, canTransition, isSendable, statusAfterRun, type CommentActor } from '../../shared/comments.js';
 import type { EventBus } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
@@ -19,6 +19,8 @@ export interface CreateCommentInput {
   target: CommentTarget;
   context?: SelectionContext;
   status?: 'draft' | 'queued';
+  attachmentIds?: string[];
+  drawing?: CommentDrawing;
 }
 
 export interface UpdateCommentInput {
@@ -39,6 +41,8 @@ export interface CommentStore {
   create(projectId: string, directionId: string, input: CreateCommentInput): Promise<DesignComment>;
   update(projectId: string, directionId: string, commentId: string, input: UpdateCommentInput, actor?: CommentActor): Promise<DesignComment>;
   remove(projectId: string, directionId: string, commentId: string): Promise<void>;
+  addReply(projectId: string, directionId: string, commentId: string, text: string): Promise<DesignComment>;
+  removeReply(projectId: string, directionId: string, commentId: string, replyId: string): Promise<DesignComment>;
   reorder(projectId: string, directionId: string, ids: string[]): Promise<DesignComment[]>;
   markSent(projectId: string, directionId: string, ids: string[], runId: string): Promise<DesignComment[]>;
   requeue(projectId: string, directionId: string, ids: string[]): Promise<DesignComment[]>;
@@ -132,6 +136,8 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
           target: input.target,
           ...(input.context ? { context: input.context } : {}),
           status: input.status ?? 'queued',
+          ...(input.attachmentIds?.length ? { attachmentIds: input.attachmentIds } : {}),
+          ...(input.drawing ? { drawing: input.drawing } : {}),
         };
         data.nextN += 1;
         data.comments.push(comment);
@@ -159,6 +165,30 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
       await mutate(projectId, directionId, (data) => {
         find(data, commentId);
         data.comments = data.comments.filter((item) => item.id !== commentId);
+      });
+    },
+
+    addReply(projectId, directionId, commentId, text) {
+      return mutate(projectId, directionId, (data) => {
+        const comment = find(data, commentId);
+        const replies = comment.replies ?? [];
+        if (replies.length >= COMMENT_REPLIES_MAX) throw new BadRequestError(`a comment can have at most ${COMMENT_REPLIES_MAX} replies`);
+        const now = Date.now();
+        comment.replies = [...replies, { id: nanoid(10), text, createdAt: now }];
+        comment.updatedAt = now;
+        return comment;
+      });
+    },
+
+    removeReply(projectId, directionId, commentId, replyId) {
+      return mutate(projectId, directionId, (data) => {
+        const comment = find(data, commentId);
+        const replies = comment.replies ?? [];
+        if (!replies.some((reply) => reply.id === replyId)) throw new NotFoundError(`reply ${replyId} not found`);
+        comment.replies = replies.filter((reply) => reply.id !== replyId);
+        if (comment.replies.length === 0) delete comment.replies;
+        comment.updatedAt = Date.now();
+        return comment;
       });
     },
 

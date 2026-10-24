@@ -211,3 +211,76 @@ describe('comment routes', { timeout: 20000 }, () => {
     expect(settled).toMatchObject({ status: 'resolved', versionId: 'v9' });
   });
 });
+
+describe('comment drawings and replies', { timeout: 20000 }, () => {
+  const box = { x: 40, y: 60, width: 200, height: 80 };
+  const drawing = { frame: { width: 1440, height: 900 }, box, strokes: [{ color: '#ff3b30', width: 4, points: [40, 60, 140, 100, 240, 140] }] };
+  const bodyTarget = { selector: 'body', sourceLoc: null, tag: 'body', textSnippet: '', rectHint: box };
+
+  async function upload(): Promise<string> {
+    const saved = await projects.saveAttachment(project.id, { name: 'drawing.png', mime: 'image/png', bytes: new Uint8Array([137, 80, 78, 71]) });
+    return saved.id;
+  }
+
+  it('stores a drawing with its image and sends the image with the run', async () => {
+    const imageId = await upload();
+    const created = await call('POST', base, { text: 'Move this up', target: bodyTarget, attachmentIds: [imageId], drawing });
+    expect(created.status).toBe(200);
+    const comment = (await created.json()) as DesignComment;
+    expect(comment.attachmentIds).toEqual([imageId]);
+    expect(comment.drawing?.strokes[0]?.points).toEqual([40, 60, 140, 100, 240, 140]);
+    const other = await add('Make it red', 3);
+
+    const response = await call('POST', `${base}/send`, { contexts: { [comment.id]: selection('body', 'everything', 1) } });
+    expect(response.status).toBe(200);
+    const ctx = started[0];
+    expect(ctx?.request.attachmentIds).toEqual([imageId]);
+    expect(ctx?.attachments.map((item) => item.id)).toEqual([imageId]);
+    const sentDrawing = ctx?.request.comments?.find((item) => item.id === comment.id);
+    expect(sentDrawing?.element).toBeNull();
+    expect(sentDrawing?.drawing).toEqual({ frame: drawing.frame, box, image: 1 });
+    expect(ctx?.request.comments?.find((item) => item.id === other.id)?.drawing).toBeUndefined();
+    const text = buildUserText({ request: ctx!.request, designMd: null, designSystem: null });
+    expect(text).toContain('<drawing>');
+    expect(text).toContain('attached image 1');
+    expect(text).toContain('x 40–240, y 60–140');
+  });
+
+  it('rejects a drawing without its image, an unknown image, and bad strokes', async () => {
+    expect((await call('POST', base, { text: 'x', target: bodyTarget, drawing })).status).toBe(400);
+    expect((await call('POST', base, { text: 'x', target: bodyTarget, attachmentIds: ['missing1'], drawing })).status).toBe(404);
+    const imageId = await upload();
+    const badColor = { ...drawing, strokes: [{ color: 'red', width: 4, points: [1, 2] }] };
+    expect((await call('POST', base, { text: 'x', target: bodyTarget, attachmentIds: [imageId], drawing: badColor })).status).toBe(400);
+    expect((await call('POST', base, { text: 'x', target: bodyTarget, attachmentIds: ['../../etc'] })).status).toBe(400);
+    expect(await list()).toEqual([]);
+  });
+
+  it('adds and deletes replies, and sends replies in the comment text', async () => {
+    const comment = await add('Make it red', 3);
+    expect((await call('POST', `${base}/${comment.id}/replies`, { text: '   ' })).status).toBe(400);
+    const first = (await (await call('POST', `${base}/${comment.id}/replies`, { text: 'Darker red' })).json()) as DesignComment;
+    expect(first.replies?.map((reply) => reply.text)).toEqual(['Darker red']);
+    const second = (await (await call('POST', `${base}/${comment.id}/replies`, { text: 'Only the title' })).json()) as DesignComment;
+    expect(second.status).toBe('queued');
+    const removed = await call('DELETE', `${base}/${comment.id}/replies/${first.replies?.[0]?.id}`);
+    expect(((await removed.json()) as DesignComment).replies?.map((reply) => reply.text)).toEqual(['Only the title']);
+    expect((await call('DELETE', `${base}/${comment.id}/replies/nope`)).status).toBe(404);
+    await call('POST', `${base}/${comment.id}/replies`, { text: 'And bolder' });
+
+    expect((await call('POST', `${base}/send`, {})).status).toBe(200);
+    const sent = started[0]?.request.comments?.[0];
+    expect(sent?.text).toBe('Make it red\nReplies:\n- Only the title\n- And bolder');
+    expect(buildUserText({ request: started[0]!.request, designMd: null, designSystem: null })).toContain('request: Make it red\nReplies:\n- Only the title');
+  });
+
+  it('reads an old comment file that has no replies field', async () => {
+    const dir = path.join(config.dataDir, 'projects', project.id, 'comments');
+    await mkdir(dir, { recursive: true });
+    const old = { id: 'old1', n: 1, createdAt: 1, updatedAt: 1, text: 'Old', target: bodyTarget, status: 'queued' };
+    await writeFile(path.join(dir, 'main.json'), JSON.stringify({ nextN: 2, comments: [old] }));
+    expect((await list()).map((c) => [c.id, c.replies])).toEqual([['old1', undefined]]);
+    const replied = (await (await call('POST', `${base}/old1/replies`, { text: 'Still needed' })).json()) as DesignComment;
+    expect(replied.replies).toHaveLength(1);
+  });
+});

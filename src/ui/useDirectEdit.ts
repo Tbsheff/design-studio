@@ -13,6 +13,7 @@ export type SaveStatus =
 export interface DirectEditControl {
   cancel: () => void;
   settle: () => Promise<void>;
+  commitText: (selector: string, text: string) => boolean;
 }
 
 export interface DirectEditCommit {
@@ -177,6 +178,17 @@ export function useDirectEdit(o: Options) {
     if (timer.current !== null) window.clearTimeout(timer.current);
     void flush();
   }, [flush]);
+  const commitText = useCallback(
+    (selector: string, text: string) => {
+      const cur = opts.current;
+      if (selector !== cur.selection.selector || !cur.selection.source || !cur.directionId) return false;
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      setTextDraft(text);
+      void flush();
+      return true;
+    },
+    [flush, setTextDraft],
+  );
 
   const preview = useCallback(
     (patch: Partial<StyleValues>) => {
@@ -245,7 +257,7 @@ export function useDirectEdit(o: Options) {
   );
 
   useEffect(() => {
-    o.control.current = { cancel, settle };
+    o.control.current = { cancel, settle, commitText };
     return () => {
       if (o.control.current?.cancel === cancel) o.control.current = null;
       if (timer.current !== null) {
@@ -253,7 +265,7 @@ export function useDirectEdit(o: Options) {
         void flush();
       }
     };
-  }, [cancel, settle, flush, o.control]);
+  }, [cancel, settle, commitText, flush, o.control]);
 
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);

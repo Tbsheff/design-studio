@@ -19,6 +19,7 @@ import { RenderCheckPanel } from './RenderCheckPanel';
 import { CommentLayer } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
+import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
 
 interface Props {
   projectId: string;
@@ -35,6 +36,7 @@ interface Props {
   comments?: CommentsControl;
   running?: boolean;
   noRuns?: boolean;
+  onTextCommit?: TextCommitHandler;
 }
 
 const RECT_REFRESH_MS = [300, 1200];
@@ -201,6 +203,18 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void) 
 
 }
 
+function canvasClass(editing: boolean): string {
+  return editing ? 'canvas text-editing' : 'canvas';
+}
+
+type CommentLayerProps = Parameters<typeof CommentLayer>[0];
+
+function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control: Props['comments'] } & Omit<CommentLayerProps, 'control' | 'commentMode' | 'onExitCommentMode'>) {
+  const { comment, control, ...rest } = p;
+  if (!comment.available || !control) return null;
+  return <CommentLayer {...rest} control={control} commentMode={comment.on} onExitCommentMode={() => comment.setOn(false)} />;
+}
+
 export function Canvas(props: Props) {
   const { projectId, directionId, kind, source, headVersionId } = props;
   const ui = useUi();
@@ -226,13 +240,17 @@ export function Canvas(props: Props) {
   const commentMode = comment.on;
 
   const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const live = source.kind === 'live';
+  const textEditAllowed = live && !props.running && !commentMode;
+  const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
+  const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
 
   const frames = usePreviewFrames({
     projectId,
     directionId,
     kind,
     baseUrl,
-    live: source.kind === 'live',
+    live,
     lastChange: props.lastChange,
     selectMode: selectMode || commentMode,
     selection: props.selection,
@@ -244,12 +262,13 @@ export function Canvas(props: Props) {
     },
     onFrameWheel: pz.frameWheel,
     onZoomKey: (key) => zoomBy(key, 'frame'),
+    textEditAllowed,
+    onTextEdit: inline.onMessage,
   });
   useTokenFrames(frames.slots, frames.elements, kind);
   useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);
   useEffect(() => () => setCanvasFront(null, false), []);
 
-  const live = source.kind === 'live';
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
   useSelectKey(setSelectMode);
@@ -276,7 +295,7 @@ export function Canvas(props: Props) {
   const stageMode = stageCursor(pz);
   const note = stageNote({ running: props.running, noRuns: props.noRuns, live, hasHead: headVersionId !== null, urlError });
   return (
-    <div className="canvas">
+    <div className={canvasClass(inline.editing)}>
       <CanvasToolbar
         viewport={ui.viewport}
         zoomSetting={ui.zoom}
@@ -321,19 +340,16 @@ export function Canvas(props: Props) {
             zoom={pz.zoom}
             resize={resize}
             comments={
-              comment.available && props.comments ? (
-                <CommentLayer
-                  control={props.comments}
-                  frames={frames}
-                  kind={kind}
-                  zoom={pz.zoom}
-                  frame={viewport}
-                  commentMode={commentMode}
-                  selectMode={selectMode}
-                  selection={props.selection}
-                  onExitCommentMode={() => comment.setOn(false)}
-                />
-              ) : null
+              <CanvasComments
+                comment={comment}
+                control={props.comments}
+                frames={frames}
+                kind={kind}
+                zoom={pz.zoom}
+                frame={viewport}
+                selectMode={selectMode}
+                selection={props.selection}
+              />
             }
           />
           {layout.frames.length > 1 && <FrameLabel {...labelProps(active)} />}

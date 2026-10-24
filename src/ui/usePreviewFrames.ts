@@ -7,9 +7,16 @@ import { randomToken } from './session';
 import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
 import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
+import { textEditability } from './cssValues';
 import type { BuildError, FilesChange } from './useStudioData';
 
 export const PREVIEW_LAYOUT_KEY_EVENT = 'studio:preview-layout-key';
+
+function forwardKeyMessage(msg: Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' }>): void {
+  if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
+  else if (msg.type === 'layout-key') window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+  else if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
+}
 
 interface Slot {
   token: string;
@@ -33,6 +40,8 @@ export interface HoverBox {
 
 const TREE_REFRESH_MS = 400;
 
+export type TextEditMessage = Extract<BridgeToParent, { type: 'text-edit' | 'text-commit' }>;
+
 interface Options {
   projectId: string;
   directionId: string | null;
@@ -47,6 +56,8 @@ interface Options {
   onModeExited: () => void;
   onFrameWheel: (frame: HTMLIFrameElement | null, wheel: Extract<BridgeToParent, { type: 'wheel' }>) => void;
   onZoomKey: (key: ZoomKey) => void;
+  textEditAllowed?: boolean;
+  onTextEdit?: (message: TextEditMessage) => void;
 }
 
 const SWAP_FALLBACK_MS = 1500;
@@ -127,6 +138,7 @@ export function usePreviewFrames(o: Options) {
   const syncFrame = useCallback(
     (frame: BridgeFrame) => {
       postToFrame(frame, { type: 'set-mode', mode: opts.current.selectMode ? 'select' : 'none' });
+      postToFrame(frame, { type: 'text-edit-allowed', allowed: opts.current.textEditAllowed === true });
       requestRects(frame);
     },
     [requestRects],
@@ -233,6 +245,14 @@ export function usePreviewFrames(o: Options) {
     if (!o.selectMode) setHover(null);
   }, [o.selectMode, frontToken, frontFrame]);
 
+  useEffect(() => {
+    const f = frontFrame();
+    if (!f) return;
+    const allowed = o.textEditAllowed === true;
+    if (!allowed) postToFrame(f, { type: 'text-edit-stop' });
+    postToFrame(f, { type: 'text-edit-allowed', allowed });
+  }, [o.textEditAllowed, frontToken, frontFrame]);
+
   const selectorKey = o.selection.map((s) => s.selector).join('\n');
   useEffect(() => {
     requestRects(frontFrame());
@@ -334,13 +354,13 @@ export function usePreviewFrames(o: Options) {
           cur.onZoomKey(msg.key);
           break;
         case 'escape':
-          window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
-          break;
         case 'history-key':
-          if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
-          break;
         case 'layout-key':
-          window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+          forwardKeyMessage(msg);
+          break;
+        case 'text-edit':
+        case 'text-commit':
+          cur.onTextEdit?.(msg);
           break;
       }
     },
@@ -393,7 +413,15 @@ export function usePreviewFrames(o: Options) {
   }, []);
   const hoverNode = useCallback((id: number | null) => post({ type: 'hover-node', id }), [post]);
   const selectNode = useCallback((id: number, additive: boolean) => post({ type: 'select-node', id, additive }), [post]);
-  const selectRelative = useCallback((selector: string, move: SelectMove) => post({ type: 'select-relative', selector, move }), [post]);
+  const selectRelative = useCallback(
+    (selector: string, move: SelectMove) => {
+      const cur = opts.current;
+      const target = cur.selection.find((s) => s.selector === selector);
+      if (move === 'child' && cur.textEditAllowed && target && textEditability(target) === 'ok') frontFrame()?.element?.focus();
+      post({ type: 'select-relative', selector, move });
+    },
+    [post, frontFrame],
+  );
 
   return {
     slots,

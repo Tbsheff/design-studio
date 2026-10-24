@@ -286,6 +286,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               comments,
               running: activeRun !== null,
               noRuns: neverRan(data.runsLoaded, directionRuns),
+              onTextCommit: (selector, text) => {
+                const target = selection.length === 1 ? selection[0] : undefined;
+                if (target?.selector === selector && editControl.current?.commitText(selector, text)) return;
+                port.current?.post({ type: 'preview-reset' });
+              },
             }}
           />
         </main>

@@ -7,6 +7,7 @@ import { createLayerIndex, moveSelection } from './layers.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
+import { createTextEditor } from './text-edit.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -241,6 +242,10 @@ function eventElement(event: Event): Element | null {
 function isTypingElement(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
   return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
+}
+
+function isEditKey(event: KeyboardEvent): boolean {
+  return event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && !event.repeat;
 }
 
 function reloadIfChangedDuringLoad(): void {
@@ -746,13 +751,18 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (mode !== 'select') return;
+    if (mode !== 'select' || textEditor.editing()) return;
     altHeld = event.altKey;
     pendingHover = eventElement(event);
     if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
   };
 
   const block = (event: Event): void => {
+    if (textEditor.owns(eventElement(event))) {
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (event.type === 'pointerdown') textEditor.commit();
     if (mode !== 'select') return;
     event.preventDefault();
     event.stopPropagation();
@@ -772,7 +782,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onClick = (event: MouseEvent): void => {
-    if (mode !== 'select') return;
+    if (mode !== 'select' || textEditor.owns(eventElement(event))) return block(event);
     block(event);
     const element = eventElement(event);
     if (!element) return;
@@ -787,7 +797,17 @@ function startBridge(session: BridgeSession): void {
     postHover(lastHover);
   };
 
+  const onDblClick = (event: MouseEvent): void => {
+    const element = eventElement(event);
+    const target = mode === 'select' || element === selected ? element : null;
+    if (textEditor.owns(element) || !textEditor.canEdit(target)) return block(event);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    textEditor.start(target, { x: event.clientX, y: event.clientY });
+  };
+
   const onKeyDown = (event: KeyboardEvent): void => {
+    if (textEditor.onKeyDown(event)) return;
     onAltChange(event);
     const reorder = reorderMoveOf(event);
     if (reorder && selected?.isConnected && !isTypingElement(eventElement(event))) {
@@ -797,6 +817,12 @@ function startBridge(session: BridgeSession): void {
       return;
     }
     if (mode !== 'select') return;
+    if (isEditKey(event) && textEditor.canEdit(selected) && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      textEditor.start(selected);
+      return;
+    }
     const move = selectMoveOf(event);
     if (move && selected?.isConnected && !isTypingElement(eventElement(event))) {
       event.preventDefault();
@@ -825,6 +851,17 @@ function startBridge(session: BridgeSession): void {
   const rects = createRectTracker(post);
   const anchors = createAnchorTracker(post);
   const livePreview = createLivePreview();
+  const textEditor = createTextEditor({
+    post,
+    selectorFor,
+    previewText: (selector, text) => livePreview.previewText(selector, text),
+    onStart: (element) => {
+      lastHover = null;
+      pendingHover = null;
+      post({ type: 'hover', rect: null });
+      if (selected !== element) postSelect(element, false);
+    },
+  });
   const previewStyles = createPreviewStyles();
   const themeControl = createThemeControl();
   const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
@@ -859,12 +896,11 @@ function startBridge(session: BridgeSession): void {
     },
     'select-relative': (message) => {
       const base = selected?.isConnected ? selected : typeof message.selector === 'string' ? queryElement(message.selector) : null;
+      if (message.move === 'child' && textEditor.canEdit(base)) return textEditor.start(base);
       const valid = message.move === 'child' || message.move === 'parent' || message.move === 'next' || message.move === 'prev';
       const next = base && valid ? moveSelection(base, message.move) : null;
       if (next) postSelect(next, false);
     },
-    'text-edit-allowed': () => undefined,
-    'text-edit-stop': () => undefined,
     'request-authored': (message) => {
       if (typeof message.requestId !== 'string' || typeof message.selector !== 'string') return;
       const element = queryElement(message.selector);
@@ -875,6 +911,8 @@ function startBridge(session: BridgeSession): void {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);
     },
+    'text-edit-allowed': (message) => textEditor.allow(message.allowed === true),
+    'text-edit-stop': () => textEditor.cancel(),
     'describe-anchors': (message) => {
       if (typeof message.requestId !== 'string') return;
       const contexts = anchorQueries(message.anchors).map((query) => {
@@ -902,7 +940,7 @@ function startBridge(session: BridgeSession): void {
   window.addEventListener('pointerup', block, { capture: true });
   window.addEventListener('mouseup', block, { capture: true });
   window.addEventListener('click', onClick, { capture: true });
-  window.addEventListener('dblclick', block, { capture: true });
+  window.addEventListener('dblclick', onDblClick, { capture: true });
   window.addEventListener('auxclick', block, { capture: true });
   window.addEventListener('contextmenu', block, { capture: true });
   window.addEventListener('keydown', onKeyDown, { capture: true });

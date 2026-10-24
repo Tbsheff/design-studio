@@ -848,3 +848,13 @@ body.frame-dragging .frame {
     transition: none;
   }
 }
+
+.canvas.text-editing .box.selected {
+  border: var(--stroke) solid var(--accent);
+  box-shadow: none;
+}
+
+.canvas.text-editing .box.hover,
+.canvas.text-editing .measure {
+  display: none;
+}

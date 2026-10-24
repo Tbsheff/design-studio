@@ -234,7 +234,7 @@ function VariationPane(props: PaneProps) {
               <div className="box hover" style={{ left: frames.hover.rect.x, top: frames.hover.rect.y, width: frames.hover.rect.width, height: frames.hover.rect.height }} />
             )}
             {selection.map((s) => (
-              <div key={s.selector} className="box selected" style={{ left: s.rect.x, top: s.rect.y, width: s.rect.width, height: s.rect.height }} />
+              <div key={s.selector} className="box selected" data-selector={s.selector} style={{ left: s.rect.x, top: s.rect.y, width: s.rect.width, height: s.rect.height }} />
             ))}
           </div>
         </div>

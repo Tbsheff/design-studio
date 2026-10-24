@@ -68,7 +68,7 @@ export function ArtboardOverlay({ hover, selection, comments, zoom, resize }: Pr
       )}
       {selection.map((s) => {
         const live = resize?.target?.selector === s.selector ? resize.live : null;
-        return <div key={s.selector} className="box selected" style={{ left: s.rect.x, top: s.rect.y, width: live?.boxWidth ?? s.rect.width, height: live?.boxHeight ?? s.rect.height }} />;
+        return <div key={s.selector} className="box selected" data-selector={s.selector} style={{ left: s.rect.x, top: s.rect.y, width: live?.boxWidth ?? s.rect.width, height: live?.boxHeight ?? s.rect.height }} />;
       })}
       {resize?.target && <ResizeHandles control={resize} rect={resize.target.rect} />}
       {measuring && hover && anchor && <Measurements from={anchor.rect} to={hover.rect} />}

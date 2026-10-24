@@ -97,8 +97,26 @@ export async function setSelectMode(page: Page, on: boolean): Promise<void> {
 
 export async function selectInFrame(page: Page, selector: string): Promise<void> {
   await setSelectMode(page, true);
+  await page.evaluate(() => {
+    const w = window as unknown as { __studioPicked?: string | null; __studioPickWatch?: boolean };
+    w.__studioPicked = null;
+    if (w.__studioPickWatch) return;
+    w.__studioPickWatch = true;
+    window.addEventListener('message', (event) => {
+      const data = event.data as { ns?: string; type?: string; selection?: { selector?: string } } | null;
+      if (data?.ns === 'studio' && data.type === 'select' && data.selection?.selector) w.__studioPicked = data.selection.selector;
+    });
+  });
   await frontFrame(page).locator(selector).first().click();
-  await expect(page.locator('.overlay .box.selected')).toHaveCount(1);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const picked = (window as unknown as { __studioPicked?: string | null }).__studioPicked;
+        const boxes = [...document.querySelectorAll<HTMLElement>('.overlay .box.selected')];
+        return Boolean(picked) && boxes.length === 1 && boxes[0]?.dataset.selector === picked;
+      }),
+    )
+    .toBe(true);
 }
 
 export async function openRunSettings(page: Page): Promise<void> {

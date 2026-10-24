@@ -82,6 +82,19 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
   );
 });
 
+function PendingEntry({ run, workTree }: { run: RunView; workTree: string | null }) {
+  return (
+    <div className="run flex min-w-0 flex-col gap-3" data-pending-run="">
+      <UserMessage run={run} />
+      <Message type="incoming" className="msg assistant">
+        <MessageContent className="run-body gap-2">
+          <LiveStatus run={run} workTree={workTree} />
+        </MessageContent>
+      </Message>
+    </div>
+  );
+}
+
 function StickOnNewRun({ runId }: { runId: string | null }) {
   const { stickToBottom } = useConversation();
   const first = useRef(true);
@@ -115,6 +128,7 @@ function EmptyChat() {
 
 interface Props {
   runs: RunView[];
+  pending?: RunView | null;
   direction: Direction | null;
   onDetails: (runId: string) => void;
   running: boolean;
@@ -124,7 +138,7 @@ interface Props {
   onApprovePlan?: (run: RunView) => void;
 }
 
-export function ChatPanel({ runs, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan }: Props) {
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -140,12 +154,13 @@ export function ChatPanel({ runs, direction, onDetails, running, busy, onPolish,
   return (
     <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="">
       <ConversationContent className="chat">
-        {runs.length === 0 && <EmptyChat />}
+        {runs.length === 0 && !pending && <EmptyChat />}
         {runs.map((r, i) => (
           <RunEntry key={r.runId} run={r} latest={i === runs.length - 1} workTree={workTree} onDetails={openDetails} polish={polish} />
         ))}
+        {pending && <PendingEntry run={pending} workTree={workTree} />}
       </ConversationContent>
-      <StickOnNewRun runId={runs.at(-1)?.runId ?? null} />
+      <StickOnNewRun runId={pending?.runId ?? runs.at(-1)?.runId ?? null} />
       <ConversationScrollButton className="icon-btn chat-scroll-btn">
         <Icon name="chevronDown" size={16} />
       </ConversationScrollButton>

@@ -30,8 +30,10 @@ import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
 import { useComments } from '../useComments';
 import { useRunControls } from '../useRunControls';
-import type { RunView } from '../runState';
+import { emptyRun, shownPending, type RunView } from '../runState';
+import { randomToken } from '../session';
 import { useChatState } from '../useChatState';
+import { setTelemetryScope } from '../perfTelemetry';
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
   return texts.find((text) => typeof text === 'string') ?? null;
@@ -126,6 +128,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     [runs, directionId],
   );
   const activeRun = directionRuns.find((r) => r.status === 'running') ?? null;
+  const [pendingRun, setPendingRun] = useState<RunView | null>(null);
   const improveRun = lastImproveRun(directionRuns);
   const variations = useVariations({ projectId, project, direction, setDirectionId: data.setDirectionId, seedRun: data.seedRun });
   const canUndo = undoAllowed(directionId, busy || activeRun !== null, versions.length);
@@ -162,6 +165,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   useEffect(() => {
     if (selection.length > 0) setStaleNotice(null);
   }, [selection.length]);
+
+  useEffect(() => setTelemetryScope(directionId ? { projectId, directionId } : { projectId }), [projectId, directionId]);
 
   useEffect(() => {
     setSelection([]);
@@ -206,16 +211,26 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     });
   undoRef.current = undo;
 
-  const startRun = async (request: RunRequest) => {
+  const startRun = async (request: RunRequest, optimistic = false) => {
     if (!did) return;
-    const { runId, stopped } = await trackSend(() => api.startRun(projectId, did, request));
-    data.seedRun(runId, did, request, stopped);
+    const pending = optimistic ? emptyRun(`pending-${randomToken()}`, did, Date.now(), request) : null;
+    if (pending) setPendingRun(pending);
+    const cancelSend = data.noteSend();
+    try {
+      const { runId, stopped } = await trackSend(() => api.startRun(projectId, did, request));
+      data.seedRun(runId, did, request, stopped);
+    } catch (error) {
+      cancelSend();
+      throw error;
+    } finally {
+      if (pending) setPendingRun((current) => (current === pending ? null : current));
+    }
     setSource({ kind: 'live' });
     panel.show('chat');
   };
 
   const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) =>
-    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection }));
+    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection }), true);
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
   const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
@@ -298,7 +313,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           columnsRef={columnsRef}
           tab={panel.tab}
           onTab={panel.choose}
-          chat={{ runs: directionRuns, direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
+          chat={{ runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,

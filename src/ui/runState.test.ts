@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RunSummary, StudioEvent } from '../shared/contracts';
-import { applyRunEvent, emptyRun, runText, type RunMap } from './runState';
+import { applyRunEvent, emptyRun, runText, shownPending, type RunMap } from './runState';
 
 let seq = 0;
 const ev = (body: Record<string, unknown>): StudioEvent => ({ seq: ++seq, ts: 1000 + seq, projectId: 'p', directionId: 'd', runId: 'r1', ...body }) as unknown as StudioEvent;
@@ -47,5 +47,23 @@ describe('run state', () => {
     const live = applyRunEvent(seeded, ev({ type: 'run.started', request: { prompt: 'x', mode: 'edit' } }));
     expect(live.r1?.status).toBe('canceled');
     expect(live.r1?.request?.prompt).toBe('x');
+  });
+});
+
+describe('shownPending', () => {
+  const request = { prompt: 'Make it blue', mode: 'edit' as const };
+  const pending = emptyRun('pending-1', 'main', 10_000, request);
+
+  it('shows the pending send until a run with the same prompt starts in the direction', () => {
+    expect(shownPending(pending, [], 'main')).toBe(pending);
+    expect(shownPending(pending, [emptyRun('old', 'main', 2_000, request)], 'main')).toBe(pending);
+    expect(shownPending(pending, [emptyRun('other', 'main', 10_050, { prompt: 'Other', mode: 'edit' })], 'main')).toBe(pending);
+    expect(shownPending(pending, [emptyRun('r1', 'main', 10_050, request)], 'main')).toBeNull();
+    expect(shownPending(pending, [emptyRun('r1', 'main', 9_500, request)], 'main')).toBeNull();
+  });
+
+  it('hides the pending send in another direction or when there is none', () => {
+    expect(shownPending(pending, [], 'alt')).toBeNull();
+    expect(shownPending(null, [], 'main')).toBeNull();
   });
 });

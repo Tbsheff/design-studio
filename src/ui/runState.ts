@@ -75,6 +75,14 @@ export function emptyRun(runId: string, directionId: string | null, startedAt: n
   };
 }
 
+const PENDING_CLOCK_SLACK_MS = 1000;
+
+export function shownPending(pending: RunView | null, runs: RunView[], directionId: string | null): RunView | null {
+  if (!pending || pending.directionId !== directionId) return null;
+  const started = runs.some((run) => run.startedAt >= pending.startedAt - PENDING_CLOCK_SLACK_MS && run.request?.prompt === pending.request?.prompt);
+  return started ? null : pending;
+}
+
 export function runFromSummary(summary: RunSummary): RunView {
   return {
     ...emptyRun(summary.id, summary.directionId, summary.startedAt, summary.request),

@@ -191,19 +191,21 @@ export function PromptBox(props: Props) {
     if (!canSend) return;
     setSending(true);
     setError(null);
+    const sentDraft = draft;
     try {
       const ids = files.flatMap((f) => (f.attachment ? [f.attachment.id] : []));
       const prompt = [draft.trim(), skillInstruction(skillIds)].filter(Boolean).join('\n\n');
       const fanOut = mode === 'edit' && props.variations && props.variations.count > 1 && props.selection.length === 0;
-      if (fanOut && props.variations) await props.variations.onSend(prompt, runLevel.level, ids);
-      else await props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
+      const sent = fanOut && props.variations ? props.variations.onSend(prompt, runLevel.level, ids) : props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
+      setDraft('');
+      await sent;
       mentions.clear();
       files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       setFiles([]);
       setSkillIds([]);
-      setDraft('');
       keys.resetHistory();
     } catch (err) {
+      if (!props.draft.get().trim()) setDraft(sentDraft);
       setError(errorText(err));
     } finally {
       setSending(false);

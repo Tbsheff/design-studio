@@ -57,7 +57,7 @@ test('design systems screen: copy, rename, export, delete, import, open in edito
 
   const copy = detail(page, 'Modern Minimal copy');
   await expect(copy).toBeVisible();
-  await expect(copy.getByText('Made here')).toBeVisible();
+  await expect(copy.getByText('Copy', { exact: true })).toBeVisible();
   await copy.getByRole('button', { name: 'Rename' }).click();
   const rename = page.getByRole('dialog', { name: 'Rename design system' });
   await rename.getByLabel('Design system name').fill(NAME);

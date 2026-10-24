@@ -12,16 +12,18 @@ export interface DesignSystemRef {
   directionId: string | null;
   packId: string | null;
   name: string | null;
+  backing: boolean;
 }
 
 export function designSystemRef(projectId: string, directionId: string | null, project: Project, state: DesignSystemState | null): DesignSystemRef {
-  if (!state) return { projectId, directionId, packId: project.packId ?? null, name: null };
-  return { projectId, directionId, packId: state.packId, name: state.manifest?.name ?? null };
+  const backing = Boolean(project.designSystemFor);
+  if (!state) return { projectId, directionId, packId: project.packId ?? null, name: null, backing };
+  return { projectId, directionId, packId: state.packId, name: state.manifest?.name ?? null, backing };
 }
 
 export interface DesignSystemActions {
   onApply: (packId: string) => Promise<void>;
-  onSave: (name: string, packId?: string) => Promise<void>;
+  onSave: (name: string, packId?: string, asNew?: boolean) => Promise<void>;
 }
 
 type Load = { state: DesignSystemState | null; error: string | null };
@@ -100,6 +102,26 @@ function useDesignSystem(ref: DesignSystemRef, open: boolean): Load {
 
 type Dialog = 'change' | 'save' | null;
 
+interface ChipDialogsProps {
+  dialog: Dialog;
+  system: DesignSystemRef;
+  name: string;
+  userPack: boolean;
+  actions: DesignSystemActions;
+  onClose: () => void;
+}
+
+function ChipDialogs({ dialog, system, name, userPack, actions, onClose }: ChipDialogsProps) {
+  if (dialog === 'change') {
+    const from = system.directionId ? { projectId: system.projectId, directionId: system.directionId } : null;
+    return <ChangePackDialog currentId={system.packId} from={from} onClose={onClose} onApply={actions.onApply} />;
+  }
+  if (dialog === 'save') {
+    return <SavePackDialog defaultName={name} updating={userPack} canCopy={userPack && !system.backing} onClose={onClose} onSave={(saveName, asNew) => actions.onSave(saveName, undefined, asNew)} />;
+  }
+  return null;
+}
+
 export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: DesignSystemRef; actions: DesignSystemActions; onOpenDesignMd: () => void }) {
   const [open, setOpen] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
@@ -118,12 +140,7 @@ export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: 
     close(false);
     setDialog(next);
   };
-  const dialogs = (
-    <>
-      {dialog === 'change' && <ChangePackDialog currentId={system.packId} onClose={() => setDialog(null)} onApply={actions.onApply} />}
-      {dialog === 'save' && <SavePackDialog defaultName={name} updating={pack?.source === 'user'} onClose={() => setDialog(null)} onSave={actions.onSave} />}
-    </>
-  );
+  const dialogs = <ChipDialogs dialog={dialog} system={system} name={name} userPack={pack?.source === 'user'} actions={actions} onClose={() => setDialog(null)} />;
   if (!system.directionId) return null;
   if (!system.packId) {
     return (

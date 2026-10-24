@@ -209,6 +209,12 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       <header className="home-header">
         <BrandMark />
         <span className="brand">Design Studio</span>
+        <nav className="home-nav" aria-label="Library">
+          <button type="button" className="btn ghost small has-icon" onClick={() => uiStore.set({ screen: 'design-systems', libraryFrom: null })}>
+            <Icon name="palette" size={14} />
+            Design systems
+          </button>
+        </nav>
       </header>
       <main className="home-main">
         <section className="home-hero">
@@ -229,7 +235,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 onLevel={(defaultLevel) => setSettingsDraft((d) => ({ ...d, defaultLevel }))}
                 designs={{ value: designCount, max: maxDesigns, onChange: setDesigns, disabledReason: null }}
               />
-              <PackPicker state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system' })} />
+              <PackPicker state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
               <div className="spacer" />
               <button className="btn primary has-icon" type="submit" disabled={busy !== null || !prompt.trim()}>
                 {busy === 'create' ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}

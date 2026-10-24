@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { errorText } from '../api';
 import { pickable, usePacks } from '../packs';
-import { uiStore } from '../storage';
+import { uiStore, type LibraryFrom } from '../storage';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
 import { PackList } from './PackPicker';
 
 interface ChangeProps {
   currentId: string | null;
+  from: LibraryFrom | null;
   onClose: () => void;
   onApply: (packId: string) => Promise<void>;
 }
 
-export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
+export function ChangePackDialog({ currentId, from, onClose, onApply }: ChangeProps) {
   const state = pickable(usePacks());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,9 @@ export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
         <PackList packs={state.packs} value={currentId} includeNone={false} onChoose={(pack) => void choose(pack?.id)} />
       </div>
       <div className="modal-foot">
+        <button type="button" className="btn ghost" disabled={busy} onClick={() => uiStore.set({ activeProjectId: null, screen: 'design-systems', libraryFrom: from })}>
+          Manage…
+        </button>
         <button type="button" className="btn ghost has-icon" disabled={busy} onClick={() => uiStore.set({ activeProjectId: null, screen: 'new-design-system' })}>
           <Icon name="plus" size={14} />
           New design system…
@@ -66,12 +70,16 @@ export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
 interface SaveProps {
   defaultName: string;
   updating: boolean;
+  canCopy: boolean;
   onClose: () => void;
-  onSave: (name: string) => Promise<void>;
+  onSave: (name: string, asNew: boolean) => Promise<void>;
 }
 
-export function SavePackDialog({ defaultName, updating, onClose, onSave }: SaveProps) {
+const COPY_SUFFIX = ' copy';
+
+export function SavePackDialog({ defaultName, updating, canCopy, onClose, onSave }: SaveProps) {
   const [name, setName] = useState(defaultName);
+  const [asNew, setAsNew] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
@@ -81,7 +89,7 @@ export function SavePackDialog({ defaultName, updating, onClose, onSave }: SaveP
     setBusy(true);
     setError(null);
     try {
-      await onSave(name.trim());
+      await onSave(name.trim(), asNew);
       onClose();
     } catch (err) {
       setError(errorText(err));
@@ -101,9 +109,11 @@ export function SavePackDialog({ defaultName, updating, onClose, onSave }: SaveP
           <div className="titles">
             <h2>Save to library</h2>
             <p>
-              {updating
-                ? `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`
-                : "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects."}
+              {asNew
+                ? 'Saves a new design system. This project then uses the new one.'
+                : updating
+                  ? `Updates ${defaultName} in your library with this direction's tokens and DESIGN.md.`
+                  : "Saves this direction's tokens and DESIGN.md as a design system you can use in other projects."}
             </p>
           </div>
           <button type="button" className="icon-btn" aria-label="Close Save to library" onClick={onClose} disabled={busy}>
@@ -111,6 +121,35 @@ export function SavePackDialog({ defaultName, updating, onClose, onSave }: SaveP
           </button>
         </div>
         <div className="modal-body">
+          {canCopy && (
+            <fieldset className="save-choice">
+              <legend className="sr-only">Save as</legend>
+              <label>
+                <input
+                  type="radio"
+                  name="save-as"
+                  checked={!asNew}
+                  onChange={() => {
+                    setAsNew(false);
+                    setName(defaultName);
+                  }}
+                />
+                Update {defaultName}
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="save-as"
+                  checked={asNew}
+                  onChange={() => {
+                    setAsNew(true);
+                    setName(`${defaultName.slice(0, 80 - COPY_SUFFIX.length)}${COPY_SUFFIX}`);
+                  }}
+                />
+                Save as a new design system
+              </label>
+            </fieldset>
+          )}
           <label className="field">
             <span>Name</span>
             <input data-autofocus value={name} maxLength={80} onChange={(e) => setName(e.target.value)} aria-label="Design system name" />

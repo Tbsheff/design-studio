@@ -14,6 +14,12 @@ import {
   type ApplyPackResult,
   type SavePackResult,
   type DesignSystemDraftInfo,
+  type DesignSystemCheckResult,
+  type ImportPackMode,
+  type ImportPackResult,
+  type OpenPackEditorResult,
+  type PackDetail,
+  type PackProblem,
   type DesignSystemDraftResult,
   type SkillCatalog,
   type RenderCheckResult,
@@ -37,6 +43,7 @@ export class ApiError extends Error {
     public status: number,
     message: string,
     public code?: string,
+    public data?: unknown,
   ) {
     super(message);
   }
@@ -60,14 +67,16 @@ async function request(method: string, path: string, body?: unknown, pick: Error
   if (!res.ok) {
     let message = `${method} ${path} failed: ${res.status}`;
     let code: string | undefined;
+    let data: unknown;
     try {
-      const data = (await res.json()) as { error?: string; message?: string };
-      message = pick(data) ?? message;
-      code = data.error;
+      const parsed = (await res.json()) as { error?: string; message?: string };
+      data = parsed;
+      message = pick(parsed) ?? message;
+      code = parsed.error;
     } catch {
       message = `${message} ${res.statusText}`;
     }
-    throw new ApiError(res.status, message, code);
+    throw new ApiError(res.status, message, code, data);
   }
   return res;
 }
@@ -79,19 +88,35 @@ export async function json<T>(method: string, path: string, body?: unknown): Pro
 
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const d = (pid: string, did: string) => `${p(pid)}/d/${encodeURIComponent(did)}`;
+const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
 
 export const api = {
   listProjects: () => json<Project[]>('GET', '/api/projects'),
   createProject: (input: { name?: string; prompt: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designMd?: string; packId?: string; level?: RunLevel; startRun?: boolean; parentPath?: string }) =>
     json<{ project: Project; runId: string | null }>('POST', '/api/projects', input),
   listPacks: () => json<PackSummary[]>('GET', '/api/packs'),
+  packProblems: () => json<PackProblem[]>('GET', '/api/packs/problems'),
+  getPack: (id: string) => json<PackDetail>('GET', `${pk(id)}`),
+  checkPack: (id: string) => json<DesignSystemCheckResult>('GET', `${pk(id)}/check`),
+  renamePack: (id: string, name: string) => json<PackSummary>('PATCH', pk(id), { name }),
+  duplicatePack: (id: string, name?: string) => json<PackSummary>('POST', `${pk(id)}/duplicate`, name ? { name } : {}),
+  deletePack: (id: string) => json<{ ok: true }>('DELETE', pk(id)),
+  exportPack: async (id: string) => (await request('GET', `${pk(id)}/export`)).blob(),
+  importPack: async (file: File, mode: ImportPackMode = 'ask'): Promise<ImportPackResult> => {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    form.append('mode', mode);
+    const res = await request('POST', '/api/packs/import', form, pickMessage);
+    return (await res.json()) as ImportPackResult;
+  },
+  openPackEditor: (id: string) => json<OpenPackEditorResult>('POST', `${pk(id)}/editor`),
   listSkills: () => json<SkillCatalog>('GET', '/api/skills'),
   getDesignSystem: (pid: string, did: string) => json<DesignSystemState>('GET', `${d(pid, did)}/design-system`),
   applyPack: async (pid: string, did: string, packId: string): Promise<ApplyPackResult> => {
     const res = await request('POST', `${d(pid, did)}/design-system/apply`, { packId }, pickMessage);
     return (await res.json()) as ApplyPackResult;
   },
-  savePack: (pid: string, did: string, input: { name: string; packId?: string }) => json<SavePackResult>('POST', `${d(pid, did)}/design-system/save`, input),
+  savePack: (pid: string, did: string, input: { name: string; packId?: string; asNew?: boolean }) => json<SavePackResult>('POST', `${d(pid, did)}/design-system/save`, input),
   createDesignSystemDraft: (form: FormData) => json<DesignSystemDraftResult>('POST', '/api/design-systems/draft', form),
   getDesignSystemDraft: (pid: string) => json<DesignSystemDraftInfo>('GET', `${p(pid)}/design-system-draft`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {

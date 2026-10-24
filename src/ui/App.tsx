@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { errorText } from './api';
+import { DesignSystems } from './components/DesignSystems';
 import { Home } from './components/Home';
 import { NewDesignSystem } from './components/NewDesignSystem';
 import { Studio } from './components/Studio';
@@ -54,7 +55,18 @@ export function App() {
     return (
       <>
         {notice}
-        <NewDesignSystem onCancel={() => uiStore.set({ screen: 'home' })} onCreated={(id) => uiStore.set({ activeProjectId: id, screen: 'home' })} />
+        <NewDesignSystem
+          onCancel={() => uiStore.set({ screen: ui.returnTo, returnTo: 'home' })}
+          onCreated={(id) => uiStore.set({ activeProjectId: id, screen: 'home', returnTo: 'home', libraryFrom: null })}
+        />
+      </>
+    );
+  }
+  if (ui.screen === 'design-systems') {
+    return (
+      <>
+        {notice}
+        <DesignSystems from={ui.libraryFrom} />
       </>
     );
   }

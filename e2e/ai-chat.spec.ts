@@ -34,13 +34,12 @@ test('chat panel: markdown replies, tool rows, live status, error, composer', as
   const project = await openProject(page, api);
   const chat = page.locator('.chat');
 
-  const firstReply = chat.locator('.msg.assistant .msg-body').first();
+  const firstReply = chat.locator('.msg.assistant .msg-body').filter({ has: page.locator('code', { hasText: 'index.html' }) }).first();
   await expect(firstReply.locator('code', { hasText: 'index.html' })).toBeVisible();
   await expect(firstReply).not.toContainText('`');
   await expect(page.getByRole('button', { name: /^Show (more|less)$/ })).toHaveCount(0);
   await expect(chat.locator('.run .status.completed')).toHaveCount(1);
-  await expect(chat.locator('.tools-toggle').first()).toContainText('5 tool calls');
-  await chat.locator('.tools-toggle').first().click();
+  await expect(chat.locator('[data-run-id]').first().locator('.tool-row')).toHaveCount(5);
   const fileRows = chat.locator('.tool-row').filter({ has: page.locator('[data-slot=chip]', { hasText: 'index.html' }) });
   await expect(fileRows.and(chat.locator('.tool-row.done'))).toHaveCount(1);
   await expect(chat.locator('.tool-row.done[data-tool="mcp__studio__render_check"]').first()).toBeVisible();
@@ -73,9 +72,8 @@ test('chat panel: markdown replies, tool rows, live status, error, composer', as
     await api.waitForRuns(project.id, runs);
     await expect(chat.locator('.run .status.completed')).toHaveCount(runs);
     await expect(chat.locator('.tool-row.pending')).toHaveCount(0);
-    await chat.locator('.tools-toggle').last().click();
     await fileRows.last().locator('[data-slot=action-trigger]').click();
-    await expect(chat.locator('[data-slot=action-content]').last()).toContainText('Edit index.html');
+    await expect(chat.locator('[data-slot=action-content]').last()).toContainText(`Add opening hours at ${width}`);
     await page.waitForTimeout(250);
     await shoot(page, 'tool-rows', width, height);
   }

@@ -106,7 +106,8 @@ test('skills: API lists discovered skills, settings persist, composer and chat s
   expect(runs.some((r) => r.request.prompt === 'Tighten the hero spacing\n\nUse the demo-plugin:demo-review skill.')).toBe(true);
   expect(runs.find((r) => r.request.prompt.startsWith('Tighten'))?.toolCalls.map((c) => c.name)).toContain('Skill');
   const skillRow = page.locator('.tool-row[data-tool="Skill"]');
-  await expect(skillRow).toContainText('Skill · demo-plugin:demo-review');
+  await expect(skillRow.locator('.tool-verb')).toContainText('Skill');
+  await expect(skillRow.locator('[data-slot=chip]')).toHaveText('demo-plugin:demo-review');
   await expect(page.locator('.composer .skill-chip')).toHaveCount(0);
   await expect(page.locator('.msg.user').last().locator('.msg-skills')).toHaveText('demo-plugin:demo-review');
   await expect(page.locator('.msg.user').last()).not.toContainText('Use the demo-plugin');
@@ -122,7 +123,7 @@ test('skills: API lists discovered skills, settings persist, composer and chat s
   await box.fill(`Add a footer [skill:${FIXTURE_SKILLS.brand}]`);
   await page.getByRole('button', { name: 'Send' }).click();
   await api.waitForRuns(project.id, 3);
-  await expect(skillRow.filter({ hasText: 'Skill · brand-voice' })).toHaveCount(1);
+  await expect(skillRow.filter({ has: page.locator('[data-slot=chip]', { hasText: 'brand-voice' }) })).toHaveCount(1);
   expect(mainDirection(await api.project(project.id)).id).toBeTruthy();
 });
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
-import type { CompiledTokenEntry, RunMention } from '../shared/contracts';
+import type { CompiledTokenEntry, ComponentInfo, RunMention } from '../shared/contracts';
 import { api } from './api';
 import { mentionKey, mentionQueryOf, useMentionPicker, type MentionOption } from './components/MentionPicker';
 
@@ -20,9 +20,20 @@ interface Options {
   tokens: readonly CompiledTokenEntry[] | undefined;
   draft: string;
   setDraft: (value: string) => void;
+  components?: readonly ComponentInfo[] | null;
+  request?: MentionRequest | null;
 }
 
-export function useMentions({ projectId, directionId, tokens, draft, setDraft }: Options) {
+export interface MentionRequest {
+  mention: RunMention;
+  seq: number;
+}
+
+export function componentMention(component: ComponentInfo): RunMention {
+  return { kind: 'component', name: component.name, file: component.file, selector: component.selector };
+}
+
+export function useMentions({ projectId, directionId, tokens, draft, setDraft, components, request }: Options) {
   const [files, setFiles] = useState<string[] | null>(null);
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -41,12 +52,21 @@ export function useMentions({ projectId, directionId, tokens, draft, setDraft }:
     const picked = new Set(mentions.map(mentionKey));
     const fileOptions = (files ?? []).map((path): MentionOption => ({ key: `file:${path}`, label: path.split('/').pop() ?? path, detail: path, mention: { kind: 'file', path } }));
     const tokenOptions = (tokens ?? []).map((entry): MentionOption => ({ key: `token:${entry.cssVar}`, label: entry.cssVar, detail: entry.value, mention: { kind: 'token', name: entry.cssVar, value: entry.value } }));
-    return [...fileOptions, ...tokenOptions].filter((option) => !picked.has(option.key));
-  }, [files, tokens, mentions]);
+    const componentOptions = (components ?? []).map((item): MentionOption => {
+      const mention = componentMention(item);
+      return { key: mentionKey(mention), label: item.name, detail: item.file ?? 'Component', mention };
+    });
+    return [...componentOptions, ...fileOptions, ...tokenOptions].filter((option) => !picked.has(option.key));
+  }, [files, tokens, mentions, components]);
+  const add = (mention: RunMention) => setMentions((prev) => (prev.some((item) => mentionKey(item) === mentionKey(mention)) ? prev : [...prev, mention]));
+  const requestSeq = request?.seq;
+  useEffect(() => {
+    if (request) add(request.mention);
+  }, [requestSeq]);
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption) => {
-    setMentions((prev) => [...prev, option.mention]);
+    add(option.mention);
     setDraft(draft.replace(/@[^\s@]*$/, '').replace(/\s+$/, (space) => (space ? ' ' : '')));
   };
 

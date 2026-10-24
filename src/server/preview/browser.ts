@@ -8,6 +8,7 @@ import { layoutProbeExpression, type LayoutProbeResult } from './layout-probe.js
 import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } from './quality.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
+import type { RenderClip } from '../../shared/render-rpc.js';
 
 const SERVER_TOKEN = 'server';
 const TWO_FRAMES = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))';
@@ -138,6 +139,24 @@ function withInspection(inspection: PageInspection | null, timings: Record<strin
   return { quality: inspection.quality, nav: inspection.nav, timingsMs: timings, selectionRects: inspection.selectionRects };
 }
 
+const SHOT_PAD = 8;
+const SHOT_MAX = { width: 1200, height: 900 };
+
+export function elementClipsExpression(selectors: string[]): string {
+  return `(() => ${JSON.stringify(selectors)}.map((selector) => {
+    let element = null;
+    try { element = document.querySelector(selector); } catch (error) { return null; }
+    if (!element) return null;
+    const box = element.getBoundingClientRect();
+    if (box.width < 2 || box.height < 2) return null;
+    const x = Math.max(0, box.left + window.scrollX - ${SHOT_PAD});
+    const y = Math.max(0, box.top + window.scrollY - ${SHOT_PAD});
+    const width = Math.min(box.width + ${SHOT_PAD * 2}, ${SHOT_MAX.width}, document.documentElement.scrollWidth - x);
+    const height = Math.min(box.height + ${SHOT_PAD * 2}, ${SHOT_MAX.height});
+    return width >= 2 && height >= 2 ? { x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) } : null;
+  }))()`;
+}
+
 async function settle(page: RenderPage): Promise<void> {
   await page.evaluate(TWO_FRAMES).catch(() => undefined);
 }
@@ -176,6 +195,24 @@ export class BrowserPool {
       await mkdir(path.dirname(outPath), { recursive: true });
       await page.screenshot(outPath);
       return outPath;
+    });
+  }
+
+  async elementShots(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]> {
+    return this.withPage(url, viewport, async (page) => {
+      const clips = await page.evaluate<(RenderClip | null)[]>(elementClipsExpression(selectors));
+      await mkdir(path.dirname(outPrefix), { recursive: true });
+      const out: (string | null)[] = [];
+      for (const [index, clip] of clips.entries()) {
+        if (!clip) {
+          out.push(null);
+          continue;
+        }
+        const outPath = `${outPrefix}-${index}.png`;
+        await page.screenshot(outPath, clip);
+        out.push(outPath);
+      }
+      return out;
     });
   }
 

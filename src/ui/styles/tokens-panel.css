@@ -263,3 +263,131 @@
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
+
+.cmp {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cmp-header {
+  gap: var(--s-2);
+  padding-right: var(--s-3);
+}
+
+.cmp-title {
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.cmp-count {
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.cmp-search {
+  flex: none;
+  padding: 0 var(--s-4);
+}
+
+.cmp-scroll {
+  padding: var(--s-2) var(--s-4) var(--s-4);
+}
+
+.cmp-empty {
+  padding: var(--s-6) 0;
+  color: var(--text-3);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cmp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--s-1) var(--s-1) var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.cmp-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.cmp-card:active {
+  transform: scale(0.98);
+}
+
+.cmp-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cmp-thumb {
+  display: grid;
+  place-items: center;
+  height: 88px;
+  margin-bottom: var(--s-1);
+  overflow: hidden;
+  border-radius: calc(var(--r-lg) - 4px);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.cmp-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  outline: 1px solid oklch(0.2 0.02 var(--hue) / 0.06);
+  outline-offset: -1px;
+}
+
+.cmp-thumb.loading {
+  animation: pulse 1.2s var(--ease) infinite;
+}
+
+.cmp-name {
+  padding: 0 var(--s-1);
+  font-size: var(--t-sm);
+  font-weight: 500;
+}
+
+.cmp-meta {
+  padding: 0 var(--s-1);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.cmp-skeleton {
+  height: 132px;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.cmp-foot {
+  flex: none;
+  margin: 0;
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-xs);
+  color: var(--text-3);
+}

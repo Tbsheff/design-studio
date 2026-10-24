@@ -232,7 +232,20 @@ export type RunTask = 'tweaks' | 'design-system';
 export type RunEffort = 'low' | 'medium' | 'high';
 export const RUN_EFFORTS: readonly RunEffort[] = ['low', 'medium', 'high'];
 
-export type RunMention = { kind: 'file'; path: string } | { kind: 'token'; name: string; value: string };
+export type RunMention =
+  | { kind: 'file'; path: string }
+  | { kind: 'token'; name: string; value: string }
+  | { kind: 'component'; name: string; file: string | null; selector: string | null };
+
+export interface ComponentInfo {
+  id: string;
+  name: string;
+  source: 'react' | 'html';
+  file: string | null;
+  line: number | null;
+  uses: number;
+  selector: string | null;
+}
 
 export interface RunRequest {
   prompt: string;

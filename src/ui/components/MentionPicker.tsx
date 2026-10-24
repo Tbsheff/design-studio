@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { RunMention } from '../../shared/contracts';
 import { fuzzyRank } from '../../shared/fuzzy';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 
 export interface MentionOption {
   key: string;
@@ -11,11 +11,22 @@ export interface MentionOption {
 }
 
 export function mentionKey(mention: RunMention): string {
-  return mention.kind === 'file' ? `file:${mention.path}` : `token:${mention.name}`;
+  return mention.kind === 'file' ? `file:${mention.path}` : `${mention.kind}:${mention.name}`;
 }
 
 export function mentionLabel(mention: RunMention): string {
   return mention.kind === 'file' ? (mention.path.split('/').pop() ?? mention.path) : mention.name;
+}
+
+function mentionIcon(mention: RunMention): IconName {
+  if (mention.kind === 'file') return 'file';
+  return mention.kind === 'token' ? 'token' : 'component';
+}
+
+function mentionTitle(mention: RunMention): string {
+  if (mention.kind === 'file') return mention.path;
+  if (mention.kind === 'token') return `${mention.name}: ${mention.value}`;
+  return mention.file ? `@${mention.name} · ${mention.file}` : `@${mention.name}`;
 }
 
 export function mentionQueryOf(draft: string): string | null {
@@ -42,7 +53,7 @@ export function MentionList({ shown, current, loading, onPick, onHover }: { show
   }, [current]);
   return (
     <div className="skill-pop mention-pop" data-testid="mention-list">
-      <ul role="listbox" aria-label="Mention a file or token" className="skill-opts" id="mention-options">
+      <ul role="listbox" aria-label="Mention a file, token or component" className="skill-opts" id="mention-options">
         {shown.map((option, index) => (
           <li
             key={option.key}
@@ -55,7 +66,7 @@ export function MentionList({ shown, current, loading, onPick, onHover }: { show
             onClick={() => onPick(option)}
           >
             <span className="skill-opt-head">
-              <Icon name={option.mention.kind === 'file' ? 'file' : 'token'} size={13} />
+              <Icon name={mentionIcon(option.mention)} size={13} />
               <strong className="mention-label">{option.label}</strong>
               <span className="skill-origin mention-detail">{option.detail}</span>
             </span>
@@ -75,8 +86,8 @@ export function MentionChips({ mentions, onRemove }: { mentions: RunMention[]; o
       {mentions.map((mention) => {
         const key = mentionKey(mention);
         return (
-          <span key={key} className="skill-chip mention-chip" title={mention.kind === 'file' ? mention.path : `${mention.name}: ${mention.value}`} data-testid="mention-chip">
-            <Icon name={mention.kind === 'file' ? 'file' : 'token'} size={12} />
+          <span key={key} className="skill-chip mention-chip" title={mentionTitle(mention)} data-testid="mention-chip">
+            <Icon name={mentionIcon(mention)} size={12} />
             {mentionLabel(mention)}
             <button type="button" aria-label={`Remove ${mentionLabel(mention)}`} onClick={() => onRemove(key)}>
               <Icon name="close" size={11} />

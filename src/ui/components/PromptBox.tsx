@@ -1,7 +1,7 @@
 import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
-import type { CompiledTokenEntry, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
+import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { MentionChips, MentionList } from './MentionPicker';
-import { useMentions } from '../useMentions';
+import { useMentions, type MentionRequest } from '../useMentions';
 import { HistorySearch, useHistorySearch } from './HistorySearch';
 import { ContextMeter } from './ContextMeter';
 import { QueuedMessages } from './QueuedMessages';
@@ -40,6 +40,8 @@ interface Props {
   contextTokens?: number | null;
   directionId?: string | null;
   tokens?: CompiledTokenEntry[];
+  components?: ComponentInfo[] | null;
+  mentionRequest?: MentionRequest | null;
 }
 
 interface VariationsPromptProps {
@@ -172,7 +174,7 @@ export function PromptBox(props: Props) {
     });
 
   const uploading = files.some((f) => !f.attachment && !f.error);
-  const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft });
+  const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft, components: props.components, request: props.mentionRequest });
   const historySearch = useHistorySearch(props.history ?? []);
   const onKeyCapture = (event: KeyboardEvent<HTMLDivElement>) => {
     const inInput = (event.target as HTMLElement).matches('[data-slot="composer-input"]');

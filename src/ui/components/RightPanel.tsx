@@ -9,6 +9,7 @@ import { Inspector, inspectorEmptyReason } from './Inspector';
 import { PromptBox } from './PromptBox';
 import { RunDetails } from './RunDetails';
 import { TokensPanel } from './TokensPanel';
+import { ComponentsPanel } from './ComponentsPanel';
 import { VersionsPanel } from './VersionsPanel';
 import { CommentsPanel, QueuedComposerBar } from './CommentsPanel';
 import { TweaksPanel } from './TweaksPanel';
@@ -24,6 +25,7 @@ interface Props {
   inspector: ComponentProps<typeof Inspector>;
   details: Omit<ComponentProps<typeof RunDetails>, 'run'> & { run: RunView | null };
   tokens: ComponentProps<typeof TokensPanel> | null;
+  components?: ComponentProps<typeof ComponentsPanel>;
   versions: ComponentProps<typeof VersionsPanel>;
   comments?: ComponentProps<typeof CommentsPanel>;
   tweaks?: ComponentProps<typeof TweaksPanel>;
@@ -35,6 +37,7 @@ const TABS: { id: PanelTab; label: string; icon: IconName }[] = [
   { id: 'design', label: 'Design', icon: 'pointer' },
   { id: 'tweaks', label: 'Tweaks', icon: 'sliders' },
   { id: 'tokens', label: 'Tokens', icon: 'token' },
+  { id: 'components', label: 'Components', icon: 'component' },
   { id: 'comments', label: 'Comments', icon: 'comment' },
   { id: 'versions', label: 'Versions', icon: 'history' },
 ];
@@ -152,12 +155,17 @@ function TabPane({ id, active, children }: { id: PanelTab; active: boolean; chil
   );
 }
 
+function visibleTab(props: Props): PanelTab {
+  const missing: Partial<Record<PanelTab, boolean>> = { tokens: !props.tokens, comments: !props.comments, tweaks: !props.tweaks, components: !props.components };
+  return missing[props.tab] ? 'chat' : props.tab;
+}
+
 export function RightPanel(props: Props) {
   const ready = inspectorEmptyReason(props.inspector.selection, props.inspector.editable) === null;
   const tokens = props.tokens;
   const comments = props.comments;
   const tweaks = props.tweaks;
-  const tab = (props.tab === 'tokens' && !tokens) || (props.tab === 'comments' && !comments) || (props.tab === 'tweaks' && !tweaks) ? 'chat' : props.tab;
+  const tab = visibleTab(props);
   return (
     <aside className="panel right">
       <ChatSplitter columnsRef={props.columnsRef} />
@@ -177,6 +185,11 @@ export function RightPanel(props: Props) {
         {tokens && (
           <TabPane id="tokens" active={tab === 'tokens'}>
             <TokensPanel {...tokens} />
+          </TabPane>
+        )}
+        {props.components && (
+          <TabPane id="components" active={tab === 'components'}>
+            <ComponentsPanel {...props.components} />
           </TabPane>
         )}
         {comments && (

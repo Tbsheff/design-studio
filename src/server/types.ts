@@ -113,4 +113,5 @@ export interface PreviewService {
   inspect(url: string, viewport: CheckViewport, outPath: string, selectionLocs: string[]): Promise<InspectResult>;
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;
   screenshotTiles(url: string, request: TileRequest): Promise<TileResult>;
+  elementShots?(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]>;
 }

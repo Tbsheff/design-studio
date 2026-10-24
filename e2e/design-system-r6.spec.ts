@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Frame, type Page } from '@playwright/test';
 import { differenceEuclidean, parse } from 'culori';
@@ -178,4 +178,96 @@ test('R6-3: an off-palette color shows the nearest token with ΔE and Use token 
   await row.getByRole('button', { name: `Use ${cssVar} for text color` }).click();
   await expect.poll(() => readFileSync(file, 'utf8')).toContain(`color: var(${cssVar})`);
   await expect(page.getByTestId('token-lint').filter({ hasText: 'Text color' })).toHaveCount(0);
+});
+
+const BUTTON_TSX = `import type { ReactNode } from 'react';
+
+export function Button({ children }: { children: ReactNode }) {
+  return <button className="inv-button" style={{ padding: '10px 18px', borderRadius: 8, background: '#1d4ed8', color: '#fff', border: 0 }}>{children}</button>;
+}
+`;
+
+const CARD_TSX = `import { Button } from './Button';
+
+export function Card({ title }: { title: string }) {
+  return (
+    <article className="inv-card" style={{ width: 240, padding: 16, border: '1px solid #ddd', borderRadius: 12 }}>
+      <h3>{title}</h3>
+      <Button>Open</Button>
+    </article>
+  );
+}
+`;
+
+const INVENTORY_APP = `import { Button } from './components/Button';
+import { Card } from './components/Card';
+
+export default function App() {
+  return (
+    <main style={{ padding: 32, display: 'flex', gap: 16 }}>
+      <h1>Inventory probe</h1>
+      <Card title="First" />
+      <Card title="Second" />
+      <Button>Start</Button>
+    </main>
+  );
+}
+`;
+
+test('R6-2: the Components tab lists Button and Card with thumbnails and a click mentions the component', async ({ page }) => {
+  const api = await openHome(page);
+  const { project } = await api.call<{ project: Project }>('POST', '/api/projects', { prompt: 'Inventory App', kind: 'react' });
+  await api.waitForRuns(project.id, 1);
+  const main = mainDirection(await api.project(project.id));
+  const components = path.join(main.workTree, 'src', 'components');
+  mkdirSync(components, { recursive: true });
+  writeFileSync(path.join(components, 'Button.tsx'), BUTTON_TSX);
+  writeFileSync(path.join(components, 'Card.tsx'), CARD_TSX);
+  writeFileSync(path.join(main.workTree, 'src', 'App.tsx'), INVENTORY_APP);
+  await api.call('POST', `/api/projects/${project.id}/d/main/keep`);
+  await page.evaluate((id) => {
+    const raw = localStorage.getItem('design-studio.ui.v1');
+    const state = raw ? JSON.parse(raw) : {};
+    localStorage.setItem('design-studio.ui.v1', JSON.stringify({ ...state, activeProjectId: id }));
+  }, project.id);
+  await page.reload();
+  await expect(frontFrame(page).locator('h1')).toHaveText('Inventory probe', { timeout: 60_000 });
+
+  await page.getByRole('tab', { name: /^Components/ }).click();
+  const cards = page.getByTestId('component-card');
+  await expect(cards).toHaveCount(2);
+  await expect(cards.nth(0)).toContainText('Button');
+  await expect(cards.nth(0)).toContainText('2 uses');
+  await expect(cards.nth(1)).toContainText('Card');
+  for (const name of ['Button', 'Card']) {
+    const img = page.getByRole('button', { name: `Mention ${name}` }).locator('img');
+    await expect(img).toBeVisible({ timeout: 30_000 });
+    await expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(20);
+  }
+  const buttonShot = await page.getByRole('button', { name: 'Mention Button' }).locator('img').evaluate((el) => [(el as HTMLImageElement).naturalWidth, (el as HTMLImageElement).naturalHeight]);
+  const cardShot = await page.getByRole('button', { name: 'Mention Card' }).locator('img').evaluate((el) => [(el as HTMLImageElement).naturalWidth, (el as HTMLImageElement).naturalHeight]);
+  expect(cardShot[1]!).toBeGreaterThan(buttonShot[1]!);
+
+  await page.getByRole('button', { name: 'Mention Button' }).click();
+  const chip = page.getByTestId('mention-chip');
+  await expect(chip).toHaveCount(1);
+  await expect(chip).toContainText('Button');
+  await expect(chip).toHaveAttribute('title', '@Button · src/components/Button.tsx');
+  await page.getByRole('button', { name: 'Mention Button' }).click();
+  await expect(chip).toHaveCount(1);
+
+  const composer = page.locator('[data-slot="composer-input"]');
+  await composer.click();
+  await composer.pressSequentially('Make @Ca');
+  await expect(page.getByTestId('mention-list')).toContainText('Card');
+  await page.keyboard.press('Enter');
+  await expect(chip).toHaveCount(2);
+  await composer.pressSequentially(' bigger');
+  const sent = page.waitForRequest((request) => request.method() === 'POST' && /\/runs$/.test(new URL(request.url()).pathname));
+  await page.keyboard.press('Meta+Enter');
+  const body = (await sent).postDataJSON() as { mentions?: unknown[] };
+  expect(body.mentions).toEqual([
+    { kind: 'component', name: 'Button', file: 'src/components/Button.tsx', selector: expect.stringContaining('src/components/Button.tsx:') },
+    { kind: 'component', name: 'Card', file: 'src/components/Card.tsx', selector: expect.stringContaining('src/components/Card.tsx:') },
+  ]);
 });

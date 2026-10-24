@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type PanelTab = 'chat' | 'design' | 'tweaks' | 'tokens' | 'comments' | 'versions';
+export type PanelTab = 'chat' | 'design' | 'tweaks' | 'tokens' | 'components' | 'comments' | 'versions';
 
-const TABS: readonly PanelTab[] = ['chat', 'design', 'tweaks', 'tokens', 'comments', 'versions'];
+const TABS: readonly PanelTab[] = ['chat', 'design', 'tweaks', 'tokens', 'components', 'comments', 'versions'];
 
 const TAB_KEY = 'design-studio.panel-tab.v1';
 

@@ -25,6 +25,8 @@ import { designSystemRef } from './DesignSystemChip';
 import { StudioTopbar } from './StudioTopbar';
 import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
+import { useComponents } from '../useComponents';
+import { componentMention, type MentionRequest } from '../useMentions';
 import { useEditHistory, useSelectionRefresh } from '../useEditHistory';
 import { TWEAKS_REQUEST, useTweaks } from '../useTweaks';
 import { useDesktopContext } from '../desktop';
@@ -162,6 +164,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const studioTokens = useStudioTokens({ projectId, directionId, tokens, ...tweaks.undoChain(historyChain.canUndo, historyChain.onUndo), redo: editHistory.redo, onCommitted: () => data.refreshVersions() });
   const { guard } = studioTokens;
   const detailsRun = runById(runs, detailsRunId);
+  const componentList = useComponents(projectId, directionId, data.lastChange);
+  const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(null);
   const chatState = useChatState(directionRuns);
 
   useHomeVariationsHandoff(projectId, project !== null && direction !== null, variations.propose);
@@ -177,6 +181,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     setStaleNotice(null);
     setSource({ kind: 'live' });
     setCompareOpen(false);
+    setMentionRequest(null);
     data.clearErrors();
   }, [directionId]);
 
@@ -340,6 +345,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             contextTokens: chatState.contextTokens,
             directionId: did,
             tokens: tokenEntries(tokens),
+            components: componentList.components,
+            mentionRequest,
             variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
           }}
           inspector={{
@@ -373,6 +380,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
           }}
           tokens={studioTokens.panel}
+          components={{ projectId, directionId: did, list: componentList, onMention: (component) => setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 })) }}
           todos={chatState.todos}
           tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
           versions={{

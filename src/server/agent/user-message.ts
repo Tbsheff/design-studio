@@ -68,6 +68,11 @@ export const PLAN_MODE_BLOCK = `<plan-mode>
 Plan only. Do not change any file: write tools are turned off for this run. Read what you need, then reply with a short plan as a numbered list of steps. The user will approve the plan before you build it.
 </plan-mode>`;
 
+function componentLine(mention: Extract<RunMention, { kind: 'component' }>): string {
+  const where = [mention.file ? `defined in ${mention.file}` : null, mention.selector ? `rendered as ${mention.selector}` : null].filter(Boolean).join(', ');
+  return where ? `${mention.name}: ${where}` : mention.name;
+}
+
 function mentionsBlock(mentions: readonly RunMention[], files: readonly MentionFile[]): string | null {
   const tokens = mentions.flatMap((mention) => (mention.kind === 'token' ? [`${mention.name}: ${mention.value}`] : []));
   const parts: string[] = [];
@@ -77,6 +82,8 @@ function mentionsBlock(mentions: readonly RunMention[], files: readonly MentionF
     parts.push('</mentioned-files>');
   }
   if (tokens.length) parts.push(`<mentioned-tokens>\n${tokens.join('\n')}\n</mentioned-tokens>`);
+  const components = mentions.flatMap((mention) => (mention.kind === 'component' ? [componentLine(mention)] : []));
+  if (components.length) parts.push(`<mentioned-components>\nThe user pointed at these components. Reuse them instead of new markup.\n${components.join('\n')}\n</mentioned-components>`);
   return parts.length ? parts.join('\n') : null;
 }
 

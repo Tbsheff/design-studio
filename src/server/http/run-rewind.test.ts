@@ -35,8 +35,7 @@ async function finished(runId: string): Promise<RunSummary> {
     if (data.summary && data.summary.status !== 'running' && !runner.isRunning(data.summary.projectId, data.summary.directionId)) return data.summary;
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
-  const last = await call<{ summary: RunSummary | null; events: { type: string }[] }>("GET", `/api/runs/${runId}`);
-  throw new Error(`run ${runId} did not finish ${JSON.stringify({ status: last.data.summary?.status, error: last.data.summary?.error, live: Boolean(runner.get(runId)), events: last.data.events.map((e) => e.type).slice(-6) })}`);
+  throw new Error(`run ${runId} did not finish`);
 }
 
 async function send(pid: string, did: string, prompt: string): Promise<RunSummary> {

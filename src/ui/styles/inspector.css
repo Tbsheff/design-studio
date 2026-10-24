@@ -516,8 +516,18 @@
   gap: var(--s-2);
 }
 
+.ins-layout-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.ins-layout-row > .ins-field {
+  flex: 1 1 0;
+}
+
 .ins-add-layout {
-  justify-self: start;
+  flex: none;
 }
 
 .ins-kbd {

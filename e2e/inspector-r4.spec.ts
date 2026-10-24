@@ -88,6 +88,7 @@ test('Inspector R4: auto layout, sizing, align self and timing', async ({ page }
   await expect(frame.locator('.cards')).toHaveCSS('display', 'flex');
   await expect(layout.getByRole('group', { name: 'Direction' })).toBeVisible();
   await expect(layout.getByRole('button', { name: /Add auto layout/ })).toHaveCount(0);
+  await expect(layout.getByLabel('Display', { exact: true })).toHaveValue('flex');
 
   await selectCard(page);
   const widthMode = page.getByLabel('Width sizing');
@@ -133,6 +134,14 @@ test('Inspector R4: auto layout, sizing, align self and timing', async ({ page }
   expect(lineOf(file, '<h1')).not.toContain('flex:');
   await settled(page);
   await expect(page.getByRole('group', { name: 'Align self' })).toHaveCount(0);
+  const display = layout.getByLabel('Display', { exact: true });
+  await expect(display).toHaveValue('block');
+  await expect(layout.getByRole('button', { name: /Add auto layout/ })).toBeVisible();
+  await display.selectOption('grid');
+  await expect.poll(() => lineOf(file, '<h1')).toContain('display: grid');
+  await settled(page);
+  await display.selectOption('none');
+  await expect.poll(() => lineOf(file, '<h1')).toContain('display: none');
 });
 
 test('Inspector R4: math, per-corner radius, shadow read back and scroll', async ({ page }) => {

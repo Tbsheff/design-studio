@@ -5,7 +5,7 @@ import { isTypingTarget } from '../usePanZoom';
 import type { DirectEdit } from '../useDirectEdit';
 import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, parentLayout, sizeModeOf, sizePatch, type Axis, type SizeMode } from '../sizing';
 import { Icon, type IconName } from './Icon';
-import { InspectorSection } from './InspectorFields';
+import { InspectorSection, SelectField } from './InspectorFields';
 import { NumberField } from './NumberField';
 
 type Patch = Parameters<DirectEdit['preview']>[0];
@@ -47,6 +47,8 @@ const DIRECTIONS: { value: string; icon: IconName; label: string }[] = [
 ];
 
 const POSITIONS = ['start', 'center', 'end'];
+
+const DISPLAYS = ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'none'];
 
 function AlignGrid({ edit, isRow }: { edit: DirectEdit; isRow: boolean }) {
   const active = activeCell(edit.values['justify-content'], edit.values['align-items'], isRow);
@@ -132,15 +134,17 @@ export function AutoLayoutSection({ edit }: { edit: DirectEdit }) {
   return (
     <InspectorSection title="Auto layout" aside={flex ? remove : undefined}>
       <div ref={root} className="ins-layout">
-        {flex ? (
-          <FlexControls edit={edit} />
-        ) : (
-          <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" onClick={() => write(edit, { display: 'flex' })}>
-            <Icon name="plus" size={13} />
-            Add auto layout
-            <kbd className="ins-kbd" aria-hidden="true">⇧A</kbd>
-          </button>
-        )}
+        <div className="ins-layout-row">
+          <SelectField prop="display" label="Display" short="Disp" edit={edit} options={DISPLAYS} />
+          {!flex && (
+            <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" onClick={() => write(edit, { display: 'flex' })}>
+              <Icon name="plus" size={13} />
+              Add auto layout
+              <kbd className="ins-kbd" aria-hidden="true">⇧A</kbd>
+            </button>
+          )}
+        </div>
+        {flex && <FlexControls edit={edit} />}
       </div>
     </InspectorSection>
   );

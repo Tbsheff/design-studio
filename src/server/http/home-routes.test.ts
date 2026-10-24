@@ -283,7 +283,7 @@ describe('home routes', { timeout: 30000 }, () => {
     });
     expect(second.versionId).not.toBe(first.versionId);
     const files = await readdir(path.join(projects.projectDir(project.id), 'thumbs'));
-    expect(files.sort()).toEqual([`${first.versionId}.png`, `${version.id}.png`].sort());
+    expect(files).toEqual([`${version.id}.png`]);
     const status = await call<{ dirty: boolean; changed: string[] }>('GET', `/api/projects/${project.id}/d/main/status`);
     expect(status.changed).toEqual([]);
   });

@@ -106,6 +106,9 @@ test('R7-1: rows show lazy thumbnails, a hidden panel fetches none, and a rename
   await page.getByRole('tab', { name: 'Chat' }).click();
   const before = thumbs.count();
   writeFileSync(path.join(mainDirection(project).workTree, 'notes.txt'), 'another hidden change\n');
+  await api.call('POST', `/api/projects/${project.id}/d/main/keep`);
+  await expect.poll(async () => (await api.versions(project.id, 'main')).length).toBe(4);
+  await expect(page.locator('li.version')).toHaveCount(4);
   await page.waitForTimeout(1500);
   expect(thumbs.count()).toBe(before);
 });

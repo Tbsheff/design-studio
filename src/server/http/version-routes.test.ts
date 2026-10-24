@@ -155,18 +155,20 @@ describe('version thumbnails', () => {
     await writeFile(path.join(dir, `${headId}.png`), pagePng(4, 4, 1));
     await utimes(path.join(dir, `${headId}.png`), new Date(1000), new Date(1000));
     for (let n = 0; n < THUMB_KEEP + 5; n += 1) {
-      const file = path.join(dir, `old${String(n).padStart(4, '0')}.png`);
+      const file = path.join(dir, `v-old${String(n).padStart(4, '0')}.png`);
       await writeFile(file, 'x');
       await utimes(file, new Date(2000 + n * 1000), new Date(2000 + n * 1000));
     }
     await writeFile(path.join(dir, '.raw-stale-1.png'), 'x');
+    await writeFile(path.join(dir, 'stale-head.png'), 'x');
     const older = (list[1] as Version).id;
     expect((await request('GET', `/api/projects/${project.id}/versions/${older}/thumb`)).status).toBe(200);
     const files = await readdir(dir);
-    expect(files).toHaveLength(THUMB_KEEP);
+    expect(files).toHaveLength(THUMB_KEEP + 1);
     expect(files).toContain(`${headId}.png`);
     expect(files).toContain(`v-${older}.png`);
-    expect(files).not.toContain('old0000.png');
+    expect(files).not.toContain('v-old0000.png');
+    expect(files).not.toContain('stale-head.png');
     expect(files).not.toContain('.raw-stale-1.png');
   });
 });

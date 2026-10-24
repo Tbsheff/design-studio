@@ -146,21 +146,22 @@ function createShotQueue() {
   };
 }
 
+const CACHED = /^(v|diff)-.+\.png$/;
+
 async function prune(dir: string, keep: string | null): Promise<void> {
   const names = await readdir(dir).catch(() => [] as string[]);
-  const files: { name: string; at: number }[] = [];
+  const cached: { name: string; at: number }[] = [];
   for (const name of names) {
     const file = path.join(dir, name);
-    if (name.startsWith('.raw-')) {
+    if (CACHED.test(name)) {
+      const info = await stat(file).catch(() => null);
+      if (info?.isFile()) cached.push({ name, at: info.mtimeMs });
+    } else if (name !== keep && (name.startsWith('.raw-') || name.endsWith('.png'))) {
       await rm(file, { force: true });
-      continue;
     }
-    if (!name.endsWith('.png') || name === keep) continue;
-    const info = await stat(file).catch(() => null);
-    if (info?.isFile()) files.push({ name, at: info.mtimeMs });
   }
-  files.sort((a, b) => b.at - a.at);
-  for (const old of files.slice(keep ? THUMB_KEEP - 1 : THUMB_KEEP)) await rm(path.join(dir, old.name), { force: true });
+  cached.sort((a, b) => b.at - a.at);
+  for (const old of cached.slice(THUMB_KEEP)) await rm(path.join(dir, old.name), { force: true });
 }
 
 export function createThumbnailService(deps: { projects: StudioProjectStore; preview: PreviewService; versions: VersionStore }): ThumbnailService {

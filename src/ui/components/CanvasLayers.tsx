@@ -3,6 +3,7 @@ import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shar
 import { uiStore } from '../storage';
 import { isTypingTarget } from '../usePanZoom';
 import type { LayerTree } from '../layersTree';
+import type { LayerEdits } from '../useLayerEdits';
 import { Icon } from './Icon';
 import { LayersPanel } from './LayersPanel';
 
@@ -13,10 +14,20 @@ interface TreeFrames {
   selectNode: (id: number, additive: boolean) => void;
 }
 
-export function CanvasLayersPanel({ frames, frameName, hasSelection, onSelectMode }: { frames: TreeFrames; frameName: string; hasSelection: boolean; onSelectMode: () => void }) {
+export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void }) {
+  const actions = edits.enabled
+    ? {
+        onRename: edits.renameNode,
+        onToggleHidden: edits.setNodeHidden,
+        onMove: edits.moveNode,
+        onMoveSelected: edits.moveSelected,
+      }
+    : null;
   return (
     <LayersPanel
-      tree={frames.tree}
+      tree={edits.tree ?? frames.tree}
+      edits={actions}
+      busy={!edits.settled}
       frameName={frameName}
       selectedNode={hasSelection ? frames.selectedNode : null}
       onHover={frames.hoverNode}
@@ -26,6 +37,18 @@ export function CanvasLayersPanel({ frames, frameName, hasSelection, onSelectMod
       }}
       onClose={() => uiStore.set({ layersOpen: false })}
     />
+  );
+}
+
+export function EditNotice({ edits }: { edits: Pick<LayerEdits, 'notice' | 'clearNotice'> }) {
+  if (!edits.notice) return null;
+  return (
+    <div className="edit-notice" role="status">
+      <span>{edits.notice}</span>
+      <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={edits.clearNotice}>
+        <Icon name="close" size={14} />
+      </button>
+    </div>
   );
 }
 

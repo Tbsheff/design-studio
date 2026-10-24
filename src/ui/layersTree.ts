@@ -1,4 +1,4 @@
-import { LAYER_LABEL_MAX, LAYER_TREE_MAX, type LayerNode } from '../shared/contracts';
+import { LAYER_LABEL_MAX, LAYER_TREE_MAX, type LayerNode, type ReorderMove } from '../shared/contracts';
 
 export interface LayerTree {
   nodes: LayerNode[];
@@ -104,4 +104,50 @@ export function treeKeyAction(key: string, shift: boolean, nodes: LayerNode[], r
   if (key !== 'Enter') return null;
   const target = shift ? parentOf(nodes, node.id) : firstChildOf(nodes, node);
   return target === null ? null : { select: target };
+}
+
+export function subtreeEnd(rows: LayerNode[], index: number): number {
+  const depth = rows[index]?.depth ?? 0;
+  let end = index + 1;
+  while (end < rows.length && (rows[end] as LayerNode).depth > depth) end += 1;
+  return end;
+}
+
+export function siblingRow(rows: LayerNode[], index: number, step: 1 | -1): number | null {
+  const depth = rows[index]?.depth;
+  if (depth === undefined) return null;
+  for (let i = index + step; i >= 0 && i < rows.length; i += step) {
+    const row = rows[i] as LayerNode;
+    if (row.depth < depth) return null;
+    if (row.depth === depth) return i;
+  }
+  return null;
+}
+
+export interface DropTarget {
+  move: ReorderMove;
+  line: number;
+}
+
+export function dropTarget(rows: LayerNode[], id: number, y: number, rowHeight: number): DropTarget | null {
+  const index = rows.findIndex((r) => r.id === id);
+  if (index < 0) return null;
+  if (y < index * rowHeight) {
+    const prev = siblingRow(rows, index, -1);
+    return prev === null ? null : { move: 'up', line: prev * rowHeight };
+  }
+  if (y < subtreeEnd(rows, index) * rowHeight) return null;
+  const next = siblingRow(rows, index, 1);
+  return next === null ? null : { move: 'down', line: subtreeEnd(rows, next) * rowHeight };
+}
+
+const FALLBACK_LABEL = /^[#.]/;
+const UNSAFE_NAME_CHARS = /["'`<>{}&\\\u0000-\u001f\u007f]/g;
+
+export function editableName(name: string): string {
+  return FALLBACK_LABEL.test(name) ? '' : name;
+}
+
+export function cleanName(value: string): string {
+  return value.replace(UNSAFE_NAME_CHARS, '').slice(0, LAYER_LABEL_MAX);
 }

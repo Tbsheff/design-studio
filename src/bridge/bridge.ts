@@ -3,6 +3,8 @@ import { forwardHistoryKeys } from './history-key.js';
 import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
 import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { createLayerIndex, moveSelection } from './layers.js';
+import { elementBySource } from './reorder.js';
+import { reorderMoveOf } from '../shared/reorder.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -773,6 +775,13 @@ function startBridge(session: BridgeSession): void {
 
   const onKeyDown = (event: KeyboardEvent): void => {
     onAltChange(event);
+    const reorder = reorderMoveOf(event);
+    if (reorder && selected?.isConnected && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      event.stopPropagation();
+      post({ type: 'reorder-key', selector: selectorFor(selected), move: reorder });
+      return;
+    }
     if (mode !== 'select') return;
     const move = selectMoveOf(event);
     if (move && selected?.isConnected && !isTypingElement(eventElement(event))) {
@@ -843,6 +852,10 @@ function startBridge(session: BridgeSession): void {
     'text-edit-allowed': () => undefined,
     'text-edit-stop': () => undefined,
     'request-authored': () => undefined,
+    'select-source': (message) => {
+      const element = elementBySource(message, textOf);
+      if (element) postSelect(element, false);
+    },
     'describe-anchors': (message) => {
       if (typeof message.requestId !== 'string') return;
       const contexts = anchorQueries(message.anchors).map((query) => {

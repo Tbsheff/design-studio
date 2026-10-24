@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ancestorsOf, defaultCollapsed, parentOf, parseLayerTree, treeKeyAction, visibleRows } from './layersTree';
+import { ancestorsOf, cleanName, defaultCollapsed, dropTarget, editableName, parentOf, parseLayerTree, siblingRow, treeKeyAction, visibleRows } from './layersTree';
 
 const raw = {
   nodes: [
@@ -44,5 +44,25 @@ describe('layers tree', () => {
     expect(treeKeyAction('Enter', false, nodes, open, 1, new Set())).toEqual({ select: 2 });
     expect(treeKeyAction('Enter', true, nodes, open, 3, new Set())).toEqual({ select: 2 });
     expect(treeKeyAction('Tab', false, nodes, open, 3, new Set())).toBeNull();
+  });
+
+  it('finds siblings and one-step drop targets for a dragged row', () => {
+    const { nodes } = parseLayerTree(raw);
+    const open = visibleRows(nodes, new Set());
+    expect(siblingRow(open, 0, 1)).toBe(4);
+    expect(siblingRow(open, 4, -1)).toBe(0);
+    expect(siblingRow(open, 2, -1)).toBeNull();
+    expect(dropTarget(open, 5, 10, 28)).toEqual({ move: 'up', line: 0 });
+    expect(dropTarget(open, 5, 4 * 28 + 10, 28)).toBeNull();
+    expect(dropTarget(open, 1, 2 * 28, 28)).toBeNull();
+    expect(dropTarget(open, 1, 4 * 28 + 2, 28)).toEqual({ move: 'down', line: 5 * 28 });
+    expect(dropTarget(open, 3, 3 * 28 + 4, 28)).toEqual({ move: 'down', line: 4 * 28 });
+    expect(dropTarget(open, 3, 10, 28)).toBeNull();
+  });
+
+  it('cleans names for data-name', () => {
+    expect(editableName('.top')).toBe('');
+    expect(editableName('Hero title')).toBe('Hero title');
+    expect(cleanName('Hero "big" <title> & {x}')).toBe('Hero big title  x');
   });
 });

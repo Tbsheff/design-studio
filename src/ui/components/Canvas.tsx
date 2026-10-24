@@ -7,7 +7,9 @@ import { boundsOf, canAddFrame, frameName, type CanvasFrame } from '../canvasFra
 import { passiveSrc, unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { AddFrameMenu, FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
-import { CanvasLayersPanel, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
+import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
+import { useLayerEdits } from '../useLayerEdits';
+import { useResizeHandles } from '../useResizeHandles';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { setCanvasFront, useTokenFrames } from '../tokenFrames';
@@ -254,6 +256,18 @@ export function Canvas(props: Props) {
   const layersOpen = ui.layersOpen && live;
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken);
   useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
+  const editsEnabled = live && !props.running && directionId !== null;
+  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode, treeWanted: layersOpen, frames, selection: props.selection });
+  const resize = useResizeHandles({
+    projectId,
+    directionId,
+    selection: props.selection,
+    enabled: editsEnabled && !commentMode,
+    post: frames.post,
+    setSelection: props.setSelection,
+    refreshRects: frames.refreshRects,
+    onError: layerEdits.notify,
+  });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps, registerPassive, addFrameAt, undoRemove, dismissUndo } = useFrameActions(canvasFrames, pz, artboardRef);
@@ -287,7 +301,7 @@ export function Canvas(props: Props) {
       />
       <CheckResults projectId={projectId} check={check} />
       <div className="canvas-body">
-      {layersOpen && <CanvasLayersPanel frames={frames} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
+      {layersOpen && <CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
@@ -305,6 +319,7 @@ export function Canvas(props: Props) {
             hover={overlayHover(frames.hover, selectMode || commentMode)}
             selection={props.selection}
             zoom={pz.zoom}
+            resize={resize}
             comments={
               comment.available && props.comments ? (
                 <CommentLayer
@@ -326,6 +341,7 @@ export function Canvas(props: Props) {
         </div>
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
+        <EditNotice edits={layerEdits} />
       </div>
       </div>
     </div>

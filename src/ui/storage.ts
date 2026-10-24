@@ -30,7 +30,11 @@ interface UiState {
   lastPackId: string | null;
   lastLocation: string | null;
   snapByProject: Record<string, boolean>;
+  homeSort: HomeSort;
 }
+
+export type HomeSort = 'recent' | 'name' | 'created';
+export const HOME_SORTS: readonly HomeSort[] = ['recent', 'name', 'created'];
 
 const KEY = 'design-studio.ui.v1';
 
@@ -46,6 +50,7 @@ const defaults: UiState = {
   lastPackId: null,
   lastLocation: null,
   snapByProject: {},
+  homeSort: 'recent',
 };
 
 function loadUiState(): UiState {
@@ -65,6 +70,7 @@ function loadUiState(): UiState {
       lastPackId: typeof parsed.lastPackId === 'string' ? parsed.lastPackId : null,
       lastLocation: typeof parsed.lastLocation === 'string' && parsed.lastLocation.startsWith('/') ? parsed.lastLocation : null,
       snapByProject: parsed.snapByProject && typeof parsed.snapByProject === 'object' ? parsed.snapByProject : {},
+      homeSort: parsed.homeSort && HOME_SORTS.includes(parsed.homeSort) ? parsed.homeSort : 'recent',
     };
   } catch {
     return defaults;

@@ -1,6 +1,9 @@
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
+  type ClarifyQuestion,
+  type Starter,
+  type TrashedProject,
   type DirectEditRequest,
   type CreateTokenRequest,
   type CreateTokenResult,
@@ -92,8 +95,19 @@ const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
 
 export const api = {
   listProjects: () => json<Project[]>('GET', '/api/projects'),
-  createProject: (input: { name?: string; prompt: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designMd?: string; packId?: string; level?: RunLevel; startRun?: boolean; parentPath?: string }) =>
+  createProject: (input: { name?: string; prompt: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designMd?: string; packId?: string; level?: RunLevel; startRun?: boolean; parentPath?: string; referenceUrls?: string[] }) =>
     json<{ project: Project; runId: string | null }>('POST', '/api/projects', input),
+  starters: () => json<Starter[]>('GET', '/api/starters'),
+  createFromStarter: (starterId: string, parentPath?: string) => json<{ project: Project }>('POST', '/api/projects/from-starter', { starterId, ...(parentPath ? { parentPath } : {}) }),
+  createSample: (parentPath?: string) => json<{ project: Project }>('POST', '/api/projects/sample', parentPath ? { parentPath } : {}),
+  renameProject: (pid: string, name: string) => json<Project>('PATCH', p(pid), { name }),
+  duplicateProject: (pid: string) => json<{ project: Project }>('POST', `${p(pid)}/duplicate`),
+  trashProject: (pid: string) => json<TrashedProject>('DELETE', p(pid)),
+  restoreProject: (trashId: string) => json<{ project: Project }>('POST', `/api/trash/${encodeURIComponent(trashId)}/restore`),
+  thumbnail: async (pid: string, versionId: string) => (await request('GET', `${p(pid)}/thumbnail/${encodeURIComponent(versionId)}`)).blob(),
+  clarify: (prompt: string) => json<{ questions: ClarifyQuestion[] }>('POST', '/api/clarify', { prompt }),
+  onboarding: () => json<{ dismissed: boolean }>('GET', '/api/onboarding'),
+  dismissOnboarding: () => json<{ dismissed: boolean }>('POST', '/api/onboarding/dismiss'),
   listPacks: () => json<PackSummary[]>('GET', '/api/packs'),
   packProblems: () => json<PackProblem[]>('GET', '/api/packs/problems'),
   getPack: (id: string) => json<PackDetail>('GET', `${pk(id)}`),
@@ -167,7 +181,7 @@ export const api = {
     json<Direction>('POST', `${p(pid)}/directions`, { fromVersionId, name }),
   listVersions: (pid: string, did: string) => json<Version[]>('GET', `${d(pid, did)}/versions`),
   status: (pid: string, did: string) => json<WorkTreeStatus>('GET', `${d(pid, did)}/status`),
-  startRun: (pid: string, did: string, req: RunRequest) => json<{ runId: string }>('POST', `${d(pid, did)}/runs`, req),
+  startRun: (pid: string, did: string, req: RunRequest & { referenceUrls?: string[] }) => json<{ runId: string }>('POST', `${d(pid, did)}/runs`, req),
   undo: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/undo`),
   restore: (pid: string, did: string, versionId: string) =>
     json<Version>('POST', `${d(pid, did)}/restore`, { versionId }),

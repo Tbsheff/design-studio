@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
-import { DEFAULT_SETTINGS, type Project, type ProjectKind } from '../../shared/contracts';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react';
+import { formatAnswers, needsQuestions } from '../../shared/clarify';
+import { DEFAULT_SETTINGS, type ClarifyQuestion, type Project, type ProjectKind, type ProjectSettings, type Starter } from '../../shared/contracts';
 import { shortenHome, type WorkspaceFolder } from '../../shared/folders';
 import { api, errorText } from '../api';
 import { findPack, pickable, usePacks } from '../packs';
@@ -16,8 +17,11 @@ import { RunSettings } from './RunSettings';
 import { ProjectGrid } from './ProjectGrid';
 import { parseDraft, toDraft } from './SettingsFields';
 import { BrandMark } from './StudioTopbar';
+import { ClarifyForm, ComposerChips, imageFiles, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
+import { FirstRunPanel, HomeToast, StarterGallery, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
 
-type Busy = 'create' | 'import' | null;
+type Busy = 'create' | 'import' | 'ask' | null;
+
 
 const KINDS = ['html', 'react'] as const;
 
@@ -35,7 +39,7 @@ function KindToggle({ kind, onKind }: { kind: ProjectKind; onKind: (k: ProjectKi
   );
 }
 
-function PromptArea({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void }) {
+function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void; onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
@@ -51,6 +55,7 @@ function PromptArea({ value, onChange, onSubmit }: { value: string; onChange: (v
       autoFocus
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onPaste={onPaste}
       onKeyDown={(e) => {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSubmit(e);
       }}
@@ -113,9 +118,48 @@ function focusOpenFolder(): void {
   });
 }
 
+function CreateButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
+  const working = busy === 'create' || busy === 'ask';
+  const label = busy === 'create' ? 'Creating…' : busy === 'ask' ? 'Thinking…' : 'Create';
+  return (
+    <button className="btn primary has-icon" type="submit" disabled={disabled}>
+      {working ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
+      {label}
+    </button>
+  );
+}
+
+interface HomeCreateInput {
+  prompt: string;
+  kind: ProjectKind;
+  settings: ProjectSettings;
+  designMd: string;
+  packId: string | null;
+  designCount: number;
+  location: string | null;
+  images: ImageDraft[];
+  references: ReferenceDraft[];
+}
+
+async function createFromHome(input: HomeCreateInput): Promise<Project> {
+  const extra = { ...(input.designMd.trim() ? { designMd: input.designMd } : {}), ...(input.packId ? { packId: input.packId } : {}) };
+  const fanOut = input.designCount > 1;
+  const level = input.settings.defaultLevel;
+  const where = input.location ? { parentPath: input.location } : {};
+  const referenceUrls = input.references.map((reference) => reference.url);
+  const refs = referenceUrls.length > 0 ? { referenceUrls } : {};
+  const separateRun = !fanOut && input.images.length > 0;
+  const { project } = await api.createProject({ prompt: input.prompt, kind: input.kind, settings: input.settings, level, ...extra, ...where, ...(fanOut || separateRun ? { startRun: false } : {}), ...refs });
+  if (fanOut) homeVariations.set({ projectId: project.id, prompt: input.prompt, count: input.designCount, level });
+  const main = project.directions.find((direction) => direction.id === 'main') ?? project.directions[0];
+  if (separateRun && main) {
+    const uploaded = await Promise.all(input.images.map((image) => api.uploadAttachment(project.id, image.file)));
+    await api.startRun(project.id, main.id, { prompt: input.prompt, mode: 'edit', level, attachmentIds: uploaded.map((item) => item.id), ...refs });
+  }
+  return project;
+}
+
 export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
-  const [projects, setProjects] = useState<Project[] | null>(null);
-  const [listError, setListError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState('');
   const [kind, setKind] = useState<ProjectKind>('html');
   const [busy, setBusy] = useState<Busy>(null);
@@ -134,16 +178,15 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const homeRef = useRef<HTMLDivElement>(null);
   const { workspaces, addFolder, renameFolder, forgetFolder, setDefaultFolder } = useWorkspaces(setFormError);
   const homeDir = workspaces ? workspaces.homeDir : null;
+  const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
+  const [query, setQuery] = useState('');
+  const [toast, setToast] = useState<HomeToastState | null>(null);
+  const onboarding = useOnboarding();
+  const { projects, setProjects, listError, loadProjects, searchRef } = useHomeProjects();
+  const { images, references, dragging, fileRef, addImages, removeImage, removeReference, onPromptPaste, dropHandlers } = useComposerAttachments(setFormError);
+  const showToast = useCallback((next: Omit<HomeToastState, 'id'>) => setToast({ ...next, id: Date.now() }), []);
+  const clearToast = useCallback(() => setToast(null), []);
 
-  const loadProjects = () =>
-    api
-      .listProjects()
-      .then((list) => setProjects([...list].sort((a, b) => b.updatedAt - a.updatedAt)))
-      .catch((err) => setListError(errorText(err)));
-
-  useEffect(() => {
-    void loadProjects();
-  }, []);
 
   const location = locationFor(workspaces, lastLocation);
   const setLocation = (path: string | null) => uiStore.set({ lastLocation: path });
@@ -168,9 +211,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
 
   const { filterFolder, shownProjects } = filterByFolder(projects, workspaces, folderFilter);
 
-  const create = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
+  const build = async (finalPrompt: string) => {
     const parsed = parseDraft(settingsDraft);
     if ('error' in parsed) {
       setFormError(parsed.error);
@@ -179,18 +220,47 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     setBusy('create');
     setFormError(null);
     try {
-      const extra = { ...(designMd.trim() ? { designMd } : {}), ...(pack ? { packId: pack.id } : {}) };
-      const fanOut = designCount > 1;
-      const level = parsed.settings.defaultLevel;
-      const where = location ? { parentPath: location } : {};
-      const { project } = await api.createProject({ prompt: prompt.trim(), kind, settings: parsed.settings, level, ...extra, ...where, ...(fanOut ? { startRun: false } : {}) });
-      if (fanOut) homeVariations.set({ projectId: project.id, prompt: prompt.trim(), count: designCount, level });
+      const project = await createFromHome({ prompt: finalPrompt, kind, settings: parsed.settings, designMd, packId: pack?.id ?? null, designCount, location, images, references });
       onOpen(project.id);
     } catch (err) {
       setFormError(errorText(err));
       setBusy(null);
     }
   };
+
+  const create = async (e: FormEvent) => {
+    e.preventDefault();
+    const text = prompt.trim();
+    if (!text || busy !== null) return;
+    if (questions === null && needsQuestions(text)) {
+      setBusy('ask');
+      setFormError(null);
+      const asked = await api.clarify(text).catch(() => ({ questions: [] as ClarifyQuestion[] }));
+      setBusy(null);
+      if (asked.questions.length > 0) {
+        setQuestions(asked.questions);
+        return;
+      }
+    }
+    await build(text);
+  };
+
+  const openStarter = async (starter: Starter) => {
+    setFormError(null);
+    try {
+      const { project } = await api.createFromStarter(starter.id, location ?? undefined);
+      onOpen(project.id);
+    } catch (err) {
+      setFormError(errorText(err));
+    }
+  };
+
+  const openSample = async () => {
+    const { project } = await api.createSample(location ?? undefined);
+    onOpen(project.id);
+  };
+
+  const actions = useProjectActions({ onOpen, setProjects, loadProjects, showToast });
 
   const importFolder = async (path: string) => {
     setBusy('import');
@@ -220,9 +290,34 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
         <section className="home-hero">
           <h1>Start a new project</h1>
           <p className="home-lede">Describe a page. The agent builds it, and every change becomes a version you can compare, branch or restore.</p>
-          <form className="home-composer" onSubmit={create}>
-            <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} />
+          <form
+            className={`home-composer${dragging ? ' dragging' : ''}`}
+            onSubmit={create}
+            {...dropHandlers}
+          >
+            <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
+            <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} />
+            {dragging && (
+              <div className="home-drop-hint" aria-hidden="true">
+                <Icon name="image" size={16} />
+                Drop an image or a link to use it as a reference
+              </div>
+            )}
             <div className="home-composer-bar">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                multiple
+                hidden
+                onChange={(event) => {
+                  addImages(imageFiles(event.target.files));
+                  event.target.value = '';
+                }}
+              />
+              <button type="button" className="icon-btn" aria-label="Attach images" title="Attach images (or drop or paste them)" onClick={() => fileRef.current?.click()}>
+                <Icon name="paperclip" size={16} />
+              </button>
               <KindToggle
                 kind={kind}
                 onKind={(next) => {
@@ -237,12 +332,18 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
               />
               <PackPicker state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
               <div className="spacer" />
-              <button className="btn primary has-icon" type="submit" disabled={busy !== null || !prompt.trim()}>
-                {busy === 'create' ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
-                {busy === 'create' ? 'Creating…' : 'Create'}
-              </button>
+              <CreateButton busy={busy} disabled={busy !== null || !prompt.trim() || questions !== null} />
             </div>
           </form>
+          {questions && (
+            <ClarifyForm
+              questions={questions}
+              busy={busy === 'create'}
+              onBuild={(answers) => void build(formatAnswers(prompt, answers))}
+              onSkip={() => void build(prompt.trim())}
+              onCancel={() => setQuestions(null)}
+            />
+          )}
           <LocationField
             folders={workspaces?.folders ?? []}
             value={location}
@@ -267,6 +368,8 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <Disclosure className="home-disclosure" />
           <OpenFolder busy={busy !== null} path={importPath} homeDir={homeDir} chooser={chooser} onPath={setImportPath} onImport={(p) => void importFolder(p)} />
         </section>
+        {onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}
+        {projects !== null && projects.length === 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
         <HiddenProjectsNote homeDir={homeDir} onMoved={() => void loadProjects()} />
         <FoldersSection
           list={workspaces}
@@ -285,10 +388,15 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           projects={shownProjects}
           packs={packs.packs}
           error={listError}
-          onOpen={onOpen}
+          actions={actions}
+          query={query}
+          onQuery={setQuery}
+          searchRef={searchRef}
           filter={filterFolder ? { label: filterFolder.label, onClear: () => setFolderFilter(null) } : null}
         />
+        {projects !== null && projects.length > 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
       </main>
+      <HomeToast toast={toast} onDone={clearToast} />
     </div>
   );
 }

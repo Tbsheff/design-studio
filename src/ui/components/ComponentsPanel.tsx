@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentInfo } from '../../shared/contracts';
 import { componentThumb, type ComponentList } from '../useComponents';
 import { Icon } from './Icon';
@@ -7,39 +7,45 @@ interface Props {
   projectId: string;
   directionId: string | null;
   list: ComponentList;
+  active: boolean;
   onMention: (component: ComponentInfo) => void;
 }
 
-function Thumb({ projectId, directionId, component, version }: { projectId: string; directionId: string; component: ComponentInfo; version: string }) {
+function Thumb({ projectId, directionId, component, version, active }: { projectId: string; directionId: string; component: ComponentInfo; version: string; active: boolean }) {
   const [src, setSrc] = useState<string | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'none'>('loading');
+  const shown = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (shown.current) URL.revokeObjectURL(shown.current);
+  }, []);
   useEffect(() => {
-    let live = true;
-    let url: string | null = null;
     if (!component.selector) {
       setState('none');
       return;
     }
+    if (!active) return;
+    let live = true;
     componentThumb(projectId, directionId, component.id, version).then(
       (next) => {
-        url = next;
         if (!live) {
           if (next) URL.revokeObjectURL(next);
           return;
         }
-        setSrc((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return next;
-        });
-        setState(next ? 'ready' : 'none');
+        if (!next) {
+          if (!shown.current) setState('none');
+          return;
+        }
+        if (shown.current) URL.revokeObjectURL(shown.current);
+        shown.current = next;
+        setSrc(next);
+        setState('ready');
       },
-      () => live && setState('none'),
+      () => live && !shown.current && setState('none'),
     );
     return () => {
       live = false;
-      if (url) URL.revokeObjectURL(url);
     };
-  }, [projectId, directionId, component.id, component.selector, version]);
+  }, [projectId, directionId, component.id, component.selector, version, active]);
   return (
     <span className={`cmp-thumb ${state}`} aria-hidden="true">
       {src ? <img src={src} alt="" draggable={false} /> : state === 'none' ? <Icon name="component" size={20} /> : null}
@@ -53,7 +59,7 @@ function meta(component: ComponentInfo): string {
   return file ? `${uses} · ${file}` : uses;
 }
 
-export function ComponentsPanel({ projectId, directionId, list, onMention }: Props) {
+export function ComponentsPanel({ projectId, directionId, list, active, onMention }: Props) {
   const [query, setQuery] = useState('');
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -108,7 +114,7 @@ export function ComponentsPanel({ projectId, directionId, list, onMention }: Pro
                     data-testid="component-card"
                     onClick={() => onMention(component)}
                   >
-                    <Thumb projectId={projectId} directionId={directionId} component={component} version={list.version} />
+                    <Thumb projectId={projectId} directionId={directionId} component={component} version={list.version} active={active} />
                     <span className="cmp-name truncate">{component.name}</span>
                     <span className="cmp-meta truncate">{meta(component)}</span>
                   </button>

@@ -184,3 +184,153 @@ test('R2-3: three frames keep their place after reload and Shift+1 fits all', as
   await expect(frontFrame(page).locator('h1')).toHaveText('Frames Page');
   expect(await page.locator('.canvas-frame iframe').evaluateAll((els) => els.map((el) => el.getAttribute('width')).sort())).toEqual(['1440', '768']);
 });
+
+const COMMIT_PROBE = () => {
+  type Fiber = { tag: number; type: unknown; stateNode: unknown; child: Fiber | null; sibling: Fiber | null; return: Fiber | null; flags: number };
+  const state = { counting: false, canvas: 0, total: 0, prev: null as Fiber | null };
+  const findCanvas = (root: Fiber | null): Fiber | null => {
+    const el = document.querySelector('.canvas');
+    if (!el) return null;
+    const stack: Fiber[] = root ? [root] : [];
+    while (stack.length > 0) {
+      const fiber = stack.pop() as Fiber;
+      if (fiber.stateNode === el) {
+        let owner = fiber.return;
+        while (owner && typeof owner.type !== 'function') owner = owner.return;
+        return owner;
+      }
+      if (fiber.sibling) stack.push(fiber.sibling);
+      if (fiber.child) stack.push(fiber.child);
+    }
+    return null;
+  };
+  (window as unknown as Record<string, unknown>).__commits = state;
+  (window as unknown as Record<string, unknown>).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+    supportsFiber: true,
+    renderers: new Map(),
+    inject: () => 1,
+    checkDCE: () => undefined,
+    onScheduleFiberRoot: () => undefined,
+    onCommitFiberUnmount: () => undefined,
+    onPostCommitFiberRoot: () => undefined,
+    onCommitFiberRoot: (_id: number, root: { current: Fiber }) => {
+      const canvas = findCanvas(root.current);
+      const rendered = canvas !== null && canvas !== state.prev && (canvas.flags & 1) === 1;
+      state.prev = canvas;
+      if (!state.counting) return;
+      state.total += 1;
+      if (rendered) state.canvas += 1;
+    },
+  };
+};
+
+function stats(deltas: number[]): { frames: number; p95: number; max: number; over32: number } {
+  const sorted = [...deltas].sort((a, b) => a - b);
+  const p95 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))] ?? 0;
+  return { frames: sorted.length, p95: Math.round(p95 * 10) / 10, max: Math.round((sorted.at(-1) ?? 0) * 10) / 10, over32: sorted.filter((d) => d > 32).length };
+}
+
+async function startFrameProbe(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __frames: number[]; __frameRun: boolean };
+    w.__frames = [];
+    w.__frameRun = true;
+    let last = 0;
+    const tick = (ts: number) => {
+      if (last) w.__frames.push(ts - last);
+      last = ts;
+      if (w.__frameRun) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
+async function stopFrameProbe(page: Page): Promise<number[]> {
+  return page.evaluate(() => {
+    const w = window as unknown as { __frames: number[]; __frameRun: boolean };
+    w.__frameRun = false;
+    return w.__frames;
+  });
+}
+
+test('R2-2: a 3 s pan and a 3 s zoom do not render Canvas, and stay smooth', async ({ page }) => {
+  await page.addInitScript(COMMIT_PROBE);
+  const api = await openHome(page);
+  await createProjectViaUi(page, api, 'Pan Smooth Page', 'html');
+  await expect(frontFrame(page).locator('h1')).toHaveText('Pan Smooth Page');
+  for (const size of ['Tablet 768', 'Mobile 390']) {
+    await page.getByRole('button', { name: 'Add frame', exact: true }).click();
+    await page.getByRole('menuitem', { name: new RegExp(size) }).click();
+  }
+  await focusStudio(page);
+  await page.waitForTimeout(500);
+  const stage = await box(page, '.stage');
+  const cx = stage.x + stage.width / 2;
+  const cy = stage.y + stage.height / 2;
+  const before = await box(page, '.artboard');
+
+  await page.keyboard.down('Space');
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.evaluate(() => {
+    (window as unknown as { __commits: { counting: boolean } }).__commits.counting = true;
+  });
+  await startFrameProbe(page);
+  const started = Date.now();
+  let i = 0;
+  while (Date.now() - started < 3000) {
+    i += 1;
+    await page.mouse.move(cx + Math.sin(i / 20) * 200, cy + Math.cos(i / 20) * 120);
+    await page.waitForTimeout(8);
+  }
+  const panFrames = await stopFrameProbe(page);
+  const panCommits = await page.evaluate(() => {
+    const c = (window as unknown as { __commits: { counting: boolean; canvas: number; total: number } }).__commits;
+    c.counting = false;
+    return { canvas: c.canvas, total: c.total };
+  });
+  await page.mouse.up();
+  await page.keyboard.up('Space');
+  const after = await box(page, '.artboard');
+  expect(after.x).not.toBe(before.x);
+  expect(panCommits.canvas).toBe(0);
+
+  await page.mouse.move(cx, cy);
+  await page.evaluate(() => {
+    const c = (window as unknown as { __commits: { counting: boolean; canvas: number; total: number } }).__commits;
+    c.canvas = 0;
+    c.total = 0;
+    c.counting = true;
+  });
+  await startFrameProbe(page);
+  await page.keyboard.down('Control');
+  const zoomStart = Date.now();
+  i = 0;
+  while (Date.now() - zoomStart < 3000) {
+    i += 1;
+    await page.mouse.wheel(0, Math.sin(i / 15) * 12);
+    await page.waitForTimeout(8);
+  }
+  const zoomFrames = await stopFrameProbe(page);
+  const zoomCommits = await page.evaluate(() => {
+    const c = (window as unknown as { __commits: { counting: boolean; canvas: number; total: number } }).__commits;
+    c.counting = false;
+    return { canvas: c.canvas, total: c.total };
+  });
+  await page.keyboard.up('Control');
+  await page.evaluate(() => {
+    const c = (window as unknown as { __commits: { counting: boolean } }).__commits;
+    c.counting = true;
+  });
+  await expect
+    .poll(() => page.evaluate(() => JSON.stringify((window as unknown as { __commits: { canvas: number; total: number } }).__commits, ['canvas', 'total'])), { timeout: 3000 })
+    .toMatch(/"canvas":[1-9]/);
+
+  const pan = stats(panFrames);
+  const zoom = stats(zoomFrames);
+  console.log(`R2-2 pan ${JSON.stringify({ ...pan, moves: i, commits: panCommits })} zoom ${JSON.stringify({ ...zoom, commits: zoomCommits })}`);
+  expect(zoomCommits.canvas).toBe(0);
+  expect(pan.frames).toBeGreaterThan(100);
+  expect(pan.p95).toBeLessThanOrEqual(17);
+  expect(pan.over32).toBe(0);
+});

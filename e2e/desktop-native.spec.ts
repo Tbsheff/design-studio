@@ -346,53 +346,45 @@ test('R3-2: Esc in the desktop window stops a run, with focus in the studio and 
     return out;
   });
   expect(accelerators.filter((key) => /^(Esc|Escape)$/i.test(key))).toEqual([]);
-  const native = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('Native undo check'));
-  if (!native) throw new Error('project missing');
-  const box = page.getByPlaceholder('Describe a change');
-  const stopsWithin = async (project: Project, prompt: string, press: () => Promise<void>) => {
-    await expect(page.locator('[data-run-id]').last().locator('.tool-row[data-state="done"]').first()).toBeVisible({ timeout: 20_000 });
-    const overlays = await page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]')).filter((el) => el.getClientRects().length > 0).map((el) => el.outerHTML.slice(0, 120)));
-    const focus = await page.evaluate(() => `${document.activeElement?.tagName}.${(document.activeElement as HTMLElement | null)?.className ?? ''} hasFocus=${document.hasFocus()}`);
-    console.log(`R3-2 desktop before Esc (${prompt}): focus ${focus} overlays ${JSON.stringify(overlays)}`);
-    await page.evaluate(() => {
-      const w = window as unknown as { __esc: string[] };
-      w.__esc = [];
-      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') w.__esc.push(`capture prevented=${e.defaultPrevented}`); }, { capture: true, once: true });
-      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') w.__esc.push(`bubble prevented=${e.defaultPrevented}`); }, { once: true });
-    });
-    const cancels: string[] = [];
-    const onRequest = (request: { url: () => string }) => { if (request.url().includes('/cancel')) cancels.push(request.url()); };
-    page.on('request', onRequest);
+  const round = test.info().repeatEachIndex;
+  const openFresh = async (name: string) => {
+    const folder = site(name);
+    await app.evaluate(({ dialog }, chosen) => {
+      dialog.showOpenDialog = (async () => ({ canceled: false, filePaths: [chosen] })) as unknown as typeof dialog.showOpenDialog;
+    }, folder);
+    await clickMenu('open-folder');
+    await expect.poll(openedProjectName).toContain(name);
+    const project = (await call<Project[]>('GET', '/api/projects')).find((item) => item.imported?.sourcePath === folder);
+    const main = project?.directions[0];
+    if (!project || !main) throw new Error(`${name} project missing`);
+    return { project, main };
+  };
+  const stopsWithin = async (project: Project, runId: string, press: () => Promise<void>) => {
+    const card = page.locator(`[data-run-id="${runId}"]`);
+    await expect(card.locator('.tool-row[data-state="done"]').first()).toBeVisible({ timeout: 20_000 });
     await press();
-    await page.waitForTimeout(300);
-    console.log(`R3-2 desktop after Esc (${prompt}): keys ${JSON.stringify(await page.evaluate(() => (window as unknown as { __esc: string[] }).__esc))} cancels ${cancels.length}`);
-    page.off('request', onRequest);
-    await expect(page.locator('[data-run-id]').last().locator('.run-foot .status.canceled')).toBeVisible({ timeout: 2_000 });
-    await expect.poll(async () => (await call<RunSummary[]>('GET', `/api/projects/${project.id}/runs`)).find((run) => run.request.prompt === prompt)?.status).toBe('canceled');
+    await expect(card.locator('.run-foot .status.canceled')).toBeVisible({ timeout: 2_000 });
+    await expect.poll(async () => (await call<RunSummary[]>('GET', `/api/projects/${project.id}/runs`)).find((run) => run.id === runId)?.status).toBe('canceled');
   };
 
+  const studio = await openFresh(`esc studio ${round}`);
+  const box = page.getByPlaceholder('Describe a change');
   await box.fill('Desktop Esc studio [steps]');
+  const sent = page.waitForResponse((response) => response.request().method() === 'POST' && response.url().endsWith(`/d/${studio.main.id}/runs`));
   await box.press('Meta+Enter');
-  await stopsWithin(native, 'Desktop Esc studio [steps]', async () => {
+  const { runId: studioRun } = (await (await sent).json()) as { runId: string };
+  await stopsWithin(studio.project, studioRun, async () => {
     await box.focus();
     await page.keyboard.press('Escape');
   });
 
-  const folder = site('esc folder');
-  await app.evaluate(({ dialog }, chosen) => {
-    dialog.showOpenDialog = (async () => ({ canceled: false, filePaths: [chosen] })) as unknown as typeof dialog.showOpenDialog;
-  }, folder);
-  await clickMenu('open-folder');
-  await expect.poll(openedProjectName).toContain('esc folder');
+  const preview = await openFresh(`esc preview ${round}`);
   const frame = page.frameLocator('iframe.frame.front');
-  await expect(frame.locator('h1')).toHaveText('esc folder');
-  const fresh = (await call<Project[]>('GET', '/api/projects')).find((item) => item.name.includes('esc folder'));
-  const main = fresh?.directions[0];
-  if (!fresh || !main) throw new Error('folder project missing');
+  await expect(frame.locator('h1')).toHaveText(`esc preview ${round}`);
   await frame.locator('h1').click();
   await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
-  await call('POST', `/api/projects/${fresh.id}/d/${main.id}/runs`, { prompt: 'Desktop Esc preview [steps]', mode: 'edit' });
-  await stopsWithin(fresh, 'Desktop Esc preview [steps]', async () => {
+  const { runId: previewRun } = await call<{ runId: string }>('POST', `/api/projects/${preview.project.id}/d/${preview.main.id}/runs`, { prompt: 'Desktop Esc preview [steps]', mode: 'edit' });
+  await stopsWithin(preview.project, previewRun, async () => {
     expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
     await page.keyboard.press('Escape');
   });

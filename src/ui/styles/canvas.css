@@ -622,7 +622,7 @@ body.frame-dragging .frame {
   padding: 0 var(--s-1);
   border-radius: var(--r-sm);
   background: var(--measure);
-  color: oklch(1 0 0);
+  color: oklch(0.99 0.006 25);
   font: 500 var(--t-xs) / 20px var(--font);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

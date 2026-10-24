@@ -220,6 +220,7 @@ export function CanvasToolbar(props: Props) {
   return (
     <div className="toolbar">
       {props.layers}
+      {props.layers && <div className="toolbar-sep" />}
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
       <div className="toolbar-sep" />

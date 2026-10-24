@@ -20,6 +20,8 @@ import { RenderCheckPanel } from './RenderCheckPanel';
 import { CommentLayer } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
+import { useCanvasDraw, type DrawTool } from '../useDrawTool';
+import { DrawBar, DrawSurface } from './DrawLayer';
 import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
 
 interface Props {
@@ -255,10 +257,15 @@ function canvasClass(editing: boolean): string {
 
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 
-function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control: Props['comments'] } & Omit<CommentLayerProps, 'control' | 'commentMode' | 'onExitCommentMode'>) {
-  const { comment, control, ...rest } = p;
+function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control: Props['comments']; draw: DrawTool } & Omit<CommentLayerProps, 'control' | 'commentMode' | 'onExitCommentMode'>) {
+  const { comment, control, draw, ...rest } = p;
   if (!comment.available || !control) return null;
-  return <CommentLayer {...rest} control={control} commentMode={comment.on} onExitCommentMode={() => comment.setOn(false)} />;
+  return (
+    <>
+      <CommentLayer {...rest} control={control} commentMode={comment.on} onExitCommentMode={() => comment.setOn(false)} />
+      {draw.on && <DrawSurface draw={draw} control={control} zoom={rest.zoom} frame={rest.frame} />}
+    </>
+  );
 }
 
 export function Canvas(props: Props) {
@@ -284,6 +291,7 @@ export function Canvas(props: Props) {
 
   const comment = useCommentMode(props.comments, source.kind === 'live', setSelectMode);
   const commentMode = comment.on;
+  const draw = useCanvasDraw(comment, selectMode, setSelectMode);
 
   const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
   const live = source.kind === 'live';
@@ -360,6 +368,8 @@ export function Canvas(props: Props) {
         }}
         commentMode={comment.available ? commentMode : undefined}
         onToggleComment={comment.toggle}
+        drawMode={draw.toolbarMode}
+        onToggleDraw={draw.toggle}
         source={source}
         onSource={props.onSource}
         hasHead={headVersionId !== null}
@@ -393,6 +403,7 @@ export function Canvas(props: Props) {
             comments={
               <CanvasComments
                 comment={comment}
+                draw={draw}
                 control={props.comments}
                 frames={frames}
                 kind={kind}
@@ -406,6 +417,7 @@ export function Canvas(props: Props) {
           {layout.frames.length > 1 && <FrameLabel {...labelProps(active)} />}
           <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
+        <DrawBar draw={draw} />
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
         <EditNotice edits={layerEdits} />

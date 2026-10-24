@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
+import { PenIcon } from './DrawLayer';
 
 const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
   { id: 'desktop', label: 'Desktop 1440', icon: 'desktop', width: 1440, height: 900 },
@@ -23,6 +24,8 @@ interface Props {
   onToggleSelect: () => void;
   commentMode?: boolean;
   onToggleComment?: () => void;
+  drawMode?: boolean;
+  onToggleDraw?: () => void;
   source: CanvasSource;
   onSource: (s: CanvasSource) => void;
   hasHead: boolean;
@@ -267,6 +270,20 @@ export function CanvasToolbar(props: Props) {
         >
           <Icon name="comment" />
           <span className="label">Comment</span> <kbd>C</kbd>
+        </button>
+      )}
+      {props.drawMode !== undefined && (
+        <button
+          className="btn small select-toggle draw-toggle"
+          aria-pressed={props.drawMode}
+          aria-label="Draw"
+          aria-keyshortcuts="P"
+          data-tip="Draw on the design, then add a comment. Esc exits."
+          data-tip-align="end"
+          onClick={props.onToggleDraw}
+        >
+          <PenIcon />
+          <span className="label">Draw</span> <kbd>P</kbd>
         </button>
       )}
       <ZoomControls

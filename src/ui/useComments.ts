@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { AnchorQuery, CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../shared/contracts';
-import { anchorQueryOf, targetFromSelection } from '../shared/comments';
-import { ApiError, errorText, json } from './api';
+import type { AnchorQuery, CommentDrawing, CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../shared/contracts';
+import { anchorQueryOf, drawingTarget, targetFromSelection } from '../shared/comments';
+import { ApiError, api, errorText, json } from './api';
 import { useProjectEvents } from './events';
 
 export type DescribeAnchors = (queries: AnchorQuery[]) => Promise<(SelectionContext | null)[]>;
@@ -32,6 +32,21 @@ export interface CommentsControl {
   move: (id: string, delta: -1 | 1) => Promise<void>;
   send: (ids?: string[]) => Promise<void>;
   repin: (id: string, selection: SelectionContext) => Promise<void>;
+  addDrawing: (input: { text: string; drawing: CommentDrawing; image: Blob; sendNow: boolean }) => Promise<boolean>;
+  reply: (id: string, text: string) => Promise<boolean>;
+  removeReply: (id: string, replyId: string) => Promise<void>;
+  showResolved: boolean;
+  setShowResolved: (on: boolean) => void;
+}
+
+const SHOW_RESOLVED_KEY = 'studio.comments.showResolved';
+
+function readShowResolved(): boolean {
+  try {
+    return window.localStorage.getItem(SHOW_RESOLVED_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 const RUNNING_NOTICE = 'Agent is running: queued';
@@ -63,6 +78,7 @@ export function useComments(projectId: string, directionId: string | null, compo
   const [sending, setSending] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [repinId, setRepinId] = useState<string | null>(null);
+  const [showResolved, setShowResolvedState] = useState(readShowResolved);
   const describeRef = useRef<DescribeAnchors | null>(null);
   const didRef = useRef(directionId);
   didRef.current = directionId;
@@ -103,7 +119,7 @@ export function useComments(projectId: string, directionId: string | null, compo
       if (chosen.length === 0) return;
       setSending(true);
       try {
-        const contexts = await describeWithTimeout(describeRef.current, chosen);
+        const contexts = await describeWithTimeout(describeRef.current, chosen.filter((comment) => !comment.drawing));
         await call('POST', '/send', { ids: chosen.map((comment) => comment.id), contexts });
         setNotice(null);
       } catch (err) {
@@ -197,6 +213,75 @@ export function useComments(projectId: string, directionId: string | null, compo
     [update],
   );
 
+  const merge = useCallback((comment: DesignComment) => {
+    setComments((prev) => (prev.some((c) => c.id === comment.id) ? prev.map((c) => (c.id === comment.id ? comment : c)) : [...prev, comment]));
+  }, []);
+
+  const addDrawing = useCallback(
+    async (input: { text: string; drawing: CommentDrawing; image: Blob; sendNow: boolean }): Promise<boolean> => {
+      const clean = input.text.trim();
+      if (!clean) return false;
+      try {
+        const attachment = await api.uploadAttachment(projectId, new File([input.image], 'drawing.png', { type: 'image/png' }));
+        const comment = await call<DesignComment>('POST', '', {
+          text: clean,
+          target: drawingTarget(input.drawing.box),
+          status: input.sendNow ? 'draft' : 'queued',
+          attachmentIds: [attachment.id],
+          drawing: input.drawing,
+        });
+        if (!comment) return false;
+        merge(comment);
+        if (input.sendNow) {
+          listRef.current = [...listRef.current.filter((c) => c.id !== comment.id), comment];
+          await send([comment.id]);
+        }
+        return true;
+      } catch (err) {
+        setNotice(errorText(err));
+        return false;
+      }
+    },
+    [call, merge, projectId, send],
+  );
+
+  const reply = useCallback(
+    async (id: string, text: string): Promise<boolean> => {
+      const clean = text.trim();
+      if (!clean) return false;
+      try {
+        const comment = await call<DesignComment>('POST', `/${encodeURIComponent(id)}/replies`, { text: clean });
+        if (comment) merge(comment);
+        return comment !== null;
+      } catch (err) {
+        setNotice(errorText(err));
+        return false;
+      }
+    },
+    [call, merge],
+  );
+
+  const removeReply = useCallback(
+    async (id: string, replyId: string) => {
+      try {
+        const comment = await call<DesignComment>('DELETE', `/${encodeURIComponent(id)}/replies/${encodeURIComponent(replyId)}`);
+        if (comment) merge(comment);
+      } catch (err) {
+        setNotice(errorText(err));
+      }
+    },
+    [call, merge],
+  );
+
+  const setShowResolved = useCallback((on: boolean) => {
+    setShowResolvedState(on);
+    try {
+      window.localStorage.setItem(SHOW_RESOLVED_KEY, on ? '1' : '0');
+    } catch {
+      return;
+    }
+  }, []);
+
   const queued = useMemo(() => queuedOf(comments), [comments]);
 
   return {
@@ -218,5 +303,10 @@ export function useComments(projectId: string, directionId: string | null, compo
     move,
     send,
     repin,
+    addDrawing,
+    reply,
+    removeReply,
+    showResolved,
+    setShowResolved,
   };
 }

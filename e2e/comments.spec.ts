@@ -138,10 +138,13 @@ test('Comments: queue two pins, survive reload and zoom, send in one run', async
   const head = await headVersion(api, project.id, mainDirection(project).id);
   expect((await comments(api, project)).map((comment) => comment.versionId)).toEqual([head.id, head.id]);
   expect(head.meta.runId).toBe(run?.id);
+  await expect(page.locator('[data-status="resolved"]')).toHaveCount(0);
+  await expect(page.getByTestId('comment-pin')).toHaveCount(0);
+  await page.getByRole('checkbox', { name: 'Show resolved' }).check();
   await expect(page.locator('[data-status="resolved"]')).toHaveCount(2);
   await expect(page.getByTestId('comment-version-link').first()).toHaveText(`Version ${head.id.slice(0, 7)}`);
   await expect(page.getByTestId('comments-badge')).toHaveCount(0);
-  await expect(page.getByTestId('comment-pin')).toHaveCount(0);
+  await expect(page.locator('.comment-pin.resolved')).toHaveCount(2);
   await shoot(page, 'tab-resolved');
 });
 

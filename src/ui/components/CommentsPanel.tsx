@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { DesignComment } from '../../shared/contracts';
 import type { CommentsControl } from '../useComments';
+import { CommentReplies } from './CommentPopover';
 import { Icon } from './Icon';
 import '../styles/comments.css';
 
@@ -12,6 +13,10 @@ interface Props {
 }
 
 function targetLabel(comment: DesignComment): string {
+  if (comment.drawing) {
+    const { box } = comment.drawing;
+    return `Drawing · ${box.width} × ${box.height}`;
+  }
   const loc = comment.target.sourceLoc;
   const where = loc ? `${loc.file.split('/').pop()}:${loc.line}` : comment.target.selector;
   const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet.slice(0, 32)}”` : '';
@@ -65,6 +70,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
         ) : (
           <span className="comment-row-text">{comment.text}</span>
         )}
+        <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">
             <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`}>
@@ -92,6 +98,15 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
             </button>
             <button type="button" className="icon-btn small" aria-label={`Edit comment ${comment.n}`} onClick={() => setEditing(true)}>
               <Icon name="pencil" />
+            </button>
+            <button
+              type="button"
+              className="icon-btn small"
+              aria-label={`Resolve comment ${comment.n}`}
+              data-tip="Resolve"
+              onClick={() => void control.update(comment.id, { status: 'resolved' })}
+            >
+              <Icon name="check" />
             </button>
             <button type="button" className="icon-btn small" aria-label={`Delete comment ${comment.n}`} onClick={() => void control.remove(comment.id)}>
               <Icon name="close" />
@@ -125,6 +140,7 @@ function DoneRow({
       <span className={`comment-num ${comment.status}`}>{comment.n}</span>
       <div className="comment-row-body">
         <span className="comment-row-text">{comment.text}</span>
+        <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">
             {runId && (
@@ -145,11 +161,12 @@ function DoneRow({
             {comment.status === 'resolved' && (
               <button
                 type="button"
-                className="icon-btn small"
+                className="btn small ghost"
                 aria-label={`Reopen comment ${comment.n}`}
                 onClick={() => void control.update(comment.id, { status: 'queued' })}
               >
-                <Icon name="undo" />
+                <Icon name="undo" size={14} />
+                Reopen
               </button>
             )}
             <button type="button" className="icon-btn small" aria-label={`Delete comment ${comment.n}`} onClick={() => void control.remove(comment.id)}>
@@ -169,6 +186,7 @@ function OrphanRow({ comment, control }: { comment: DesignComment; control: Comm
       <span className="comment-num orphaned">{comment.n}</span>
       <div className="comment-row-body">
         <span className="comment-row-text">{comment.text}</span>
+        <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">Element not found: {targetLabel(comment)}</span>
           <div className="comment-row-actions">
@@ -201,6 +219,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
   const orphaned = by('orphaned');
   const queued = control.queued;
   const empty = control.comments.filter((comment) => comment.status !== 'draft').length === 0;
+  const showResolved = control.showResolved;
   return (
     <div className="comments-panel" data-testid="comments-panel">
       {control.notice && (
@@ -216,6 +235,20 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
           No comments yet. Press <kbd>C</kbd> and click an element to pin one, or select an element and type quick feedback. Queue several, then send them in
           one run.
         </p>
+      )}
+      {resolved.length > 0 && (
+        <div className="comments-filter">
+          <label>
+            <input type="checkbox" checked={showResolved} onChange={(event) => control.setShowResolved(event.target.checked)} />
+            Show resolved
+          </label>
+          <span className="spacer" />
+          {!showResolved && (
+            <span className="count" data-testid="resolved-hidden">
+              {resolved.length} hidden
+            </span>
+          )}
+        </div>
       )}
       <Section title="Queued" count={queued.length} action={<SendQueuedButton control={control} />}>
         {queued.map((comment, index) => (
@@ -233,7 +266,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
           <OrphanRow key={comment.id} comment={comment} control={control} />
         ))}
       </Section>
-      <Section title="Resolved" count={resolved.length}>
+      <Section title="Resolved" count={showResolved ? resolved.length : 0}>
         {resolved.map((comment) => (
           <DoneRow key={comment.id} comment={comment} control={control} onOpenRun={onOpenRun} onOpenVersion={onOpenVersion} />
         ))}

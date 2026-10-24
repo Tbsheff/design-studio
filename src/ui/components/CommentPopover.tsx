@@ -155,11 +155,56 @@ interface OpenProps {
   onSend: () => void;
   onSave: (text: string) => void;
   onResolve: () => void;
+  onReopen: () => void;
   onDelete: () => void;
   onClose: () => void;
+  onReply: (text: string) => Promise<boolean>;
+  onDeleteReply: (replyId: string) => void;
 }
 
-export function OpenCommentPopover({ comment, style, busy, onSend, onSave, onResolve, onDelete, onClose }: OpenProps) {
+export function CommentReplies({ comment, onDelete }: { comment: DesignComment; onDelete: (replyId: string) => void }) {
+  const replies = comment.replies ?? [];
+  if (replies.length === 0) return null;
+  return (
+    <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
+      {replies.map((reply, index) => (
+        <li key={reply.id} className="comment-reply" data-testid="comment-reply">
+          <span className="comment-reply-text">{reply.text}</span>
+          <button type="button" className="icon-btn small" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
+            <Icon name="close" size={12} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ReplyInput({ comment, onReply }: { comment: DesignComment; onReply: (text: string) => Promise<boolean> }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <input
+      className="input comment-input comment-reply-input"
+      aria-label={`Reply to comment ${comment.n}`}
+      placeholder="Reply"
+      value={text}
+      maxLength={2000}
+      disabled={busy}
+      onChange={(event) => setText(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.nativeEvent.isComposing || text.trim() === '') return;
+        event.preventDefault();
+        setBusy(true);
+        void onReply(text).then((ok) => {
+          setBusy(false);
+          if (ok) setText('');
+        });
+      }}
+    />
+  );
+}
+
+export function OpenCommentPopover({ comment, style, busy, onSend, onSave, onResolve, onReopen, onDelete, onClose, onReply, onDeleteReply }: OpenProps) {
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
   const editable = comment.status === 'queued';
@@ -218,6 +263,8 @@ export function OpenCommentPopover({ comment, style, busy, onSend, onSave, onRes
         </button>
       </div>
       {body}
+      <CommentReplies comment={comment} onDelete={onDeleteReply} />
+      <ReplyInput comment={comment} onReply={onReply} />
       <div className="comment-pop-actions">
         <button type="button" className="btn small ghost danger" onClick={onDelete}>
           Delete
@@ -226,6 +273,11 @@ export function OpenCommentPopover({ comment, style, busy, onSend, onSave, onRes
         {comment.status !== 'resolved' && comment.status !== 'sent' && (
           <button type="button" className="btn small" onClick={onResolve}>
             Resolve
+          </button>
+        )}
+        {comment.status === 'resolved' && (
+          <button type="button" className="btn small" onClick={onReopen}>
+            Reopen
           </button>
         )}
         {editable && changed && (

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { AnchorQuery, AnchorReport, ProjectKind, SelectionContext } from '../../shared/contracts';
+import type { AnchorQuery, AnchorReport, CommentDrawing, DesignComment, ProjectKind, SelectionContext } from '../../shared/contracts';
 import { anchorQueryOf, createOrphanTracker, hasPin } from '../../shared/comments';
 import { reviewReport } from '../commentAnchors';
 import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
 import { isTypingTarget } from '../typingTarget';
 import type { CommentsControl } from '../useComments';
 import { COMPACT_PLACEMENT, ComposePopover, OpenCommentPopover, popoverStyle } from './CommentPopover';
+import { DrawingStrokes, PenIcon } from './DrawLayer';
 import '../styles/comments.css';
 
 type Rect = SelectionContext['rect'];
@@ -35,12 +36,92 @@ function visible(rect: Rect, frame: { width: number; height: number }): boolean 
   return rect.y + rect.height > 0 && rect.y < frame.height && rect.x + rect.width > 0 && rect.x < frame.width;
 }
 
+function useShown(control: CommentsControl): DesignComment[] {
+  const showResolved = control.showResolved;
+  return useMemo(
+    () => control.comments.filter((c) => hasPin(c.status) || c.status === 'orphaned' || (showResolved && c.status === 'resolved')),
+    [control.comments, showResolved],
+  );
+}
+
+function openComment(control: CommentsControl): DesignComment | null {
+  return control.openId ? (control.comments.find((c) => c.id === control.openId) ?? null) : null;
+}
+
+function drawingAnchor(drawing: CommentDrawing): Rect {
+  const points = drawing.strokes[0]?.points ?? [];
+  const x = points[0] ?? drawing.box.x;
+  const y = points[1] ?? drawing.box.y;
+  return { x, y: y - PIN_SIZE / 2, width: Math.max(1, drawing.box.x + drawing.box.width - x), height: PIN_SIZE };
+}
+
 function focusLater(selector: string): void {
   window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
 }
 
 function selectionKey(selection: SelectionContext[]): string {
   return selection.map((s) => s.selector).join('\n');
+}
+
+function CommentPin({ comment, rect, frame, scale, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; scale: number; control: CommentsControl }) {
+  if (!rect || !visible(rect, frame)) return null;
+  const left = Math.max(0, Math.min(frame.width - PIN_SIZE * scale, rect.x - (PIN_SIZE + 4) * scale));
+  const top = Math.max(0, Math.min(frame.height - PIN_SIZE * scale, rect.y));
+  return (
+    <div className="comment-pin-wrap" style={{ left, top, transform: `scale(${scale})` }}>
+      <button
+        type="button"
+        className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}`}
+        data-testid="comment-pin"
+        data-comment-id={comment.id}
+        aria-label={`Comment ${comment.n}: ${comment.text}`}
+        aria-expanded={control.openId === comment.id}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={() => control.setOpenId(control.openId === comment.id ? null : comment.id)}
+      >
+        {comment.n}
+        {comment.drawing && (
+          <span className="pin-pen" aria-hidden="true">
+            <PenIcon size={12} />
+          </span>
+        )}
+      </button>
+      <span className="comment-pin-tip" role="tooltip">
+        {comment.text}
+      </span>
+    </div>
+  );
+}
+
+function OpenComment({ comment: open, rect: openRect, zoom, frame, control }: { comment: DesignComment; rect: Rect; zoom: number; frame: Props['frame']; control: CommentsControl }) {
+  return (
+    <>
+      {open.drawing && <DrawingStrokes drawing={open.drawing} />}
+      <OpenCommentPopover
+        key={open.id}
+        comment={open}
+        style={popoverStyle(openRect, zoom, frame)}
+        busy={control.sending}
+        onSend={() => {
+          control.setOpenId(null);
+          void control.send([open.id]);
+        }}
+        onSave={(text) => void control.update(open.id, { text })}
+        onResolve={() => {
+          control.setOpenId(null);
+          void control.update(open.id, { status: 'resolved' });
+        }}
+        onReopen={() => void control.update(open.id, { status: 'queued' })}
+        onReply={(text) => control.reply(open.id, text)}
+        onDeleteReply={(replyId) => void control.removeReply(open.id, replyId)}
+        onDelete={() => void control.remove(open.id)}
+        onClose={() => {
+          control.setOpenId(null);
+          focusLater(`[data-comment-id="${open.id}"]`);
+        }}
+      />
+    </>
+  );
 }
 
 export function CommentLayer(props: Props) {
@@ -57,7 +138,8 @@ export function CommentLayer(props: Props) {
   const live = useRef({ control, commentMode: props.commentMode });
   live.current = { control, commentMode: props.commentMode };
 
-  const tracked = useMemo(() => control.comments.filter((c) => hasPin(c.status) || c.status === 'orphaned'), [control.comments]);
+  const shown = useShown(control);
+  const tracked = useMemo(() => shown.filter((c) => !c.drawing), [shown]);
   const queries = useMemo<AnchorQuery[]>(() => tracked.map(anchorQueryOf), [tracked]);
   const queryKey = JSON.stringify(queries);
   const queriesRef = useRef(queries);
@@ -198,9 +280,10 @@ export function CommentLayer(props: Props) {
   }, [feedbackOpen, selKey]);
 
   const scale = 1 / zoom;
-  const pinned = tracked.filter((c) => hasPin(c.status));
-  const open = control.openId ? (control.comments.find((c) => c.id === control.openId) ?? null) : null;
-  const openRect = open ? (rects[open.id] ?? null) : null;
+  const pinned = shown.filter((c) => c.status !== 'orphaned');
+  const rectOf = (comment: DesignComment): Rect | undefined => (comment.drawing ? drawingAnchor(comment.drawing) : rects[comment.id]);
+  const open = openComment(control);
+  const openRect = open ? (open.drawing?.box ?? rects[open.id] ?? null) : null;
   const lastSelected = props.selection[props.selection.length - 1];
 
   const finishPick = () => {
@@ -210,31 +293,9 @@ export function CommentLayer(props: Props) {
 
   return (
     <>
-      {pinned.map((comment) => {
-        const rect = rects[comment.id];
-        if (!rect || !visible(rect, frame)) return null;
-        const left = Math.max(0, Math.min(frame.width - PIN_SIZE * scale, rect.x - (PIN_SIZE + 4) * scale));
-        const top = Math.max(0, Math.min(frame.height - PIN_SIZE * scale, rect.y));
-        return (
-          <div key={comment.id} className="comment-pin-wrap" style={{ left, top, transform: `scale(${scale})` }}>
-            <button
-              type="button"
-              className={`comment-pin ${comment.status}`}
-              data-testid="comment-pin"
-              data-comment-id={comment.id}
-              aria-label={`Comment ${comment.n}: ${comment.text}`}
-              aria-expanded={control.openId === comment.id}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={() => control.setOpenId(control.openId === comment.id ? null : comment.id)}
-            >
-              {comment.n}
-            </button>
-            <span className="comment-pin-tip" role="tooltip">
-              {comment.text}
-            </span>
-          </div>
-        );
-      })}
+      {pinned.map((comment) => (
+        <CommentPin key={comment.id} comment={comment} rect={rectOf(comment)} frame={frame} scale={scale} control={control} />
+      ))}
       {pick && (
         <ComposePopover
           key={pick.selector}
@@ -286,28 +347,7 @@ export function CommentLayer(props: Props) {
           }}
         />
       )}
-      {open && openRect && (
-        <OpenCommentPopover
-          key={open.id}
-          comment={open}
-          style={popoverStyle(openRect, zoom, frame)}
-          busy={control.sending}
-          onSend={() => {
-            control.setOpenId(null);
-            void control.send([open.id]);
-          }}
-          onSave={(text) => void control.update(open.id, { text })}
-          onResolve={() => {
-            control.setOpenId(null);
-            void control.update(open.id, { status: 'resolved' });
-          }}
-          onDelete={() => void control.remove(open.id)}
-          onClose={() => {
-            control.setOpenId(null);
-            focusLater(`[data-comment-id="${open.id}"]`);
-          }}
-        />
-      )}
+      {open && openRect && <OpenComment comment={open} rect={openRect} zoom={zoom} frame={frame} control={control} />}
     </>
   );
 }

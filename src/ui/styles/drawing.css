@@ -1,0 +1,106 @@
+.draw-canvas {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 3;
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.draw-bar {
+  position: absolute;
+  top: var(--s-3);
+  left: 50%;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border-radius: calc(var(--r-sm) + var(--s-1));
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  translate: -50% 0;
+  font-family: var(--font);
+  user-select: none;
+}
+
+.draw-swatches {
+  display: flex;
+  gap: 0;
+}
+
+.draw-swatch {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  cursor: pointer;
+  transition: scale var(--dur-fast) var(--ease);
+}
+
+.draw-swatch::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.12);
+}
+
+.draw-swatch[aria-checked='true']::before {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px currentColor;
+}
+
+.draw-swatch:active {
+  scale: 0.96;
+}
+
+.draw-swatch:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.draw-hint {
+  min-width: 72px;
+  padding: 0 var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.draw-bar kbd {
+  height: 16px;
+  min-width: 16px;
+  font-size: var(--t-xs);
+  background: transparent;
+}
+
+.drawing-strokes {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 2;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.comment-pin .pin-pen {
+  display: inline-grid;
+  margin-left: 3px;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-swatch {
+    transition: none;
+  }
+}

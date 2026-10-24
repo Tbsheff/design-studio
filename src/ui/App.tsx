@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState, type ReactNode } from 'react';
+import { Component, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { errorText } from './api';
 import { Home } from './components/Home';
 import { DesignSystems, NewDesignSystem, prefetchStudio, Studio } from './screens';
@@ -8,8 +8,35 @@ import { useDesktopApp } from './useDesktopApp';
 
 if (uiStore.get().activeProjectId) void prefetchStudio();
 
+class ScreenBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  state = { error: null };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error: errorText(error) };
+  }
+
+  render() {
+    if (this.state.error === null) return this.props.children;
+    return (
+      <div className="boot">
+        <div className="boot-card" role="alert">
+          <h1>This screen did not load</h1>
+          <p className="muted">{this.state.error}</p>
+          <button className="btn" onClick={() => window.location.reload()}>
+            Reload
+          </button>
+        </div>
+      </div>
+    );
+  }
+}
+
 function Screen({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<div className="boot muted">Loading project…</div>}>{children}</Suspense>;
+  return (
+    <ScreenBoundary>
+      <Suspense fallback={<div className="boot muted">Loading project…</div>}>{children}</Suspense>
+    </ScreenBoundary>
+  );
 }
 
 export function App() {
@@ -83,7 +110,9 @@ export function App() {
   return (
     <>
       {notice}
-      <Home onOpen={(id) => void prefetchStudio().then(() => uiStore.set({ activeProjectId: id }))} />
+      <ScreenBoundary>
+        <Home onOpen={(id) => void prefetchStudio().then(() => uiStore.set({ activeProjectId: id }))} />
+      </ScreenBoundary>
     </>
   );
 }

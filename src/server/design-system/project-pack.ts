@@ -151,6 +151,7 @@ export async function saveDirectionPack(deps: ProjectPackDeps, library: PackLibr
     provenance: manifest.provenance === 'imported' ? ('imported' as const) : ('extracted' as const),
     tags: manifest.tags,
     license: manifest.license,
+    draft: false,
   };
   const target = await saveTarget(library, request.packId, manifest);
   const saved = target === undefined ? await library.createUserPack(input) : await library.updateUserPack(target, input);

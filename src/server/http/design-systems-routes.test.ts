@@ -169,17 +169,20 @@ describe('POST /api/design-systems/draft', { timeout: 30000 }, () => {
 
   it('save to library from the backing project updates the same draft pack', async () => {
     const result = await ok<DesignSystemDraftResult>(call('POST', '/api/design-systems/draft', { brief: 'Quiet tools', urls: [siteUrl] }));
+    expect(result.pack.draft).toBe(true);
+    expect((await userPacks()).map((pack) => [pack.id, pack.draft])).toEqual([[result.pack.id, true]]);
     const tree = workTree(result.project);
     const tokens = JSON.parse(await readFile(path.join(tree, TOKENS_FILE), 'utf8')) as { color: Record<string, { $value: string }> };
     tokens.color.primary!.$value = 'oklch(50% 0.2 20)';
     await writeFile(path.join(tree, TOKENS_FILE), `${JSON.stringify(tokens, null, 2)}\n`);
     const saved = await ok<SavePackResult>(call('POST', `/api/projects/${result.project.id}/d/main/design-system/save`, { name: result.pack.name, packId: result.pack.id }));
-    expect(saved).toMatchObject({ created: false, pack: { id: result.pack.id }, version: null });
-    expect((await userPacks()).map((pack) => pack.id)).toEqual([result.pack.id]);
+    expect(saved).toMatchObject({ created: false, pack: { id: result.pack.id }, version: { title: `Save ${result.pack.name} to library` } });
+    expect((await userPacks()).map((pack) => [pack.id, pack.draft])).toEqual([[result.pack.id, undefined]]);
+    expect(JSON.parse(await readFile(path.join(tree, PACK_FILE), 'utf8'))).not.toHaveProperty('draft');
     const detail = await ok<{ tokensJson: string }>(call('GET', `/api/packs/${result.pack.id}`));
     expect(detail.tokensJson).toContain('oklch(50% 0.2 20)');
     const again = await ok<SavePackResult>(call('POST', `/api/projects/${result.project.id}/d/main/design-system/save`, { name: result.pack.name }));
-    expect(again).toMatchObject({ created: false, pack: { id: result.pack.id } });
+    expect(again).toMatchObject({ created: false, pack: { id: result.pack.id }, version: null });
   });
 
   it('answers 404 for the draft info of a normal project', async () => {

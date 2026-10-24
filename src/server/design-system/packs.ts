@@ -41,6 +41,7 @@ export const manifestSchema = z
           .optional(),
       })
       .strict(),
+    draft: z.literal(true).optional(),
   })
   .strict();
 

@@ -672,6 +672,7 @@ export interface PackManifest {
   license: string;
   provenance: 'original' | 'imported' | 'extracted';
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string };
+  draft?: boolean;
 }
 
 export type PackSource = 'builtin' | 'user';
@@ -758,6 +759,7 @@ export interface CreateUserPackInput {
   provenance: PackManifest['provenance'];
   tags?: string[];
   license?: string;
+  draft?: boolean;
 }
 
 export type UpdateUserPackInput = Partial<CreateUserPackInput>;

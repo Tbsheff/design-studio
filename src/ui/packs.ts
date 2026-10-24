@@ -48,6 +48,10 @@ export function usePacks(): PacksState {
   return state;
 }
 
+export function pickable(state: PacksState): PacksState {
+  return state.packs ? { ...state, packs: state.packs.filter((pack) => !pack.draft) } : state;
+}
+
 export function findPack(packs: PackSummary[] | null, id: string | null | undefined): PackSummary | null {
   if (!packs || !id) return null;
   return packs.find((pack) => pack.id === id) ?? null;

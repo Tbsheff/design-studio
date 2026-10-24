@@ -275,6 +275,7 @@ export async function buildDraft(request: DraftRequest, deps: DraftDeps, options
       designMd,
       provenance: imported ? 'imported' : 'extracted',
       license: 'Custom',
+      draft: true,
     },
   };
 }

@@ -141,6 +141,17 @@ describe('pack library store', () => {
     expect((await readdir(userDir)).filter((name) => name.startsWith('.'))).toEqual([]);
   });
 
+  it('keeps a draft marked as draft through updates and renames, and a duplicate is not a draft', async () => {
+    const pack = await library.createUserPack({ ...(await fixtureInput('Half Done')), draft: true });
+    expect(pack.summary.draft).toBe(true);
+    expect((await library.renamePack(pack.manifest.id, 'Half Done 2')).manifest.draft).toBe(true);
+    expect((await library.updateUserPack(pack.manifest.id, { description: 'More.' })).manifest.draft).toBe(true);
+    expect((await library.duplicatePack(pack.manifest.id)).manifest.draft).toBeUndefined();
+    const published = await library.updateUserPack(pack.manifest.id, { draft: false });
+    expect(published.manifest.draft).toBeUndefined();
+    expect(JSON.parse(await readFile(path.join(published.dir, 'pack.json'), 'utf8'))).not.toHaveProperty('draft');
+  });
+
   it('renames only the display name', async () => {
     const pack = await library.createUserPack(await fixtureInput('Old Name'));
     const renamed = await library.renamePack(pack.manifest.id, 'New Name');

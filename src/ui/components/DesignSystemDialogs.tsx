@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { errorText } from '../api';
-import { usePacks } from '../packs';
+import { pickable, usePacks } from '../packs';
 import { uiStore } from '../storage';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
@@ -13,7 +13,7 @@ interface ChangeProps {
 }
 
 export function ChangePackDialog({ currentId, onClose, onApply }: ChangeProps) {
-  const state = usePacks();
+  const state = pickable(usePacks());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));

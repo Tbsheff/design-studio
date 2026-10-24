@@ -2,7 +2,7 @@ import { useRef, useState, type DragEvent, type FormEvent, type ReactNode } from
 import { Markdown } from '../ai/components/ai/markdown';
 import { api, errorText } from '../api';
 import { pickFolder } from '../folderPicker';
-import { refreshPacks, usePacks } from '../packs';
+import { pickable, refreshPacks, usePacks } from '../packs';
 import { Icon } from './Icon';
 
 const MAX_URLS = 3;
@@ -208,7 +208,7 @@ function ImagesField({ images, onChange }: { images: File[]; onChange: (images: 
 }
 
 function Basics({ form, set }: { form: DraftForm; set: (patch: Partial<DraftForm>) => void }) {
-  const { packs } = usePacks();
+  const { packs } = pickable(usePacks());
   return (
     <div className="nds-basics">
       <label className="field">

@@ -31,6 +31,7 @@ const fieldsSchema = z
     provenance: z.enum(['original', 'imported', 'extracted']),
     tags: z.array(z.string().min(1).max(40)).max(20).optional(),
     license: z.string().trim().min(1).max(40).optional(),
+    draft: z.boolean().optional(),
   })
   .strict();
 
@@ -81,6 +82,7 @@ export function buildPackFiles(id: string, input: CreateUserPackInput): PackFile
     license: input.license?.trim() || DEFAULT_LICENSE,
     provenance: input.provenance,
     fonts: input.fonts,
+    ...(input.draft ? { draft: true } : {}),
   };
   const manifest = manifestSchema.safeParse(candidate);
   if (!manifest.success) throw new BadRequestError(`invalid pack.json: ${formatIssues('pack.json', manifest.error).join('; ')}`);
@@ -107,6 +109,7 @@ function inputOf(pack: LoadedPack): CreateUserPackInput {
     provenance: manifest.provenance,
     tags: manifest.tags,
     license: manifest.license,
+    ...(manifest.draft ? { draft: true } : {}),
   };
 }
 
@@ -222,7 +225,7 @@ export function createPackLibrary(registry: PackRegistry): PackLibrary {
     async duplicatePack(id, name) {
       const source = await requirePack(id);
       const copyName = name?.trim() || `${source.manifest.name.slice(0, NAME_MAX - COPY_SUFFIX.length)}${COPY_SUFFIX}`;
-      return create(parseFields({ ...inputOf(source), name: copyName }, 'design system'));
+      return create(parseFields({ ...inputOf(source), name: copyName, draft: false }, 'design system'));
     },
 
     async renamePack(id, name) {

@@ -252,6 +252,33 @@ Plan: `research/add-design-system-plan.md`.
 - Pack identity follows the files: `DesignSystemState.packId` is the work tree's `pack.json` id (null when the direction has no studio design system). `project.packId` is set when a pack is applied to the main direction and is synced from main's `pack.json` after undo and restore. Other directions only have their files.
 - UI: the top bar chip popover has "Change design system…" (modal with `PackList`, no "No design system" option) and "Save to library…" (name prompt). With no design system the top bar shows "Add design system". A toast (`.ds-toast`, `role="status"`) shows the result. `refreshPacks()` clears the `usePacks` cache after a save. Pickers show user packs after built-ins with a "Yours" marker.
 
+## Design systems: new design system and deterministic drafts (slice 2)
+
+```
+New design system page (sources: website URLs ≤3, DESIGN.md, brief, tokens file, code folder, images; base pack; name; mode)
+  → POST /api/design-systems/draft (JSON, or multipart: request + tokensFile + images)
+      extract/  tokens-file.ts > folder.ts > url.ts > design-md.ts (DESIGN.md text, then brief)   candidates per token
+      map.ts    pick per required token (source order, then high > medium), derive missing pairs, contrast guard, base pack fills the rest
+                → tokens.json + fonts + coverage (score, grade, per-token source and confidence)
+      library.createUserPack  (provenance imported: only a tokens file and/or DESIGN.md; else extracted)
+      projects.createInFolder "<Name> design system" (HTML, default projects folder, designSystemFor = pack id)
+      write index.html (kit page) + source/* → applyPack → one init version "Apply <name> design system"
+  → UI opens the project; DraftBar (name, grade, fallback tokens, Save to library, slot for "Improve with AI")
+```
+
+- Fetch (`extract/safe-fetch.ts`): `node:http(s)` with a `lookup` that resolves every address, refuses the request when any is blocked, and connects to the checked address (no DNS rebinding gap). IP-literal hosts are checked directly. Blocked: `0/8 10/8 100.64/10 127/8 169.254/16 172.16/12 192.0.0/24 192.168/16 198.18/15`, test nets, multicast and reserved, `:: ::1 fc00::/7 fe80::/10 ff00::/8 64:ff9b::/96`, IPv4-mapped v6, and the names `localhost`, `*.localhost`, `*.local`, `*.internal` and single-label hosts. http/https only, no user info. Redirects are followed by hand (≤3) and every hop is checked again. 10 s per request, `accept-encoding: identity` (a compressed body is refused), the body is streamed and cut at 2 MB (page) or 1 MB (CSS), up to 20 stylesheets (links, `<style>`, one level of `@import`). A blocked URL answers 400; a failed fetch is a source error in the coverage report.
+- `STUDIO_FETCH_ALLOW_LOOPBACK=1` opens 127/8, `::1` and `localhost` only (never other private ranges). `loadConfig` ignores it when `STUDIO_RESOURCES_DIR` is set (packaged app). Only `e2e/support/server.ts` sets it.
+- Fetched content is data: it is never run and never goes into a prompt as text. Only validated values leave it: colors (parsed by culori, written as OKLCH), lengths, shadows without `; { } < > \ var( url(`, and font names matching `[A-Za-z0-9 .\-_]{1,60}`. The page title and copy are not used. The snapshot is stored as `source/url-N/page.html.txt` and `style-K.css.txt`, so the preview never serves it as HTML.
+- URL heuristics: custom properties in root, light and dark contexts (`.dark`, `[data-theme=dark]`, `prefers-color-scheme: dark`); body background and color; button background, text and radius; link color; meta `theme-color`; card background; muted text; input borders; body, heading and code font families; radius and shadow spread; Google Fonts `<link>`.
+- Folder (read only): realpath, then a walk with no symlinks, skipping `node_modules`, `.git`, build output and dot folders; caps 20 000 entries, 300 files, 1 MB per file, 16 MB in total, depth 10. It reads CSS/SCSS/Less custom properties (shadcn HSL triples become `hsl()`), SCSS/Less variables, `tailwind.config.*` theme sections (a small JS literal reader, nothing is run) and `*tokens*.json` / `theme.json`.
+- Tokens file: DTCG (`$value`/`$type`, inherited group types, whole and embedded aliases, object colors and dimensions, font arrays, shadow objects, `studio.modes`) and Tokens Studio (sets, `value`/`type`, references without the set name, a set named `*dark*` gives dark values). Names map to our tokens through one alias table (`extract/names.ts`).
+- Mapping: light packs keep an extracted dark value, derive one for brand colors (same hue, lighter), or keep the base dark value for neutrals; dark packs (mode `dark` or a dark detected bg) use dark values as `$value` and carry no `studio.modes`. Missing `primary-fg`, `accent-fg`, `ring`, `accent`, `surface`, `border`, `fg-muted` and `font.display` are derived from what was found (`source: derived`). A contrast guard fixes fg on bg and the `*-fg` pairs.
+- Coverage (`source/coverage.json`): group weights color 0.5, font 0.2, radius 0.1, shadow 0.08, text 0.06, space 0.06; inside color bg/fg/primary weigh 2 and success/warning/danger 0.5; high 1, medium 0.75, derived 0.6, fallback 0. Grades: excellent ≥ 80, usable ≥ 60, needs review ≥ 40, else rebuild.
+- DESIGN.md: the pasted one as is, else a template in the 9-section order with name, brief, palette, fonts and scales filled in. Lines that start with `_To do:` are for slice 3 to fill.
+- Backing project: `project.designSystemFor = <user pack id>` marks it (undo and restore do not touch it). Its main work tree has `index.html` (kit page: palette light + `.dark`, type scale, spacing, radius, elevation, buttons, inputs, card, alerts, nav, table; only `var(--token)`), `source/meta.json` (`{version, kind: "design-system-draft", packId, name, createdAt, inputs, attachments: [{id, name, mime}], files}`), `source/coverage.json`, `source/evidence.md` (starts with an untrusted-data line), `source/url-N/*`, `source/tokens-file.json.txt`, `source/brief.md`. Images are project attachments (PNG, JPEG, GIF, WebP; ≤ 8, 8 MB each); SVG is refused. `GET /api/projects/:pid/design-system-draft` returns `{packId, coverage}`.
+- Save to library in the backing project sends `packId = designSystemFor`, so it always updates the draft pack.
+- UI: `uiStore.screen = 'new-design-system'` shows `NewDesignSystem` (App has no router; the screen is reset after create). Entry points: "New design system…" at the foot of the Home pack picker and of the Change/Add design system dialog.
+
 ## Design systems (phase 3): live token editing
 
 ```

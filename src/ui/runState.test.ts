@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RunSummary, StudioEvent } from '../shared/contracts';
-import { applyRunEvent, runText, type RunMap } from './runState';
+import { applyRunEvent, emptyRun, runText, type RunMap } from './runState';
 
 let seq = 0;
 const ev = (body: Record<string, unknown>): StudioEvent => ({ seq: ++seq, ts: 1000 + seq, projectId: 'p', directionId: 'd', runId: 'r1', ...body }) as unknown as StudioEvent;
@@ -40,5 +40,12 @@ describe('run state', () => {
     expect(live.r1?.queue).toEqual([]);
     expect(runText(live.r1!)).toBe('Kept');
     expect(live.r1?.tools).toEqual([]);
+  });
+
+  it('keeps a run seeded as stopped stopped when run.started arrives late', () => {
+    const seeded: RunMap = { r1: { ...emptyRun('r1', 'd', 1), status: 'canceled' } };
+    const live = applyRunEvent(seeded, ev({ type: 'run.started', request: { prompt: 'x', mode: 'edit' } }));
+    expect(live.r1?.status).toBe('canceled');
+    expect(live.r1?.request?.prompt).toBe('x');
   });
 });

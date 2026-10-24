@@ -108,8 +108,68 @@ test('the menus carry the native shortcuts', async () => {
     'Edit/redo': 'Shift+CmdOrCtrl+Z',
     'Run/run': 'CmdOrCtrl+Enter',
     'Run/stop': 'CmdOrCtrl+.',
+    'View/zoom-in': 'CmdOrCtrl+=',
+    'View/zoom-out': 'CmdOrCtrl+-',
+    'View/zoom-actual': 'CmdOrCtrl+0',
+    'View/zoom-fit': 'CmdOrCtrl+1',
+    'View/zoom-selection': 'CmdOrCtrl+2',
   });
-  expect(Object.keys(items)).toEqual(expect.arrayContaining(['File/recentdocuments', 'File/reveal-work-tree', 'File/reveal-export', 'View/zoomin', 'View/zoomout', 'View/resetzoom']));
+  expect(Object.keys(items)).toEqual(expect.arrayContaining(['File/recentdocuments', 'File/reveal-work-tree', 'File/reveal-export']));
+  expect(Object.keys(items).filter((key) => /\/(zoomin|zoomout|resetzoom)$/.test(key))).toEqual([]);
+});
+
+async function canvasZoom(): Promise<number> {
+  const transform = await page.locator('.artboard').evaluate((el) => (el as HTMLElement).style.transform);
+  return Number(/scale\(([\d.]+)\)/.exec(transform)?.[1] ?? NaN);
+}
+
+function studioZoomFactor(): Promise<number> {
+  return app.evaluate(({ BrowserWindow }, studioOrigin) => {
+    const win = BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().startsWith(studioOrigin));
+    if (!win) throw new Error('no studio window');
+    return win.webContents.getZoomFactor();
+  }, origin);
+}
+
+test('R2-1: zoom keys and View menu zoom the canvas, never the page', async () => {
+  const folder = site('zoom folder');
+  await app.evaluate(({ dialog }, chosen) => {
+    dialog.showOpenDialog = (async () => ({ canceled: false, filePaths: [chosen] })) as unknown as typeof dialog.showOpenDialog;
+  }, folder);
+  await clickMenu('open-folder');
+  await expect.poll(openedProjectName).toContain('zoom folder');
+  const frame = page.frameLocator('iframe.frame.front');
+  await expect(frame.locator('h1')).toHaveText('zoom folder');
+  const seen: Record<string, number[]> = {};
+  for (const where of ['studio', 'frame'] as const) {
+    if (where === 'studio') await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    else {
+      await frame.locator('h1').click();
+      await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe('IFRAME');
+    }
+    await page.keyboard.press('Meta+Digit0');
+    await expect.poll(canvasZoom).toBe(1);
+    await page.keyboard.press('Meta+Equal');
+    await expect.poll(canvasZoom).toBeCloseTo(1.25, 4);
+    await page.keyboard.press('Meta+Minus');
+    await expect.poll(canvasZoom).toBeCloseTo(1, 4);
+    await page.keyboard.press('Meta+Minus');
+    await expect.poll(canvasZoom).toBeCloseTo(0.8, 4);
+    await page.keyboard.press('Shift+Digit1');
+    await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('fit');
+    seen[where] = [await canvasZoom(), await studioZoomFactor()];
+    expect(await studioZoomFactor()).toBe(1);
+  }
+  await clickMenu('zoom-actual');
+  await expect.poll(canvasZoom).toBe(1);
+  await clickMenu('zoom-in');
+  await expect.poll(canvasZoom).toBeCloseTo(1.25, 4);
+  await clickMenu('zoom-out');
+  await expect.poll(canvasZoom).toBeCloseTo(1, 4);
+  await clickMenu('zoom-fit');
+  await expect(page.getByLabel('Zoom', { exact: true })).toHaveValue('fit');
+  expect(await studioZoomFactor()).toBe(1);
+  console.log(`R2-1 desktop ${JSON.stringify(seen)}`);
 });
 
 test('Open Folder imports a folder, opens it, and records it as recent', async () => {

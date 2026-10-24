@@ -304,6 +304,7 @@ export function Canvas(props: Props) {
           <ArtboardOverlay
             hover={overlayHover(frames.hover, selectMode || commentMode)}
             selection={props.selection}
+            zoom={pz.zoom}
             comments={
               comment.available && props.comments ? (
                 <CommentLayer

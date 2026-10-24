@@ -9,6 +9,7 @@ interface Props {
   hover: HoverBox | null;
   selection: SelectionContext[];
   comments: ReactNode;
+  zoom: number;
 }
 
 function lineStyle(l: MeasureLine) {
@@ -31,14 +32,14 @@ function Measurements({ from, to }: { from: SelectionContext['rect']; to: Select
   );
 }
 
-export function ArtboardOverlay({ hover, selection, comments }: Props) {
+export function ArtboardOverlay({ hover, selection, comments, zoom }: Props) {
   const anchor = selection.at(-1);
   const measuring = hover?.altKey && anchor && !hover.fromTree;
   return (
     <div className="overlay">
       {hover && !measuring && (
         <div className="box hover" style={{ left: hover.rect.x, top: hover.rect.y, width: hover.rect.width, height: hover.rect.height }}>
-          {hover.label && <span className={`box-label${hover.rect.y < LABEL_ROOM ? ' inside' : ''}`}>{hover.label}</span>}
+          {hover.label && <span className={`box-label${hover.rect.y * zoom < LABEL_ROOM ? ' inside' : ''}`}>{hover.label}</span>}
         </div>
       )}
       {selection.map((s) => (

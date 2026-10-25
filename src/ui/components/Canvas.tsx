@@ -13,6 +13,7 @@ import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectM
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
+import { usePreviewMenu } from '../usePreviewMenu';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
@@ -339,6 +340,7 @@ export function Canvas(props: Props) {
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
   const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
+  const openMenu = useRef<(at: { x: number; y: number }) => void>(() => undefined);
 
   const frames = usePreviewFrames({
     projectId,
@@ -359,7 +361,10 @@ export function Canvas(props: Props) {
     onZoomKey: (key) => zoomBy(key, 'frame'),
     textEditAllowed,
     onTextEdit: inline.onMessage,
+    onContextMenu: (at) => openMenu.current(at),
   });
+  const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu') });
+  openMenu.current = previewMenu.onContextMenu;
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
@@ -437,6 +442,7 @@ export function Canvas(props: Props) {
         theme={darkSwitch}
       />
       <CheckResults projectId={projectId} check={check} />
+      {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && <CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>

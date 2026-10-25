@@ -75,6 +75,14 @@ interface Options {
   onZoomKey: (key: ZoomKey) => void;
   textEditAllowed?: boolean;
   onTextEdit?: (message: TextEditMessage) => void;
+  onContextMenu?: (point: { x: number; y: number }) => void;
+}
+
+function pagePoint(frame: HTMLIFrameElement | null, x: number, y: number): { x: number; y: number } | null {
+  if (!frame) return null;
+  const rect = frame.getBoundingClientRect();
+  const scale = frame.offsetWidth > 0 ? rect.width / frame.offsetWidth : 1;
+  return { x: rect.left + x * scale, y: rect.top + y * scale };
 }
 
 const SWAP_FALLBACK_MS = 1500;
@@ -405,6 +413,11 @@ export function usePreviewFrames(o: Options) {
         case 'zoom-key':
           cur.onZoomKey(msg.key);
           break;
+        case 'context-menu': {
+          const at = pagePoint(frame.element, msg.x, msg.y);
+          if (at) cur.onContextMenu?.(at);
+          break;
+        }
         case 'text-edit':
         case 'text-commit':
           onTextMessage(msg);

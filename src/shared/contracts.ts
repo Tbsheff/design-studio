@@ -697,6 +697,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'history-key'; redo: boolean }
   | { ns: 'studio'; token: string; type: 'layout-key' }
   | { ns: 'studio'; token: string; type: 'app-key'; id: AppKey }
+  | { ns: 'studio'; token: string; type: 'context-menu'; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string };
 

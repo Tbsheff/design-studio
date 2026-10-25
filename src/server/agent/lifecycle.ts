@@ -7,6 +7,9 @@ import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.
 import { runTitle } from '../../shared/version-title.js';
 import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
 import { diffLines } from '../../shared/line-diff.js';
+import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js';
+import { createCommandRuleStore } from '../store/command-rules.js';
+import { BadRequestError } from '../store/errors.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
 
 export interface DriverSink {
@@ -41,6 +44,11 @@ export interface RunInbox {
 
 export type PermissionAsk = Omit<PermissionRequest, 'id'>;
 
+export interface CommandRules {
+  allows(command: string): Promise<boolean>;
+  remember(rule: string): Promise<void>;
+}
+
 export interface DriverInput {
   ctx: AgentRunContext;
   runId: string;
@@ -50,6 +58,7 @@ export interface DriverInput {
   prior?: PriorSession | null;
   inbox?: RunInbox;
   ask?: (request: PermissionAsk) => Promise<PermissionDecision>;
+  commandRules?: CommandRules;
 }
 
 export function queuedText(items: readonly QueuedMessage[]): string {
@@ -440,7 +449,14 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     let queue: QueuedMessage[] = [];
     let steerText: string | null = null;
-    const pendingAsks = new Map<string, { toolUseId: string | null; resolve: (decision: PermissionDecision) => void }>();
+    const pendingAsks = new Map<string, { toolUseId: string | null; command: string | null; resolve: (decision: PermissionDecision) => void }>();
+    const ruleStore = createCommandRuleStore(deps.projects.projectDir);
+    const commandRules: CommandRules = {
+      allows: async (command) => anyRuleMatches(await ruleStore.list(projectId), command),
+      remember: async (rule) => {
+        await ruleStore.add(projectId, rule);
+      },
+    };
     const deniedTools = new Set<string>();
     let askCounter = 0;
 
@@ -459,6 +475,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     function resolveAsk(id: string, decision: PermissionDecision): boolean {
       const pending = pendingAsks.get(id);
       if (!pending) return false;
+      if (decision.allow && decision.always !== undefined && (pending.command === null || decision.always !== ruleForCommand(pending.command))) {
+        throw new BadRequestError('rule does not match the command');
+      }
       pendingAsks.delete(id);
       if (!decision.allow && pending.toolUseId) deniedTools.add(pending.toolUseId);
       emitRun({ type: 'run.permission.resolved', requestId: id, allow: decision.allow });
@@ -471,7 +490,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       askCounter += 1;
       const id = `${runId}-ask-${askCounter}`;
       return new Promise<PermissionDecision>((resolve) => {
-        pendingAsks.set(id, { toolUseId: request.toolUseId, resolve });
+        const command = request.toolName === 'Bash' && typeof (request.input as { command?: unknown } | null)?.command === 'string' ? (request.input as { command: string }).command : null;
+        pendingAsks.set(id, { toolUseId: request.toolUseId, command, resolve });
         emitRun({ type: 'run.permission', request: { ...request, id } });
       });
     }
@@ -519,7 +539,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let failure: string | null = null;
       try {
         const prior = await loadPriorSession(runsDir, ctx.direction);
-        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask });
+        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules });
       } catch (error) {
         failure = describeError(error);
       }

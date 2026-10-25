@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Project } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { useModalDialog } from '../usePopover';
+import { CommandRules } from './CommandRules';
 import { Icon } from './Icon';
 import { parseDraft, SettingsFields, toDraft } from './SettingsFields';
 
@@ -48,7 +49,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
         </button>
       </div>
       <div className="modal-body">
-        <SettingsFields draft={draft} onChange={setDraft} />
+        <SettingsFields draft={draft} onChange={setDraft} shellExtra={<CommandRules projectId={project.id} />} />
         {error && (
           <div className="alert error" role="alert">
             {error}

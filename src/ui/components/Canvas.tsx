@@ -12,6 +12,8 @@ import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
+import { useCanvasCommands } from '../commands/useCanvasCommands';
+import { usePreviewMenu } from '../usePreviewMenu';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
@@ -338,6 +340,7 @@ export function Canvas(props: Props) {
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
   const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
+  const openMenu = useRef<(at: { x: number; y: number }) => void>(() => undefined);
 
   const frames = usePreviewFrames({
     projectId,
@@ -358,7 +361,10 @@ export function Canvas(props: Props) {
     onZoomKey: (key) => zoomBy(key, 'frame'),
     textEditAllowed,
     onTextEdit: inline.onMessage,
+    onContextMenu: (at) => openMenu.current(at),
   });
+  const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu') });
+  openMenu.current = previewMenu.onContextMenu;
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
@@ -392,10 +398,14 @@ export function Canvas(props: Props) {
     selection: props.selection,
     enabled: editsEnabled && !commentMode,
     post: frames.post,
+    holdSwap: frames.holdSwap,
     setSelection: props.setSelection,
     refreshRects: frames.refreshRects,
     onError: layerEdits.notify,
   });
+
+  const darkSwitch = themeSwitch(props.darkPreview, theme);
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onSource: props.onSource, dark: darkSwitch, check });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
@@ -429,12 +439,13 @@ export function Canvas(props: Props) {
         onCheck={check.run}
         addFrame={<AddFrameMenu disabled={!canAddFrame(layout)} onAdd={addFrameAt} />}
         layers={<LayersToggle open={layersOpen} disabled={!live} />}
-        theme={themeSwitch(props.darkPreview, theme)}
+        theme={darkSwitch}
       />
       <CheckResults projectId={projectId} check={check} />
+      {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && <CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
-      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} onPointerDown={pz.onPointerDown}>
+      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
           ref={artboardRef}

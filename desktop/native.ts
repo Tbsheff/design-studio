@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { app, BrowserWindow, dialog, ipcMain, Menu, Notification, session, shell, type DownloadItem, type WebContents } from 'electron';
-import { DESKTOP_IPC, isDesktopContext, parseDeepLink, parsePickFolderRequest, type DesktopCommand, type DesktopContext } from '../src/shared/desktop-link.js';
+import { DESKTOP_IPC, isCommandId, isDesktopContext, parseDeepLink, parseDroppedPath, parsePickFolderRequest, type DesktopCommand, type DesktopContext } from '../src/shared/desktop-link.js';
 import { buildDockMenu, buildMenu, type MenuState } from './menu.js';
 import { NOTIFY_ENV, runNotice } from './notify.js';
 import { addRecent, readRecents, writeRecents, type RecentProject } from './recents.js';
@@ -43,6 +43,7 @@ export class NativeShell {
   private recents: RecentProject[] = [];
   private ready = false;
   private pickerOpen = false;
+  private unseenRuns = 0;
   private readonly loaded = new WeakSet<WebContents>();
 
   constructor(private readonly deps: NativeDeps) {}
@@ -68,6 +69,7 @@ export class NativeShell {
     ipcMain.on(DESKTOP_IPC.revealExport, (event) => {
       if (this.isStudio(event.sender)) this.revealExport();
     });
+    ipcMain.on(DESKTOP_IPC.dropFolder, (event, raw: unknown) => this.onDropFolder(event.sender, raw));
     session.defaultSession.on('will-download', (_event, item, contents) => this.onDownload(item, contents));
     this.refreshMenus();
   }
@@ -85,6 +87,7 @@ export class NativeShell {
 
   trackWindow(window: BrowserWindow): void {
     const contents = window.webContents;
+    window.on('focus', () => this.setUnseen(0));
     contents.on('did-start-navigation', (details) => {
       if (details.isMainFrame && !details.isSameDocument) this.loaded.delete(contents);
     });
@@ -157,6 +160,9 @@ export class NativeShell {
           run: () => this.send({ type: 'run' }),
           stop: () => this.send({ type: 'stop' }),
           zoom: (key) => this.send({ type: 'zoom', key }),
+          command: (id) => {
+            if (isCommandId(id)) this.send({ type: 'command', id });
+          },
           revealWorkTree: () => void this.revealWorkTree(),
           revealExport: () => this.revealExport(),
         },
@@ -202,6 +208,19 @@ export class NativeShell {
     const folder = await this.showFolderDialog(BrowserWindow.fromWebContents(sender), { title: request.title, buttonLabel: 'Choose', ...(defaultPath ? { defaultPath } : {}) });
     app.emit('studio-pick-folder', { title: request.title, defaultPath: defaultPath ?? null, folder });
     return folder;
+  }
+
+  private onDropFolder(sender: WebContents, raw: unknown): void {
+    if (!this.isStudio(sender)) return;
+    const dropped = parseDroppedPath(raw);
+    if (dropped) this.openFolder(dropped);
+  }
+
+  private setUnseen(count: number): void {
+    if (count === this.unseenRuns) return;
+    this.unseenRuns = count;
+    app.dock?.setBadge(count > 0 ? String(count) : '');
+    app.emit('studio-badge', count);
   }
 
   private onContext(sender: WebContents, raw: unknown): void {
@@ -264,6 +283,7 @@ export class NativeShell {
     const project = await this.deps.link.project(finished.run.projectId);
     const notice = runNotice(finished, project?.name ?? null, focused);
     if (!notice) return;
+    if (!this.deps.studioWindows().some((window) => window.isFocused())) this.setUnseen(this.unseenRuns + 1);
     app.emit('studio-notification', notice);
     if (process.env[NOTIFY_ENV] === 'off' || !Notification.isSupported()) return;
     const shown = new Notification({ title: notice.title, body: notice.body });

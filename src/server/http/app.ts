@@ -45,6 +45,7 @@ import { isDirectEditBatch } from '../direct-edit/validate.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
+import { createCommandRuleStore } from '../store/command-rules.js';
 import { registerCommentRoutes } from './comments-routes.js';
 import { registerExportRoutes } from './export-routes.js';
 import { registerRunControlRoutes } from './run-control-routes.js';
@@ -556,6 +557,19 @@ export function createApp(deps: AppDeps): Hono {
     const patch = parseSettings(await readBody(c)) ?? {};
     const project = await projects.updateSettings(pid, patch);
     return c.json(project);
+  });
+
+  const commandRules = createCommandRuleStore(projects.projectDir);
+
+  app.get('/api/projects/:pid/command-rules', async (c) => {
+    const project = await projects.get(c.req.param('pid'));
+    return c.json({ rules: await commandRules.list(project.id) });
+  });
+
+  app.post('/api/projects/:pid/command-rules/remove', async (c) => {
+    const project = await projects.get(c.req.param('pid'));
+    const rule = requireString(await readBody(c), 'rule');
+    return c.json({ rules: await commandRules.remove(project.id, rule) });
   });
 
   app.get('/api/projects/:pid/events', async (c) => {

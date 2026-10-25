@@ -1,6 +1,7 @@
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import { BadRequestError, NotFoundError, assertSafeId } from '../store/errors.js';
+import { RULE_MAX_CHARS } from '../../shared/permissionRules.js';
 import type { AgentRunner, RunHandle } from '../types.js';
 
 const TEXT_MAX = 20_000;
@@ -15,7 +16,7 @@ const queueSchema = z
 
 const steerSchema = z.object({ text: z.string().trim().min(1).max(TEXT_MAX) }).strict();
 
-const answerSchema = z.union([z.object({ allow: z.literal(true) }).strict(), z.object({ allow: z.literal(false), note: z.string().max(2000).optional() }).strict()]);
+const answerSchema = z.union([z.object({ allow: z.literal(true), always: z.string().min(1).max(RULE_MAX_CHARS).optional() }).strict(), z.object({ allow: z.literal(false), note: z.string().max(2000).optional() }).strict()]);
 
 async function parse<T>(schema: z.ZodType<T>, text: string): Promise<T> {
   let body: unknown;
@@ -55,7 +56,7 @@ export function registerRunControlRoutes(app: Hono, runner: AgentRunner): void {
     const requestId = c.req.param('requestId');
     if (!/^[A-Za-z0-9_-]{1,120}$/.test(requestId)) throw new BadRequestError('bad request id');
     const decision = await parse(answerSchema, await c.req.text());
-    if (!handle.answer?.(requestId, decision.allow ? { allow: true } : { allow: false, ...(decision.note?.trim() ? { note: decision.note.trim() } : {}) })) {
+    if (!handle.answer?.(requestId, decision.allow ? { allow: true, ...(decision.always !== undefined ? { always: decision.always } : {}) } : { allow: false, ...(decision.note?.trim() ? { note: decision.note.trim() } : {}) })) {
       throw new NotFoundError('permission request is not open');
     }
     return c.json({ ok: true });

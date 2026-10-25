@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 const VERSION_FLAG = '--studio-version=';
 const BOOT_FLAG = '--studio-boot=';
@@ -6,6 +6,7 @@ const COMMAND_CHANNEL = 'studio:command';
 const CONTEXT_CHANNEL = 'studio:context';
 const PICK_FOLDER_CHANNEL = 'studio:pick-folder';
 const REVEAL_EXPORT_CHANNEL = 'studio:reveal-export';
+const DROP_FOLDER_CHANNEL = 'studio:drop-folder';
 
 type Command = { type: string } & Record<string, unknown>;
 
@@ -61,7 +62,20 @@ function revealExport(): void {
   ipcRenderer.send(REVEAL_EXPORT_CHANNEL);
 }
 
-contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport }));
+
+function pathForFile(file: unknown): string {
+  try {
+    return webUtils.getPathForFile(file as File);
+  } catch {
+    return '';
+  }
+}
+
+function openDropped(folder: unknown): void {
+  if (typeof folder === 'string' && folder) ipcRenderer.send(DROP_FOLDER_CHANNEL, folder);
+}
+
+contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport, pathForFile, openDropped }));
 
 const THEME_GET_CHANNEL = 'studio:theme-get';
 const THEME_SET_CHANNEL = 'studio:theme-set';

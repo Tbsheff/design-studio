@@ -75,7 +75,7 @@ All file paths are relative to the repo root. Status comes from a read-only code
 | Run parts in true order | CC: transcript keeps text, thinking and tools in sequence [CC1] | has (R3), one ordered `parts` list per run, saved on `RunSummary.parts`, same order after reload | P0 | M |
 | Tool-call rows | CC: one summary row per call, repeats grouped, Ctrl+O full input/output [CC1] | has (R3), one verb and target format (`toolLabels.ts`), errors open, repeats as "×N", Stopped and Denied states | — | — |
 | File diffs in chat | CC desktop: `+12 -1` card, per-file diff, line comments, Cmd+Enter sends [CC7] | has (R3), `+N −M` badge per write or edit, red and green diff, per-file totals on the run card (`shared/line-diff.ts`) | P0 | M |
-| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | partial (R3), Bash only asks: Allow once, or Deny with a note (`agent/ask-gate.ts`); writes outside the project stay hard denies; always-rules and mode cycle in R8-5 | P1 | L |
+| Permission prompts | CC: Yes / Yes don't ask again for `<rule>` / No, Tab adds a note; Shift+Tab cycles modes [CC4, CC1] | has (R3, R8), Bash asks: Allow once, Always allow `<rule>` (exact rule shown; per project, listed in Settings with Remove), or Deny with a note; Shift+Tab in the composer cycles Edit, Plan, Critique; writes outside the project stay hard denies | P1 | L |
 | Interrupt | CC: Esc stops, keeps done work, sends queued next [CC1] | has (R3), Esc in web and desktop with focus in the studio or the preview, < 500 ms; partial output stays, marked Stopped (`useEscapeStop.ts`) | P0 | S |
 | Queued messages | CC: Enter while running queues; lands at next tool boundary; Up pulls it back [CC1]; Cursor: drag to reorder [CC10] | has (R3), Enter while running queues; edit, remove, drag to reorder; sent at the next tool boundary; Stop puts the queue back in the composer (`QueuedMessages.tsx`) | P0 | M |
 | Steer mid-run | Cursor: "send now" at the next tool call [CC10]; OD: "Steer this turn" [OD3] | has (R3), Cmd+Enter while running stops the turn and starts the next one with that text | P0 | M |
@@ -272,16 +272,16 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Queue and steer while running | Chat | CC, Cursor, OD | P0 | M | R3-2 (done) | — | The composer is locked during long runs |
 | File diffs in chat | Chat | CC desktop | P0 | M | R3-3 (done) | — | Users must see what the agent changed |
 | Copy message and code | Chat | claude.ai | P0 | S | R3-4 (done) | — | Basic |
-| Permission prompts | Chat | CC | P1 | L | R3-5 (done: allow once, deny with note), R8-5 (always-rules, mode cycle) | — | Safe Bash; CC parity |
+| Permission prompts | Chat | CC | P1 | L | R3-5 (done), R8-5 (done: always-rules, Settings list; mode cycle is Edit, Plan, Critique, no Accept edits mode) | — | Safe Bash; CC parity |
 | @ mentions | Chat | CC, OD | P1 | M | R3-6 (partial: files and tokens, no layers) | — | Exact context for the agent |
 | Todo list | Chat | CC | P1 | M | R3-7 (done) | — | Long runs need visible progress |
 | Plan mode | Chat | CC | P1 | M | R3-8 (done) | — | Review the plan before a long run |
 | Context meter, effort picker | Chat | CC | P1 | S | R3-9 (done) | — | Control of cost and quality |
 | Prompt history, auto-retry line, retry button | Chat | CC | P1 | S | R3-10 (done) | — | Speed for heavy users; a silent wait looks like a hang |
-| Slash commands | Chat | CC | P1 | M | R8-3 (one command registry with the palette) | — | Fast access to modes, skills and export |
+| Slash commands | Chat | CC | P1 | M | R8-3 (done: / list shares the palette registry; Tab completes; /compact deferred, no server support) | — | Fast access to modes, skills and export |
 | Rewind per message, edit as fork | Chat | CC, Cursor | P1 | M | R7-4 (done) | — | Undo one turn, not the whole run |
 | Session search and rename | Chat | CC | P2 | S | R7-7 (done) | — | Find old runs |
-| Notify when done (web) | Chat | CC | P2 | S | R8-8 | — | Web parity with desktop |
+| Notify when done (web) | Chat | CC | P2 | S | R8-8 (done, code only) | — | Web parity with desktop |
 | Hooks for users | Chat | CC | P2 | M | defer | A user hook on PreToolUse that exits 2 blocks the tool and its reason shows in the transcript | The studio sets its own guards; few users need this |
 | Background tasks and subagent display | Chat | CC | P2 | L | defer | A backgrounded tool shows in a tasks list with elapsed time and Stop | The studio agent seldom runs long shell work |
 | Prompt suggestion | Chat | CC desktop | P2 | M | defer | After a run, a gray next prompt shows; Tab accepts it | Nice to have |
@@ -310,11 +310,11 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Comment replies | Comments | Paper | P2 | M | R7-6 (done) | — | Threads |
 | Share link | Collaboration | OD, CD | P2 | L | defer | Make a link; a signed-out browser shows the preview; a reviewer comment shows in the queue | Local-first app; needs hosting |
 | Multiplayer | Collaboration | Paper, Figma | P2 | L | defer | Two clients see each other's cursors within 100 ms | Single-user app now |
-| Command palette | Keyboard | Figma | P0 | M | R8-1 | — | One place for every action |
-| Shortcut sheet | Keyboard | Figma | P0 | S | R8-2 | — | Users find features through keys |
-| Context menus | Keyboard | Figma | P1 | M | R8-4 | — | Desktop feel |
-| Full menus, F6 regions, Finder drop, key hints | Keyboard | Figma, CD | P1 | S | R8-6, R8-7 | — | Native feel |
-| Dock badge | Keyboard | — | P2 | S | R8-8 | — | Know a run is done with the window hidden |
+| Command palette | Keyboard | Figma | P0 | M | R8-1 (done) | — | One place for every action |
+| Shortcut sheet | Keyboard | Figma | P0 | S | R8-2 (done; old handlers not yet read from the keymap) | — | Users find features through keys |
+| Context menus | Keyboard | Figma | P1 | M | R8-4 (partial: preview element and project card; version row and chat message deferred) | — | Desktop feel |
+| Full menus, F6 regions, Finder drop, key hints | Keyboard | Figma, CD | P1 | S | R8-6, R8-7 (done; desktop not run) | — | Native feel |
+| Dock badge | Keyboard | — | P2 | S | R8-8 (done, code only) | — | Know a run is done with the window hidden |
 | Project tabs | Keyboard | Paper | P2 | L | defer | Open 2 projects in tabs; a run in tab 1 goes on while tab 2 is in use | Needs one server session per tab |
 | Rebindable keys | Keyboard | CC | P2 | M | defer | Change Shift+1 to F in a keymap file; the sheet and palette show F | The keymap file from R8-2 makes this easy later |
 | App dark theme | A11y | Figma | P0 | L | R9-1 (done: System, Light, Dark on Home and studio top bar; palette entry after R8 merge) | — | Pros work in dark rooms; every rival has it |

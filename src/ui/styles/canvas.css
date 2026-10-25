@@ -359,7 +359,13 @@ body.frame-dragging * {
   cursor: grabbing !important;
 }
 
-body.frame-dragging .frame {
+.stage:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+body.frame-dragging .frame,
+body.element-resizing .frame {
   pointer-events: none;
 }
 

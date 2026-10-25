@@ -5,6 +5,7 @@ import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
 import { reportFirstToken } from './perfTelemetry';
 import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
+import { useRunNotice } from './useRunNotice';
 import { uiStore, useUi } from './storage';
 
 export interface BuildError {
@@ -201,6 +202,7 @@ export function useStudioData(projectId: string): StudioData {
   );
 
   const connection = useProjectEvents(projectId, onEvent);
+  useRunNotice(project?.name ?? null, runs);
 
   const seedRun = useCallback((runId: string, did: string, request: RunRequest, stopped = false) => {
     setRuns((prev) => {

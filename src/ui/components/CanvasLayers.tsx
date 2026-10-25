@@ -6,6 +6,7 @@ import type { LayerTree } from '../layersTree';
 import type { LayerEdits } from '../useLayerEdits';
 import { Icon } from './Icon';
 import { LayersPanel } from './LayersPanel';
+import { tipWithKey } from '../commands/keys';
 
 interface TreeFrames {
   tree: LayerTree | null;
@@ -60,7 +61,7 @@ export function LayersToggle({ open, disabled }: { open: boolean; disabled: bool
       aria-label="Layers"
       aria-pressed={open}
       aria-keyshortcuts="Alt+1"
-      data-tip={disabled ? 'Layers show for the live preview' : 'Layers  ⌥1'}
+      data-tip={disabled ? 'Layers show for the live preview' : tipWithKey('Layers', 'layers')}
       data-tip-align="start"
       disabled={disabled}
       onClick={() => uiStore.set((s) => ({ layersOpen: !s.layersOpen }))}

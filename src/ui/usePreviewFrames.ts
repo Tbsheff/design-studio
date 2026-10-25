@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
+import type { AppKey, BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
 import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
 import { reportAppStart } from './perfTelemetry';
@@ -10,11 +10,27 @@ import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import { textEditability } from './cssValues';
 import type { BuildError, FilesChange } from './useStudioData';
+import { openLayer } from './commands/registry';
+import { moveRegion } from './commands/useStudioCommands';
 
 export const PREVIEW_LAYOUT_KEY_EVENT = 'studio:preview-layout-key';
 
-function forwardKeyMessage(msg: Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' }>): void {
-  if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
+type KeyMessage = Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' | 'app-key' }>;
+
+const KEY_MESSAGES = new Set<BridgeToParent['type']>(['escape', 'history-key', 'layout-key', 'app-key']);
+
+function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
+  return KEY_MESSAGES.has(msg.type);
+}
+
+function forwardAppKey(id: AppKey): void {
+  if (id === 'palette' || id === 'shortcuts') openLayer(id);
+  else moveRegion(id === 'next-region' ? 1 : -1);
+}
+
+function forwardKeyMessage(msg: KeyMessage): void {
+  if (msg.type === 'app-key') forwardAppKey(msg.id);
+  else if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
   else if (msg.type === 'layout-key') window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
   else if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
 }
@@ -59,6 +75,14 @@ interface Options {
   onZoomKey: (key: ZoomKey) => void;
   textEditAllowed?: boolean;
   onTextEdit?: (message: TextEditMessage) => void;
+  onContextMenu?: (point: { x: number; y: number }) => void;
+}
+
+function pagePoint(frame: HTMLIFrameElement | null, x: number, y: number): { x: number; y: number } | null {
+  if (!frame) return null;
+  const rect = frame.getBoundingClientRect();
+  const scale = frame.offsetWidth > 0 ? rect.width / frame.offsetWidth : 1;
+  return { x: rect.left + x * scale, y: rect.top + y * scale };
 }
 
 const SWAP_FALLBACK_MS = 1500;
@@ -116,6 +140,7 @@ export function usePreviewFrames(o: Options) {
   const hmrFallback = useRef<number | null>(null);
   const listeners = useRef(new Set<(message: BridgeToParent) => void>());
   const textEditing = useRef(false);
+  const dragHold = useRef(false);
 
   const opts = useRef(o);
   opts.current = o;
@@ -179,7 +204,7 @@ export function usePreviewFrames(o: Options) {
     (token: string) => {
       const swap = pendingSwap.current;
       if (swap?.token !== token) return;
-      if (textEditing.current) {
+      if (textEditing.current || dragHold.current) {
         swap.due = true;
         swap.loaded = true;
         return;
@@ -351,6 +376,10 @@ export function usePreviewFrames(o: Options) {
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
       for (const listener of listeners.current) listener(msg);
+      if (isKeyMessage(msg)) {
+        forwardKeyMessage(msg);
+        return;
+      }
       switch (msg.type) {
         case 'hover':
           if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
@@ -384,11 +413,11 @@ export function usePreviewFrames(o: Options) {
         case 'zoom-key':
           cur.onZoomKey(msg.key);
           break;
-        case 'escape':
-        case 'history-key':
-        case 'layout-key':
-          forwardKeyMessage(msg);
+        case 'context-menu': {
+          const at = pagePoint(frame.element, msg.x, msg.y);
+          if (at) cur.onContextMenu?.(at);
           break;
+        }
         case 'text-edit':
         case 'text-commit':
           onTextMessage(msg);
@@ -454,9 +483,25 @@ export function usePreviewFrames(o: Options) {
     [post, frontFrame],
   );
 
+  const holdSwap = useCallback(
+    (held: boolean, settle: boolean) => {
+      dragHold.current = held;
+      const swap = pendingSwap.current;
+      if (held || !swap) return;
+      const release = () => {
+        const cur = pendingSwap.current;
+        if (cur === swap && !dragHold.current && !textEditing.current && cur.due && cur.loaded) settleSwap(cur.token);
+      };
+      if (settle) release();
+      else window.setTimeout(release, SWAP_FALLBACK_MS);
+    },
+    [settleSwap],
+  );
+
   return {
     slots,
     frontToken,
+    holdSwap,
     hover,
     elements,
     onFrameLoad,

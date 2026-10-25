@@ -17,6 +17,7 @@ interface Options {
   selection: SelectionContext[];
   enabled: boolean;
   post: (body: ParentMessageBody) => void;
+  holdSwap?: (held: boolean, settle: boolean) => void;
   setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
   refreshRects: () => void;
   onError: (message: string) => void;
@@ -100,9 +101,11 @@ export function useResizeHandles(o: Options): ResizeControl {
     live.current.post({ type: 'preview-style', selector: d.target.selector, style: axisStyle(d, next) });
   }, []);
 
-  const end = useCallback(() => {
+  const end = useCallback((committing = false) => {
     drag.current = null;
     setSize(null);
+    document.body.classList.remove('element-resizing');
+    live.current.holdSwap?.(false, !committing);
   }, []);
 
   const cancel = useCallback(() => {
@@ -141,6 +144,8 @@ export function useResizeHandles(o: Options): ResizeControl {
       const base = { w: pxOf(sel.styles.width, sel.rect.width), h: pxOf(sel.styles.height, sel.rect.height) };
       const d: Drag = { edge, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, zoom: scaleOf(handle) || 1, base, size: base, target: sel, axes: new Set() };
       drag.current = d;
+      document.body.classList.add('element-resizing');
+      live.current.holdSwap?.(true, false);
       setSize({ size: base, base });
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== d.pointerId || drag.current !== d) return;
@@ -157,7 +162,7 @@ export function useResizeHandles(o: Options): ResizeControl {
         detach();
         if (drag.current !== d) return;
         const changed = d.size.w !== d.base.w || d.size.h !== d.base.h;
-        end();
+        end(changed);
         if (changed) void commit(d);
       };
       const onCancel = () => {

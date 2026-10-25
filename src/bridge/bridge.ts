@@ -19,6 +19,7 @@ import {
   zoomKeyOf,
   isModZoomKey,
   selectMoveOf,
+  appKeyOf,
 } from '../shared/contracts.js';
 
 type Rect = SelectionContext['rect'];
@@ -292,6 +293,12 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
+    const app = event.repeat ? null : appKeyOf(event, isTypingElement(eventElement(event)));
+    if (app) {
+      event.preventDefault();
+      post({ type: 'app-key', id: app });
+      return;
+    }
     if (event.key === 'Escape' && !event.repeat) post({ type: 'escape' });
     if (isLayoutKey(event) && !isTypingElement(eventElement(event))) {
       event.preventDefault();
@@ -791,6 +798,14 @@ function startBridge(session: BridgeSession): void {
     postSelect(element, event.shiftKey);
   };
 
+  const onContextMenu = (event: MouseEvent): void => {
+    block(event);
+    const element = eventElement(event);
+    if (mode !== 'select' || !element || textEditor.owns(element)) return;
+    if (element !== selected) postSelect(element, false);
+    post({ type: 'context-menu', x: event.clientX, y: event.clientY });
+  };
+
   const onAltChange = (event: KeyboardEvent): void => {
     if (event.key !== 'Alt' || mode !== 'select') return;
     altHeld = event.type === 'keydown';
@@ -944,7 +959,7 @@ function startBridge(session: BridgeSession): void {
   window.addEventListener('click', onClick, { capture: true });
   window.addEventListener('dblclick', onDblClick, { capture: true });
   window.addEventListener('auxclick', block, { capture: true });
-  window.addEventListener('contextmenu', block, { capture: true });
+  window.addEventListener('contextmenu', onContextMenu, { capture: true });
   window.addEventListener('keydown', onKeyDown, { capture: true });
   window.addEventListener('keyup', onAltChange, { capture: true });
   window.addEventListener('scroll', onScroll, { capture: true, passive: true });

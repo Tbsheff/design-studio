@@ -147,7 +147,7 @@ async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
   const page = pagePath(args);
   if (src.project.kind === 'html') {
-    const file = await insideRoot(src.root, page ?? (src.project.entry || 'index.html'));
+    const file = await insideRoot(await src.files(), page ?? (src.project.entry || 'index.html'));
     return text(await readFile(file, 'utf8'));
   }
   const opened = await src.open();
@@ -165,7 +165,7 @@ async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
 
 async function tokens(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
-  const files = await readDesignSystemFiles(src.root);
+  const files = await readDesignSystemFiles(await src.files());
   if (!files) return text('This version has no design system.');
   return json({
     pack: files.manifest ? { id: files.manifest.id, name: files.manifest.name, mode: files.manifest.mode, fonts: files.manifest.fonts } : null,
@@ -207,18 +207,18 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
       return tokens(deps, args);
     case 'get_design_md': {
       const src = await source(deps, args);
-      const md = await readFile(path.join(src.root, DESIGN_MD_FILE), 'utf8').catch(() => null);
+      const md = await readFile(path.join(await src.files(), DESIGN_MD_FILE), 'utf8').catch(() => null);
       return text(md ?? 'This project has no DESIGN.md.');
     }
     case 'get_screenshot':
       return screenshot(deps, args);
     case 'list_files': {
       const src = await source(deps, args);
-      return json({ versionId: src.version.id, files: await listFiles(src.root) });
+      return json({ versionId: src.version.id, files: await listFiles(await src.files()) });
     }
     case 'read_file': {
       const src = await source(deps, args);
-      const file = await insideRoot(src.root, str(args, 'path', true) as string);
+      const file = await insideRoot(await src.files(), str(args, 'path', true) as string);
       if (!TEXT_EXT.has(path.extname(file).toLowerCase())) throw new ToolError('only text files can be read');
       if ((await stat(file)).size > MAX_TEXT) throw new ToolError('the file is too large');
       return text(await readFile(file, 'utf8'));

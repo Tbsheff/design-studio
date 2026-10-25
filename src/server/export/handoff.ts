@@ -172,12 +172,13 @@ interface MarkdownInput {
   sourceMap: { name: string; bytes: number }[];
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string } | undefined;
   entries: CompiledTokenEntry[];
+  filesRoot: string;
 }
 
 async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise<string> {
   const { shots, designHtml, sourceMap, fonts } = input;
-  const { project, direction, version, root } = input.source;
-  const components = await listComponents(root, project.kind).catch(() => [] as ComponentInfo[]);
+  const { project, direction, version } = input.source;
+  const components = await listComponents(input.filesRoot, project.kind).catch(() => [] as ComponentInfo[]);
   const comments = await deps.comments.list(project.id, direction.id).catch(() => [] as DesignComment[]);
   const lineage = versionAncestors(input.history, version);
   const { brief, changes } = intent(lineage);
@@ -242,7 +243,8 @@ async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise
 
 export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Promise<HandoffResult> {
   const { source, frames } = input;
-  const { project, version, root } = source;
+  const { project, version } = source;
+  const root = await source.files();
   const folderName = `${exportFileStem(project.name)}-${version.id.slice(0, 8)}`;
   const outDir = path.join(handoffRoot(deps, project.id), folderName);
   await rm(outDir, { recursive: true, force: true });
@@ -272,7 +274,7 @@ export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Prom
 
   const { shots, designHtml } = await captureScreens(deps, source, frames, put);
 
-  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, entries: ds?.entries ?? [] });
+  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, entries: ds?.entries ?? [], filesRoot: root });
   await put('HANDOFF.md', md);
 
   const prompt = `Read ${path.join(outDir, 'HANDOFF.md')} and build this design in this codebase. The source is in ${path.join(outDir, 'source')}, the target screens are in ${path.join(outDir, 'screens')}, and tokens.css has the design tokens. Match the screens and use the tokens.`;

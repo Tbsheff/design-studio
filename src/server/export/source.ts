@@ -14,6 +14,7 @@ export interface ExportSource {
   direction: Direction;
   version: Version;
   root: string;
+  files(): Promise<string>;
   open(): Promise<{ url: string; release: () => Promise<void> }>;
 }
 
@@ -29,6 +30,7 @@ export async function resolveSource(deps: ExportDeps, projectId: string, version
       direction,
       version,
       root: direction.workTree,
+      files: () => deps.versions.snapshot(project, version.id),
       open: async () => ({ url: await deps.preview.directionUrl(project, direction), release: async () => undefined }),
     };
   }
@@ -38,6 +40,7 @@ export async function resolveSource(deps: ExportDeps, projectId: string, version
     direction,
     version,
     root,
+    files: async () => root,
     open: async () => {
       if (deps.preview.snapshotShot) return deps.preview.snapshotShot(project, version.id, root);
       return { url: await deps.preview.snapshotUrl(project, version.id, root), release: async () => undefined };

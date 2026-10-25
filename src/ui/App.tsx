@@ -1,10 +1,11 @@
-import { Component, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { errorText } from './api';
 import { Home } from './components/Home';
-import { DesignSystems, NewDesignSystem, prefetchStudio, Studio } from './screens';
+import { CommandLayer, DesignSystems, NewDesignSystem, prefetchStudio, Studio } from './screens';
+import type { CommandLayer as Layer } from './commands/registry';
+import { isTypingTarget } from './typingTarget';
 import { loadSession } from './session';
 import { uiStore, useUi } from './storage';
-import { useDesktopApp } from './useDesktopApp';
 
 if (uiStore.get().activeProjectId) void prefetchStudio();
 
@@ -31,6 +32,38 @@ class ScreenBoundary extends Component<{ children: ReactNode }, { error: string 
   }
 }
 
+const LAYER_EVENT = 'studio:command-layer';
+const DesktopApp = 'studioDesktop' in window ? lazy(() => import('./DesktopApp')) : null;
+
+function useCommandLayer() {
+  const [layer, setLayer] = useState<Layer | null>(null);
+  useEffect(() => {
+    const toggle = (next: unknown) => (next === 'palette' || next === 'shortcuts') && setLayer((cur) => (cur === next ? null : next));
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      const next = mod && !e.altKey && !e.shiftKey && e.code === 'KeyK' ? 'palette' : e.key === '?' && !e.metaKey && !e.altKey && (e.ctrlKey || !isTypingTarget(e.target)) ? 'shortcuts' : null;
+      if (!next || e.repeat) return;
+      e.preventDefault();
+      e.stopPropagation();
+      toggle(next);
+    };
+    const onOpen = (e: Event) => toggle((e as CustomEvent<unknown>).detail);
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener(LAYER_EVENT, onOpen);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener(LAYER_EVENT, onOpen);
+    };
+  }, []);
+  return (
+    layer && (
+      <Suspense fallback={null}>
+        <CommandLayer layer={layer} onLayer={setLayer} />
+      </Suspense>
+    )
+  );
+}
+
 function Screen({ children }: { children: ReactNode }) {
   return (
     <ScreenBoundary>
@@ -43,7 +76,7 @@ export function App() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ui = useUi();
-  const desktopError = useDesktopApp(ui.activeProjectId);
+  const layer = useCommandLayer();
 
   useEffect(() => {
     loadSession()
@@ -65,11 +98,16 @@ export function App() {
     );
   }
   if (!ready) return <div className="boot muted">Connecting…</div>;
-  const notice = desktopError ? (
-    <div className="desktop-notice" role="alert">
-      {desktopError}
-    </div>
-  ) : null;
+  const notice = (
+    <>
+      {layer}
+      {DesktopApp && (
+        <Suspense fallback={null}>
+          <DesktopApp activeProjectId={ui.activeProjectId} />
+        </Suspense>
+      )}
+    </>
+  );
   if (ui.activeProjectId) {
     return (
       <>

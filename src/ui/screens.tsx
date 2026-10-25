@@ -19,7 +19,10 @@ const studio = preloadable(() => import('./components/Studio').then((m) => m.Stu
 const designSystems = preloadable(() => import('./components/DesignSystems').then((m) => m.DesignSystems));
 const newDesignSystem = preloadable(() => import('./components/NewDesignSystem').then((m) => m.NewDesignSystem));
 
+const loadLayer = () => import('./commands/CommandLayer');
+
 export const Studio = studio.Screen;
+export const CommandLayer = lazy(loadLayer);
 export const DesignSystems = designSystems.Screen;
 export const NewDesignSystem = newDesignSystem.Screen;
 
@@ -27,11 +30,16 @@ export function prefetchStudio(): Promise<unknown> {
   return studio.fetch().catch(() => undefined);
 }
 
+export function prefetchCommandLayer(): void {
+  loadLayer().catch(() => undefined);
+}
+
 export function prefetchScreensWhenIdle(): void {
   const run = () => {
     void prefetchStudio();
     void designSystems.fetch().catch(() => undefined);
     void newDesignSystem.fetch().catch(() => undefined);
+    prefetchCommandLayer();
   };
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 1000 });
   else setTimeout(run, 200);

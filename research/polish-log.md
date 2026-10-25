@@ -586,3 +586,57 @@ Before in `/tmp/polish-r7/before/` (13), after in `/tmp/polish-r7/after/` (28): 
 ### Commits
 
 `6b0b49d`…`c23800b` duplicate and trash · `5cae5ba`, `1d4eb10` comments, drawing, replies · `0855251`…`117197d` rewind and run titles · `f1cb1cb`…`fc00219` version thumbs, names, compare · `7f1ba1e`, `fd53a9e`, `cdca5c9` variation frames, page per frame, resize · then the docs commit.
+
+## Round 10 — Export and handoff (2026-10-24)
+
+Branch `polish/r10-export` from `cf5ec75`. Rounds 8 and 9 ran at the same time on other branches. Rule for this round: no new tests, no vitest or Playwright runs; only `tsc` and `build:ui` before each commit, and each export tried once by hand on a temp data dir (`/tmp/polish-r10/data`, mock agent, ports 4911/4912/9400).
+
+### Features
+
+| Item | What was built | Check by hand | Result |
+| --- | --- | --- | --- |
+| R10-1 PNG | `POST /api/projects/:pid/export {format: png}`. Frames come from the canvas layout (name, size, page path). 1×, 2× or 3×; full page or frame only; a selected element (from the inspector menu) as its own clip. Many frames download as a zip. Scale goes through both render backends: `RenderOps.open` takes `scale`; Playwright sets `deviceScaleFactor`, the Electron pool sets the CDP capture scale and stitches tall pages per 8000 px of output | 2× of a 1440 frame | 2880 × 1800 (Playwright). Electron host: 1440, 2880, 4320 wide; a 3× tall page of 390 × 3000 gives 1170 × 9000 (stitched). React 3×: 4320 × 2700 and 1170 × 2532 |
+| R10-1 HTML | One file per page. The render page fetches the served HTML (or clones the DOM for React), strips the bridge script, `data-studio-loc` and `studio-*` styles, and inlines stylesheets, `@import`, `url()`, fonts (Google Fonts too), images, `srcset`, icons and scripts as data URLs. The server stops the export when the HTML holds the studio token | Offline open vs the preview at 1440 × 900 | 0.000% pixel diff for an HTML project with the Editorial pack (fonts inlined, 1.1 MB) and for a React project |
+| R10-2 Handoff | `POST /api/projects/:pid/handoff` writes `<projectDir>/handoff/<name>-<version>/`: `HANDOFF.md` (intent from the first prompt and later asks, decisions from the version lineage, token tables with CSS variables and dark values, fonts, components with file:line, screens, open comments, file map with roles, how to run, rules for the build), `tokens.css`, `tokens.json`, `DESIGN.md`, `screens/*.png` (desktop and mobile), `design.html`, `source/`. The dialog copies a Claude Code prompt that names the folder path, downloads a zip, reveals the folder | Bundle files and prompt | 11 files for the HTML project; prompt names `…/HANDOFF.md`; works for a React version that is not the head (snapshot path) |
+| R10-3 PDF | One page per frame, each page an image at 2× (small PDF writer, no dependency) | 3 frames | `PDF document, version 1.4, 3 pages` |
+| R10-3 Copy as code | Inspector header: new code menu next to Copy CSS: Copy HTML and CSS, Copy Tailwind, Export PNG of the element. The server walks the element in a render page and keeps only the computed values that differ from the tag default (inherited ones only where they change); shorthands for padding, margin, radius, border, gap; same rules share a class; Tailwind uses named classes where one exists and arbitrary values for the rest | Button and a card grid | Code as expected. The clipboard write was refused by the test browser pane for both the new menu and the old Copy CSS; the code reached `navigator.clipboard` |
+| R10-4 MCP part 1 | Off by default. "Connect to Claude Code" in the handoff view turns on a server on `127.0.0.1:4590` (or a free port, kept in `<dataDir>/mcp.json`, mode 0600). Own random token, Bearer auth with a constant-time compare; requests with an `Origin` header or a wrong `Host` are refused. Hand-written JSON-RPC over Streamable HTTP (no new dependency). Tools, all read-only: `list_projects`, `list_versions`, `get_frame_html`, `get_tokens`, `get_design_md`, `get_screenshot` (PNG image block, at most 6000 px tall), `list_files`, `read_file` (text only, realpath inside the version, no `node_modules`/`.git`). The dialog shows and copies the `claude mcp add --scope user --transport http …` command; "New token" rotates it | `claude mcp list` with `CLAUDE_CONFIG_DIR=/tmp/polish-r10/claude-cfg` | `design-studio: http://127.0.0.1:4590/mcp (HTTP) - ✔ Connected`. curl: no token 401, Origin 403, bad Host 403; `get_tokens` returns the Editorial tokens; `read_file ../../../etc/passwd` refused |
+| R10-5 Open in editor | `GET /api/editors` lists Cursor, VS Code and Zed when the app is in `/Applications` or `~/Applications`; `POST …/d/:did/open-in-editor` runs `/usr/bin/open -a <app> <work tree>` with a fixed app list; the server picks the path | Editor list | Cursor listed. The launch was not clicked (it would open the real app) |
+
+### Polish
+
+- Export dialog (own lazy chunk `ExportDialog`, 11 kB): format, frames, scale and area; it keeps the last format, scale and area (`design-studio.export.v1`); progress line with elapsed seconds; done line with the file name, a note when assets were not inlined or a tall page was cut, and "Reveal in Finder" in the desktop app (new `revealExport` preload call, main reveals only its last download). One primary action per state: after a handoff, "Copy prompt for Claude Code" is primary and "Rebuild handoff" is secondary.
+- Entry points: topbar "Export" (head version; off with a tip until a version exists), version row Export (was a direct zip), inspector code menu, and an `openExport()` window event that the R8 palette can call after the merge.
+- Checked with `make-interfaces-feel-better`, `emil-design-eng`, `better-interface` (trigger list) and `impeccable`: tabular numbers on sizes and elapsed time; menu opens below its trigger with a top-right origin; enter motion is a 4 px rise with a fade-only fallback for reduced motion; the truncated MCP command shows in full on hover; the format control wraps on narrow windows; no em dashes in new copy.
+
+### Bundle
+
+Home JS 299,300 bytes (gate 300,000; Round 7 was 299,247, so +53 from new shared export names). Export UI is in `ExportDialog` (lazy) and the Studio chunk.
+
+### Screenshots
+
+Before in `/tmp/polish-r10/before/` (2), after in `/tmp/polish-r10/after/` (6): `export-dialog-png`, `export-png-done`, `handoff-v1`, `inspector-copy-menu`, `version-row-export`, `electron-2x-preview`.
+
+### Left for later rounds
+
+- Palette entries for Export, Handoff and Open in editor: add after the R8 merge; they call `openExport({format})`.
+- PDF pages are images (no text selection); a vector PDF needs a `pdf` render op in both backends and a merge step.
+- Built React bundle (`vite build` output in the zip, R10-7): not done.
+- MCP write tools (`set_text` and others) and an MCP resource list: not done. The MCP server reads the newest saved version, not unsaved work tree changes.
+- Copy as code: no `::before`/`::after`, no hover or focus states, grid tracks come out as resolved px (an `auto-fit` grid becomes fixed columns), widths are kept only on the root and replaced elements. Tailwind output uses arbitrary values for most colors and sizes, not the project tokens.
+- Single-file HTML of a React project is a static DOM snapshot (scripts removed). Google Fonts CSS brings every unicode-range subset (about 36 font files for one pack).
+- Exports of a version that is not the head start a Vite server for React snapshots each time (about 2–3 s).
+- The clipboard copy was not proven in the browser pane (permission refused for every copy button there); check it in the desktop app.
+- e2e `inspector-extras-r4` still finds "Copy CSS" (kept as is); no new specs this round by rule.
+
+### Regressions found
+
+None seen by hand. Not run: vitest, Playwright, desktop e2e (rule for this round).
+
+### Shared files touched
+
+`src/server/http/app.ts` (one import, one `registerExportRoutes` call, the comment store moved into a const so both routes share it), `src/server/types.ts` (`withPage?` on `PreviewService`), `src/shared/render-rpc.ts` (`scale?` on `open`), `src/shared/desktop-link.ts` (`revealExport` channel), `desktop/preload.cts`, `desktop/native.ts` (reveal IPC), `desktop/render-pool.ts`, `desktop/render-rpc-host.ts`, `src/ui/components/Studio.tsx`, `StudioTopbar.tsx`, `Inspector.tsx`, `VersionRow.tsx` (tip). Not touched: `desktop/menu.ts`, `src/shared/contracts.ts`, `src/ui/App.tsx`, global styles.
+
+### Commits
+
+`d727b73` render scale · `83a5e99` export server · `4c60f18` MCP server · `080a0a6` export UI · `3870624`, `9eedbe5` polish · then the docs commit.

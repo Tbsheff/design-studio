@@ -178,7 +178,7 @@
 .pack-text {
   display: grid;
   align-content: start;
-  gap: 3px;
+  gap: var(--s-1);
   min-width: 0;
   padding: 0 2px 2px;
 }
@@ -196,7 +196,7 @@
 
 .pack-yours {
   flex-shrink: 0;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--text-2);
@@ -216,7 +216,7 @@
 }
 
 .pack-text .swatches {
-  margin-top: 4px;
+  margin-top: var(--s-1);
   padding-left: 1px;
 }
 

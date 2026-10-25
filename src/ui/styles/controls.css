@@ -150,7 +150,7 @@
   left: 50%;
   top: calc(100% + 6px);
   translate: -50% -2px;
-  padding: 4px 8px;
+  padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
   background: var(--tip-bg);
   color: var(--tip-text);

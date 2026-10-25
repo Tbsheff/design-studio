@@ -190,7 +190,7 @@
 
 .variation-status {
   flex: none;
-  padding: 1px 8px;
+  padding: 1px var(--s-2);
   border-radius: var(--r-full);
   font-size: var(--t-xs);
   background: var(--surface-2);

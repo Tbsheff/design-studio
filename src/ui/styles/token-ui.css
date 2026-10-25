@@ -38,9 +38,9 @@
 }
 
 .tk-chip {
-  gap: 5px;
+  gap: var(--s-1);
   max-width: 112px;
-  padding: 0 6px 0 4px;
+  padding: 0 6px 0 var(--s-1);
   background: var(--accent-soft);
   color: var(--accent-text);
   font-family: var(--mono);
@@ -175,7 +175,7 @@
   gap: 6px;
   flex: none;
   margin: 0 var(--s-3) var(--s-3);
-  padding: 0 4px 0 10px;
+  padding: 0 var(--s-1) 0 10px;
   height: 32px;
   border-radius: var(--r-md);
   background: var(--surface-raised);

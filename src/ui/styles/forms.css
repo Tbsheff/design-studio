@@ -144,7 +144,7 @@ kbd {
   place-items: center;
   min-width: 18px;
   height: 18px;
-  padding: 0 4px;
+  padding: 0 var(--s-1);
   font: 500 var(--t-xs)/1 var(--font);
   color: var(--text-3);
   background: var(--surface);
@@ -306,8 +306,8 @@ kbd {
 }
 
 .skills-problems ul {
-  margin: 4px 0 0;
-  padding-left: 16px;
+  margin: var(--s-1) 0 0;
+  padding-left: var(--s-4);
 }
 
 .skill-tag.muted-tag {

@@ -100,7 +100,7 @@
 .twk-row {
   display: grid;
   gap: 6px;
-  padding: 8px var(--s-4) 10px;
+  padding: var(--s-2) var(--s-4) 10px;
   box-shadow: inset 2px 0 0 transparent;
   transition-property: background-color, box-shadow;
   transition-duration: var(--dur);
@@ -269,7 +269,7 @@
 }
 
 .twk-problems ul {
-  margin: 4px 0 0;
+  margin: var(--s-1) 0 0;
   padding-left: 14px;
   color: var(--text-2);
   overflow-wrap: anywhere;

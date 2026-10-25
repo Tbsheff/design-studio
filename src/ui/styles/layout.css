@@ -39,7 +39,7 @@
 
 .crumbs .btn.ghost {
   color: var(--text-2);
-  padding: 0 8px;
+  padding: 0 var(--s-2);
 }
 
 .crumb-sep {
@@ -50,7 +50,7 @@
 .topbar-name {
   font-weight: 600;
   max-width: 440px;
-  padding: 0 4px;
+  padding: 0 var(--s-1);
 }
 
 .topbar-direction {
@@ -67,7 +67,7 @@
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .conn {

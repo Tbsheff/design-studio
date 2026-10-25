@@ -22,7 +22,7 @@
   display: grid;
   gap: var(--s-12);
   justify-items: center;
-  padding: clamp(24px, 9vh, 96px) var(--s-6) var(--s-12);
+  padding: clamp(var(--s-6), 9vh, 96px) var(--s-6) var(--s-12);
 }
 
 .home-hero {
@@ -92,9 +92,9 @@
 .advanced summary {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 28px;
-  padding: 0 8px 0 4px;
+  padding: 0 var(--s-2) 0 var(--s-1);
   border-radius: var(--r-sm);
   color: var(--text-2);
   font-size: var(--t-xs);

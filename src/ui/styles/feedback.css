@@ -1,7 +1,7 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
   height: 20px;
   padding: 0 7px;
   border-radius: var(--r-full);
@@ -39,7 +39,7 @@
   align-items: center;
   gap: var(--s-2);
   height: 28px;
-  padding: 0 4px 0 10px;
+  padding: 0 var(--s-1) 0 10px;
   border-radius: var(--r-full);
   background: var(--warn-soft);
   box-shadow: inset 0 0 0 1px var(--warn-line);
@@ -60,7 +60,7 @@
   position: relative;
   flex: none;
   height: 22px;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   border-radius: var(--r-full);
   background: var(--surface);
   color: var(--warn);
@@ -92,7 +92,7 @@
 .alert.inline {
   align-items: center;
   height: 32px;
-  padding: 0 4px 0 10px;
+  padding: 0 var(--s-1) 0 10px;
   max-width: 420px;
   white-space: nowrap;
 }

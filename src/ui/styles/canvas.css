@@ -82,7 +82,7 @@
 .dims {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .dims input {
@@ -155,7 +155,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  padding: 8px 14px;
+  padding: var(--s-2) 14px;
   border-radius: var(--r-full);
   background: var(--surface-raised);
   box-shadow: var(--shadow-md);
@@ -875,7 +875,7 @@ body.frame-dragging .frame {
 }
 
 .layers-eye:active {
-  scale: 0.92;
+  scale: 0.96;
 }
 
 .layers-eye:focus-visible {

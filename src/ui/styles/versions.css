@@ -18,7 +18,7 @@
   display: grid;
   grid-template-columns: 20px 56px minmax(0, 1fr) 82px;
   column-gap: var(--s-2);
-  padding: 8px var(--s-2) 10px;
+  padding: var(--s-2) var(--s-2) 10px;
   border-radius: var(--r-md);
   transition: background-color var(--dur) var(--ease);
 }
@@ -64,7 +64,7 @@
 
 .version-main {
   display: grid;
-  gap: 3px;
+  gap: var(--s-1);
   min-width: 0;
   container-type: inline-size;
 }
@@ -246,7 +246,7 @@
 .version-kind {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--s-1);
 }
 
 .version-kind .icon {
@@ -320,11 +320,11 @@
 .version-files {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--s-1);
 }
 
 .version-files code {
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: var(--r-xs);
   background: var(--surface-2);
   font-size: var(--t-xs);

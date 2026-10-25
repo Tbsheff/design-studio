@@ -3,7 +3,7 @@
   place-items: center;
   min-width: 16px;
   height: 16px;
-  padding: 0 4px;
+  padding: 0 var(--s-1);
   border-radius: var(--r-full);
   background: var(--accent);
   color: var(--on-accent);
@@ -31,7 +31,7 @@
 
 .tkp-theme button {
   height: 24px;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
 }
 
 .tkp-search {
@@ -88,8 +88,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: 4px var(--s-2);
-  padding: 4px var(--s-4);
+  gap: var(--s-1) var(--s-2);
+  padding: var(--s-1) var(--s-4);
   box-shadow: inset 2px 0 0 transparent;
   transition-property: background-color, box-shadow;
   transition-duration: var(--dur);
@@ -164,7 +164,7 @@
 
 .tkp-field .ins-input,
 .tkp-field.mono .ins-input {
-  padding-left: 8px;
+  padding-left: var(--s-2);
 }
 
 .tkp-field.color .ins-input,
@@ -202,10 +202,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: var(--s-1);
   height: 28px;
   min-width: 0;
-  padding: 0 8px;
+  padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;

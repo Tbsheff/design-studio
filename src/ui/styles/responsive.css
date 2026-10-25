@@ -119,7 +119,7 @@ body.resizing iframe {
   }
   .toolbar,
   .toolbar-group {
-    gap: 4px;
+    gap: var(--s-1);
   }
 }
 
@@ -140,6 +140,6 @@ body.resizing iframe {
     max-width: 200px;
   }
   .topbar .btn.has-icon {
-    padding: 0 8px;
+    padding: 0 var(--s-2);
   }
 }

@@ -116,6 +116,7 @@ export function usePreviewFrames(o: Options) {
   const hmrFallback = useRef<number | null>(null);
   const listeners = useRef(new Set<(message: BridgeToParent) => void>());
   const textEditing = useRef(false);
+  const dragHold = useRef(false);
 
   const opts = useRef(o);
   opts.current = o;
@@ -179,7 +180,7 @@ export function usePreviewFrames(o: Options) {
     (token: string) => {
       const swap = pendingSwap.current;
       if (swap?.token !== token) return;
-      if (textEditing.current) {
+      if (textEditing.current || dragHold.current) {
         swap.due = true;
         swap.loaded = true;
         return;
@@ -454,9 +455,25 @@ export function usePreviewFrames(o: Options) {
     [post, frontFrame],
   );
 
+  const holdSwap = useCallback(
+    (held: boolean, settle: boolean) => {
+      dragHold.current = held;
+      const swap = pendingSwap.current;
+      if (held || !swap) return;
+      const release = () => {
+        const cur = pendingSwap.current;
+        if (cur === swap && !dragHold.current && !textEditing.current && cur.due && cur.loaded) settleSwap(cur.token);
+      };
+      if (settle) release();
+      else window.setTimeout(release, SWAP_FALLBACK_MS);
+    },
+    [settleSwap],
+  );
+
   return {
     slots,
     frontToken,
+    holdSwap,
     hover,
     elements,
     onFrameLoad,

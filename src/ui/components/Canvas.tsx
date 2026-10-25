@@ -392,6 +392,7 @@ export function Canvas(props: Props) {
     selection: props.selection,
     enabled: editsEnabled && !commentMode,
     post: frames.post,
+    holdSwap: frames.holdSwap,
     setSelection: props.setSelection,
     refreshRects: frames.refreshRects,
     onError: layerEdits.notify,

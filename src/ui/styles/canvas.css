@@ -361,7 +361,8 @@ body.frame-dragging * {
   cursor: grabbing !important;
 }
 
-body.frame-dragging .frame {
+body.frame-dragging .frame,
+body.element-resizing .frame {
   pointer-events: none;
 }
 

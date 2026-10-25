@@ -119,17 +119,33 @@ function sides(map: Map<string, string>, names: [string, string, string, string]
   else map.set(short, `${top} ${right} ${bottom} ${left}`);
 }
 
+const SIDES = ['top', 'right', 'bottom', 'left'];
+
+function compactBorder(map: Map<string, string>): void {
+  const parts = SIDES.map((side) => [map.get(`border-${side}-width`), map.get(`border-${side}-style`), map.get(`border-${side}-color`)]);
+  const touched = parts.some((part) => part.some((value) => value !== undefined));
+  if (!touched) return;
+  const clear = () => {
+    for (const side of SIDES) for (const part of ['width', 'style', 'color']) map.delete(`border-${side}-${part}`);
+  };
+  if (parts.every((part) => part[1] === 'none' || part[0] === '0px')) {
+    clear();
+    map.set('border', 'none');
+    return;
+  }
+  const first = parts[0];
+  if (first && first.every((value) => value !== undefined) && parts.every((part) => part[0] === first[0] && part[1] === first[1] && part[2] === first[2])) {
+    clear();
+    map.set('border', `${first[0]} ${first[1]} ${first[2]}`);
+  }
+}
+
 function compact(styles: [string, string][]): [string, string][] {
   const map = new Map(styles);
   sides(map, ['padding-top', 'padding-right', 'padding-bottom', 'padding-left'], 'padding');
   sides(map, ['margin-top', 'margin-right', 'margin-bottom', 'margin-left'], 'margin');
   sides(map, ['border-top-left-radius', 'border-top-right-radius', 'border-bottom-right-radius', 'border-bottom-left-radius'], 'border-radius');
-  const widths = ['top', 'right', 'bottom', 'left'].map((side) => [map.get(`border-${side}-width`), map.get(`border-${side}-style`), map.get(`border-${side}-color`)]);
-  const first = widths[0];
-  if (first && widths.every((w) => w[0] === first[0] && w[1] === first[1] && w[2] === first[2]) && first.every((part) => part !== undefined)) {
-    for (const side of ['top', 'right', 'bottom', 'left']) for (const part of ['width', 'style', 'color']) map.delete(`border-${side}-${part}`);
-    if (first[1] !== 'none') map.set('border', `${first[0]} ${first[1]} ${first[2]}`);
-  }
+  compactBorder(map);
   const rowGap = map.get('row-gap');
   if (rowGap !== undefined && rowGap === map.get('column-gap')) {
     map.delete('row-gap');
@@ -191,6 +207,7 @@ const TW_KEYWORDS: Record<string, Record<string, string>> = {
   overflow: { hidden: 'overflow-hidden', auto: 'overflow-auto', scroll: 'overflow-scroll', visible: 'overflow-visible', clip: 'overflow-clip' },
   'white-space': { nowrap: 'whitespace-nowrap', pre: 'whitespace-pre', 'pre-wrap': 'whitespace-pre-wrap', normal: 'whitespace-normal' },
   'text-decoration-line': { underline: 'underline', 'line-through': 'line-through', none: 'no-underline' },
+  border: { none: 'border-0' },
 };
 
 const TW_PREFIX: Record<string, string> = {

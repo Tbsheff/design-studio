@@ -91,6 +91,17 @@ async function exportImages(job: ImageJob, format: 'png' | 'pdf'): Promise<Respo
   return file(zipFiles(shots.map((shot, index) => ({ name: shotName(shot, index, scale), data: shot.png }))), 'application/zip', `${job.stem}-png.zip`, note);
 }
 
+async function openForCopy(deps: ExportRouteDeps, pid: string, input: Record<string, unknown>): Promise<{ url: string; release: () => Promise<void> }> {
+  if (typeof input.directionId === 'string') {
+    const project = await deps.projects.get(assertSafeId(pid, 'projectId'));
+    const did = assertSafeId(input.directionId, 'directionId');
+    const direction = project.directions.find((d) => d.id === did);
+    if (!direction) throw new NotFoundError('direction not found');
+    return { url: await deps.preview.directionUrl(project, direction), release: async () => undefined };
+  }
+  return (await resolveSource(deps, pid, text(input, 'versionId'))).open();
+}
+
 export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   const secrets = [deps.studioToken];
 
@@ -141,9 +152,8 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     const format: CopyCodeFormat = input.format === 'tailwind' ? 'tailwind' : 'html';
     const selector = selectorOf(input);
     if (!selector) throw new BadRequestError('selector is required');
-    const source = await resolveSource(deps, c.req.param('pid'), text(input, 'versionId'));
     const frame = parseFrame(input.frame);
-    const opened = await source.open();
+    const opened = await openForCopy(deps, c.req.param('pid'), input);
     try {
       const result: CopyCodeResult = { code: await copyAsCode(deps.preview, opened.url, frame, selector, format), format };
       return c.json(result);

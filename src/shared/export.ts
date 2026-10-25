@@ -38,7 +38,8 @@ export interface HandoffResult {
 }
 
 export interface CopyCodeRequest {
-  versionId: string;
+  versionId?: string;
+  directionId?: string;
   frame: ExportFrame;
   selector: string;
   format: CopyCodeFormat;

@@ -40,6 +40,7 @@ export const DESKTOP_IPC = {
   command: 'studio:command',
   context: 'studio:context',
   pickFolder: 'studio:pick-folder',
+  revealExport: 'studio:reveal-export',
 } as const;
 
 const MAX_PICK_TITLE = 200;

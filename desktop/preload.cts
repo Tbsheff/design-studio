@@ -57,3 +57,22 @@ async function pickFolder(options: unknown): Promise<string | null> {
 }
 
 contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder }));
+
+const THEME_GET_CHANNEL = 'studio:theme-get';
+const THEME_SET_CHANNEL = 'studio:theme-set';
+const THEMES = ['system', 'light', 'dark'];
+
+function savedTheme(): string {
+  try {
+    const value: unknown = ipcRenderer.sendSync(THEME_GET_CHANNEL);
+    return typeof value === 'string' && THEMES.includes(value) ? value : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+function setTheme(value: unknown): void {
+  if (typeof value === 'string' && THEMES.includes(value)) ipcRenderer.send(THEME_SET_CHANNEL, value);
+}
+
+contextBridge.exposeInMainWorld('studioThemeHost', Object.freeze({ initial: savedTheme(), set: setTheme }));

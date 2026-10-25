@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { BrowserWindow, screen } from 'electron';
+import { initTheme, studioBackground, trackThemeWindow } from './theme.js';
 import { parseStateFile, pickState, recordState, type DisplayInfo, type WindowState, type WindowStateFile } from './window-state.js';
 
 export interface WindowOptions {
@@ -13,7 +14,6 @@ export interface WindowOptions {
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 const SAVE_DELAY_MS = 400;
-const FIRST_PAINT_COLOR = '#f6f8fa';
 const MAC_CHROME = { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } } as const;
 
 function displays(): DisplayInfo[] {
@@ -67,13 +67,14 @@ function trackFullScreen(window: BrowserWindow): void {
 
 export function createMainWindow(options: WindowOptions): BrowserWindow {
   const saved = readWindowState(options.stateFile);
+  initTheme(path.join(path.dirname(options.stateFile), 'theme.json'));
   const window = new BrowserWindow({
     ...(saved ? saved.bounds : DEFAULT_SIZE),
     minWidth: 800,
     minHeight: 600,
     show: false,
     title: 'Design Studio',
-    backgroundColor: FIRST_PAINT_COLOR,
+    backgroundColor: studioBackground(),
     ...(process.platform === 'darwin' ? MAC_CHROME : {}),
     webPreferences: {
       preload: options.preload,
@@ -85,6 +86,7 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
     },
   });
   if (saved?.maximized) window.maximize();
+  trackThemeWindow(window);
   trackState(window, options.stateFile);
   trackFullScreen(window);
   window.once('ready-to-show', () => window.show());

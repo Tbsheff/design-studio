@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { BrowserWindow, clipboard, ipcMain, shell, type IpcMainInvokeEvent } from 'electron';
+import { setupBackground } from './theme.js';
 import { CLAUDE_INSTALL_COMMAND, FIX_ACTIONS, needsAttention, runChecks, type CheckInputs, type CheckResult, type FixAction } from './setup-checks.js';
 
 export interface SetupWindowOptions {
@@ -12,7 +13,6 @@ export interface SetupWindowOptions {
 const FIRST_RUN_FILE = 'first-run.html';
 const TERMINAL_APP = '/System/Applications/Utilities/Terminal.app';
 
-const SETUP_BACKGROUND = '#fbfcfe';
 let current: { window: BrowserWindow; options: SetupWindowOptions } | null = null;
 
 function fromSetupWindow(event: IpcMainInvokeEvent): boolean {
@@ -59,7 +59,7 @@ export function openSetupWindow(options: SetupWindowOptions): Promise<void> {
     resizable: true,
     show: false,
     title: 'Design Studio setup',
-    backgroundColor: SETUP_BACKGROUND,
+    backgroundColor: setupBackground(),
     ...(process.platform === 'darwin' ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 16 } } as const : {}),
     webPreferences: { preload: path.join(options.ownDir, 'first-run-preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
   });

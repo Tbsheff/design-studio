@@ -17,6 +17,7 @@ const INHERITED = [
   'color', 'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'text-align', 'text-transform',
   'white-space', 'word-spacing', 'font-variant-numeric', 'font-feature-settings', 'text-wrap', 'list-style-type', 'cursor', 'visibility',
 ];
+const ROOT_TYPE = ['color', 'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing'];
 const OWN = [
   'display', 'position', 'top', 'right', 'bottom', 'left', 'z-index', 'box-sizing',
   'flex-direction', 'flex-wrap', 'align-items', 'align-content', 'align-self', 'justify-content', 'justify-items', 'justify-self', 'flex-grow', 'flex-shrink', 'flex-basis', 'order',
@@ -35,6 +36,7 @@ function collectExpression(selector: string): string {
   const INHERITED = ${JSON.stringify(INHERITED)};
   const OWN = ${JSON.stringify(OWN)};
   const LOC = ${JSON.stringify(SOURCE_LOC_ATTR)};
+  const ROOT_TYPE = ${JSON.stringify(ROOT_TYPE)};
   const root = document.querySelector(${JSON.stringify(selector)});
   if (!root) return null;
   const sandbox = document.createElement('iframe');
@@ -72,6 +74,10 @@ function collectExpression(selector: string): string {
     const base = defaultsFor(tag);
     for (const prop of INHERITED) {
       const value = style.getPropertyValue(prop);
+      if (isRoot && ROOT_TYPE.includes(prop)) {
+        styles.push([prop, value]);
+        continue;
+      }
       const reference = isRoot || !parentStyle ? base[prop] : parentStyle.getPropertyValue(prop);
       if (value !== reference) styles.push([prop, value]);
     }

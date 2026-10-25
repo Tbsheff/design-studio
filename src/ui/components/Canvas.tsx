@@ -12,6 +12,7 @@ import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
+import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
@@ -398,6 +399,9 @@ export function Canvas(props: Props) {
     onError: layerEdits.notify,
   });
 
+  const darkSwitch = themeSwitch(props.darkPreview, theme);
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onSource: props.onSource, dark: darkSwitch, check });
+
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel });
@@ -430,12 +434,12 @@ export function Canvas(props: Props) {
         onCheck={check.run}
         addFrame={<AddFrameMenu disabled={!canAddFrame(layout)} onAdd={addFrameAt} />}
         layers={<LayersToggle open={layersOpen} disabled={!live} />}
-        theme={themeSwitch(props.darkPreview, theme)}
+        theme={darkSwitch}
       />
       <CheckResults projectId={projectId} check={check} />
       <div className="canvas-body">
       {layersOpen && <CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
-      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} onPointerDown={pz.onPointerDown}>
+      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
           ref={artboardRef}

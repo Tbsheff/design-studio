@@ -47,12 +47,16 @@
   box-shadow: inset 0 -1px 0 var(--line);
 }
 
-.cmdk-search input {
+.cmdk .cmdk-search input,
+.cmdk .cmdk-search input:focus {
   flex: 1;
   min-width: 0;
   height: 100%;
+  padding: 0;
   border: 0;
+  border-radius: 0;
   outline: 0;
+  box-shadow: none;
   background: transparent;
   color: var(--text);
   font: inherit;
@@ -214,11 +218,16 @@
   box-shadow: 0 0 0 2px var(--ring-soft);
 }
 
-.keysheet-search input {
+.keysheet .keysheet-search input,
+.keysheet .keysheet-search input:focus {
   flex: 1;
   min-width: 0;
+  height: 100%;
+  padding: 0;
   border: 0;
+  border-radius: 0;
   outline: 0;
+  box-shadow: none;
   background: transparent;
   color: var(--text);
   font: inherit;

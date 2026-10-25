@@ -3,7 +3,7 @@ import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
 import { PenIcon } from './DrawLayer';
 
-const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
+export const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
   { id: 'desktop', label: 'Desktop 1440', icon: 'desktop', width: 1440, height: 900 },
   { id: 'tablet', label: 'Tablet 768', icon: 'tablet', width: 768, height: 1024 },
   { id: 'mobile', label: 'Mobile 390', icon: 'mobile', width: 390, height: 844 },

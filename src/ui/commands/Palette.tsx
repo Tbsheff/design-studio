@@ -84,7 +84,10 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
   const listId = useId();
   const listRef = useRef<HTMLDivElement>(null);
   const [recent] = useState(readRecent);
-  const [base] = useState(() => [...collectCommands(), ...globalCommands(onShortcuts)]);
+  const [base] = useState(() => {
+    const all = [...collectCommands(), ...globalCommands(onShortcuts)];
+    return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
+  });
 
   useEffect(() => {
     let alive = true;

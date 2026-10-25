@@ -38,6 +38,8 @@ import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
 import { setTelemetryScope } from '../perfTelemetry';
 import { renameVersion } from '../versionsApi';
+import { useStudioCommands } from '../commands/useStudioCommands';
+import { prefetchCommandLayer } from '../screens';
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
   return texts.find((text) => typeof text === 'string') ?? null;
@@ -92,6 +94,10 @@ function modeOf(mode: ComposerMode): Pick<RunRequest, 'mode' | 'plan'> {
 
 function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
   return effort ? { effort } : {};
+}
+
+function exportTarget(versions: Version[], direction: { headVersionId: string | null } | null): string | null {
+  return (versions.find((v) => v.id === direction?.headVersionId) ?? versions[0])?.id ?? null;
 }
 
 function runById<T>(runs: Record<string, T>, id: string | null): T | null {
@@ -199,6 +205,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     }
   }, []);
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
+  const commandActions = useStudioCommands();
+  useEffect(() => {
+    const id = window.setTimeout(prefetchCommandLayer, 1500);
+    return () => window.clearTimeout(id);
+  }, []);
   const rewind = useRewind({ projectId, direction, versions, status, busy, running: activeRun, act, guard, seedRun: data.seedRun, setDirectionId: data.setDirectionId, refreshVersions: data.refreshVersions });
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
@@ -252,6 +263,25 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const retryRun = (run: RunView) => {
     const request = run.request;
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
+  };
+
+  commandActions.current = {
+    running: Boolean(activeRun),
+    directions: project.directions.map((d) => ({ id: d.id, name: d.name })),
+    directionId: did,
+    onHome: guard(onExit),
+    onSettings: () => setSettingsOpen(true),
+    onDesignMd: () => setDesignOpen(true),
+    onPanel: panel.choose,
+    onDirection: guard(data.setDirectionId),
+    onStop: runControls.onCancel,
+    onPolish: polish,
+    canUndo: historyChain.canUndo,
+    onUndo: historyChain.onUndo,
+    canRedo: editHistory.redo.enabled,
+    onRedo: editHistory.redo.onRedo,
+    exportId: exportTarget(versions, direction),
+    onExport: (id) => void act(async () => downloadBlob(await api.exportVersion(projectId, id), `${project.name}-${id.slice(0, 7)}.zip`)),
   };
 
   const [left, right] = compare.map((picked) => versions.find((v) => v.id === picked.id) ?? picked);

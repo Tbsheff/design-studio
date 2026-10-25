@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
+import type { AppKey, BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
 import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
 import { reportAppStart } from './perfTelemetry';
@@ -10,11 +10,27 @@ import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import { textEditability } from './cssValues';
 import type { BuildError, FilesChange } from './useStudioData';
+import { openLayer } from './commands/registry';
+import { moveRegion } from './commands/useStudioCommands';
 
 export const PREVIEW_LAYOUT_KEY_EVENT = 'studio:preview-layout-key';
 
-function forwardKeyMessage(msg: Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' }>): void {
-  if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
+type KeyMessage = Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' | 'app-key' }>;
+
+const KEY_MESSAGES = new Set<BridgeToParent['type']>(['escape', 'history-key', 'layout-key', 'app-key']);
+
+function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
+  return KEY_MESSAGES.has(msg.type);
+}
+
+function forwardAppKey(id: AppKey): void {
+  if (id === 'palette' || id === 'shortcuts') openLayer(id);
+  else moveRegion(id === 'next-region' ? 1 : -1);
+}
+
+function forwardKeyMessage(msg: KeyMessage): void {
+  if (msg.type === 'app-key') forwardAppKey(msg.id);
+  else if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
   else if (msg.type === 'layout-key') window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
   else if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
 }
@@ -352,6 +368,10 @@ export function usePreviewFrames(o: Options) {
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
       for (const listener of listeners.current) listener(msg);
+      if (isKeyMessage(msg)) {
+        forwardKeyMessage(msg);
+        return;
+      }
       switch (msg.type) {
         case 'hover':
           if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
@@ -384,11 +404,6 @@ export function usePreviewFrames(o: Options) {
           break;
         case 'zoom-key':
           cur.onZoomKey(msg.key);
-          break;
-        case 'escape':
-        case 'history-key':
-        case 'layout-key':
-          forwardKeyMessage(msg);
           break;
         case 'text-edit':
         case 'text-commit':

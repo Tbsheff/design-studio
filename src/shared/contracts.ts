@@ -696,6 +696,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'text-commit'; selector: string; text: string; at: number }
   | { ns: 'studio'; token: string; type: 'history-key'; redo: boolean }
   | { ns: 'studio'; token: string; type: 'layout-key' }
+  | { ns: 'studio'; token: string; type: 'app-key'; id: AppKey }
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string };
 
@@ -713,6 +714,16 @@ export const LAYER_TREE_MAX = 5000;
 export const LAYER_LABEL_MAX = 60;
 
 export type SelectMove = 'child' | 'parent' | 'next' | 'prev';
+
+export type AppKey = 'palette' | 'shortcuts' | 'next-region' | 'prev-region';
+
+export function appKeyOf(event: { key: string; code: string; metaKey: boolean; ctrlKey: boolean; altKey: boolean; shiftKey: boolean }, typing: boolean): AppKey | null {
+  if (event.altKey) return null;
+  if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.code === 'KeyK') return 'palette';
+  if (event.key === '?' && !event.metaKey && (event.ctrlKey || !typing)) return 'shortcuts';
+  if (event.key === 'F6' && !event.metaKey && !event.ctrlKey) return event.shiftKey ? 'prev-region' : 'next-region';
+  return null;
+}
 
 export function selectMoveOf(event: { key: string; shiftKey: boolean; metaKey: boolean; ctrlKey: boolean; altKey: boolean }): SelectMove | null {
   if (event.metaKey || event.ctrlKey || event.altKey) return null;

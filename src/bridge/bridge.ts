@@ -19,6 +19,7 @@ import {
   zoomKeyOf,
   isModZoomKey,
   selectMoveOf,
+  appKeyOf,
 } from '../shared/contracts.js';
 
 type Rect = SelectionContext['rect'];
@@ -292,6 +293,12 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
+    const app = event.repeat ? null : appKeyOf(event, isTypingElement(eventElement(event)));
+    if (app) {
+      event.preventDefault();
+      post({ type: 'app-key', id: app });
+      return;
+    }
     if (event.key === 'Escape' && !event.repeat) post({ type: 'escape' });
     if (isLayoutKey(event) && !isTypingElement(eventElement(event))) {
       event.preventDefault();

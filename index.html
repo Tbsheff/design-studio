@@ -4,6 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Design Studio</title>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        var key = 'design-studio.theme';
+        var media = matchMedia('(prefers-color-scheme: dark)');
+        var host = window.studioThemeHost;
+        var pref = 'system';
+        function valid(value) {
+          return value === 'light' || value === 'dark' ? value : 'system';
+        }
+        try {
+          pref = valid(host ? host.initial : localStorage.getItem(key));
+        } catch (e) {}
+        function apply() {
+          root.dataset.theme = pref === 'dark' || (pref === 'system' && media.matches) ? 'dark' : 'light';
+          root.dataset.themePref = pref;
+          window.dispatchEvent(new Event('studio-theme'));
+        }
+        function quiet() {
+          root.dataset.themeSwitching = '';
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              delete root.dataset.themeSwitching;
+            });
+          });
+        }
+        media.addEventListener('change', function () {
+          if (pref !== 'system') return;
+          quiet();
+          apply();
+        });
+        window.studioTheme = {
+          get: function () {
+            return pref;
+          },
+          set: function (value) {
+            pref = valid(value);
+            try {
+              localStorage.setItem(key, pref);
+            } catch (e) {}
+            if (host) host.set(pref);
+            quiet();
+            apply();
+          },
+        };
+        apply();
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

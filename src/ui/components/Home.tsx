@@ -10,6 +10,7 @@ import { Disclosure } from './Disclosure';
 import { FoldersSection, LocationField, OpenFolder, useFolderChooser } from './FolderControls';
 import { filterByFolder, locationFor, useWorkspaces } from '../useWorkspaces';
 import { Icon } from './Icon';
+import { ThemeButton } from './ThemeButton';
 import { useRovingRadioGroup } from './LevelControl';
 import { NewProjectAdvanced } from './NewProjectAdvanced';
 import { PackPicker } from './PackPicker';
@@ -304,6 +305,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
             <Icon name="trash" size={14} />
             Trash
           </button>
+          <ThemeButton />
         </nav>
       </header>
       <main className="home-main">

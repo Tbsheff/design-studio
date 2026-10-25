@@ -2,6 +2,7 @@ import type { ProjectKind } from '../../shared/contracts';
 import { BrandMark } from './BrandMark';
 import { DesignSystemChip, type DesignSystemActions, type DesignSystemRef } from './DesignSystemChip';
 import { Icon } from './Icon';
+import { ThemeButton } from './ThemeButton';
 
 interface Props {
   name: string;
@@ -70,6 +71,7 @@ export function StudioTopbar(props: Props) {
           <Icon name="doc" />
           DESIGN.md
         </button>
+        <ThemeButton />
         <button className="icon-btn" aria-label="Settings" data-tip="Project settings" data-tip-align="end" onClick={props.onSettings}>
           <Icon name="settings" />
         </button>

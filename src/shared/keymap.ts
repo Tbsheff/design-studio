@@ -23,7 +23,7 @@ export const KEYMAP = [
 
   { id: 'run', label: 'Send', keys: ['Mod+Enter'], group: 'Run and chat' },
   { id: 'stop', label: 'Stop the run', keys: ['Esc', 'Mod+.'], group: 'Run and chat' },
-  { id: 'composer-mode', label: 'Switch Edit and Plan', keys: ['Shift+Tab'], group: 'Run and chat' },
+  { id: 'composer-mode', label: 'Next run mode (Edit, Plan, Critique)', keys: ['Shift+Tab'], group: 'Run and chat' },
   { id: 'slash', label: 'Commands and skills', keys: ['/'], group: 'Run and chat' },
   { id: 'mention', label: 'Mention a file or token', keys: ['@'], group: 'Run and chat' },
   { id: 'prompt-history', label: 'Last prompt', keys: ['↑'], group: 'Run and chat' },
@@ -59,6 +59,7 @@ export const KEYMAP = [
   { id: 'save-design-md', label: 'Save DESIGN.md', keys: ['Mod+S'], group: 'Edit' },
 
   { id: 'project-rename', label: 'Rename project', keys: ['F2'], group: 'Home' },
+  { id: 'project-duplicate', label: 'Duplicate project', keys: ['Mod+D'], group: 'Home' },
   { id: 'project-delete', label: 'Move project to trash', keys: ['Mod+Backspace'], group: 'Home' },
   { id: 'project-menu', label: 'Project menu', keys: ['Shift+F10'], group: 'Home' },
 ] as const satisfies readonly KeyBinding[];

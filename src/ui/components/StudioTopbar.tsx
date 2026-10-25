@@ -2,6 +2,7 @@ import type { ProjectKind } from '../../shared/contracts';
 import { BrandMark } from './BrandMark';
 import { DesignSystemChip, type DesignSystemActions, type DesignSystemRef } from './DesignSystemChip';
 import { Icon } from './Icon';
+import { tipWithKey } from '../commands/keys';
 
 interface Props {
   name: string;
@@ -45,7 +46,7 @@ export function StudioTopbar(props: Props) {
     <header className="topbar">
       <BrandMark />
       <nav className="crumbs" aria-label="Breadcrumb">
-        <button className="btn ghost small" onClick={props.onExit}>
+        <button className="btn ghost small" data-tip={tipWithKey('All projects', 'home')} data-tip-align="start" onClick={props.onExit}>
           Projects
         </button>
         <span className="crumb-sep" aria-hidden="true">
@@ -70,7 +71,7 @@ export function StudioTopbar(props: Props) {
           <Icon name="doc" />
           DESIGN.md
         </button>
-        <button className="icon-btn" aria-label="Settings" data-tip="Project settings" data-tip-align="end" onClick={props.onSettings}>
+        <button className="icon-btn" aria-label="Settings" data-tip={tipWithKey('Project settings', 'settings')} data-tip-align="end" onClick={props.onSettings}>
           <Icon name="settings" />
         </button>
       </div>

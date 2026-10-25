@@ -2,6 +2,8 @@ import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
 import { PenIcon } from './DrawLayer';
+import { shortcutLabel, type KeyId } from '../../shared/keymap';
+import { IS_MAC, tipWithKey } from '../commands/keys';
 
 export const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
   { id: 'desktop', label: 'Desktop 1440', icon: 'desktop', width: 1440, height: 900 },
@@ -175,13 +177,8 @@ function SourceControls({ source, onSource, hasHead }: Pick<Props, 'source' | 'o
   );
 }
 
-function isApple(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const data = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
-  return /mac|iphone|ipad/i.test(data?.platform || navigator.userAgent);
-}
-
-const MOD_KEY = isApple() ? '⌘' : 'Ctrl+';
+const keyOf = (id: KeyId) => shortcutLabel(id, IS_MAC);
+const ZOOM_TIP = `Fit ${keyOf('zoom-fit')}  ·  Selection ${keyOf('zoom-selection')}  ·  100% ${keyOf('zoom-actual')}`;
 
 type ZoomControlProps = Pick<Props, 'zoomSetting' | 'zoom' | 'onZoomTo' | 'onZoomStep' | 'onFit'>;
 
@@ -194,13 +191,13 @@ function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomCo
   const custom = zoomSetting !== 'fit' && !ZOOMS.includes(zoomSetting);
   return (
     <div className="zoom-controls">
-      <button className="icon-btn small" aria-label="Zoom out" aria-keyshortcuts="- Control+- Meta+-" data-tip={`Zoom out  −  ${MOD_KEY}−`} onClick={() => onZoomStep(-1)}>
+      <button className="icon-btn small" aria-label="Zoom out" aria-keyshortcuts="- Control+- Meta+-" data-tip={tipWithKey('Zoom out', 'zoom-out')} onClick={() => onZoomStep(-1)}>
         <Icon name="minus" />
       </button>
       <select
         className="select zoom-select"
         aria-label="Zoom"
-        data-tip={`Fit ⇧1  ·  Selection ⇧2  ·  100% ⇧0`}
+        data-tip={ZOOM_TIP}
         value={zoomSetting === 'fit' ? 'fit' : String(zoomSetting)}
         onChange={(e) => (e.target.value === 'fit' ? onFit() : onZoomTo(Number(e.target.value)))}
       >
@@ -216,7 +213,7 @@ function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomCo
         className="icon-btn small"
         aria-label="Zoom in"
         aria-keyshortcuts="= Control+= Meta+="
-        data-tip={`Zoom in  +  ${MOD_KEY}+`}
+        data-tip={tipWithKey('Zoom in', 'zoom-in')}
         data-tip-align="end"
         onClick={() => onZoomStep(1)}
       >

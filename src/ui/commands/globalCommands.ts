@@ -15,6 +15,18 @@ async function openFolder(): Promise<void> {
   uiStore.set({ activeProjectId: project.id });
 }
 
+type ThemePref = 'system' | 'light' | 'dark';
+
+function setTheme(pref: ThemePref): void {
+  (window as unknown as { studioTheme?: { set: (pref: ThemePref) => void } }).studioTheme?.set(pref);
+}
+
+const THEME_COMMANDS: Command[] = [
+  { id: 'theme.system', title: 'Theme: match the system', group: 'View', icon: 'moon', keywords: 'appearance auto dark light', run: () => setTheme('system') },
+  { id: 'theme.light', title: 'Theme: light', group: 'View', icon: 'moon', keywords: 'appearance', run: () => setTheme('light') },
+  { id: 'theme.dark', title: 'Theme: dark', group: 'View', icon: 'moon', keywords: 'appearance night', run: () => setTheme('dark') },
+];
+
 export function globalCommands(openShortcuts: () => void): Command[] {
   const inProject = uiStore.get().activeProjectId !== null;
   const home = () => uiStore.set({ activeProjectId: null, screen: 'home' });
@@ -34,6 +46,7 @@ export function globalCommands(openShortcuts: () => void): Command[] {
     { id: 'project.open-folder', title: 'Open a folder…', group: 'Go', icon: 'folder', keywords: 'import vite html', run: () => void openFolder().catch(() => undefined) },
     { id: 'go.design-systems', title: 'Design systems', group: 'Go', icon: 'palette', keywords: 'packs library tokens', run: () => uiStore.set({ activeProjectId: null, screen: 'design-systems', libraryFrom: null }) },
     { id: 'go.new-design-system', title: 'New design system', group: 'Go', icon: 'palette', keywords: 'pack create', run: () => uiStore.set({ activeProjectId: null, screen: 'new-design-system', returnTo: 'home' }) },
+    ...THEME_COMMANDS,
     { id: 'help.shortcuts', title: 'Keyboard shortcuts', group: 'Help', icon: 'sliders', keyId: 'shortcuts', keywords: 'keys keymap cheat sheet', run: openShortcuts },
   ];
 }

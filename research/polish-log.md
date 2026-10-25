@@ -586,3 +586,54 @@ Before in `/tmp/polish-r7/before/` (13), after in `/tmp/polish-r7/after/` (28): 
 ### Commits
 
 `6b0b49d`…`c23800b` duplicate and trash · `5cae5ba`, `1d4eb10` comments, drawing, replies · `0855251`…`117197d` rewind and run titles · `f1cb1cb`…`fc00219` version thumbs, names, compare · `7f1ba1e`, `fd53a9e`, `cdca5c9` variation frames, page per frame, resize · then the docs commit.
+
+## Round 8 — Keyboard, command palette, menus and native feel (2026-10-24)
+
+Branch `polish-r8` from `cf5ec75`. Two sub agents built the permission rules and the desktop part in the same worktree. Rule for this round: no new tests and no test runs; each commit passed `npx tsc --noEmit -p tsconfig.json` and `npm run build:ui`. Checks below are manual, in the dev app (mock agent, temp data dir, ports 4870/4871).
+
+### Round 7 regression: resize handle drag
+
+Cause: the drag listened only on the handle with pointer capture, and nothing kept the cross-origin preview frame from taking the pointer. A live HTML frame swap could also land in the middle of a drag (the file change from the last commit, late under load); the new frame drops the inline preview style, so the card showed the file width (224) and not base + 4. Fix (`d93e19a`): `body.element-resizing` turns off pointer events on frames during the drag (as frame drag and the splitter already do), and `usePreviewFrames.holdSwap` holds the live swap until the drag ends (released at once on cancel, after the next change or 1.5 s after a commit). Manual check: 4 alternating drags right after each commit (+26, −31, +26, −31 px) wrote 191 → 181 px, and the handle sat on the new edge each time. Before the fix the same drag in the browser pane did not resize at all.
+
+### Features
+
+| Item | Check | Result |
+|---|---|---|
+| R8-1 Command palette | Opens < 50 ms; "zo fi" ranks Zoom to fit first; Enter runs | Pass (manual). Open 15–27 ms over 5 tries (key event to dialog in the DOM, hidden pane). "zo fi" gives one row, Zoom to fit, with marks. Lazy chunk 10 kB; Home JS 298,427 bytes (R7: 299,247) |
+| R8-2 Shortcut sheet, one keymap | Every keymap entry in the sheet; keys mark on press | Pass for the sheet (renders `KEYMAP` by group, filter, marks pressed keys for 0.9 s). The "test that fails if a handler binds a key not in the keymap" was not written (no-tests rule). Tooltips (zoom, layers, settings, Projects), palette rows and desktop menu accelerators read the keymap; the older handlers keep their own key checks |
+| R8-3 Slash commands | `/exp` + Tab gives `/export` | Pass (manual). `/` opens the skill picker with app commands: plan, edit, critique, level wireframe/prototype/polish, variations, export, model, polish, undo, versions, comments, design-md. Commands show only on a prefix match, so the skills e2e counts stay the same |
+| R8-4 Context menus | Right-click on a preview element opens a menu with 4+ items | Pass (manual). Select mode only; it selects the element and shows 6 items. Project cards already had one (R1). Version row and chat message menus: not built |
+| R8-5 Permission prompts part 2 | Always-rule skips the next prompt, shows in Settings; Remove brings it back | Pass (sub agent, mock agent). Rule: exact command, or the first 3 words + ` *` when the command has no shell metacharacters; the server derives the rule again and rejects a mismatch; stored in `<data>/projects/<pid>/command-rules.json`; checked after the hard denies. Shift+Tab in the composer cycles Edit, Plan, Critique (there is no Accept edits mode) |
+| R8-6 Native menus and F6 | Each menu item runs the same action as its key; F6 visits 4 regions | Code only for menus (Electron not run): View, Canvas, Go, Help send `{type:'command', id}`; new keys use `registerAccelerator: false` so the renderer acts once. F6/Shift+F6: canvas toolbar, canvas, side panel tab, composer; also from inside the preview |
+| R8-7 Finder drop, key hints | Dropped folder opens import; icon buttons show keys | Code only for the drop (preload `webUtils.getPathForFile`, main validates through `openFolder`). Key hints: toolbar and topbar buttons with a keymap entry show the key |
+| R8-8 Dock badge, web notification | Badge counts runs that end in the background; one Notification with the tab hidden | Code only |
+
+Leftovers from earlier rounds, also done: Home, frame and layer actions in the app menu and the palette (R1, R2 logs).
+
+### Polish
+
+- Palette: one search field, grouped rows (Recent first), key chips per row, disabled rows say why, marks on matched letters, Esc clears the query then closes, focus goes back to where it was. 100 ms fade and scale on open; none with reduced motion.
+- Shortcut sheet: docked bottom right and not modal, so the keys still work while it is open.
+- `make-interfaces-feel-better` quick pass on the palette, sheet and menu: no HIGH or MEDIUM findings; numbers in key chips use tabular figures.
+- Desktop glue (`useDesktopApp`, `desktop.ts`) is now a lazy chunk that loads only in Electron, which paid for the palette listener in Home JS.
+
+### Screenshots
+
+`/tmp/polish-r8/`: `palette-zo-fi.jpg`, `shortcut-sheet.jpg`, `slash-export.jpg`, `preview-context-menu.jpg`, `resize-after-fix.jpg`.
+
+### Left for later rounds
+
+- Make every old key handler read `matchesKey` from the keymap (then rebindable keys are a small step), and the keymap coverage test.
+- Context menus on version rows and chat messages; native context menus in desktop.
+- `/compact` (no server support); an Accept edits / Ask before edits mode.
+- Run Electron to check the menus, folder drop (a drop on the preview iframe does nothing) and dock badge.
+- Home commands that need Home state (Trash, sort) are not in the palette.
+- A web notification does not fire if the tab was already hidden when the Studio opened.
+
+### Shared files touched
+
+`src/ui/App.tsx` (command layer listener, lazy desktop glue), `src/shared/contracts.ts` (`app-key`, `context-menu` bridge messages, `appKeyOf`, `PermissionDecision.always?`), `src/shared/desktop-link.ts` (command and drop types), `src/ui/api.ts` (no net change), `src/ui/styles/canvas.css` (2 small rules), `src/ui/styles/composer.css` (1 rule), `src/ui/styles/chat.css` (permission buttons), `src/ui/useStudioData.ts` (2 lines), `ARCHITECTURE.md`.
+
+### Commits
+
+`d93e19a` resize fix · `a208c18`, `0bfb9d4`, `d3cceb3`, `0bec676` always-allow rules · `5890d79` keymap, palette, sheet · `fce5358` studio and canvas commands, F6, keys from the preview · `0a0a5dc` slash commands, mode cycle · `50d9f0b`, `6d1cc11` desktop menus, drop, badge, web notification · `7e148ab` preview context menu · `c85bc7e` key hints · then the docs commit.

@@ -584,6 +584,25 @@ GET /api/telemetry?projectId= | ?scope=app | (none: app + every project)
 - Code split (`src/ui/screens.tsx`): Studio, the design systems library and New design system are lazy chunks. Home preloads them when idle; a restored session starts the Studio import before the session loads; a card click waits for the chunk before it switches screens. A screen renders the loaded component directly (no Suspense), because React reveals a suspended boundary no sooner than 300 ms after it suspends. Home-only parts that are not on screen at first (starter gallery and first-run panel, clarifying questions, the card menu and rename field, Advanced settings fields, the design system list) are their own chunks; a card hover or focus preloads Studio. Home and each lazy screen sit in `ScreenBoundary`, so a chunk that fails to load shows an error card with Reload. Home JS (entry plus preloads in `index.html`) must stay under 300 kB; `perf-r5.spec.ts` checks it.
 - Optimistic Send: the studio adds a pending run (`emptyRun('pending-…')`, user message and "Starting") in the same frame as Cmd+Enter and clears the draft; `shownPending` hides it once a run with the same prompt starts in the direction, and the POST response replaces it. A failed send removes it and puts the draft back. Retries, polish and plan approval do not add a pending row.
 
+## Keyboard, command palette and menus (Round 8)
+
+```
+src/shared/keymap.ts (one keymap: id, label, keys, group)
+  ├─► shortcut sheet (ShortcutSheet.tsx)      ├─► tooltips (commands/keys.tsx tipWithKey)
+  ├─► palette rows (Command.keyId)            └─► desktop/menu.ts accelerators (accelerator(id))
+src/ui/commands/registry.ts (commands from useCommands sources, read only when a list opens)
+  ◄── Studio (useStudioCommands) ◄── Canvas (useCanvasCommands) ◄── composer (composerCommands)
+  ──► palette (Cmd+K) · / list in the composer (commands with a slash name) · desktop menus (COMMAND_EVENT)
+```
+
+- The palette and the sheet are one lazy chunk (`commands/CommandLayer.tsx`). App.tsx holds only a capture keydown listener for Cmd+K and `?` (Ctrl+Shift+? in text fields) and the `studio:command-layer` event; the event name is a string there, not an import, so the registry stays out of Home JS. Home preloads the chunk when idle; the Studio preloads it 1.5 s after open. Closed, nothing is mounted and no listener runs; the sheet's key listener runs only while it is open.
+- Commands are getters: a source is called when the palette or the / list opens, so a closed palette costs nothing per render. Disabled commands show the reason and do not run. Recent commands (5) are in localStorage `design-studio.commands.recent.v1`.
+- Fuzzy rank (`commands/fuzzy.ts`): each query word must match the start of a title word (best), a substring, a keyword, or a subsequence. "zo fi" ranks "Zoom to fit" first.
+- Keys in the preview: the bridge posts `app-key` (`palette`, `shortcuts`, `next-region`, `prev-region`) for Cmd+K, `?` outside text fields and F6, so they work with focus in the iframe. F6 and Shift+F6 move focus between the canvas toolbar, the canvas (`.stage`, `tabIndex=-1`), the side panel tab and the composer.
+- Right-click in select mode: the bridge selects the element and posts `context-menu` with frame coordinates; the parent maps them through the iframe rect and scale and opens `PreviewMenu` (ask the agent, select parent or child, copy CSS, zoom to selection, show in layers).
+- The / list in the composer is the skill picker with app commands added: a command shows only when every query word starts a word of its slash name, so plain skill searches are unchanged. Tab completes the top row; Enter runs a command or adds a skill. Shift+Tab in the composer cycles Edit, Plan, Critique.
+- Element resize drags add `body.element-resizing` (frames take no pointer events) and hold the live HTML frame swap until the drag ends (`usePreviewFrames.holdSwap`); a swap during a drag dropped the preview style.
+
 ## End-to-end tests
 
 `npm run e2e` (Playwright, installed Chrome). Each Playwright config has its own `outputDir` under `test-results/` and launches Chrome with site isolation off for tests only: Playwright maps clicks into an out-of-process iframe without the parent's CSS scale, and each project origin is its own site. Global setup builds the UI and starts the real server with `STUDIO_AGENT=mock`, a temp `STUDIO_DATA_DIR`, and ports 4270/4271/5300. The server gets `STUDIO_CLAUDE_HOME` set to a fixture home (`e2e/support/skills-fixture.ts`), so tests never read the real `~/.claude`. Specs `e2e/a-*.spec.ts` to `e2e/f-*.spec.ts` cover the release workflows; `e2e/latency.spec.ts` writes `e2e/results/latency.json` (gates: open 1000, HTML 150, React 400, select 50, user message 50, first token 1500, direct edit 200 ms, p95); `e2e/perf-r5.spec.ts` writes `e2e/results/perf-r5.json` (telemetry kinds, Home start, open from Home, versions at 100, Home grid scroll, Home JS size).

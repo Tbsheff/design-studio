@@ -321,12 +321,12 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Token sweep | A11y | — | P0 | S | R9-2 (done for colors, font sizes, durations; 164 off-grid spacing px left) | — | Needed for dark theme |
 | Motion system | A11y | — | P1 | S | R9-3 (done) | — | Same timing everywhere |
 | Live regions, skeletons, keyboard-only flow | A11y | — | P1 | S–M | R9-4 (partial: run state), R9-5 (partial: versions), R9-6 (not done) | — | Access and a calm app |
-| Single-file HTML, PNG export | Export | CD, pen.dev | P0 | S | R10-1 | — | Share a design without the app |
-| Handoff bundle | Export | CD, OD | P0 | M | R10-2 | — | The path from design to product |
-| PDF, copy as code | Export | CD, pen.dev, Paper | P1 | S | R10-3 | — | Common handoff formats |
-| MCP server | Export | Figma, Paper | P1 | L | R10-4 (read-only tools); write tools deferred | Write tools: a `set_text` call from Claude Code changes the source and the preview | Lets Claude Code and other agents use the studio |
-| Open project in editor | Export | OD | P1 | S | R10-5 | — | One step from design to code |
-| Built React bundle | Export | — | P2 | S | R10-7 | — | Deploy without a build step |
+| Single-file HTML, PNG export | Export | CD, pen.dev | P0 | S | R10-1 (done) | — | Share a design without the app |
+| Handoff bundle | Export | CD, OD | P0 | M | R10-2 (done) | — | The path from design to product |
+| PDF, copy as code | Export | CD, pen.dev, Paper | P1 | S | R10-3 (done; PDF pages are images) | Vector PDF: text in the PDF can be selected | Common handoff formats |
+| MCP server | Export | Figma, Paper | P1 | L | R10-4 (done: 8 read-only tools); write tools deferred | Write tools: a `set_text` call from Claude Code changes the source and the preview | Lets Claude Code and other agents use the studio |
+| Open project in editor | Export | OD | P1 | S | R10-5 (done in the handoff view; palette entry after the R8 merge) | — | One step from design to code |
+| Built React bundle | Export | — | P2 | S | R10-7 (not done) | The zip's `dist/index.html` serves and renders | Deploy without a build step |
 | SVG export | Export | Figma | P2 | M | defer | Export a frame as SVG; it opens in a browser within 2% pixel diff | HTML and PNG cover most uses |
 | Deploy | Export | OD, CD | P2 | M | defer | Deploy to Vercel with a token; the URL serves the head version | Handoff and zip cover the need now |
 | PPTX and slides | Export | CD, OD | P2 | L | defer | A 5-slide deck exports to a PPTX that opens in Keynote with 5 slides | Deck mode does not exist yet |

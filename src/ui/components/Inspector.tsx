@@ -15,6 +15,7 @@ import { AlignField, ColorField, InspectorSection, SelectField } from './Inspect
 import { AutoLayoutSection, SizeSection } from './InspectorLayout';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
+import { CopyCodeMenu } from './CopyCodeMenu';
 import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { MultiCreateTokenHost, MultiNote, MultiSizeSection } from './InspectorMulti';
 import { NumberField } from './NumberField';
@@ -70,7 +71,7 @@ function StatusText({ status }: { status: SaveStatus }) {
   return null;
 }
 
-function Header({ selection, edit, ui, authored }: { selection: SelectionContext; edit: DirectEdit; ui: TokenUi | null; authored: AuthoredCssState }) {
+function Header({ selection, edit, ui, authored, projectId, directionId }: { selection: SelectionContext; edit: DirectEdit; ui: TokenUi | null; authored: AuthoredCssState; projectId: string; directionId: string | null }) {
   const source = selection.source;
   const where = source ? `${source.file}:${source.line}` : '';
   return (
@@ -84,6 +85,7 @@ function Header({ selection, edit, ui, authored }: { selection: SelectionContext
       </span>
       <SnapToggle ui={ui} />
       <CopyCssButton authored={authored} />
+      <CopyCodeMenu projectId={projectId} directionId={directionId} selector={selection.selector} />
       <button type="button" className="btn ghost small" onClick={edit.reset}>
         Reset
       </button>
@@ -190,7 +192,7 @@ function Editor(props: InspectorProps & { target: SelectionContext }) {
     <TokenUiContext.Provider value={tk.ui}>
     <div className="inspector" aria-label="Design inspector">
       <InspectorBreadcrumb selection={props.target} port={props.port} />
-      <Header selection={props.target} edit={edit} ui={tk.ui} authored={authored} />
+      <Header selection={props.target} edit={edit} ui={tk.ui} authored={authored} projectId={props.projectId} directionId={props.directionId} />
       <div className="ins-scroll">
         <ErrorLine status={edit.status} />
         <TokenLint ui={tk.ui} edit={edit} css={authored.css} />

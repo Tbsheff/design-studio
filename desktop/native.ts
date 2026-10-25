@@ -65,6 +65,9 @@ export class NativeShell {
     this.recents = readRecents(this.deps.recentsFile());
     ipcMain.on(DESKTOP_IPC.context, (event, raw: unknown) => this.onContext(event.sender, raw));
     ipcMain.handle(DESKTOP_IPC.pickFolder, (event, raw: unknown) => this.pickFolder(event.sender, raw));
+    ipcMain.on(DESKTOP_IPC.revealExport, (event) => {
+      if (this.isStudio(event.sender)) this.revealExport();
+    });
     session.defaultSession.on('will-download', (_event, item, contents) => this.onDownload(item, contents));
     this.refreshMenus();
   }

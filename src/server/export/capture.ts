@@ -1,0 +1,79 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import type { ExportFrame, ExportScale, ExportScope } from '../../shared/export.js';
+import type { RenderClip } from '../../shared/render-rpc.js';
+import { BadRequestError } from '../store/errors.js';
+import type { PreviewService } from '../types.js';
+import { withPagePath } from './source.js';
+
+const MAX_OUTPUT_PIXELS = 80_000_000;
+const READY_EXPRESSION = `(async () => {
+  try { await document.fonts.ready; } catch (error) {}
+  await Promise.all([...document.images].filter((img) => !img.complete).map((img) => new Promise((done) => { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); setTimeout(done, 3000); })));
+  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+  return true;
+})()`;
+const PAGE_SIZE_EXPRESSION = '[Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0), Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)]';
+
+export interface Shot {
+  frame: ExportFrame;
+  png: Buffer;
+  width: number;
+  height: number;
+  cssWidth: number;
+  cssHeight: number;
+  cropped: boolean;
+}
+
+export function pngDimensions(bytes: Buffer): { width: number; height: number } {
+  if (bytes.length < 24 || bytes.readUInt32BE(12) !== 0x49484452) throw new Error('not a PNG');
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+
+function selectorClipExpression(selector: string): string {
+  return `(() => {
+    let element = null;
+    try { element = document.querySelector(${JSON.stringify(selector)}); } catch (error) { return null; }
+    if (!element) return null;
+    const box = element.getBoundingClientRect();
+    if (box.width < 1 || box.height < 1) return null;
+    return { x: Math.max(0, box.left + window.scrollX), y: Math.max(0, box.top + window.scrollY), width: box.width, height: box.height };
+  })()`;
+}
+
+export async function waitForPage(page: { evaluate<T>(expression: string): Promise<T> }): Promise<void> {
+  await Promise.race([page.evaluate(READY_EXPRESSION).catch(() => undefined), new Promise((done) => setTimeout(done, 8000).unref())]);
+}
+
+export async function captureFrame(preview: PreviewService, url: string, frame: ExportFrame, scale: ExportScale, scope: ExportScope, selector?: string, maxCssHeight?: number): Promise<Shot> {
+  if (!preview.withPage) throw new Error('this preview backend cannot export images');
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'studio-export-'));
+  const out = path.join(dir, 'shot.png');
+  try {
+    return await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height, scale }, async (page) => {
+      await waitForPage(page);
+      let clip: RenderClip;
+      if (selector) {
+        const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector));
+        if (!found) throw new BadRequestError('The selected element is not on this page');
+        clip = found;
+      } else if (scope === 'frame') {
+        clip = { x: 0, y: 0, width: frame.width, height: frame.height };
+      } else {
+        const [, pageHeight] = await page.evaluate<[number, number]>(PAGE_SIZE_EXPRESSION);
+        clip = { x: 0, y: 0, width: frame.width, height: Math.max(frame.height, Math.ceil(pageHeight)) };
+      }
+      const maxHeight = Math.min(maxCssHeight ?? Infinity, Math.floor(MAX_OUTPUT_PIXELS / (clip.width * scale * scale)));
+      const cropped = clip.height > maxHeight;
+      if (cropped) clip = { ...clip, height: maxHeight };
+      clip = { x: Math.round(clip.x), y: Math.round(clip.y), width: Math.max(1, Math.round(clip.width)), height: Math.max(1, Math.round(clip.height)) };
+      await page.screenshot(out, clip);
+      const png = await readFile(out);
+      const size = pngDimensions(png);
+      return { frame, png, ...size, cssWidth: clip.width, cssHeight: clip.height, cropped };
+    });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}

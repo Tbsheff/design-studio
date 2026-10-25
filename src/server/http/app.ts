@@ -46,6 +46,7 @@ import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeErro
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { registerCommentRoutes } from './comments-routes.js';
+import { registerExportRoutes } from './export-routes.js';
 import { registerRunControlRoutes } from './run-control-routes.js';
 import { registerRunTitleRoutes } from './run-title-routes.js';
 import { listWorkTree, parseMentions, readMentionFiles } from './mentions.js';
@@ -931,8 +932,10 @@ export function createApp(deps: AppDeps): Hono {
     return c.json(samples);
   });
 
+  const comments = deps.comments ?? createCommentStore(config.dataDir, bus);
+  registerExportRoutes(app, { projects, versions, preview, comments, studioToken: config.studioToken, dataDir: config.dataDir });
   registerCommentRoutes(app, {
-    comments: deps.comments ?? createCommentStore(config.dataDir, bus),
+    comments,
     runner,
     runsDir,
     loadDirection,

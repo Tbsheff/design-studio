@@ -228,7 +228,7 @@ export function VersionRow(props: VersionRowProps) {
           pressed={picked}
           onClick={props.onToggleCompare}
         />
-        <RowAction label="Export" icon="download" tip="Export as zip" onClick={props.onExport} />
+        <RowAction label="Export" icon="download" tip="Export, handoff or source zip" onClick={props.onExport} />
         <RowAction label="Branch" icon="branch" tip="New direction from here" onClick={props.onBranch} />
         {isHead && v.meta.level !== 'polish' && (
           <RowAction

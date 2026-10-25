@@ -16,6 +16,8 @@ interface Props {
   onExit: () => void;
   onDesign: () => void;
   onSettings: () => void;
+  canExport: boolean;
+  onExport: () => void;
 }
 
 function ConnectionState({ connection }: { connection: string }) {
@@ -70,6 +72,10 @@ export function StudioTopbar(props: Props) {
         <button className="btn ghost small has-icon" onClick={props.onDesign}>
           <Icon name="doc" />
           DESIGN.md
+        </button>
+        <button className="btn ghost small has-icon" disabled={!props.canExport} data-tip={props.canExport ? 'Export, handoff and Claude Code' : 'Save a version to export'} data-tip-align="end" onClick={props.onExport}>
+          <Icon name="download" />
+          Export
         </button>
         <ThemeButton />
         <button className="icon-btn" aria-label="Settings" data-tip="Project settings" data-tip-align="end" onClick={props.onSettings}>

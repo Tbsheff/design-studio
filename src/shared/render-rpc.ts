@@ -19,7 +19,7 @@ export interface RenderErrors {
 }
 
 export interface RenderOps {
-  open: { args: { width: number; height: number }; result: { pageId: string } };
+  open: { args: { width: number; height: number; scale?: number }; result: { pageId: string } };
   goto: { args: { pageId: string; url: string; timeoutMs: number; settleMs: number }; result: null };
   evaluate: { args: { pageId: string; expression: string }; result: unknown };
   screenshot: { args: { pageId: string; path: string; clip?: RenderClip }; result: { width: number; height: number } };

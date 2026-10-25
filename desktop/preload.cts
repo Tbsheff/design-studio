@@ -5,6 +5,7 @@ const BOOT_FLAG = '--studio-boot=';
 const COMMAND_CHANNEL = 'studio:command';
 const CONTEXT_CHANNEL = 'studio:context';
 const PICK_FOLDER_CHANNEL = 'studio:pick-folder';
+const REVEAL_EXPORT_CHANNEL = 'studio:reveal-export';
 
 type Command = { type: string } & Record<string, unknown>;
 
@@ -56,7 +57,11 @@ async function pickFolder(options: unknown): Promise<string | null> {
   return typeof chosen === 'string' ? chosen : null;
 }
 
-contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder }));
+function revealExport(): void {
+  ipcRenderer.send(REVEAL_EXPORT_CHANNEL);
+}
+
+contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, revealExport }));
 
 const THEME_GET_CHANNEL = 'studio:theme-get';
 const THEME_SET_CHANNEL = 'studio:theme-set';

@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
 import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
-import { downloadBlob } from '../format';
 import { POLISH_REQUEST } from '../polish';
 import { createDraftStore, homeVariations, useDraftActive, useUi } from '../storage';
 import { useDesignSystemState } from '../useDesignSystemState';
@@ -38,6 +37,19 @@ import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
 import { setTelemetryScope } from '../perfTelemetry';
 import { renameVersion } from '../versionsApi';
+import { useExportTarget } from '../useExportTarget';
+import type { ExportTarget } from '../exportApi';
+
+const ExportDialog = lazy(() => import('./ExportDialog').then((m) => ({ default: m.ExportDialog })));
+
+function ExportLayer({ target, onClose }: { target: ExportTarget | null; onClose: () => void }) {
+  if (!target) return null;
+  return (
+    <Suspense fallback={null}>
+      <ExportDialog target={target} onClose={onClose} />
+    </Suspense>
+  );
+}
 
 function firstText(...texts: (string | null | undefined)[]): string | null {
   return texts.find((text) => typeof text === 'string') ?? null;
@@ -199,6 +211,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     }
   }, []);
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
+  const exporter = useExportTarget(projectId, direction, versions);
   const rewind = useRewind({ projectId, direction, versions, status, busy, running: activeRun, act, guard, seedRun: data.seedRun, setDirectionId: data.setDirectionId, refreshVersions: data.refreshVersions });
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
@@ -271,6 +284,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onExit={guard(onExit)}
         onDesign={() => setDesignOpen(true)}
         onSettings={() => setSettingsOpen(true)}
+        canExport={exporter.canOpen}
+        onExport={exporter.openHead}
       />
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
         <main className="center">
@@ -406,7 +421,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
             onRestore: (v) => withDid((id) => refreshAfter(() => api.restore(projectId, id, v.id))),
             onUndo: undo,
-            onExport: (v) => void act(async () => downloadBlob(await api.exportVersion(projectId, v.id), `${project.name}-${v.id.slice(0, 7)}.zip`)),
+            onExport: (v) => exporter.open({ versionId: v.id }),
             onToggleCompare: (v) =>
               setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
             onCompare: () => setCompareOpen(true),
@@ -425,6 +440,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onCloseDesign={() => setDesignOpen(false)}
         onCloseSettings={() => setSettingsOpen(false)}
       />
+      <ExportLayer target={exporter.target} onClose={exporter.close} />
       <StudioToast text={firstText(editHistory.toast, packActions.toast?.text)} />
     </div>
   );

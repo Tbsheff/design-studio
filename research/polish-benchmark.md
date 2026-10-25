@@ -317,10 +317,10 @@ Every row marked missing or partial in the scorecard is here, with the round tha
 | Dock badge | Keyboard | — | P2 | S | R8-8 | — | Know a run is done with the window hidden |
 | Project tabs | Keyboard | Paper | P2 | L | defer | Open 2 projects in tabs; a run in tab 1 goes on while tab 2 is in use | Needs one server session per tab |
 | Rebindable keys | Keyboard | CC | P2 | M | defer | Change Shift+1 to F in a keymap file; the sheet and palette show F | The keymap file from R8-2 makes this easy later |
-| App dark theme | A11y | Figma | P0 | L | R9-1 (R1–R8 use tokens only, so R9 changes values) | — | Pros work in dark rooms; every rival has it |
-| Token sweep | A11y | — | P0 | S | R9-2 | — | Needed for dark theme |
-| Motion system | A11y | — | P1 | S | R9-3 | — | Same timing everywhere |
-| Live regions, skeletons, keyboard-only flow | A11y | — | P1 | S–M | R9-4, R9-5, R9-6 | — | Access and a calm app |
+| App dark theme | A11y | Figma | P0 | L | R9-1 (done: System, Light, Dark on Home and studio top bar; palette entry after R8 merge) | — | Pros work in dark rooms; every rival has it |
+| Token sweep | A11y | — | P0 | S | R9-2 (done for colors, font sizes, durations; 164 off-grid spacing px left) | — | Needed for dark theme |
+| Motion system | A11y | — | P1 | S | R9-3 (done) | — | Same timing everywhere |
+| Live regions, skeletons, keyboard-only flow | A11y | — | P1 | S–M | R9-4 (partial: run state), R9-5 (partial: versions), R9-6 (not done) | — | Access and a calm app |
 | Single-file HTML, PNG export | Export | CD, pen.dev | P0 | S | R10-1 | — | Share a design without the app |
 | Handoff bundle | Export | CD, OD | P0 | M | R10-2 | — | The path from design to product |
 | PDF, copy as code | Export | CD, pen.dev, Paper | P1 | S | R10-3 | — | Common handoff formats |

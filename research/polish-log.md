@@ -586,3 +586,56 @@ Before in `/tmp/polish-r7/before/` (13), after in `/tmp/polish-r7/after/` (28): 
 ### Commits
 
 `6b0b49d`…`c23800b` duplicate and trash · `5cae5ba`, `1d4eb10` comments, drawing, replies · `0855251`…`117197d` rewind and run titles · `f1cb1cb`…`fc00219` version thumbs, names, compare · `7f1ba1e`, `fd53a9e`, `cdca5c9` variation frames, page per frame, resize · then the docs commit.
+
+## Round 9 — Motion, typography, dark mode and accessibility (2026-10-24)
+
+Rule for this round: no new tests and no vitest or Playwright runs. Checks below are `tsc`, `build:ui`, screenshots and throwaway audit scripts (axe-core and a culori contrast script, not committed).
+
+### Features
+
+| Item | Check in the benchmark | How it was checked | Result |
+|---|---|---|---|
+| R9-1 App dark theme (P0) | 0 axe color-contrast violations in both themes; screenshot per screen | axe-core `color-contrast` on Home, Design systems, Studio (Chat, Versions, Comments, Components) and Project settings, light and dark | Pass: 0 violations on all 14. System, Light and Dark menu on Home and in the studio top bar (lazy chunk, 1.9 kB, loads on click). Applied before first paint; survives reload. Not in Settings (settings are per project) and not in the palette (R8 owns it): add the palette entry after the merge |
+| R9-1 desktop | Window background matches, no flash | Code only: `desktop/theme.ts`; Electron not launched (it would use the real userData and a running app's lock) | Not run. Main owns the preference (`theme.json` in userData) because the origin can change; `backgroundColor` follows the resolved theme and `nativeTheme` `updated`; the setup window follows macOS |
+| R9-2 Token sweep (P0) | 0 raw colors and 0 px font sizes outside `tokens.css`; fewer than 20 raw spacing px | grep | Colors: 0 in CSS (35 moved to tokens), 1 TSX halo moved; `#ffffff` in `InspectorFields`/`TokenInputs` stays (a color-input value, not a UI color). Font sizes: 0 px (10 px badge raised to 12). Spacing: 89 grid values moved to `--s-*`; 164 off-grid values (mostly 2 and 6 px) stay — fail against < 20 |
+| R9-3 Motion system (P1) | 0 literal durations outside `tokens.css`; no transform animation with reduced motion | grep; the global reduced-motion rule | Pass by grep. New `--ease-out`, `--ease-in-out`, `--ease-spring`, `--ease-standard`, `--dur-loop*`, `--dur-tip-delay`; old names kept (`--ease` aliases `--ease-out`) so R8 and R10 CSS still works |
+| R9-4 Live regions (P1) | 1 announcement per state change | Code review | Partial: one polite status region in the chat says "Run started / finished / stopped / failed" and the queue count; text changes only on state change. Errors already use `role="alert"`. No aria-live spy run |
+| R9-5 Skeletons (P1) | Skeleton within 100 ms, CLS < 0.05 | Visual only | Partial: Versions panel shows 3 skeleton rows. Chat history and inspector: not done |
+| R9-6 Keyboard-only flow (P1) | Playwright keys-only flow | — | Not done (needs a test; rule change) |
+
+### Polish
+
+- Dark palette: cool neutral (hue 250), bg L 0.2, raised surfaces L 0.24 for modals, menus, popovers and toasts (`--surface-raised`; equals `--surface` in light, so light is unchanged). Shadows in dark are black with a 1 px white hairline. Image and swatch outlines are pure black 10% in light and pure white 10% in dark (`--edge*`).
+- Contrast (culori, both themes): text, text-2, text-3 on bg, surface-2 and hover; on-accent on accent and hover; accent-text on accent-soft; danger, ok, warn on soft; diff pairs; stage text; tooltip. All ≥ 4.5:1 except dark `on-accent` on `danger` (2.8), which no rule uses as a fill.
+- The user's design renders as authored: iframes keep `color-scheme: light`; frame paper, selection, measure, halo and comment-pin shadows have no dark value; `nativeTheme.themeSource` stays `system` (Chromium gives iframes the OS `prefers-color-scheme`, measured in the browser).
+- Theme switch turns off transitions for two frames, so the switch does not animate every color.
+- Type: body line height 20 px (was 19.5); `--t-display` 40 px for the pack card "Aa"; Tailwind `--text-*` sizes in `library.css` mapped by pixel value (`--text-sm` 14 → `--t-md`). `tabular-nums` on every number readout class (zoom, sizes, counts, times, run foot, inspector inputs).
+- Layer eye press scale 0.96 (was 0.92). Odd gaps (3, 5 px) to 4 px; badge padding 5 → 6 px.
+
+### Screens swept
+
+Home, Trash, Design systems, pack detail, New design system, Studio (chat, inspector, layers, versions, comments, components), Project settings, theme menu. Light and dark. Before in `/tmp/polish-r9/before/` (20), after in `/tmp/polish-r9/after/` (29 incl. `*-theme-menu.png`, `light-pref-on-dark-os-home.png`, `*-ds-detail*.png`). Tokens tab and setup window not shot (no pack on the sample project; Electron not launched).
+
+### Bundle
+
+Home JS 299,733 bytes (gate 300,000; Round 7 was 299,247, so +486 for the theme button). The theme script is inline in `index.html`; the menu is a lazy chunk. Only 267 bytes are left: the next Home change must be lazy.
+
+### Left for later rounds
+
+- Palette entry "Theme: System / Light / Dark" (R8 owns the palette) and a View > Appearance menu item (`desktop/menu.ts`, not touched).
+- Native context menus and dialogs follow macOS, not an explicit app choice (see above).
+- Electron run to check no-flash start, theme restore after restart and the setup window in dark.
+- 164 off-grid spacing values; 7 px paddings in inputs are height-tuned and need a visual pass.
+- Chat and inspector skeletons; keyboard-only flow test; aria-live spy.
+- Components panel thumbnails show transparent parts of a component on the studio surface, so in dark a transparent element sits on dark.
+- Design systems and New design system headers have no theme button (Home and Studio do).
+
+### Test runs (final)
+
+- `npx tsc --noEmit -p tsconfig.json`: clean.
+- `npm run build:ui`: built.
+- vitest, Playwright: not run (rule).
+
+### Commits
+
+`392f43a` dark tokens and sweep · `629f0e5` theme menu · `a52a654` desktop background · `aa5ebe0` live region and versions skeleton · `88007aa` spacing tokens · then this docs commit.

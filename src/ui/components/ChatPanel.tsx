@@ -196,6 +196,24 @@ interface Props {
   onApprovePlan?: (run: RunView) => void;
 }
 
+const RUN_ANNOUNCE: Record<RunView['status'], string> = {
+  running: 'Run started',
+  completed: 'Run finished',
+  canceled: 'Run stopped',
+  failed: 'Run failed',
+  budget_exceeded: 'Run stopped at the spending limit',
+};
+
+function RunAnnouncer({ run }: { run: RunView | undefined }) {
+  const queued = run?.status === 'running' ? run.queue.length : 0;
+  const text = run ? `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ''}` : '';
+  return (
+    <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+      {text}
+    </p>
+  );
+}
+
 export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
@@ -231,6 +249,7 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   const lastId = runs.at(-1)?.runId;
   return (
     <div className="chat-wrap">
+      <RunAnnouncer run={pending ?? runs.at(-1)} />
       {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">

@@ -164,8 +164,17 @@ function VersionsEmpty({ count, loading }: { count: number; loading: boolean }) 
   if (count > 0) return null;
   if (loading) {
     return (
-      <div className="empty-note" role="status">
-        Loading versions…
+      <div className="version-skeletons" role="status" aria-busy="true">
+        <span className="sr-only">Loading versions…</span>
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="version-skeleton" aria-hidden="true">
+            <span className="version-skeleton-thumb" />
+            <span className="skeleton-lines">
+              <span />
+              <span />
+            </span>
+          </div>
+        ))}
       </div>
     );
   }

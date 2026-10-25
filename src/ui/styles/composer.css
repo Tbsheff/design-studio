@@ -639,3 +639,8 @@
   overflow: hidden;
   color: var(--text);
 }
+
+.slash-opt .slash-name {
+  font-family: var(--mono);
+  font-weight: 500;
+}

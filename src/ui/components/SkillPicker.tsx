@@ -4,6 +4,8 @@ import { api, errorText } from '../api';
 import { NO_SKILLS_TEXT, enabledSkills, originText, plural, skillDisplayName, useSkillCatalog } from '../skills';
 import { Icon } from './Icon';
 import { SkillsChecklist } from './SkillsChecklist';
+import { rank } from '../commands/fuzzy';
+import type { Command } from '../commands/registry';
 
 function matches(skill: SkillInfo, query: string): boolean {
   const needle = query.trim().toLowerCase();
@@ -74,32 +76,81 @@ interface PickerProps {
   exclude: readonly string[];
   onPick: (id: string) => void;
   onClose: () => void;
+  commands?: readonly Command[];
+  onCommand?: (command: Command) => void;
 }
 
-export function SkillPicker({ disabled, exclude, onPick, onClose }: PickerProps) {
+type PickItem = { kind: 'command'; key: string; command: Command } | { kind: 'skill'; key: string; skill: SkillInfo };
+
+function slashText(query: string): string {
+  return query.replace(/^\//, '');
+}
+
+function shownCommands(commands: readonly Command[], query: string): Command[] {
+  const tokens = slashText(query).trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+  const hits = commands.filter((c) => {
+    const words = (c.slash ?? '').toLowerCase().split(/[\s-]+/);
+    return tokens.every((t) => words.some((w) => w.startsWith(t)));
+  });
+  return rank(hits, tokens.join(' '), (c) => ({ title: c.slash ?? c.title })).map((r) => r.item);
+}
+
+function completion(item: PickItem | undefined): string | null {
+  if (!item) return null;
+  return item.kind === 'command' ? `/${item.command.slash ?? ''}` : `/${item.skill.id}`;
+}
+
+function CommandOption({ command, active, onPick }: { command: Command; active: boolean; onPick: () => void }) {
+  return (
+    <li id={`skill-opt-cmd-${command.id}`} role="option" aria-selected={active} aria-disabled={command.disabled ? true : undefined} className={`skill-opt slash-opt ${active ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={onPick}>
+      <span className="skill-opt-head">
+        <Icon name={command.icon ?? 'sparkle'} size={13} />
+        <strong className="slash-name">/{command.slash}</strong>
+        <span className="skill-origin">App</span>
+      </span>
+      <span className="skill-opt-desc">{command.disabled ?? command.title}</span>
+    </li>
+  );
+}
+
+export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [], onCommand }: PickerProps) {
   const { catalog, error } = useSkillCatalog();
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const ref = useDismiss(onClose);
   const all = enabledSkills(catalog, disabled).filter((skill) => skill.modelInvocable && !exclude.includes(skill.id));
-  const shown = all.filter((skill) => matches(skill, query));
-  const current = shown[Math.min(active, Math.max(0, shown.length - 1))];
+  const shown = all.filter((skill) => matches(skill, slashText(query)));
+  const items: PickItem[] = [
+    ...shownCommands(commands, query).map((command): PickItem => ({ kind: 'command', key: `cmd-${command.id}`, command })),
+    ...shown.map((skill): PickItem => ({ kind: 'skill', key: skill.id, skill })),
+  ];
+  const current = items[Math.min(active, Math.max(0, items.length - 1))];
   const manualCount = enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length;
   useFitAbove(ref, 420);
   useEffect(() => {
-    if (current) document.getElementById(`skill-opt-${current.id}`)?.scrollIntoView({ block: 'nearest' });
+    if (current) document.getElementById(`skill-opt-${current.key}`)?.scrollIntoView({ block: 'nearest' });
   }, [current]);
 
+  const choose = (item: PickItem | undefined) => {
+    if (item?.kind === 'skill') onPick(item.skill.id);
+    else if (item && !item.command.disabled) onCommand?.(item.command);
+  };
+
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
+    const done = completion(current);
     if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (current) onPick(current.id);
+      choose(current);
+    } else if (e.key === 'Tab' && !e.shiftKey && done) {
+      e.preventDefault();
+      setQuery(done);
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      setActive((index) => nextIndex(e.key, index, shown.length));
+      setActive((index) => nextIndex(e.key, index, items.length));
     }
   };
 
@@ -112,8 +163,9 @@ export function SkillPicker({ disabled, exclude, onPick, onClose }: PickerProps)
         role="combobox"
         aria-expanded="true"
         aria-controls="skill-options"
-        aria-activedescendant={current ? `skill-opt-${current.id}` : undefined}
-        placeholder="Search skills"
+        aria-activedescendant={current ? `skill-opt-${current.key}` : undefined}
+        placeholder={commands.length > 0 ? 'Search skills, or type a command like plan or export' : 'Search skills'}
+        spellCheck={false}
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -121,16 +173,20 @@ export function SkillPicker({ disabled, exclude, onPick, onClose }: PickerProps)
         }}
         onKeyDown={onKey}
       />
-      <PickerBody catalogLoaded={Boolean(catalog)} error={error} total={catalog?.skills.length ?? 0} enabled={all.length}>
-        <ul id="skill-options" role="listbox" aria-label="Skills" className="skill-opts">
-          {shown.map((skill) => (
-            <SkillOption key={skill.id} skill={skill} active={skill === current} onPick={() => onPick(skill.id)} />
-          ))}
+      <ul id="skill-options" role="listbox" aria-label="Skills" className="skill-opts">
+        {items.map((item) =>
+          item.kind === 'command' ? (
+            <CommandOption key={item.key} command={item.command} active={item === current} onPick={() => choose(item)} />
+          ) : (
+            <SkillOption key={item.key} skill={item.skill} active={item === current} onPick={() => choose(item)} />
+          ),
+        )}
+        <PickerBody catalogLoaded={Boolean(catalog)} error={error} total={catalog?.skills.length ?? 0} enabled={all.length}>
           {shown.length === 0 && <li className="skill-empty">No skills match.</li>}
-        </ul>
-      </PickerBody>
+        </PickerBody>
+      </ul>
       <p className="skill-pop-foot">
-        ↑ ↓ to move, Enter to add, Esc to close
+        ↑ ↓ to move, Tab to complete, Enter to run or add, Esc to close
         {manualCount > 0 && (
           <span className="skill-pop-manual" title="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
             {' · '}
@@ -143,10 +199,10 @@ export function SkillPicker({ disabled, exclude, onPick, onClose }: PickerProps)
 }
 
 function PickerBody(props: { catalogLoaded: boolean; error: string | null; total: number; enabled: number; children: ReactNode }) {
-  if (props.error) return <p className="skill-empty">Could not load skills ({props.error}). Close this list and open it again to retry.</p>;
-  if (!props.catalogLoaded) return <p className="skill-empty">Loading skills…</p>;
-  if (props.total === 0) return <p className="skill-empty" data-testid="skills-empty">{NO_SKILLS_TEXT}</p>;
-  if (props.enabled === 0) return <p className="skill-empty">All skills are off for this project. Turn some on with the skills count below.</p>;
+  if (props.error) return <li className="skill-empty">Could not load skills ({props.error}). Close this list and open it again to retry.</li>;
+  if (!props.catalogLoaded) return <li className="skill-empty">Loading skills…</li>;
+  if (props.total === 0) return <li className="skill-empty" data-testid="skills-empty">{NO_SKILLS_TEXT}</li>;
+  if (props.enabled === 0) return <li className="skill-empty">All skills are off for this project. Turn some on with the skills count below.</li>;
   return <>{props.children}</>;
 }
 

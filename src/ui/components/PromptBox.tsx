@@ -18,6 +18,8 @@ import { skillInstruction } from '../skills';
 import { useRunLevel } from '../useRunLevel';
 import { useDesktopCommand } from '../desktop';
 import { useDraft, type DraftStore } from '../storage';
+import { useCommands, type Command } from '../commands/registry';
+import { composerCommands, isModeCycleKey, nextMode, slashCommands } from '../commands/composerCommands';
 
 interface Props {
   projectId: string;
@@ -106,9 +108,9 @@ function KbdHint({ running }: { running: boolean }) {
 
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
-  edit: { label: 'Describe a change', placeholder: 'Describe a change, or type / for skills' },
-  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan, or type / for skills' },
-  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique, or type / for skills' },
+  edit: { label: 'Describe a change', placeholder: 'Describe a change, or type / for commands' },
+  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan, or type / for commands' },
+  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique, or type / for commands' },
 };
 
 function designsBlocker(mode: ComposerMode, selectionCount: number): string | null {
@@ -135,6 +137,12 @@ export function PromptBox(props: Props) {
   const closePicker = () => {
     setPicking(false);
     window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt textarea')?.focus());
+  };
+  const focusInput = () => window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]')?.focus());
+  useCommands(() => composerCommands({ mode, setMode, level: runLevel.level, setLevel: runLevel.choose, variations: props.variations, focus: focusInput }));
+  const runSlash = (command: Command) => {
+    setPicking(false);
+    command.run();
   };
   const pickSkill = (id: string) => {
     setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -184,6 +192,11 @@ export function PromptBox(props: Props) {
       return;
     }
     if (inInput && mentions.onKeyDown(event)) return;
+    if (inInput && isModeCycleKey(event)) {
+      event.preventDefault();
+      setMode(nextMode(mode));
+      return;
+    }
     keys.onKeyDown(event);
   };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
@@ -272,7 +285,7 @@ export function PromptBox(props: Props) {
         }}
       />
       {mentions.picker.open && <MentionList shown={mentions.picker.shown} current={mentions.picker.current} loading={mentions.loading} onPick={mentions.pick} onHover={mentions.picker.setActive} />}
-      {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} />}
+      {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} commands={slashCommands()} onCommand={runSlash} />}
       <Composer
         className={`composer cursor-text ${dragging ? 'bg-accent ring-2 ring-primary/40' : ''}`}
         onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
@@ -312,7 +325,7 @@ export function PromptBox(props: Props) {
             className={`icon-btn small ${picking ? 'on' : ''}`}
             aria-label="Skills"
             aria-expanded={picking}
-            data-tip="Use a skill (/)"
+            data-tip="Commands and skills (/)"
             data-tip-side="top"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => (picking ? closePicker() : setPicking(true))}

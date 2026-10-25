@@ -28,7 +28,14 @@ export type DesktopCommand =
   | { type: 'redo' }
   | { type: 'run' }
   | { type: 'stop' }
-  | { type: 'zoom'; key: ZoomKey };
+  | { type: 'zoom'; key: ZoomKey }
+  | { type: 'command'; id: string };
+
+const COMMAND_ID = /^[a-z][a-z0-9.-]{0,63}$/;
+
+export function isCommandId(value: unknown): value is string {
+  return typeof value === 'string' && COMMAND_ID.test(value);
+}
 
 export interface DesktopContext {
   projectId: string | null;
@@ -40,10 +47,15 @@ export const DESKTOP_IPC = {
   command: 'studio:command',
   context: 'studio:context',
   pickFolder: 'studio:pick-folder',
+  dropFolder: 'studio:drop-folder',
 } as const;
 
 const MAX_PICK_TITLE = 200;
 const MAX_PICK_PATH = 4096;
+
+export function parseDroppedPath(value: unknown): string | null {
+  return typeof value === 'string' && value.startsWith('/') && value.length <= MAX_PICK_PATH && !value.includes('\0') ? value : null;
+}
 
 interface PickFolderRequest {
   title: string;

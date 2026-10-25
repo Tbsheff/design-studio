@@ -1,5 +1,6 @@
 import { app, Menu, type MenuItemConstructorOptions } from 'electron';
 import type { ZoomKey } from '../src/shared/contracts.js';
+import { accelerator, type KeyId } from '../src/shared/keymap.js';
 
 export interface MenuActions {
   checkSetup: () => void;
@@ -11,6 +12,7 @@ export interface MenuActions {
   run: () => void;
   stop: () => void;
   zoom: (key: ZoomKey) => void;
+  command: (id: string) => void;
   revealWorkTree: () => void;
   revealExport: () => void;
 }
@@ -102,7 +104,31 @@ function runMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOpt
   };
 }
 
+function shownKey(key: KeyId | undefined): Pick<MenuItemConstructorOptions, 'accelerator' | 'registerAccelerator'> {
+  const shown = key ? accelerator(key) : undefined;
+  return shown ? { accelerator: shown, registerAccelerator: false } : {};
+}
+
+interface CommandItem {
+  label: string;
+  command: string;
+  key?: KeyId;
+  menuId?: string;
+  always?: boolean;
+}
+
+function commandItem(actions: MenuActions, state: MenuState, item: CommandItem): MenuItemConstructorOptions {
+  return {
+    id: item.menuId ?? item.command,
+    label: item.label,
+    enabled: item.always === true || state.inProject,
+    click: () => actions.command(item.command),
+    ...shownKey(item.key),
+  };
+}
+
 function viewMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
+  const command = (item: CommandItem) => commandItem(actions, state, item);
   const zoom = (id: string, label: string, accelerator: string, key: ZoomKey): MenuItemConstructorOptions => ({
     id,
     label,
@@ -113,9 +139,15 @@ function viewMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOp
   return {
     label: 'View',
     submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools' },
+      command({ label: 'Command Palette…', command: 'palette', key: 'palette', always: true }),
+      command({ label: 'Keyboard Shortcuts', command: 'shortcuts', key: 'shortcuts', always: true }),
+      { type: 'separator' },
+      command({ label: 'Show Layers', command: 'view.layers', key: 'layers' }),
+      command({ label: 'Chat', command: 'panel.chat' }),
+      command({ label: 'Design', command: 'panel.design' }),
+      command({ label: 'Components', command: 'panel.components' }),
+      command({ label: 'Comments', command: 'panel.comments' }),
+      command({ label: 'Versions', command: 'panel.versions' }),
       { type: 'separator' },
       zoom(MENU_IDS.zoomIn, 'Zoom In', 'CmdOrCtrl+=', 'in'),
       zoom(MENU_IDS.zoomOut, 'Zoom Out', 'CmdOrCtrl+-', 'out'),
@@ -123,13 +155,64 @@ function viewMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOp
       zoom(MENU_IDS.zoomFit, 'Zoom to Fit', 'CmdOrCtrl+1', 'fit'),
       zoom(MENU_IDS.zoomSelection, 'Zoom to Selection', 'CmdOrCtrl+2', 'selection'),
       { type: 'separator' },
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
       { role: 'togglefullscreen' },
     ],
   };
 }
 
+function canvasMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
+  const command = (item: CommandItem) => commandItem(actions, state, item);
+  return {
+    label: 'Canvas',
+    submenu: [
+      command({ label: 'Select Tool', command: 'tool.select', key: 'tool-select' }),
+      command({ label: 'Comment Tool', command: 'tool.comment', key: 'tool-comment' }),
+      command({ label: 'Pen Tool', command: 'tool.draw', key: 'tool-draw' }),
+      { type: 'separator' },
+      command({ label: 'Live Preview', command: 'view.live' }),
+      command({ label: 'Last Completed Version', command: 'view.last' }),
+    ],
+  };
+}
+
+function goMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
+  const command = (item: CommandItem) => commandItem(actions, state, item);
+  return {
+    label: 'Go',
+    submenu: [
+      command({ label: 'Home', command: 'go.home', key: 'home' }),
+      command({ label: 'Next Direction', command: 'direction.next', key: 'next-direction' }),
+      command({ label: 'Previous Direction', command: 'direction.prev', key: 'prev-direction' }),
+      { type: 'separator' },
+      command({ label: 'Project Settings…', command: 'project.settings', key: 'settings' }),
+      command({ label: 'Edit DESIGN.md', command: 'project.design-md' }),
+    ],
+  };
+}
+
+function helpMenu(actions: MenuActions, state: MenuState): MenuItemConstructorOptions {
+  return {
+    role: 'help',
+    submenu: [commandItem(actions, state, { label: 'Keyboard Shortcuts', command: 'shortcuts', key: 'shortcuts', menuId: 'help-shortcuts', always: true })],
+  };
+}
+
 export function buildMenu(actions: MenuActions, state: MenuState): Menu {
-  return Menu.buildFromTemplate([appMenu(actions, state), fileMenu(actions, state), editMenu(actions), viewMenu(actions, state), runMenu(actions, state), { role: 'windowMenu' }]);
+  return Menu.buildFromTemplate([
+    appMenu(actions, state),
+    fileMenu(actions, state),
+    editMenu(actions),
+    viewMenu(actions, state),
+    canvasMenu(actions, state),
+    goMenu(actions, state),
+    runMenu(actions, state),
+    { role: 'windowMenu' },
+    helpMenu(actions, state),
+  ]);
 }
 
 export function buildDockMenu(newProject: () => void, recents: { id: string; name: string }[], open: (id: string) => void): Menu {

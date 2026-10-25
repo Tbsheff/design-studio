@@ -1,10 +1,11 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 const VERSION_FLAG = '--studio-version=';
 const BOOT_FLAG = '--studio-boot=';
 const COMMAND_CHANNEL = 'studio:command';
 const CONTEXT_CHANNEL = 'studio:context';
 const PICK_FOLDER_CHANNEL = 'studio:pick-folder';
+const DROP_FOLDER_CHANNEL = 'studio:drop-folder';
 
 type Command = { type: string } & Record<string, unknown>;
 
@@ -56,4 +57,16 @@ async function pickFolder(options: unknown): Promise<string | null> {
   return typeof chosen === 'string' ? chosen : null;
 }
 
-contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder }));
+function pathForFile(file: unknown): string {
+  try {
+    return webUtils.getPathForFile(file as File);
+  } catch {
+    return '';
+  }
+}
+
+function openDropped(folder: unknown): void {
+  if (typeof folder === 'string' && folder) ipcRenderer.send(DROP_FOLDER_CHANNEL, folder);
+}
+
+contextBridge.exposeInMainWorld('studioDesktop', Object.freeze({ platform: process.platform, version: appVersion(), boot: bootTimes(), onCommand, setContext, pickFolder, pathForFile, openDropped }));

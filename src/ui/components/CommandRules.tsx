@@ -37,7 +37,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
     <fieldset className="skills-field command-rules" data-testid="command-rules">
       <legend>Allowed commands</legend>
       {rules === null ? null : rules.length === 0 ? (
-        <p className="warn-line">No commands are always allowed.</p>
+        <p className="command-rules-empty">No commands are always allowed.</p>
       ) : (
         <ul>
           {rules.map((rule) => (

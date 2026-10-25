@@ -1,3 +1,5 @@
+export const RULE_MAX_CHARS = 2000;
+
 const SHELL_META = /[;&|`<>\n\r]|\$\(/;
 const PREFIX_SUFFIX = ' *';
 

@@ -1,6 +1,7 @@
 import type { Hono } from 'hono';
 import { z } from 'zod';
 import { BadRequestError, NotFoundError, assertSafeId } from '../store/errors.js';
+import { RULE_MAX_CHARS } from '../../shared/permissionRules.js';
 import type { AgentRunner, RunHandle } from '../types.js';
 
 const TEXT_MAX = 20_000;
@@ -15,7 +16,7 @@ const queueSchema = z
 
 const steerSchema = z.object({ text: z.string().trim().min(1).max(TEXT_MAX) }).strict();
 
-const answerSchema = z.union([z.object({ allow: z.literal(true), always: z.string().min(1).max(2000).optional() }).strict(), z.object({ allow: z.literal(false), note: z.string().max(2000).optional() }).strict()]);
+const answerSchema = z.union([z.object({ allow: z.literal(true), always: z.string().min(1).max(RULE_MAX_CHARS).optional() }).strict(), z.object({ allow: z.literal(false), note: z.string().max(2000).optional() }).strict()]);
 
 async function parse<T>(schema: z.ZodType<T>, text: string): Promise<T> {
   let body: unknown;

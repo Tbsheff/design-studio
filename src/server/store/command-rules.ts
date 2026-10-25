@@ -2,10 +2,10 @@ import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { RULE_MAX_CHARS } from '../../shared/permissionRules.js';
 import { createKeyedMutex } from './mutex.js';
 
 export const COMMAND_RULES_MAX = 200;
-export const COMMAND_RULE_MAX_CHARS = 2000;
 
 export interface CommandRuleStore {
   list(projectId: string): Promise<string[]>;
@@ -51,7 +51,7 @@ export function createCommandRuleStore(projectDir: (projectId: string) => string
     list: (projectId) => read(fileOf(projectId)),
     add: (projectId, rule) =>
       mutate(projectId, (rules) => {
-        if (!rule || rule.length > COMMAND_RULE_MAX_CHARS || rules.includes(rule)) return rules;
+        if (!rule || rule.length > RULE_MAX_CHARS || rules.includes(rule)) return rules;
         return [...rules, rule].slice(-COMMAND_RULES_MAX);
       }),
     remove: (projectId, rule) => mutate(projectId, (rules) => (rules.includes(rule) ? rules.filter((item) => item !== rule) : rules)),

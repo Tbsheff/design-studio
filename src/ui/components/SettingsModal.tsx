@@ -49,8 +49,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
         </button>
       </div>
       <div className="modal-body">
-        <SettingsFields draft={draft} onChange={setDraft} />
-        <CommandRules projectId={project.id} />
+        <SettingsFields draft={draft} onChange={setDraft} shellExtra={<CommandRules projectId={project.id} />} />
         {error && (
           <div className="alert error" role="alert">
             {error}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MODEL_OPTIONS, type SettingsDraft } from '../settingsDraft';
 import { SkillsChecklist } from './SkillsChecklist';
 
@@ -6,9 +7,10 @@ export { modelLabel, parseDraft, toDraft, type SettingsDraft } from '../settings
 interface Props {
   draft: SettingsDraft;
   onChange: (next: SettingsDraft) => void;
+  shellExtra?: ReactNode;
 }
 
-export function SettingsFields({ draft, onChange }: Props) {
+export function SettingsFields({ draft, onChange, shellExtra }: Props) {
   const set = (patch: Partial<SettingsDraft>) => onChange({ ...draft, ...patch });
   const known = MODEL_OPTIONS.some((m) => m.id === draft.model);
   return (
@@ -70,6 +72,7 @@ export function SettingsFields({ draft, onChange }: Props) {
         Shell commands run on this computer in the project folder. Installs download and run third-party code. Turn these on
         only for projects you trust.
       </p>
+      {shellExtra}
       <SkillsChecklist disabled={draft.disabledSkills} allowBash={draft.allowBash} onChange={(disabledSkills) => set({ disabledSkills })} />
     </div>
   );

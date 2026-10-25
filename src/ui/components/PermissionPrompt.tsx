@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { PermissionDecision, PermissionRequest } from '../../shared/contracts';
-import { ruleForCommand } from '../../shared/permissionRules';
+import { RULE_MAX_CHARS, ruleForCommand } from '../../shared/permissionRules';
 import { api, errorText } from '../api';
 import { Icon } from './Icon';
 
@@ -18,7 +18,7 @@ export function PermissionPrompt({ runId, request }: { runId: string; request: P
     });
   };
   const command = request.toolName === 'Bash' ? (request.input as { command?: unknown } | null)?.command : undefined;
-  const rule = typeof command === 'string' && command.trim() !== '' ? ruleForCommand(command) : null;
+  const rule = typeof command === 'string' && command.trim() !== '' && command.trim().length <= RULE_MAX_CHARS ? ruleForCommand(command) : null;
   const deny = () => answer({ allow: false, ...(note.trim() ? { note: note.trim() } : {}) });
   return (
     <section className="permission" role="group" aria-label={request.title} data-testid="permission-prompt">

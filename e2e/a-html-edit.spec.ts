@@ -74,8 +74,11 @@ test('A: HTML mock create, select edit, undo, restore, export', async ({ page, c
   await expect(page.locator('li.version')).toHaveCount(4);
 
   const headRow = versionRow(page, restoredHead.title).filter({ has: page.locator('.badge', { hasText: 'Head' }) });
-  const downloadPromise = page.waitForEvent('download');
   await headRow.getByRole('button', { name: 'Export' }).click();
+  const exportDialog = page.getByRole('dialog', { name: 'Export' });
+  await exportDialog.getByRole('radio', { name: 'Source' }).click();
+  const downloadPromise = page.waitForEvent('download');
+  await exportDialog.getByRole('button', { name: 'Export zip' }).click();
   const download = await downloadPromise;
   const outDir = mkdtempSync(path.join(os.tmpdir(), 'studio export '));
   const zipPath = path.join(outDir, 'design.zip');

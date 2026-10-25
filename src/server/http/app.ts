@@ -933,7 +933,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   const comments = deps.comments ?? createCommentStore(config.dataDir, bus);
-  registerExportRoutes(app, { projects, versions, preview, comments, studioToken: config.studioToken });
+  registerExportRoutes(app, { projects, versions, preview, comments, studioToken: config.studioToken, dataDir: config.dataDir });
   registerCommentRoutes(app, {
     comments,
     runner,

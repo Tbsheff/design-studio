@@ -46,7 +46,7 @@ export async function waitForPage(page: { evaluate<T>(expression: string): Promi
   await Promise.race([page.evaluate(READY_EXPRESSION).catch(() => undefined), new Promise((done) => setTimeout(done, 8000).unref())]);
 }
 
-export async function captureFrame(preview: PreviewService, url: string, frame: ExportFrame, scale: ExportScale, scope: ExportScope, selector?: string): Promise<Shot> {
+export async function captureFrame(preview: PreviewService, url: string, frame: ExportFrame, scale: ExportScale, scope: ExportScope, selector?: string, maxCssHeight?: number): Promise<Shot> {
   if (!preview.withPage) throw new Error('this preview backend cannot export images');
   const dir = await mkdtemp(path.join(os.tmpdir(), 'studio-export-'));
   const out = path.join(dir, 'shot.png');
@@ -64,7 +64,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
         const [, pageHeight] = await page.evaluate<[number, number]>(PAGE_SIZE_EXPRESSION);
         clip = { x: 0, y: 0, width: frame.width, height: Math.max(frame.height, Math.ceil(pageHeight)) };
       }
-      const maxHeight = Math.floor(MAX_OUTPUT_PIXELS / (clip.width * scale * scale));
+      const maxHeight = Math.min(maxCssHeight ?? Infinity, Math.floor(MAX_OUTPUT_PIXELS / (clip.width * scale * scale)));
       const cropped = clip.height > maxHeight;
       if (cropped) clip = { ...clip, height: maxHeight };
       clip = { x: Math.round(clip.x), y: Math.round(clip.y), width: Math.max(1, Math.round(clip.width)), height: Math.max(1, Math.round(clip.height)) };

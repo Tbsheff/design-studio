@@ -10,12 +10,14 @@ import { buildHandoff, handoffRoot, zipHandoff } from '../export/handoff.js';
 import { inlineHtml } from '../export/inline-html.js';
 import { imagesToPdf } from '../export/pdf.js';
 import { parseFrame, parseFrames, parseScale, resolveSource, type ExportDeps } from '../export/source.js';
+import { createMcpService } from '../mcp/server.js';
 import type { CommentStore } from '../store/comments.js';
 import { BadRequestError, NotFoundError, assertSafeId } from '../store/errors.js';
 
 export interface ExportRouteDeps extends ExportDeps {
   comments: CommentStore;
   studioToken: string;
+  dataDir: string;
 }
 
 const FORMATS: readonly Exclude<ExportFormat, 'handoff'>[] = ['png', 'pdf', 'html', 'zip'];
@@ -151,6 +153,16 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   });
 
   app.get('/api/editors', (c) => c.json(listEditors()));
+
+  const mcp = createMcpService(deps.dataDir, deps);
+  void mcp.boot();
+  app.get('/api/mcp', async (c) => c.json(await mcp.status()));
+  app.post('/api/mcp', async (c) => {
+    const input = await body(c);
+    if (input.rotate === true) await mcp.rotate();
+    if (typeof input.enabled === 'boolean') return c.json(await mcp.setEnabled(input.enabled));
+    return c.json(await mcp.status());
+  });
 
   app.post('/api/projects/:pid/d/:did/open-in-editor', async (c) => {
     const input = await body(c);

@@ -15,7 +15,7 @@ export function ruleForCommand(command: string): string {
   const trimmed = command.trim();
   if (trimmed === '' || hasShellMeta(trimmed)) return trimmed;
   const parts = words(trimmed);
-  return parts.length >= 2 ? `${parts[0]} ${parts[1]}${PREFIX_SUFFIX}` : trimmed;
+  return parts.length >= 2 ? `${parts.slice(0, 3).join(' ')}${PREFIX_SUFFIX}` : trimmed;
 }
 
 function prefixOf(rule: string): string[] | null {

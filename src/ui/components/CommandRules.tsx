@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { api, errorText } from '../api';
+import { errorText, json } from '../api';
+
+const rulesPath = (projectId: string) => `/api/projects/${encodeURIComponent(projectId)}/command-rules`;
+const listRules = (projectId: string) => json<{ rules: string[] }>('GET', rulesPath(projectId));
+const removeRule = (projectId: string, rule: string) => json<{ rules: string[] }>('POST', `${rulesPath(projectId)}/remove`, { rule });
 
 export function CommandRules({ projectId }: { projectId: string }) {
   const [rules, setRules] = useState<string[] | null>(null);
@@ -8,7 +12,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     let live = true;
-    api.commandRules(projectId).then(
+    listRules(projectId).then(
       (result) => {
         if (live) setRules(result.rules);
       },
@@ -25,7 +29,7 @@ export function CommandRules({ projectId }: { projectId: string }) {
     setBusy(rule);
     setError(null);
     try {
-      setRules((await api.removeCommandRule(projectId, rule)).rules);
+      setRules((await removeRule(projectId, rule)).rules);
     } catch (err) {
       setError(errorText(err));
     } finally {

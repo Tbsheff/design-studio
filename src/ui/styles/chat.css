@@ -375,6 +375,23 @@
   gap: var(--s-2);
 }
 
+.permission-actions {
+  flex-wrap: wrap;
+}
+
+.permission-always {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.permission-rule {
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .permission-deny input {
   flex: 1;
   min-width: 0;
@@ -382,6 +399,28 @@
 
 .permission-error {
   color: var(--danger);
+  font-size: var(--t-xs);
+}
+
+.command-rules ul {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.command-rules li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.command-rules code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
   font-size: var(--t-xs);
 }
 

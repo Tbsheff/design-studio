@@ -214,6 +214,9 @@ export const api = {
   cancelRun: (runId: string) => json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/cancel`),
   setQueue: (runId: string, items: QueuedMessage[]) => json<{ ok: boolean }>('PUT', `/api/runs/${encodeURIComponent(runId)}/queue`, { items }),
   steerRun: (runId: string, text: string) => json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/steer`, { text }),
+  commandRules: (projectId: string) => json<{ rules: string[] }>('GET', `/api/projects/${encodeURIComponent(projectId)}/command-rules`),
+  removeCommandRule: (projectId: string, rule: string) =>
+    json<{ rules: string[] }>('POST', `/api/projects/${encodeURIComponent(projectId)}/command-rules/remove`, { rule }),
   answerPermission: (runId: string, requestId: string, decision: PermissionDecision) =>
     json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/permissions/${encodeURIComponent(requestId)}`, decision),
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),

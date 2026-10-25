@@ -425,7 +425,7 @@ export interface PermissionRequest {
   detail: string;
 }
 
-export type PermissionDecision = { allow: true } | { allow: false; note?: string };
+export type PermissionDecision = { allow: true; always?: string } | { allow: false; note?: string };
 
 export type TodoStatus = 'pending' | 'in_progress' | 'completed';
 

@@ -231,7 +231,7 @@ class MockSession {
     const toolUseId = `mock_tool_${this.toolCounter}`;
     const input = { command };
     this.sink.toolStarted(toolUseId, 'Bash', input);
-    const gate = this.input.ask ? createBashGate(this.input.ask) : null;
+    const gate = this.input.ask ? createBashGate(this.input.ask, undefined, this.input.commandRules) : null;
     const decision = gate ? await gate(toolUseId, input) : { behavior: 'allow' as const };
     throwIfAborted(this.signal);
     if (decision.behavior === 'deny') {

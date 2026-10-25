@@ -7,7 +7,7 @@
   border: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--text);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-lg);
@@ -20,7 +20,7 @@
 }
 
 .modal::backdrop {
-  background: oklch(0.2 0.02 var(--hue) / 0.32);
+  background: var(--scrim);
   animation: fade-in var(--dur-slow) var(--ease);
 }
 
@@ -189,7 +189,7 @@
   max-height: min(620px, calc(100vh - 160px));
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--surface-raised);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
@@ -250,7 +250,7 @@
   object-fit: cover;
   object-position: top;
   border-radius: var(--r-md);
-  outline: 1px solid oklch(0 0 0 / 0.1);
+  outline: 1px solid var(--edge);
   outline-offset: -1px;
   background: var(--surface-2);
 }
@@ -435,4 +435,63 @@
 
 .dmd-preview table {
   font-size: var(--t-xs);
+}
+
+.theme-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.theme-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--s-1));
+  right: 0;
+  display: grid;
+  min-width: 160px;
+  padding: var(--s-1);
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-lg);
+  transform-origin: top right;
+  animation: menu-in var(--dur) var(--ease-out);
+}
+
+.theme-menu [role='menuitemradio'] {
+  display: grid;
+  grid-template-columns: 16px 1fr 14px;
+  align-items: center;
+  gap: var(--s-2);
+  height: 32px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--t-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.theme-menu [role='menuitemradio']:hover,
+.theme-menu [role='menuitemradio']:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.theme-menu [role='menuitemradio']:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.theme-menu [role='menuitemradio']:active {
+  background: var(--surface-active);
+}
+
+.theme-menu .icon {
+  color: var(--text-2);
+}
+
+.theme-menu [aria-checked='true'] .icon:last-child {
+  color: var(--accent-text);
 }

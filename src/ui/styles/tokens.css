@@ -3,6 +3,7 @@
   --bg: oklch(0.992 0.002 var(--hue));
   --surface: oklch(0.992 0.002 var(--hue));
   --surface-2: oklch(0.978 0.003 var(--hue));
+  --surface-raised: var(--surface);
   --surface-hover: oklch(0.955 0.004 var(--hue));
   --surface-active: oklch(0.93 0.005 var(--hue));
   --surface-inverse: oklch(0.22 0.01 var(--hue));
@@ -36,7 +37,35 @@
   --stage-dot: oklch(0.86 0.006 var(--hue));
   --stage-text: oklch(0.45 0.01 var(--hue));
   --select: oklch(0.6 0.2 254);
+  --select-tint: oklch(0.6 0.2 254 / 0.06);
   --measure: oklch(0.54 0.2 25);
+  --on-measure: oklch(0.99 0.006 25);
+  --on-warn: oklch(0.2 0.02 var(--hue));
+  --frame-bg: oklch(0.995 0 0);
+  --frame-shadow: 0 0 0 1px oklch(0.2 0.02 var(--hue) / 0.08), 0 2px 4px oklch(0.2 0.02 var(--hue) / 0.04),
+    0 12px 32px -8px oklch(0.2 0.02 var(--hue) / 0.16);
+  --halo: oklch(1 0 0 / 0.85);
+  --halo-solid: oklch(1 0 0);
+  --halo-soft: oklch(1 0 0 / 0.35);
+  --pin-shadow: 0 2px 6px oklch(0.2 0.02 var(--hue) / 0.3);
+  --hit-clear: oklch(0 0 0 / 0.001);
+
+  --tip-bg: oklch(0.24 0.012 var(--hue));
+  --tip-text: oklch(0.97 0.004 var(--hue));
+  --scrim: oklch(0.2 0.02 var(--hue) / 0.32);
+  --tint-hover: oklch(0.2 0.02 var(--hue) / 0.06);
+  --tint-press: oklch(0.2 0.02 var(--hue) / 0.1);
+  --edge: oklch(0 0 0 / 0.1);
+  --edge-soft: oklch(0 0 0 / 0.06);
+  --edge-strong: oklch(0 0 0 / 0.12);
+  --edge-inverse: oklch(1 0 0 / 0.16);
+  --line-input: oklch(0.78 0.008 var(--hue));
+  --accent-press: oklch(0.93 0.04 254);
+  --accent-tint: oklch(0.55 0.18 254 / 0.12);
+  --danger-tint: oklch(0.54 0.19 25 / 0.16);
+  --btn-primary-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14), 0 1px 2px oklch(0.3 0.1 254 / 0.3);
+  --knob-shadow: 0 0 0 1px oklch(0 0 0 / 0.08), 0 2px 8px -2px oklch(0 0 0 / 0.24);
+  --selection: oklch(0.55 0.18 254 / 0.2);
 
   --s-1: 4px;
   --s-2: 8px;
@@ -54,6 +83,10 @@
   --t-lg: 16px;
   --t-xl: 20px;
   --t-2xl: 28px;
+  --t-display: 40px;
+  --lh-tight: 16px;
+  --lh-body: 20px;
+  --lh-loose: 24px;
 
   --r-xs: 4px;
   --r-sm: 6px;
@@ -71,14 +104,97 @@
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
   --ring-soft: 0 0 0 3px oklch(0.55 0.18 254 / 0.22);
 
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease: var(--ease-out);
   --dur-fast: 100ms;
   --dur: 160ms;
   --dur-slow: 220ms;
+  --dur-tip-delay: 350ms;
+  --dur-reveal-delay: 300ms;
+  --dur-spin: 800ms;
+  --dur-loop: 1200ms;
+  --dur-loop-slow: 1400ms;
+  --loader-duration: var(--dur-loop-slow);
 
   --font: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --mono: 'SF Mono', ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
   color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: oklch(0.2 0.006 var(--hue));
+  --surface: oklch(0.2 0.006 var(--hue));
+  --surface-2: oklch(0.225 0.007 var(--hue));
+  --surface-raised: oklch(0.24 0.007 var(--hue));
+  --surface-hover: oklch(0.265 0.008 var(--hue));
+  --surface-active: oklch(0.3 0.009 var(--hue));
+  --surface-inverse: oklch(0.16 0.008 var(--hue));
+  --line: oklch(0.285 0.007 var(--hue));
+  --line-strong: oklch(0.36 0.008 var(--hue));
+  --text: oklch(0.95 0.004 var(--hue));
+  --text-2: oklch(0.77 0.008 var(--hue));
+  --text-3: oklch(0.68 0.008 var(--hue));
+  --on-accent: oklch(0.99 0.004 var(--hue));
+
+  --accent: oklch(0.56 0.17 254);
+  --accent-hover: oklch(0.51 0.17 254);
+  --accent-soft: oklch(0.29 0.06 254);
+  --accent-line: oklch(0.47 0.12 254);
+  --accent-text: oklch(0.78 0.11 254);
+
+  --danger: oklch(0.7 0.16 25);
+  --danger-soft: oklch(0.28 0.06 25);
+  --danger-line: oklch(0.46 0.11 25);
+  --ok: oklch(0.76 0.13 152);
+  --ok-soft: oklch(0.28 0.05 152);
+  --warn: oklch(0.82 0.12 80);
+  --warn-soft: oklch(0.29 0.05 80);
+  --warn-line: oklch(0.48 0.08 80);
+  --diff-add: oklch(0.3 0.06 152);
+  --diff-add-text: oklch(0.84 0.11 152);
+  --diff-del: oklch(0.3 0.06 25);
+  --diff-del-text: oklch(0.82 0.1 25);
+
+  --stage: oklch(0.16 0.005 var(--hue));
+  --stage-dot: oklch(0.27 0.006 var(--hue));
+  --stage-text: oklch(0.72 0.008 var(--hue));
+  --frame-shadow: 0 0 0 1px oklch(1 0 0 / 0.06), 0 2px 4px oklch(0 0 0 / 0.24), 0 12px 32px -8px oklch(0 0 0 / 0.5);
+
+  --tip-bg: oklch(0.34 0.01 var(--hue));
+  --tip-text: oklch(0.97 0.004 var(--hue));
+  --scrim: oklch(0 0 0 / 0.5);
+  --tint-hover: oklch(1 0 0 / 0.07);
+  --tint-press: oklch(1 0 0 / 0.11);
+  --edge: oklch(1 0 0 / 0.1);
+  --edge-soft: oklch(1 0 0 / 0.06);
+  --edge-strong: oklch(1 0 0 / 0.14);
+  --line-input: oklch(0.42 0.008 var(--hue));
+  --accent-press: oklch(0.34 0.08 254);
+  --accent-tint: oklch(0.7 0.14 254 / 0.18);
+  --danger-tint: oklch(0.7 0.16 25 / 0.22);
+  --btn-primary-shadow: inset 0 1px 0 oklch(1 0 0 / 0.12), 0 1px 2px oklch(0 0 0 / 0.4);
+  --knob-shadow: 0 0 0 1px oklch(1 0 0 / 0.1), 0 2px 8px -2px oklch(0 0 0 / 0.6);
+  --selection: oklch(0.7 0.14 254 / 0.32);
+
+  --shadow-xs: 0 1px 1px oklch(0 0 0 / 0.3);
+  --shadow-sm: 0 0 0 1px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-md: 0 0 0 1px oklch(1 0 0 / 0.08), 0 4px 12px -2px oklch(0 0 0 / 0.5), 0 2px 4px oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 0 0 1px oklch(1 0 0 / 0.09), 0 24px 48px -12px oklch(0 0 0 / 0.65), 0 8px 16px -8px oklch(0 0 0 / 0.4);
+  --ring-soft: 0 0 0 3px oklch(0.7 0.14 254 / 0.3);
+  color-scheme: dark;
+}
+
+iframe {
+  color-scheme: light;
+}
+
+:root[data-theme-switching] *,
+:root[data-theme-switching] *::before,
+:root[data-theme-switching] *::after {
+  transition: none !important;
 }
 
 * {
@@ -95,7 +211,7 @@ body,
 body {
   font-family: var(--font);
   font-size: var(--t-sm);
-  line-height: 1.5;
+  line-height: var(--lh-body);
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -157,7 +273,7 @@ button {
 }
 
 ::selection {
-  background: oklch(0.55 0.18 254 / 0.2);
+  background: var(--selection);
 }
 
 .muted {
@@ -173,7 +289,29 @@ button {
   font-size: var(--t-xs);
 }
 
-.num {
+.num,
+.count,
+.dims,
+.dims-readout,
+.frame-size-readout,
+.resize-label,
+.zoom-select,
+.project-time,
+.version-meta,
+.version-file-count,
+.run-foot,
+.kv,
+.cmp-count,
+.lib-count,
+.tkp-count,
+.tkp-section-count,
+.twk-count,
+.folder-count,
+.trash-count,
+.ins-count,
+.ins-other-count,
+.ins-input,
+input[type='number'] {
   font-variant-numeric: tabular-nums;
 }
 
@@ -232,7 +370,7 @@ button {
 }
 
 .boot.muted {
-  animation: boot-reveal var(--dur) var(--ease) 300ms both;
+  animation: boot-reveal var(--dur) var(--ease) var(--dur-reveal-delay) both;
 }
 
 @keyframes boot-reveal {
@@ -263,7 +401,7 @@ button {
   border-radius: 50%;
   border: 1.5px solid currentColor;
   border-right-color: transparent;
-  animation: spin 0.8s linear infinite;
+  animation: spin var(--dur-spin) linear infinite;
 }
 
 @keyframes spin {

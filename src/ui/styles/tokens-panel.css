@@ -362,12 +362,12 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  outline: 1px solid oklch(0 0 0 / 0.1);
+  outline: 1px solid var(--edge);
   outline-offset: -1px;
 }
 
 .cmp-thumb.loading {
-  animation: pulse 1.2s var(--ease) infinite;
+  animation: pulse var(--dur-loop) var(--ease-in-out) infinite;
 }
 
 .cmp-name {

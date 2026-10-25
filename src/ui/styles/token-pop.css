@@ -3,7 +3,7 @@
   z-index: 90;
   width: 264px;
   border-radius: var(--r-lg);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   animation: pop-in var(--dur) var(--ease);
@@ -174,7 +174,7 @@
 }
 
 .tk-row input[aria-invalid='true'] {
-  box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px oklch(0.54 0.19 25 / 0.16);
+  box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px var(--danger-tint);
 }
 
 .field.tk-row > .tk-value {

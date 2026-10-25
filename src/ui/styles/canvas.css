@@ -157,7 +157,7 @@
   gap: var(--s-2);
   padding: 8px 14px;
   border-radius: var(--r-full);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-md);
   color: var(--stage-text);
   font-size: var(--t-xs);
@@ -170,9 +170,8 @@
   left: 0;
   top: 0;
   transform-origin: 0 0;
-  background: oklch(0.995 0 0);
-  box-shadow: 0 0 0 1px oklch(0.2 0.02 var(--hue) / 0.08), 0 2px 4px oklch(0.2 0.02 var(--hue) / 0.04),
-    0 12px 32px -8px oklch(0.2 0.02 var(--hue) / 0.16);
+  background: var(--frame-bg);
+  box-shadow: var(--frame-shadow);
 }
 
 .frame {
@@ -180,7 +179,7 @@
   inset: 0;
   border: 0;
   display: block;
-  background: oklch(0.995 0 0);
+  background: var(--frame-bg);
 }
 
 .frame.front {
@@ -207,12 +206,12 @@
 
 .box.hover {
   border: var(--stroke) solid var(--select);
-  background: oklch(0.6 0.2 254 / 0.06);
+  background: var(--select-tint);
 }
 
 .box.selected {
   border: calc(var(--stroke) * 2) solid var(--select);
-  box-shadow: 0 0 0 var(--stroke) oklch(1 0 0 / 0.85);
+  box-shadow: 0 0 0 var(--stroke) var(--halo);
 }
 
 .box-label {
@@ -241,7 +240,7 @@
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: oklch(0 0 0 / 0.001);
+  background: var(--hit-clear);
 }
 
 .stage.grab .frame,
@@ -260,9 +259,8 @@
 
 .canvas-frame {
   position: absolute;
-  background: oklch(0.995 0 0);
-  box-shadow: 0 0 0 1px oklch(0.2 0.02 var(--hue) / 0.08), 0 2px 4px oklch(0.2 0.02 var(--hue) / 0.04),
-    0 12px 32px -8px oklch(0.2 0.02 var(--hue) / 0.16);
+  background: var(--frame-bg);
+  box-shadow: var(--frame-shadow);
 }
 
 .frame.passive {
@@ -306,12 +304,12 @@
 
 .frame-name:hover {
   color: var(--text);
-  background: oklch(0.2 0.02 var(--hue) / 0.06);
+  background: var(--tint-hover);
 }
 
 .frame-name:active {
   cursor: grabbing;
-  background: oklch(0.2 0.02 var(--hue) / 0.1);
+  background: var(--tint-press);
 }
 
 .frame-name:focus-visible {
@@ -344,11 +342,11 @@
 
 .frame-remove:hover {
   color: var(--text);
-  background: oklch(0.2 0.02 var(--hue) / 0.06);
+  background: var(--tint-hover);
 }
 
 .frame-remove:active {
-  background: oklch(0.2 0.02 var(--hue) / 0.1);
+  background: var(--tint-press);
 }
 
 .frame-remove:focus-visible {
@@ -438,9 +436,9 @@ body.frame-dragging .frame {
 
 .compare-board {
   overflow: hidden;
-  background: oklch(0.995 0 0);
+  background: var(--frame-bg);
   border-radius: 2px;
-  box-shadow: 0 0 0 1px oklch(0.2 0.02 var(--hue) / 0.08), 0 12px 32px -8px oklch(0.2 0.02 var(--hue) / 0.16);
+  box-shadow: var(--frame-shadow);
 }
 
 .compare-board iframe {
@@ -520,7 +518,7 @@ body.frame-dragging .frame {
   left: 13px;
   width: 2px;
   background: var(--surface);
-  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.12);
+  box-shadow: 0 0 0 1px var(--edge-strong);
 }
 
 .compare-knob {
@@ -532,7 +530,7 @@ body.frame-dragging .frame {
   border-radius: var(--r-full);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 0 0 1px oklch(0 0 0 / 0.08), 0 2px 8px -2px oklch(0 0 0 / 0.24);
+  box-shadow: var(--knob-shadow);
   transition: transform var(--dur-fast) var(--ease);
 }
 
@@ -786,7 +784,7 @@ body.frame-dragging .frame {
   padding: 0 var(--s-1);
   border-radius: var(--r-sm);
   background: var(--measure);
-  color: oklch(0.99 0.006 25);
+  color: var(--on-measure);
   font: 500 var(--t-xs) / 20px var(--font);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -834,7 +832,7 @@ body.frame-dragging .frame {
   gap: var(--s-3);
   padding: var(--s-2) var(--s-4);
   border-radius: var(--r-full);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-md);
   font-size: var(--t-sm);
 }
@@ -995,7 +993,7 @@ body.frame-dragging .frame {
   max-width: min(520px, calc(100% - var(--s-8)));
   padding: var(--s-1) var(--s-1) var(--s-1) var(--s-4);
   border-radius: var(--r-full);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-md);
   font-size: var(--t-sm);
   text-wrap: pretty;

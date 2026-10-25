@@ -296,7 +296,7 @@
   max-height: 320px;
   overflow: auto;
   padding: var(--s-3);
-  background: var(--surface);
+  background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-md);

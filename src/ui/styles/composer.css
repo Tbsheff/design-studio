@@ -54,7 +54,7 @@
   gap: var(--s-4);
   padding: var(--s-3);
   border-radius: var(--r-lg);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-lg);
   animation: pop-in var(--dur) var(--ease);
 }
@@ -211,7 +211,7 @@
   overflow: hidden;
   padding: var(--s-2);
   border-radius: var(--r-lg);
-  background: var(--surface);
+  background: var(--surface-raised);
   box-shadow: var(--shadow-lg), 0 0 0 1px var(--line);
 }
 
@@ -338,7 +338,7 @@
 }
 
 .skill-chip button:hover {
-  background: oklch(0.55 0.18 254 / 0.12);
+  background: var(--accent-tint);
 }
 
 .skills-ind-wrap {

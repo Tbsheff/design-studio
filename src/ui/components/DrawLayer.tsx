@@ -195,7 +195,7 @@ export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
         const d = strokePath(stroke.points);
         return (
           <g key={index}>
-            <path d={d} stroke="rgba(255, 255, 255, 0.9)" strokeWidth={stroke.width + 3} />
+            <path d={d} style={{ stroke: 'var(--halo)' }} strokeWidth={stroke.width + 3} />
             <path d={d} stroke={stroke.color} strokeWidth={stroke.width} />
           </g>
         );

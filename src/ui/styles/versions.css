@@ -91,7 +91,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1);
+  box-shadow: inset 0 0 0 1px var(--edge);
   pointer-events: none;
 }
 
@@ -216,7 +216,7 @@
   gap: 2px;
   opacity: 0;
   transition-property: opacity;
-  transition-duration: 150ms;
+  transition-duration: var(--dur);
   transition-timing-function: var(--ease);
 }
 
@@ -337,4 +337,24 @@
 
 .version-level.polish {
   color: var(--accent-text);
+}
+
+.version-skeletons {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-2) var(--s-4) var(--s-2) var(--s-8);
+}
+
+.version-skeleton {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.version-skeleton-thumb {
+  height: 36px;
+  border-radius: var(--r-xs);
+  background: var(--surface-hover);
+  animation: variation-pulse var(--dur-loop) var(--ease-in-out) infinite alternate;
 }

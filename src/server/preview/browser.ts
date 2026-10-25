@@ -188,7 +188,11 @@ export class BrowserPool {
     return this.backendPromise;
   }
 
-  private async withPage<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+  run<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+    return this.withPage(url, viewport, task);
+  }
+
+  private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     const page = await (await this.backend()).open(viewport);
     try {
       await page.goto(withServerBridgeParams(url, this.parentOrigin));

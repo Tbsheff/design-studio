@@ -10,7 +10,7 @@ export interface RenderPage {
 
 export interface RenderBackend {
   readonly name: RenderBackendName;
-  open(viewport: { width: number; height: number }): Promise<RenderPage>;
+  open(viewport: { width: number; height: number; scale?: number }): Promise<RenderPage>;
   close(): Promise<void>;
 }
 

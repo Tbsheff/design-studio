@@ -1,4 +1,5 @@
 import type { InspectResult, RenderCheckOptions, TileRequest, TileResult } from './preview/browser.js';
+import type { RenderPage } from './preview/render-backend.js';
 import type {
   Attachment,
   CheckViewport,
@@ -114,5 +115,6 @@ export interface PreviewService {
   inspect(url: string, viewport: CheckViewport, outPath: string, selectionLocs: string[]): Promise<InspectResult>;
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;
   screenshotTiles(url: string, request: TileRequest): Promise<TileResult>;
+  withPage?<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T>;
   elementShots?(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]>;
 }

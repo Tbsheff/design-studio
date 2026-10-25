@@ -209,6 +209,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     inspect: async (url, viewport, outPath, selectionLocs) => (await browsers.get()).inspect(url, viewport, outPath, selectionLocs),
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
+    withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }

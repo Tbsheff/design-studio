@@ -28,6 +28,7 @@ export interface PageState {
   errors: RenderErrors;
   inflight: Set<string>;
   lastNetworkAt: number;
+  scale: number;
 }
 
 export function isRenderContents(contents: WebContents): boolean {
@@ -95,6 +96,10 @@ function onCdpEvent(state: PageState, event: CdpEvent): void {
   } else if (event.method === 'Runtime.exceptionThrown') {
     state.errors.pageErrors.push(exceptionText(event.params));
   }
+}
+
+function clampScale(scale: number): number {
+  return Number.isFinite(scale) ? Math.min(3, Math.max(1, scale)) : 1;
 }
 
 export class RenderPool {
@@ -178,9 +183,9 @@ export class RenderPool {
     slot.idleTimer = setTimeout(() => this.dropSlot(slot), IDLE_CLOSE_MS);
   }
 
-  async open(width: number, height: number): Promise<PageState> {
+  async open(width: number, height: number, scale = 1): Promise<PageState> {
     const slot = await this.acquire();
-    const state: PageState = { slot, errors: { consoleErrors: [], pageErrors: [] }, inflight: new Set(), lastNetworkAt: Date.now() };
+    const state: PageState = { slot, errors: { consoleErrors: [], pageErrors: [] }, inflight: new Set(), lastNetworkAt: Date.now(), scale: clampScale(scale) };
     try {
       await this.prepare(state, width, height);
       return state;
@@ -244,17 +249,22 @@ export class RenderPool {
       format: 'png',
       captureBeyondViewport: true,
       fromSurface: true,
-      clip: { ...clip, scale: 1 },
+      clip: { ...clip, scale: state.scale },
     })) as { data: string };
     return Buffer.from(shot.data, 'base64');
   }
 
   private async captureTall(state: PageState, clip: RenderClip): Promise<Buffer> {
-    const out = new PNG({ width: clip.width, height: clip.height });
-    for (let offset = 0; offset < clip.height; offset += MAX_SEGMENT_PX) {
-      const height = Math.min(MAX_SEGMENT_PX, clip.height - offset);
+    const scale = state.scale;
+    const outWidth = Math.round(clip.width * scale);
+    const outHeight = Math.round(clip.height * scale);
+    const out = new PNG({ width: outWidth, height: outHeight });
+    const segment = Math.floor(MAX_SEGMENT_PX / scale);
+    for (let offset = 0; offset < clip.height; offset += segment) {
+      const height = Math.min(segment, clip.height - offset);
       const part = PNG.sync.read(await this.captureClip(state, { x: clip.x, y: clip.y + offset, width: clip.width, height }));
-      PNG.bitblt(part, out, 0, 0, Math.min(part.width, clip.width), Math.min(part.height, height), 0, offset);
+      const top = Math.round(offset * scale);
+      PNG.bitblt(part, out, 0, 0, Math.min(part.width, outWidth), Math.min(part.height, outHeight - top), 0, top);
     }
     return PNG.sync.write(out);
   }
@@ -263,7 +273,7 @@ export class RenderPool {
     const size = await this.contentSize(state);
     const target = clip ?? { x: 0, y: 0, width: size.width, height: size.height };
     const rounded = { x: Math.round(target.x), y: Math.round(target.y), width: Math.max(1, Math.round(target.width)), height: Math.max(1, Math.round(target.height)) };
-    const bytes = rounded.height > MAX_SEGMENT_PX ? await this.captureTall(state, rounded) : await this.captureClip(state, rounded);
+    const bytes = rounded.height * state.scale > MAX_SEGMENT_PX ? await this.captureTall(state, rounded) : await this.captureClip(state, rounded);
     await mkdir(path.dirname(outPath), { recursive: true });
     await writeFile(outPath, bytes);
     return pngSize(bytes);

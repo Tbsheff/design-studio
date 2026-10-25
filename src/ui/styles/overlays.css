@@ -495,3 +495,10 @@
 .theme-menu [aria-checked='true'] .icon:last-child {
   color: var(--accent-text);
 }
+
+@media (forced-colors: active) {
+  .theme-menu [role='menuitemradio']:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+}

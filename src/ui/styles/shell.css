@@ -62,7 +62,7 @@
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] :is(.run-settings-pop, .tk-pop, .ds-popover, .pack-popover, .desktop-notice) {
+:root[data-shell='mac'] :is(.run-settings-pop, .tk-pop, .ds-popover, .pack-popover, .desktop-notice, .theme-menu) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }

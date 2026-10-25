@@ -596,7 +596,7 @@ Rule for this round: no new tests and no vitest or Playwright runs. Checks below
 | Item | Check in the benchmark | How it was checked | Result |
 |---|---|---|---|
 | R9-1 App dark theme (P0) | 0 axe color-contrast violations in both themes; screenshot per screen | axe-core `color-contrast` on Home, Design systems, Studio (Chat, Versions, Comments, Components) and Project settings, light and dark | Pass: 0 violations on all 14. System, Light and Dark menu on Home and in the studio top bar (lazy chunk, 1.9 kB, loads on click). Applied before first paint; survives reload. Not in Settings (settings are per project) and not in the palette (R8 owns it): add the palette entry after the merge |
-| R9-1 desktop | Window background matches, no flash | Code only: `desktop/theme.ts`; Electron not launched (it would use the real userData and a running app's lock) | Not run. Main owns the preference (`theme.json` in userData) because the origin can change; `backgroundColor` follows the resolved theme and `nativeTheme` `updated`; the setup window follows macOS |
+| R9-1 desktop | Window background matches, no flash | Built desktop; launched Electron twice with `STUDIO_DESKTOP_USER_DATA` and data dirs in `/tmp/polish-r9/electron` | Pass: background `#F6F8FA` light, `#191C1F` after Dark, `theme.json` written, Dark comes back after restart, System goes back to light. Setup window opens with `#FBFCFE` (macOS was light; dark setup not seen). Main owns the preference (`theme.json` in userData) because the origin can change; `backgroundColor` follows the resolved theme and `nativeTheme` `updated`; the setup window follows macOS |
 | R9-2 Token sweep (P0) | 0 raw colors and 0 px font sizes outside `tokens.css`; fewer than 20 raw spacing px | grep | Colors: 0 in CSS (35 moved to tokens), 1 TSX halo moved; `#ffffff` in `InspectorFields`/`TokenInputs` stays (a color-input value, not a UI color). Font sizes: 0 px (10 px badge raised to 12). Spacing: 89 grid values moved to `--s-*`; 164 off-grid values (mostly 2 and 6 px) stay — fail against < 20 |
 | R9-3 Motion system (P1) | 0 literal durations outside `tokens.css`; no transform animation with reduced motion | grep; the global reduced-motion rule | Pass by grep. New `--ease-out`, `--ease-in-out`, `--ease-spring`, `--ease-standard`, `--dur-loop*`, `--dur-tip-delay`; old names kept (`--ease` aliases `--ease-out`) so R8 and R10 CSS still works |
 | R9-4 Live regions (P1) | 1 announcement per state change | Code review | Partial: one polite status region in the chat says "Run started / finished / stopped / failed" and the queue count; text changes only on state change. Errors already use `role="alert"`. No aria-live spy run |
@@ -614,7 +614,7 @@ Rule for this round: no new tests and no vitest or Playwright runs. Checks below
 
 ### Screens swept
 
-Home, Trash, Design systems, pack detail, New design system, Studio (chat, inspector, layers, versions, comments, components), Project settings, theme menu. Light and dark. Before in `/tmp/polish-r9/before/` (20), after in `/tmp/polish-r9/after/` (29 incl. `*-theme-menu.png`, `light-pref-on-dark-os-home.png`, `*-ds-detail*.png`). Tokens tab and setup window not shot (no pack on the sample project; Electron not launched).
+Home, Trash, Design systems, pack detail, New design system, Studio (chat, inspector, layers, versions, comments, components), Project settings, theme menu. Light and dark. Before in `/tmp/polish-r9/before/` (20), after in `/tmp/polish-r9/after/` (29 incl. `*-theme-menu.png`, `light-pref-on-dark-os-home.png`, `*-ds-detail*.png`). Desktop: `desktop-dark-home.png`, `desktop-setup.png`. Tokens tab not shot (no pack on the sample project). The theme menu is no-drag in the mac shell and has a forced-colors focus outline. Skills used: `make-interfaces-feel-better` (press scale, outlines), `better-accessibility` (menu roles, forced colors, live region); the others were not run.
 
 ### Bundle
 
@@ -624,7 +624,7 @@ Home JS 299,733 bytes (gate 300,000; Round 7 was 299,247, so +486 for the theme 
 
 - Palette entry "Theme: System / Light / Dark" (R8 owns the palette) and a View > Appearance menu item (`desktop/menu.ts`, not touched).
 - Native context menus and dialogs follow macOS, not an explicit app choice (see above).
-- Electron run to check no-flash start, theme restore after restart and the setup window in dark.
+- Setup window in macOS dark mode not seen (changing the OS setting is out of scope).
 - 164 off-grid spacing values; 7 px paddings in inputs are height-tuned and need a visual pass.
 - Chat and inspector skeletons; keyboard-only flow test; aria-live spy.
 - Components panel thumbnails show transparent parts of a component on the studio surface, so in dark a transparent element sits on dark.
@@ -638,4 +638,4 @@ Home JS 299,733 bytes (gate 300,000; Round 7 was 299,247, so +486 for the theme 
 
 ### Commits
 
-`392f43a` dark tokens and sweep · `629f0e5` theme menu · `a52a654` desktop background · `aa5ebe0` live region and versions skeleton · `88007aa` spacing tokens · then this docs commit.
+`392f43a` dark tokens and sweep · `629f0e5` theme menu · `a52a654` desktop background · `aa5ebe0` live region and versions skeleton · `88007aa` spacing tokens · `2ddc311` docs · then the no-drag and forced-colors fix.

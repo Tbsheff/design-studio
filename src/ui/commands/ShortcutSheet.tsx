@@ -60,7 +60,7 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
   }, [query]);
 
   return (
-    <aside className="keysheet" ref={rootRef} role="dialog" aria-modal="false" aria-label="Keyboard shortcuts">
+    <aside className="keysheet" ref={rootRef} aria-label="Keyboard shortcuts">
       <header className="keysheet-head">
         <h2>Keyboard shortcuts</h2>
         <button type="button" className="icon-btn small" aria-label="Close shortcuts" onClick={onClose}>

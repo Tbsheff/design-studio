@@ -593,18 +593,18 @@ Branch `polish-r8` from `cf5ec75`. Two sub agents built the permission rules and
 
 ### Round 7 regression: resize handle drag
 
-Cause: the drag listened only on the handle with pointer capture, and nothing kept the cross-origin preview frame from taking the pointer. A live HTML frame swap could also land in the middle of a drag (the file change from the last commit, late under load); the new frame drops the inline preview style, so the card showed the file width (224) and not base + 4. Fix (`d93e19a`): `body.element-resizing` turns off pointer events on frames during the drag (as frame drag and the splitter already do), and `usePreviewFrames.holdSwap` holds the live swap until the drag ends (released at once on cancel, after the next change or 1.5 s after a commit). Manual check: 4 alternating drags right after each commit (+26, −31, +26, −31 px) wrote 191 → 181 px, and the handle sat on the new edge each time. Before the fix the same drag in the browser pane did not resize at all.
+Likely cause (consistent with the 224 px result, not reproduced in a test run): a live HTML frame swap landed in the middle of a drag (the file change from the last commit, late under load); the new frame drops the inline preview style, so the card showed the file width (224) and not base + 4. A second weak point: the drag listened only on the handle with pointer capture, and nothing kept the cross-origin preview frame from taking the pointer. Fix (`d93e19a`): `body.element-resizing` turns off pointer events on frames during the drag (as frame drag and the splitter already do), and `usePreviewFrames.holdSwap` holds the live swap until the drag ends (released at once on cancel, after the next change or 1.5 s after a commit). Manual check: 4 alternating drags right after each commit (+26, −31, +26, −31 px) wrote 191 → 181 px, and the handle sat on the new edge each time. Before the fix the same drag in the browser pane did not resize at all, but that pane sends synthetic input, so it is weak evidence.
 
 ### Features
 
 | Item | Check | Result |
 |---|---|---|
-| R8-1 Command palette | Opens < 50 ms; "zo fi" ranks Zoom to fit first; Enter runs | Pass (manual). Open 15–27 ms over 5 tries (key event to dialog in the DOM, hidden pane). "zo fi" gives one row, Zoom to fit, with marks. Lazy chunk 10 kB; Home JS 298,427 bytes (R7: 299,247) |
+| R8-1 Command palette | Opens < 50 ms; "zo fi" ranks Zoom to fit first; Enter runs | Pass (manual). Open 15–27 ms over 5 tries (key event to dialog in the DOM, hidden pane). Cmd+K with focus in the preview iframe opens it too. "zo fi" gives one row, Zoom to fit, with marks. Lazy chunk 10 kB; Home JS 298,427 bytes (R7: 299,247) |
 | R8-2 Shortcut sheet, one keymap | Every keymap entry in the sheet; keys mark on press | Pass for the sheet (renders `KEYMAP` by group, filter, marks pressed keys for 0.9 s). The "test that fails if a handler binds a key not in the keymap" was not written (no-tests rule). Tooltips (zoom, layers, settings, Projects), palette rows and desktop menu accelerators read the keymap; the older handlers keep their own key checks |
 | R8-3 Slash commands | `/exp` + Tab gives `/export` | Pass (manual). `/` opens the skill picker with app commands: plan, edit, critique, level wireframe/prototype/polish, variations, export, model, polish, undo, versions, comments, design-md. Commands show only on a prefix match, so the skills e2e counts stay the same |
 | R8-4 Context menus | Right-click on a preview element opens a menu with 4+ items | Pass (manual). Select mode only; it selects the element and shows 6 items. Project cards already had one (R1). Version row and chat message menus: not built |
 | R8-5 Permission prompts part 2 | Always-rule skips the next prompt, shows in Settings; Remove brings it back | Pass (sub agent, mock agent). Rule: exact command, or the first 3 words + ` *` when the command has no shell metacharacters; the server derives the rule again and rejects a mismatch; stored in `<data>/projects/<pid>/command-rules.json`; checked after the hard denies. Shift+Tab in the composer cycles Edit, Plan, Critique (there is no Accept edits mode) |
-| R8-6 Native menus and F6 | Each menu item runs the same action as its key; F6 visits 4 regions | Code only for menus (Electron not run): View, Canvas, Go, Help send `{type:'command', id}`; new keys use `registerAccelerator: false` so the renderer acts once. F6/Shift+F6: canvas toolbar, canvas, side panel tab, composer; also from inside the preview |
+| R8-6 Native menus and F6 | Each menu item runs the same action as its key; F6 visits 4 regions | Menus: code only (Electron not run): View, Canvas, Go, Help send `{type:'command', id}`; new keys use `registerAccelerator: false` so the renderer acts once. F6: pass (manual): from focus in the preview, 4 presses went side panel tab, composer, toolbar, canvas |
 | R8-7 Finder drop, key hints | Dropped folder opens import; icon buttons show keys | Code only for the drop (preload `webUtils.getPathForFile`, main validates through `openFolder`). Key hints: toolbar and topbar buttons with a keymap entry show the key |
 | R8-8 Dock badge, web notification | Badge counts runs that end in the background; one Notification with the tab hidden | Code only |
 
@@ -613,8 +613,9 @@ Leftovers from earlier rounds, also done: Home, frame and layer actions in the a
 ### Polish
 
 - Palette: one search field, grouped rows (Recent first), key chips per row, disabled rows say why, marks on matched letters, Esc clears the query then closes, focus goes back to where it was. 100 ms fade and scale on open; none with reduced motion.
-- Shortcut sheet: docked bottom right and not modal, so the keys still work while it is open.
-- `make-interfaces-feel-better` quick pass on the palette, sheet and menu: no HIGH or MEDIUM findings; numbers in key chips use tabular figures.
+- Shortcut sheet: docked bottom right and not modal, so the keys still work while it is open. It is a plain `aside` landmark, not `role=dialog`: Esc-to-stop skips any visible dialog, so a dialog role would block Esc from stopping a run (not checked with a live run; mock runs end too fast).
+- Loaded `make-interfaces-feel-better` and read the palette, sheet and menu against it by hand (no formal review report). `impeccable`, `emil-design-eng` and `better-interface` were not run this round.
+- Premium-feel checklist, palette, sheet and menu: spacing on `--s-*` pass; nested radius (`--r-xl` card, `--r-md` rows, `--s-2` padding) pass; tabular figures in key chips pass; reduced motion turns off the open animations pass; sheet close button is 24 px (`icon-btn small`), below the 28 px hit area, fail; backdrop uses a raw `oklch()` like `.modal::backdrop`, so the Round 9 token lint will flag `commands.css`.
 - Desktop glue (`useDesktopApp`, `desktop.ts`) is now a lazy chunk that loads only in Electron, which paid for the palette listener in Home JS.
 
 ### Screenshots
@@ -632,7 +633,7 @@ Leftovers from earlier rounds, also done: Home, frame and layer actions in the a
 
 ### Shared files touched
 
-`src/ui/App.tsx` (command layer listener, lazy desktop glue), `src/shared/contracts.ts` (`app-key`, `context-menu` bridge messages, `appKeyOf`, `PermissionDecision.always?`), `src/shared/desktop-link.ts` (command and drop types), `src/ui/api.ts` (no net change), `src/ui/styles/canvas.css` (2 small rules), `src/ui/styles/composer.css` (1 rule), `src/ui/styles/chat.css` (permission buttons), `src/ui/useStudioData.ts` (2 lines), `ARCHITECTURE.md`.
+`src/ui/App.tsx` (command layer listener, lazy desktop glue), `src/shared/contracts.ts` (`app-key`, `context-menu` bridge messages, `appKeyOf`, `PermissionDecision.always?`), `src/shared/desktop-link.ts` (command and drop types), `src/ui/api.ts` (no net change), `src/ui/styles/canvas.css` (2 small rules), `src/ui/styles/composer.css` (1 rule), `src/ui/styles/chat.css` (permission buttons), `src/ui/useStudioData.ts` (2 lines), `ARCHITECTURE.md`. Other files Rounds 9 and 10 may touch: `Studio.tsx`, `Canvas.tsx`, `CanvasToolbar.tsx`, `CanvasLayers.tsx`, `StudioTopbar.tsx`, `PromptBox.tsx`, `SkillPicker.tsx`, `PermissionPrompt.tsx`, `SettingsModal.tsx`, `SettingsFields.tsx`, `usePreviewFrames.ts`, `useResizeHandles.ts`, `screens.tsx`, `src/bridge/bridge.ts`, server `agent/ask-gate.ts`, `lifecycle.ts`, `mock.ts`, `sdk-driver.ts`, `http/run-control-routes.ts`, `app.ts`; new `src/ui/styles/commands.css`.
 
 ### Commits
 

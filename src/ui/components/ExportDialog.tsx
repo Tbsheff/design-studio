@@ -177,7 +177,7 @@ function ConnectClaudeCode() {
       {on && status?.command ? (
         <>
           <div className="export-command">
-            <code className="truncate" title="Run this once in a terminal">{status.command}</code>
+            <code className="truncate" title={status.command}>{status.command}</code>
             <button type="button" className="btn small has-icon" onClick={() => copy('mcp', status.command as string)}>
               <Icon name={copied === 'mcp' ? 'check' : 'copy'} size={14} />
               <span aria-live="polite">{copied === 'mcp' ? 'Copied' : 'Copy command'}</span>

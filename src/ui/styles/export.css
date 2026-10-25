@@ -8,6 +8,8 @@
 
 .export-seg {
   justify-self: start;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .export-seg button {
@@ -288,6 +290,7 @@
 }
 
 .copy-code-menu {
+  transform-origin: top right;
   top: calc(100% + var(--s-1));
   right: 0;
   left: auto;

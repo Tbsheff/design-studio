@@ -28,9 +28,11 @@ export function CopyCssButton({ authored }: { authored: AuthoredCssState }) {
   };
   const label = state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : 'Copy CSS';
   return (
-    <button type="button" className="btn ghost small ins-copy-css" data-tip="Copy the CSS rules of this element" data-tip-align="end" onClick={() => void copy()}>
+    <button type="button" className="icon-btn small ins-copy-css" data-tip={state === 'idle' ? 'Copy CSS' : label} data-tip-align="end" onClick={() => void copy()}>
       <Icon name={state === 'copied' ? 'check' : 'copy'} size={14} />
-      <span aria-live="polite">{label}</span>
+      <span className="sr-only" aria-live="polite">
+        {label}
+      </span>
     </button>
   );
 }

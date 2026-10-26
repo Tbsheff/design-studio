@@ -3,7 +3,7 @@ import { placeFixed } from './popoverPlacement';
 
 const HIDDEN: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
 
-export function useAnchoredPopover<T extends string>() {
+export function useAnchoredPopover<T extends string>(anchor?: (trigger: HTMLElement) => HTMLElement) {
   const [view, setView] = useState<T | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
   const trigger = useRef<HTMLSpanElement | null>(null);
@@ -25,8 +25,8 @@ export function useAnchoredPopover<T extends string>() {
 
   useLayoutEffect(() => {
     if (!view || !trigger.current || !panel.current) return;
-    setStyle(placeFixed(trigger.current, panel.current, { align: 'end' }));
-  }, [view]);
+    setStyle(placeFixed(anchor ? anchor(trigger.current) : trigger.current, panel.current, { align: 'end' }));
+  }, [view, anchor]);
 
   useEffect(() => {
     if (!view) return;

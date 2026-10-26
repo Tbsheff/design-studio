@@ -6,6 +6,8 @@
   background: var(--surface-raised);
   box-shadow: var(--shadow-pop);
   overflow: hidden;
+  font-size: var(--t-xs);
+  line-height: 16px;
   animation: pop-in var(--dur) var(--ease);
 }
 
@@ -13,7 +15,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 10px;
+  padding: 0 var(--s-3);
   height: 36px;
   color: var(--text-3);
   border-bottom: 1px solid var(--line);
@@ -47,9 +49,9 @@
   grid-template-columns: 18px minmax(0, 1fr) auto 14px;
   align-items: center;
   gap: var(--s-2);
-  height: 30px;
-  padding: 0 var(--s-2) 0 6px;
-  border-radius: var(--r-sm);
+  height: 28px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-md);
   font-size: var(--t-xs);
   cursor: pointer;
 }
@@ -119,10 +121,11 @@
 .tk-menu {
   display: grid;
   padding: var(--s-1);
+  border-bottom: 1px solid var(--line);
 }
 
 .tk-menu-note {
-  padding: 6px var(--s-2) var(--s-1);
+  padding: var(--s-2) var(--s-2) var(--s-1);
   color: var(--text-3);
   font-size: var(--t-xs);
 }
@@ -141,6 +144,7 @@
 
 .tk-row input {
   width: 100%;
+  text-overflow: ellipsis;
 }
 
 .tk-row input[readonly] {

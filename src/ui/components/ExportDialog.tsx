@@ -334,35 +334,28 @@ function OptionFields({ options }: { options: Options }) {
 function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
   const elapsed = useElapsed(status);
   return (
-    <>
-      <div className="export-status" aria-live="polite">
-        {status.kind === 'busy' ? (
-          <span className="export-progress">
-            <span className="spinner" />
-            {handoff ? 'Building handoff' : 'Exporting'}… <span className="tabular">{elapsed} s</span>
-          </span>
-        ) : null}
-        {status.kind === 'done' ? (
-          <span className="export-done">
-            <Icon name="check" size={14} />
-            <span className="truncate" title={status.text}>
-              {status.text}
-            </span>
-            {status.note ? <span className="export-sub">· {status.note}</span> : null}
-            {status.reveal ? (
-              <button type="button" className="btn small ghost" onClick={revealDownload}>
-                Reveal in Finder
-              </button>
-            ) : null}
-          </span>
-        ) : null}
-      </div>
-      {status.kind === 'error' ? (
-        <div className="alert error small" role="alert">
-          {status.text}
-        </div>
+    <div className="export-status" aria-live="polite">
+      {status.kind === 'busy' ? (
+        <span className="export-progress">
+          <span className="spinner" />
+          {handoff ? 'Building handoff' : 'Exporting'}… <span className="tabular">{elapsed} s</span>
+        </span>
       ) : null}
-    </>
+      {status.kind === 'done' ? (
+        <span className="export-done">
+          <Icon name="check" size={14} />
+          <span className="truncate" title={status.text}>
+            {status.text}
+          </span>
+          {status.note ? <span className="export-sub">· {status.note}</span> : null}
+          {status.reveal ? (
+            <button type="button" className="btn small ghost" onClick={revealDownload}>
+              Reveal in Finder
+            </button>
+          ) : null}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -425,9 +418,14 @@ export function ExportDialog({ target, onClose }: Props) {
         <OptionFields options={options} />
         {shown ? <HandoffResultView target={target} result={shown} editors={editors} onError={(text) => setStatus({ kind: 'error', text })} /> : null}
         {format === 'handoff' ? <ConnectClaudeCode /> : null}
-        <StatusLine status={status} handoff={format === 'handoff'} />
+        {status.kind === 'error' ? (
+          <div className="alert error small" role="alert">
+            {status.text}
+          </div>
+        ) : null}
       </div>
       <div className="modal-foot">
+        <StatusLine status={status} handoff={format === 'handoff'} />
         <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
           Close
         </button>

@@ -157,8 +157,8 @@ function useLeadWidth(leadRef: RefObject<HTMLSpanElement | null>, card: RefObjec
         setState((prev) => (prev.width === 0 && !prev.inline ? prev : { width: 0, inline: false }));
         return;
       }
-      const width = Math.ceil(lead.scrollWidth);
-      const inline = lead.querySelector('.comment-thumb') === null && width + LEAD_GAP + MIN_FIRST_LINE <= field.clientWidth;
+      const width = lead.offsetWidth;
+      const inline = width + LEAD_GAP + MIN_FIRST_LINE <= field.clientWidth;
       setState((prev) => (prev.width === width && prev.inline === inline ? prev : { width, inline }));
     };
     measure();

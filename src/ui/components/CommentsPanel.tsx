@@ -292,7 +292,6 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
             <input type="checkbox" checked={showResolved} onChange={(event) => control.setShowResolved(event.target.checked)} />
             Show resolved
           </label>
-          <span className="spacer" />
           {!showResolved && (
             <span className="count" data-testid="resolved-hidden">
               {resolved.length} hidden

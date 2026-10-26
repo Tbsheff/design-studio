@@ -24,6 +24,10 @@
   animation: fade-in var(--dur-slow) var(--ease);
 }
 
+.modal .modal::backdrop {
+  background: transparent;
+}
+
 .modal-form {
   display: contents;
 }

@@ -120,8 +120,8 @@ test('token snap: picker, auto-snap, raw badge, create token with apply, undo', 
   await color.fill(far);
   await color.press('Enter');
   await expect.poll(() => readFileSync(indexFile, 'utf8')).toContain(`color: ${far}`);
-  const rawBadge = page.getByRole('button', { name: /^Text color: raw value/ });
-  await expect(rawBadge).toBeVisible();
+  const rawBadge = pickerButton;
+  await expect(rawBadge).toHaveAccessibleDescription(/^Raw value/);
   const beforeCreate = await settledCount(page, api, project.id, main.id);
   const sourceRaw = readFileSync(indexFile, 'utf8');
   const tokensRaw = readFileSync(tokensJson, 'utf8');

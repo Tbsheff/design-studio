@@ -5,7 +5,7 @@ import { LEVEL_PRESETS } from '../../shared/run-levels';
 import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
-import { levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
+import { levelHint, levelLabel, levelShortHint, useRovingRadioGroup } from './LevelControl';
 import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_HINT, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
 
 function usePlacedPopover(trigger: RefObject<HTMLButtonElement | null>, panel: RefObject<HTMLDivElement | null>) {
@@ -198,6 +198,83 @@ export function PlusMenu(props: PlusMenuProps) {
   );
 }
 
+const SHORT_LEVEL: Record<RunLevel, string> = { wireframe: 'Wire', prototype: 'Proto', polish: 'Polish' };
+
+function PillCaret() {
+  return (
+    <svg className="ui-pill-select-caret" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true">
+      <path d="M3.5 6L8 10.5 12.5 6" />
+    </svg>
+  );
+}
+
+function ModelName({ name }: { name: string }) {
+  const at = name.lastIndexOf(' ');
+  if (at < 0) return <>{name}</>;
+  return (
+    <>
+      {name.slice(0, at)}
+      <span className="model-pill-version"> {name.slice(at + 1)}</span>
+    </>
+  );
+}
+
+export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel: (level: RunLevel) => void; onOpen?: () => void }) {
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const menu = usePlacedPopover(trigger, panel);
+  useEffect(() => {
+    if (menu.open) (panel.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? panel.current?.querySelector<HTMLElement>(ITEM))?.focus();
+  }, [menu.open]);
+  return (
+    <>
+      <button
+        ref={trigger}
+        type="button"
+        className="ui-pill-select composer-pill"
+        data-testid="level-pill"
+        aria-haspopup="menu"
+        aria-expanded={menu.open}
+        aria-label={`Level: ${levelLabel(level)}`}
+        onClick={() => {
+          if (!menu.open) onOpen?.();
+          menu.toggle();
+        }}
+      >
+        <span className="ui-pill-select-label">Level</span>
+        <span className="ui-pill-select-value">{SHORT_LEVEL[level]}</span>
+        <PillCaret />
+      </button>
+      {menu.open &&
+        createPortal(
+          <div ref={panel} className="ui-menu composer-menu level-menu" role="menu" aria-label="Level" style={menu.style} onKeyDown={(event) => menuKeys(event, menu.close)}>
+            <Section label="Level">
+              {RUN_LEVELS.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  role="menuitemradio"
+                  className="ui-menu-item level-menu-item"
+                  title={levelHint(item)}
+                  aria-checked={level === item}
+                  tabIndex={-1}
+                  onClick={() => {
+                    onLevel(item);
+                    menu.close(true);
+                  }}
+                >
+                  <span className="level-menu-label">{levelLabel(item)}</span>
+                  <span className="level-menu-hint">{levelShortHint(item)}</span>
+                </button>
+              ))}
+            </Section>
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
+
 export function effectiveModel(model: string, level: RunLevel): string {
   const preset = LEVEL_PRESETS[level].model;
   return preset === 'project' ? model : preset;
@@ -246,7 +323,7 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
       <button
         ref={trigger}
         type="button"
-        className="model-pill"
+        className="ui-pill-select composer-pill model-pill"
         data-testid="run-settings"
         aria-haspopup="dialog"
         aria-expanded={pop.open}
@@ -258,11 +335,11 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
           pop.toggle();
         }}
       >
-        <span className="model-pill-name" data-testid="active-model">
-          {shortModel(shown)}
+        <span className="ui-pill-select-label">Model</span>
+        <span className="ui-pill-select-value model-pill-name" data-testid="active-model">
+          <ModelName name={shortModel(shown)} />
         </span>
-        <span className="model-pill-effort">{EFFORT_LABEL[choice]}</span>
-        <Icon name="chevronDown" size={12} />
+        <PillCaret />
       </button>
       {pop.open &&
         createPortal(
@@ -270,7 +347,7 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
             <section className="rs-group">
               <h3 className="rs-label">Model</h3>
               <ModelToggle value={shown} onChange={onModel} locked={locked} />
-              <p className="rs-hint">{locked ? `${levelLabel(level)} runs always use ${shortModel(shown)}. Pick another level in the + menu to change the model.` : 'Saved for this project.'}</p>
+              <p className="rs-hint">{locked ? `${levelLabel(level)} runs always use ${shortModel(shown)}. Pick another level in the Level menu to change the model.` : 'Saved for this project.'}</p>
             </section>
             <section className="rs-group">
               <h3 className="rs-label">Effort</h3>

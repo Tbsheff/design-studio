@@ -32,13 +32,14 @@ const loadPops = () => import('./HomePopovers');
 const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
 const PackPopover = lazy(() => loadPops().then((m) => ({ default: m.PackPopover })));
 const ModelPopover = lazy(() => loadPops().then((m) => ({ default: m.ModelPopover })));
+const LevelPopover = lazy(() => loadPops().then((m) => ({ default: m.LevelPopover })));
 const PackCards = lazy(() => loadPops().then((m) => ({ default: m.PackCards })));
 const loadTemplates = () => import('./HomeTemplates');
 const loadExtras = () => import('./HomeExtras');
 const FoldersSection = lazy(() => loadExtras().then((m) => ({ default: m.FoldersSection })));
 
 type Busy = 'create' | 'import' | 'ask' | 'starter' | null;
-type Pop = 'plus' | 'pack' | 'model' | null;
+type Pop = 'plus' | 'pack' | 'level' | 'model' | null;
 
 const EXAMPLES = ['Wireframe a settings page', 'Prototype a dashboard for tracking orders', 'A pricing page for a developer tool with three tiers', 'Turn my notes into a one-page brief', 'A mobile onboarding flow for a running app'];
 const EXAMPLE_MS = 3500;
@@ -189,9 +190,9 @@ function folderLabel(list: WorkspaceList | null, location: string | null): strin
   return match?.label ?? 'Design Studio';
 }
 
-function modelSummary(model: string, level: RunLevel, count: number): string {
+function modelSummary(model: string, count: number): string {
   const extra = count > 1 ? ` · ${count}×` : '';
-  return `${modelLabel(model).replace(/^Claude /, '')} · ${LEVEL_LABEL[level]}${extra}`;
+  return `${modelLabel(model).replace(/^Claude /, '')}${extra}`;
 }
 
 function StarterRow({ template, busy, onOpen }: { template: { label: string; starter: Starter | null } | null; busy: Busy; onOpen: (starter: Starter) => void }) {
@@ -277,9 +278,10 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
   const plusRef = useRef<HTMLButtonElement>(null);
   const packRef = useRef<HTMLButtonElement>(null);
   const modelRef = useRef<HTMLButtonElement>(null);
+  const levelRef = useRef<HTMLButtonElement>(null);
   const closePop = useCallback(
     (refocus: boolean) => {
-      const trigger = pop === 'plus' ? plusRef : pop === 'pack' ? packRef : modelRef;
+      const trigger = { plus: plusRef, pack: packRef, level: levelRef, model: modelRef }[pop ?? 'model'];
       setPop(null);
       if (refocus) trigger.current?.focus();
     },
@@ -338,6 +340,14 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
         <Icon name="code" size={16} />
       </button>
       <div className="spacer" />
+      <div className="home-anchor end">
+        <PillSelect label="Level" ariaLabel="Level" value={LEVEL_LABEL[modelSettings.level]} open={pop === 'level'} triggerRef={levelRef} onOpen={() => togglePop('level')} />
+        {pop === 'level' && (
+          <Suspense fallback={null}>
+            <LevelPopover trigger={levelRef} onClose={closePop} level={modelSettings.level} onLevel={modelSettings.onLevel} />
+          </Suspense>
+        )}
+      </div>
       <div className="home-anchor end">
         <PillSelect label="Model" ariaLabel="Model and run settings" value={modelValue} open={pop === 'model'} triggerRef={modelRef} onOpen={() => togglePop('model')} />
         {pop === 'model' && (
@@ -590,7 +600,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     setDesigns((n) => Math.min(n, maxVariationsFor(next)));
   };
 
-  const modelValue = modelSummary(settingsDraft.model, settingsDraft.defaultLevel, designCount);
+  const modelValue = modelSummary(settingsDraft.model, designCount);
   const tabs = <Tabs tab={prefs.tab} />;
   const openAdvanced = () => {
     setAdvancedOpened((n) => n + 1);

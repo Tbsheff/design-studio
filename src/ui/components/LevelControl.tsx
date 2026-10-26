@@ -83,3 +83,9 @@ export function levelLabel(level: RunLevel): string {
 export function levelHint(level: RunLevel): string {
   return LEVEL_PRESETS[level].hint;
 }
+
+export function levelShortHint(level: RunLevel): string {
+  const hint = LEVEL_PRESETS[level].hint;
+  const match = /^(.*?) \(usually ([^,)]+)/.exec(hint);
+  return match ? `${match[1]}, ${match[2]}` : (hint.split('. ')[0] ?? hint);
+}

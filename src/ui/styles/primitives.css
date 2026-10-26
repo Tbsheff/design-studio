@@ -567,3 +567,40 @@
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--text);
 }
+
+.ui-menu-item.level-menu-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  justify-items: start;
+  align-content: center;
+  column-gap: 8px;
+  row-gap: 1px;
+  height: auto;
+  min-height: 40px;
+  padding: 5px 8px;
+  text-align: left;
+}
+
+.level-menu-label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+
+.level-menu-hint {
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--text-2);
+  white-space: normal;
+}
+
+.level-menu-item > span {
+  grid-column: 1;
+}
+
+.ui-menu-item.level-menu-item::after {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}

@@ -1,10 +1,10 @@
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import type { PackSummary, RunLevel } from '../../shared/contracts';
+import { RUN_LEVELS, type PackSummary, type RunLevel } from '../../shared/contracts';
 import { fontStack, loadPackFonts, type PacksState } from '../packs';
 import { MODEL_OPTIONS } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
-import { LevelControl, levelHint } from './LevelControl';
+import { levelHint, levelLabel, levelShortHint } from './LevelControl';
 import { VariationsControl } from './VariationsControl';
 
 type Close = (refocus: boolean) => void;
@@ -224,11 +224,6 @@ export function ModelPopover({ trigger, onClose, settings }: { trigger: RefObjec
         ))}
       </div>
       <div className="ui-menu-section home-pop-group">
-        <span className="ui-menu-label">Level</span>
-        <LevelControl value={settings.level} onChange={settings.onLevel} tipSide="bottom" />
-        <p className="home-pop-hint">{levelHint(settings.level)}</p>
-      </div>
-      <div className="ui-menu-section home-pop-group">
         <span className="ui-menu-label" id="home-designs-label">
           Designs
         </span>
@@ -247,6 +242,34 @@ export function ModelPopover({ trigger, onClose, settings }: { trigger: RefObjec
           <Icon name="sliders" size={14} />
           Skills, limits and DESIGN.md…
         </button>
+      </div>
+    </Pop>
+  );
+}
+
+export function LevelPopover({ trigger, onClose, level, onLevel }: { trigger: RefObject<HTMLElement | null>; onClose: Close; level: RunLevel; onLevel: (level: RunLevel) => void }) {
+  return (
+    <Pop trigger={trigger} onClose={onClose} className="home-level-pop" label="Level" role="menu" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
+      <div className="ui-menu-section" role="group" aria-label="Level">
+        <span className="ui-menu-label">Level</span>
+        {RUN_LEVELS.map((item) => (
+          <button
+            key={item}
+            type="button"
+            role="menuitemradio"
+            className="ui-menu-item level-menu-item"
+            title={levelHint(item)}
+            aria-checked={level === item}
+            tabIndex={level === item ? 0 : -1}
+            onClick={() => {
+              onLevel(item);
+              onClose(true);
+            }}
+          >
+            <span className="level-menu-label">{levelLabel(item)}</span>
+            <span className="level-menu-hint">{levelShortHint(item)}</span>
+          </button>
+        ))}
       </div>
     </Pop>
   );

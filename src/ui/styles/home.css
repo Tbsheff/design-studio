@@ -270,6 +270,12 @@
   padding: var(--s-1);
 }
 
+.home-level-pop {
+  display: grid;
+  width: 280px;
+  padding: var(--s-1);
+}
+
 .home-pop-group {
   display: grid;
   gap: var(--s-2);

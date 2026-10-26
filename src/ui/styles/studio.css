@@ -3,7 +3,7 @@
 }
 
 .studio > .columns {
-  grid-template-columns: clamp(300px, var(--chat-w, 320px), 50%) minmax(0, 1fr);
+  grid-template-columns: clamp(300px, var(--chat-w, 336px), 50%) minmax(0, 1fr);
   gap: var(--s-2);
   padding: var(--s-2) var(--s-2) var(--s-2) 0;
 }

@@ -9,7 +9,7 @@ import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
-import { ModelPill, PlusMenu } from './ComposerMenu';
+import { LevelPill, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
 import { MOD_LABEL } from './CommentPopover';
@@ -353,6 +353,7 @@ export function PromptBox(props: Props) {
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
             <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
+            <LevelPill level={runLevel.level} onLevel={runLevel.choose} onOpen={() => setPicking(false)} />
             <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={() => setPicking(false)} />
             <StopButton running={props.running} onStop={props.onCancel} />
             <SendButton running={props.running} sending={sending} canSend={canSend} canQueue={keys.canQueue} onQueue={keys.queueDraft} />

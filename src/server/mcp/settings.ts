@@ -4,6 +4,7 @@ import path from 'node:path';
 
 export interface McpSettings {
   enabled: boolean;
+  control: boolean;
   port: number;
   token: string;
 }
@@ -20,9 +21,9 @@ export async function readMcpSettings(dataDir: string): Promise<McpSettings> {
     const parsed = JSON.parse(await readFile(path.join(dataDir, FILE), 'utf8')) as Partial<McpSettings>;
     const port = Number.isInteger(parsed.port) && (parsed.port as number) > 1023 && (parsed.port as number) < 65536 ? (parsed.port as number) : DEFAULT_MCP_PORT;
     const token = typeof parsed.token === 'string' && parsed.token.length >= 32 ? parsed.token : newToken();
-    return { enabled: parsed.enabled === true, port, token };
+    return { enabled: parsed.enabled === true, control: parsed.control === true, port, token };
   } catch {
-    return { enabled: false, port: DEFAULT_MCP_PORT, token: newToken() };
+    return { enabled: false, control: false, port: DEFAULT_MCP_PORT, token: newToken() };
   }
 }
 

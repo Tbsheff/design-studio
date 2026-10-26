@@ -290,6 +290,12 @@
   color: var(--text);
 }
 
+.export-control h4 {
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+  line-height: 18px;
+}
+
 .export-connect-foot {
   display: flex;
   align-items: center;

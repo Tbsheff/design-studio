@@ -13,7 +13,7 @@ import { tweakControlSchema } from '../tweaks/schema.js';
 import { defineTweaks } from '../tweaks/store.js';
 import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
-import { canvasList, canvasPlace, canvasPoint, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
+import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -71,27 +71,6 @@ export function runCanvasPlace(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, fra
 export function runCanvasPoint(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: { frame: string; selector?: string }) {
   return withCanvas(deps, 'canvas_point', (ctx) => canvasPoint(ctx, args));
 }
-
-const frameRef = z.string().trim().min(1).max(60);
-
-const placeSchema = z
-  .object({
-    frame: frameRef.optional().describe('Id or @label of a frame to move or change. Leave out to add a new frame.'),
-    label: z.string().max(40).optional().describe('Short name shown on the frame label, for example "Empty" or "Pricing".'),
-    path: z.string().max(200).optional().describe('Page the frame shows, relative to the project root, for example "states/empty.html". Empty string = the entry page.'),
-    viewport: z.enum(['desktop', 'tablet', 'mobile']).optional().describe('Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844.'),
-    width: z.number().int().min(200).max(4000).optional(),
-    height: z.number().int().min(200).max(4000).optional(),
-    below: frameRef.optional().describe('Put the frame under this frame (id or @label), left edges lined up.'),
-    rightOf: frameRef.optional().describe('Put the frame to the right of this frame, top edges lined up.'),
-    leftOf: frameRef.optional(),
-    above: frameRef.optional(),
-    gap: z.number().int().min(0).max(2000).optional().describe('Space between the frames in px. Default 80.'),
-    x: z.number().int().optional().describe('Absolute canvas x. Overrides the relative x.'),
-    y: z.number().int().optional().describe('Absolute canvas y. Overrides the relative y.'),
-    hidden: z.boolean().optional(),
-  })
-  .strict();
 
 function errorText(message: string) {
   return { content: [{ type: 'text' as const, text: message }], isError: true };

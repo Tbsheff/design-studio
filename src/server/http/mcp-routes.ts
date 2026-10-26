@@ -1,0 +1,71 @@
+import type { Context, Hono } from 'hono';
+import { STUDIO_TOKEN_HEADER } from '../../shared/contracts.js';
+import type { McpApprovalPoll } from '../../shared/export.js';
+import type { CanvasService } from '../canvas/service.js';
+import type { ExportDeps } from '../export/source.js';
+import { createApprovalQueue } from '../mcp/approvals.js';
+import { createMcpService } from '../mcp/server.js';
+import { BadRequestError, NotFoundError } from '../store/errors.js';
+import type { AgentRunner } from '../types.js';
+
+interface McpRouteDeps extends ExportDeps {
+  dataDir: string;
+  studioToken: string;
+  runner: AgentRunner;
+  canvas: CanvasService;
+  projectsFolder: () => Promise<string>;
+}
+
+const MAX_WAIT_S = 25;
+
+async function body(c: Context): Promise<Record<string, unknown>> {
+  const parsed: unknown = await c.req.json().catch(() => null);
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) throw new BadRequestError('body must be a JSON object');
+  return parsed as Record<string, unknown>;
+}
+
+export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
+  const approvals = createApprovalQueue();
+  const request = async (method: string, url: string, payload?: unknown): Promise<Response> =>
+    app.request(url, {
+      method,
+      headers: { [STUDIO_TOKEN_HEADER]: deps.studioToken, ...(payload !== undefined ? { 'content-type': 'application/json' } : {}) },
+      ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
+    });
+  const mcp = createMcpService(deps.dataDir, deps, { ...deps, request, approvals });
+  void mcp.boot();
+
+  const denyPending = (): void => {
+    for (const item of approvals.list()) approvals.answer(item.id, false);
+  };
+
+  app.get('/api/mcp', async (c) => c.json(await mcp.status()));
+
+  app.post('/api/mcp', async (c) => {
+    const input = await body(c);
+    if (input.rotate === true) await mcp.rotate();
+    if (typeof input.control === 'boolean') {
+      await mcp.setControl(input.control);
+      if (!input.control) denyPending();
+    }
+    if (typeof input.enabled === 'boolean') {
+      if (!input.enabled) denyPending();
+      return c.json(await mcp.setEnabled(input.enabled));
+    }
+    return c.json(await mcp.status());
+  });
+
+  app.get('/api/mcp/approvals', async (c) => {
+    if (!(await mcp.controlOn())) return c.json({ control: false, pending: [] } satisfies McpApprovalPoll);
+    const wait = Math.min(MAX_WAIT_S, Math.max(0, Number.parseInt(c.req.query('wait') ?? '0', 10) || 0));
+    const pending = await approvals.poll(c.req.query('seen') ?? '', wait * 1000, c.req.raw.signal);
+    return c.json({ control: true, pending } satisfies McpApprovalPoll);
+  });
+
+  app.post('/api/mcp/approvals/:id', async (c) => {
+    const input = await body(c);
+    if (typeof input.allow !== 'boolean') throw new BadRequestError('allow must be true or false');
+    if (!approvals.answer(c.req.param('id'), input.allow)) throw new NotFoundError('approval request is not open');
+    return c.json({ ok: true });
+  });
+}

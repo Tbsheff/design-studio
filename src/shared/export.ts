@@ -57,10 +57,25 @@ export interface EditorInfo {
 
 export interface McpStatus {
   enabled: boolean;
+  control: boolean;
   running: boolean;
   url: string | null;
   command: string | null;
   error: string | null;
+}
+
+export interface McpApproval {
+  id: string;
+  tool: string;
+  title: string;
+  detail: string;
+  createdAt: number;
+  expiresAt: number;
+}
+
+export interface McpApprovalPoll {
+  control: boolean;
+  pending: McpApproval[];
 }
 
 export const EXPORT_NOTE_HEADER = 'x-studio-export-note';

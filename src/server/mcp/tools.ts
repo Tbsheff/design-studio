@@ -24,7 +24,7 @@ export interface ToolDef {
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
-  annotations: { readOnlyHint: true; openWorldHint: false };
+  annotations: { readOnlyHint: boolean; destructiveHint?: boolean; idempotentHint?: boolean; openWorldHint: boolean };
 }
 
 type Args = Record<string, unknown>;

@@ -75,6 +75,7 @@ import { parseStatesRequest } from '../../shared/states.js';
 import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
+import { registerMcpRoutes } from './mcp-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -978,7 +979,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   const comments = deps.comments ?? createCommentStore(config.dataDir, bus);
-  registerExportRoutes(app, { projects, versions, preview, comments, studioToken: config.studioToken, dataDir: config.dataDir });
+  registerExportRoutes(app, { projects, versions, preview, comments, studioToken: config.studioToken });
   registerCommentRoutes(app, {
     comments,
     runner,
@@ -1038,6 +1039,7 @@ export function createApp(deps: AppDeps): Hono {
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
+  registerMcpRoutes(app, { projects, versions, preview, runner, canvas, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure() });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

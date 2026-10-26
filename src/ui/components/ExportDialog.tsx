@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { EXPORT_SCALES, type EditorInfo, type ExportFormat, type ExportFrame, type ExportScale, type ExportScope, type HandoffResult, type McpStatus } from '../../shared/export';
 import { downloadBlob } from '../format';
 import { canRevealDownload, canvasFrameChoices, exportApi, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
+import { MCP_WAKE_EVENT } from '../mcpApprovals';
 import { useModalDialog } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 import '../styles/export.css';
@@ -146,11 +147,12 @@ function ConnectClaudeCode() {
       live = false;
     };
   }, []);
-  const change = async (input: { enabled?: boolean; rotate?: boolean }) => {
+  const change = async (input: { enabled?: boolean; control?: boolean; rotate?: boolean }) => {
     setBusy(true);
     setError(null);
     try {
       setStatus(await exportApi.setMcp(input));
+      window.dispatchEvent(new Event(MCP_WAKE_EVENT));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -158,12 +160,13 @@ function ConnectClaudeCode() {
     }
   };
   const on = status?.enabled === true;
+  const control = status?.control === true;
   return (
     <section className="export-connect" aria-label="Connect to Claude Code">
       <div className="export-connect-head">
         <div className="titles">
           <h3>Connect to Claude Code</h3>
-          <p className="export-sub">A local MCP server lets Claude Code read projects, tokens, DESIGN.md and screenshots. Read only. Runs on this Mac.</p>
+          <p className="export-sub">A local MCP server lets Claude Code read projects, tokens, DESIGN.md and screenshots. Runs on this Mac only.</p>
         </div>
         <button type="button" role="switch" aria-checked={on} aria-label="MCP server" className={`export-switch${on ? ' on' : ''}`} disabled={busy || status === null} onClick={() => void change({ enabled: !on })}>
           <span className="export-switch-knob" />
@@ -181,6 +184,19 @@ function ConnectClaudeCode() {
             <button type="button" className="btn small has-icon" onClick={() => copy('mcp', status.command as string)}>
               <Icon name={copied === 'mcp' ? 'check' : 'copy'} size={14} />
               <span aria-live="polite">{copied === 'mcp' ? 'Copied' : 'Copy command'}</span>
+            </button>
+          </div>
+          <div className="export-connect-head export-control">
+            <div className="titles">
+              <h4>Allow control</h4>
+              <p className="export-sub">
+                {control
+                  ? 'Claude Code can also create projects, start and stop runs, comment, arrange the canvas and export. You approve stop, restore, design system changes and writes outside the usual folders here. Reconnect the server in Claude Code after you change this.'
+                  : 'Off: Claude Code can only read. Turn on to let it create projects, start runs, comment, arrange the canvas and export.'}
+              </p>
+            </div>
+            <button type="button" role="switch" aria-checked={control} aria-label="Allow control" className={`export-switch${control ? ' on' : ''}`} disabled={busy} onClick={() => void change({ control: !control })}>
+              <span className="export-switch-knob" />
             </button>
           </div>
           <div className="export-connect-foot">

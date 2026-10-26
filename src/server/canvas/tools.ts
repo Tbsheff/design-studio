@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import {
   CANVAS_GAP,
   CANVAS_MAX_COORD,
@@ -12,6 +13,27 @@ import {
 } from '../../shared/canvas-file.js';
 import type { Direction, Project, RunMode } from '../../shared/contracts.js';
 import type { CanvasService } from './service.js';
+
+export const frameRef = z.string().trim().min(1).max(60);
+
+export const placeSchema = z
+  .object({
+    frame: frameRef.optional().describe('Id or @label of a frame to move or change. Leave out to add a new frame.'),
+    label: z.string().max(40).optional().describe('Short name shown on the frame label, for example "Empty" or "Pricing".'),
+    path: z.string().max(200).optional().describe('Page the frame shows, relative to the project root, for example "states/empty.html". Empty string = the entry page.'),
+    viewport: z.enum(['desktop', 'tablet', 'mobile']).optional().describe('Frame size preset: desktop 1440x900, tablet 768x1024, mobile 390x844.'),
+    width: z.number().int().min(200).max(4000).optional(),
+    height: z.number().int().min(200).max(4000).optional(),
+    below: frameRef.optional().describe('Put the frame under this frame (id or @label), left edges lined up.'),
+    rightOf: frameRef.optional().describe('Put the frame to the right of this frame, top edges lined up.'),
+    leftOf: frameRef.optional(),
+    above: frameRef.optional(),
+    gap: z.number().int().min(0).max(2000).optional().describe('Space between the frames in px. Default 80.'),
+    x: z.number().int().optional().describe('Absolute canvas x. Overrides the relative x.'),
+    y: z.number().int().optional().describe('Absolute canvas y. Overrides the relative y.'),
+    hidden: z.boolean().optional(),
+  })
+  .strict();
 
 export const CANVAS_VIEWPORTS = {
   desktop: { width: 1440, height: 900 },

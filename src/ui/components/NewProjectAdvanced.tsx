@@ -11,10 +11,11 @@ interface Props {
   designMd: string;
   onDesignMd: (value: string) => void;
   onError: (message: string) => void;
+  initiallyOpen?: boolean;
 }
 
 export function NewProjectAdvanced(props: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(props.initiallyOpen === true);
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -26,7 +27,7 @@ export function NewProjectAdvanced(props: Props) {
   };
 
   return (
-    <details className="advanced" onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details className="advanced" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
       <summary onPointerEnter={() => void loadFields()} onFocus={() => void loadFields()}>
         <Icon name="chevronRight" size={14} />
         Advanced

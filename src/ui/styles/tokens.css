@@ -52,6 +52,24 @@
 
   --tip-bg: oklch(0.24 0.012 var(--hue));
   --tip-text: oklch(0.97 0.004 var(--hue));
+  --float-hue: 70;
+  --float-bg: oklch(0.235 0.005 var(--float-hue));
+  --float-bg-hover: oklch(0.29 0.006 var(--float-hue));
+  --float-fg: oklch(0.96 0.004 var(--float-hue));
+  --float-fg-muted: oklch(0.96 0.004 var(--float-hue) / 0.62);
+  --float-fg-faint: oklch(0.96 0.004 var(--float-hue) / 0.42);
+  --float-line: oklch(1 0 0 / 0.08);
+  --float-line-strong: oklch(1 0 0 / 0.14);
+  --float-accent: oklch(0.62 0.16 254);
+  --float-accent-text: oklch(0.8 0.1 254);
+  --float-accent-line: oklch(0.7 0.12 254 / 0.5);
+  --float-accent-tint: oklch(0.62 0.16 254 / 0.16);
+  --float-danger: oklch(0.74 0.14 25);
+  --float-shadow: inset 0 0 0 1px var(--float-line), 0 1px 2px oklch(0.2 0.01 var(--float-hue) / 0.2),
+    0 8px 16px -4px oklch(0.2 0.01 var(--float-hue) / 0.18), 0 24px 48px -12px oklch(0.2 0.01 var(--float-hue) / 0.28);
+  --pin-bg: oklch(0.3 0.006 var(--float-hue));
+  --pin-fg: oklch(0.97 0.004 var(--float-hue));
+  --pin-ring: var(--float-accent);
   --scrim: oklch(0.2 0.02 var(--hue) / 0.32);
   --tint-hover: oklch(0.2 0.02 var(--hue) / 0.06);
   --tint-press: oklch(0.2 0.02 var(--hue) / 0.1);
@@ -165,6 +183,12 @@
 
   --tip-bg: oklch(0.34 0.01 var(--hue));
   --tip-text: oklch(0.97 0.004 var(--hue));
+  --float-bg: oklch(0.275 0.006 var(--float-hue));
+  --float-bg-hover: oklch(0.32 0.007 var(--float-hue));
+  --float-line: oklch(1 0 0 / 0.1);
+  --float-line-strong: oklch(1 0 0 / 0.16);
+  --float-shadow: inset 0 0 0 1px var(--float-line), 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 16px -4px oklch(0 0 0 / 0.4),
+    0 24px 48px -12px oklch(0 0 0 / 0.6);
   --scrim: oklch(0 0 0 / 0.5);
   --tint-hover: oklch(1 0 0 / 0.07);
   --tint-press: oklch(1 0 0 / 0.11);

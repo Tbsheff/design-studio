@@ -323,8 +323,13 @@ body.element-resizing .frame {
 .compare-pane {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--s-2);
   min-width: 0;
+}
+
+.compare-pane > .compare-stage {
+  flex: none;
 }
 
 .compare-label {
@@ -348,7 +353,6 @@ body.element-resizing .frame {
   flex: 1;
   min-height: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
   position: relative;
 }

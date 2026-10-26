@@ -1,4 +1,4 @@
-import { Fragment, useState, type MutableRefObject } from 'react';
+import { Fragment, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { collapseCrumbs, parseSelectionPath, pathCrumbs, type Crumb } from '../authoredCss';
 import type { PreviewPort } from '../bridge';
@@ -16,6 +16,13 @@ function elementLabel(selection: SelectionContext): string {
 
 export function InspectorBreadcrumb({ selection, port }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const list = useRef<HTMLOListElement>(null);
+  useLayoutEffect(() => {
+    const el = list.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth;
+    el.toggleAttribute('data-clipped', el.scrollLeft > 0);
+  }, [expanded, selection.selector]);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   if (path.length === 0) return null;
   const crumbs: Crumb[] = expanded ? path.map((crumb) => ({ kind: 'node', ...crumb })) : collapseCrumbs(path);
@@ -25,7 +32,7 @@ export function InspectorBreadcrumb({ selection, port }: Props) {
   const current = elementLabel(selection);
   return (
     <nav className="ins-crumbs" aria-label="Element path">
-      <ol>
+      <ol ref={list} onScroll={(event) => event.currentTarget.toggleAttribute('data-clipped', event.currentTarget.scrollLeft > 0)}>
         {crumbs.map((crumb, index) => (
           <Fragment key={crumb.kind === 'node' ? crumb.levels : `gap-${index}`}>
             <li>

@@ -12,19 +12,23 @@
   min-width: 0;
   margin: 0;
   padding: 0;
+  overflow-x: auto;
   list-style: none;
+  scrollbar-width: none;
+}
+
+.ins-crumbs ol[data-clipped] {
+  mask-image: linear-gradient(to right, transparent, #000 24px);
 }
 
 .ins-crumbs li {
   display: flex;
   align-items: center;
-  min-width: 0;
-  flex: 0 1 auto;
+  flex: none;
 }
 
 .ins-crumbs li:last-child {
   flex: none;
-  max-width: 50%;
 }
 
 .ins-crumbs li:last-child .ins-crumb {
@@ -38,8 +42,7 @@
 
 .ins-crumb {
   display: block;
-  max-width: 120px;
-  min-width: 3ch;
+  max-width: 160px;
   height: 28px;
   padding: 0 var(--s-1);
   overflow: hidden;

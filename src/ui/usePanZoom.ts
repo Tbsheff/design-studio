@@ -7,6 +7,7 @@ import { isTypingTarget } from './typingTarget';
 export { isTypingTarget };
 
 const PAD = 24;
+const FRAME_LABEL_H = 28;
 const SELECTION_PAD = 64;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 4;
@@ -59,18 +60,22 @@ function clampZoom(z: number): number {
 
 function fitZoomFor(stage: Stage, bounds: Box): number {
   if (stage.w <= 0 || stage.h <= 0 || bounds.width <= 0 || bounds.height <= 0) return 1;
-  return Math.max(MIN_ZOOM, Math.min(1, (stage.w - PAD * 2) / bounds.width, (stage.h - PAD * 2) / bounds.height));
+  return Math.max(MIN_ZOOM, Math.min(1, (stage.w - PAD * 2) / bounds.width, (stage.h - PAD * 2 - FRAME_LABEL_H) / bounds.height));
+}
+
+function fitTop(stage: Stage, height: number): number {
+  return FRAME_LABEL_H + Math.max(PAD, Math.round((stage.h - FRAME_LABEL_H - height) / 2));
 }
 
 function numericBase(stage: Stage, active: Box, z: number): { x: number; y: number } {
-  return { x: Math.round((stage.w - active.width * z) / 2), y: Math.max(PAD, Math.round((stage.h - active.height * z) / 2)) };
+  return { x: Math.round((stage.w - active.width * z) / 2), y: fitTop(stage, active.height * z) };
 }
 
 function fitBase(stage: Stage, layout: PanZoomLayout, z: number): { x: number; y: number } {
   const { bounds, active } = layout;
   return {
     x: Math.round((stage.w - bounds.width * z) / 2) + (active.x - bounds.x) * z,
-    y: Math.max(PAD, Math.round((stage.h - bounds.height * z) / 2)) + (active.y - bounds.y) * z,
+    y: fitTop(stage, bounds.height * z) + (active.y - bounds.y) * z,
   };
 }
 

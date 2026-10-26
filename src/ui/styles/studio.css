@@ -447,36 +447,6 @@
   opacity: 1;
 }
 
-.frame-label .frame-name {
-  gap: 6px;
-  color: var(--stage-text);
-}
-
-.frame-number {
-  display: inline-grid;
-  place-items: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 4px;
-  background: var(--text);
-  color: var(--bg);
-  font: var(--w-medium) 10px / 16px var(--font);
-  font-variant-numeric: tabular-nums;
-}
-
-.frame-label.active .frame-name {
-  color: var(--text);
-}
-
-.frame-size {
-  color: var(--text-3);
-}
-
-.frame-label .frame-title {
-  max-width: 360px;
-}
-
 @container (max-width: 760px) {
   .canvas-topbar .topbar-tools > button > span,
   .canvas-topbar .topbar-avatar {

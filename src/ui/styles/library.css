@@ -10,8 +10,7 @@
 }
 
 .lib .home-header {
-  width: min(1120px, 100%);
-  margin: 0 auto;
+  padding-inline: max(var(--s-6), calc((100% - 1120px) / 2 + var(--s-6)));
 }
 
 .lib-main {

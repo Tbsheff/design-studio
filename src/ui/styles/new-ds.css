@@ -1,6 +1,5 @@
 .nds .home-header {
-  width: min(768px, 100%);
-  margin: 0 auto;
+  padding-inline: max(var(--s-6), calc((100% - 720px) / 2));
 }
 
 .nds-form input:not([type='file'], [type='checkbox'], [type='radio']),
@@ -278,10 +277,7 @@
 }
 
 .draft-fallbacks {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
   white-space: nowrap;
   color: var(--text-3);
   font-size: var(--t-xs);

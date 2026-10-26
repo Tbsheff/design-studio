@@ -41,8 +41,9 @@ function cssVarOf(token: string): string {
 function Fallbacks({ tokens }: { tokens: string[] }) {
   if (tokens.length === 0) return <span className="draft-fallbacks">No fallback tokens</span>;
   return (
-    <span className="draft-fallbacks" tabIndex={0} data-tip={`From base: ${tokens.map(cssVarOf).join(', ')}`} data-tip-align="start">
+    <span className="draft-fallbacks" data-tip={`From base: ${tokens.map(cssVarOf).join(', ')}`} data-tip-align="start">
       {tokens.length} from base
+      <span className="sr-only">: {tokens.map(cssVarOf).join(', ')}</span>
     </span>
   );
 }

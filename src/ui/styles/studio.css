@@ -275,6 +275,7 @@
 }
 
 .pane-canvas .canvas-topbar {
+  z-index: 35;
   gap: var(--s-1);
   height: var(--bar-h);
   padding: 0 var(--s-2);
@@ -380,11 +381,26 @@
 }
 
 .pane-canvas .canvas-viewrow {
+  position: absolute;
+  z-index: 30;
+  top: calc(var(--bar-h) + var(--s-2));
+  left: var(--s-2);
+  max-width: calc(100% - var(--s-4));
   gap: var(--s-2);
-  height: 36px;
-  padding: 0 var(--s-2);
-  background: var(--surface-inset);
-  border-bottom: 1px solid var(--line);
+  height: 40px;
+  padding: 0 6px;
+  border-bottom: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-pop);
+  container-type: normal;
+  overflow-x: auto;
+  scrollbar-width: none;
+  animation: pop-in var(--dur-slow) var(--ease);
+}
+
+.pane-canvas .canvas-viewrow > .spacer {
+  flex: 0 0 var(--s-2);
 }
 
 .pane-canvas .canvas-viewrow .segmented > button {
@@ -394,8 +410,8 @@
 .tweak-prompt {
   position: absolute;
   z-index: 40;
-  top: 48px;
-  left: var(--s-8);
+  top: calc(var(--bar-h) + var(--s-2));
+  left: 40px;
   display: flex;
   align-items: center;
   gap: var(--s-1);
@@ -403,6 +419,10 @@
   padding: var(--s-1) var(--s-1) var(--s-1) var(--s-3);
   border-radius: var(--r-lg);
   animation: pop-in var(--dur-slow) var(--ease);
+}
+
+.studio[data-pane='collapsed'] .tweak-prompt {
+  left: 72px;
 }
 
 .tweak-prompt input {
@@ -437,7 +457,7 @@
   position: absolute;
   top: var(--s-3);
   right: var(--s-3);
-  opacity: 0.35;
+  opacity: 0.7;
   box-shadow: var(--shadow-md);
   transition: opacity var(--dur) var(--ease);
 }
@@ -451,6 +471,11 @@
   .canvas-topbar .topbar-tools > button > span,
   .canvas-topbar .topbar-avatar {
     display: none;
+  }
+
+  .canvas-topbar .topbar-tools > button {
+    width: 28px;
+    padding: 0;
   }
 }
 

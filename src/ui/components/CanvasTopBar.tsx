@@ -2,7 +2,8 @@ import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode, type
 import type { ZoomSetting } from '../storage';
 import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
-import { tipWithKey } from '../commands/keys';
+import { IS_MAC, tipWithKey } from '../commands/keys';
+import { shortcutLabel } from '../../shared/keymap';
 
 export type CanvasTool = 'select' | 'comment' | 'edit' | null;
 export type PresentMode = 'window' | 'fullscreen' | 'new-window';
@@ -99,19 +100,19 @@ function ZoomPill({ zoom, setting, onZoomTo, onFit, onStep }: { zoom: number; se
   const groups = (): MenuGroup[] => [
     {
       items: [
-        { id: 'in', label: 'Zoom in', icon: 'plus', run: () => onStep(1) },
-        { id: 'out', label: 'Zoom out', icon: 'minus', run: () => onStep(-1) },
+        { id: 'in', label: 'Zoom in', meta: shortcutLabel('zoom-in', IS_MAC), run: () => onStep(1) },
+        { id: 'out', label: 'Zoom out', meta: shortcutLabel('zoom-out', IS_MAC), run: () => onStep(-1) },
       ],
     },
     {
       items: [
-        { id: 'fit', label: 'Zoom to fit', checked: setting === 'fit', run: onFit },
+        { id: 'fit', label: 'Zoom to fit', meta: shortcutLabel('zoom-fit', IS_MAC), checked: setting === 'fit', run: onFit },
         ...ZOOMS.map((z) => ({ id: String(z), label: `${Math.round(z * 100)}%`, checked: setting === z, run: () => onZoomTo(z) })),
       ],
     },
   ];
   return (
-    <DropMenu label={`Zoom ${Math.round(zoom * 100)}%`} className="topbar-zoom" groups={groups} tip={tipWithKey('Zoom', 'zoom-fit')}>
+    <DropMenu label={`Zoom ${Math.round(zoom * 100)}%`} className="topbar-zoom" groups={groups} align="end" tip={tipWithKey('Zoom', 'zoom-fit')}>
       {Math.round(zoom * 100)}%
     </DropMenu>
   );

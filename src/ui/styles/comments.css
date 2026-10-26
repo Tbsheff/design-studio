@@ -194,8 +194,8 @@
   z-index: 4;
   box-sizing: border-box;
   display: grid;
-  gap: var(--s-2);
-  padding: var(--s-3) var(--s-3) 10px var(--s-4);
+  gap: var(--s-3);
+  padding: var(--s-4);
   border-radius: var(--r-lg);
   background: var(--float-bg);
   color: var(--float-fg);
@@ -231,8 +231,8 @@
   margin: 0;
   overflow: hidden;
   color: var(--float-fg-muted);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 13px;
+  line-height: 20px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -258,13 +258,13 @@
 
 .comment-field.inline .comment-lead {
   position: absolute;
-  top: 1px;
+  top: 0;
   left: 0;
   z-index: 1;
 }
 
 .comment-field.reply {
-  padding-top: var(--s-2);
+  padding-top: var(--s-3);
   box-shadow: inset 0 1px 0 var(--float-line);
 }
 
@@ -311,12 +311,12 @@
   align-items: center;
   gap: 4px;
   max-width: 200px;
-  height: 22px;
-  padding: 0 3px 0 8px;
+  height: 24px;
+  padding: 0 4px 0 8px;
   box-sizing: border-box;
   border-radius: var(--r-full);
   color: var(--float-fg);
-  font: 500 13px/1 var(--font);
+  font: 500 14px/1 var(--font);
   box-shadow: inset 0 0 0 1px var(--float-line-strong);
   white-space: nowrap;
 }
@@ -341,6 +341,7 @@
 
 .comment-pill button,
 .comment-thumb button {
+  position: relative;
   display: grid;
   place-items: center;
   flex: none;
@@ -356,6 +357,13 @@
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
+.comment-pill button::after,
+.comment-thumb button::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
 .comment-pill button:hover {
   opacity: 1;
   background: var(--float-line);
@@ -364,9 +372,9 @@
 .comment-thumb {
   position: relative;
   flex: none;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-sm);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-xs);
 }
 
 .comment-thumb img {
@@ -395,10 +403,11 @@
   background: var(--float-bg-hover);
   color: var(--float-fg);
   box-shadow: 0 0 0 1px var(--float-line-strong);
-  opacity: 0;
+  opacity: 0.6;
 }
 
-.comment-thumb:hover button {
+.comment-thumb:hover button,
+.comment-thumb button:hover {
   opacity: 1;
 }
 
@@ -413,17 +422,18 @@
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
+  min-height: 28px;
   margin-right: auto;
   color: var(--float-fg);
-  font-size: 13px;
-  line-height: 1;
+  font-size: 14px;
+  line-height: 20px;
   cursor: pointer;
   user-select: none;
 }
 
 .comment-check input {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin: 0;
   accent-color: var(--float-accent);
   cursor: pointer;
@@ -509,15 +519,15 @@
   border-radius: var(--r-xs);
   background: var(--float-line);
   color: var(--float-fg);
-  font: 500 11px/1 var(--font);
+  font: 500 12px/1 var(--font);
   box-shadow: none;
 }
 
 .comment-card-live {
   flex: none;
-  width: 6px;
-  height: 6px;
-  margin-right: 2px;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
   border-radius: var(--r-full);
   background: var(--warn);
 }
@@ -548,6 +558,10 @@
   box-shadow: var(--float-shadow);
 }
 
+.comment-mentions .skill-opt {
+  line-height: 20px;
+}
+
 .comment-mentions .skill-opt:hover {
   background: var(--float-line);
 }
@@ -575,7 +589,6 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  margin: -4px -4px 0 0;
 }
 
 .thread-head .spacer,
@@ -585,14 +598,15 @@
 
 .thread-num {
   color: var(--float-fg);
-  font: 600 13px/1 var(--font);
+  font: 500 13px/20px var(--font);
   font-variant-numeric: tabular-nums;
 }
 
 .thread-status {
+  display: inline;
+  margin: 0;
   color: var(--float-fg-muted);
-  font-size: 12px;
-  line-height: 1;
+  font: 500 12px/20px var(--font);
 }
 
 .thread-status.sent {
@@ -608,7 +622,7 @@
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   background: transparent;
   color: var(--float-fg-muted);
   cursor: pointer;
@@ -631,12 +645,12 @@
   align-items: center;
   gap: 6px;
   height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--s-3);
   border: 0;
   border-radius: var(--r-md);
   background: var(--float-bg-hover);
   color: var(--float-fg);
-  font: 500 13px/1 var(--font);
+  font: 500 12px/16px var(--font);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-out),

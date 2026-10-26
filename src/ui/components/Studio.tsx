@@ -325,133 +325,132 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   return (
     <div className="studio" data-pane={paneAttr(paneCollapsed)}>
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
-        {!paneCollapsed && (
-          <LeftPane
-            columnsRef={columnsRef}
-            tab={panel.tab}
-            onTab={showPane}
-            layersSlot={setLayersHost}
-            header={
-              <StudioPaneHeader
-                name={project.name}
-                kindLabel={kindLabel(project.kind)}
-                directionName={nameOf(direction)}
-                connection={data.connection}
-                actionError={actionError}
-                onDismissError={() => setActionError(null)}
-                tab={panel.tab}
-                onTab={showPane}
-                hasTokens={studioTokens.panel !== null}
-                hasComponents
-                hasTweaks
-                commentCount={comments.queued.length}
-                onRename={(name) => act(async () => data.setProject(await api.renameProject(projectId, name)))}
-                onExit={guard(onExit)}
-                onDesignMd={() => setDesignOpen(true)}
-                onSettings={() => setSettingsOpen(true)}
-                canExport={exporter.canOpen}
-                onExport={exporter.openHead}
-                onCollapse={() => uiStore.set({ paneCollapsed: true })}
-              />
-            }
-            system={
-              <>
-                <p className="pane-system-text">The design system sets the tokens, type and components the agent uses for this direction.</p>
-                <DesignSystemChip system={designSystemRef(projectId, did, project, designSystem.state)} actions={packActions.actions} onOpenDesignMd={() => setDesignOpen(true)} />
-                <button type="button" className="btn small" onClick={() => setDesignOpen(true)}>
-                  Edit DESIGN.md
-                </button>
-              </>
-            }
-            chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
-            errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
-            prompt={{
-              projectId,
-              model: project.settings.model,
-              settings: project.settings,
-              onSettingsSaved: data.setProject,
-              draft,
-              queued: comments.queued.length > 0,
-              selection,
-              onRemoveSelection: (sel) => setSelection((prev) => prev.filter((s) => s.selector !== sel)),
-              running: activeRun !== null,
-              disabled: !did,
-              onSend: send,
-              ...runControls,
-              history: chatState.history,
-              contextTokens: chatState.contextTokens,
-              directionId: did,
-              tokens: tokenEntries(tokens),
-              components: componentList.components,
-              mentionRequest,
-              variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
-            }}
-            inspector={{
-              projectId,
-              directionId: did,
-              selection,
-              editable,
-              port,
-              control: editControl,
-              onCommitted: (commit) => {
-                setSelection((prev) => mergeCommit(prev, commit));
-                port.current?.refreshRects();
-              },
-              notice: staleNotice,
-              tokens: studioTokens.draft.effective,
-              onStale: (message) => {
-                setStaleNotice(message);
-                setSelection([]);
-              },
-            }}
-            details={{ projectId, run: detailsRun, onClose: () => setDetailsRunId(null) }}
-            comments={{
-              control: comments,
-              running: activeRun !== null,
-              onOpenRun: setDetailsRunId,
-              onOpenVersion: (versionId) => {
-                const version = versions.find((v) => v.id === versionId);
-                if (!version) return;
-                setCompareOpen(false);
-                setSource({ kind: 'version', versionId, title: version.name ?? version.title });
-              },
-            }}
-            tokens={studioTokens.panel}
-            components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', onMention: (component) => { showPane('chat'); setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 }));
-              },
-            }}
-            todos={chatState.todos}
-            tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
-            versions={{
-              project,
-              directionId: did,
-              versions,
-              busy,
-              running: activeRun !== null,
-              compare: compare.map((v) => v.id),
-              openVersionId: source.kind === 'version' ? source.versionId : null,
-              onSelectDirection: guard(data.setDirectionId),
-              onNewDirection: guard(async (fromVersionId: string, name: string) => {
-                const created = await api.createDirection(projectId, fromVersionId, name);
-                data.setDirectionId(created.id);
-              }),
-              onOpen: (v: Version, title: string) => {
-                setCompareOpen(false);
-                setSource({ kind: 'version', versionId: v.id, title });
-              },
-              onRestore: (v) => withDid((id) => refreshAfter(() => api.restore(projectId, id, v.id))),
-              onUndo: undo,
-              onExport: (v) => exporter.open({ versionId: v.id }),
-              onToggleCompare: (v) =>
-                setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
-              onCompare: () => setCompareOpen(true),
-              onPolish: polish,
-              active: panel.tab === 'versions',
-              onRename: (v, name) =>
-                act(() => renameVersion(projectId, v.id, name).finally(data.refreshVersions)),
-            }}
-          />
-        )}
+        <LeftPane
+          collapsed={paneCollapsed}
+          columnsRef={columnsRef}
+          tab={panel.tab}
+          onTab={showPane}
+          layersSlot={setLayersHost}
+          header={
+            <StudioPaneHeader
+              name={project.name}
+              kindLabel={kindLabel(project.kind)}
+              directionName={nameOf(direction)}
+              connection={data.connection}
+              actionError={actionError}
+              onDismissError={() => setActionError(null)}
+              tab={panel.tab}
+              onTab={showPane}
+              hasTokens={studioTokens.panel !== null}
+              hasComponents
+              hasTweaks
+              commentCount={comments.queued.length}
+              onRename={(name) => act(async () => data.setProject(await api.renameProject(projectId, name)))}
+              onExit={guard(onExit)}
+              onDesignMd={() => setDesignOpen(true)}
+              onSettings={() => setSettingsOpen(true)}
+              canExport={exporter.canOpen}
+              onExport={exporter.openHead}
+              onCollapse={() => uiStore.set({ paneCollapsed: true })}
+            />
+          }
+          system={
+            <>
+              <p className="pane-system-text">The design system sets the tokens, type and components the agent uses for this direction.</p>
+              <DesignSystemChip system={designSystemRef(projectId, did, project, designSystem.state)} actions={packActions.actions} onOpenDesignMd={() => setDesignOpen(true)} />
+              <button type="button" className="btn small" onClick={() => setDesignOpen(true)}>
+                Edit DESIGN.md
+              </button>
+            </>
+          }
+          chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
+          errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
+          prompt={{
+            projectId,
+            model: project.settings.model,
+            settings: project.settings,
+            onSettingsSaved: data.setProject,
+            draft,
+            queued: comments.queued.length > 0,
+            selection,
+            onRemoveSelection: (sel) => setSelection((prev) => prev.filter((s) => s.selector !== sel)),
+            running: activeRun !== null,
+            disabled: !did,
+            onSend: send,
+            ...runControls,
+            history: chatState.history,
+            contextTokens: chatState.contextTokens,
+            directionId: did,
+            tokens: tokenEntries(tokens),
+            components: componentList.components,
+            mentionRequest,
+            variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
+          }}
+          inspector={{
+            projectId,
+            directionId: did,
+            selection,
+            editable,
+            port,
+            control: editControl,
+            onCommitted: (commit) => {
+              setSelection((prev) => mergeCommit(prev, commit));
+              port.current?.refreshRects();
+            },
+            notice: staleNotice,
+            tokens: studioTokens.draft.effective,
+            onStale: (message) => {
+              setStaleNotice(message);
+              setSelection([]);
+            },
+          }}
+          details={{ projectId, run: detailsRun, onClose: () => setDetailsRunId(null) }}
+          comments={{
+            control: comments,
+            running: activeRun !== null,
+            onOpenRun: setDetailsRunId,
+            onOpenVersion: (versionId) => {
+              const version = versions.find((v) => v.id === versionId);
+              if (!version) return;
+              setCompareOpen(false);
+              setSource({ kind: 'version', versionId, title: version.name ?? version.title });
+            },
+          }}
+          tokens={studioTokens.panel}
+          components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', onMention: (component) => { showPane('chat'); setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 }));
+            },
+          }}
+          todos={chatState.todos}
+          tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
+          versions={{
+            project,
+            directionId: did,
+            versions,
+            busy,
+            running: activeRun !== null,
+            compare: compare.map((v) => v.id),
+            openVersionId: source.kind === 'version' ? source.versionId : null,
+            onSelectDirection: guard(data.setDirectionId),
+            onNewDirection: guard(async (fromVersionId: string, name: string) => {
+              const created = await api.createDirection(projectId, fromVersionId, name);
+              data.setDirectionId(created.id);
+            }),
+            onOpen: (v: Version, title: string) => {
+              setCompareOpen(false);
+              setSource({ kind: 'version', versionId: v.id, title });
+            },
+            onRestore: (v) => withDid((id) => refreshAfter(() => api.restore(projectId, id, v.id))),
+            onUndo: undo,
+            onExport: (v) => exporter.open({ versionId: v.id }),
+            onToggleCompare: (v) =>
+              setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
+            onCompare: () => setCompareOpen(true),
+            onPolish: polish,
+            active: panel.tab === 'versions',
+            onRename: (v, name) =>
+              act(() => renameVersion(projectId, v.id, name).finally(data.refreshVersions)),
+          }}
+        />
         <main className="center pane-canvas ui-inset">
           <DraftBar
             project={project}
@@ -500,7 +499,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               shell: {
                 pane: panel.tab,
                 onPane: showPane,
-                layersHost,
+                layersHost: paneCollapsed ? null : layersHost,
                 directionName: nameOf(direction),
                 paneCollapsed,
                 onExpandPane: () => uiStore.set({ paneCollapsed: false }),

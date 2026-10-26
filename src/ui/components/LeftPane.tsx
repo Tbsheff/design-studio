@@ -16,6 +16,7 @@ import { TweaksPanel } from './TweaksPanel';
 import { TodoPanel } from './TodoPanel';
 
 interface Props {
+  collapsed?: boolean;
   columnsRef: RefObject<HTMLDivElement | null>;
   tab: PanelTab;
   onTab: (tab: PanelTab) => void;
@@ -107,7 +108,7 @@ export function LeftPane(props: Props) {
   const sheet = !chat && !edit;
   const comments = props.comments;
   return (
-    <aside className="pane-left" data-mode={tab}>
+    <aside className="pane-left" data-mode={tab} hidden={props.collapsed}>
       {props.header}
       <div className="pane-body">
         <div className="pane-chat" hidden={!chat}>

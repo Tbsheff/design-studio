@@ -116,7 +116,12 @@ function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onSta
 
 function RenameField({ name, onDone }: { name: string; onDone: (next: string | null) => void }) {
   const [value, setValue] = useState(name);
-  const finish = (save: boolean) => onDone(save && value.trim() && value.trim() !== name ? value.trim() : null);
+  const done = useRef(false);
+  const finish = (save: boolean) => {
+    if (done.current) return;
+    done.current = true;
+    onDone(save && value.trim() && value.trim() !== name ? value.trim() : null);
+  };
   return (
     <input
       className="pane-rename"

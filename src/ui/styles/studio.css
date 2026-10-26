@@ -22,6 +22,10 @@
   background: var(--bg);
 }
 
+.pane-left[hidden] {
+  display: none;
+}
+
 .pane-left > .splitter {
   left: auto;
   right: -6px;

@@ -25,33 +25,37 @@ type SetSelectMode = (update: (m: boolean) => boolean) => void;
 type CommentTool = { available: boolean; on: boolean; setOn: (on: boolean) => void; toggle: () => void };
 
 function useShellSync(shell: CanvasShell | undefined, comment: CommentTool, setSelectMode: SetSelectMode) {
-  const onPane = shell?.onPane;
+  const onPane = useRef(shell?.onPane);
+  onPane.current = shell?.onPane;
   const pane = shell?.pane;
   const commentRef = useRef(comment);
   commentRef.current = comment;
+  const wasOn = useRef(comment.on);
   useEffect(() => {
-    if (comment.on) onPane?.('comments');
-  }, [comment.on, onPane]);
+    const before = wasOn.current;
+    wasOn.current = comment.on;
+    if (comment.on && !before) onPane.current?.('comments');
+  }, [comment.on]);
   const prevPane = useRef(pane);
   useEffect(() => {
     const before = prevPane.current;
     prevPane.current = pane;
     if (before === pane) return;
     if (pane !== 'comments' && commentRef.current.on) commentRef.current.setOn(false);
-    if (pane === 'design') setSelectMode(() => true);
-    else if (before === 'design') setSelectMode(() => false);
+    if (before === 'design') setSelectMode(() => false);
   }, [pane, setSelectMode]);
 }
 
-export function useShellPane(shell: CanvasShell | undefined, comment: CommentTool, setSelectMode: SetSelectMode, live: boolean, layersOpenSetting: boolean) {
+export function useShellPane(shell: CanvasShell | undefined, comment: CommentTool, selectMode: boolean, setSelectMode: SetSelectMode, live: boolean, layersOpenSetting: boolean) {
   useShellSync(shell, comment, setSelectMode);
+  const picking = selectMode || (shell?.pane === 'design' && !comment.on);
   const editOpen = shell ? shell.pane === 'design' : layersOpenSetting;
   const hostReady = !shell || shell.layersHost !== null;
   const layersOpen = editOpen && live && hostReady;
   const toggleEdit = () => shell?.onPane(shell.pane === 'design' ? 'chat' : 'design');
   const closeLayers = () => (shell ? shell.onPane('chat') : uiStore.set({ layersOpen: false }));
   const place = (panel: ReactNode) => (shell?.layersHost ? createPortal(panel, shell.layersHost) : panel);
-  return { layersOpen, toggleEdit, closeLayers, place };
+  return { layersOpen, picking, toggleEdit, closeLayers, place };
 }
 
 function fileNameOf(frame: CanvasFrame, kind: ProjectKind, directionName: string | null): string {

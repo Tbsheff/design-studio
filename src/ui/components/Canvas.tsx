@@ -340,11 +340,13 @@ export function Canvas(props: Props) {
 
   const comment = useCommentMode(props.comments, source.kind === 'live', setSelectMode);
   const commentMode = comment.on;
-  const draw = useCanvasDraw(comment, selectMode, setSelectMode);
+  const live = source.kind === 'live';
+  const pane = useShellPane(props.shell, comment, selectMode, setSelectMode, live, ui.layersOpen);
+  const { layersOpen, toggleEdit, picking } = pane;
+  const draw = useCanvasDraw(comment, picking, setSelectMode);
 
   const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
   const liveUrl = livePageUrl(baseUrl, active);
-  const live = source.kind === 'live';
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
   const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
@@ -357,7 +359,7 @@ export function Canvas(props: Props) {
     baseUrl: liveUrl,
     live,
     lastChange: props.lastChange,
-    selectMode: selectMode || commentMode,
+    selectMode: picking || commentMode,
     selection: props.selection,
     setSelection: comment.guard(props.setSelection),
     onError: props.onError,
@@ -395,12 +397,10 @@ export function Canvas(props: Props) {
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
   useSelectKey(setSelectMode);
-  const pane = useShellPane(props.shell, comment, setSelectMode, live, ui.layersOpen);
-  const { layersOpen, toggleEdit } = pane;
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
-  useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
+  useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
-  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
+  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode: picking, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
   const resize = useResizeHandles({
     projectId,
     directionId,
@@ -468,7 +468,7 @@ export function Canvas(props: Props) {
         >
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
           <ArtboardOverlay
-            hover={overlayHover(frames.hover, selectMode || commentMode)}
+            hover={overlayHover(frames.hover, picking || commentMode)}
             selection={props.selection}
             zoom={pz.zoom}
             resize={resize}
@@ -481,7 +481,7 @@ export function Canvas(props: Props) {
                 kind={kind}
                 zoom={pz.zoom}
                 frame={viewport}
-                selectMode={selectMode}
+                selectMode={picking}
                 selection={props.selection}
               />
             }

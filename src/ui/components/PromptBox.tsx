@@ -337,8 +337,6 @@ export function PromptBox(props: Props) {
             onOpen={() => setPicking(false)}
             mode={mode}
             onMode={setMode}
-            level={runLevel.level}
-            onLevel={runLevel.choose}
             designs={designs}
           />
           {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} short={<Icon name={MODE_ICON[mode]} size={14} />} tip={`${MODE_LABEL[mode]} mode. Shift+Tab cycles modes.`} onClear={() => setMode('edit')} />}

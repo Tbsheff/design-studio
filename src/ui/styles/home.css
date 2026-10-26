@@ -99,7 +99,7 @@
 .home-composer-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .home-anchor {
@@ -109,10 +109,10 @@
 }
 
 .home-square {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: var(--surface-raised);
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: transparent;
 }
 
 .icon-btn.home-kind[aria-pressed='true'] {
@@ -123,11 +123,12 @@
 
 .home-composer-bar .ui-pill-select {
   max-width: 220px;
-  height: 28px;
-  min-height: 28px;
-  padding: 0 8px;
-  border-radius: 6px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 10px;
+  border-radius: 10px;
   row-gap: 3px;
+  background: transparent;
 }
 
 .home-composer-bar .ui-pill-select-label {
@@ -140,17 +141,17 @@
 
 .home-composer-bar .ui-pill-select-value {
   font-size: 13px;
-  line-height: 13px;
+  line-height: 15px;
   font-weight: var(--w-medium);
   color: var(--home-pill-value);
 }
 
 .home-send {
-  width: auto;
-  height: 30px;
+  width: 48px;
+  height: 48px;
   flex: none;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 0;
+  border-radius: 10px;
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text) 8%, transparent);
   color: var(--text);
 }

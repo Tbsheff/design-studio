@@ -6,7 +6,8 @@
   --shell-inset: var(--s-3);
 }
 
-:root[data-shell='mac'] .topbar {
+:root[data-shell='mac'] .pane-head,
+:root[data-shell='mac'] .studio[data-pane='collapsed'] .canvas-topbar {
   padding-left: var(--shell-inset);
   -webkit-app-region: drag;
   app-region: drag;
@@ -57,17 +58,31 @@
   }
 }
 
-:root[data-shell='mac'] :is(.topbar, .home-header) :is(button, a, input, select, textarea, [role='button'], [role='tab'], [tabindex], .alert, .conn) {
+:root[data-shell='mac'] :is(.topbar, .pane-head, .canvas-topbar, .home-header) :is(button, a, input, select, textarea, [role='button'], [role='tab'], [tabindex], .alert, .conn) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] :is(.run-settings-pop, .tk-pop, .ds-popover, .pack-popover, .desktop-notice, .theme-menu) {
+:root[data-shell='mac'] :is(.run-settings-pop, .tk-pop, .ds-popover, .pack-popover, .desktop-notice, .theme-menu, .ui-menu, .tweak-prompt) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac']:has(dialog[open]) :is(.topbar, .home-header) {
+:root[data-shell='mac']:has(dialog[open]) :is(.topbar, .pane-head, .canvas-topbar, .home-header) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
+}
+
+:root[data-shell='mac'] .canvas-topbar {
+  -webkit-app-region: drag;
+  app-region: drag;
+  user-select: none;
+}
+
+:root[data-shell='mac'] .studio > .columns {
+  padding-top: 0;
+}
+
+:root[data-shell='mac'] .studio .pane-canvas {
+  margin-top: var(--s-2);
 }

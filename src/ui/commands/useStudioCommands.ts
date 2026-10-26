@@ -26,21 +26,23 @@ export interface StudioActions {
 
 const PANELS: { tab: PanelTab; title: string; icon: Command['icon'] }[] = [
   { tab: 'chat', title: 'Show Chat', icon: 'chat' },
-  { tab: 'design', title: 'Show Design', icon: 'pointer' },
-  { tab: 'components', title: 'Show Components', icon: 'component' },
+  { tab: 'design', title: 'Edit mode: inspector and layers', icon: 'pointer' },
   { tab: 'comments', title: 'Show Comments', icon: 'comment' },
   { tab: 'versions', title: 'Show Versions', icon: 'history' },
   { tab: 'tokens', title: 'Show Tokens', icon: 'token' },
+  { tab: 'components', title: 'Show Components', icon: 'component' },
+  { tab: 'tweaks', title: 'Show Tweaks', icon: 'sliders' },
+  { tab: 'system', title: 'Show Design system', icon: 'palette' },
 ];
 
-const REGIONS = ['.canvas .toolbar button:not(:disabled)', '.canvas .stage', '.panel.right [role="tab"][aria-selected="true"]', '.prompt [data-slot="composer-input"]'];
+const REGIONS = ['.canvas .toolbar button:not(:disabled)', '.canvas .stage', '.pane-left .pane-project', '.prompt [data-slot="composer-input"]'];
 
 function regionOf(element: Element | null): number {
   if (!element) return -1;
   if (element.closest('.canvas .toolbar')) return 0;
   if (element.closest('.canvas .stage')) return 1;
   if (element.closest('.prompt')) return 3;
-  if (element.closest('.panel.right')) return 2;
+  if (element.closest('.pane-left')) return 2;
   return -1;
 }
 
@@ -75,7 +77,7 @@ function studioCommands(a: StudioActions): Command[] {
     ...a.directions
       .filter((d) => d.id !== a.directionId)
       .map((d) => ({ id: `direction.open.${d.id}`, title: `Open direction ${d.name}`, group: 'Go', icon: 'branch' as const, keywords: 'switch variation', run: () => a.onDirection(d.id) })),
-    ...PANELS.map((p) => ({ id: `panel.${p.tab}`, title: p.title, group: 'Panels', icon: p.icon, keywords: 'tab side panel', run: () => a.onPanel(p.tab) })),
+    ...PANELS.map((p) => ({ id: `panel.${p.tab}`, title: p.title, group: 'Panels', icon: p.icon, keywords: 'tab side panel pane mode sheet', run: () => a.onPanel(p.tab) })),
     { id: 'panel.focus-composer', title: 'Ask the agent', group: 'Run', icon: 'chat', keywords: 'composer prompt message chat', run: () => focusComposer(a) },
     { id: 'run.stop', title: 'Stop the run', group: 'Run', icon: 'stop', keyId: 'stop', keywords: 'cancel interrupt', run: a.onStop, ...(a.running ? {} : { disabled: 'No run is going' }) },
     { id: 'run.polish', title: 'Polish this design', group: 'Run', icon: 'sparkle', keywords: 'improve refine critique', run: a.onPolish, ...(a.running ? { disabled: 'A run is going' } : {}) },

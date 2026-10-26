@@ -15,6 +15,8 @@ interface LabelProps {
   removable: boolean;
   directionId: string | null;
   badge?: FrameBadge;
+  number?: string;
+  title?: string;
   extras?: ReactNode;
   onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
   onActivate: (frame: CanvasFrame) => void;
@@ -25,7 +27,7 @@ interface LabelProps {
 
 const NUDGE: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
 
-export function FrameLabel({ frame, active, removable, directionId, badge, extras, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
+export function FrameLabel({ frame, active, removable, directionId, badge, number, title, extras, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
   const size = frameName(frame);
   const name = badge ? `Variation ${badge.label}` : size;
   const classes = ['frame-label', active ? 'active' : '', badge ? 'variation' : '', badge?.current ? 'current' : ''].filter(Boolean).join(' ');
@@ -50,14 +52,9 @@ export function FrameLabel({ frame, active, removable, directionId, badge, extra
           }
         }}
       >
-        {badge ? (
-          <>
-            <span className="badge accent">{badge.label}</span>
-            <span className="frame-title">{badge.title}</span>
-          </>
-        ) : (
-          size
-        )}
+        {number && <span className="frame-number">{number}</span>}
+        <span className="frame-title">{badge ? badge.title : (title ?? size)}</span>
+        {!badge && title && <span className="frame-size">{size}</span>}
       </button>
       {extras}
       {removable && (

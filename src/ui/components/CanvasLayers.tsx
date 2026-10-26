@@ -1,12 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shared/contracts';
-import { uiStore } from '../storage';
 import { isTypingTarget } from '../typingTarget';
 import type { LayerTree } from '../layersTree';
 import type { LayerEdits } from '../useLayerEdits';
 import { Icon } from './Icon';
 import { LayersPanel } from './LayersPanel';
-import { tipWithKey } from '../commands/keys';
 
 interface TreeFrames {
   tree: LayerTree | null;
@@ -15,7 +13,7 @@ interface TreeFrames {
   selectNode: (id: number, additive: boolean) => void;
 }
 
-export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void }) {
+export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void; onClose: () => void }) {
   const actions = edits.enabled
     ? {
         onRename: edits.renameNode,
@@ -36,7 +34,7 @@ export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSe
         onSelectMode();
         frames.selectNode(id, additive);
       }}
-      onClose={() => uiStore.set({ layersOpen: false })}
+      onClose={onClose}
     />
   );
 }
@@ -53,25 +51,9 @@ export function EditNotice({ edits }: { edits: Pick<LayerEdits, 'notice' | 'clea
   );
 }
 
-export function LayersToggle({ open, disabled }: { open: boolean; disabled: boolean }) {
-  return (
-    <button
-      type="button"
-      className="icon-btn"
-      aria-label="Layers"
-      aria-pressed={open}
-      aria-keyshortcuts="Alt+1"
-      data-tip={disabled ? 'Layers show for the live preview' : tipWithKey('Layers', 'layers')}
-      data-tip-align="start"
-      disabled={disabled}
-      onClick={() => uiStore.set((s) => ({ layersOpen: !s.layersOpen }))}
-    >
-      <Icon name="layers" />
-    </button>
-  );
-}
-
-export function useLayersWatch(watch: (on: boolean) => void, open: boolean, frontToken: string | null): void {
+export function useLayersWatch(watch: (on: boolean) => void, open: boolean, frontToken: string | null, onToggle: () => void): void {
+  const toggle = useRef(onToggle);
+  toggle.current = onToggle;
   useEffect(() => {
     watch(open);
   }, [watch, open, frontToken]);
@@ -79,7 +61,7 @@ export function useLayersWatch(watch: (on: boolean) => void, open: boolean, fron
     const onKey = (e: KeyboardEvent) => {
       if (!e.altKey || e.metaKey || e.ctrlKey || e.shiftKey || e.code !== 'Digit1' || isTypingTarget(e.target)) return;
       e.preventDefault();
-      uiStore.set((s) => ({ layersOpen: !s.layersOpen }));
+      toggle.current();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

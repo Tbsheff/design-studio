@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
 import type { Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
-import { uiStore, useUi } from '../storage';
+import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, canAddFrame, frameDirection, frameName, setFramePath, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { boundsOf, frameDirection, frameName, setFramePath, withFramePath, type CanvasFrame } from '../canvasFrames';
 import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
 import { FramePageMenu, FrameResizeHandles, VariationControls, type FrameVariation } from './FrameControls';
-import { AddFrameMenu, FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
+import { FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
-import { CanvasLayersPanel, EditNotice, LayersToggle, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
+import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
 import { useResizeHandles } from '../useResizeHandles';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
@@ -18,7 +18,9 @@ import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
 import type { BuildError, FilesChange } from '../useStudioData';
-import { CanvasToolbar, type CanvasSource } from './CanvasToolbar';
+import type { CanvasSource } from './CanvasToolbar';
+import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
+import { CommentHint } from './CanvasOverlays';
 import { RenderCheckPanel } from './RenderCheckPanel';
 import { CommentLayer } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
@@ -45,6 +47,7 @@ interface Props {
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
   directions?: CanvasDirections;
+  shell?: CanvasShell;
 }
 
 export interface CanvasDirections {
@@ -235,6 +238,7 @@ interface LabelInput {
   setSelection: Props['setSelection'];
   frames: ReturnType<typeof useCanvasFrames>;
   baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
+  directionName: string | null;
 }
 
 function useFrameLabels(o: LabelInput) {
@@ -246,8 +250,12 @@ function useFrameLabels(o: LabelInput) {
   return (frame: CanvasFrame, did: string | null) => {
     const variation = did ? o.directions?.variationOf(did) : undefined;
     const isActive = frame.id === o.activeId;
+    const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
+    const named = did ? o.directions?.list.find((d) => d.id === did)?.name : undefined;
     return {
       ...o.baseLabel(frame),
+      number: variation ? `1${variation.label.toLowerCase()}` : String(index + 1),
+      title: variation ? undefined : (named ?? o.directionName ?? undefined),
       directionId: did,
       badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
       extras: (
@@ -387,8 +395,9 @@ export function Canvas(props: Props) {
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
   useSelectKey(setSelectMode);
-  const layersOpen = ui.layersOpen && live;
-  useLayersWatch(frames.watchTree, layersOpen, frames.frontToken);
+  const pane = useShellPane(props.shell, comment, setSelectMode, live, ui.layersOpen);
+  const { layersOpen, toggleEdit } = pane;
+  useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
   useSelectMoveKeys(selectMode, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
   const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
@@ -405,46 +414,45 @@ export function Canvas(props: Props) {
   });
 
   const darkSwitch = themeSwitch(props.darkPreview, theme);
-  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onSource: props.onSource, dark: darkSwitch, check });
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, check });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
-  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel });
+  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null });
+
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
   const note = stageNote({ running: props.running, noRuns: props.noRuns, live, hasHead: headVersionId !== null, urlError });
   return (
     <div className={canvasClass(inline.editing)}>
-      <CanvasToolbar
-        viewport={ui.viewport}
-        zoomSetting={ui.zoom}
-        zoom={pz.zoom}
-        onZoomTo={pz.zoomTo}
-        onZoomStep={pz.zoomStep}
-        onFit={pz.fit}
+      <CanvasChrome
+        shell={props.shell}
+        kind={kind}
+        projectId={projectId}
+        directionId={directionId}
+        live={live}
+        ui={ui}
+        zoom={pz}
+        comment={comment}
         selectMode={selectMode}
-        onToggleSelect={() => {
-          comment.setOn(false);
-          setSelectMode((m) => !m);
-        }}
-        commentMode={comment.available ? commentMode : undefined}
-        onToggleComment={comment.toggle}
-        drawMode={draw.toolbarMode}
-        onToggleDraw={draw.toggle}
-        source={source}
-        onSource={props.onSource}
-        hasHead={headVersionId !== null}
-        checking={check.checking}
-        onCheck={check.run}
-        addFrame={<AddFrameMenu disabled={!canAddFrame(layout)} onAdd={addFrameAt} />}
-        layers={<LayersToggle open={layersOpen} disabled={!live} />}
-        theme={darkSwitch}
+        setSelectMode={setSelectMode}
+        toggleEdit={toggleEdit}
+        layout={layout}
+        active={active}
+        frames={canvasFrames}
+        label={(f) => labelProps(f, frameDirection(f, directionId))}
+        addFrame={addFrameAt}
+        presentUrl={liveUrl}
+        sandbox={sandbox}
+        selection={props.selection}
+        stage={() => stageRef.current}
+        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch }}
       />
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
       <div className="canvas-body">
-      {layersOpen && <CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} />}
+      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={pane.closeLayers} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
@@ -478,10 +486,11 @@ export function Canvas(props: Props) {
               />
             }
           />
-          {layout.frames.length > 1 && <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />}
+          <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
+        <CommentHint on={commentMode} />
         <DrawBar draw={draw} />
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />

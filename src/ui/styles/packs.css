@@ -423,19 +423,30 @@
 .ds-toast {
   position: fixed;
   left: 50%;
-  bottom: var(--s-5);
+  bottom: var(--s-4);
   z-index: 80;
   display: flex;
   align-items: center;
   gap: var(--s-2);
+  box-sizing: border-box;
+  width: max-content;
   max-width: min(560px, calc(100vw - 32px));
-  padding: var(--s-2) var(--s-3);
+  min-height: 36px;
+  padding: var(--s-1) var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface-raised);
   box-shadow: var(--shadow-lg);
   font-size: var(--t-sm);
   transform: translateX(-50%);
   animation: pop-in var(--dur) var(--ease);
+}
+
+.ds-toast:has(button) {
+  padding-right: var(--s-1);
+}
+
+.ds-toast :is(.btn, .icon-btn) {
+  border-radius: var(--r-md);
 }
 
 .ds-toast.error {

@@ -173,6 +173,11 @@
   --info: #3f74a6;
   --info-tint: rgb(63 116 166 / 0.12);
   --info-tint-strong: rgb(63 116 166 / 0.18);
+  --home-shell: #f4f3ee;
+  --home-input: #ffffff;
+  --home-pill-label: rgb(28 27 25 / 0.55);
+  --home-pill-value: rgb(28 27 25 / 0.8);
+  --home-tile-on: rgb(28 27 25 / 0.07);
   color-scheme: light;
 }
 
@@ -260,6 +265,11 @@
   --info: #7eaeda;
   --info-tint: rgb(126 174 218 / 0.14);
   --info-tint-strong: rgb(126 174 218 / 0.22);
+  --home-shell: rgb(250 249 245 / 0.025);
+  --home-input: #20201f;
+  --home-pill-label: #898781;
+  --home-pill-value: #c3c2b7;
+  --home-tile-on: rgb(240 239 236 / 0.13);
   color-scheme: dark;
 }
 

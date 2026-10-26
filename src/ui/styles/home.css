@@ -20,45 +20,55 @@
 
 .home-main {
   display: grid;
-  gap: var(--s-12);
+  gap: 64px;
   justify-items: center;
   padding: clamp(var(--s-8), 11vh, 120px) var(--s-6) var(--s-12);
 }
 
 .home-hero {
-  width: min(680px, 100%);
+  width: min(800px, 100%);
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-3);
 }
 
 .home-hero > h1 {
-  margin-bottom: var(--s-4);
+  margin: 8px 0 20px;
   text-align: center;
 }
 
 .home-card {
   display: grid;
-  border-radius: 14px;
-  background: var(--surface-2);
+  border-radius: 17px;
+  background: var(--home-shell);
   box-shadow: var(--shadow-inset);
 }
 
-.home-composer {
-  display: grid;
+.home-composer.ui-composer {
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
   gap: 6px;
-  padding: 12px;
-  border-radius: 14px;
+  margin: -1px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--home-input);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.home-composer.ui-composer:focus-within {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .home-composer textarea {
-  min-height: 63px;
+  flex: 1 0 48px;
+  min-height: 48px;
   padding: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   resize: none;
-  font-size: var(--t-md);
-  line-height: 21px;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .home-composer textarea::placeholder {
@@ -97,21 +107,26 @@
 
 .home-composer-bar .ui-pill-select {
   max-width: 220px;
+  height: 28px;
   min-height: 28px;
-  padding: 3px 8px;
+  padding: 0 8px;
   border-radius: 6px;
-  row-gap: 0;
-}
-
-.home-composer-bar .ui-pill-select-label,
-.home-composer-bar .ui-pill-select-value {
-  font-size: 11px;
-  line-height: 11px;
-  font-weight: var(--w-medium);
+  row-gap: 3px;
 }
 
 .home-composer-bar .ui-pill-select-label {
-  color: var(--text-3);
+  font-size: 10.5px;
+  line-height: 10.5px;
+  font-weight: var(--w-medium);
+  letter-spacing: 0.105px;
+  color: var(--home-pill-label);
+}
+
+.home-composer-bar .ui-pill-select-value {
+  font-size: 13px;
+  line-height: 13px;
+  font-weight: var(--w-medium);
+  color: var(--home-pill-value);
 }
 
 .home-send {
@@ -149,14 +164,19 @@
 
 .home-templates {
   display: grid;
-  gap: var(--s-2);
-  padding: var(--s-3) var(--s-3) var(--s-3);
+  gap: 14px;
+  padding: 15px 14px 14px;
+  border-radius: 0 0 17px 17px;
 }
 
-.home-templates-toggle {
+.home-templates-toggle.ui-section-label {
   justify-self: start;
   height: 24px;
-  padding: 0 var(--s-1);
+  padding: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.55px;
+  color: color-mix(in srgb, var(--info) 78%, transparent);
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -169,15 +189,29 @@
 
 .home-tile-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .home-tile-grid .ui-tile {
-  min-height: 96px;
+  height: 117px;
+  gap: 0;
+  padding: 6px;
+  border-radius: 10px;
+  color: var(--home-pill-value);
+  font-size: 11.5px;
+  line-height: 14.375px;
+  font-weight: 400;
+}
+
+.home-tile-grid .ui-tile[aria-pressed='true'] {
+  background: var(--home-tile-on);
+  box-shadow: none;
 }
 
 .home-tile-grid .ui-tile-art {
-  width: 64px;
-  height: 52px;
+  width: 100%;
+  height: 84px;
+  margin-bottom: 7px;
 }
 
 .home-tile-placeholder {
@@ -419,27 +453,33 @@
 }
 
 .home-foot .home-location {
-  font-size: var(--t-xs);
+  font-size: 13px;
+}
+
+.home-foot .home-location .select {
+  font-size: 13px;
 }
 
 .home-foot .advanced summary {
-  font-size: var(--t-xs);
+  font-size: 13px;
 }
 
 .home-tabs {
   display: flex;
-  gap: 2px;
+  gap: 1px;
+  padding: 0 8px;
 }
 
 .home-tab {
   height: 28px;
   font-weight: var(--w-medium);
-  padding: 0 var(--s-3);
+  padding: 0 10px;
   border: 0;
-  border-radius: var(--r-md);
+  border-radius: 5px;
   background: transparent;
   color: var(--text-2);
-  font-size: var(--t-xs);
+  font-size: 14px;
+  line-height: 20px;
   cursor: pointer;
   transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
@@ -1195,9 +1235,16 @@
   text-wrap: pretty;
 }
 
-.first-run {
-  margin: 0 var(--s-3);
+.first-run.ui-notice {
+  margin: 10px 14px 0;
+  padding: 6px 6px 6px 10px;
   align-items: center;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.first-run .first-run-sample {
+  height: 26px;
 }
 
 .first-run-text {

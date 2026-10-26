@@ -1,4 +1,5 @@
 import type { CanvasFile } from './canvas-file';
+import type { StatesRequest } from './states';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -271,6 +272,7 @@ export interface RunRequest {
   comments?: RunComment[];
   task?: RunTask;
   referencePages?: ReferencePage[];
+  states?: StatesRequest;
 }
 
 export type CommentStatus = 'draft' | 'queued' | 'sent' | 'resolved' | 'orphaned';

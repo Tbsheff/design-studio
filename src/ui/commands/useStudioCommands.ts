@@ -16,6 +16,7 @@ export interface StudioActions {
   onDirection: (id: string) => void;
   onStop: () => void;
   onPolish: () => void;
+  onMakeStates: (() => void) | null;
   canUndo: boolean;
   onUndo: () => void;
   canRedo: boolean;
@@ -81,6 +82,16 @@ function studioCommands(a: StudioActions): Command[] {
     { id: 'panel.focus-composer', title: 'Ask the agent', group: 'Run', icon: 'chat', keywords: 'composer prompt message chat', run: () => focusComposer(a) },
     { id: 'run.stop', title: 'Stop the run', group: 'Run', icon: 'stop', keyId: 'stop', keywords: 'cancel interrupt', run: a.onStop, ...(a.running ? {} : { disabled: 'No run is going' }) },
     { id: 'run.polish', title: 'Polish this design', group: 'Run', icon: 'sparkle', keywords: 'improve refine critique', run: a.onPolish, ...(a.running ? { disabled: 'A run is going' } : {}) },
+    {
+      id: 'run.states',
+      title: 'Make UI states of this page',
+      group: 'Run',
+      icon: 'layers',
+      slash: 'states',
+      keywords: 'empty loading error success validation menu frames',
+      run: () => a.onMakeStates?.(),
+      ...(a.running ? { disabled: 'A run is going' } : a.onMakeStates ? {} : { disabled: 'No direction yet' }),
+    },
     { id: 'edit.undo', title: 'Undo', group: 'Version', icon: 'undo', keyId: 'undo', run: a.onUndo, ...(a.canUndo ? {} : { disabled: 'Nothing to undo' }) },
     { id: 'edit.redo', title: 'Redo', group: 'Version', icon: 'restore', keyId: 'redo', run: a.onRedo, ...(a.canRedo ? {} : { disabled: 'Nothing to redo' }) },
     { id: 'version.export', title: 'Export this version as a zip', group: 'Version', icon: 'download', keywords: 'download source files', run: () => a.exportId && a.onExport(a.exportId), ...(a.exportId ? {} : { disabled: 'No version yet' }) },

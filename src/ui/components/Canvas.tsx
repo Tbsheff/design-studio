@@ -48,6 +48,7 @@ interface Props {
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
+  onMakeStates?: (frame: CanvasFrame) => void;
   directions?: CanvasDirections;
   shell?: CanvasShell;
 }
@@ -465,7 +466,13 @@ export function Canvas(props: Props) {
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
-  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null });
+  const frameActions = (frame: CanvasFrame, did: string | null): FrameMenuItem[] => {
+    const make = props.onMakeStates;
+    if (!make) return [];
+    const blocked = props.running ? 'A run is going.' : did !== directionId ? 'Open this direction first.' : undefined;
+    return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
+  };
+  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null, frameActions });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;

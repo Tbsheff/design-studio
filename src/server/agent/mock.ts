@@ -12,7 +12,7 @@ import { runVariationMock } from '../variations/mock-pages.js';
 import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
 import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-system.js';
 import type { CanvasService } from '../canvas/service.js';
-import { mockCanvasContext, runMockCanvas, wantsMockCanvas } from './mock-canvas.js';
+import { mockCanvasContext, runMockCanvas, runMockStates, wantsMockCanvas, wantsMockStates } from './mock-canvas.js';
 
 const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
 const DELTA_DELAY_MS = 20;
@@ -550,6 +550,7 @@ function wantsTweaks(input: DriverInput): boolean {
 async function runMockScenario(input: DriverInput, session: MockSession, canvas: CanvasService | undefined): Promise<string> {
   if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt);
   if (wantsMockCanvas(input)) return runMockCanvas(session, mockCanvasContext(input, canvas));
+  if (wantsMockStates(input)) return runMockStates(session, input, mockCanvasContext(input, canvas));
   const tweaksOnly = input.ctx.request.task === 'tweaks';
   let finalText = tweaksOnly ? '' : await runMockEdit(input, session);
   if (wantsTweaks(input)) finalText = `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();

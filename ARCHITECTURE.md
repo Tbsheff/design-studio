@@ -581,6 +581,23 @@ agent: mcp__studio__canvas_list  ──► frames + lofi + {currentDirection, li
 - Bridge: `select-selector {selector}` (max 400 chars, `querySelector` in a try) scrolls the element into view and selects it like a click.
 - Mock: `[canvas]` in the prompt runs canvas_list, then canvas_place (label f1 "Desktop", add "Mobile" right of it, add "Tablet" at 0,0, which overlaps), a second canvas_place that moves Tablet right of Mobile because of the warning, then canvas_point at `@Mobile` with selector `h1`.
 
+## State frames (pm-ideas)
+
+```
+frame "…" menu › Make states │ palette "Make UI states of this page" │ /states in the composer
+  → Studio.makeStates(frame = the live frame): RunRequest {prompt: "Make the UI states of <page> as frames.", mode edit, level = project default, states: {path, frame, width, height}}
+  → POST .../runs (parseStatesRequest: path by cleanFramePath, frame id, sides 200..4000; edit mode, no task)
+  → buildUserText adds a <states-task> block (src/shared/states.ts statesTaskBlock)
+  → agent: states/<prefix><state>.html (HTML) or /states/<prefix><state> routes on window.location.pathname (React, no router package)
+           + one canvas_place call: a row under the page frame, labelled by state, same size  + canvas_point at the first state
+```
+
+- The block lists the suggested states (empty, loading, error, validation error, open menu, success); the agent picks 3 to 6 that fit the page. `<prefix>` is empty for `index.html` and `<page stem>-` for other pages, so states of two pages do not collide.
+- The state frames are ordinary frames with `path` and `label`, so they render, reload, resize and export like any extra page frame. The frame label shows the label (the state name) in place of the direction name.
+- "Make states" in the frame menu is disabled while a run is going and on frames of another direction (make that direction current first).
+- The prompt text in chat stays short; the task text is in the user message only, so the system prompt and its cache do not change.
+- Mock: `[states]` in the prompt or `RunRequest.states` writes `states/<prefix>{empty,loading,error,success}.html` (a copy of the page with `<base href="../">` and a dashed state banner; React projects write them under `public/states/`), places the four frames in a row below the source frame with the real `canvas_place`, then points at `@Empty`.
+
 ## Versions, chat rewind and comments (Round 7)
 
 - Version thumbnails: `GET /api/projects/:pid/versions/:vid/thumb` shoots the version snapshot on the first request (one shared shot queue, one at a time) and then serves `thumbs/v-<vid>.png`. The Versions panel fetches only rows in view while the panel is open, at most 2 at a time.

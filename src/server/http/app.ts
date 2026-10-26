@@ -71,6 +71,7 @@ import { registerHomeRoutes } from './home-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
+import { parseStatesRequest } from '../../shared/states.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 
@@ -178,12 +179,21 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
     }
     request.attachmentIds = body.attachmentIds as string[];
   }
+  parseRunTask(body, request);
+  return request;
+}
+
+function parseRunTask(body: Record<string, unknown>, request: RunRequest): void {
   if (body.task !== undefined) {
     if (body.task !== 'tweaks' && body.task !== 'design-system') throw new BadRequestError('task must be tweaks or design-system');
-    if (mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
+    if (request.mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
     request.task = body.task;
   }
-  return request;
+  if (body.states === undefined) return;
+  const states = parseStatesRequest(body.states);
+  if (!states) throw new BadRequestError('states must be {path, frame, width, height}');
+  if (request.mode !== 'edit' || request.task) throw new BadRequestError('states needs an edit run with no task');
+  request.states = states;
 }
 
 const settingsSchema = z

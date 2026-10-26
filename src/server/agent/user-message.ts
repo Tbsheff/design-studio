@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
-import type { Attachment, RunComment, RunMention, SelectionContext } from '../../shared/contracts.js';
+import type { Attachment, ProjectKind, RunComment, RunMention, SelectionContext } from '../../shared/contracts.js';
+import { statesTaskBlock } from '../../shared/states.js';
 import type { AgentRunContext, MentionFile } from '../types.js';
 import { referenceBlock, variationBlock } from '../variations/message.js';
 import { referencePagesBlock } from '../reference-page.js';
@@ -94,11 +95,17 @@ function mentionsBlock(mentions: readonly RunMention[], files: readonly MentionF
   return parts.length ? parts.join('\n') : null;
 }
 
-export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles'> & { attachments?: readonly unknown[] }): string {
-  const blocks = [ctx.request.prompt.trim()];
+function taskBlocks(ctx: Pick<AgentRunContext, 'request'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string[] {
+  const blocks: string[] = [];
   if (ctx.request.plan) blocks.push(PLAN_MODE_BLOCK);
   const imageCount = ctx.attachments?.length ?? 0;
   if (ctx.request.task === 'design-system' && imageCount > 0) blocks.push(sourceImagesBlock(imageCount));
+  if (ctx.request.states) blocks.push(statesTaskBlock(ctx.request.states, ctx.project?.kind ?? 'html'));
+  return blocks;
+}
+
+export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
+  const blocks = [ctx.request.prompt.trim(), ...taskBlocks(ctx)];
   const variation = variationBlock(ctx.request.variation);
   if (variation) blocks.push(variation);
   const reference = referenceBlock(ctx.request.reference);

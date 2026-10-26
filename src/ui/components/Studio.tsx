@@ -2,6 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
 import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import { statesPrompt } from '../../shared/states';
+import { activeFrame, canvasStore, defaultLayout, type CanvasFrame } from '../canvasFrames';
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { POLISH_REQUEST } from '../polish';
@@ -307,6 +309,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     panel.choose(tab);
     return true;
   };
+  const makeStates = (frame?: CanvasFrame) => {
+    const f = frame ?? activeFrame(canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport));
+    const path = f.path ?? '';
+    void act(() => startRun({ prompt: statesPrompt(path), mode: 'edit', level: project.settings.defaultLevel, states: { path, frame: f.id, width: f.width, height: f.height } }, true));
+  };
   const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
   const retryRun = (run: RunView) => {
     const request = run.request;
@@ -324,6 +331,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     onDirection: guard(data.setDirectionId),
     onStop: runControls.onCancel,
     onPolish: polish,
+    onMakeStates: did ? () => makeStates() : null,
     canUndo: historyChain.canUndo,
     onUndo: historyChain.onUndo,
     canRedo: editHistory.redo.enabled,
@@ -529,6 +537,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               running: activeRun !== null,
               noRuns: neverRan(data.runsLoaded, directionRuns),
               darkPreview: hasDarkMode(tokens),
+              onMakeStates: did ? makeStates : undefined,
               directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
               shell: {
                 pane: panel.tab,

@@ -1,5 +1,5 @@
 .nds .home-header {
-  padding-inline: max(var(--s-6), calc((100% - 720px) / 2));
+  padding-inline: max(var(--s-6), calc((100% - 1040px) / 2));
 }
 
 .nds-form input:not([type='file'], [type='checkbox'], [type='radio']),
@@ -16,13 +16,112 @@
 .nds-main {
   display: grid;
   justify-items: center;
-  padding: var(--s-6) var(--s-6) var(--s-12);
+  padding: var(--s-6) var(--s-6) 0;
 }
 
 .nds-form {
-  width: min(720px, 100%);
+  width: min(1040px, 100%);
   display: grid;
-  gap: var(--s-6);
+  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-areas:
+    'head head'
+    'sources side';
+  align-items: start;
+  column-gap: var(--s-6);
+  row-gap: var(--s-6);
+  padding-bottom: var(--s-12);
+}
+
+.nds-head {
+  grid-area: head;
+}
+
+.nds-sources {
+  grid-area: sources;
+  display: grid;
+  gap: var(--s-4);
+}
+
+.nds-side {
+  grid-area: side;
+  position: sticky;
+  top: var(--s-6);
+}
+
+.nds-side-card {
+  display: grid;
+  gap: var(--s-5);
+  padding: var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.nds-side-card .nds-basics {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.nds-summary {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.nds-summary h2 {
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+  color: var(--text-2);
+}
+
+.nds-summary ul {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nds-summary li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  height: 24px;
+  font-size: var(--t-sm);
+}
+
+.nds-summary li svg {
+  flex: none;
+  color: var(--success, var(--accent-text));
+}
+
+.nds-summary-empty {
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
+  text-wrap: pretty;
+}
+
+.nds-side-actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.nds-create {
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .nds-form {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'side'
+      'sources';
+  }
+
+  .nds-side {
+    position: static;
+  }
 }
 
 .nds-head {
@@ -215,12 +314,6 @@
   border-radius: var(--r-sm);
 }
 
-.nds-foot {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--s-2);
-}
 
 .pack-popover-foot {
   display: flex;
@@ -397,9 +490,3 @@
   max-width: 16em;
 }
 
-.nds-foot-hint {
-  margin: 0 auto 0 0;
-  font-size: var(--t-xs);
-  line-height: var(--lh-xs);
-  color: var(--text-3);
-}

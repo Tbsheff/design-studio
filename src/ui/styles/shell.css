@@ -33,7 +33,7 @@
   user-select: none;
 }
 
-:root[data-shell='mac'] .home-main {
+:root[data-shell='mac'] .home > main {
   flex: 1;
   min-height: 0;
   overflow-y: auto;

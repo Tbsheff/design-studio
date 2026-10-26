@@ -207,10 +207,42 @@ function ImagesField({ images, onChange }: { images: File[]; onChange: (images: 
   );
 }
 
+function sourceList(form: DraftForm): string[] {
+  const urls = form.urls.map((url) => url.trim()).filter(Boolean);
+  const list: string[] = urls.map((url) => url.replace(/^https?:\/\//, '').replace(/\/$/, ''));
+  if (form.designMd.trim()) list.push('DESIGN.md');
+  if (form.brief.trim()) list.push('Brief');
+  if (form.tokensFile) list.push(form.tokensFile.name);
+  if (form.folder.trim()) list.push(form.folder.trim().split('/').filter(Boolean).pop() ?? form.folder.trim());
+  if (form.images.length > 0) list.push(form.images.length === 1 ? '1 image' : `${form.images.length} images`);
+  return list;
+}
+
+function SourceSummary({ form }: { form: DraftForm }) {
+  const list = sourceList(form);
+  return (
+    <div className="nds-summary">
+      <h2>Sources</h2>
+      {list.length === 0 ? (
+        <p className="nds-summary-empty">Add a website, DESIGN.md, brief, tokens file, folder or image.</p>
+      ) : (
+        <ul>
+          {list.map((item, index) => (
+            <li key={`${item}-${index}`}>
+              <Icon name="check" size={12} />
+              <span className="truncate">{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Basics({ form, set }: { form: DraftForm; set: (patch: Partial<DraftForm>) => void }) {
   const { packs } = pickable(usePacks());
   return (
-    <div className="nds-basics">
+    <div className="nds-basics" role="group" aria-label="Design system settings">
       <label className="field">
         <span>Name</span>
         <input value={form.name} maxLength={80} placeholder="From the website or brief" aria-label="Design system name" onChange={(e) => set({ name: e.target.value })} />
@@ -274,40 +306,46 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
             <h1>New design system</h1>
             <p className="muted">Add one or more sources. The studio makes a draft in seconds, then opens it as a project with a kit page.</p>
           </div>
-          <Basics form={form} set={set} />
-          <Section title="Website" hint="Up to 3 pages. The studio reads their HTML and CSS.">
-            <UrlFields urls={form.urls} onChange={(urls) => set({ urls })} />
-          </Section>
-          <Section title="DESIGN.md" hint="Paste an existing DESIGN.md. It becomes the system's guide.">
-            <DesignMdField value={form.designMd} onChange={(designMd) => set({ designMd })} />
-          </Section>
-          <Section title="Brief" hint="A few words about the brand and mood.">
-            <textarea aria-label="Brief" rows={3} maxLength={4000} placeholder="Calm, precise banking app for small teams" value={form.brief} onChange={(e) => set({ brief: e.target.value })} />
-          </Section>
-          <Section title="Tokens file" hint="DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.">
-            <TokensDrop file={form.tokensFile} onChange={(tokensFile) => set({ tokensFile })} />
-          </Section>
-          <Section title="Code folder" hint="Read only. The studio scans CSS, SCSS and Tailwind config files.">
-            <FolderField value={form.folder} onChange={(folder) => set({ folder })} />
-          </Section>
-          <Section title="Images" hint="Screenshots or a logo, kept for the AI step.">
-            <ImagesField images={form.images} onChange={(images) => set({ images })} />
-          </Section>
-          {error && (
-            <div className="alert error small" role="alert">
-              {error}
-            </div>
-          )}
-          <div className="nds-foot">
-            {!busy && !hasSource(form) && <p className="nds-foot-hint">Add a website, DESIGN.md, brief, tokens file, folder or image to continue.</p>}
-            <button type="button" className="btn ghost" onClick={onCancel} disabled={busy}>
-              Cancel
-            </button>
-            <button type="submit" className="btn primary has-icon" disabled={!ready}>
-              {busy && <span className="spinner" />}
-              {busy ? 'Making draft…' : 'Create draft'}
-            </button>
+          <div className="nds-sources">
+            <Section title="Website" hint="Up to 3 pages. The studio reads their HTML and CSS.">
+              <UrlFields urls={form.urls} onChange={(urls) => set({ urls })} />
+            </Section>
+            <Section title="DESIGN.md" hint="Paste an existing DESIGN.md. It becomes the system's guide.">
+              <DesignMdField value={form.designMd} onChange={(designMd) => set({ designMd })} />
+            </Section>
+            <Section title="Brief" hint="A few words about the brand and mood.">
+              <textarea aria-label="Brief" rows={3} maxLength={4000} placeholder="Calm, precise banking app for small teams" value={form.brief} onChange={(e) => set({ brief: e.target.value })} />
+            </Section>
+            <Section title="Tokens file" hint="DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.">
+              <TokensDrop file={form.tokensFile} onChange={(tokensFile) => set({ tokensFile })} />
+            </Section>
+            <Section title="Code folder" hint="Read only. The studio scans CSS, SCSS and Tailwind config files.">
+              <FolderField value={form.folder} onChange={(folder) => set({ folder })} />
+            </Section>
+            <Section title="Images" hint="Screenshots or a logo, kept for the AI step.">
+              <ImagesField images={form.images} onChange={(images) => set({ images })} />
+            </Section>
           </div>
+          <aside className="nds-side" aria-label="Create">
+            <div className="nds-side-card">
+              <Basics form={form} set={set} />
+              <SourceSummary form={form} />
+              {error && (
+                <div className="alert error small" role="alert">
+                  {error}
+                </div>
+              )}
+              <div className="nds-side-actions">
+                <button type="submit" className="btn primary has-icon nds-create" disabled={!ready}>
+                  {busy && <span className="spinner" />}
+                  {busy ? 'Making draft…' : 'Create draft'}
+                </button>
+                <button type="button" className="btn ghost" onClick={onCancel} disabled={busy}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </aside>
         </form>
       </main>
     </div>

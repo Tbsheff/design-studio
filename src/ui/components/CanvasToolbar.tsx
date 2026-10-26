@@ -22,6 +22,7 @@ interface Props {
   onCheck: () => void;
   addFrame?: ReactNode;
   theme?: { dark: boolean; onToggle: () => void };
+  lofi?: { on: boolean; onToggle: () => void };
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
@@ -182,12 +183,28 @@ function ThemeSwitch({ dark, onToggle }: { dark: boolean; onToggle: () => void }
   );
 }
 
+function LofiSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="btn small ghost select-toggle lofi-toggle"
+      aria-pressed={on}
+      data-tip={on ? 'Show the real colors and fonts' : 'Show this direction in grayscale with a hand-drawn font. Your files do not change.'}
+      onClick={onToggle}
+    >
+      <Icon name="pencil" size={14} />
+      <span className="label">Lo-fi look</span>
+    </button>
+  );
+}
+
 export function CanvasViewRow(props: Props) {
   return (
     <div className="toolbar canvas-viewrow" role="toolbar" aria-label="View options">
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
       {props.theme && <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />}
+      {props.lofi && <LofiSwitch on={props.lofi.on} onToggle={props.lofi.onToggle} />}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />

@@ -1,3 +1,5 @@
+import type { CanvasFile } from './canvas-file';
+import type { StatesRequest } from './states';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -270,6 +272,7 @@ export interface RunRequest {
   comments?: RunComment[];
   task?: RunTask;
   referencePages?: ReferencePage[];
+  states?: StatesRequest;
 }
 
 export type CommentStatus = 'draft' | 'queued' | 'sent' | 'resolved' | 'orphaned';
@@ -498,7 +501,20 @@ export type StudioEventBody =
   | { type: 'preview.build-error'; message: string; file?: string; line?: number; frame?: string }
   | { type: 'comments.changed'; comments: DesignComment[] }
   | { type: 'edit-history.changed' }
-  | { type: 'versions.changed' };
+  | { type: 'versions.changed' }
+  | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
+  | { type: 'canvas.point'; frameId: string; selector?: string; at: number };
+
+export type CanvasWriteSource = 'user' | 'agent' | 'run' | 'restore' | 'migrate';
+
+export interface CanvasPresence {
+  directionId: string | null;
+  activeFrameId: string | null;
+  liveSize?: { width: number; height: number };
+  inView: string[];
+  selection: { selector: string; tag: string; text: string }[];
+  at: number;
+}
 
 export type StudioEvent = EventBase & StudioEventBody;
 
@@ -772,6 +788,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'preview-reset' }
   | { ns: 'studio'; token: string; type: 'tokens-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
+  | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] }
@@ -782,7 +799,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'text-edit-allowed'; allowed: boolean }
   | { ns: 'studio'; token: string; type: 'text-edit-stop' }
   | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
-  | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string };
+  | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
+  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',

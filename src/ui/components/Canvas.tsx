@@ -3,10 +3,11 @@ import type { CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderC
 import { api, errorText } from '../api';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, frameDirection, frameName, setFramePath, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { boundsOf, canHideFrame, canvasStore, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, useCanvasLofi, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { useLofiFrames } from '../lofiFrames';
 import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
-import { FramePageMenu, FrameResizeHandles, VariationControls, type FrameVariation } from './FrameControls';
+import { FrameMoreMenu, FramePageMenu, FrameResizeHandles, VariationControls, type FrameMenuItem, type FrameVariation } from './FrameControls';
 import { FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
@@ -27,6 +28,8 @@ import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
 import { DrawBar, DrawSurface } from './DrawLayer';
 import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
+import { useCanvasPresence } from '../useCanvasPresence';
+import { useCanvasPoint } from '../useCanvasPoint';
 
 interface Props {
   projectId: string;
@@ -46,6 +49,7 @@ interface Props {
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
+  onMakeStates?: (frame: CanvasFrame) => void;
   directions?: CanvasDirections;
   shell?: CanvasShell;
 }
@@ -267,6 +271,19 @@ interface LabelInput {
   frames: ReturnType<typeof useCanvasFrames>;
   baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
   directionName: string | null;
+  frameActions?: (frame: CanvasFrame, directionId: string | null) => FrameMenuItem[];
+}
+
+function frameMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null): FrameMenuItem[] {
+  const extra = o.frameActions?.(frame, did) ?? [];
+  const hide: FrameMenuItem = {
+    id: 'hide',
+    label: 'Hide frame',
+    icon: 'eyeOff',
+    run: () => o.frames.update((l) => setFrameHidden(l, frame.id, true)),
+    ...(canHideFrame(o.frames.layout, frame.id) ? {} : { disabled: 'The last shown frame stays.' }),
+  };
+  return [...extra, hide];
 }
 
 function useFrameLabels(o: LabelInput) {
@@ -283,13 +300,14 @@ function useFrameLabels(o: LabelInput) {
     return {
       ...o.baseLabel(frame),
       number: variation ? `1${variation.label.toLowerCase()}` : String(index + 1),
-      title: variation ? undefined : (named ?? o.directionName ?? undefined),
+      title: variation ? undefined : (frame.label ?? named ?? o.directionName ?? undefined),
       directionId: did,
       badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
       extras: (
         <>
           {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
           <FramePageMenu path={frame.path ?? ''} listPages={o.kind === 'html' && did ? listPages(did) : null} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
         </>
       ),
     };
@@ -352,13 +370,14 @@ export function Canvas(props: Props) {
   const artboardRef = useRef<HTMLDivElement>(null);
   const canvasFrames = useCanvasFrames(projectId, directionId, activateOf(props.directions), knownIds(props.directions));
   const { layout, active } = canvasFrames;
+  const shown = shownFrames(layout);
   const viewport = { width: active.width, height: active.height };
   const selectionRef = useRef(props.selection);
   selectionRef.current = props.selection;
   const pz = usePanZoom({
     stageRef,
     artboardRef,
-    layout: { activeId: active.id, active, bounds: boundsOf(layout.frames) },
+    layout: { activeId: active.id, active, bounds: boundsOf(shown) },
     setting: ui.zoom,
     selectionRect: () => unionRect(selectionRef.current),
   });
@@ -409,7 +428,7 @@ export function Canvas(props: Props) {
   const passive = useDirectionFrames({
     projectId,
     kind,
-    frames: layout.frames,
+    frames: shown,
     activeId: active.id,
     currentId: directionId,
     currentUrl: baseUrl,
@@ -441,12 +460,26 @@ export function Canvas(props: Props) {
     onError: layerEdits.notify,
   });
 
+  useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
+  useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
+  const lofiList = useCanvasLofi(projectId);
+  useLofiFrames(stageRef, kind, directionId, lofiList);
+  const liveDirection = frameDirection(active, directionId);
+  const lofiSwitch = liveDirection
+    ? { on: lofiList.includes(liveDirection), onToggle: () => canvasStore.setLofi(projectId, liveDirection, !lofiList.includes(liveDirection), layout) }
+    : undefined;
   const darkSwitch = themeSwitch(props.darkPreview, theme);
-  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, check });
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
-  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null });
+  const frameActions = (frame: CanvasFrame, did: string | null): FrameMenuItem[] => {
+    const make = props.onMakeStates;
+    if (!make) return [];
+    const blocked = props.running ? 'A run is going.' : did !== directionId ? 'Open this direction first.' : undefined;
+    return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
+  };
+  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null, frameActions });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
@@ -475,7 +508,7 @@ export function Canvas(props: Props) {
         sandbox={sandbox}
         selection={props.selection}
         stage={() => stageRef.current}
-        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch }}
+        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch }}
       />
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
@@ -518,7 +551,7 @@ export function Canvas(props: Props) {
           />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
-          <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />

@@ -60,6 +60,12 @@ Every message has a <run-level> block. It sets which checks to run, how many fix
 ${NAV_RULE}
 - After the last edit of the run, run the final check that the <run-level> block asks for. An edit after your last check means the work is not verified.`;
 
+const CANVAS_RULES = `## Canvas
+The studio canvas shows frames. Each frame renders one page of this design at one size. Only the canvas tools change the layout (\`.studio/\` is owned by the studio).
+- \`mcp__studio__canvas_list\`: frames (id, label, page, size, position), the user's selection and the frame in view. Call it before you place frames and when the user says "this frame" or "the one on the right".
+- \`mcp__studio__canvas_place\`: when you add a page or a state the user should compare, give it its own labelled frame beside the others (\`rightOf\`, \`below\`, \`leftOf\`, \`above\` a frame id or \`@label\`, default gap 80). Fix every overlap in its \`warnings\`.
+- \`mcp__studio__canvas_point\`: at the end of a reply about one frame or element, point the user's canvas at it.`;
+
 const EDIT_REPLY_RULES = `## Replies
 Keep chat replies short: one to three sentences on what you changed, then one line on the checks you ran and what you left unfixed, as the <run-level> block asks. Never paste source code into chat.`;
 
@@ -158,8 +164,8 @@ export function buildSystemPrompt(
 - Package installs: ${shellAllowed && project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.`;
   const sections =
     mode === 'critique'
-      ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES]
-      : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, EDIT_REPLY_RULES];
+      ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES, CANVAS_RULES]
+      : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, EDIT_REPLY_RULES];
   if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));

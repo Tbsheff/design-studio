@@ -70,6 +70,11 @@ import { createThumbnailService, type ThumbnailService } from '../thumbnails.js'
 import { registerHomeRoutes } from './home-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
+import { CANVAS_FILE } from '../../shared/canvas-file.js';
+import { parseStatesRequest } from '../../shared/states.js';
+import { withLofi } from '../../shared/lofi.js';
+import { createCanvasService, type CanvasService } from '../canvas/service.js';
+import { registerCanvasRoutes } from './canvas-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -88,6 +93,7 @@ interface AppDeps {
   folderPicker?: FolderPicker;
   thumbnails?: ThumbnailService;
   editHistory?: EditHistory;
+  canvas?: CanvasService;
 }
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
@@ -174,12 +180,21 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
     }
     request.attachmentIds = body.attachmentIds as string[];
   }
+  parseRunTask(body, request);
+  return request;
+}
+
+function parseRunTask(body: Record<string, unknown>, request: RunRequest): void {
   if (body.task !== undefined) {
     if (body.task !== 'tweaks' && body.task !== 'design-system') throw new BadRequestError('task must be tweaks or design-system');
-    if (mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
+    if (request.mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
     request.task = body.task;
   }
-  return request;
+  if (body.states === undefined) return;
+  const states = parseStatesRequest(body.states);
+  if (!states) throw new BadRequestError('states must be {path, frame, width, height}');
+  if (request.mode !== 'edit' || request.task) throw new BadRequestError('states needs an edit run with no task');
+  request.states = states;
 }
 
 const settingsSchema = z
@@ -276,6 +291,14 @@ export function createApp(deps: AppDeps): Hono {
   const directionLock = createKeyedMutex();
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
   const editDeps = { bus, projects, versions, runner, history: editHistory };
+  const canvas = deps.canvas ?? createCanvasService(bus);
+  const announceCanvas = (project: Project): void => {
+    void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));
+  };
+  const announceCanvasAt = async (workTree: string): Promise<void> => {
+    const owner = (await projects.list()).find((project) => canvas.ownerOf(project).workTree === workTree);
+    if (owner) announceCanvas(owner);
+  };
   const app = new Hono();
   const versionNames = createVersionNames((pid) => projects.projectDir(pid));
   const thumbnails = deps.thumbnails ?? createThumbnailService({ projects, preview, versions });
@@ -303,6 +326,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const recordVersion = async (project: Project, direction: Direction, version: Version, resetSession?: SessionResetReason): Promise<Direction> => {
     bus.emit({ type: 'version.created', projectId: project.id, directionId: direction.id, version });
+    if (resetSession && direction.id === canvas.ownerOf(project).id) announceCanvas(project);
     const patch: Partial<Direction> = resetSession ? { headVersionId: version.id, ...freshSessionPatch(resetSession) } : { headVersionId: version.id };
     const updated = await projects.updateDirection(project.id, direction.id, patch);
     bus.emit({ type: 'direction.updated', projectId: project.id, directionId: direction.id, direction: updated });
@@ -335,6 +359,12 @@ export function createApp(deps: AppDeps): Hono {
     return pack ? applyPackOnCreate(started, pack, designMd) : started;
   };
 
+  const markLofi = async (project: Project, direction: Direction, request: RunRequest): Promise<void> => {
+    if (request.mode !== 'edit' || request.task || request.plan) return;
+    const on = request.level === 'wireframe';
+    await canvas.update(project, (file) => withLofi(file, direction.id, on), { source: 'run' }).catch((error: unknown) => console.error('[http] lo-fi mark failed', error));
+  };
+
   const startRun = async (project: Project, direction: Direction, input: RunRequest): Promise<string> => {
     const request: RunRequest = { ...input, level: levelOf(input, project.settings) };
     const attachments: Attachment[] = await Promise.all(
@@ -350,6 +380,7 @@ export function createApp(deps: AppDeps): Hono {
       return null;
     });
     const mentionFiles = await readMentionFiles(direction.workTree, request.mentions);
+    await markLofi(project, direction, request);
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
@@ -1000,7 +1031,11 @@ export function createApp(deps: AppDeps): Hono {
 
   registerVersionRoutes(app, { projects, versions, thumbnails, names: versionNames, readBody });
 
-  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree) => invalidateTokenSource(workTree) });
+  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree, relatives) => {
+    invalidateTokenSource(workTree);
+    if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
+  } });
+  registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

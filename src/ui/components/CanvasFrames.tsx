@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { FRAME_PRESETS, frameName, type CanvasFrame } from '../canvasFrames';
 import { FrameResizeHandles, type ResizeEdge } from './FrameControls';
 import { Icon } from './Icon';
@@ -32,7 +32,7 @@ export function FrameLabel({ frame, active, removable, directionId, badge, numbe
   const name = badge ? `Variation ${badge.label}` : size;
   const classes = ['frame-label', active ? 'active' : '', badge ? 'variation' : '', badge?.current ? 'current' : ''].filter(Boolean).join(' ');
   return (
-    <div className={classes} data-frame-id={frame.id} data-direction-id={directionId ?? undefined} data-testid={badge ? 'variation-frame' : undefined}>
+    <div className={classes} data-frame-id={frame.id} data-direction-id={directionId ?? undefined} data-testid={badge ? 'variation-frame' : undefined} style={{ '--frame-w': `${frame.width}px` } as CSSProperties}>
       <button
         type="button"
         className="frame-name"

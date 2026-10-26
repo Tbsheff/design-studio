@@ -17,6 +17,7 @@ export interface CanvasActions {
   onLayers: () => void;
   onSource: (kind: 'live' | 'last') => void;
   dark: { on: boolean; toggle: () => void } | null;
+  lofi: { on: boolean; toggle: () => void } | null;
   onCheck: () => void;
   checking: boolean;
   presets: { id: Viewport['preset']; label: string; width: number; height: number }[];
@@ -43,6 +44,7 @@ function canvasCommands(a: CanvasActions): Command[] {
   ];
   if (a.comment.available) out.push({ id: 'tool.comment', title: a.comment.on ? 'Stop commenting' : 'Add comments', group: 'Canvas', icon: 'comment', keyId: 'tool-comment', keywords: 'pin feedback note', run: a.comment.toggle });
   if (a.draw) out.push({ id: 'tool.draw', title: a.draw.on ? 'Stop drawing' : 'Draw on the design', group: 'Canvas', icon: 'pencil', keyId: 'tool-draw', keywords: 'pen sketch stroke', run: a.draw.toggle });
+  if (a.lofi) out.push({ id: 'view.lofi', title: a.lofi.on ? 'Turn off the lo-fi look' : 'Turn on the lo-fi look', group: 'View', icon: 'pencil', keywords: 'wireframe grayscale sketch hand drawn', run: a.lofi.toggle });
   if (a.dark) out.push({ id: 'view.dark', title: a.dark.on ? 'Preview the default mode' : 'Preview dark mode', group: 'View', icon: 'moon', keywords: 'theme light', run: a.dark.toggle });
   return out;
 }
@@ -59,6 +61,7 @@ export interface CanvasInput {
   onLayers: () => void;
   onSource: (source: CanvasSource) => void;
   dark: { dark: boolean; onToggle: () => void } | undefined;
+  lofi?: { on: boolean; onToggle: () => void } | undefined;
   check: { run: () => void; checking: boolean };
 }
 
@@ -78,6 +81,7 @@ function actionsOf(i: CanvasInput): CanvasActions {
     onLayers: i.onLayers,
     onSource: (kind) => i.onSource({ kind }),
     dark: i.dark ? { on: i.dark.dark, toggle: i.dark.onToggle } : null,
+    lofi: i.lofi ? { on: i.lofi.on, toggle: i.lofi.onToggle } : null,
     onCheck: i.check.run,
     checking: i.check.checking,
     presets: PRESETS,

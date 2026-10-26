@@ -4,10 +4,14 @@ import type { CanUseTool, HookCallback, PermissionResult } from '@anthropic-ai/c
 import { TOKENS_CSS_FILE } from '../../shared/contracts.js';
 import type { RunMode } from '../../shared/contracts.js';
 import { TWEAKS_FILE, TWEAKS_TOOL } from '../../shared/tweaks.js';
+import { CANVAS_DIR } from '../../shared/canvas-file.js';
 import type { ToolGate } from './ask-gate.js';
 
 export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL] as const;
+export const CANVAS_LIST_TOOL = 'mcp__studio__canvas_list';
+export const CANVAS_PLACE_TOOL = 'mcp__studio__canvas_place';
+export const CANVAS_POINT_TOOL = 'mcp__studio__canvas_point';
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
@@ -178,6 +182,13 @@ function isTweaksFile(workTree: string, raw: string): boolean {
   return relativeToRoot(workTree, raw) === TWEAKS_FILE.toLowerCase();
 }
 
+export const STUDIO_DIR_MESSAGE = `${CANVAS_DIR}/ is owned by the studio; change the canvas layout with mcp__studio__canvas_place instead`;
+
+function isStudioDir(workTree: string, raw: string): boolean {
+  const relative = relativeToRoot(workTree, raw);
+  return relative === CANVAS_DIR || relative.startsWith(`${CANVAS_DIR}/`);
+}
+
 function checkReadOnlyDirs(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const dirs = (policy.readOnlyDirs ?? []).map((dir) => dir.toLowerCase());
   if (dirs.length === 0) return null;
@@ -196,6 +207,7 @@ function checkGeneratedFile(workTree: string, input: Record<string, unknown>): s
     const value = input[field];
     if (typeof value === 'string' && isGeneratedTokensFile(workTree, value)) return GENERATED_TOKENS_MESSAGE;
     if (typeof value === 'string' && isTweaksFile(workTree, value)) return TWEAKS_FILE_MESSAGE;
+    if (typeof value === 'string' && isStudioDir(workTree, value)) return STUDIO_DIR_MESSAGE;
   }
   return null;
 }
@@ -256,7 +268,7 @@ function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string |
 
 function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<string, unknown>): string | null {
   if (!permittedToolNames(policy).includes(toolName)) return `Tool ${toolName} is not available in Design Studio.`;
-  if (policy.plan && (WRITE_PATH_TOOLS.has(toolName) || toolName === 'Bash' || toolName === TWEAKS_TOOL)) return PLAN_MODE_DENY;
+  if (policy.plan && (WRITE_PATH_TOOLS.has(toolName) || toolName === 'Bash' || toolName === TWEAKS_TOOL || toolName === CANVAS_PLACE_TOOL)) return PLAN_MODE_DENY;
   if (PATH_TOOLS.has(toolName)) {
     const problem = checkPathTool(policy, toolName, input);
     if (problem) return problem;
@@ -266,6 +278,7 @@ function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<str
     if (problem) return problem;
   }
   if (toolName === TWEAKS_TOOL && policy.mode === 'critique') return 'define_tweaks is not available in critique runs.';
+  if (toolName === CANVAS_PLACE_TOOL && policy.mode === 'critique') return 'canvas_place is not available in critique runs.';
   if (toolName === 'Bash') return checkBash(policy, input);
   if (toolName === SKILL_TOOL) return checkSkill(policy, input);
   return null;
@@ -286,7 +299,7 @@ export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: str
   };
 }
 
-const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, TODO_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL]);
+const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, TODO_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL]);
 
 export function canChangePreview(toolName: string): boolean {
   return !NO_CHANGE_TOOLS.has(toolName);

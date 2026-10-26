@@ -1,4 +1,4 @@
-import type { PermissionDecision, QueuedMessage } from '../shared/contracts';
+import type { CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
@@ -44,6 +44,13 @@ import {
   type WorkTreeStatus,
 } from '../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../shared/folders';
+import type { CanvasFile } from '../shared/canvas-file';
+
+export interface CanvasSnapshot {
+  directionId: string;
+  canvas: CanvasFile | null;
+  hash: string | null;
+}
 import type { CommitTweaksResult, TweaksState, TweakValue } from '../shared/tweaks';
 import { getSession } from './session';
 
@@ -151,6 +158,9 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/design-system/tokens/update`, { changes }, pickMessage);
     return (await res.json()) as UpdateTokensResult;
   },
+  getCanvas: (pid: string) => json<CanvasSnapshot>('GET', `${p(pid)}/canvas`),
+  putCanvas: (pid: string, body: { canvas: CanvasFile; baseHash: string | null; writer: string; migrate?: boolean }) => json<CanvasSnapshot>('PUT', `${p(pid)}/canvas`, body),
+  putCanvasPresence: (pid: string, body: Omit<CanvasPresence, 'at'>) => request('PUT', `${p(pid)}/canvas/presence`, body).then(() => undefined),
   getTweaks: (pid: string, did: string) => json<TweaksState>('GET', `${d(pid, did)}/tweaks`),
   commitTweaks: async (pid: string, did: string, values: Record<string, TweakValue>) => {
     const res = await request('POST', `${d(pid, did)}/tweaks/commit`, { values }, pickMessage);

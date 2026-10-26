@@ -64,7 +64,7 @@ studio-data/
 Every git call sets `GIT_DIR=<pid>/git`, `GIT_WORK_TREE=<work tree>`, `GIT_INDEX_FILE=<pid>/git/index-<did>`. Never use `HEAD`.
 
 - Commit: `git add -A` → `write-tree` → `commit-tree -p <head>` → `update-ref refs/heads/d/<did>`.
-- Excludes (`git/info/exclude`): `node_modules node_modules/ dist/ .vite/ .studio/ .DS_Store`. `node_modules` without a slash also matches the symlink in created React projects. The exclude file is rewritten on the first status or commit of each project after boot, and every stage step runs `git rm --cached node_modules`, so old repos drop it too. Export excludes `node_modules` from old commits.
+- Excludes (`git/info/exclude`): `node_modules node_modules/ dist/ .vite/ .studio/* !.studio/canvas.json .DS_Store`. `.studio/*` (not `.studio/`) lets the negation keep the canvas file in versions (see Canvas layout file). `node_modules` without a slash also matches the symlink in created React projects. The exclude file is rewritten on the first status or commit of each project after boot, and every stage step runs `git rm --cached node_modules`, so old repos drop it too. Export excludes `node_modules` from old commits.
 - `status(paths?)`: the watcher passes the changed paths, and status runs `git add -A -- <paths>` and then `diff-index`. A full-tree add runs only when `paths` is undefined (API status calls), when there are more than 500 paths, or when the scoped add fails (ignored or missing path).
 - Commit message: first line = title, then a line `studio-meta: <json VersionMeta>`.
 - Undo / restore = new commit whose tree is the older tree. Nothing is lost (AC-31). First the index is reset to the head tree (no `-u`), then `read-tree -u --reset <target>`. So files that no version tracks (a user's own notes in an imported folder) stay on disk.
@@ -538,10 +538,79 @@ stage (pointer + wheel)            Canvas render (React)
 ```
 
 - React never owns `transform` on `.artboard`; a render during a pan paints the ref values again in a layout effect, so the view does not jump.
-- Frames: `canvasFrames.ts`, localStorage `design-studio.canvas.v1` per project (`{frames: [{id, width, height, x, y, directionId?, path?}], activeId}`; a missing `directionId` means the current direction, `path` is a relative page (no `.` or `..`) the frame loads; right, bottom and corner handles resize (min 240, Shift keeps the ratio), max 12, validated on load). The active frame size mirrors `uiStore.viewport`. Activate, move and remove keep the world still on screen; in Fit mode they first freeze the zoom to a number.
+- Frames: `canvasFrames.ts`, stored in the project file `.studio/canvas.json` since pm-ideas (see Canvas layout file; the old localStorage `design-studio.canvas.v1` is read once for migration). In memory: `{frames: [{id, width, height, x, y, directionId?, path?, label?, hidden?}], activeId}`; a missing `directionId` means the current direction, `path` is a relative page (no `.` or `..`) the frame loads; right, bottom and corner handles resize (min 240, Shift keeps the ratio), max 24, validated on load). The active frame size mirrors `uiStore.viewport`. Activate, move and remove keep the world still on screen; in Fit mode they first freeze the zoom to a number.
 - Zoom keys: `zoomKeyOf` (shared by studio and bridge): ⌘= ⌘− in/out, ⌘0 and ⇧0 100%, ⌘1 and ⇧1 fit all frames, ⌘2 and ⇧2 selection, bare = + −. Bare and Shift keys are ignored in text fields. The View menu has Zoom In/Out/100%/Fit/Selection that send `{type:'zoom', key}`; there are no Electron zoom roles, so page zoom stays 1. One zoom key from two sources within 150 ms (key and menu echo) applies once.
 - Bridge additions: `zoom-key {key, at}`, `hover {altKey, node, source}`, `select {node}`, `tree {nodes, truncated}`; parent sends `request-tree`, `hover-node`, `select-node`, `select-relative {selector, move}`. Node ids are a per-document counter in a WeakMap (`src/bridge/layers.ts`); tree labels are capped and parsed again in the parent (`layersTree.ts`) because preview pages are untrusted. In select mode the bridge handles Enter, Shift+Enter, Tab and Shift+Tab, and a click focuses the preview.
 - Layers panel: virtual list (28 px rows), re-requested 400 ms after `painted` while open. Measurement: `measure.ts` from the selected rect to the hovered rect, in frame px.
+
+## Canvas layout file (pm-ideas)
+
+```
+UI drag / resize / add / page / hide ──► canvasStore.set (memory, notify) ──400 ms──► PUT /api/projects/:pid/canvas {canvas, baseHash, writer}
+agent canvas_place, run level (lo-fi) ──► CanvasService.update ─┐          (stale baseHash → 409, the UI reloads)
+restore / undo / edit-session discard ──► CanvasService.announce ┤
+                                                                 ▼
+             <main work tree>/.studio/canvas.json (temp file + rename, one mutex per project) ──► canvas.changed {canvas, hash, source, writer} on SSE
+```
+
+- One file per project, in the **main** direction's work tree. The layout spans directions (variation frames carry `directionId`), so a file per direction would make the canvas jump when a click on a variation frame changes the current direction. Forked directions get a copy of the file in their first tree; nothing reads those copies.
+- Format (`src/shared/canvas-file.ts`, `serializeCanvasFile`): `{version: 1, frames: [{id, width, height, x, y, order, directionId?, path?, label?, hidden?}], lofi?: [directionId]}`. Keys sorted at every depth, integers only, 2-space JSON, trailing newline; frames sorted by `order` and renumbered 0..n-1; `lofi` sorted and left out when empty. Same input, same bytes, so diffs stay small. `parseCanvasFile` drops bad frames (id `f<digits>`, sides 200..4000, coordinates within 100 000, path rules of `cleanFramePath`, label at most 40 chars with no `<`, `>` or control chars) and keeps at most 24 frames.
+- Not in the file: `activeId` (localStorage `design-studio.canvas.active.v1`, per project), the selection and the frame in view (presence, see Agent canvas tools).
+- Versions: the drag writes do not make versions. They fold into the next version of the main direction: `commit()` stages the whole tree, and `commitFile` (direct edits, tweaks, DESIGN.md) adds `.studio/canvas.json` when it exists. `status()` drops the file from `changed`, so a drag never shows the unfinished-changes banner. `discard` keeps the canvas bytes across its reset. Undo and restore reset the tree, so the layout comes back with the version; a version from before the file existed removes it, and the canvas shows the default frame. `recordVersion` (undo, restore on the main direction) and the edit-session discard call `announce`, which sends `canvas.changed` with the file on disk. Drags made after the last version are lost on a restore, as any unsaved file is.
+- Preview: the watcher ignores `.studio/`, so a layout write never reloads a frame or runs `status`.
+- Agent: Write and Edit under `.studio/` are denied (`STUDIO_DIR_MESSAGE`, realpath and case-insensitive like the tweaks file). The agent changes the layout only with the canvas tools.
+- Handoff: `source/.studio/canvas.json` is kept (the rest of `.studio/` is still skipped), and HANDOFF.md gets a Canvas table (frame, label, page, size, position).
+- UI store (`canvasStore` in `canvasFrames.ts`): loads with `GET /api/projects/:pid/canvas` when the canvas mounts. A change of only `activeId` writes no file. Writes before the first load stay in memory. `canvas.changed` from this tab (same `writer`) or with the hash it already has is skipped; an event older than the last GET is skipped (SSE replays the log from 0). Another writer (agent, restore, a second window) replaces the layout and drops a pending write.
+- Migration: when the file has no frames and localStorage `design-studio.canvas.v1` has a layout for the project, the UI writes it once (`migrate: true`, source `migrate`) and records the project in `design-studio.canvas.migrated.v1`, then deletes the old entry. A later restore to a version without the file does not bring the old frames back.
+- Hidden frames: the frame "…" menu has Hide frame (not for the last shown frame); hidden frames render no iframe and do not count for Fit. The top bar file menu lists them as "Hidden"; a click shows the frame again and makes it live.
+
+## Agent canvas tools (pm-ideas)
+
+```
+UI (Canvas) ──PUT /api/projects/:pid/canvas/presence every 1.5 s when it changed, else every 60 s──► CanvasService presence (memory, 10 min TTL)
+agent: mcp__studio__canvas_list  ──► frames + lofi + {currentDirection, liveFrame, inView, selection}
+       mcp__studio__canvas_place ──► CanvasService.update (source agent) ──► .studio/canvas.json ──► canvas.changed
+       mcp__studio__canvas_point ──► canvas.point {frameId, selector?, at} ──► UI: unhide, make live, select-selector, zoom to selection or frame
+```
+
+- Code: `src/server/canvas/tools.ts` (plain functions on a `CanvasToolContext {canvas, project, direction, mode, plan}`; the SDK tools in `agent/tools.ts` and the mock call the same functions, so mock runs change the real file). `CanvasService` is made once in `index.ts` and passed to `createApp` and `createAgentRunner` (SDK driver option and mock driver option).
+- `canvas_place {frames: [...]}` (1..12 items, applied in order in one write): `frame` (id or `@label`) moves or changes a frame, else a new `f<n>` frame is added (bound to the run's direction with `directionId`). Size: `viewport` preset, `width`/`height`, else the moved frame, the reference frame or 1440×900. Placement: one of `below` (left edges lined up), `rightOf` (top edges lined up), `leftOf`, `above` with `gap` (default 80), or `x`/`y` (they override the relative value), else right of all shown frames. `@label` matches the label without case; a bare string matches an id, then a label. An empty file is seeded with the default `f1` at the live size from presence. It refuses more than 24 frames, a bad path and two relations at once (tool error, nothing written). The result lists the placed frames and `warnings` for every pair of shown frames that overlap.
+- `canvas_list` and `canvas_point` are read-only for files. `canvas_point` needs a known frame (or `f1` on an empty file); the UI acts on a point only when it is under 8 s old, so the SSE replay of old points on open does nothing.
+- Policy: the three tools are in `STUDIO_MCP_TOOLS` at every level and mode (prompt cache rule) and in `NO_CHANGE_TOOLS` (the visual-diff baseline hold does not wait for them). `canvas_place` is denied in plan mode (`PLAN_MODE_DENY`) and in critique runs.
+- Prompt: a `## Canvas` section in the system prompt (both modes) says when to use each tool.
+- Bridge: `select-selector {selector}` (max 400 chars, `querySelector` in a try) scrolls the element into view and selects it like a click.
+- Mock: `[canvas]` in the prompt runs canvas_list, then canvas_place (label f1 "Desktop", add "Mobile" right of it, add "Tablet" at 0,0, which overlaps), a second canvas_place that moves Tablet right of Mobile because of the warning, then canvas_point at `@Mobile` with selector `h1`.
+
+## State frames (pm-ideas)
+
+```
+frame "…" menu › Make states │ palette "Make UI states of this page" │ /states in the composer
+  → Studio.makeStates(frame = the live frame): RunRequest {prompt: "Make the UI states of <page> as frames.", mode edit, level = project default, states: {path, frame, width, height}}
+  → POST .../runs (parseStatesRequest: path by cleanFramePath, frame id, sides 200..4000; edit mode, no task)
+  → buildUserText adds a <states-task> block (src/shared/states.ts statesTaskBlock)
+  → agent: states/<prefix><state>.html (HTML) or /states/<prefix><state> routes on window.location.pathname (React, no router package)
+           + one canvas_place call: a row under the page frame, labelled by state, same size  + canvas_point at the first state
+```
+
+- The block lists the suggested states (empty, loading, error, validation error, open menu, success); the agent picks 3 to 6 that fit the page. `<prefix>` is empty for `index.html` and `<page stem>-` for other pages, so states of two pages do not collide.
+- The state frames are ordinary frames with `path` and `label`, so they render, reload, resize and export like any extra page frame. The frame label shows the label (the state name) in place of the direction name.
+- "Make states" in the frame menu is disabled while a run is going and on frames of another direction (make that direction current first).
+- The prompt text in chat stays short; the task text is in the user message only, so the system prompt and its cache do not change.
+- Mock: `[states]` in the prompt or `RunRequest.states` writes `states/<prefix>{empty,loading,error,success}.html` (a copy of the page with `<base href="../">` and a dashed state banner; React projects write them under `public/states/`), places the four frames in a row below the source frame with the real `canvas_place` (when the tool warns of an overlap, it moves the row below the lowest other frame), then points at `@Empty`.
+
+## Lo-fi look (pm-ideas)
+
+```
+run start (edit mode, no task, no plan) → canvas.update: level wireframe adds the direction id to CanvasFile.lofi, prototype/polish removes it
+"…" view row › Lo-fi look (aria-pressed)  → canvasStore.setLofi → PUT canvas (same file, same CAS)
+useLofiFrames(stage, kind, current, lofi) → for each iframe.frame in the stage: direction = closest [data-direction-id] or current
+  → on:  post {type: 'lofi-preview', css: lofiCss(fontDataUrl)}   off: post {css: ''}   (again on each bridge 'ready')
+bridge PREVIEW_LAYERS 'lofi' → <style id="studio-lofi-preview"> last in <head>
+```
+
+- The style is grayscale (`html { filter: grayscale(1) }`) plus the bundled Kalam font (OFL, `src/ui/assets/fonts/kalam-latin-400-normal.woff2`) as `Studio Lofi Hand` on every element. The font loads once on first use and goes into the CSS as a base64 data URL, so the preview origin needs no font route.
+- The flag is per direction and lives in `.studio/canvas.json`, so it reloads, goes into versions, and follows restore. A run at Prototype or Polish level turns it off, because those levels mean real visual design.
+- The layer only changes the preview. User files, export, handoff and screenshots taken by the agent stay as they are.
 
 ## Versions, chat rewind and comments (Round 7)
 

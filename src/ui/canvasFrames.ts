@@ -1,5 +1,11 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+import { CANVAS_MAX_FRAMES, cleanFramePath, isFrameId, normalizeCanvasFile, serializeCanvasFile, type CanvasFile } from '../shared/canvas-file';
+import type { StudioEvent } from '../shared/contracts';
+import { ApiError, api } from './api';
+import { useProjectEvents } from './events';
 import type { Viewport } from './storage';
+
+export { cleanFramePath } from '../shared/canvas-file';
 
 export interface CanvasFrame {
   id: string;
@@ -9,6 +15,8 @@ export interface CanvasFrame {
   y: number;
   directionId?: string;
   path?: string;
+  label?: string;
+  hidden?: boolean;
 }
 
 export interface CanvasLayout {
@@ -37,15 +45,19 @@ export const FRAME_PRESETS: FramePreset[] = [
 ];
 
 export const FRAME_GAP = 80;
-const MAX_FRAMES = 12;
+const MAX_FRAMES = CANVAS_MAX_FRAMES;
 const MIN_SIDE = 200;
 export const RESIZE_MIN = 240;
 const ROW_GAP = FRAME_GAP * 2;
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-const PATH_MAX = 200;
 const MAX_SIDE = 4000;
 const MAX_COORD = 100_000;
 const KEY = 'design-studio.canvas.v1';
+const ACTIVE_KEY = 'design-studio.canvas.active.v1';
+const MIGRATED_KEY = 'design-studio.canvas.migrated.v1';
+const WRITE_DELAY_MS = 400;
+const RETRY_MS = 2000;
+const writerId = `w${Math.random().toString(36).slice(2, 12)}`;
 
 export function frameName(frame: Pick<CanvasFrame, 'width' | 'height'>): string {
   const preset = FRAME_PRESETS.find((p) => p.width === frame.width && p.height === frame.height);
@@ -63,6 +75,10 @@ export function defaultLayout(viewport: Viewport): CanvasLayout {
 
 export function activeFrame(layout: CanvasLayout): CanvasFrame {
   return layout.frames.find((f) => f.id === layout.activeId) ?? (layout.frames[0] as CanvasFrame);
+}
+
+export function shownFrames(layout: CanvasLayout): CanvasFrame[] {
+  return layout.frames.filter((f) => !f.hidden || f.id === layout.activeId);
 }
 
 export function boundsOf(frames: CanvasFrame[]): Box {
@@ -86,7 +102,7 @@ export function canAddFrame(layout: CanvasLayout): boolean {
 
 export function addFrame(layout: CanvasLayout, size: { width: number; height: number }): CanvasLayout {
   if (!canAddFrame(layout)) return layout;
-  const bounds = boundsOf(layout.frames);
+  const bounds = boundsOf(shownFrames(layout));
   const frame: CanvasFrame = { id: nextId(layout.frames), width: size.width, height: size.height, x: bounds.x + bounds.width + FRAME_GAP, y: bounds.y };
   return { ...layout, frames: [...layout.frames, frame] };
 }
@@ -96,10 +112,26 @@ export function moveFrame(layout: CanvasLayout, id: string, dx: number, dy: numb
   return { ...layout, frames: layout.frames.map((f) => (f.id === id ? { ...f, x: Math.round(f.x + dx), y: Math.round(f.y + dy) } : f)) };
 }
 
+function firstShown(frames: CanvasFrame[]): CanvasFrame {
+  return frames.find((f) => !f.hidden) ?? (frames[0] as CanvasFrame);
+}
+
 export function removeFrame(layout: CanvasLayout, id: string): CanvasLayout {
   if (layout.frames.length <= 1) return layout;
   const frames = layout.frames.filter((f) => f.id !== id);
-  const activeId = layout.activeId === id ? (frames[0] as CanvasFrame).id : layout.activeId;
+  const activeId = layout.activeId === id ? firstShown(frames).id : layout.activeId;
+  return { frames, activeId };
+}
+
+export function canHideFrame(layout: CanvasLayout, id: string): boolean {
+  return shownFrames(layout).some((f) => f.id !== id);
+}
+
+export function setFrameHidden(layout: CanvasLayout, id: string, hidden: boolean): CanvasLayout {
+  const frame = layout.frames.find((f) => f.id === id);
+  if (!frame || Boolean(frame.hidden) === hidden || (hidden && !canHideFrame(layout, id))) return layout;
+  const frames = layout.frames.map((f) => (f.id !== id ? f : hidden ? { ...f, hidden: true } : withoutKey(f, 'hidden')));
+  const activeId = hidden && layout.activeId === id ? firstShown(frames).id : layout.activeId;
   return { frames, activeId };
 }
 
@@ -109,14 +141,6 @@ export function resizeFrame(layout: CanvasLayout, id: string, width: number, hei
   const frame = layout.frames.find((f) => f.id === id);
   if (!frame || (frame.width === w && frame.height === h)) return layout;
   return { ...layout, frames: layout.frames.map((f) => (f.id === id ? { ...f, width: w, height: h } : f)) };
-}
-
-export function cleanFramePath(raw: string): string | null {
-  const path = raw.trim().replace(/^\/+/, '');
-  if (path === '') return '';
-  if (path.length > PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(path)) return null;
-  if (path.split('/').some((part) => part === '..' || part === '.')) return null;
-  return path;
 }
 
 export function setFramePath(layout: CanvasLayout, id: string, raw: string): CanvasLayout {
@@ -135,7 +159,7 @@ export function withFramePath(url: string, path: string | undefined): string {
   return next.toString();
 }
 
-function withoutKey<K extends 'path' | 'directionId'>(frame: CanvasFrame, key: K): CanvasFrame {
+function withoutKey<K extends 'path' | 'directionId' | 'hidden'>(frame: CanvasFrame, key: K): CanvasFrame {
   const copy = { ...frame };
   delete copy[key];
   return copy;
@@ -151,7 +175,7 @@ export function placeDirections(layout: CanvasLayout, directionIds: string[], cu
   if (dropCurrent && currentId && !directionIds.includes(currentId)) frames = frames.filter((f) => f.directionId !== currentId);
   const missing = directionIds.filter((id) => !frames.some((f) => f.directionId === id));
   const group = frames.filter((f) => f.directionId && directionIds.includes(f.directionId));
-  const others = frames.filter((f) => !group.includes(f));
+  const others = frames.filter((f) => !group.includes(f) && !f.hidden);
   const row = group.length > 0 ? boundsOf(group) : null;
   const rest = boundsOf(others);
   let x = row ? row.x + row.width + FRAME_GAP : rest.x;
@@ -178,7 +202,7 @@ export function keepDirection(layout: CanvasLayout, keepId: string, groupIds: st
 export function followDirection(layout: CanvasLayout, currentId: string | null): CanvasLayout {
   const active = activeFrame(layout);
   if (!currentId || frameDirection(active, currentId) === currentId) return layout;
-  const match = layout.frames.find((f) => f.directionId === currentId) ?? layout.frames.find((f) => !f.directionId);
+  const match = layout.frames.find((f) => f.directionId === currentId && !f.hidden) ?? layout.frames.find((f) => !f.directionId && !f.hidden);
   if (match) return { ...layout, activeId: match.id };
   return { ...layout, frames: layout.frames.map((f) => (f.id === active.id ? { ...f, directionId: currentId } : f)) };
 }
@@ -204,9 +228,9 @@ export function parseLayout(raw: unknown): CanvasLayout | null {
   const frames: CanvasFrame[] = [];
   for (const item of record.frames.slice(0, MAX_FRAMES)) {
     const f = item as Record<string, unknown>;
-    if (typeof f.id !== 'string' || !/^f\d{1,4}$/.test(f.id) || frames.some((other) => other.id === f.id)) continue;
+    if (!isFrameId(f.id) || frames.some((other) => other.id === f.id)) continue;
     if (!isSide(f.width) || !isSide(f.height) || !isCoord(f.x) || !isCoord(f.y)) continue;
-    const frame: CanvasFrame = { id: f.id, width: f.width, height: f.height, x: f.x, y: f.y };
+    const frame: CanvasFrame = { id: f.id, width: f.width, height: f.height, x: Math.round(f.x), y: Math.round(f.y) };
     if (typeof f.directionId === 'string' && ID_RE.test(f.directionId)) frame.directionId = f.directionId;
     const path = typeof f.path === 'string' ? cleanFramePath(f.path) : null;
     if (path) frame.path = path;
@@ -217,38 +241,202 @@ export function parseLayout(raw: unknown): CanvasLayout | null {
   return { frames, activeId };
 }
 
-function load(): Record<string, CanvasLayout> {
+function readJson(key: string): Record<string, unknown> {
   try {
-    const parsed = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, unknown>;
-    const out: Record<string, CanvasLayout> = {};
-    for (const [pid, value] of Object.entries(parsed)) {
-      const layout = parseLayout(value);
-      if (layout) out[pid] = layout;
-    }
-    return out;
+    const parsed = JSON.parse(localStorage.getItem(key) ?? '{}') as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
   } catch {
     return {};
   }
 }
 
-let layouts: Record<string, CanvasLayout> | null = null;
+function writeJson(key: string, value: Record<string, unknown>): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    void 0;
+  }
+}
+
+function legacyLayout(projectId: string): CanvasLayout | null {
+  if (readJson(MIGRATED_KEY)[projectId] === true) return null;
+  return parseLayout(readJson(KEY)[projectId]);
+}
+
+function markMigrated(projectId: string): void {
+  if (readJson(MIGRATED_KEY)[projectId] !== true) writeJson(MIGRATED_KEY, { ...readJson(MIGRATED_KEY), [projectId]: true });
+  const legacy = readJson(KEY);
+  if (!(projectId in legacy)) return;
+  delete legacy[projectId];
+  writeJson(KEY, legacy);
+}
+
+function storedActive(projectId: string): string | null {
+  const value = readJson(ACTIVE_KEY)[projectId];
+  return typeof value === 'string' ? value : null;
+}
+
+function saveActive(projectId: string, activeId: string): void {
+  if (storedActive(projectId) === activeId) return;
+  writeJson(ACTIVE_KEY, { ...readJson(ACTIVE_KEY), [projectId]: activeId });
+}
+
+export function toCanvasFile(layout: CanvasLayout | null, lofi: readonly string[]): CanvasFile {
+  const frames = (layout?.frames ?? []).map((frame, order) => ({ ...frame, order }));
+  return normalizeCanvasFile({ version: 1, frames, lofi: [...lofi] });
+}
+
+export function fromCanvasFile(file: CanvasFile, activeId: string | null): CanvasLayout | null {
+  const frames: CanvasFrame[] = file.frames.map(({ order: _order, ...frame }) => frame);
+  if (frames.length === 0) return null;
+  const pick = frames.find((f) => f.id === activeId && !f.hidden) ?? firstShown(frames);
+  return { frames: frames.map((f) => (f.id === pick.id && f.hidden ? withoutKey(f, 'hidden') : f)), activeId: pick.id };
+}
+
+interface Entry {
+  layout: CanvasLayout | null;
+  lofi: string[];
+  hash: string | null;
+  loaded: boolean;
+  loading: Promise<void> | null;
+  requestedAt: number;
+  timer: number | null;
+  writing: boolean;
+  again: boolean;
+}
+
+const entries = new Map<string, Entry>();
 const listeners = new Set<() => void>();
 
-function all(): Record<string, CanvasLayout> {
-  layouts ??= load();
-  return layouts;
+function entryOf(projectId: string): Entry {
+  let entry = entries.get(projectId);
+  if (!entry) {
+    entry = { layout: null, lofi: [], hash: null, loaded: false, loading: null, requestedAt: 0, timer: null, writing: false, again: false };
+    entries.set(projectId, entry);
+  }
+  return entry;
+}
+
+function notify(): void {
+  listeners.forEach((l) => l());
+}
+
+function fileText(entry: Pick<Entry, 'layout' | 'lofi'>): string {
+  return serializeCanvasFile(toCanvasFile(entry.layout, entry.lofi));
+}
+
+function applySnapshot(projectId: string, canvas: CanvasFile | null, hash: string | null): void {
+  const entry = entryOf(projectId);
+  if (entry.timer !== null) window.clearTimeout(entry.timer);
+  entry.timer = null;
+  entry.again = false;
+  entry.hash = hash;
+  entry.lofi = canvas?.lofi ?? [];
+  const active = entry.layout?.activeId ?? storedActive(projectId);
+  entry.layout = canvas ? fromCanvasFile(canvas, active) : null;
+  notify();
+}
+
+async function flush(projectId: string): Promise<void> {
+  const entry = entryOf(projectId);
+  entry.timer = null;
+  if (entry.writing) {
+    entry.again = true;
+    return;
+  }
+  entry.writing = true;
+  const sent = fileText(entry);
+  let stale = false;
+  try {
+    const result = await api.putCanvas(projectId, { canvas: toCanvasFile(entry.layout, entry.lofi), baseHash: entry.hash, writer: writerId });
+    entry.hash = result.hash;
+  } catch (error) {
+    stale = error instanceof ApiError && error.status === 409;
+    if (!stale) console.error('[canvas] save failed', error);
+    if (!stale && fileText(entry) === sent) entry.timer = window.setTimeout(() => void flush(projectId), RETRY_MS);
+  } finally {
+    entry.writing = false;
+  }
+  if (stale) {
+    await reloadCanvas(projectId).catch((error: unknown) => console.error('[canvas] reload failed', error));
+    return;
+  }
+  if (entry.again) {
+    entry.again = false;
+    void flush(projectId);
+  }
+}
+
+function schedule(projectId: string): void {
+  const entry = entryOf(projectId);
+  if (entry.timer !== null) window.clearTimeout(entry.timer);
+  entry.timer = window.setTimeout(() => void flush(projectId), WRITE_DELAY_MS);
+}
+
+async function migrate(projectId: string, legacy: CanvasLayout): Promise<void> {
+  const entry = entryOf(projectId);
+  entry.layout = legacy;
+  notify();
+  try {
+    const result = await api.putCanvas(projectId, { canvas: toCanvasFile(legacy, entry.lofi), baseHash: entry.hash, writer: writerId, migrate: true });
+    entry.hash = result.hash;
+    markMigrated(projectId);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) await reloadCanvas(projectId);
+    else console.error('[canvas] migration failed', error);
+  }
+}
+
+export async function reloadCanvas(projectId: string): Promise<void> {
+  const entry = entryOf(projectId);
+  entry.requestedAt = Date.now();
+  const snapshot = await api.getCanvas(projectId);
+  applySnapshot(projectId, snapshot.canvas, snapshot.hash);
+  entry.loaded = true;
+  const hasFrames = (snapshot.canvas?.frames.length ?? 0) > 0;
+  const legacy = hasFrames ? null : legacyLayout(projectId);
+  if (legacy) await migrate(projectId, legacy);
+  else markMigrated(projectId);
+}
+
+function ensureLoaded(projectId: string): void {
+  const entry = entryOf(projectId);
+  if (entry.loaded || entry.loading) return;
+  entry.loading = reloadCanvas(projectId)
+    .catch((error: unknown) => console.error('[canvas] load failed', error))
+    .finally(() => {
+      entry.loading = null;
+    });
+}
+
+export function receiveCanvasEvent(event: StudioEvent): void {
+  if (event.type !== 'canvas.changed') return;
+  const entry = entryOf(event.projectId);
+  if (!entry.loaded || event.ts < entry.requestedAt) return;
+  if (event.writer === writerId || event.hash === entry.hash) return;
+  applySnapshot(event.projectId, event.canvas, event.hash);
 }
 
 export const canvasStore = {
-  get: (projectId: string): CanvasLayout | undefined => all()[projectId],
+  get: (projectId: string): CanvasLayout | undefined => entries.get(projectId)?.layout ?? undefined,
+  lofi: (projectId: string): string[] => entries.get(projectId)?.lofi ?? NO_LOFI,
+  loaded: (projectId: string): boolean => entries.get(projectId)?.loaded ?? false,
+  load: ensureLoaded,
   set: (projectId: string, layout: CanvasLayout) => {
-    layouts = { ...all(), [projectId]: layout };
-    try {
-      localStorage.setItem(KEY, JSON.stringify(layouts));
-    } catch {
-      void 0;
-    }
-    listeners.forEach((l) => l());
+    const entry = entryOf(projectId);
+    const before = fileText(entry);
+    entry.layout = layout;
+    saveActive(projectId, layout.activeId);
+    notify();
+    if (entry.loaded && fileText(entry) !== before) schedule(projectId);
+  },
+  setLofi: (projectId: string, directionId: string, on: boolean, fallback: CanvasLayout) => {
+    const entry = entryOf(projectId);
+    if (!entry.loaded || entry.lofi.includes(directionId) === on) return;
+    entry.lofi = on ? [...entry.lofi, directionId].sort() : entry.lofi.filter((id) => id !== directionId);
+    entry.layout ??= fallback;
+    notify();
+    schedule(projectId);
   },
   subscribe: (l: () => void) => {
     listeners.add(l);
@@ -258,7 +446,11 @@ export const canvasStore = {
   },
 };
 
+const NO_LOFI: string[] = [];
+
 export function useCanvasLayout(projectId: string, viewport: Viewport): [CanvasLayout, (update: (layout: CanvasLayout) => CanvasLayout) => void] {
+  useEffect(() => canvasStore.load(projectId), [projectId]);
+  useProjectEvents(projectId, receiveCanvasEvent);
   const stored = useSyncExternalStore(canvasStore.subscribe, () => canvasStore.get(projectId));
   const layout = stored ?? defaultLayout(viewport);
   const update = (fn: (layout: CanvasLayout) => CanvasLayout) => {
@@ -267,4 +459,8 @@ export function useCanvasLayout(projectId: string, viewport: Viewport): [CanvasL
     if (next !== current) canvasStore.set(projectId, next);
   };
   return [layout, update];
+}
+
+export function useCanvasLofi(projectId: string): string[] {
+  return useSyncExternalStore(canvasStore.subscribe, () => canvasStore.lofi(projectId));
 }

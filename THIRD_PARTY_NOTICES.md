@@ -70,6 +70,7 @@ The studio UI ships these font files in `src/ui/assets/fonts/`. They are unmodif
 | --- | --- | --- | --- | --- |
 | Inter (variable, wght) | `@fontsource-variable/inter` 5.3.0 | Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter) | SIL OFL 1.1 | UI text (`--font`). |
 | Source Serif 4 (variable, opsz + wght, roman and italic) | `@fontsource-variable/source-serif-4` 5.3.1 | Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source' | SIL OFL 1.1 | Display headlines and assistant prose (`--serif`). |
+| Kalam (400, latin subset, `kalam-latin-400-normal.woff2`) | `@fontsource/kalam` 5.3.0 | Copyright (c) 2014 Indian Type Foundry | SIL OFL 1.1 | The hand-drawn font of the canvas "Lo-fi look" (sent into the preview frames as a data URL; the user's files do not change). |
 
 OFL 1.1 lets the app bundle and ship the fonts. The files must keep the license with them, and a changed version must not use the reserved name "Source". The studio does not change the files.
 
@@ -83,3 +84,10 @@ OFL 1.1 lets the app bundle and ship the fonts. The files must keep the license 
 | git, from `dugite` | GPL-2.0 (git); `dugite` itself is MIT | Slim git binaries in `Contents/Resources/git`, used only when the system git is missing. A binary release must meet the GPL-2.0 source terms for git. |
 | Claude Agent SDK (JavaScript only), `@anthropic-ai/claude-agent-sdk` | Anthropic's terms (see the package's `LICENSE.md`) | Talks to the agent. The Claude Code CLI binary is not shipped: the app runs the user's installed `claude`. |
 | npm runtime packages | Each package's own license | Copied into `Contents/Resources/server/node_modules`. |
+
+## itspatmorgan/design-studio (ideas only)
+
+Source: https://github.com/itspatmorgan/design-studio, MIT License, (c) 2026 Patrick Morgan.
+
+The canvas layout file, the agent canvas tools (relative placement with overlap warnings), state frames and the lo-fi look of wireframes follow ideas from that project (`src/platform/modules/canvas/format.ts`, `src/platform/modules/canvas/tools.ts`, `src/platform/modules/view/lofi.css`). We read those files as a reference. No code was copied; the studio code is new.
+

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
 import { isTypingTarget } from '../typingTarget';
@@ -120,7 +120,7 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
   );
 }
 
-export function AutoLayoutSection({ edit }: { edit: DirectEdit }) {
+export function AutoLayoutSection({ edit, title = 'Auto layout', children }: { edit: DirectEdit; title?: string; children?: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
   useAddLayoutKey(root, () => {
@@ -132,7 +132,7 @@ export function AutoLayoutSection({ edit }: { edit: DirectEdit }) {
     </button>
   );
   return (
-    <InspectorSection title="Auto layout" aside={flex ? remove : undefined}>
+    <InspectorSection title={title} aside={flex ? remove : undefined}>
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
           <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
@@ -146,6 +146,7 @@ export function AutoLayoutSection({ edit }: { edit: DirectEdit }) {
         </div>
         {flex && <FlexControls edit={edit} />}
       </div>
+      {children}
     </InspectorSection>
   );
 }
@@ -210,15 +211,23 @@ function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
   );
 }
 
-export function SizeSection({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+export function SizeRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
   const parent = parentLayout(selection.styles);
   return (
-    <InspectorSection title="Size">
+    <>
       <div className="ins-grid">
         <SizeRow axis="width" edit={edit} selection={selection} />
         <SizeRow axis="height" edit={edit} selection={selection} />
       </div>
       {(parent.flex || parent.grid) && <AlignSelf edit={edit} column={parent.flex && !parent.row} />}
+    </>
+  );
+}
+
+export function SizeSection({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+  return (
+    <InspectorSection title="Size">
+      <SizeRows edit={edit} selection={selection} />
     </InspectorSection>
   );
 }

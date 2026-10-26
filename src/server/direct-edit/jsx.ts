@@ -288,10 +288,16 @@ function movedPosition(code: string, offset: number, typescript: boolean): Sourc
   return { line: start.line, col: start.column + 1 };
 }
 
+export function jsxElementSpan(source: string, loc: SourcePosition, typescript: boolean): { start: number; end: number } | null {
+  const element = findJsxElement(parseSource(source, typescript).program, loc);
+  return element && element.start != null && element.end != null ? { start: element.start, end: element.end } : null;
+}
+
 export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, options: JsxPatchOptions = {}): PatchResult {
   const ast = parseSource(source, options.typescript ?? true);
   const element = findJsxElement(ast.program, loc);
   if (!element) throw new DirectEditError('element_not_found', `No JSX element starts at line ${loc.line}, column ${loc.col}`);
+  if (edit.insert !== undefined) throw new DirectEditError('invalid_request', 'Adding elements works in HTML files only');
   const name = element.openingElement.name;
   assertSameTag(edit.tag, name.type === 'JSXIdentifier' ? name.name : null);
   const tag = hostTagName(element);

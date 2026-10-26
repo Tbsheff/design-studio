@@ -26,7 +26,7 @@ function differ(radius: string): boolean {
   return SIDES.some((side) => corners[side] !== corners.top);
 }
 
-export function RadiusField({ edit }: { edit: DirectEdit }) {
+export function RadiusField({ edit, short = 'R' }: { edit: DirectEdit; short?: string }) {
   const [split, setSplit] = useState(() => differ(edit.values['border-radius']));
   const radius = edit.values['border-radius'];
   const corners = cornersOf(radius);
@@ -45,7 +45,7 @@ export function RadiusField({ edit }: { edit: DirectEdit }) {
   if (!split) {
     return (
       <div className="ins-radius">
-        <NumberField short="R" spec={{ prop: 'border-radius', label: 'Border radius', edit, min: 0 }} />
+        <NumberField short={short} spec={{ prop: 'border-radius', label: 'Border radius', edit, min: 0 }} />
         {toggle}
       </div>
     );

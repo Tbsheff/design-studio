@@ -180,7 +180,9 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     const did = assertSafeId(c.req.param('did'), 'directionId');
     const direction = project.directions.find((d) => d.id === did);
     if (!direction) throw new NotFoundError('direction not found');
-    await openInEditor(input.editor, direction.workTree);
+    const file = typeof input.file === 'string' && input.file !== '' ? path.resolve(direction.workTree, input.file) : undefined;
+    if (file !== undefined && !file.startsWith(path.resolve(direction.workTree) + path.sep)) throw new BadRequestError('file must be inside the design folder');
+    await openInEditor(input.editor, direction.workTree, file);
     return c.json({ ok: true });
   });
 }

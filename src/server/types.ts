@@ -66,6 +66,21 @@ export interface VersionStore {
   checkoutInto(project: Project, versionId: string, targetDir: string): Promise<void>;
   snapshot(project: Project, versionId: string): Promise<string>;
   exportZip(project: Project, versionId: string): Promise<Uint8Array>;
+  sessionSince?(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan>;
+  endSession?(project: Project, direction: Direction, baseVersionId: string, action: 'save' | 'discard', title: string, meta: VersionMeta): Promise<SessionEndResult>;
+}
+
+export interface SessionSpan {
+  count: number;
+  dirty: boolean;
+  foreign: string | null;
+  titles: string[];
+}
+
+export interface SessionEndResult {
+  version: Version | null;
+  head: string;
+  changed: string[];
 }
 
 export interface RunHandle {

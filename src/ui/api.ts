@@ -13,6 +13,8 @@ import {
   type DirectEditBatchResult,
   type DirectEditResult,
   type EditHistoryState,
+  type EditSessionEnd,
+  type EditSessionState,
   type Direction,
   type Project,
   type PackSummary,
@@ -192,6 +194,14 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/edit-history/${kind}`, undefined, pickMessage);
     return (await res.json()) as { state: EditHistoryState; version: Version };
   },
+  editSession: (pid: string, did: string, base?: string) =>
+    json<EditSessionState>('GET', `${d(pid, did)}/edit-session${base ? `?base=${encodeURIComponent(base)}` : ''}`),
+  endEditSession: async (pid: string, did: string, action: 'save' | 'discard', baseVersionId: string) => {
+    const res = await request('POST', `${d(pid, did)}/edit-session/${action}`, { baseVersionId }, pickMessage);
+    return (await res.json()) as EditSessionEnd;
+  },
+  elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
+    json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>
     json<Version>('POST', `${d(pid, did)}/restore`, { versionId }),
   keep: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/keep`),
@@ -222,6 +232,7 @@ export const api = {
 
 function editKind(req: DirectEditRequest): string {
   if (req.move) return 'move';
+  if (req.insert) return 'insert';
   if (req.text !== undefined) return 'text';
   if (req.name !== undefined) return 'name';
   return 'style';

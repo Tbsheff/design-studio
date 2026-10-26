@@ -59,6 +59,7 @@ export interface SourceEdit {
   text?: string;
   name?: string | null;
   move?: 'up' | 'down';
+  insert?: 'text' | 'frame' | 'rect' | 'ellipse';
 }
 
 export interface PatchResult {

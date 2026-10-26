@@ -45,8 +45,8 @@ export const exportApi = {
   },
   copyCode: async (pid: string, request: CopyCodeRequest): Promise<CopyCodeResult> => (await call('POST', `${p(pid)}/copy-code`, request)).json() as Promise<CopyCodeResult>,
   editors: async (): Promise<EditorInfo[]> => (await call('GET', '/api/editors')).json() as Promise<EditorInfo[]>,
-  openInEditor: async (pid: string, did: string, editor: EditorId): Promise<void> => {
-    await call('POST', `${p(pid)}/d/${encodeURIComponent(did)}/open-in-editor`, { editor });
+  openInEditor: async (pid: string, did: string, editor: EditorId, file?: string): Promise<void> => {
+    await call('POST', `${p(pid)}/d/${encodeURIComponent(did)}/open-in-editor`, file ? { editor, file } : { editor });
   },
   mcpStatus: async (): Promise<McpStatus> => (await call('GET', '/api/mcp')).json() as Promise<McpStatus>,
   setMcp: async (input: { enabled?: boolean; rotate?: boolean }): Promise<McpStatus> => (await call('POST', '/api/mcp', input)).json() as Promise<McpStatus>,

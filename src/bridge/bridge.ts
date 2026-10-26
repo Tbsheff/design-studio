@@ -54,6 +54,16 @@ const STYLE_KEYS = [
   'flex',
   'box-shadow',
   'filter',
+  'font-style',
+  'text-decoration-line',
+  'text-transform',
+  'overflow',
+  'text-shadow',
+  'transform',
+  'opacity',
+  'border-width',
+  'border-style',
+  'border-color',
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;

@@ -1000,7 +1000,7 @@ export function createApp(deps: AppDeps): Hono {
 
   registerVersionRoutes(app, { projects, versions, thumbnails, names: versionNames, readBody });
 
-  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection });
+  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree) => invalidateTokenSource(workTree) });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

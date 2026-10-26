@@ -497,7 +497,8 @@ export type StudioEventBody =
   | { type: 'status.changed'; status: WorkTreeStatus }
   | { type: 'preview.build-error'; message: string; file?: string; line?: number; frame?: string }
   | { type: 'comments.changed'; comments: DesignComment[] }
-  | { type: 'edit-history.changed' };
+  | { type: 'edit-history.changed' }
+  | { type: 'versions.changed' };
 
 export type StudioEvent = EventBase & StudioEventBody;
 
@@ -817,6 +818,12 @@ export const DIRECT_STYLE_PROPERTIES = [
   'flex',
   'box-shadow',
   'filter',
+  'font-style',
+  'text-decoration-line',
+  'text-transform',
+  'overflow',
+  'text-shadow',
+  'transform',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];
@@ -829,9 +836,13 @@ export interface DirectEditRequest {
   text?: string;
   name?: string | null;
   move?: ReorderMove;
+  insert?: InsertKind;
 }
 
 export type ReorderMove = 'up' | 'down';
+
+export const INSERT_KINDS = ['text', 'frame', 'rect', 'ellipse'] as const;
+export type InsertKind = (typeof INSERT_KINDS)[number];
 
 export interface DirectEditBatch {
   edits: DirectEditRequest[];
@@ -842,6 +853,18 @@ export interface EditHistoryState {
   canRedo: boolean;
   undoLabel: string | null;
   redoLabel: string | null;
+}
+
+export interface EditSessionState {
+  baseVersionId: string;
+  count: number;
+  dirty: boolean;
+  blocked: string | null;
+}
+
+export interface EditSessionEnd {
+  version: Version | null;
+  headVersionId: string;
 }
 
 export interface AuthoredRule {

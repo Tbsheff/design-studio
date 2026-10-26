@@ -56,6 +56,7 @@ export interface PlannedEdit {
 const EDITABLE_EXTENSIONS = new Set(['.html', '.htm', '.jsx', '.tsx']);
 const BLOCKED_SEGMENTS = new Set(['node_modules', '.git', 'dist', '.vite', '.studio']);
 const MAX_SUMMARY_TEXT = 120;
+const INSERT_LABEL = { text: 'Text', frame: 'Frame', rect: 'Rectangle', ellipse: 'Ellipse' } as const;
 
 function invalidSource(message: string): DirectEditError {
   return new DirectEditError('invalid_source', message);
@@ -99,7 +100,7 @@ export async function resolveSource(workTree: string, file: string): Promise<Res
 
 export function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
   const extension = path.extname(relative).toLowerCase();
-  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move };
+  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert };
   const position = { line: request.source.line, col: request.source.col };
   if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit);
   return patchJsx(source, position, edit, { typescript: extension === '.tsx' });
@@ -127,6 +128,7 @@ function visibilityTitle(tag: string, style: DirectEditRequest['style']): string
 
 function editTitle(tag: string, applied: PatchResult['applied'], request: DirectEditRequest): string {
   if (request.move !== undefined) return `Move ${tag} ${request.move}`;
+  if (request.insert !== undefined) return `Add ${INSERT_LABEL[request.insert].toLowerCase()} to ${tag}`;
   const visibility = visibilityTitle(tag, request.style);
   if (visibility && request.text === undefined && request.name === undefined) return visibility;
   if (request.name !== undefined && applied.style.length === 0 && !applied.text) {
@@ -145,6 +147,7 @@ export function editSummary(request: DirectEditRequest): string {
   }
   if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
   if (request.move !== undefined) parts.push(`move ${request.move}`);
+  if (request.insert !== undefined) parts.push(`insert ${request.insert}`);
   return `Direct edit of ${request.source.file}:${request.source.line}:${request.source.col}: ${parts.join('; ')}`;
 }
 

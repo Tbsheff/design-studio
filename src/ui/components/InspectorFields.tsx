@@ -42,8 +42,29 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
     }
   };
 
+  const id = `ins-${prop}-${label.replace(/\W+/g, '-').toLowerCase()}`;
   return (
     <div className="ins-field color">
+      <label htmlFor={id} className="ins-scrub static">
+        {short}
+      </label>
+      <input
+        id={id}
+        className="ins-input"
+        aria-label={label}
+        aria-invalid={text !== null && !isValidColor(text)}
+        value={shown}
+        spellCheck={false}
+        autoComplete="off"
+        placeholder={edit.mixed.has(prop) ? 'Mixed' : 'None'}
+        onChange={(event) => {
+          const next = event.target.value;
+          setText(next);
+          if (isValidColor(next)) edit.preview({ [prop]: next.trim() });
+        }}
+        onKeyDown={onKeyDown}
+        onBlur={settle}
+      />
       <span className={`ins-swatch ${hex ? '' : 'empty'}`} style={{ ['--swatch' as string]: resolved || 'transparent' }}>
         <input
           type="color"
@@ -55,25 +76,6 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
             edit.commitSoon();
           }}
         />
-      </span>
-      <input
-        className="ins-input"
-        aria-label={label}
-        aria-invalid={text !== null && !isValidColor(text)}
-        value={shown}
-        spellCheck={false}
-        autoComplete="off"
-        placeholder={edit.mixed.has(prop) ? 'Mixed' : '—'}
-        onChange={(event) => {
-          const next = event.target.value;
-          setText(next);
-          if (isValidColor(next)) edit.preview({ [prop]: next.trim() });
-        }}
-        onKeyDown={onKeyDown}
-        onBlur={settle}
-      />
-      <span className="ins-suffix" aria-hidden="true">
-        {short}
       </span>
       <TokenControl prop={prop} label={label} edit={edit} />
     </div>
@@ -152,9 +154,9 @@ export function AlignField({ edit }: { edit: DirectEdit }) {
   );
 }
 
-export function InspectorSection({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
+export function InspectorSection({ title, children, aside, className }: { title: string; children: ReactNode; aside?: ReactNode; className?: string }) {
   return (
-    <section className="ins-section" aria-label={title}>
+    <section className={`ins-section ${className ?? ''}`} aria-label={title}>
       <div className="ins-section-head">
         <h3>{title}</h3>
         {aside}

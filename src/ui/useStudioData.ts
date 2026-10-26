@@ -173,6 +173,9 @@ export function useStudioData(projectId: string): StudioData {
               prev.some((v) => v.id === event.version.id) ? prev : [event.version, ...prev],
             );
           break;
+        case 'versions.changed':
+          if (active) refreshVersions();
+          break;
         case 'direction.updated':
           setProject((prev) => {
             if (!prev) return prev;
@@ -198,7 +201,7 @@ export function useStudioData(projectId: string): StudioData {
           break;
       }
     },
-    [addError, batcher, projectId],
+    [addError, batcher, projectId, refreshVersions],
   );
 
   const connection = useProjectEvents(projectId, onEvent);

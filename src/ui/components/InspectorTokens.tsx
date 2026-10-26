@@ -190,7 +190,6 @@ export function CreateTokenHost(props: ScopeInput & { edit: DirectEdit; request:
 
 export function FontField({ ui, edit }: { ui: TokenUi | null; edit: DirectEdit }) {
   const [text, setText] = useState<string | null>(null);
-  if (!ui) return null;
   const prop = 'font-family';
   const value = edit.values[prop];
   const settle = () => {
@@ -217,7 +216,7 @@ export function FontField({ ui, edit }: { ui: TokenUi | null; edit: DirectEdit }
         id="ins-font-family"
         className="ins-input"
         aria-label="Font family"
-        value={text ?? (varName(value) ? value : value.split(',')[0]?.trim() ?? '')}
+        value={text ?? (ui && varName(value) ? value : value.split(',')[0]?.replace(/^["']|["']$/g, '').trim() ?? '')}
         title={value}
         spellCheck={false}
         autoComplete="off"

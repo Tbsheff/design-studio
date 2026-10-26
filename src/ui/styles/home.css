@@ -39,7 +39,7 @@
 .home-card {
   display: grid;
   border-radius: 14px;
-  background: var(--surface);
+  background: var(--surface-2);
   box-shadow: var(--shadow-inset);
 }
 
@@ -315,9 +315,12 @@
 }
 
 .pc-fonts {
+  overflow: hidden;
   font-size: 8px;
   line-height: 10px;
-  color: var(--pc-primary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: color-mix(in oklch, var(--pc-fg) 60%, transparent);
 }
 
 .pc-name {

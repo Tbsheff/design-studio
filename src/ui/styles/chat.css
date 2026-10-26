@@ -547,8 +547,17 @@
 }
 
 .msg-action[aria-disabled='true'] {
-  opacity: 0.4;
   cursor: default;
+}
+
+.msg-action[aria-disabled='true'] > svg {
+  opacity: 0.4;
+}
+
+.msg.user:hover,
+.msg.user:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .msg-action[aria-disabled='true']:hover {

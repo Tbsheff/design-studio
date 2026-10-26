@@ -691,6 +691,8 @@
 }
 
 .prompt .prompt-bar {
+  position: relative;
+  z-index: 1;
   align-items: center;
   gap: var(--s-1);
   padding: 0;
@@ -818,7 +820,12 @@
   }
 
   .prompt-bar .composer-state-label {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .prompt-bar .composer-state-short {
@@ -864,9 +871,10 @@
 }
 
 .btn.send.send-btn:disabled {
-  opacity: 0.45;
-  background: var(--brand);
-  color: var(--on-brand);
+  --send-off: 45%;
+  opacity: 1;
+  background: color-mix(in oklab, var(--brand) var(--send-off), var(--surface-raised));
+  color: color-mix(in oklab, var(--on-brand) var(--send-off), var(--surface-raised));
 }
 
 .btn.send.send-btn .spinner {
@@ -879,5 +887,5 @@
 }
 
 :root:not([data-theme='dark']) .btn.send.send-btn:disabled {
-  opacity: 0.55;
+  --send-off: 55%;
 }

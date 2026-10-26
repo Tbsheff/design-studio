@@ -496,7 +496,8 @@ export type StudioEventBody =
   | { type: 'status.changed'; status: WorkTreeStatus }
   | { type: 'preview.build-error'; message: string; file?: string; line?: number; frame?: string }
   | { type: 'comments.changed'; comments: DesignComment[] }
-  | { type: 'edit-history.changed' };
+  | { type: 'edit-history.changed' }
+  | { type: 'versions.changed' };
 
 export type StudioEvent = EventBase & StudioEventBody;
 
@@ -840,6 +841,18 @@ export interface EditHistoryState {
   canRedo: boolean;
   undoLabel: string | null;
   redoLabel: string | null;
+}
+
+export interface EditSessionState {
+  baseVersionId: string;
+  count: number;
+  dirty: boolean;
+  blocked: string | null;
+}
+
+export interface EditSessionEnd {
+  version: Version | null;
+  headVersionId: string;
 }
 
 export interface AuthoredRule {

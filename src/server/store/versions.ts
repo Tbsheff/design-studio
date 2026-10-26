@@ -6,8 +6,8 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Direction, Project, Version, VersionMeta, WorkTreeStatus } from '../../shared/contracts.js';
 import { baseTitle, isRestoreKind, restoreTitle } from '../../shared/version-title.js';
-import type { ServerConfig, VersionStore } from '../types.js';
-import { BadRequestError, NotFoundError, assertSafeId } from './errors.js';
+import type { ServerConfig, SessionEndResult, SessionSpan, VersionStore } from '../types.js';
+import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
 
 export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.studio/', '.DS_Store'];
@@ -318,6 +318,29 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const headOf = async (project: Project, direction: Direction): Promise<string | null> =>
     resolveRef(project, refOf(direction));
 
+  const isAncestor = async (project: Project, base: string, head: string): Promise<boolean> => {
+    try {
+      await runGit(repoScope(project), ['merge-base', '--is-ancestor', base, head]);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const spanOf = async (project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan & { base: string; head: string }> => {
+    const base = await requireCommit(project, baseVersionId);
+    const head = await headOf(project, direction);
+    if (head === null || !(await isAncestor(project, base, head))) {
+      return { base, head: head ?? base, count: 0, dirty: false, foreign: 'This design changed outside the edit session.', titles: [] };
+    }
+    if (head === base) return { base, head, count: 0, dirty: false, foreign: null, titles: [] };
+    const span = await readVersions(project, [`${base}..${head}`]);
+    const other = span.find((version) => version.meta.kind !== 'manual');
+    const foreign = other ? `"${other.title}" happened during the edit session.` : null;
+    const dirty = (await treeOf(project, head)) !== (await treeOf(project, base));
+    return { base, head, count: span.length, dirty, foreign, titles: span.map((version) => version.title).reverse() };
+  };
+
   const listUntracked = async (scope: GitScope): Promise<string[]> => {
     const { stdout } = await runGit(scope, ['ls-files', '--others', '--exclude-standard', '-z']);
     return splitNul(stdout);
@@ -483,6 +506,32 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         await resetWorkTree(project, direction, await treeOf(project, head), tree, 'keep');
         const title = restoreTitle(kind, await originTitleOf(project, target));
         return commitTree(project, direction, tree, head, head, title, { kind, restoredFrom: target });
+      });
+    },
+
+    sessionSince(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan> {
+      return lock(lockKey(project, direction), async () => {
+        const { count, dirty, foreign, titles } = await spanOf(project, direction, baseVersionId);
+        return { count, dirty, foreign, titles };
+      });
+    },
+
+    endSession(project: Project, direction: Direction, baseVersionId: string, action: 'save' | 'discard', title: string, meta: VersionMeta): Promise<SessionEndResult> {
+      return lock(lockKey(project, direction), async () => {
+        const span = await spanOf(project, direction, baseVersionId);
+        if (span.foreign !== null) throw new ConflictError(span.foreign);
+        if (span.head === span.base) return { version: null, head: span.base, changed: [] };
+        const headTree = await treeOf(project, span.head);
+        const baseTree = await treeOf(project, span.base);
+        const { stdout } = await runGit(repoScope(project), ['diff-tree', '-r', '--name-only', '-z', span.base, span.head]);
+        const changed = splitNul(stdout);
+        if (action === 'save' && span.dirty) {
+          const version = await commitTree(project, direction, headTree, span.base, span.head, title, meta);
+          return { version, head: version.id, changed };
+        }
+        if (action === 'discard' && span.dirty) await resetWorkTree(project, direction, headTree, baseTree, 'keep');
+        await runGit(repoScope(project), ['update-ref', refOf(direction), span.base, span.head]);
+        return { version: null, head: span.base, changed };
       });
     },
 

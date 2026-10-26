@@ -19,6 +19,7 @@ export interface EditHistory extends EditRecorder {
   state(projectId: string, directionId: string): EditHistoryState;
   step(kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult>;
   clear(projectId: string, directionId?: string): void;
+  forget(projectId: string, directionId: string): void;
 }
 
 interface HistoryOptions {
@@ -111,6 +112,15 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     if (directionId !== undefined) changed(projectId, directionId);
   };
 
+  const forget = (projectId: string, directionId: string): void => {
+    const stacks = projects.get(projectId);
+    if (stacks) {
+      stacks.undo = stacks.undo.filter((entry) => entry.directionId !== directionId);
+      stacks.redo = stacks.redo.filter((entry) => entry.directionId !== directionId);
+    }
+    changed(projectId, directionId);
+  };
+
   const commitStep = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction, record: EditRecord, files: string[]): Promise<Version> => {
     const wanted = (change: EditFileChange) => (kind === 'undo' ? change.before : change.after);
     const current = (change: EditFileChange) => (kind === 'undo' ? change.after : change.before);
@@ -158,5 +168,5 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     changed(entry.projectId, entry.directionId);
   };
 
-  return { record, state, step, clear };
+  return { record, state, step, clear, forget };
 }

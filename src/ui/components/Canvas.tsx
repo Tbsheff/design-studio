@@ -20,7 +20,7 @@ import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type Th
 import type { BuildError, FilesChange } from '../useStudioData';
 import { CanvasToolbar, type CanvasSource } from './CanvasToolbar';
 import { RenderCheckPanel } from './RenderCheckPanel';
-import { CommentLayer, type CommentTools } from './CommentLayer';
+import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
@@ -505,6 +505,7 @@ export function Canvas(props: Props) {
           <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         <DrawBar draw={draw} />
+        <CommentModePill mode={comment} control={props.comments} />
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
         <EditNotice edits={layerEdits} />

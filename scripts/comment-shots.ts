@@ -104,6 +104,8 @@ async function run(theme: Theme, browser: Awaited<ReturnType<typeof chromium.lau
   await page.getByTestId('comment-open').waitFor();
   await shot(page, theme, '5-thread');
   await page.keyboard.press('Escape');
+  await page.getByRole('tab', { name: /Comments/ }).click();
+  await shot(page, theme, '7-comments-panel');
 
   await page
     .getByRole('button', { name: /^Comment/ })

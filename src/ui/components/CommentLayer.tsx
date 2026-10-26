@@ -154,6 +154,17 @@ function withMentions(text: string, mentions: ComposerSubmit['mentions']): strin
   return mentions.length ? `${text} (see ${mentions.map((mention) => `@${mentionLabel(mention)}`).join(', ')})` : text;
 }
 
+export function CommentModePill({ mode, control }: { mode: { on: boolean; available: boolean }; control: CommentsControl | undefined }) {
+  if (!mode.on || !mode.available) return null;
+  const repin = control?.repinId ? control.comments.find((comment) => comment.id === control.repinId) : undefined;
+  return (
+    <div className="comment-mode-pill" role="status" data-testid="comment-mode-pill">
+      {repin ? `Click an element to move comment #${repin.n}` : 'Click an element to comment'}
+      <kbd>Esc</kbd>
+    </div>
+  );
+}
+
 export function CommentLayer(props: Props) {
   const { control, frames, zoom, frame } = props;
   const [rects, setRects] = useState<Record<string, Rect>>({});

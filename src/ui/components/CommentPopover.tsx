@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide } from '../commentPlacement';
 import { AvatarFace } from './CommentAvatar';
+import { useProfileInitial } from '../useProfileInitial';
 import { Icon } from './Icon';
 
 type Rect = SelectionContext['rect'];
@@ -36,14 +37,15 @@ export const STATUS_LABEL: Record<DesignComment['status'], string> = {
   orphaned: 'Element not found',
 };
 
-export function CommentReplies({ comment, initial, onDelete }: { comment: DesignComment; initial?: string | null; onDelete: (replyId: string) => void }) {
+export function CommentReplies({ comment, onDelete }: { comment: DesignComment; onDelete: (replyId: string) => void }) {
+  const initial = useProfileInitial();
   const replies = comment.replies ?? [];
   if (replies.length === 0) return null;
   return (
     <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
       {replies.map((reply, index) => (
         <li key={reply.id} className="comment-reply" data-testid="comment-reply">
-          <AvatarFace initial={initial ?? null} tone="reply" />
+          <AvatarFace initial={initial} tone="reply" />
           <span className="comment-reply-text">{reply.text}</span>
           <button type="button" className="thread-icon" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
             <Icon name="close" size={12} />
@@ -224,7 +226,7 @@ export function OpenCommentPopover(props: OpenProps) {
           </p>
         )}
         {body}
-        <CommentReplies comment={comment} initial={props.initial} onDelete={props.onDeleteReply} />
+        <CommentReplies comment={comment} onDelete={props.onDeleteReply} />
         <ReplyBox comment={comment} onReply={props.onReply} />
         {editable && (
           <div className="comment-card-foot">

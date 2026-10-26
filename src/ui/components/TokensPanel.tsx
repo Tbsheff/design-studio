@@ -5,6 +5,7 @@ import type { ThemeChoice } from '../tokenFrames';
 import type { DesignTokens } from '../useDesignSystemState';
 import type { TokenDraft } from '../useTokenDraft';
 import { Icon } from './Icon';
+import { PanelHead } from './SheetHead';
 import { TokenRow } from './TokenRow';
 
 interface Props {
@@ -81,12 +82,11 @@ export function TokensPanel({ tokens, draft }: Props) {
   const showDark = tokens.mode === 'light';
   return (
     <div className="tkp">
-      <div className="ins-header tkp-header">
-        <strong className="tkp-title">Tokens</strong>
+      <PanelHead title="Tokens" className="ins-header tkp-header" titleClassName="tkp-title">
         <div className="ins-header-end">
           <ThemeToggle theme={draft.theme} onTheme={draft.setTheme} />
         </div>
-      </div>
+      </PanelHead>
       <div className="tk-search tkp-search">
         <Icon name="search" size={13} />
         <input type="search" aria-label="Filter tokens" placeholder="Filter tokens" value={query} spellCheck={false} onChange={(event) => setQuery(event.target.value)} />

@@ -25,8 +25,7 @@
 }
 
 .tkp-title {
-  font-size: var(--t-sm);
-  font-weight: var(--w-medium);
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
 }
 
 .tkp-theme button {
@@ -155,7 +154,11 @@
 .tkp-values {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 6px;
+  gap: var(--s-1);
+}
+
+.tkp-row.has-dark .tkp-values {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .tkp-field {
@@ -277,8 +280,7 @@
 }
 
 .cmp-title {
-  font-size: var(--t-sm);
-  font-weight: var(--w-medium);
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
 }
 
 .cmp-count {
@@ -371,13 +373,13 @@
 }
 
 .cmp-name {
-  padding: 0 var(--s-1);
+  padding: 0;
   font-size: var(--t-sm);
   font-weight: 500;
 }
 
 .cmp-meta {
-  padding: 0 var(--s-1);
+  padding: 0;
   font-size: var(--t-xs);
   font-variant-numeric: tabular-nums;
   color: var(--text-3);
@@ -395,5 +397,6 @@
   padding: var(--s-2) var(--s-4);
   border-top: 1px solid var(--line);
   font-size: var(--t-xs);
+  line-height: 16px;
   color: var(--text-3);
 }

@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode, RefObject } from 'react';
+import { useMemo, useState, type ComponentProps, type ReactNode, type RefObject } from 'react';
 import type { RunView } from '../runState';
 import type { PanelTab } from '../usePanelTab';
 import { ChatPanel } from './ChatPanel';
@@ -14,6 +14,7 @@ import { VersionsPanel } from './VersionsPanel';
 import { CommentsPanel, QueuedComposerBar } from './CommentsPanel';
 import { TweaksPanel } from './TweaksPanel';
 import { TodoPanel } from './TodoPanel';
+import { SheetSlot } from './SheetHead';
 
 interface Props {
   collapsed?: boolean;
@@ -49,12 +50,14 @@ export function visiblePane(tab: PanelTab, has: { tokens: boolean; comments: boo
   return missing[tab] ? 'chat' : tab;
 }
 
-function SheetHead({ title, onClose, children }: { title: string; onClose: () => void; children?: ReactNode }) {
+function SheetHead({ id, title, onClose, onSlot }: { id: string; title: string; onClose: () => void; onSlot: (el: HTMLDivElement | null) => void }) {
   return (
     <div className="pane-sheet-head">
-      <h2 className="pane-sheet-title">{title}</h2>
-      {children}
-      <button type="button" className="icon-btn small" aria-label={`Close ${title}`} data-tip="Back to chat" data-tip-align="end" onClick={onClose}>
+      <h2 className="pane-sheet-title" id={id}>
+        {title}
+      </h2>
+      <div className="pane-sheet-slot" ref={onSlot} />
+      <button type="button" className="icon-btn small" aria-label="Back to chat" data-tip="Back to chat" data-tip-align="end" onClick={onClose}>
         <Icon name="close" size={14} />
       </button>
     </div>
@@ -63,6 +66,8 @@ function SheetHead({ title, onClose, children }: { title: string; onClose: () =>
 
 function Sheet(props: Props & { tab: PanelTab }) {
   const close = () => props.onTab('chat');
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null);
+  const sheet = useMemo(() => ({ slot }), [slot]);
   const title = SHEET_TITLES[props.tab] ?? '';
   const body = (() => {
     switch (props.tab) {
@@ -83,9 +88,11 @@ function Sheet(props: Props & { tab: PanelTab }) {
     }
   })();
   return (
-    <section className={`pane-sheet pane-sheet-${props.tab}`} aria-label={title}>
-      <SheetHead title={title} onClose={close} />
-      <div className="pane-sheet-body">{body}</div>
+    <section className={`pane-sheet pane-sheet-${props.tab}`} aria-labelledby={`${props.tab}-heading`}>
+      <SheetSlot.Provider value={sheet}>
+        <SheetHead id={`${props.tab}-heading`} title={title} onClose={close} onSlot={setSlot} />
+        <div className="pane-sheet-body">{body}</div>
+      </SheetSlot.Provider>
     </section>
   );
 }

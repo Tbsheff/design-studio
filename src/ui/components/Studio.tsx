@@ -369,10 +369,12 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           system={
             <>
               <p className="pane-system-text">The design system sets the tokens, type and components the agent uses for this direction.</p>
-              <DesignSystemChip system={designSystemRef(projectId, did, project, designSystem.state)} actions={packActions.actions} onOpenDesignMd={() => setDesignOpen(true)} />
-              <button type="button" className="btn small" onClick={() => setDesignOpen(true)}>
-                Edit DESIGN.md
-              </button>
+              <div className="pane-system-actions">
+                <DesignSystemChip system={designSystemRef(projectId, did, project, designSystem.state)} actions={packActions.actions} onOpenDesignMd={() => setDesignOpen(true)} />
+                <button type="button" className="btn small" onClick={() => setDesignOpen(true)}>
+                  Edit DESIGN.md
+                </button>
+              </div>
             </>
           }
           chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}

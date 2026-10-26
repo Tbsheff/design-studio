@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentInfo } from '../../shared/contracts';
 import { componentThumb, type ComponentList } from '../useComponents';
 import { Icon } from './Icon';
+import { PanelHead } from './SheetHead';
 
 interface Props {
   projectId: string;
@@ -68,10 +69,9 @@ export function ComponentsPanel({ projectId, directionId, list, active, onMentio
   const count = list.components?.length ?? 0;
   return (
     <div className="cmp">
-      <div className="ins-header cmp-header">
-        <strong className="cmp-title">Components</strong>
-        {list.components && <span className="cmp-count">{count}</span>}
-      </div>
+      <PanelHead title="Components" className="ins-header cmp-header" titleClassName="cmp-title">
+        {list.components && <span className="count cmp-count">{count}</span>}
+      </PanelHead>
       {count > 6 && (
         <div className="tk-search cmp-search">
           <Icon name="search" size={13} />

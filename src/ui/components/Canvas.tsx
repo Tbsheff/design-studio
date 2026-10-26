@@ -473,7 +473,7 @@ export function Canvas(props: Props) {
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
       <div className="canvas-body">
-      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={pane.closeLayers} />)}
+      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={props.shell ? undefined : pane.closeLayers} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div

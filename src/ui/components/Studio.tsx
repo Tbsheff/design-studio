@@ -10,7 +10,9 @@ import { useDesignSystemState } from '../useDesignSystemState';
 import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
 import type { PreviewPort } from '../bridge';
-import { inspectorEmptyReason, isDirectEditable } from './Inspector';
+import { inspectorEmptyReason, isDirectEditable, type InspectorTab } from './Inspector';
+import type { EditSessionHandle } from '../useEditSession';
+import { runCommand } from '../commands/registry';
 import { usePanelTab } from '../usePanelTab';
 import { undoAllowed } from '../useUndoShortcut';
 import { mergeCommit, type DirectEditControl } from '../useDirectEdit';
@@ -153,6 +155,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const columnsRef = useRef<HTMLDivElement>(null);
   const { chatWidth, paneCollapsed } = useUi();
   const [layersHost, setLayersHost] = useState<HTMLDivElement | null>(null);
+  const editSession = useRef<EditSessionHandle | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>('simple');
   const [actionError, setActionError] = useState<string | null>(null);
   const port = useRef<PreviewPort | null>(null);
   const editControl = useRef<DirectEditControl | null>(null);
@@ -264,12 +268,16 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     });
   undoRef.current = undo;
 
+  const showChatAfterRun = () => {
+    if ((editSession.current?.count ?? 0) === 0) panel.show('chat');
+  };
+
   const startRun = async (request: RunRequest, optimistic = false) => {
     if (!did) return;
     const pending = optimistic ? emptyRun(`pending-${randomToken()}`, did, Date.now(), request) : null;
     if (pending) {
       setPendingRun(pending);
-      panel.show('chat');
+      showChatAfterRun();
     }
     const cancelSend = data.noteSend();
     try {
@@ -282,7 +290,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       if (pending) setPendingRun((current) => (current === pending ? null : current));
     }
     setSource({ kind: 'live' });
-    panel.show('chat');
+    showChatAfterRun();
   };
 
   const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) =>
@@ -290,9 +298,14 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
   const tweak = (prompt: string) => void act(() => startRun(composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection }), true));
-  const showPane = (tab: Parameters<typeof panel.choose>[0]) => {
+  const suggestTweaks = (prompt?: string) =>
+    void act(() => startRun(prompt ? { ...TWEAKS_REQUEST, prompt: `${TWEAKS_REQUEST.prompt}\n\nThe user asked for: ${prompt}` } : TWEAKS_REQUEST));
+  const showPane = async (tab: Parameters<typeof panel.choose>[0]): Promise<boolean> => {
     if (paneCollapsed) uiStore.set({ paneCollapsed: false });
+    const session = editSession.current;
+    if (panel.tab === 'design' && tab !== 'design' && session && !(await session.requestExit())) return false;
     panel.choose(tab);
+    return true;
   };
   const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
   const retryRun = (run: RunView) => {
@@ -330,7 +343,6 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           columnsRef={columnsRef}
           tab={panel.tab}
           onTab={showPane}
-          layersSlot={setLayersHost}
           header={
             <StudioPaneHeader
               name={project.name}
@@ -403,6 +415,24 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               setStaleNotice(message);
               setSelection([]);
             },
+            session: editSession,
+            onExit: () => panel.choose('chat'),
+            onSessionEnd: (action) => {
+              if (action === 'discard') setSelection([]);
+              data.refreshVersions();
+            },
+            layers: <div className="edit-layers-host" ref={setLayersHost} />,
+            tweaks: { draft: tweaks, running: activeRun !== null, onSuggest: suggestTweaks },
+            selectMode: panel.tab === 'design',
+            onSelectMode: () => void runCommand('tool.select'),
+            onUndo: () => {
+              if (historyChain.canUndo) historyChain.onUndo();
+            },
+            onRedo: () => {
+              if (editHistory.redo.enabled) editHistory.redo.onRedo();
+            },
+            tab: inspectorTab,
+            onTab: setInspectorTab,
           }}
           details={{ projectId, run: detailsRun, onClose: () => setDetailsRunId(null) }}
           comments={{
@@ -421,7 +451,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
           }}
           todos={chatState.todos}
-          tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
+          tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => suggestTweaks() }}
           versions={{
             project,
             directionId: did,

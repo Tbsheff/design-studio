@@ -22,7 +22,6 @@ interface Props {
   onTab: (tab: PanelTab) => void;
   header: ReactNode;
   system: ReactNode;
-  layersSlot: (el: HTMLDivElement | null) => void;
   chat: ComponentProps<typeof ChatPanel>;
   errors: ComponentProps<typeof ErrorsPanel>;
   prompt: ComponentProps<typeof PromptBox>;
@@ -91,16 +90,6 @@ function Sheet(props: Props & { tab: PanelTab }) {
   );
 }
 
-function EditPane({ slot, children, onClose }: { slot: (el: HTMLDivElement | null) => void; children: ReactNode; onClose: () => void }) {
-  return (
-    <section className="pane-edit" aria-label="Edit">
-      <SheetHead title="Edit" onClose={onClose} />
-      <div className="pane-edit-layers" ref={slot} />
-      <div className="pane-edit-inspector">{children}</div>
-    </section>
-  );
-}
-
 export function LeftPane(props: Props) {
   const tab = visiblePane(props.tab, { tokens: props.tokens !== null, comments: Boolean(props.comments), tweaks: Boolean(props.tweaks), components: Boolean(props.components) });
   const chat = tab === 'chat';
@@ -114,11 +103,11 @@ export function LeftPane(props: Props) {
         <div className="pane-chat" hidden={!chat}>
           <ChatPanel {...props.chat} />
         </div>
-        <div className="pane-edit-host" hidden={!edit}>
-          <EditPane slot={props.layersSlot} onClose={() => props.onTab('chat')}>
+        {edit && (
+          <section className="pane-edit" aria-label="Edit">
             <Inspector {...props.inspector} />
-          </EditPane>
-        </div>
+          </section>
+        )}
         {sheet && <Sheet {...props} tab={tab} />}
       </div>
       <ErrorsPanel {...props.errors} />

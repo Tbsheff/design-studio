@@ -13,7 +13,7 @@ interface TreeFrames {
   selectNode: (id: number, additive: boolean) => void;
 }
 
-export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void; onClose: () => void }) {
+export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void; onClose?: () => void }) {
   const actions = edits.enabled
     ? {
         onRename: edits.renameNode,

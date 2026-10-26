@@ -22,7 +22,7 @@ interface Props {
   selectedNode: number | null;
   onHover: (id: number | null) => void;
   onSelect: (id: number, additive: boolean) => void;
-  onClose: () => void;
+  onClose?: () => void;
   edits?: LayerEditActions | null;
   busy?: boolean;
 }
@@ -286,9 +286,11 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
         <span className="layers-frame" title={frameName}>
           {frameName}
         </span>
-        <button type="button" className="icon-btn small" aria-label="Close layers" data-tip="Close  ⌥1" data-tip-align="end" onClick={onClose}>
-          <Icon name="close" size={14} />
-        </button>
+        {onClose && (
+          <button type="button" className="icon-btn small" aria-label="Close layers" data-tip="Close  ⌥1" data-tip-align="end" onClick={onClose}>
+            <Icon name="close" size={14} />
+          </button>
+        )}
       </header>
       <div
         ref={listRef}

@@ -11,7 +11,7 @@ import { PresentLayer, TweakPrompt } from './CanvasOverlays';
 
 export interface CanvasShell {
   pane: PanelTab;
-  onPane: (tab: PanelTab) => void;
+  onPane: (tab: PanelTab) => void | Promise<boolean>;
   layersHost: HTMLElement | null;
   directionName: string | null;
   paneCollapsed: boolean;
@@ -34,7 +34,10 @@ function useShellSync(shell: CanvasShell | undefined, comment: CommentTool, setS
   useEffect(() => {
     const before = wasOn.current;
     wasOn.current = comment.on;
-    if (comment.on && !before) onPane.current?.('comments');
+    if (!comment.on || before) return;
+    void Promise.resolve(onPane.current?.('comments')).then((moved) => {
+      if (moved === false) commentRef.current.setOn(false);
+    });
   }, [comment.on]);
   const prevPane = useRef(pane);
   useEffect(() => {

@@ -3,11 +3,12 @@ import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { RUN_LEVELS } from '../../shared/contracts.js';
-import type { DesignComment, Direction, Project, RunComment, RunLevel, RunRequest, RunSummary, SelectionContext } from '../../shared/contracts.js';
+import type { DesignComment, Direction, Project, RunComment, RunLevel, RunMention, RunRequest, RunSummary, SelectionContext } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, DRAW_POINTS_MAX, DRAW_STROKES_MAX, agentText, commentPrompt, isSendable } from '../../shared/comments.js';
 import type { CommentStore } from '../store/comments.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../store/errors.js';
 import type { AgentRunner, RunHandle } from '../types.js';
+import { MENTION_MAX, parseMentions } from './mentions.js';
 
 const rectSchema = z.object({
   x: z.number().finite(),
@@ -71,6 +72,7 @@ const createSchema = z
     context: selectionSchema.optional(),
     status: z.enum(['draft', 'queued']).optional(),
     attachmentIds: attachmentIdsSchema.optional(),
+    mentions: z.array(z.unknown()).max(MENTION_MAX).optional(),
     drawing: drawingSchema.optional(),
   })
   .refine((input) => !input.drawing || (input.attachmentIds?.length ?? 0) > 0, 'a drawing needs its image in attachmentIds');
@@ -130,8 +132,21 @@ async function readSummary(file: string): Promise<RunSummary | null> {
   }
 }
 
-function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionContext> | undefined): Pick<RunRequest, 'comments' | 'attachmentIds'> {
+function mentionId(mention: RunMention): string {
+  return mention.kind === 'file' ? `file:${mention.path}` : `${mention.kind}:${mention.name}`;
+}
+
+function mergedMentions(chosen: DesignComment[]): RunMention[] {
+  const seen = new Map<string, RunMention>();
+  for (const mention of chosen.flatMap((comment) => comment.mentions ?? [])) {
+    if (!seen.has(mentionId(mention))) seen.set(mentionId(mention), mention);
+  }
+  return [...seen.values()].slice(0, MENTION_MAX);
+}
+
+function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionContext> | undefined): Pick<RunRequest, 'comments' | 'attachmentIds' | 'mentions'> {
   const attachmentIds: string[] = [];
+  const mentions = mergedMentions(chosen);
   const comments = chosen.map((comment): RunComment => {
     const own = (comment.attachmentIds ?? []).filter((id) => !attachmentIds.includes(id));
     attachmentIds.push(...own);
@@ -140,7 +155,7 @@ function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionC
     const image = attachmentIds.indexOf(comment.attachmentIds?.[0] ?? '') + 1;
     return { ...base, element: null, drawing: { frame: comment.drawing.frame, box: comment.drawing.box, image } };
   });
-  return { comments, ...(attachmentIds.length ? { attachmentIds } : {}) };
+  return { comments, ...(attachmentIds.length ? { attachmentIds } : {}), ...(mentions.length ? { mentions } : {}) };
 }
 
 function chooseComments(all: DesignComment[], ids: string[] | undefined): DesignComment[] {
@@ -197,12 +212,13 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
   });
 
   app.post(base, async (c) => {
-    const input = await parseBody(c, createSchema);
+    const { mentions: rawMentions, ...input } = await parseBody(c, createSchema);
+    const mentions = parseMentions(rawMentions);
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
     for (const id of input.attachmentIds ?? []) {
       if (deps.hasAttachment && !(await deps.hasAttachment(project.id, id))) throw new NotFoundError(`attachment ${id} not found`);
     }
-    return c.json(await comments.create(project.id, direction.id, input));
+    return c.json(await comments.create(project.id, direction.id, { ...input, ...(mentions?.length ? { mentions } : {}) }));
   });
 
   app.post(`${base}/:cid/replies`, async (c) => {

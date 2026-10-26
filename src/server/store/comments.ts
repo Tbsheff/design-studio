@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { CommentDrawing, CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../../shared/contracts.js';
+import type { CommentDrawing, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../../shared/contracts.js';
 import { COMMENT_REPLIES_MAX, canTransition, isSendable, statusAfterRun, type CommentActor } from '../../shared/comments.js';
 import type { EventBus } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
@@ -20,6 +20,7 @@ export interface CreateCommentInput {
   context?: SelectionContext;
   status?: 'draft' | 'queued';
   attachmentIds?: string[];
+  mentions?: RunMention[];
   drawing?: CommentDrawing;
 }
 
@@ -137,6 +138,7 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
           ...(input.context ? { context: input.context } : {}),
           status: input.status ?? 'queued',
           ...(input.attachmentIds?.length ? { attachmentIds: input.attachmentIds } : {}),
+          ...(input.mentions?.length ? { mentions: input.mentions } : {}),
           ...(input.drawing ? { drawing: input.drawing } : {}),
         };
         data.nextN += 1;

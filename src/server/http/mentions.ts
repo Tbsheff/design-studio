@@ -7,7 +7,7 @@ import type { MentionFile } from '../types.js';
 
 const SKIP = new Set(['node_modules', '.git', 'dist', '.vite', 'vite-cache', '.DS_Store', '.studio']);
 const TREE_MAX = 3000;
-const MENTION_MAX = 10;
+export const MENTION_MAX = 10;
 const FILE_MAX_BYTES = 20_000;
 
 export async function listWorkTree(root: string): Promise<string[]> {

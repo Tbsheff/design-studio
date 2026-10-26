@@ -295,6 +295,7 @@ export interface DesignComment {
   versionId?: string | null;
   replies?: CommentReply[];
   attachmentIds?: string[];
+  mentions?: RunMention[];
   drawing?: CommentDrawing;
 }
 
@@ -639,7 +640,8 @@ export const API_ROUTES = {
   cancelVariations: 'POST /api/projects/:pid/variations/:gid/cancel -> {canceled: runId[]}',
   mixVariation: 'POST /api/projects/:pid/variations/mix VariationMixRequest -> {runId} (edit run on the target with the element as a <reference-element>)',
   listComments: 'GET /api/projects/:pid/d/:did/comments -> DesignComment[]',
-  createComment: 'POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued, attachmentIds?, drawing?} -> DesignComment',
+  createComment: 'POST /api/projects/:pid/d/:did/comments {text, target, context?, status?: draft|queued, attachmentIds?, mentions?, drawing?} -> DesignComment',
+  profile: 'GET /api/profile -> {name: string | null}',
   updateComment: 'PATCH /api/projects/:pid/d/:did/comments/:cid {text?, status?, target?, context?} -> DesignComment (409 bad_transition)',
   deleteComment: 'DELETE /api/projects/:pid/d/:did/comments/:cid -> {ok}',
   addCommentReply: 'POST /api/projects/:pid/d/:did/comments/:cid/replies {text} -> DesignComment',

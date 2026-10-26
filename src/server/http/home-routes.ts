@@ -1,3 +1,4 @@
+import { userInfo } from 'node:os';
 import type { Context, Hono } from 'hono';
 import type { Project } from '../../shared/contracts.js';
 import { askQuestions } from '../agent/clarify.js';
@@ -104,10 +105,21 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     return c.json(await askQuestions(body.prompt, { mode: config.agentMode === 'mock' ? 'mock' : 'sdk', env: buildEnv(process.env, false), ...(claudeExecutable ? { claudeExecutable } : {}) }));
   });
 
+  app.get('/api/profile', (c) => c.json({ name: osUserName() }));
+
   app.get('/api/onboarding', async (c) => c.json({ dismissed: await defaultFolder.onboardingDismissed() }));
 
   app.post('/api/onboarding/dismiss', async (c) => {
     await defaultFolder.dismissOnboarding();
     return c.json({ dismissed: true });
   });
+}
+
+function osUserName(): string | null {
+  try {
+    const name = userInfo().username.trim();
+    return name === '' ? null : name;
+  } catch {
+    return null;
+  }
 }

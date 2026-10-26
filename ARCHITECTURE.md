@@ -480,12 +480,16 @@ Composer: Run settings popover, Designs 1|2|3|4 (1 = off), Edit mode, no selecti
 ## Pinned comments (queue)
 
 ```
-Comment mode (C, toolbar)            Select mode (V) with a selection
-  click element → bridge 'select'      → compact feedback popover under the selection's right end
+Comment mode (C, toolbar, "Click an element to comment" pill)    Select mode (V) with a selection
+  click element → bridge 'select'      → the same card beside the selection
                                          (no focus; F focuses; Esc hides; hidden while the composer has a draft)
-  → ComposePopover (focus, Tab trap)   → one comment per selected element, same text
-        Enter = Add to queue (queued)   Cmd/Ctrl+Enter = Send now (draft → send [id])
-  → POST .../comments {text, target, context}       zod; comments.changed {comments} on SSE
+  → CommentComposer (focus, Tab trap)  → one comment per selected element, same text
+        Enter = submit, Shift+Enter = new line, Esc = close (draft kept per element)
+        "Send to Claude" off → saved comment (queued, waits for Send N queued)
+        "Send to Claude" on, no run → draft → send [id]
+        "Send to Claude" on, run active → Enter: queued now, sent when the run ends (useComments afterRun)
+                                          Cmd/Ctrl+Enter: steer with "About <breadcrumb> (<selectors>): text", no comment
+  → POST .../comments {text, target, context, mentions?, attachmentIds?}   zod; comments.changed {comments} on SSE
 Send N queued (Comments tab or the bar above the composer)
   → bridge describe-anchors → fresh SelectionContext per comment (800 ms, else the stored context)
   → POST .../comments/send {ids?, contexts}  (per-direction mutex)
@@ -499,6 +503,8 @@ Send N queued (Comments tab or the bar above the composer)
 
 - Shape: `DesignComment {id, n, createdAt, updatedAt, text, target {selector, sourceLoc?, tag, textSnippet, rectHint}, context?, status, runId?, versionId?, replies?, attachmentIds?, drawing?}`. `replies [{id, text, createdAt}]` (`POST .../comments/:cid/replies`, `DELETE .../replies/:rid`) go into the comment text sent to the agent. A drawing comment (pen tool, key P) carries `drawing {frame, box, strokes}` and the id of a transparent frame-size PNG of the strokes in `attachments/`; `comments/send` passes every attachment id into `RunRequest.attachmentIds` and sends the comment with `element: null` and a `<drawing>` block. "Show resolved" (localStorage `studio.comments.showResolved`, off by default) hides resolved rows and pins. `n` is stable per direction and never reused, so pin numbers and "Done: #2" stay valid after reorder or delete. Queue order is array order (`POST .../reorder {ids}`).
 - Status rules (`src/shared/comments.ts`, `canTransition`): only the server sends (`draft|queued → sent`) and settles (`sent → resolved|queued`). The user can queue, resolve, reopen (`resolved → queued`) and re-pin (`orphaned → queued` with a new target). Only `draft` and `queued` can become `orphaned`; `sent` and `resolved` never do, because the run edits their text.
+- Comment card (`CommentComposer.tsx`, thread in `CommentPopover.tsx`, geometry in `commentPlacement.ts`): a 400 px `--float-*` surface (warm dark in both themes, a step above `--surface` in dark), counter-scaled like pins. `placeComposer` tries right of the element, then left, below and above, using the measured card height, and keeps the first side while the card grows. The top line is a breadcrumb (page › nearest classed or landmark ancestor › element kind and short text; the full ancestor path is the tooltip). The field is a real `<textarea>` (`field-sizing: content`, 1 to 8 lines, so macOS dictation and IME work); the `@Claude`, mention and image chips sit in front of it, and when they fit on one line the textarea gets a matching `text-indent`, so they read as inline pills. Backspace at the start removes the last chip; removing `@Claude` clears the checkbox (localStorage `studio.comments.sendToClaude`). `@` uses `useMentions` with a lead "Claude" option; picks go in `DesignComment.mentions` and `comments/send` merges them (deduped, max 10) into `RunRequest.mentions`. Pasted or dropped images upload as attachments (max 4) into `attachmentIds`. No mic: Electron has no Web Speech API, and system dictation already types into the textarea.
+- Pins are avatar pins (`CommentAvatar.tsx`): the OS user's initial (`GET /api/profile`, `os.userInfo().username`, a comment glyph when null) in a `--pin-bg` circle with a status ring (`--pin-ring` queued, warn sent, ok resolved, muted draft or orphaned) and a teardrop point at the element's top-right corner (mirrored at the frame edge), plus a reply count badge. The number stays in the label, the tooltip and the thread header.
 - Pins draw in the parent `.overlay` (counter-scaled like `.box-label`), so they follow pan and zoom. The bridge keeps a second tracker for `track-anchors` (separate from `request-rects`, which belongs to the selection) and answers `anchor-rects` on ResizeObserver, DOM mutation and scroll. `resolveAnchor`: `data-studio-loc` when the match is unique (or disambiguated by selector or text) and the tag is the same; then the selector when its text agrees; then the first element of that tag with the same text; then the selector even with changed text; else no match.
 - A fallback match writes the fresh selector and loc back to the comment. A queued comment with no match for 1.5 s on the live front frame (a second report confirms it) becomes `orphaned`; an orphan that matches again goes back to `queued`.
 - Code: `src/shared/comments.ts` (rules, resolver), `src/server/store/comments.ts`, `src/server/http/comments-routes.ts`, `src/ui/useComments.ts` (state, SSE, send), `src/ui/useCommentMode.ts` (C key, re-pin), `src/ui/commentAnchors.ts` (report review), `CommentLayer.tsx` (bridge, pins, popovers), `CommentsPanel.tsx`.

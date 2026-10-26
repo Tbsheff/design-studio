@@ -643,37 +643,65 @@
 }
 
 .prompt .composer.ui-composer {
-  border: 0;
-  gap: 0;
+  gap: 6px;
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-raised);
+  box-shadow: none;
+}
+
+.prompt .composer.ui-composer:focus-within {
+  border-color: var(--line-strong);
 }
 
 .prompt .composer.ui-composer.dragging {
-  box-shadow: inset 0 0 0 1px var(--accent-line), var(--shadow-sm);
+  border-color: var(--accent-line);
   background: var(--accent-tint);
 }
 
+.prompt .composer.ui-composer .chips,
+.prompt .composer.ui-composer .thumbs,
+.prompt .composer.ui-composer .skill-chips {
+  padding: 0;
+}
+
 .prompt .composer-input {
-  padding: var(--s-3) var(--s-3) var(--s-2);
-  font-size: var(--t-sm);
-  line-height: var(--lh-md);
+  min-height: 42px;
+  padding: 0;
+  font-size: var(--t-md);
+  line-height: 21px;
 }
 
 .prompt .composer-input::placeholder {
   color: var(--text-faint);
 }
 
-.prompt-bar {
+.prompt .prompt-bar {
   align-items: center;
+  gap: var(--s-1);
+  padding: 0;
 }
 
+.prompt-bar .icon-btn.bordered {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.prompt-bar .icon-btn.bordered:hover:not(:disabled),
 .composer-plus[aria-expanded='true'] {
-  background: var(--surface-active);
+  background: var(--surface-hover);
   color: var(--text);
 }
 
 .composer-state {
   gap: 2px;
+  height: 22px;
   padding-right: 2px;
+  font-size: 11px;
 }
 
 .composer-menu {
@@ -724,15 +752,20 @@
 }
 
 .model-pill {
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: 13px 13px;
   align-items: center;
-  gap: var(--s-1);
+  column-gap: var(--s-1);
   min-width: 0;
   height: 28px;
-  padding: 0 6px 0 var(--s-2);
-  border-radius: var(--r-md);
+  padding: 1px var(--s-2);
+  border-radius: var(--r-sm);
   color: var(--text);
-  font-size: var(--t-xs);
+  font-size: 11px;
+  font-weight: var(--w-medium);
+  line-height: 13px;
+  text-align: left;
   white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease);
@@ -744,25 +777,49 @@
 }
 
 .model-pill-name {
-  font-weight: var(--w-medium);
+  grid-column: 1;
+  grid-row: 1;
 }
 
-.model-pill-effort,
-.model-pill > .icon {
+.model-pill-effort {
+  grid-column: 1;
+  grid-row: 2;
   color: var(--text-3);
 }
 
 .model-pill > .icon {
+  grid-column: 2;
+  grid-row: 1 / span 2;
   flex: none;
+  color: var(--text-3);
 }
 
-.icon-btn.send-btn .spinner {
+.btn.send.send-btn {
+  width: 72px;
+  height: 30px;
+  padding: 6px var(--s-3);
+  border-radius: var(--r-md);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  font-weight: var(--w-medium);
+}
+
+.btn.send.send-btn:disabled {
+  opacity: 0.45;
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+.btn.send.send-btn .spinner {
   width: 14px;
   height: 14px;
 }
 
+.prompt-bar .icon-btn.stop-btn {
+  color: var(--text);
+}
+
 @container (max-width: 300px) {
-  .model-pill-effort,
   .context-meter {
     display: none;
   }

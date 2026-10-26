@@ -68,7 +68,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
     return (
       <button
         type="button"
-        className="icon-btn small send send-btn"
+        className="btn send send-btn"
         disabled={!props.canQueue}
         onClick={props.onQueue}
         aria-label="Queue"
@@ -76,7 +76,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
         data-tip-side="top"
         data-tip-align="end"
       >
-        <Icon name="arrowUp" size={16} />
+        Queue
       </button>
     );
   }
@@ -87,9 +87,9 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
       data-tip={`Send (${MOD_LABEL}Enter)`}
       data-tip-side="top"
       data-tip-align="end"
-      render={<button className="icon-btn small send send-btn" />}
+      render={<button className="btn send send-btn" />}
     >
-      {props.sending ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
+      {props.sending ? <span className="spinner" /> : 'Send'}
     </ComposerSubmit>
   );
 }

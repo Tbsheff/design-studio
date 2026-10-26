@@ -752,3 +752,15 @@
   color: var(--text-3);
   opacity: 1;
 }
+
+.edit-layers-host .layers-head {
+  padding-left: var(--pane-inset);
+}
+
+.edit-layers-host .layers-title {
+  font-size: var(--t-xs);
+}
+
+.layers-list.dragging:focus-visible {
+  box-shadow: none;
+}

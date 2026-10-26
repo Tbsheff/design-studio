@@ -809,7 +809,7 @@
   min-height: 44px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-xs);
   background: transparent;
   color: var(--text-2);
   text-align: left;
@@ -829,7 +829,12 @@
 .folder-text {
   display: grid;
   flex: 1;
+  grid-template-columns: minmax(0, 1fr);
   min-width: 0;
+}
+
+.folder-text .folder-path {
+  max-width: 100%;
 }
 
 .folder-label {
@@ -861,8 +866,16 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: var(--s-1);
+  gap: var(--s-2);
+  max-width: 100%;
   margin-left: auto;
+}
+
+.folder-tail {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-1);
+  width: 76px;
 }
 
 .folder-rename {
@@ -883,7 +896,7 @@
 .home-list {
   width: min(880px, 100%);
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-2);
 }
 
 .home-list-head {
@@ -1022,9 +1035,9 @@
 .project-name {
   padding-right: var(--s-8);
   overflow: hidden;
-  font-size: var(--t-md);
+  font-size: var(--t-sm);
   font-weight: var(--w-medium);
-  line-height: 1.35;
+  line-height: var(--lh-body);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -1047,7 +1060,7 @@
 
 .project-more {
   position: absolute;
-  right: var(--s-1);
+  right: var(--s-3);
   bottom: var(--s-6);
   width: 28px;
   height: 28px;
@@ -1067,18 +1080,27 @@
   }
 }
 
+.project-rename {
+  padding-right: var(--s-8);
+}
+
 .project-rename input {
   width: 100%;
   height: 28px;
+  margin: -4px 0;
   padding: 0 var(--s-2);
-  font-size: var(--t-md);
+  font-size: var(--t-sm);
   font-weight: var(--w-medium);
+}
+
+.project-grid.list .project-rename {
+  padding-right: 0;
 }
 
 .project-menu {
   position: absolute;
   z-index: 60;
-  top: calc(100% - var(--s-6));
+  top: calc(100% - var(--s-6) + var(--s-1));
   right: var(--s-1);
   transform-origin: top right;
   animation: menu-in var(--dur) var(--ease);
@@ -1133,6 +1155,7 @@
   box-shadow: inset 0 0 0 1px var(--line);
   width: 200px;
   height: 28px;
+  border-radius: var(--r-sm);
   padding: 0 var(--s-8) 0 calc(var(--s-6) + var(--s-1));
   font-size: var(--t-xs);
 }
@@ -1145,6 +1168,7 @@
 
 .home-sort .select {
   height: 28px;
+  border-radius: var(--r-sm);
   font-size: var(--t-xs);
 }
 
@@ -1709,8 +1733,8 @@
   position: absolute;
   top: var(--s-3);
   right: var(--s-3);
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--r-sm);
   background: color-mix(in oklch, var(--surface-raised) 88%, transparent);
   color: var(--text-2);
@@ -1737,16 +1761,19 @@
 .project-grid.list {
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
+  padding: 0;
 }
 
 .project-grid.list .project-card {
+  padding: var(--s-1) 0;
   border-radius: 0;
   background: transparent;
   box-shadow: inset 0 -1px 0 var(--line);
 }
 
-.project-grid.list .project-card:hover {
-  background: var(--surface-hover);
+.project-grid.list .project-card:hover,
+.project-grid.list .project-card.menu-open {
+  background: transparent;
   box-shadow: inset 0 -1px 0 var(--line);
 }
 
@@ -1754,8 +1781,14 @@
   grid-template-columns: 72px minmax(0, 1fr);
   align-items: center;
   gap: var(--s-4);
-  padding: var(--s-2) 88px var(--s-2) var(--s-1);
-  border-radius: 0;
+  padding: var(--s-1) 88px var(--s-1) var(--s-1);
+  border-radius: var(--r-md);
+  transition: background-color var(--dur) var(--ease);
+}
+
+.project-grid.list .project-card:hover .project-open,
+.project-grid.list .project-card.menu-open .project-open {
+  background: var(--surface-hover);
 }
 
 .project-grid.list .project-thumb {
@@ -1778,7 +1811,6 @@
 
 .project-grid.list .project-name {
   padding-right: 0;
-  font-size: var(--t-sm);
 }
 
 .project-grid.list .project-star,
@@ -1795,6 +1827,10 @@
 
 .project-grid.list .project-more {
   right: var(--s-2);
+}
+
+.project-grid.list .project-menu:not(.at-pointer) {
+  top: calc(50% + 14px + var(--s-1));
 }
 
 @media (max-width: 720px) {

@@ -39,9 +39,9 @@ function useThumbnail(project: Project): string | null {
   return null;
 }
 
-function Star({ filled }: { filled: boolean }) {
+function Star({ filled, size = 14 }: { filled: boolean; size?: number }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round">
       <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
     </svg>
   );
@@ -306,19 +306,19 @@ function ProjectListStates({ projects, error, filter, query, shownCount, onClear
       )}
       {filter && projects?.length === 0 && (
         <div className="home-empty">
-          <Icon name="folder" size={18} />
+          <Icon name="folder" size={16} />
           <span>No projects in {filter.label} yet. Use New project here or Open folder here.</span>
         </div>
       )}
       {!filter && projects?.length === 0 && (
         <div className="home-empty">
-          <Icon name="folder" size={18} />
+          <Icon name="folder" size={16} />
           <span>No projects yet. Describe a design above, pick a starter, or open a folder that already holds one.</span>
         </div>
       )}
       {projects && projects.length > 0 && shownCount === 0 && (
         <div className="home-empty" role="status">
-          <Icon name="search" size={18} />
+          <Icon name="search" size={16} />
           <span>No projects match “{query.trim()}”.</span>
           <button type="button" className="link" onClick={() => onClearQuery()}>
             Clear search
@@ -390,7 +390,7 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
       <ProjectListStates projects={projects} error={error} filter={filter} query={query} shownCount={matched.length} onClearQuery={() => onQuery('')} />
       {favoritesOnly && matched.length > 0 && shown.length === 0 && (
         <div className="home-empty" role="status">
-          <Star filled={false} />
+          <Star filled={false} size={16} />
           <span>No favorites yet. Use the star on a project to add it.</span>
         </div>
       )}

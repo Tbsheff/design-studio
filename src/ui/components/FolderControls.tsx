@@ -255,6 +255,7 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
         <button type="button" className="btn small" disabled={folder.missing} onClick={onOpenHere}>
           Open folder here…
         </button>
+        <span className="folder-tail">
         {folder.default ? (
           <button type="button" className="btn small" aria-label="Change the default folder" data-tip="New projects go here when you pick no location." onClick={onChangeDefault} disabled={changing}>
             Change…
@@ -269,6 +270,7 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
             </button>
           </>
         )}
+        </span>
       </div>
     </li>
   );

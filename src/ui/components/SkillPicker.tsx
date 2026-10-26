@@ -164,7 +164,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
         aria-expanded="true"
         aria-controls="skill-options"
         aria-activedescendant={current ? `skill-opt-${current.key}` : undefined}
-        placeholder={commands.length > 0 ? 'Search skills, or type a command like plan or export' : 'Search skills'}
+        placeholder={commands.length > 0 ? 'Search skills or commands' : 'Search skills'}
         spellCheck={false}
         value={query}
         onChange={(e) => {

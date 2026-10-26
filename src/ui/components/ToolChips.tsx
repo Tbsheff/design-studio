@@ -203,7 +203,7 @@ export function ToolChips({ tools, running, workTree, flat = false }: { tools: T
   const [open, setOpen] = useState<boolean | null>(null);
   if (tools.length === 0) return null;
   const rows = (
-    <div className="tool-list flex flex-col gap-0.5">
+    <div className="tool-list flex flex-col">
       {groupRepeats(tools, workTree).map((group) => (
         <ToolItem key={group.tool.toolUseId} group={group} workTree={workTree} running={running} />
       ))}
@@ -246,9 +246,13 @@ export function fileChanges(tools: ToolRow[]): FileChange[] {
   return [...byPath.values()];
 }
 
+const SUMMARY_GROUPS = 3;
+
 export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const label = useMemo(() => toolTally(tools.map((tool) => tool.name)).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)).join(', '), [tools]);
+  const parts = useMemo(() => toolTally(tools.map((tool) => tool.name)).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)), [tools]);
+  const full = parts.join(', ');
+  const label = parts.length > SUMMARY_GROUPS ? `${parts.slice(0, SUMMARY_GROUPS - 1).join(', ')} +${parts.length - SUMMARY_GROUPS + 1} more` : full;
   const failed = useMemo(() => tools.filter((tool) => tool.isError && !tool.denied).length, [tools]);
   if (tools.length === 0) return null;
   return (
@@ -257,7 +261,9 @@ export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: R
         <span className="tool-summary-icon" aria-hidden="true">
           <Icon name="sparkle" size={14} />
         </span>
-        <span className="tool-summary-label">{label}</span>
+        <span className="tool-summary-label" title={label === full ? undefined : full}>
+          {label}
+        </span>
         {failed > 0 && <span className="tool-summary-failed">{failed} failed</span>}
         <Icon name="chevronDown" size={14} className="tool-summary-caret" />
       </button>

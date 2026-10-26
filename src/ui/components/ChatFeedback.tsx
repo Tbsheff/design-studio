@@ -117,13 +117,13 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, latest, onDeta
             <ThumbButton value="down" on={feedback.thumb === 'down'} onPick={(thumb) => setFeedback({ thumb })} />
           </span>
         )}
-        {run.status !== 'running' && runText(run) && <CopyButton text={() => runText(run)} label="Copy reply" className="reply-copy" />}
         {!done && (
           <span className={`status ${run.status}`}>
             <span className="status-dot" aria-hidden="true" />
             {STATUS_LABEL[run.status]}
           </span>
         )}
+        {run.status !== 'running' && runText(run) && <CopyButton text={() => runText(run)} label="Copy reply" className="reply-copy" />}
         {summary && (
           <span className="run-foot-meta tabular-nums" data-tip-side="top" data-tip={`$${summary.costUsd.toFixed(4)}`}>
             {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}

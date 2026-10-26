@@ -107,8 +107,6 @@ interface PlusMenuProps {
   onOpen?: () => void;
   mode: ComposerMode;
   onMode: (mode: ComposerMode) => void;
-  level: RunLevel;
-  onLevel: (level: RunLevel) => void;
   designs?: DesignsSetting | undefined;
 }
 
@@ -161,11 +159,6 @@ export function PlusMenu(props: PlusMenuProps) {
             <Section label="Mode">
               {MODES.map((mode) => (
                 <MenuItem key={mode} label={MODE_LABEL[mode]} hint={MODE_SHORT_HINT[mode]} checked={props.mode === mode} onPick={() => props.onMode(mode)} />
-              ))}
-            </Section>
-            <Section label="Level">
-              {RUN_LEVELS.map((level) => (
-                <MenuItem key={level} label={levelLabel(level)} checked={props.level === level} onPick={() => props.onLevel(level)} />
               ))}
             </Section>
             {designs && (

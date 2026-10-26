@@ -129,10 +129,10 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
   const running = run.status === 'running';
   const rewind = useMemo(() => ({ restoreTip, restoreVersionId, forkBase, editTip }), [restoreTip, restoreVersionId, forkBase, editTip]);
   return (
-    <div className="run flex min-w-0 flex-col gap-3" data-run-id={runId}>
+    <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={runId}>
       <UserTurn run={run} title={title} rewind={actions ? rewind : null} actions={actions} />
       <Message type="incoming" className="msg assistant">
-        <MessageContent className="run-body gap-2">
+        <MessageContent className="run-body gap-3">
           <RunParts run={run} running={running} workTree={workTree} />
           {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
           {running && <LiveStatus run={run} workTree={workTree} />}
@@ -149,10 +149,10 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
 
 function PendingEntry({ run, workTree }: { run: RunView; workTree: string | null }) {
   return (
-    <div className="run flex min-w-0 flex-col gap-3" data-pending-run="">
+    <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
       <UserMessage run={run} />
       <Message type="incoming" className="msg assistant">
-        <MessageContent className="run-body gap-2">
+        <MessageContent className="run-body gap-3">
           <LiveStatus run={run} workTree={workTree} />
         </MessageContent>
       </Message>

@@ -205,7 +205,7 @@ export function RunError({ run, latest, onRetry }: { run: RunView; latest: boole
   if (!error || run.status === 'budget_exceeded') return null;
   return (
     <Exception ref={ref} className="run-error" role="alert">
-      <ExceptionHeader className="h-auto min-h-11 items-start py-2.5">
+      <ExceptionHeader className="run-error-head">
         <ExceptionType>Error</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>
         {latest && onRetry && run.status !== 'canceled' && (
@@ -259,7 +259,7 @@ export function PolishThis({ disabled, onPolish }: { disabled: boolean; onPolish
         <Icon name="sparkle" size={14} />
         Polish this
       </button>
-      <span>Run every check on this version and fix what it finds.</span>
+      <span>Run every check and fix issues.</span>
     </div>
   );
 }

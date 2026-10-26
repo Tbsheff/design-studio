@@ -230,6 +230,7 @@ export const api = {
 
 function editKind(req: DirectEditRequest): string {
   if (req.move) return 'move';
+  if (req.insert) return 'insert';
   if (req.text !== undefined) return 'text';
   if (req.name !== undefined) return 'name';
   return 'style';

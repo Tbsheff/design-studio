@@ -828,9 +828,13 @@ export interface DirectEditRequest {
   text?: string;
   name?: string | null;
   move?: ReorderMove;
+  insert?: InsertKind;
 }
 
 export type ReorderMove = 'up' | 'down';
+
+export const INSERT_KINDS = ['text', 'frame', 'rect', 'ellipse'] as const;
+export type InsertKind = (typeof INSERT_KINDS)[number];
 
 export interface DirectEditBatch {
   edits: DirectEditRequest[];

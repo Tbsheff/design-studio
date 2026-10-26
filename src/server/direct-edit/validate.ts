@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
+import { DIRECT_STYLE_PROPERTIES, INSERT_KINDS } from '../../shared/contracts.js';
 import type { DirectEditBatch, DirectEditRequest } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
 
@@ -46,11 +46,16 @@ const requestSchema = z
     text: z.string().max(MAX_TEXT).optional(),
     name: nameSchema.optional(),
     move: z.enum(['up', 'down']).optional(),
+    insert: z.enum(INSERT_KINDS).optional(),
   })
   .strict()
   .refine(
-    (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || Object.keys(request.style ?? {}).length > 0,
-    'style, text, name or move is required',
+    (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || request.insert !== undefined || Object.keys(request.style ?? {}).length > 0,
+    'style, text, name, move or insert is required',
+  )
+  .refine(
+    (request) => request.insert === undefined || (request.move === undefined && request.text === undefined && request.name === undefined && request.style === undefined),
+    'insert must be the only change',
   )
   .refine(
     (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined),
@@ -73,6 +78,7 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.text !== undefined) request.text = parsed.data.text;
   if (parsed.data.name !== undefined) request.name = parsed.data.name;
   if (parsed.data.move !== undefined) request.move = parsed.data.move;
+  if (parsed.data.insert !== undefined) request.insert = parsed.data.insert;
   return request;
 }
 
@@ -96,7 +102,7 @@ export function parseDirectEditBatch(raw: unknown): DirectEditBatch {
       if (error instanceof DirectEditError) throw new DirectEditError('invalid_request', `Edit ${index + 1}: ${error.message}`);
       throw error;
     }
-    if (request.name !== undefined || request.move !== undefined) {
+    if (request.name !== undefined || request.move !== undefined || request.insert !== undefined) {
       throw new DirectEditError('invalid_request', `Edit ${index + 1}: a batch can only change style and text`);
     }
     return request;

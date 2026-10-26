@@ -136,6 +136,27 @@ function textSplice(source: string, element: Element, text: string): Splice {
   return { start: location.startOffset, end: location.endOffset, text: `${lead}${escaped}${trail}` };
 }
 
+const INSERT_SNIPPET: Record<NonNullable<SourceEdit['insert']>, string> = {
+  text: '<p data-name="Text">Text</p>',
+  frame: '<div data-name="Frame" style="display: flex; flex-direction: column; gap: 8px; min-height: 96px; padding: 16px; border: 1px dashed #b4b4b4;"></div>',
+  rect: '<div data-name="Rectangle" style="width: 120px; height: 80px; background: #d9d9d9;"></div>',
+  ellipse: '<div data-name="Ellipse" style="width: 96px; height: 96px; border-radius: 50%; background: #d9d9d9;"></div>',
+};
+
+function insertSplice(source: string, element: Element, kind: NonNullable<SourceEdit['insert']>): Splice {
+  const endTag = element.sourceCodeLocation?.endTag;
+  if (VOID_ELEMENTS.has(element.tagName) || NON_TEXT_ELEMENTS.has(element.tagName) || !endTag) {
+    throw new DirectEditError('invalid_request', `Elements cannot be added inside <${element.tagName}>`);
+  }
+  const lineStart = source.lastIndexOf('\n', startTagOf(element).startOffset) + 1;
+  const indent = /^[ \t]*/.exec(source.slice(lineStart))?.[0] ?? '';
+  const before = source.slice(0, endTag.startOffset);
+  const closeOnOwnLine = /\n[ \t]*$/.test(before);
+  const at = closeOnOwnLine ? before.lastIndexOf('\n') : endTag.startOffset;
+  const text = `\n${indent}  ${INSERT_SNIPPET[kind]}${closeOnOwnLine ? '' : `\n${indent}`}`;
+  return { start: at, end: at, text };
+}
+
 export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit): PatchResult {
   const document = parse(source, { sourceCodeLocationInfo: true });
   const element = findElementAt(document, loc);
@@ -144,6 +165,10 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit)
   if (edit.move !== undefined) {
     const plan = planHtmlMove(source, element, edit.move);
     return { code: plan.code, tag: element.tagName, applied: { style: [], text: false }, moved: htmlPositionAt(plan.code, plan.movedStart) };
+  }
+  if (edit.insert !== undefined) {
+    const code = applySplices(source, [insertSplice(source, element, edit.insert)]);
+    return { code, tag: element.tagName, applied: { style: [], text: false } };
   }
   const splices: Splice[] = [];
   if (edit.name !== undefined) {

@@ -9,6 +9,7 @@ interface Props {
   projectId: string;
   directionId: string | null;
   selector: string;
+  variant?: 'icon' | 'row';
 }
 
 type State = { kind: 'idle' } | { kind: 'busy' } | { kind: 'copied'; label: string } | { kind: 'failed'; message: string };
@@ -39,7 +40,19 @@ function writeWhenReady(text: Promise<string>): Promise<void> {
   return text.then((value) => navigator.clipboard.writeText(value));
 }
 
-export function CopyCodeMenu({ projectId, directionId, selector }: Props) {
+function TriggerContent({ variant, open, busy, text, icon }: { variant: 'icon' | 'row'; open: boolean; busy: boolean; text: string; icon: IconName }) {
+  if (variant === 'row') {
+    return (
+      <>
+        <span>{text}</span>
+        <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
+      </>
+    );
+  }
+  return busy ? <span className="spinner" /> : <Icon name={icon} size={14} />;
+}
+
+export function CopyCodeMenu({ projectId, directionId, selector, variant = 'icon' }: Props) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<State>({ kind: 'idle' });
   const root = useRef<HTMLDivElement>(null);
@@ -100,15 +113,15 @@ export function CopyCodeMenu({ projectId, directionId, selector }: Props) {
       <button
         ref={trigger}
         type="button"
-        className={`icon-btn small copy-code-trigger${state.kind === 'busy' ? ' busy' : ''}`}
+        className={`${variant === 'row' ? 'ins-export-row' : 'icon-btn small copy-code-trigger'}${state.kind === 'busy' ? ' busy' : ''}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        data-tip={open ? undefined : label}
+        data-tip={open || variant === 'row' ? undefined : label}
         data-tip-align="end"
         onClick={() => setOpen((value) => !value)}
       >
-        {state.kind === 'busy' ? <span className="spinner" /> : <Icon name={icon} size={14} />}
+        <TriggerContent variant={variant} open={open} busy={state.kind === 'busy'} text={state.kind === 'idle' ? 'Export selection' : label} icon={icon} />
       </button>
       <span className="sr-only" aria-live="polite">
         {state.kind === 'idle' ? '' : label}

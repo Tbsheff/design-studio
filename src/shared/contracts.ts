@@ -816,6 +816,12 @@ export const DIRECT_STYLE_PROPERTIES = [
   'flex',
   'box-shadow',
   'filter',
+  'font-style',
+  'text-decoration-line',
+  'text-transform',
+  'overflow',
+  'text-shadow',
+  'transform',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

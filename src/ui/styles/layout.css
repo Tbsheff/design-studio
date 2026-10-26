@@ -136,11 +136,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin: 0;
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
 }
 
 .section-head .count {
   color: var(--text-3);
-  font-weight: 500;
+  font-weight: var(--w-regular);
   font-variant-numeric: tabular-nums;
 }
 

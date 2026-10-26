@@ -997,7 +997,7 @@
 
 .comment-mode-pill {
   position: absolute;
-  top: var(--s-3);
+  top: var(--s-2);
   left: 50%;
   z-index: 30;
   display: flex;

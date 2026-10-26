@@ -56,12 +56,17 @@ function Measurements({ from, to }: { from: SelectionContext['rect']; to: Select
   );
 }
 
+function sameRect(a: SelectionContext['rect'], b: SelectionContext['rect']): boolean {
+  return Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && Math.abs(a.width - b.width) < 0.5 && Math.abs(a.height - b.height) < 0.5;
+}
+
 export function ArtboardOverlay({ hover, selection, comments, zoom, resize }: Props) {
   const anchor = selection.at(-1);
   const measuring = hover?.altKey && anchor && !hover.fromTree;
+  const onSelected = hover !== null && selection.some((s) => sameRect(s.rect, hover.rect));
   return (
     <div className="overlay">
-      {hover && !measuring && (
+      {hover && !measuring && !onSelected && (
         <div className="box hover" style={{ left: hover.rect.x, top: hover.rect.y, width: hover.rect.width, height: hover.rect.height }}>
           {hover.label && <span className={`box-label${hover.rect.y * zoom < LABEL_ROOM ? ' inside' : ''}`}>{hover.label}</span>}
         </div>

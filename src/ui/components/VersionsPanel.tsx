@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import type { Direction, Project, Version } from '../../shared/contracts';
 import { displayTitle, indexVersions, type VersionIndex } from '../versionLabels';
 import { Icon } from './Icon';
+import { PanelHead } from './SheetHead';
 import { VersionRow } from './VersionRow';
 
 interface Props {
@@ -131,10 +132,8 @@ function DirectionsSection({ project, directionId, headVersionId, index, fork, o
 
 function VersionsHead(props: { count: number; comparing: boolean; canUndo: boolean; onCompare: () => void; onUndo: () => void }) {
   return (
-    <div className="section-head">
-      <h3 id="versions-heading">
-        Versions <span className="count">{props.count}</span>
-      </h3>
+    <PanelHead title="Versions" className="section-head" titleClassName="section-title">
+      <span className="count">{props.count}</span>
       <div className="section-actions">
         {props.comparing && (
           <button type="button" className="btn small primary has-icon" onClick={props.onCompare}>
@@ -156,7 +155,7 @@ function VersionsHead(props: { count: number; comparing: boolean; canUndo: boole
           Undo
         </button>
       </div>
-    </div>
+    </PanelHead>
   );
 }
 
@@ -208,7 +207,7 @@ export function VersionsPanel(props: Props) {
   return (
     <div className="versions-pane">
       <DirectionsSection project={project} directionId={directionId} headVersionId={headVersionId} index={index} fork={fork} onSelectDirection={props.onSelectDirection} />
-      <section className="panel-section grow" aria-labelledby="versions-heading">
+      <section className="panel-section grow" aria-label="Version list">
         <VersionsHead count={sorted.length} comparing={props.compare.length === 2} canUndo={!locked && sorted.length >= 2} onCompare={props.onCompare} onUndo={props.onUndo} />
         <VersionsEmpty count={sorted.length} loading={headVersionId !== null} />
         <ul className="list versions">

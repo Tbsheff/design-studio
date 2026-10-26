@@ -219,21 +219,20 @@
   bottom: 100%;
   left: calc(var(--stroke) * -1);
   transform-origin: 0 100%;
-  transform: scale(var(--inv-zoom, 1));
-  margin-bottom: 0;
+  transform: scale(var(--inv-zoom, 1)) translateY(calc(var(--s-1) * -1));
   background: var(--accent);
   color: var(--on-accent);
-  font: 500 var(--t-xs)/18px var(--mono);
+  font: var(--w-medium) 11px / 20px var(--mono);
   padding: 0 6px;
   white-space: nowrap;
-  border-radius: 4px 4px 4px 0;
+  border-radius: var(--r-xs);
 }
 
 .box-label.inside {
   bottom: auto;
   top: 0;
   transform-origin: 0 0;
-  border-radius: 0 0 4px 0;
+  transform: scale(var(--inv-zoom, 1)) translate(var(--s-1), var(--s-1));
 }
 
 .capture {
@@ -272,86 +271,6 @@
   inset: 0;
   z-index: 2;
   cursor: default;
-}
-
-.frame-label {
-  position: absolute;
-  left: 0;
-  bottom: 100%;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  padding-bottom: 0;
-  transform: scale(var(--inv-zoom, 1));
-  transform-origin: 0 100%;
-  white-space: nowrap;
-}
-
-.frame-name {
-  height: 28px;
-  padding: 0 var(--s-1);
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-3);
-  font: 500 var(--t-xs) / 28px var(--font);
-  font-variant-numeric: tabular-nums;
-  cursor: grab;
-  user-select: none;
-  transition: color var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
-}
-
-.frame-name:hover {
-  color: var(--text);
-  background: var(--tint-hover);
-}
-
-.frame-name:active {
-  cursor: grabbing;
-  background: var(--tint-press);
-}
-
-.frame-name:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--accent);
-}
-
-.frame-label.active .frame-name {
-  color: var(--accent-text);
-}
-
-.frame-remove {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-3);
-  opacity: 0;
-  cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease), background-color var(--dur-fast) var(--ease);
-}
-
-.frame-label:hover .frame-remove,
-.frame-remove:focus-visible {
-  opacity: 1;
-}
-
-.frame-remove:hover {
-  color: var(--text);
-  background: var(--tint-hover);
-}
-
-.frame-remove:active {
-  background: var(--tint-press);
-}
-
-.frame-remove:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 body.frame-dragging,
@@ -404,8 +323,13 @@ body.element-resizing .frame {
 .compare-pane {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: var(--s-2);
   min-width: 0;
+}
+
+.compare-pane > .compare-stage {
+  flex: none;
 }
 
 .compare-label {
@@ -805,15 +729,6 @@ body.element-resizing .frame {
   inset: -6px;
 }
 
-.frame-remove:active,
-.frame-name:active {
-  scale: 0.96;
-}
-
-.frame-remove {
-  transition-property: opacity, background-color, scale;
-}
-
 .layers-flag {
   margin-left: auto;
   flex: none;
@@ -934,7 +849,7 @@ body.element-resizing .frame {
   height: 8px;
   margin: -4px 0 0 -4px;
   border: calc(var(--stroke) * 1) solid var(--select);
-  background: var(--surface);
+  background: #fff;
   transform: scale(var(--inv-zoom, 1));
   pointer-events: auto;
   touch-action: none;

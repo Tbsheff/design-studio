@@ -24,8 +24,7 @@
 }
 
 .twk-title {
-  font-size: var(--t-sm);
-  font-weight: var(--w-medium);
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
 }
 
 .twk-scroll {

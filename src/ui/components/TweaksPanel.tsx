@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { ColorTweak, RangeTweak, SelectTweak, ToggleTweak, TweakControl, TweakValue } from '../../shared/tweaks';
 import type { TweaksDraft } from '../useTweaks';
 import { Icon } from './Icon';
+import { PanelHead } from './SheetHead';
 import { ColorValue } from './TokenInputs';
 
 interface Props {
@@ -174,8 +175,7 @@ function Problems({ problems }: { problems: string[] }) {
 
 function Header({ draft, running, onSuggest, hasControls }: Props & { hasControls: boolean }) {
   return (
-    <div className="twk-header">
-      <strong className="twk-title">Tweaks</strong>
+    <PanelHead title="Tweaks" className="twk-header" titleClassName="twk-title">
       <div className="twk-header-end">
         {draft.count > 0 && (
           <button type="button" className="btn small ghost" onClick={draft.discard}>
@@ -189,7 +189,7 @@ function Header({ draft, running, onSuggest, hasControls }: Props & { hasControl
           </button>
         )}
       </div>
-    </div>
+    </PanelHead>
   );
 }
 

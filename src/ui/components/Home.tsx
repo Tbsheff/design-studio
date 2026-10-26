@@ -314,7 +314,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
           onPointerEnter={() => void loadPops()}
           onClick={() => togglePop('plus')}
         >
-          <Icon name="plus" size={18} />
+          <Icon name="plus" size={16} />
         </button>
         {pop === 'plus' && (
           <Suspense fallback={null}>
@@ -634,8 +634,8 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
         <span className="brand">Design Studio</span>
         <div className="spacer" />
         <nav className="home-nav" aria-label="App">
-          <button type="button" className="icon-btn home-round" aria-label="Trash" data-tip="Trash" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
-            <Icon name="trash" size={15} />
+          <button type="button" className="icon-btn" aria-label="Trash" data-tip="Trash" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
+            <Icon name="trash" size={16} />
           </button>
           <ThemeButton />
         </nav>
@@ -664,23 +664,26 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 sendDisabled={busy !== null || !prompt.trim() || questions !== null}
               />
             </form>
-            <Suspense fallback={null}>{onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}</Suspense>
-            <TemplatesSection open={prefs.templatesOpen} templates={templates} selected={template?.id ?? null} disabled={busy !== null} onPick={pickTemplate} />
+            {questions ? (
+              <Suspense fallback={null}>
+                <ClarifyForm
+                  questions={questions}
+                  busy={busy === 'create'}
+                  onBuild={(answers) => void build(formatAnswers(prompt, answers))}
+                  onSkip={() => void build(prompt.trim())}
+                  onCancel={() => {
+                    setQuestions(null);
+                    focusPrompt(homeRef.current);
+                  }}
+                />
+              </Suspense>
+            ) : (
+              <>
+                <Suspense fallback={null}>{onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}</Suspense>
+                <TemplatesSection open={prefs.templatesOpen} templates={templates} selected={template?.id ?? null} disabled={busy !== null} onPick={pickTemplate} />
+              </>
+            )}
           </div>
-          {questions && (
-            <Suspense fallback={null}>
-              <ClarifyForm
-                questions={questions}
-                busy={busy === 'create'}
-                onBuild={(answers) => void build(formatAnswers(prompt, answers))}
-                onSkip={() => void build(prompt.trim())}
-                onCancel={() => {
-                  setQuestions(null);
-                  focusPrompt(homeRef.current);
-                }}
-              />
-            </Suspense>
-          )}
           {formError && (
             <div className="alert error" role="alert">
               {formError}

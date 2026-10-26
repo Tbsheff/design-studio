@@ -81,7 +81,7 @@ export function FirstRunPanel({ onClose, onSample }: { onClose: () => void; onSa
     <section className="ui-notice info first-run" aria-label="First steps">
       <Icon name="sparkle" size={16} />
       <p className="first-run-text">
-        <strong>New here?</strong> Describe a page or pick a template. Then press Select to edit any element, and open Versions to compare or restore.
+        <strong>New here?</strong> Describe a page or pick a template. Then use Select to edit any part.
         {error && (
           <span className="first-run-error" role="alert">
             {' '}

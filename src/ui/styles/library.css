@@ -1,5 +1,12 @@
 .home-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
   margin-left: auto;
+}
+
+.home-nav .theme-anchor {
+  display: flex;
 }
 
 .lib-main {

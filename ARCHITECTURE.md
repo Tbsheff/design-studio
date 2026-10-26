@@ -564,6 +564,23 @@ restore / undo / edit-session discard ──► CanvasService.announce ┤
 - Migration: when the file has no frames and localStorage `design-studio.canvas.v1` has a layout for the project, the UI writes it once (`migrate: true`, source `migrate`) and records the project in `design-studio.canvas.migrated.v1`, then deletes the old entry. A later restore to a version without the file does not bring the old frames back.
 - Hidden frames: the frame "…" menu has Hide frame (not for the last shown frame); hidden frames render no iframe and do not count for Fit. The top bar file menu lists them as "Hidden"; a click shows the frame again and makes it live.
 
+## Agent canvas tools (pm-ideas)
+
+```
+UI (Canvas) ──PUT /api/projects/:pid/canvas/presence every 1.5 s when it changed, else every 60 s──► CanvasService presence (memory, 10 min TTL)
+agent: mcp__studio__canvas_list  ──► frames + lofi + {currentDirection, liveFrame, inView, selection}
+       mcp__studio__canvas_place ──► CanvasService.update (source agent) ──► .studio/canvas.json ──► canvas.changed
+       mcp__studio__canvas_point ──► canvas.point {frameId, selector?, at} ──► UI: unhide, make live, select-selector, zoom to selection or frame
+```
+
+- Code: `src/server/canvas/tools.ts` (plain functions on a `CanvasToolContext {canvas, project, direction, mode, plan}`; the SDK tools in `agent/tools.ts` and the mock call the same functions, so mock runs change the real file). `CanvasService` is made once in `index.ts` and passed to `createApp` and `createAgentRunner` (SDK driver option and mock driver option).
+- `canvas_place {frames: [...]}` (1..12 items, applied in order in one write): `frame` (id or `@label`) moves or changes a frame, else a new `f<n>` frame is added (bound to the run's direction with `directionId`). Size: `viewport` preset, `width`/`height`, else the moved frame, the reference frame or 1440×900. Placement: one of `below` (left edges lined up), `rightOf` (top edges lined up), `leftOf`, `above` with `gap` (default 80), or `x`/`y` (they override the relative value), else right of all shown frames. `@label` matches the label without case; a bare string matches an id, then a label. An empty file is seeded with the default `f1` at the live size from presence. It refuses more than 24 frames, a bad path and two relations at once (tool error, nothing written). The result lists the placed frames and `warnings` for every pair of shown frames that overlap.
+- `canvas_list` and `canvas_point` are read-only for files. `canvas_point` needs a known frame (or `f1` on an empty file); the UI acts on a point only when it is under 8 s old, so the SSE replay of old points on open does nothing.
+- Policy: the three tools are in `STUDIO_MCP_TOOLS` at every level and mode (prompt cache rule) and in `NO_CHANGE_TOOLS` (the visual-diff baseline hold does not wait for them). `canvas_place` is denied in plan mode (`PLAN_MODE_DENY`) and in critique runs.
+- Prompt: a `## Canvas` section in the system prompt (both modes) says when to use each tool.
+- Bridge: `select-selector {selector}` (max 400 chars, `querySelector` in a try) scrolls the element into view and selects it like a click.
+- Mock: `[canvas]` in the prompt runs canvas_list, then canvas_place (label f1 "Desktop", add "Mobile" right of it, add "Tablet" at 0,0, which overlaps), a second canvas_place that moves Tablet right of Mobile because of the warning, then canvas_point at `@Mobile` with selector `h1`.
+
 ## Versions, chat rewind and comments (Round 7)
 
 - Version thumbnails: `GET /api/projects/:pid/versions/:vid/thumb` shoots the version snapshot on the first request (one shared shot queue, one at a time) and then serves `thumbs/v-<vid>.png`. The Versions panel fetches only rows in view while the panel is open, at most 2 at a time.

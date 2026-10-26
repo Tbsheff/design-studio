@@ -18,6 +18,7 @@ const presenceSchema = z
   .object({
     directionId: z.string().nullable(),
     activeFrameId: z.string().nullable(),
+    liveSize: z.object({ width: z.number().int().min(200).max(4000), height: z.number().int().min(200).max(4000) }).strict().optional(),
     inView: z.array(z.string()).max(64),
     selection: z
       .array(z.object({ selector: z.string().max(400), tag: z.string().max(40), text: z.string().max(200) }).strict())
@@ -39,6 +40,7 @@ function parsePresence(raw: unknown): CanvasPresence {
   return {
     directionId: data.directionId && isDirectionRef(data.directionId) ? data.directionId : null,
     activeFrameId: data.activeFrameId && isFrameId(data.activeFrameId) ? data.activeFrameId : null,
+    ...(data.liveSize ? { liveSize: data.liveSize } : {}),
     inView: data.inView.filter(isFrameId),
     selection: data.selection,
     at: Date.now(),

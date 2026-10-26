@@ -11,6 +11,8 @@ import { buildUserText } from './user-message.js';
 import { runVariationMock } from '../variations/mock-pages.js';
 import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
 import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-system.js';
+import type { CanvasService } from '../canvas/service.js';
+import { mockCanvasContext, runMockCanvas, wantsMockCanvas } from './mock-canvas.js';
 
 const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
 const DELTA_DELAY_MS = 20;
@@ -77,7 +79,7 @@ function escapeJsxText(value: string): string {
 }
 
 const SKILL_TAG = /\[skill:([^\]\s]+)\]/g;
-const MOCK_TAGS = /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry)\]/g;
+const MOCK_TAGS = /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry|canvas|states)\]/g;
 const SKILL_LINE = /^Use the (\S+) skill\.$/gm;
 
 export function mockSkillRequests(prompt: string): string[] {
@@ -545,8 +547,9 @@ function wantsTweaks(input: DriverInput): boolean {
   return request.mode === 'edit' && (request.task === 'tweaks' || request.prompt.includes(MOCK_TWEAKS_TAG));
 }
 
-async function runMockScenario(input: DriverInput, session: MockSession): Promise<string> {
+async function runMockScenario(input: DriverInput, session: MockSession, canvas: CanvasService | undefined): Promise<string> {
   if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt);
+  if (wantsMockCanvas(input)) return runMockCanvas(session, mockCanvasContext(input, canvas));
   const tweaksOnly = input.ctx.request.task === 'tweaks';
   let finalText = tweaksOnly ? '' : await runMockEdit(input, session);
   if (wantsTweaks(input)) finalText = `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();
@@ -584,7 +587,7 @@ function runMockEdit(input: DriverInput, session: MockSession): Promise<string> 
   return runReactEdit(session, workTree, text);
 }
 
-async function runMock(input: DriverInput): Promise<DriverOutcome> {
+async function runMock(input: DriverInput, canvas: CanvasService | undefined): Promise<DriverOutcome> {
   const startedAt = Date.now();
   const prompt = input.ctx.request.prompt;
   const flags: MockFlags = { slow: prompt.includes('[slow]'), fail: prompt.includes('[fail]') };
@@ -614,7 +617,7 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');
     await session.think('Thinking B: keep the cards, then write the change.');
   }
-  const finalText = await runMockScenario(input, session);
+  const finalText = await runMockScenario(input, session, canvas);
   const outcome: DriverOutcome = {
     status: 'completed',
     usage: { ...MOCK_USAGE },
@@ -639,10 +642,10 @@ async function runMock(input: DriverInput): Promise<DriverOutcome> {
 
 export const MOCK_SLOW_STOP_MS = 2000;
 
-export function createMockDriver(): RunDriver {
+export function createMockDriver(options: { canvas?: CanvasService } = {}): RunDriver {
   return async (input) => {
     try {
-      return await runMock(input);
+      return await runMock(input, options.canvas);
     } catch (error) {
       if (input.signal.aborted && input.ctx.request.prompt.includes('[slowstop]')) await new Promise((resolve) => setTimeout(resolve, MOCK_SLOW_STOP_MS));
       throw error;

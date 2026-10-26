@@ -508,6 +508,7 @@ export type CanvasWriteSource = 'user' | 'agent' | 'run' | 'restore' | 'migrate'
 export interface CanvasPresence {
   directionId: string | null;
   activeFrameId: string | null;
+  liveSize?: { width: number; height: number };
   inView: string[];
   selection: { selector: string; tag: string; text: string }[];
   at: number;
@@ -795,7 +796,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'text-edit-allowed'; allowed: boolean }
   | { ns: 'studio'; token: string; type: 'text-edit-stop' }
   | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
-  | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string };
+  | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
+  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',

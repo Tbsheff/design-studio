@@ -27,6 +27,8 @@ import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
 import { DrawBar, DrawSurface } from './DrawLayer';
 import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
+import { useCanvasPresence } from '../useCanvasPresence';
+import { useCanvasPoint } from '../useCanvasPoint';
 
 interface Props {
   projectId: string;
@@ -456,6 +458,8 @@ export function Canvas(props: Props) {
     onError: layerEdits.notify,
   });
 
+  useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
+  useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
   const darkSwitch = themeSwitch(props.darkPreview, theme);
   useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, check });
 

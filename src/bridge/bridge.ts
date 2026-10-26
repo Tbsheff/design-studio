@@ -934,6 +934,19 @@ function startBridge(session: BridgeSession): void {
       const rules = element ? authoredRules(element) : [];
       post({ type: 'authored', requestId: message.requestId, rules, inline: element ? livePreview.authoredInline(element).slice(0, AUTHORED_MAX_BYTES) : '' });
     },
+    'select-selector': (message) => {
+      if (typeof message.selector !== 'string' || message.selector.length > 400) return;
+      let element: Element | null = null;
+      try {
+        element = document.querySelector(message.selector);
+      } catch {
+        element = null;
+      }
+      if (element) {
+        element.scrollIntoView({ block: 'center', inline: 'nearest' });
+        postSelect(element, false);
+      }
+    },
     'select-source': (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);

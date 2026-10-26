@@ -170,7 +170,7 @@
 }
 
 [data-tip]::after {
-  content: attr(data-tip);
+  content: attr(data-tip) / "";
   position: absolute;
   z-index: 50;
   left: 50%;

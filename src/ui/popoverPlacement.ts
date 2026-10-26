@@ -53,38 +53,41 @@ function layoutRect(panel: HTMLElement): { left: number; top: number; right: num
   return { left, top: base.top + panel.offsetTop, right: left + panel.offsetWidth };
 }
 
-function fitAbsolute(panel: HTMLElement, trigger: HTMLElement | null): void {
+function resetFit(style: CSSStyleDeclaration): void {
+  for (const key of ['top', 'bottom', 'left', 'right', 'maxHeight', 'maxWidth', 'overflowY'] as const) style[key] = '';
+}
+
+function fitVertical(panel: HTMLElement, top: number, from: DOMRect, bounds: PopoverBounds): void {
   const style = panel.style;
-  style.top = '';
-  style.bottom = '';
-  style.left = '';
-  style.right = '';
-  style.maxHeight = '';
-  style.maxWidth = '';
-  style.overflowY = '';
-  const anchor = trigger ?? panel.parentElement ?? panel;
-  const bounds = popoverBounds(anchor);
-  style.maxWidth = `${bounds.right - bounds.left}px`;
-  const rect = layoutRect(panel);
-  const from = anchor.getBoundingClientRect();
   const height = panel.scrollHeight;
-  const below = bounds.bottom - rect.top;
+  const below = bounds.bottom - top;
   const above = from.top - POPOVER_GAP - bounds.top;
-  if (height > below && above > below) {
+  const flip = height > below && above > below;
+  if (flip) {
     style.top = 'auto';
     style.bottom = 'calc(100% + 6px)';
-    style.maxHeight = `${Math.max(0, above)}px`;
-  } else if (height > below) {
-    style.maxHeight = `${Math.max(0, below)}px`;
   }
+  if (height > below) style.maxHeight = `${Math.max(0, flip ? above : below)}px`;
   if (height > Math.max(above, below)) style.overflowY = 'auto';
+}
+
+function fitHorizontal(panel: HTMLElement, rect: { left: number; right: number }, bounds: PopoverBounds): void {
   const shift = rect.right > bounds.right ? bounds.right - rect.right : 0;
   const moved = rect.left + shift < bounds.left ? bounds.left - rect.left : shift;
   const parent = panel.offsetParent;
-  if (moved !== 0 && parent) {
-    style.left = `${rect.left + moved - parent.getBoundingClientRect().left}px`;
-    style.right = 'auto';
-  }
+  if (moved === 0 || !parent) return;
+  panel.style.left = `${rect.left + moved - parent.getBoundingClientRect().left}px`;
+  panel.style.right = 'auto';
+}
+
+function fitAbsolute(panel: HTMLElement, trigger: HTMLElement | null): void {
+  resetFit(panel.style);
+  const anchor = trigger ?? panel.parentElement ?? panel;
+  const bounds = popoverBounds(anchor);
+  panel.style.maxWidth = `${bounds.right - bounds.left}px`;
+  const rect = layoutRect(panel);
+  fitVertical(panel, rect.top, anchor.getBoundingClientRect(), bounds);
+  fitHorizontal(panel, rect, bounds);
 }
 
 export function useFitPopover(panel: RefObject<HTMLElement | null>, trigger: RefObject<HTMLElement | null> | null, open: boolean): void {
@@ -93,7 +96,12 @@ export function useFitPopover(panel: RefObject<HTMLElement | null>, trigger: Ref
     if (!open || !node) return;
     const fit = () => fitAbsolute(node, trigger?.current ?? null);
     fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(node);
     window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+    };
   }, [open, panel, trigger]);
 }

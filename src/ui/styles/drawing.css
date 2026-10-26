@@ -16,7 +16,7 @@
   align-items: center;
   gap: var(--s-1);
   padding: var(--s-1);
-  border-radius: calc(var(--r-sm) + var(--s-1));
+  border-radius: var(--r-lg);
   background: var(--surface-raised);
   box-shadow: var(--shadow-md);
   translate: -50% 0;
@@ -76,9 +76,6 @@
 }
 
 .draw-bar kbd {
-  height: 16px;
-  min-width: 16px;
-  font-size: var(--t-xs);
   background: transparent;
 }
 

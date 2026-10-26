@@ -55,7 +55,7 @@ export function RenamePackDialog({ pack, onClose, onRename }: { pack: PackSummar
   };
   return (
     <dialog ref={dialog.ref} className="modal" aria-label="Rename design system" onMouseDown={dialog.onMouseDown}>
-      <form onSubmit={submit}>
+      <form className="modal-form" onSubmit={submit}>
         <Head title="Rename design system" text="Projects that use it keep working. Its id does not change." busy={action.busy} onClose={onClose} />
         <div className="modal-body">
           <label className="field">

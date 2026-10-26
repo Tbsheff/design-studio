@@ -99,7 +99,7 @@ export function SavePackDialog({ defaultName, updating, canCopy, onClose, onSave
 
   return (
     <dialog ref={dialog.ref} className="modal" aria-label="Save to library" onMouseDown={dialog.onMouseDown}>
-      <form
+      <form className="modal-form"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();

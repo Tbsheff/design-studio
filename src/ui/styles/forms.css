@@ -190,7 +190,7 @@ kbd {
 }
 
 .skills-field legend {
-  margin-bottom: 6px;
+  margin-bottom: 0;
   padding: 0;
   font-size: var(--t-xs);
   font-weight: 500;

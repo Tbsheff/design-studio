@@ -723,14 +723,19 @@
   padding: 2px var(--s-1) var(--s-1);
 }
 
+.composer-menu-counts-hint {
+  margin: 0;
+  padding: 0 var(--s-2) var(--s-1);
+}
+
 .composer-menu-count {
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   background: transparent;
   color: var(--text-2);
-  font-size: var(--t-sm);
+  font-size: var(--t-xs);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: background-color var(--dur-fast) var(--ease);

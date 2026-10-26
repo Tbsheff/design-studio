@@ -4,7 +4,7 @@
   width: 264px;
   border-radius: var(--r-lg);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-pop);
   overflow: hidden;
   animation: pop-in var(--dur) var(--ease);
 }
@@ -127,32 +127,8 @@
   font-size: var(--t-xs);
 }
 
-.tk-item {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  height: 30px;
-  padding: 0 var(--s-2);
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text);
-  font-size: var(--t-xs);
-  text-align: left;
-  cursor: pointer;
-}
-
 .tk-item .icon {
   color: var(--text-3);
-}
-
-.tk-item:hover,
-.tk-item:focus-visible {
-  background: var(--surface-hover);
-}
-
-.tk-item:focus-visible {
-  outline-offset: -2px;
 }
 
 .tk-dialog {

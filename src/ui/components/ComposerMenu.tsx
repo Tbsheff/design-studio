@@ -6,7 +6,7 @@ import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 import { levelHint, levelLabel, levelShortHint, useRovingRadioGroup } from './LevelControl';
-import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_HINT, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
+import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
 
 function usePlacedPopover(trigger: RefObject<HTMLButtonElement | null>, panel: RefObject<HTMLDivElement | null>) {
   const [open, setOpen] = useState(false);
@@ -67,10 +67,11 @@ interface ItemProps {
 
 function MenuItem({ icon, label, meta, checked, disabledReason, hint, onPick }: ItemProps) {
   const off = Boolean(disabledReason);
+  const note = disabledReason ?? hint;
   return (
     <button
       type="button"
-      className="ui-menu-item"
+      className={note ? 'ui-menu-item has-hint' : 'ui-menu-item'}
       role={checked === undefined ? 'menuitem' : 'menuitemradio'}
       aria-checked={checked}
       aria-disabled={off || undefined}
@@ -79,8 +80,9 @@ function MenuItem({ icon, label, meta, checked, disabledReason, hint, onPick }: 
         if (!off) onPick();
       }}
     >
-      {icon && <Icon name={icon} size={16} />}
+      {icon && <Icon name={icon} size={14} />}
       <span>{label}</span>
+      {note && <span className="ui-menu-hint">{note}</span>}
       {meta && <span className="ui-menu-meta">{meta}</span>}
     </button>
   );
@@ -111,6 +113,7 @@ interface PlusMenuProps {
 }
 
 const MODES: readonly ComposerMode[] = ['edit', 'plan', 'critique'];
+const MODE_SHORT_HINT: Record<ComposerMode, string> = { edit: 'Changes the design', plan: 'Plan first, then you approve', critique: 'Review only, no changes' };
 const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 export function PlusMenu(props: PlusMenuProps) {
@@ -125,6 +128,7 @@ export function PlusMenu(props: PlusMenuProps) {
     run();
   };
   const designs = props.designs;
+  const countsId = useId();
   return (
     <>
       <button
@@ -156,17 +160,17 @@ export function PlusMenu(props: PlusMenuProps) {
             </Section>
             <Section label="Mode">
               {MODES.map((mode) => (
-                <MenuItem key={mode} label={MODE_LABEL[mode]} hint={MODE_HINT[mode]} checked={props.mode === mode} onPick={() => props.onMode(mode)} />
+                <MenuItem key={mode} label={MODE_LABEL[mode]} hint={MODE_SHORT_HINT[mode]} checked={props.mode === mode} onPick={() => props.onMode(mode)} />
               ))}
             </Section>
             <Section label="Level">
               {RUN_LEVELS.map((level) => (
-                <MenuItem key={level} label={levelLabel(level)} hint={levelHint(level)} checked={props.level === level} onPick={() => props.onLevel(level)} />
+                <MenuItem key={level} label={levelLabel(level)} checked={props.level === level} onPick={() => props.onLevel(level)} />
               ))}
             </Section>
             {designs && (
               <Section label="Designs side by side">
-                <div className="composer-menu-counts">
+                <div className="composer-menu-counts" aria-describedby={`${countsId}-hint`}>
                   {DESIGN_COUNTS.filter((count) => count <= designs.max).map((count) => {
                     const off = count > 1 && designs.disabledReason !== null;
                     return (
@@ -188,6 +192,9 @@ export function PlusMenu(props: PlusMenuProps) {
                     );
                   })}
                 </div>
+                <p className="ui-menu-hint composer-menu-counts-hint" id={`${countsId}-hint`}>
+                  {designsHint(designs)}
+                </p>
               </Section>
             )}
           </div>,
@@ -253,7 +260,7 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
                   key={item}
                   type="button"
                   role="menuitemradio"
-                  className="ui-menu-item level-menu-item"
+                  className="ui-menu-item has-hint level-menu-item"
                   aria-checked={level === item}
                   tabIndex={-1}
                   onClick={() => {
@@ -261,8 +268,8 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
                     menu.close(true);
                   }}
                 >
-                  <span className="level-menu-label">{levelLabel(item)}</span>
-                  <span className="level-menu-hint">{levelShortHint(item)}</span>
+                  <span>{levelLabel(item)}</span>
+                  <span className="ui-menu-hint">{levelShortHint(item)}</span>
                 </button>
               ))}
             </Section>

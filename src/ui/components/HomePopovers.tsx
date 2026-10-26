@@ -257,7 +257,7 @@ export function LevelPopover({ trigger, onClose, level, onLevel }: { trigger: Re
             key={item}
             type="button"
             role="menuitemradio"
-            className="ui-menu-item level-menu-item"
+            className="ui-menu-item has-hint level-menu-item"
             aria-checked={level === item}
             tabIndex={level === item ? 0 : -1}
             onClick={() => {
@@ -265,8 +265,8 @@ export function LevelPopover({ trigger, onClose, level, onLevel }: { trigger: Re
               onClose(true);
             }}
           >
-            <span className="level-menu-label">{levelLabel(item)}</span>
-            <span className="level-menu-hint">{levelShortHint(item)}</span>
+            <span>{levelLabel(item)}</span>
+            <span className="ui-menu-hint">{levelShortHint(item)}</span>
           </button>
         ))}
       </div>

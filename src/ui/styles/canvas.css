@@ -382,13 +382,6 @@ body.element-resizing .frame {
   transform-origin: top left;
 }
 
-.canvas-menu kbd {
-  border: 0;
-  background: none;
-  padding: 0;
-  font-variant-numeric: tabular-nums;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .canvas-menu {
     animation: none;

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent, type RefObject } from 'react';
-import { Icon } from './Icon';
 
 type ThemePref = 'system' | 'light' | 'dark';
 
@@ -67,7 +66,6 @@ export default function ThemeMenu({ trigger, onClose }: { trigger: RefObject<HTM
             <path d={option.path} />
           </svg>
           <span>{option.label}</span>
-          {pref === option.pref && <Icon name="check" size={14} />}
         </button>
       ))}
     </div>

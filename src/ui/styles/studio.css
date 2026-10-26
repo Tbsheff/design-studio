@@ -93,7 +93,6 @@
   position: absolute;
   z-index: 60;
   top: calc(100% + var(--s-1));
-  min-width: 232px;
   max-height: min(70vh, 520px);
   overflow-y: auto;
 }
@@ -108,12 +107,6 @@
 
 .topbar-menu.align-end {
   right: 0;
-}
-
-.pane-project-menu .ui-menu-item,
-.topbar-menu .ui-menu-item {
-  height: 28px;
-  font-size: var(--t-xs);
 }
 
 .pane-head-btn.icon-btn {

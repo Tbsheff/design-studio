@@ -159,8 +159,7 @@ export function CommentModePill({ mode, control }: { mode: { on: boolean; availa
   const repin = control?.repinId ? control.comments.find((comment) => comment.id === control.repinId) : undefined;
   return (
     <div className="comment-mode-pill" role="status" data-testid="comment-mode-pill">
-      {repin ? `Click an element to move comment #${repin.n}` : 'Click an element to comment'}
-      <kbd>Esc</kbd>
+      {repin ? `Click an element to move comment #${repin.n}` : 'Click to comment, press P to draw'}
     </div>
   );
 }

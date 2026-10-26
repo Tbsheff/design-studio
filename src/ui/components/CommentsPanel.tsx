@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import type { DesignComment } from '../../shared/contracts';
+import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import type { CommentsControl } from '../useComments';
 import { CommentReplies } from './CommentPopover';
 import { Icon } from './Icon';
@@ -10,6 +10,7 @@ interface Props {
   running: boolean;
   onOpenRun: (runId: string) => void;
   onOpenVersion: (versionId: string) => void;
+  selection?: SelectionContext[];
 }
 
 function targetLabel(comment: DesignComment): string {
@@ -212,7 +213,58 @@ function SendQueuedButton({ control, className }: { control: CommentsControl; cl
   );
 }
 
-export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Props) {
+function composerTarget(selection: SelectionContext[]): string | null {
+  if (selection.length === 0) return null;
+  if (selection.length > 1) return `${selection.length} elements`;
+  const first = selection[0];
+  return first ? `the ${first.tag}` : null;
+}
+
+function CommentsComposer({ control, selection }: { control: CommentsControl; selection: SelectionContext[] }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const target = composerTarget(selection);
+  const ready = target !== null && text.trim().length > 0 && !busy;
+  const submit = async () => {
+    if (!ready) return;
+    setBusy(true);
+    try {
+      if (await control.add(selection, text.trim(), false)) setText('');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const queued = control.queued.length;
+  return (
+    <div className="comments-composer ui-composer" data-testid="comments-composer">
+      <textarea
+        aria-label="Add a comment"
+        rows={2}
+        maxLength={2000}
+        value={text}
+        disabled={target === null}
+        placeholder={target ? `Add a comment on ${target}…` : 'Click an element on the canvas to comment.'}
+        onChange={(event) => setText(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault();
+            void submit();
+          }
+        }}
+      />
+      <div className="comments-composer-row">
+        {queued > 0 && <SendQueuedButton control={control} className="ghost" />}
+        <span className="spacer" />
+        <button type="button" className="btn small send" disabled={!ready} onClick={() => void submit()}>
+          <Icon name="arrowUp" size={12} />
+          Comment
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, selection = [] }: Props) {
   const by = (status: DesignComment['status']) => control.comments.filter((comment) => comment.status === status);
   const sent = by('sent');
   const resolved = by('resolved');
@@ -221,6 +273,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
   const empty = control.comments.filter((comment) => comment.status !== 'draft').length === 0;
   const showResolved = control.showResolved;
   return (
+    <div className="comments-pane">
     <div className="comments-panel" data-testid="comments-panel">
       {control.notice && (
         <div className="comments-notice" role="status">
@@ -231,10 +284,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
         </div>
       )}
       {empty && (
-        <p className="comments-empty">
-          No comments yet. Press <kbd>C</kbd> and click an element to pin one, or select an element and type quick feedback. Queue several, then send them in
-          one run.
-        </p>
+        <p className="comments-empty">No comments yet. Click an element on the canvas to pin one. Queue several, then send them to Claude in one run.</p>
       )}
       {resolved.length > 0 && (
         <div className="comments-filter">
@@ -250,7 +300,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
           )}
         </div>
       )}
-      <Section title="Queued" count={queued.length} action={<SendQueuedButton control={control} />}>
+      <Section title="Queued" count={queued.length}>
         {queued.map((comment, index) => (
           <QueuedRow key={comment.id} comment={comment} index={index} total={queued.length} control={control} />
         ))}
@@ -271,6 +321,8 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion }: Pr
           <DoneRow key={comment.id} comment={comment} control={control} onOpenRun={onOpenRun} onOpenVersion={onOpenVersion} />
         ))}
       </Section>
+    </div>
+    <CommentsComposer control={control} selection={selection} />
     </div>
   );
 }

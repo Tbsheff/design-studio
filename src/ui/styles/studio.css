@@ -410,24 +410,6 @@
   outline: none;
 }
 
-.canvas-hint {
-  position: absolute;
-  z-index: 30;
-  top: var(--s-3);
-  left: 50%;
-  transform: translateX(-50%);
-  height: 26px;
-  padding: 0 var(--s-3);
-  border-radius: var(--r-full);
-  background: var(--accent);
-  color: var(--on-accent);
-  box-shadow: var(--shadow-md);
-  font: var(--w-medium) var(--t-xs) / 26px var(--font);
-  white-space: nowrap;
-  pointer-events: none;
-  animation: pop-in var(--dur-slow) var(--ease);
-}
-
 .present-layer {
   position: fixed;
   inset: 0;

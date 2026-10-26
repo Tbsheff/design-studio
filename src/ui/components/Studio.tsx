@@ -437,6 +437,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           details={{ projectId, run: detailsRun, onClose: () => setDetailsRunId(null) }}
           comments={{
             control: comments,
+            selection,
             running: activeRun !== null,
             onOpenRun: setDetailsRunId,
             onOpenVersion: (versionId) => {

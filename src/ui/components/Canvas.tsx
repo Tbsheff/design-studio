@@ -20,7 +20,6 @@ import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type Th
 import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
-import { CommentHint } from './CanvasOverlays';
 import { RenderCheckPanel } from './RenderCheckPanel';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
@@ -512,7 +511,6 @@ export function Canvas(props: Props) {
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
-        <CommentHint on={commentMode} />
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />
         {capture && <div className="capture" data-testid="pan-capture" />}

@@ -83,11 +83,3 @@ export function TweakPrompt({ scope, onSend, onClose }: { scope: string | null; 
   );
 }
 
-export function CommentHint({ on }: { on: boolean }) {
-  if (!on) return null;
-  return (
-    <div className="canvas-hint" role="status">
-      Click to comment, press P to draw
-    </div>
-  );
-}

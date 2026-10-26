@@ -4,6 +4,7 @@ import type { CanUseTool, HookCallback, PermissionResult } from '@anthropic-ai/c
 import { TOKENS_CSS_FILE } from '../../shared/contracts.js';
 import type { RunMode } from '../../shared/contracts.js';
 import { TWEAKS_FILE, TWEAKS_TOOL } from '../../shared/tweaks.js';
+import { CANVAS_DIR } from '../../shared/canvas-file.js';
 import type { ToolGate } from './ask-gate.js';
 
 export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
@@ -178,6 +179,13 @@ function isTweaksFile(workTree: string, raw: string): boolean {
   return relativeToRoot(workTree, raw) === TWEAKS_FILE.toLowerCase();
 }
 
+export const STUDIO_DIR_MESSAGE = `${CANVAS_DIR}/ is owned by the studio; change the canvas layout with mcp__studio__canvas_place instead`;
+
+function isStudioDir(workTree: string, raw: string): boolean {
+  const relative = relativeToRoot(workTree, raw);
+  return relative === CANVAS_DIR || relative.startsWith(`${CANVAS_DIR}/`);
+}
+
 function checkReadOnlyDirs(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const dirs = (policy.readOnlyDirs ?? []).map((dir) => dir.toLowerCase());
   if (dirs.length === 0) return null;
@@ -196,6 +204,7 @@ function checkGeneratedFile(workTree: string, input: Record<string, unknown>): s
     const value = input[field];
     if (typeof value === 'string' && isGeneratedTokensFile(workTree, value)) return GENERATED_TOKENS_MESSAGE;
     if (typeof value === 'string' && isTweaksFile(workTree, value)) return TWEAKS_FILE_MESSAGE;
+    if (typeof value === 'string' && isStudioDir(workTree, value)) return STUDIO_DIR_MESSAGE;
   }
   return null;
 }

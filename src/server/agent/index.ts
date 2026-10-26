@@ -5,6 +5,7 @@ import { refreshDraftCoverage } from '../design-system/draft-project.js';
 import { packRegistry, type PackRegistry } from '../design-system/packs.js';
 import { buildErrorMessage, syncDesignSystem } from '../design-system/sync.js';
 import type { AgentRunner, EventBus, PreviewService, ProjectStore, ServerConfig, VersionStore } from '../types.js';
+import type { CanvasService } from '../canvas/service.js';
 import { createRunLifecycle } from './lifecycle.js';
 import { createMockDriver } from './mock.js';
 import { createSdkDriver } from './sdk-driver.js';
@@ -15,6 +16,7 @@ interface AgentRunnerDeps {
   projects: ProjectStore;
   versions: VersionStore;
   preview: PreviewService;
+  canvas?: CanvasService;
 }
 
 function claudeExecutableOption(): { claudeExecutable?: string } {

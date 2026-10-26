@@ -3,10 +3,10 @@ import type { CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderC
 import { api, errorText } from '../api';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, frameDirection, frameName, setFramePath, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { boundsOf, canHideFrame, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, withFramePath, type CanvasFrame } from '../canvasFrames';
 import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
-import { FramePageMenu, FrameResizeHandles, VariationControls, type FrameVariation } from './FrameControls';
+import { FrameMoreMenu, FramePageMenu, FrameResizeHandles, VariationControls, type FrameMenuItem, type FrameVariation } from './FrameControls';
 import { FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
@@ -267,6 +267,19 @@ interface LabelInput {
   frames: ReturnType<typeof useCanvasFrames>;
   baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
   directionName: string | null;
+  frameActions?: (frame: CanvasFrame, directionId: string | null) => FrameMenuItem[];
+}
+
+function frameMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null): FrameMenuItem[] {
+  const extra = o.frameActions?.(frame, did) ?? [];
+  const hide: FrameMenuItem = {
+    id: 'hide',
+    label: 'Hide frame',
+    icon: 'eyeOff',
+    run: () => o.frames.update((l) => setFrameHidden(l, frame.id, true)),
+    ...(canHideFrame(o.frames.layout, frame.id) ? {} : { disabled: 'The last shown frame stays.' }),
+  };
+  return [...extra, hide];
 }
 
 function useFrameLabels(o: LabelInput) {
@@ -283,13 +296,14 @@ function useFrameLabels(o: LabelInput) {
     return {
       ...o.baseLabel(frame),
       number: variation ? `1${variation.label.toLowerCase()}` : String(index + 1),
-      title: variation ? undefined : (named ?? o.directionName ?? undefined),
+      title: variation ? undefined : (frame.label ?? named ?? o.directionName ?? undefined),
       directionId: did,
       badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
       extras: (
         <>
           {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
           <FramePageMenu path={frame.path ?? ''} listPages={o.kind === 'html' && did ? listPages(did) : null} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
         </>
       ),
     };
@@ -352,13 +366,14 @@ export function Canvas(props: Props) {
   const artboardRef = useRef<HTMLDivElement>(null);
   const canvasFrames = useCanvasFrames(projectId, directionId, activateOf(props.directions), knownIds(props.directions));
   const { layout, active } = canvasFrames;
+  const shown = shownFrames(layout);
   const viewport = { width: active.width, height: active.height };
   const selectionRef = useRef(props.selection);
   selectionRef.current = props.selection;
   const pz = usePanZoom({
     stageRef,
     artboardRef,
-    layout: { activeId: active.id, active, bounds: boundsOf(layout.frames) },
+    layout: { activeId: active.id, active, bounds: boundsOf(shown) },
     setting: ui.zoom,
     selectionRect: () => unionRect(selectionRef.current),
   });
@@ -409,7 +424,7 @@ export function Canvas(props: Props) {
   const passive = useDirectionFrames({
     projectId,
     kind,
-    frames: layout.frames,
+    frames: shown,
     activeId: active.id,
     currentId: directionId,
     currentUrl: baseUrl,
@@ -518,7 +533,7 @@ export function Canvas(props: Props) {
           />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
-          <OtherFrames frames={layout.frames} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
         </div>
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />

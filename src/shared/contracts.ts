@@ -1,3 +1,4 @@
+import type { CanvasFile } from './canvas-file';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -498,7 +499,19 @@ export type StudioEventBody =
   | { type: 'preview.build-error'; message: string; file?: string; line?: number; frame?: string }
   | { type: 'comments.changed'; comments: DesignComment[] }
   | { type: 'edit-history.changed' }
-  | { type: 'versions.changed' };
+  | { type: 'versions.changed' }
+  | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
+  | { type: 'canvas.point'; frameId: string; selector?: string; at: number };
+
+export type CanvasWriteSource = 'user' | 'agent' | 'run' | 'restore' | 'migrate';
+
+export interface CanvasPresence {
+  directionId: string | null;
+  activeFrameId: string | null;
+  inView: string[];
+  selection: { selector: string; tag: string; text: string }[];
+  at: number;
+}
 
 export type StudioEvent = EventBase & StudioEventBody;
 

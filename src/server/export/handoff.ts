@@ -8,6 +8,7 @@ import { DESIGN_MD_FILE } from '../design-system/packs.js';
 import { readDesignSystemFiles } from '../design-system/sync.js';
 import { zipFiles, type ZipEntry } from '../design-system/zip.js';
 import type { CommentStore } from '../store/comments.js';
+import { CANVAS_FILE, parseCanvasText, type CanvasFile } from '../../shared/canvas-file.js';
 import { captureFrame } from './capture.js';
 import { inlineHtml } from './inline-html.js';
 import type { ExportDeps, ExportSource } from './source.js';
@@ -29,13 +30,19 @@ function cell(value: string): string {
   return value.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
 }
 
+const FIXED_ROLES: Record<string, string> = {
+  [TOKENS_FILE]: 'Design tokens (source of truth)',
+  [TOKENS_CSS_FILE]: 'Design tokens as CSS variables (generated)',
+  [CANVAS_FILE]: 'Canvas layout (frames, pages, labels)',
+  'design-system/pack.json': 'Design system manifest',
+};
+
 function role(file: string, entry: string): string {
   const base = path.posix.basename(file).toLowerCase();
   const ext = path.posix.extname(base);
   if (file === entry) return 'Entry page';
-  if (file === TOKENS_FILE) return 'Design tokens (source of truth)';
-  if (file === TOKENS_CSS_FILE) return 'Design tokens as CSS variables (generated)';
-  if (file === 'design-system/pack.json') return 'Design system manifest';
+  const fixed = FIXED_ROLES[file];
+  if (fixed) return fixed;
   if (base === 'design.md') return 'Design rules in prose';
   if (base === 'package.json') return 'Dependencies and scripts';
   if (base.startsWith('vite.config')) return 'Vite config';
@@ -173,6 +180,19 @@ interface MarkdownInput {
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string } | undefined;
   entries: CompiledTokenEntry[];
   filesRoot: string;
+  canvas: CanvasFile | null;
+}
+
+function canvasSection(canvas: CanvasFile | null): string[] {
+  if (!canvas || canvas.frames.length === 0) return ['No saved canvas layout.', ''];
+  return [
+    `\`source/${CANVAS_FILE}\` is the canvas layout: the frames the designer placed, in order.`,
+    '',
+    '| Frame | Label | Page | Size | Position |',
+    '| --- | --- | --- | --- | --- |',
+    ...canvas.frames.map((f) => `| ${f.id} | ${cell(f.label ?? '')} | ${f.path ? `\`${cell(f.path)}\`` : 'entry page'} | ${f.width} × ${f.height} | ${f.x}, ${f.y}${f.hidden ? ' (hidden)' : ''} |`),
+    '',
+  ];
 }
 
 async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise<string> {
@@ -216,6 +236,9 @@ async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise
     ...(shots.length > 0 ? shots.map((s) => `- \`${s.file}\`: ${s.frame.name}${s.frame.path ? ` (/${s.frame.path})` : ''}, ${s.frame.width} px viewport, ${s.width} × ${s.height} px${s.cropped ? ', cut at the bottom' : ''}`) : ['No screenshots.']),
     ...(designHtml ? ['', '`design.html` is the first screen as one self-contained file. Open it in a browser to inspect styles.'] : []),
     '',
+    '## Canvas',
+    '',
+    ...canvasSection(input.canvas),
     '## Open comments',
     '',
     commentList(comments),
@@ -261,6 +284,9 @@ export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Prom
   const sourceEntries: ZipEntry[] = [];
   await walk(root, '', sourceEntries, SKIP_SOURCE);
   if (sourceEntries.reduce((sum, entry) => sum + entry.data.length, 0) > MAX_SOURCE_BYTES) throw new Error('the project is too large for a handoff bundle');
+  const canvasText = await readFile(path.join(root, ...CANVAS_FILE.split('/')), 'utf8').catch(() => null);
+  const canvas = canvasText === null ? null : parseCanvasText(canvasText);
+  if (canvasText !== null && canvas) sourceEntries.push({ name: CANVAS_FILE, data: Buffer.from(canvasText) });
   for (const entry of sourceEntries) await put(`source/${entry.name}`, entry.data);
   const sourceMap = sourceEntries.map((entry) => ({ name: entry.name, bytes: entry.data.length })).sort((a, b) => a.name.localeCompare(b.name));
 
@@ -274,7 +300,7 @@ export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Prom
 
   const { shots, designHtml } = await captureScreens(deps, source, frames, put);
 
-  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, entries: ds?.entries ?? [], filesRoot: root });
+  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, entries: ds?.entries ?? [], filesRoot: root, canvas });
   await put('HANDOFF.md', md);
 
   const prompt = `Read ${path.join(outDir, 'HANDOFF.md')} and build this design in this codebase. The source is in ${path.join(outDir, 'source')}, the target screens are in ${path.join(outDir, 'screens')}, and tokens.css has the design tokens. Match the screens and use the tokens.`;

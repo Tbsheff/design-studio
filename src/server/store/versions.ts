@@ -1,16 +1,17 @@
 import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { cp, lstat, mkdir, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { cp, lstat, mkdir, readFile, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import type { Direction, Project, Version, VersionMeta, WorkTreeStatus } from '../../shared/contracts.js';
 import { baseTitle, isRestoreKind, restoreTitle } from '../../shared/version-title.js';
 import type { ServerConfig, SessionEndResult, SessionSpan, VersionStore } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
 
-export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.studio/', '.DS_Store'];
+export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.studio/*', `!${CANVAS_FILE}`, '.DS_Store'];
 const NEVER_TRACKED = ['node_modules'];
 const MAX_SCOPED_PATHS = 500;
 
@@ -390,9 +391,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     const { stdout } = head
       ? await runGit(scope, ['diff-index', '--cached', '--name-only', '-z', head])
       : await runGit(scope, ['ls-files', '-z']);
-    const changed = splitNul(stdout);
+    const changed = splitNul(stdout).filter((entry) => entry !== CANVAS_FILE);
     return { dirty: changed.length > 0, changed };
   };
+
+  const canvasOf = (direction: Direction): string => path.join(direction.workTree, ...CANVAS_FILE.split('/'));
 
   const checkoutTo = async (project: Project, sha: string, targetDir: string): Promise<void> => {
     await mkdir(targetDir, { recursive: true });
@@ -434,7 +437,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     },
 
     commitFile(project: Project, direction: Direction, relative: string | string[], title: string, meta: VersionMeta): Promise<Version | null> {
-      const paths = Array.isArray(relative) ? relative : [relative];
+      const listed = Array.isArray(relative) ? relative : [relative];
+      const paths = existsSync(canvasOf(direction)) && !listed.includes(CANVAS_FILE) ? [...listed, CANVAS_FILE] : listed;
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tempIndex = path.join(gitDirOf(project), `index-file-${randomBytes(6).toString('hex')}`);
@@ -484,7 +488,12 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tree = head === null ? null : await treeOf(project, head);
+        const canvas = await readFile(canvasOf(direction)).catch(() => null);
         await resetWorkTree(project, direction, tree, tree, 'trash');
+        if (canvas) {
+          await mkdir(path.dirname(canvasOf(direction)), { recursive: true });
+          await writeFile(canvasOf(direction), canvas);
+        }
         return statusOf(project, direction);
       });
     },

@@ -2,7 +2,62 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKe
 import type { RunStatus, SelectionContext } from '../../shared/contracts';
 import { cleanFramePath } from '../canvasFrames';
 import { usePopover } from '../usePopover';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
+
+export interface FrameMenuItem {
+  id: string;
+  label: string;
+  icon: IconName;
+  disabled?: string;
+  run: () => void;
+}
+
+export function FrameMoreMenu({ name, items }: { name: string; items: FrameMenuItem[] }) {
+  const menu = useMenu();
+  useEffect(() => {
+    if (menu.open) menu.root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus();
+  }, [menu.open, menu.root]);
+  if (items.length === 0) return null;
+  return (
+    <div className="frame-menu-root" ref={menu.root}>
+      <button
+        ref={menu.trigger}
+        type="button"
+        className="frame-chip more"
+        aria-haspopup="menu"
+        aria-expanded={menu.open}
+        aria-label={`More actions for ${name}`}
+        onPointerDown={stop}
+        onClick={() => menu.setOpen((v) => !v)}
+        data-tip={menu.open ? undefined : 'More frame actions'}
+      >
+        <Icon name="more" size={14} />
+      </button>
+      {menu.open && (
+        <div className="ui-menu project-menu canvas-menu frame-menu" role="menu" aria-label={`${name} actions`} onKeyDown={(e) => menuKeys(e, menu.close)}>
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="menuitem"
+              className={`ui-menu-item${item.disabled ? ' has-hint' : ''}`}
+              tabIndex={-1}
+              disabled={Boolean(item.disabled)}
+              onClick={() => {
+                menu.close(true);
+                item.run();
+              }}
+            >
+              <Icon name={item.icon} size={14} />
+              <span>{item.label}</span>
+              {item.disabled && <span className="ui-menu-hint">{item.disabled}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export type ResizeEdge = 'right' | 'bottom' | 'corner';
 

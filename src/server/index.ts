@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import { createAgentRunner } from './agent/index.js';
 import { loadConfig } from './config.js';
 import { createApp } from './http/app.js';
+import { createCanvasService } from './canvas/service.js';
 import { loadBridgeScript } from './preview/bridge-bundle.js';
 import { createPreviewService } from './preview/index.js';
 import { createEventBus } from './store/events.js';
@@ -58,13 +59,14 @@ async function main(): Promise<void> {
   const observed = observeBus(desktop ? linkDesktop(baseBus, desktop, { token: config.studioToken, dataDir: config.dataDir }) : baseBus);
   const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
-  const runner = createAgentRunner({ config, bus, projects, versions, preview });
+  const canvas = createCanvasService(bus);
+  const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas });
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
     if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
   });
 
-  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails });
+  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails, canvas });
   const server = serve({ fetch: app.fetch, port: config.studioPort, hostname: '127.0.0.1' }, () => {
     console.log(`Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`);
   });

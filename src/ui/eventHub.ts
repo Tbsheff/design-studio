@@ -25,6 +25,8 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
   'comments.changed': true,
   'edit-history.changed': true,
   'versions.changed': true,
+  'canvas.changed': true,
+  'canvas.point': true,
 };
 
 export const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody['type'][];

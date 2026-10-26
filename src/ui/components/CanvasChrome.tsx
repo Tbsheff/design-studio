@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ComponentProps, type Rea
 import { createPortal } from 'react-dom';
 import type { ProjectKind, SelectionContext } from '../../shared/contracts';
 import { api } from '../api';
-import { canAddFrame, FRAME_PRESETS, frameName, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
+import { canAddFrame, FRAME_PRESETS, frameName, setFrameHidden, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
 import { uiStore, type UiState } from '../storage';
 import type { PanelTab } from '../usePanelTab';
 import { CanvasViewRow } from './CanvasToolbar';
@@ -131,7 +131,11 @@ function useFileMenu(p: ChromeProps) {
       label: 'Frames',
       items: p.layout.frames.map((f, i) => {
         const info = p.label(f);
-        return { id: `frame-${f.id}`, label: `${info.number ?? i + 1}  ${info.badge?.title ?? info.title ?? frameName(f)}`, meta: frameName(f), checked: f.id === p.active.id, run: () => p.frames.activate(f) };
+        const show = () => {
+          if (f.hidden) p.frames.update((l) => setFrameHidden(l, f.id, false));
+          p.frames.activate(f);
+        };
+        return { id: `frame-${f.id}`, label: `${info.number ?? i + 1}  ${info.badge?.title ?? info.title ?? frameName(f)}`, meta: f.hidden ? 'Hidden' : frameName(f), checked: f.id === p.active.id, run: show };
       }),
     },
     { label: 'Add frame', items: FRAME_PRESETS.map((f) => ({ id: `add-${f.preset}`, label: f.label, icon: f.preset, disabled: !canAddFrame(p.layout), run: () => p.addFrame({ width: f.width, height: f.height }) })) },

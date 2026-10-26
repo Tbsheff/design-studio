@@ -204,6 +204,20 @@
   opacity: 1;
 }
 
+.frame-chip.more {
+  width: 24px;
+  padding: 0;
+  justify-content: center;
+  opacity: 0;
+}
+
+.frame-label:hover .frame-chip.more,
+.frame-label.active .frame-chip.more,
+.frame-chip.more:focus-visible,
+.frame-chip.more[aria-expanded='true'] {
+  opacity: 1;
+}
+
 .frame-label:has([aria-expanded='true']) {
   z-index: 20;
 }

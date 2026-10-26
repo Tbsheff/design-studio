@@ -70,6 +70,9 @@ import { createThumbnailService, type ThumbnailService } from '../thumbnails.js'
 import { registerHomeRoutes } from './home-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
+import { CANVAS_FILE } from '../../shared/canvas-file.js';
+import { createCanvasService, type CanvasService } from '../canvas/service.js';
+import { registerCanvasRoutes } from './canvas-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -88,6 +91,7 @@ interface AppDeps {
   folderPicker?: FolderPicker;
   thumbnails?: ThumbnailService;
   editHistory?: EditHistory;
+  canvas?: CanvasService;
 }
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
@@ -276,6 +280,14 @@ export function createApp(deps: AppDeps): Hono {
   const directionLock = createKeyedMutex();
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
   const editDeps = { bus, projects, versions, runner, history: editHistory };
+  const canvas = deps.canvas ?? createCanvasService(bus);
+  const announceCanvas = (project: Project): void => {
+    void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));
+  };
+  const announceCanvasAt = async (workTree: string): Promise<void> => {
+    const owner = (await projects.list()).find((project) => canvas.ownerOf(project).workTree === workTree);
+    if (owner) announceCanvas(owner);
+  };
   const app = new Hono();
   const versionNames = createVersionNames((pid) => projects.projectDir(pid));
   const thumbnails = deps.thumbnails ?? createThumbnailService({ projects, preview, versions });
@@ -303,6 +315,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const recordVersion = async (project: Project, direction: Direction, version: Version, resetSession?: SessionResetReason): Promise<Direction> => {
     bus.emit({ type: 'version.created', projectId: project.id, directionId: direction.id, version });
+    if (resetSession && direction.id === canvas.ownerOf(project).id && version.changedFiles.includes(CANVAS_FILE)) announceCanvas(project);
     const patch: Partial<Direction> = resetSession ? { headVersionId: version.id, ...freshSessionPatch(resetSession) } : { headVersionId: version.id };
     const updated = await projects.updateDirection(project.id, direction.id, patch);
     bus.emit({ type: 'direction.updated', projectId: project.id, directionId: direction.id, direction: updated });
@@ -1000,7 +1013,11 @@ export function createApp(deps: AppDeps): Hono {
 
   registerVersionRoutes(app, { projects, versions, thumbnails, names: versionNames, readBody });
 
-  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree) => invalidateTokenSource(workTree) });
+  registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree, relatives) => {
+    invalidateTokenSource(workTree);
+    if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
+  } });
+  registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
 

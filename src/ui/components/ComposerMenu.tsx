@@ -42,7 +42,7 @@ const ITEM = '[role^="menuitem"]:not([aria-disabled="true"])';
 function menuKeys(event: KeyboardEvent<HTMLDivElement>, close: (refocus: boolean) => void) {
   const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(ITEM));
   const at = items.indexOf(document.activeElement as HTMLElement);
-  const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+  const step = event.key === 'ArrowDown' || event.key === 'ArrowRight' ? 1 : event.key === 'ArrowUp' || event.key === 'ArrowLeft' ? -1 : 0;
   if (step !== 0) {
     event.preventDefault();
     items[(at + step + items.length) % items.length]?.focus();
@@ -166,17 +166,29 @@ export function PlusMenu(props: PlusMenuProps) {
               ))}
             </Section>
             {designs && (
-              <Section label="Designs">
-                {DESIGN_COUNTS.filter((count) => count <= designs.max).map((count) => (
-                  <MenuItem
-                    key={count}
-                    label={count === 1 ? '1 design' : `${count} designs side by side`}
-                    hint={designsHint(designs)}
-                    checked={designs.value === count}
-                    disabledReason={count > 1 ? designs.disabledReason : null}
-                    onPick={() => designs.onChange(count)}
-                  />
-                ))}
+              <Section label="Designs side by side">
+                <div className="composer-menu-counts" title={designsHint(designs)}>
+                  {DESIGN_COUNTS.filter((count) => count <= designs.max).map((count) => {
+                    const off = count > 1 && designs.disabledReason !== null;
+                    return (
+                      <button
+                        key={count}
+                        type="button"
+                        role="menuitemradio"
+                        className="composer-menu-count"
+                        aria-label={count === 1 ? '1 design' : `${count} designs`}
+                        aria-checked={designs.value === count}
+                        aria-disabled={off || undefined}
+                        tabIndex={-1}
+                        onClick={() => {
+                          if (!off) designs.onChange(count);
+                        }}
+                      >
+                        {count}
+                      </button>
+                    );
+                  })}
+                </div>
               </Section>
             )}
           </div>,

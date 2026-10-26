@@ -685,6 +685,44 @@
   animation: pop-in var(--dur) var(--ease);
 }
 
+.composer-menu-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  padding: 2px var(--s-1) var(--s-1);
+}
+
+.composer-menu-count {
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.composer-menu-count:hover:not([aria-disabled='true']),
+.composer-menu-count:focus-visible {
+  background: var(--surface-hover);
+  color: var(--text);
+  outline: none;
+}
+
+.composer-menu-count[aria-checked='true'] {
+  background: var(--surface-active);
+  color: var(--text);
+  font-weight: var(--w-medium);
+}
+
+.composer-menu-count[aria-disabled='true'] {
+  color: var(--text-faint);
+  cursor: default;
+}
+
 .model-pill {
   display: inline-flex;
   align-items: center;

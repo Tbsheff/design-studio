@@ -69,6 +69,25 @@ async function main(): Promise<void> {
     await page.locator('.pane-project').click();
     await shot(page, `project-menu-${theme}`);
     await page.keyboard.press('Escape');
+    if (theme === 'dark') {
+      await page.keyboard.press('c');
+      await page.locator('.topbar-tools button', { hasText: 'Edit' }).click();
+      await page.waitForTimeout(300);
+      console.log('comment->edit mode:', await page.locator('.pane-left').getAttribute('data-mode'));
+      await page.keyboard.press('Escape');
+      await page.frameLocator('iframe.frame.front').locator('h1').first().click();
+      await page.waitForTimeout(400);
+      console.log('edit after Esc selection boxes:', await page.locator('.artboard [class*="sel"]').count());
+      await shot(page, `edit-after-esc-${theme}`);
+      await page.locator('[aria-label="Reload preview"]').click();
+      await page.waitForTimeout(800);
+      await page.locator('.topbar-present').click();
+      await page.getByRole('menuitem', { name: 'In this window' }).click();
+      await shot(page, `present-${theme}`);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+      console.log('present closed:', (await page.locator('.present-layer').count()) === 0);
+    }
     await context.close();
   }
   await browser.close();

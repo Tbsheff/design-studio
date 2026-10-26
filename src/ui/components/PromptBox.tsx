@@ -1,4 +1,4 @@
-import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
+import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions, type MentionRequest } from '../useMentions';
@@ -11,7 +11,7 @@ import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
 import { LevelPill, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { MOD_LABEL } from './CommentPopover';
 import { MODE_LABEL, type ComposerMode } from './RunSettings';
 import { SkillChips, SkillPicker, SkillsIndicator } from './SkillPicker';
@@ -57,7 +57,7 @@ interface VariationsPromptProps {
 function StopButton({ running, onStop }: { running: boolean; onStop: () => void }) {
   if (!running) return null;
   return (
-    <button type="button" className="icon-btn small bordered stop-btn" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
+    <button type="button" className="icon-btn small bordered stop-btn" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-align="end">
       <Icon name="stop" size={14} />
     </button>
   );
@@ -73,7 +73,6 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
         onClick={props.onQueue}
         aria-label="Queue"
         data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`}
-        data-tip-side="top"
         data-tip-align="end"
       >
         Queue
@@ -85,7 +84,6 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
       disabled={!props.canSend}
       aria-label={props.sending ? 'Sending…' : 'Send'}
       data-tip={`${MOD_LABEL}Enter`}
-      data-tip-side="top"
       data-tip-align="end"
       render={<button className="btn send send-btn" />}
     >
@@ -94,16 +92,21 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
   );
 }
 
-function StateChip({ label, tip, onClear }: { label: string; tip: string; onClear: () => void }) {
+function StateChip({ label, short, tip, onClear }: { label: string; short: ReactNode; tip: string; onClear: () => void }) {
   return (
     <span className="ui-chip composer-state" data-tip={tip} data-tip-side="top" data-tip-align="start">
-      {label}
+      <span className="composer-state-short" aria-hidden="true">
+        {short}
+      </span>
+      <span className="composer-state-label">{label}</span>
       <button type="button" className="icon-btn chip-x" aria-label={`Clear ${label}`} onClick={onClear}>
         <Icon name="close" size={12} />
       </button>
     </span>
   );
 }
+
+const MODE_ICON: Record<ComposerMode, IconName> = { edit: 'pencil', plan: 'doc', critique: 'eye' };
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
   edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create...' },
@@ -338,8 +341,8 @@ export function PromptBox(props: Props) {
             onLevel={runLevel.choose}
             designs={designs}
           />
-          {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} tip={`${MODE_LABEL[mode]} mode. Shift+Tab cycles modes.`} onClear={() => setMode('edit')} />}
-          {designs && designs.value > 1 && designs.disabledReason === null && <StateChip label={`${designs.value} designs`} tip={`Send makes ${designs.value} designs side by side.`} onClear={() => designs.onChange(1)} />}
+          {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} short={<Icon name={MODE_ICON[mode]} size={14} />} tip={`${MODE_LABEL[mode]} mode. Shift+Tab cycles modes.`} onClear={() => setMode('edit')} />}
+          {designs && designs.value > 1 && designs.disabledReason === null && <StateChip label={`${designs.value} designs`} short={`${designs.value}×`} tip={`Send makes ${designs.value} designs side by side.`} onClear={() => designs.onChange(1)} />}
           <input
             ref={inputRef}
             type="file"
@@ -352,7 +355,6 @@ export function PromptBox(props: Props) {
             }}
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
-            <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
             <LevelPill level={runLevel.level} onLevel={runLevel.choose} onOpen={() => setPicking(false)} />
             <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={() => setPicking(false)} />
             <StopButton running={props.running} onStop={props.onCancel} />
@@ -363,6 +365,7 @@ export function PromptBox(props: Props) {
       <Disclosure
         className="prompt-foot"
         lead={<SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />}
+        trail={<ContextMeter tokens={props.contextTokens ?? null} model={props.model} />}
       />
     </div>
   );

@@ -211,7 +211,7 @@
   -webkit-box-orient: vertical;
   color: var(--text-2);
   font-size: var(--t-xs);
-  line-height: 1.4;
+  line-height: var(--lh-xs);
   overflow: hidden;
 }
 
@@ -412,7 +412,7 @@
 .ds-actions {
   display: flex;
   gap: var(--s-1);
-  padding: var(--s-2) var(--s-2) 0;
+  padding: var(--s-2) var(--s-4) 0;
 }
 
 .ds-switch-body {

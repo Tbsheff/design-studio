@@ -9,6 +9,11 @@
   display: flex;
 }
 
+.lib .home-header {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
 .lib-main {
   display: grid;
   gap: var(--s-6);
@@ -56,8 +61,10 @@
   display: flex;
   align-items: baseline;
   gap: var(--s-2);
-  font-size: var(--t-md);
+  color: var(--text-2);
+  font-size: var(--t-xs);
   font-weight: var(--w-medium);
+  line-height: var(--lh-xs);
 }
 
 .lib-count {
@@ -116,8 +123,8 @@
   display: flex;
   align-items: center;
   height: 88px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-md);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-xs);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--edge-soft);
   overflow: hidden;
@@ -131,7 +138,7 @@
 
 .lib-chip {
   position: absolute;
-  right: var(--s-4);
+  right: var(--s-3);
   bottom: var(--s-3);
   width: 28px;
   height: 12px;
@@ -142,7 +149,7 @@
   display: grid;
   gap: 6px;
   min-width: 0;
-  padding: 0 var(--s-1) var(--s-1);
+  padding: 0 var(--s-3) var(--s-1);
 }
 
 .lib-name {
@@ -237,6 +244,11 @@
   gap: var(--s-2);
 }
 
+.lib-actions .btn {
+  height: 30px;
+  border-radius: var(--r-md);
+}
+
 .lib-detail-body {
   align-content: start;
   padding-top: var(--s-5);
@@ -277,16 +289,20 @@
 
 .lib-check ul {
   display: grid;
-  gap: var(--s-1);
+  gap: var(--s-2);
   margin: 0;
   padding: 0;
   list-style: none;
   color: var(--text);
 }
 
+.lib-check ul.lib-check-messages {
+  gap: 2px;
+  margin-top: var(--s-1);
+  color: var(--text-2);
+}
+
 .lib-doc {
-  max-height: 480px;
-  overflow: auto;
   padding: var(--s-4) var(--s-5);
   border-radius: var(--r-md);
   background: var(--surface-2);
@@ -331,7 +347,7 @@
 .pv-label {
   color: var(--fg-muted);
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }

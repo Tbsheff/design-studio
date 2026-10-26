@@ -198,7 +198,6 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
         <button type="button" className="btn ghost small" onClick={back}>
           Back
         </button>
-        <span className="brand">Design systems</span>
       </header>
       <main className="lib-main">
         <div className="lib-head">
@@ -247,9 +246,8 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
               empty={
                 <div className="lib-empty">
                   <span>Make one from a website, a DESIGN.md or a tokens file.</span>
-                  <button type="button" className="btn small has-icon" onClick={() => uiStore.set({ screen: 'new-design-system', returnTo: 'design-systems' })}>
-                    <Icon name="plus" size={14} />
-                    New design system
+                  <button type="button" className="btn small" onClick={() => uiStore.set({ screen: 'new-design-system', returnTo: 'design-systems' })}>
+                    Make your first
                   </button>
                 </div>
               }

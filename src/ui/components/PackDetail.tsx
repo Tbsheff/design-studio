@@ -52,15 +52,22 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
     );
   }
   const { problems } = check.value;
+  const byRule = new Map<string, string[]>();
+  for (const problem of problems) byRule.set(problem.rule, [...(byRule.get(problem.rule) ?? []), problem.message]);
   return (
     <div className="lib-check fail" role="status">
       <strong>
         {problems.length} {problems.length === 1 ? 'problem' : 'problems'}
       </strong>
       <ul>
-        {problems.map((problem, index) => (
-          <li key={index}>
-            <span className="badge">{problem.rule}</span> {problem.message}
+        {[...byRule].map(([rule, messages]) => (
+          <li key={rule}>
+            <span className="badge">{rule}</span>
+            <ul className="lib-check-messages">
+              {messages.map((message, index) => (
+                <li key={index}>{message}</li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>

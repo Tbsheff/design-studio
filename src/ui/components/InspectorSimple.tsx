@@ -117,7 +117,7 @@ function AppearanceSection({ edit, extras, onReveal }: { edit: DirectEdit; extra
         <div className="wide">
           <ColorField prop="background-color" label="Background color" short="Background" edit={edit} />
         </div>
-        <RadiusField edit={edit} />
+        <RadiusField edit={edit} short="Radius" />
         <SelectField prop="overflow" label="Overflow" short="Overflow" edit={edit} options={OVERFLOWS} />
         <NumberField short="Opacity" spec={{ prop: 'opacity', label: 'Opacity', edit, unit: '', step: 0.05, min: 0, max: 1 }} />
       </div>

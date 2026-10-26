@@ -113,12 +113,13 @@ export function useEditSession(o: Options) {
 
   const requestExit = useCallback((): Promise<boolean> => {
     if (viewRef.current.count === 0) return Promise.resolve(true);
+    if (!viewRef.current.dirty) return end('save');
     exitResolve.current?.(false);
     setAsking(true);
     return new Promise<boolean>((resolve) => {
       exitResolve.current = resolve;
     });
-  }, []);
+  }, [end]);
 
   const answer = useCallback(
     async (choice: SessionAction | 'cancel') => {

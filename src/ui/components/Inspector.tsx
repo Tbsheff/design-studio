@@ -79,7 +79,7 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
   return (
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
-      {session.count > 0 && (
+      {session.dirty && session.count > 0 && (
         <span className="edit-count" role="status" title={unsavedLabel(session.count)}>
           {session.count}
           <span className="sr-only"> unsaved edits</span>
@@ -186,7 +186,7 @@ function ProTab(props: InspectorProps) {
 function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | undefined, session: EditSession) {
   useEffect(() => {
     if (!ref) return;
-    ref.current = { dirty: session.count > 0, count: session.count, requestExit: session.requestExit, save: session.save, discard: session.discard };
+    ref.current = { dirty: session.dirty, count: session.count, requestExit: session.requestExit, save: session.save, discard: session.discard };
   });
   useEffect(
     () => () => {
@@ -207,7 +207,7 @@ export function Inspector(props: InspectorProps) {
     port: props.port,
     onEnded: (action, result) => {
       if (props.onSessionEnd) props.onSessionEnd(action, result);
-      else if (action === 'discard' && props.selection.length > 0) props.onStale('Edits discarded. Select an element to keep editing.');
+      else if (action === 'discard' && props.selection.length > 0) props.onStale('');
     },
   });
   useSessionHandle(props.session, session);

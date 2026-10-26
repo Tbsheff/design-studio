@@ -25,10 +25,17 @@ function parseLoose(raw: string): Oklch | null {
   const candidate = hsl ? `hsl(${text})` : rgb ? `rgb(${rgb[1]} ${rgb[2]} ${rgb[3]})` : bare && text.includes('%') ? `oklch(${text})` : text;
   if (!/^(#|[a-z]+\()/i.test(candidate) && !/^[a-z]+$/i.test(candidate)) return null;
   if (/^(transparent|currentcolor|inherit|initial|unset|none)$/i.test(candidate)) return null;
-  const parsed = parse(candidate);
+  const parsed = parseOrNull(candidate);
   if (!parsed) return null;
-  const color = toOklch(parsed);
-  return color ?? null;
+  return toOklch(parsed) ?? null;
+}
+
+function parseOrNull(candidate: string): ReturnType<typeof parse> | null {
+  try {
+    return parse(candidate) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function toOklchColor(raw: string): Oklch | null {

@@ -299,6 +299,7 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
             </div>
           )}
           <div className="nds-foot">
+            {!busy && !hasSource(form) && <p className="nds-foot-hint">Add a website, DESIGN.md, brief, tokens file, folder or image to continue.</p>}
             <button type="button" className="btn ghost" onClick={onCancel} disabled={busy}>
               Cancel
             </button>

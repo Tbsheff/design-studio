@@ -218,6 +218,7 @@
 .nds-foot {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: var(--s-2);
 }
 
@@ -394,4 +395,11 @@
 .draft-main > strong {
   flex: none;
   max-width: 16em;
+}
+
+.nds-foot-hint {
+  margin: 0 auto 0 0;
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
 }

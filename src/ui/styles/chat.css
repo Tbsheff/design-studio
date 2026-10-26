@@ -432,14 +432,14 @@
   position: absolute;
   z-index: 11;
   top: var(--s-2);
-  left: var(--s-3);
-  right: var(--s-3);
+  left: var(--pane-inset);
+  right: var(--pane-inset);
   display: flex;
   align-items: center;
   gap: var(--s-1);
   height: 36px;
   padding: 0 var(--s-1) 0 var(--s-3);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   background: var(--surface);
   box-shadow: var(--shadow-md), 0 0 0 1px var(--line);
   transition-property: opacity, translate;
@@ -453,7 +453,7 @@
 
 .chat-search.closed {
   left: auto;
-  right: var(--s-3);
+  right: var(--pane-inset);
   width: auto;
   height: auto;
   padding: 0;
@@ -500,6 +500,10 @@
   flex: none;
   color: var(--text-3);
   font-size: var(--t-xs);
+}
+
+.chat-wrap:has(> .chat-search.closed) .chat {
+  padding-top: calc(28px + var(--s-4));
 }
 
 .chat-conversation[data-searching] .chat {

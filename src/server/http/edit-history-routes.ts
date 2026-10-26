@@ -6,7 +6,7 @@ import { htmlElementSpan } from '../direct-edit/html.js';
 import { DirectEditError, assertCanEdit, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
 import { jsxElementSpan } from '../direct-edit/jsx.js';
 import type { EditHistory, HistoryStep } from '../direct-edit/history.js';
-import { BadRequestError, assertSafeId } from '../store/errors.js';
+import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 
 interface EditHistoryRouteDeps {
@@ -15,6 +15,7 @@ interface EditHistoryRouteDeps {
   projects: Pick<StudioProjectStore, 'get' | 'mainDirection'>;
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   readBody: (c: Context) => Promise<unknown>;
+  loadDirection: (pid: string, did: string) => Promise<{ project: Project; direction: Direction }>;
   onRestored?: (workTree: string, relatives: string[]) => void;
 }
 
@@ -76,12 +77,13 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
 
   app.get('/api/projects/:pid/d/:did/edit-session', async (c) => {
     const raw = c.req.query('base');
-    const state = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction): Promise<EditSessionState> => {
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    const state = await (async (): Promise<EditSessionState> => {
       const base = raw === undefined ? direction.headVersionId : baseOf(raw);
       if (base === null) return { baseVersionId: '', count: 0, dirty: false, blocked: 'This direction has no saved version yet.' };
       const span = editDeps.versions.sessionSince ? await editDeps.versions.sessionSince(project, direction, base) : null;
       return { baseVersionId: base, count: span?.count ?? 0, dirty: span?.dirty ?? false, blocked: span?.foreign ?? null };
-    });
+    })();
     return c.json(state);
   });
 
@@ -94,6 +96,10 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
         if (!store.sessionSince || !store.endSession) throw new BadRequestError('Edit sessions are not supported');
         assertCanEdit(editDeps, project, direction);
         const span = await store.sessionSince(project, direction, base);
+        if (span.foreign !== null) {
+          if (action === 'discard') throw new ConflictError(span.foreign);
+          return { version: null, headVersionId: direction.headVersionId ?? base };
+        }
         const ended = await store.endSession(project, direction, base, action, sessionTitle(span.titles), sessionMeta(span.titles));
         if (ended.version) {
           await publishVersion(editDeps, project, direction, ended.version);
@@ -122,7 +128,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     const line = Number(c.req.query('line'));
     const col = Number(c.req.query('col'));
     if (!Number.isInteger(line) || line < 1 || !Number.isInteger(col) || col < 1) throw new BadRequestError('line and col must be positive whole numbers');
-    const read = withDirection(c.req.param('pid'), c.req.param('did'), async (_project, direction): Promise<ElementSource> => {
+    const read = deps.loadDirection(c.req.param('pid'), c.req.param('did')).then(async ({ direction }): Promise<ElementSource> => {
       const target = await resolveSource(direction.workTree, file);
       const code = await readFile(target.file, 'utf8');
       const extension = path.extname(target.relative).toLowerCase();

@@ -509,11 +509,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       });
     },
 
-    sessionSince(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan> {
-      return lock(lockKey(project, direction), async () => {
-        const { count, dirty, foreign, titles } = await spanOf(project, direction, baseVersionId);
-        return { count, dirty, foreign, titles };
-      });
+    async sessionSince(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan> {
+      const { count, dirty, foreign, titles } = await spanOf(project, direction, baseVersionId);
+      return { count, dirty, foreign, titles };
     },
 
     endSession(project: Project, direction: Direction, baseVersionId: string, action: 'save' | 'discard', title: string, meta: VersionMeta): Promise<SessionEndResult> {

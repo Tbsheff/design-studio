@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { RunEffort, RunLevel, RunMode } from '../../shared/contracts';
+import { placeFixed } from '../popoverPlacement';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
 import { LevelControl, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
@@ -66,8 +67,6 @@ export const MODE_HINT: Record<ComposerMode, string> = {
   plan: 'Send makes a plan first. Files change only after you approve it.',
   critique: 'Send asks for a review. The design does not change.',
 };
-const GAP = 4;
-const MARGIN = 8;
 export const UNPLACED: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
 
 export function runSettingsSummary(input: { mode?: ComposerMode; level: RunLevel; designs?: number; designsOn?: boolean; effort?: RunEffort | null }): string {
@@ -83,12 +82,7 @@ export function designsHint(designs: DesignsSetting): string {
 }
 
 export function placeAboveOrBelow(trigger: HTMLElement, panel: HTMLElement): CSSProperties {
-  const rect = trigger.getBoundingClientRect();
-  const left = Math.min(Math.max(MARGIN, rect.left), window.innerWidth - panel.offsetWidth - MARGIN);
-  const roomAbove = rect.top - GAP - MARGIN;
-  const roomBelow = window.innerHeight - rect.bottom - GAP - MARGIN;
-  const fitsAbove = roomAbove >= panel.offsetHeight || roomAbove >= roomBelow;
-  return fitsAbove ? { left, bottom: window.innerHeight - rect.top + GAP } : { left, top: rect.bottom + GAP };
+  return placeFixed(trigger, panel, { prefer: 'above' });
 }
 
 function ModeToggle({ mode, hintId }: { mode: ModeSetting; hintId: string }) {

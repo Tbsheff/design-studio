@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CompiledTokenEntry, DesignSystemState, Project } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { findPack, keySwatches, usePacks } from '../packs';
+import { useFitPopover } from '../popoverPlacement';
 import { usePopover } from '../usePopover';
 import { ChangePackDialog, SavePackDialog } from './DesignSystemDialogs';
 import { Icon } from './Icon';
@@ -127,6 +128,7 @@ export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: 
   const [dialog, setDialog] = useState<Dialog>(null);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const popover = useRef<HTMLDivElement>(null);
   const { packs } = usePacks();
   const load = useDesignSystem(system, open);
   const pack = findPack(packs, system.packId);
@@ -136,6 +138,7 @@ export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: 
     if (refocus) trigger.current?.focus();
   }, []);
   usePopover(open, root, close);
+  useFitPopover(popover, trigger, open);
   const openDialog = (next: Dialog) => {
     close(false);
     setDialog(next);
@@ -169,7 +172,7 @@ export function DesignSystemChip({ system, actions, onOpenDesignMd }: { system: 
         <span className="ds-chip-name truncate">{name}</span>
       </button>
       {open && (
-        <div className="ds-popover" role="dialog" aria-label="Design system">
+        <div ref={popover} className="ds-popover" role="dialog" aria-label="Design system">
           <div className="ds-head">
             <div className="ds-titles">
               <strong>{name}</strong>

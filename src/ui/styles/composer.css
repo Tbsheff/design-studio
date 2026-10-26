@@ -55,7 +55,7 @@
   padding: var(--s-3);
   border-radius: var(--r-lg);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-pop);
   animation: pop-in var(--dur) var(--ease);
 }
 

@@ -65,7 +65,7 @@
   padding: var(--s-2);
   border-radius: var(--r-xl);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-pop);
   overflow: auto;
   overscroll-behavior: contain;
   animation: pop-in var(--dur) var(--ease);
@@ -262,7 +262,7 @@
   max-height: min(560px, calc(100vh - 72px));
   border-radius: var(--r-lg);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-pop);
   overflow: hidden;
   animation: pop-in var(--dur) var(--ease);
 }

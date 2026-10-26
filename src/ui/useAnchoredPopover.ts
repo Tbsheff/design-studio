@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { placeFixed } from './popoverPlacement';
 
-const GAP = 4;
 const HIDDEN: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
-const MARGIN = 8;
-
-function place(trigger: HTMLElement, panel: HTMLElement): CSSProperties {
-  const rect = trigger.getBoundingClientRect();
-  const width = panel.offsetWidth;
-  const height = panel.offsetHeight;
-  const below = window.innerHeight - rect.bottom - MARGIN;
-  const top = below >= height || below >= rect.top ? rect.bottom + GAP : rect.top - GAP - height;
-  const left = Math.min(Math.max(MARGIN, rect.right - width), window.innerWidth - width - MARGIN);
-  return { top: Math.max(MARGIN, top), left };
-}
 
 export function useAnchoredPopover<T extends string>() {
   const [view, setView] = useState<T | null>(null);
@@ -36,7 +25,7 @@ export function useAnchoredPopover<T extends string>() {
 
   useLayoutEffect(() => {
     if (!view || !trigger.current || !panel.current) return;
-    setStyle(place(trigger.current, panel.current));
+    setStyle(placeFixed(trigger.current, panel.current, { align: 'end' }));
   }, [view]);
 
   useEffect(() => {

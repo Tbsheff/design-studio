@@ -2,6 +2,7 @@ import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNo
 import { RUN_LEVELS, type PackSummary, type RunLevel } from '../../shared/contracts';
 import { fontStack, loadPackFonts, type PacksState } from '../packs';
 import { MODEL_OPTIONS } from '../settingsDraft';
+import { useFitPopover } from '../popoverPlacement';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
 import { levelLabel, levelShortHint } from './LevelControl';
@@ -23,6 +24,7 @@ function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
 function Pop({ trigger, onClose, className, label, role = 'dialog', children, onKeyDown }: { trigger: RefObject<HTMLElement | null>; onClose: Close; className: string; label: string; role?: 'dialog' | 'menu'; children: ReactNode; onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void }) {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, onClose, trigger);
+  useFitPopover(root, trigger, true);
   useEffect(() => {
     const first = root.current?.querySelector<HTMLElement>('[aria-checked="true"], [aria-pressed="true"]') ?? root.current?.querySelector<HTMLElement>(FOCUS_ITEMS);
     first?.focus();

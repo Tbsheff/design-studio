@@ -97,7 +97,7 @@ export function LeftPane(props: Props) {
   const sheet = !chat && !edit;
   const comments = props.comments;
   return (
-    <aside className="pane-left" data-mode={tab} hidden={props.collapsed}>
+    <aside className="pane-left" data-mode={tab} data-popover-boundary="" hidden={props.collapsed}>
       {props.header}
       <div className="pane-body">
         <div className="pane-chat" hidden={!chat}>

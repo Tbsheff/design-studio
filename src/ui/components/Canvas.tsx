@@ -3,7 +3,8 @@ import type { CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderC
 import { api, errorText } from '../api';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, canHideFrame, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { boundsOf, canHideFrame, canvasStore, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, useCanvasLofi, withFramePath, type CanvasFrame } from '../canvasFrames';
+import { useLofiFrames } from '../lofiFrames';
 import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
 import { FrameMoreMenu, FramePageMenu, FrameResizeHandles, VariationControls, type FrameMenuItem, type FrameVariation } from './FrameControls';
@@ -461,8 +462,14 @@ export function Canvas(props: Props) {
 
   useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
   useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
+  const lofiList = useCanvasLofi(projectId);
+  useLofiFrames(stageRef, kind, directionId, lofiList);
+  const liveDirection = frameDirection(active, directionId);
+  const lofiSwitch = liveDirection
+    ? { on: lofiList.includes(liveDirection), onToggle: () => canvasStore.setLofi(projectId, liveDirection, !lofiList.includes(liveDirection), layout) }
+    : undefined;
   const darkSwitch = themeSwitch(props.darkPreview, theme);
-  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, check });
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
@@ -501,7 +508,7 @@ export function Canvas(props: Props) {
         sandbox={sandbox}
         selection={props.selection}
         stage={() => stageRef.current}
-        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch }}
+        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch }}
       />
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}

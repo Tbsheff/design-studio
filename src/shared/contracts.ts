@@ -788,6 +788,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'preview-reset' }
   | { ns: 'studio'; token: string; type: 'tokens-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
+  | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] }

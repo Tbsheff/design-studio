@@ -598,6 +598,20 @@ frame "…" menu › Make states │ palette "Make UI states of this page" │ /
 - The prompt text in chat stays short; the task text is in the user message only, so the system prompt and its cache do not change.
 - Mock: `[states]` in the prompt or `RunRequest.states` writes `states/<prefix>{empty,loading,error,success}.html` (a copy of the page with `<base href="../">` and a dashed state banner; React projects write them under `public/states/`), places the four frames in a row below the source frame with the real `canvas_place`, then points at `@Empty`.
 
+## Lo-fi look (pm-ideas)
+
+```
+run start (edit mode, no task, no plan) → canvas.update: level wireframe adds the direction id to CanvasFile.lofi, prototype/polish removes it
+"…" view row › Lo-fi look (aria-pressed)  → canvasStore.setLofi → PUT canvas (same file, same CAS)
+useLofiFrames(stage, kind, current, lofi) → for each iframe.frame in the stage: direction = closest [data-direction-id] or current
+  → on:  post {type: 'lofi-preview', css: lofiCss(fontDataUrl)}   off: post {css: ''}   (again on each bridge 'ready')
+bridge PREVIEW_LAYERS 'lofi' → <style id="studio-lofi-preview"> last in <head>
+```
+
+- The style is grayscale (`html { filter: grayscale(1) }`) plus the bundled Kalam font (OFL, `src/ui/assets/fonts/kalam-latin-400-normal.woff2`) as `Studio Lofi Hand` on every element. The font loads once on first use and goes into the CSS as a base64 data URL, so the preview origin needs no font route.
+- The flag is per direction and lives in `.studio/canvas.json`, so it reloads, goes into versions, and follows restore. A run at Prototype or Polish level turns it off, because those levels mean real visual design.
+- The layer only changes the preview. User files, export, handoff and screenshots taken by the agent stay as they are.
+
 ## Versions, chat rewind and comments (Round 7)
 
 - Version thumbnails: `GET /api/projects/:pid/versions/:vid/thumb` shoots the version snapshot on the first request (one shared shot queue, one at a time) and then serves `thumbs/v-<vid>.png`. The Versions panel fetches only rows in view while the panel is open, at most 2 at a time.

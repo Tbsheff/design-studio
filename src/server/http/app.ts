@@ -72,6 +72,7 @@ import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import { parseStatesRequest } from '../../shared/states.js';
+import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 
@@ -358,6 +359,12 @@ export function createApp(deps: AppDeps): Hono {
     return pack ? applyPackOnCreate(started, pack, designMd) : started;
   };
 
+  const markLofi = async (project: Project, direction: Direction, request: RunRequest): Promise<void> => {
+    if (request.mode !== 'edit' || request.task || request.plan) return;
+    const on = request.level === 'wireframe';
+    await canvas.update(project, (file) => withLofi(file, direction.id, on), { source: 'run' }).catch((error: unknown) => console.error('[http] lo-fi mark failed', error));
+  };
+
   const startRun = async (project: Project, direction: Direction, input: RunRequest): Promise<string> => {
     const request: RunRequest = { ...input, level: levelOf(input, project.settings) };
     const attachments: Attachment[] = await Promise.all(
@@ -373,6 +380,7 @@ export function createApp(deps: AppDeps): Hono {
       return null;
     });
     const mentionFiles = await readMentionFiles(direction.workTree, request.mentions);
+    await markLofi(project, direction, request);
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);

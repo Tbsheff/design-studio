@@ -2,6 +2,7 @@ import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, Selecti
 import { forwardHistoryKeys } from './history-key.js';
 import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
 import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
+import { LOFI_STYLE_ID } from '../shared/lofi.js';
 import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { elementBySource } from './reorder.js';
@@ -434,11 +435,12 @@ function createLivePreview(): LivePreview {
 
 const MAX_TOKEN_PREVIEW_CSS = 200_000;
 
-type PreviewLayer = 'tokens' | 'tweaks';
+type PreviewLayer = 'tokens' | 'tweaks' | 'lofi';
 
 const PREVIEW_LAYERS: { layer: PreviewLayer; id: string }[] = [
   { layer: 'tokens', id: TOKEN_PREVIEW_STYLE_ID },
   { layer: 'tweaks', id: TWEAKS_PREVIEW_STYLE_ID },
+  { layer: 'lofi', id: LOFI_STYLE_ID },
 ];
 
 interface PreviewStyles {
@@ -446,7 +448,7 @@ interface PreviewStyles {
 }
 
 function createPreviewStyles(): PreviewStyles {
-  const active: Record<PreviewLayer, string> = { tokens: '', tweaks: '' };
+  const active: Record<PreviewLayer, string> = { tokens: '', tweaks: '', lofi: '' };
   let observer: MutationObserver | null = null;
 
   const element = (id: string): HTMLStyleElement | null => {
@@ -913,6 +915,7 @@ function startBridge(session: BridgeSession): void {
     'preview-reset': () => livePreview.reset(),
     'tokens-preview': (message) => previewStyles.apply('tokens', message.css),
     'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
+    'lofi-preview': (message) => previewStyles.apply('lofi', message.css),
     'set-theme': (message) => themeControl.set(message.theme),
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
     'request-tree': () => post({ type: 'tree', ...layers.build() }),

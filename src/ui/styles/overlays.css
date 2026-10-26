@@ -106,21 +106,6 @@
   gap: 6px;
 }
 
-.mcp-approval {
-  width: min(460px, 100%);
-}
-
-.mcp-approval .modal-head h2 {
-  overflow-wrap: anywhere;
-}
-
-.mcp-approval-detail {
-  color: var(--text-2);
-  font-size: var(--t-sm);
-  line-height: var(--lh-sm);
-  overflow-wrap: anywhere;
-}
-
 .design-md {
   min-height: 380px;
   resize: none;

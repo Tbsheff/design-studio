@@ -680,38 +680,48 @@ src/ui/commands/registry.ts (commands from useCommands sources, read only when a
 
 ## MCP server (Connect to Claude Code)
 
+The MCP server lets an outside agent (Claude Code or any MCP client) read projects and, when the user turns on Allow edits, work on the design files and the canvas directly. It never starts, steers or stops a studio agent run.
+
 ```
-Claude Code ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1:<port>/mcp   (mcp/server.ts)
-                                                     ├─ read tools      (mcp/tools.ts, ExportDeps)
-                                                     └─ control tools   (mcp/control-tools.ts, only when Allow control is on)
-                                                          │ app.request('/api/...', x-studio-token)   same routes, locks and checks as the UI
-                                                          │ canvasPlace / canvasPoint / canvasList    same code as the agent canvas tools
-                                                          └─ approvals.ask() ──► GET /api/mcp/approvals (long poll, studio token)
-                                                                                   └─ App: McpApprovalDialog  Allow / Deny ──► POST /api/mcp/approvals/:id
+MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1:<port>/mcp   (mcp/server.ts)
+                                                    ├─ read tools   (mcp/tools.ts, ExportDeps)
+                                                    └─ edit tools   (mcp/edit-tools.ts, only when Allow edits is on)
+                                                         │ app.request('/api/...', x-studio-token)   same routes, locks and checks as the UI
+                                                         │ canvas/tools.ts canvasList / canvasPlace    same code as the agent canvas tools
+                                                         │ agent/permissions.ts evaluateToolUse('Write') for write_file paths
+                                                         └─ approvals.ask()  only for an export folder outside ~/Downloads and the projects folder
+                                                              ├─ bus: mcp.approval / mcp.approval.resolved (project event stream)
+                                                              └─ GET /api/mcp/approvals, POST /api/mcp/approvals/:id {allow}   (studio token)
 ```
 
-- Settings: `<dataDir>/mcp.json` `{enabled, control, port, token}` (mode 0600). Both flags are off by default. The port is 4590; when it is taken the server picks a free port and saves it. The token is separate from the studio token. "New token" makes a new one. The server listens on 127.0.0.1 only, checks the `Host` header, refuses any `Origin` header, and needs `Authorization: Bearer <token>`. Body cap 1 MB. `requestTimeout` is 960 s, so `wait_for_run` can wait 900 s.
-- UI: Export dialog, Handoff tab, "Connect to Claude Code". The first switch starts or stops the server and shows the `claude mcp add` command. The second switch, "Allow control", shows only while the server is on. `POST /api/mcp {enabled?, control?, rotate?}`. Turning either switch off denies the open approval requests.
-- Read tools (always listed): `list_projects`, `list_versions`, `get_frame_html`, `get_tokens`, `get_design_md`, `get_screenshot`, `list_files`, `read_file`.
-- Control tools (listed only when `enabled && control`; a call while control is off gets an `isError` result that says how to turn it on). `tools/list` uses `listChanged: false`, so the client must reconnect after a change.
+- Settings: `<dataDir>/mcp.json` `{enabled, edits, port, token}` (mode 0600). Both flags are off by default. The port is 4590; when it is taken the server picks a free port and saves it. The token is separate from the studio token. The server listens on 127.0.0.1 only, checks the `Host` header, refuses any `Origin` header and needs `Authorization: Bearer <token>`. Body cap 1 MB.
+- UI: Export dialog, Handoff tab, "Connect to Claude Code". The first switch starts or stops the server. The second switch, "Allow edits", shows while the server is on. `POST /api/mcp {enabled?, edits?, rotate?}`. Turning either switch off denies the open approval requests. There is no approval UI yet.
+- Client name: `initialize` reads `clientInfo.title` or `clientInfo.name` (letters, digits, ` ._@()-`, 40 characters; default "MCP client") and returns an `mcp-session-id` header. Later calls with that header use the name for version titles ("Edit by <client>") and comment authors.
+- Read tools (always listed): `list_projects`, `list_versions`, `get_frame_html`, `get_tokens`, `get_design_md`, `get_screenshot` (also `frameId`: a canvas frame id or `@label` sets the page, the size and the direction), `list_files`, `read_file`.
+- Edit tools (listed only when `enabled && edits`; a call while edits are off gets an `isError` result that says how to turn it on). `tools/list` uses `listChanged: false`, so the client must reconnect after a change.
 
-| Tool | Calls | Approval |
+| Tool | Calls | Refused during a studio run |
 |---|---|---|
-| `create_project {name?, prompt?, kind, designSystemId?, location?}` | `POST /api/projects` (`startRun` only with a prompt) | when `location` is outside the default projects folder |
-| `start_run {projectId, directionId?, prompt, level?, mode edit/plan/critique, selector?}` | `POST /d/:did/runs`; plan = `{mode:'edit', plan:true}`; the selector becomes a `SelectionContext` from a headless render of the entry page | no |
-| `wait_for_run {runId, timeoutSeconds ≤ 900}` | `handle.done`, then `GET /api/runs/:id`; changed files from the version | no |
-| `get_run_status {runId}` | `GET /api/runs/:id`; current step = last `run.tool.started` with no `run.tool.finished`; cost only after the run | no |
-| `stop_run {runId}` | `handle.cancel()` | yes |
-| `restore_version {projectId, directionId?, versionId}` | `POST /d/:did/restore` | yes |
+| `canvas_list {projectId, directionId?}` | `canvasList` | no |
+| `canvas_place {projectId, directionId?, frames[]}` | `canvasPlace`, write source `agent` | yes |
+| `canvas_point {projectId, directionId?, frame, selector?}` | checks the frame and returns it; it does not move the user's view yet | no |
+| `add_frame {projectId, directionId?, path?, viewport?, width?, height?, label?, rightOf?, below?}` | `canvasPlace` with one new frame | yes |
+| `remove_frame {projectId, frame}` | `canvas.update` without the frame (the last frame stays) | yes |
+| `write_file {projectId, directionId?, path, content ≤ 512 KB}` | atomic write, `versions.commitFile` "Edit by <client>", `publishVersion` | yes |
+| `edit_element {projectId, directionId?, path?, selector, style?, text?}` | headless render finds the element and its source location, then `POST /d/:did/direct-edit` (the inspector path) | yes |
+| `add_comment {projectId, directionId?, path?, selector?, text}` | `POST /d/:did/comments` as `draft` with `author`; no selector = frame comment on `body` | no |
+| `reply_comment`, `resolve_comment` | `POST .../replies` with `author`, `PATCH {status:'resolved'}` | no |
+| `create_project {name, kind, designSystemId?}` | `POST /api/projects` with `startRun: false`, default projects folder only | n/a |
+| `restore_version {projectId, directionId?, versionId}` | `POST /d/:did/restore` (also restores `.studio/canvas.json`) | yes |
 | `apply_design_system {projectId, directionId?, packId}` | `POST /d/:did/design-system/apply` | yes |
-| `add_comment {projectId, directionId?, selector?, text, sendToClaude}` | `POST /d/:did/comments` (`queued`, or `draft` then `comments/send`, as the "Send to Claude" box). No selector = frame comment on `body` | no |
-| `canvas_list`, `canvas_place`, `canvas_point` | `canvas/tools.ts` with `{mode:'edit', plan:false}`, write source `agent` | no |
-| `export {projectId, directionId?, versionId?, format png/html/pdf/handoff/zip, scale, frames, folder?}` | `POST /export`, or `POST /handoff` then `GET /handoff/:folder/zip`. Files are written with `wx` and a `-2`, `-3` suffix, never over a file | when `folder` is outside `~/Downloads` and the projects folder |
+| `export {projectId, directionId?, versionId?, format png/html/pdf/handoff/zip, scale, frames, folder?}` | `POST /export`, or `POST /handoff` then `GET /handoff/:folder/zip`; files written with `wx` and a `-2`, `-3` suffix | no |
 
-- Run rule: `start_run`, `restore_version`, `apply_design_system` and `add_comment` with `sendToClaude` are refused while a run is going in the direction, before any write. The routes check again under the direction lock.
-- Approvals (`mcp/approvals.ts`): the tool waits up to 120 s, then answers "refused". The approval is asked before the route call, so no direction lock is held while the user reads it; the run check runs again after Allow. The app window counts as open while a long poll is open or ended less than 6 s ago. With no window the tool is refused at once. At most 10 open requests. The UI (`src/ui/mcpApprovals.ts`, in `App`) long-polls only while control is on (otherwise it waits 30 s or the `studio:mcp-control` event). The dialog is lazy-loaded (`McpApprovalDialog`, `.modal` primitives). Escape and a backdrop click are Deny. Deny has the focus. Only the studio token can answer; the MCP token cannot.
-- Input rules: zod schemas (`z.toJSONSchema` for `inputSchema`), ids `^[A-Za-z0-9_-]{1,64}$`, prompt 20,000 characters, comment 2,000, selector 2,000, name 120. Folders (`mcp/folders.ts`): absolute (or `~/`), realpath, must be an existing folder, not inside the data dir, not `/`, `/Users`, `/Volumes`, `/private` or the home folder itself, and not inside `/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/etc`, `/var`, `/private/etc`, `/private/var`, `/dev`, `/opt`, `/Applications`, `/Network` or `~/Library`.
-- Annotations: read tools and `wait_for_run`, `get_run_status`, `canvas_list` have `readOnlyHint: true`. `stop_run`, `restore_version` and `apply_design_system` have `destructiveHint: true`. `idempotentHint: true` on `wait_for_run`, `get_run_status`, `stop_run`, `canvas_list` and `canvas_point`. `openWorldHint: false` on all.
+- Run rule: the tools marked "yes" answer "A studio run is editing this design. Try again when it finishes." while a studio run is going in that direction. The routes check again under the direction lock.
+- write_file paths: relative, no `..`, then the studio agent's Write policy: inside the work tree after realpath (symlinks out are refused), not `.git` or `node_modules`, not `.studio/`, not `design-system/tokens.css`, not the tweaks file, not build config files run as code, and not `source/` in design-system draft projects.
+- Approvals (`mcp/approvals.ts`): a pending record `{id, tool, action, title, detail, projectId, createdAt, expiresAt}`. The tool call waits up to 120 s, then refuses. Title and detail are one line with control characters removed (200 and 600 characters). At most 10 open. The app counts as open while a project event stream or an approvals long poll is open (6 s grace). With no app open the tool is refused at once. Only the studio token can answer.
+- Folders (`mcp/folders.ts`): absolute (or `~/`), realpath, an existing folder, not inside the data dir, not `/`, `/Users`, `/Volumes`, `/private` or the home folder itself, and not inside `/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/etc`, `/var`, `/private/etc`, `/private/var`, `/dev`, `/opt`, `/Applications`, `/Network` or `~/Library`.
+- Input rules: zod schemas (`z.toJSONSchema` for `inputSchema`), ids `^[A-Za-z0-9_-]{1,64}$`, comment 2,000 characters, selector 2,000, name 120, style keys from `DIRECT_STYLE_PROPERTIES`.
+- Annotations: `readOnlyHint: true` on the read tools, `canvas_list` and `canvas_point`. `destructiveHint: true` only on `restore_version`, `remove_frame` and `apply_design_system`. `idempotentHint: true` on `canvas_list`, `canvas_point`, `remove_frame` and `resolve_comment`. `openWorldHint: false` on all.
 
 ## End-to-end tests
 

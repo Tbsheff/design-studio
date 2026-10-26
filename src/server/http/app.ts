@@ -301,6 +301,7 @@ export function createApp(deps: AppDeps): Hono {
     if (owner) announceCanvas(owner);
   };
   const app = new Hono();
+  let openStreams = 0;
   const versionNames = createVersionNames((pid) => projects.projectDir(pid));
   const thumbnails = deps.thumbnails ?? createThumbnailService({ projects, preview, versions });
 
@@ -610,6 +611,7 @@ export function createApp(deps: AppDeps): Hono {
     const after = Number.parseInt(rawAfter, 10);
     const afterSeq = Number.isFinite(after) && after >= 0 ? after : 0;
     return streamSSE(c, async (stream) => {
+      openStreams += 1;
       const pending: StudioEvent[] = [];
       let wake: (() => void) | null = null;
       let closed = false;
@@ -643,6 +645,7 @@ export function createApp(deps: AppDeps): Hono {
           }
         }
       } finally {
+        openStreams -= 1;
         clearInterval(heartbeat);
         unsubscribe();
       }
@@ -1039,7 +1042,7 @@ export function createApp(deps: AppDeps): Hono {
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
-  registerMcpRoutes(app, { projects, versions, preview, runner, canvas, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure() });
+  registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0 });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

@@ -5,7 +5,6 @@ import { CommandLayer, DesignSystems, NewDesignSystem, prefetchStudio, Studio } 
 import type { CommandLayer as Layer } from './commands/registry';
 import { isTypingTarget } from './typingTarget';
 import { loadSession } from './session';
-import { useMcpApprovals } from './mcpApprovals';
 import { uiStore, useUi } from './storage';
 
 if (uiStore.get().activeProjectId) void prefetchStudio();
@@ -34,16 +33,6 @@ class ScreenBoundary extends Component<{ children: ReactNode }, { error: string 
 }
 
 const LAYER_EVENT = 'studio:command-layer';
-const McpApprovalDialog = lazy(() => import('./components/McpApprovalDialog'));
-
-function McpApprovals() {
-  const [first] = useMcpApprovals();
-  return first ? (
-    <Suspense fallback={null}>
-      <McpApprovalDialog key={first.id} approval={first} />
-    </Suspense>
-  ) : null;
-}
 const DesktopApp = 'studioDesktop' in window ? lazy(() => import('./DesktopApp')) : null;
 
 function useCommandLayer() {
@@ -112,7 +101,6 @@ export function App() {
   const notice = (
     <>
       {layer}
-      <McpApprovals />
       {DesktopApp && (
         <Suspense fallback={null}>
           <DesktopApp activeProjectId={ui.activeProjectId} />

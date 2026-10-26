@@ -1,0 +1,374 @@
+import { randomBytes } from 'node:crypto';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { z } from 'zod';
+import { DIRECT_STYLE_PROPERTIES, type DesignComment, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type Version } from '../../shared/contracts.js';
+import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
+import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
+import { evaluateToolUse } from '../agent/permissions.js';
+import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext } from '../canvas/tools.js';
+import { SOURCE_DIR } from '../design-system/extract/draft.js';
+import { publishVersion } from '../direct-edit/index.js';
+import { withPagePath } from '../export/source.js';
+import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
+import { describeElement } from './element.js';
+import { FolderError } from './folders.js';
+import type { ToolDef, ToolResult } from './tools.js';
+
+const SELECTOR_MAX = 2000;
+const FILE_MAX = 512 * 1024;
+const PATH_MAX = 300;
+
+const id = (what: string) => z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, 'must be an id of 1 to 64 letters, digits, - or _').describe(what);
+const projectId = id('Project id from list_projects.');
+const directionId = id('Direction id. Leave out for the main direction.').optional();
+const selector = z.string().trim().min(1).max(SELECTOR_MAX);
+const pagePath = z.string().trim().max(PATH_MAX).optional().describe('Page path in the project, for example "about.html". Leave out for the entry page.');
+const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
+const styleValue = z.string().max(200).nullable();
+const style = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();
+const viewport = z.enum(['desktop', 'tablet', 'mobile']);
+
+const schemas = {
+  canvas_list: z.object({ projectId, directionId }).strict(),
+  canvas_place: z.object({ projectId, directionId, frames: z.array(placeSchema).min(1).max(12) }).strict(),
+  canvas_point: z.object({ projectId, directionId, frame: frameRef.describe('Frame id or @label.'), selector: z.string().max(400).optional() }).strict(),
+  add_frame: z
+    .object({
+      projectId,
+      directionId,
+      path: pagePath,
+      viewport: viewport.optional().describe('desktop 1440x900, tablet 768x1024 or mobile 390x844. Default desktop.'),
+      width: z.number().int().min(200).max(4000).optional(),
+      height: z.number().int().min(200).max(4000).optional(),
+      label: z.string().max(40).optional().describe('Short frame name, for example "Empty state".'),
+      rightOf: frameRef.optional().describe('Put the new frame to the right of this frame (id or @label).'),
+      below: frameRef.optional().describe('Put the new frame under this frame (id or @label).'),
+    })
+    .strict(),
+  remove_frame: z.object({ projectId, frame: frameRef.describe('Frame id or @label.') }).strict(),
+  write_file: z
+    .object({
+      projectId,
+      directionId,
+      path: z.string().trim().min(1).max(PATH_MAX).describe('File path relative to the project folder, for example "index.html" or "styles/site.css".'),
+      content: z.string().max(FILE_MAX).describe('The full new text of the file.'),
+    })
+    .strict(),
+  edit_element: z
+    .object({
+      projectId,
+      directionId,
+      path: pagePath,
+      selector: selector.describe('CSS selector of one element on the page.'),
+      style: style.optional().describe('CSS properties to set. null removes the property.'),
+      text: z.string().max(5000).optional().describe('New text content of the element.'),
+    })
+    .strict()
+    .refine((input) => input.text !== undefined || Object.keys(input.style ?? {}).length > 0, 'pass style or text'),
+  add_comment: z
+    .object({
+      projectId,
+      directionId,
+      path: pagePath,
+      selector: selector.optional().describe('CSS selector of the element. Leave out for a comment on the whole frame.'),
+      text: z.string().trim().min(1).max(COMMENT_TEXT_MAX),
+    })
+    .strict(),
+  reply_comment: z.object({ projectId, directionId, commentId: id('Comment id from add_comment.'), text: z.string().trim().min(1).max(COMMENT_TEXT_MAX) }).strict(),
+  resolve_comment: z.object({ projectId, directionId, commentId: id('Comment id from add_comment.') }).strict(),
+  create_project: z
+    .object({
+      name: z.string().trim().min(1).max(120).describe('Project name.'),
+      kind: z.enum(['html', 'react']).default('html').describe('html (static pages) or react (Vite + React). Default html.'),
+      designSystemId: packId.optional().describe('Design system (pack) id to apply. Leave out for none.'),
+    })
+    .strict(),
+  restore_version: z.object({ projectId, directionId, versionId: id('Version id from list_versions.') }).strict(),
+  apply_design_system: z.object({ projectId, directionId, packId: packId.describe('Design system (pack) id.') }).strict(),
+  export: z
+    .object({
+      projectId,
+      directionId,
+      versionId: id('Version id. Leave out for the newest version of the direction.').optional(),
+      format: z.enum(['png', 'html', 'pdf', 'handoff', 'zip']).describe('png, html, pdf, handoff (folder for a coding agent, as a zip) or zip (source files).'),
+      scale: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1).describe('PNG pixel scale.'),
+      frames: z
+        .array(z.object({ name: z.string().max(60).optional(), width: z.number().int().min(1).max(EXPORT_FRAME_MAX_SIDE), height: z.number().int().min(1).max(EXPORT_FRAME_MAX_SIDE), path: z.string().max(200).optional() }).strict())
+        .min(1)
+        .max(EXPORT_MAX_FRAMES)
+        .optional()
+        .describe('Frames to capture. Default one 1440x900 frame (handoff: desktop and mobile).'),
+      folder: z.string().min(1).max(4096).optional().describe('Absolute path of an existing folder. Leave out for ~/Downloads. Another folder outside the projects folder waits for the user to approve it in Design Studio.'),
+    })
+    .strict(),
+};
+
+type Name = keyof typeof schemas;
+type Input<N extends Name> = z.output<(typeof schemas)[N]>;
+
+interface Meta {
+  title: string;
+  description: string;
+  readOnly?: boolean;
+  destructive?: boolean;
+  idempotent?: boolean;
+}
+
+const META: Record<Name, Meta> = {
+  canvas_list: { title: 'List canvas frames', description: 'List the frames on the studio canvas of a project: id, label, page, size and position, plus what the user has selected and which frame is live.', readOnly: true, idempotent: true },
+  canvas_place: { title: 'Place canvas frames', description: 'Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order. Each item: frame (id or @label to move; leave out to add), label, path, viewport or width/height, and one of below / rightOf / leftOf / above (another frame) with gap, or absolute x/y. Returns the placed frames and overlap warnings.' },
+  canvas_point: { title: 'Point at a canvas frame', description: 'Check one frame (and an optional CSS selector) and return it, so you can tell the user which frame to look at. Design Studio does not move the user\'s view for outside clients yet.', readOnly: true, idempotent: true },
+  add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
+  remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
+  write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
+  edit_element: { title: 'Edit element', description: 'Change the style or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. The source file changes and a version is saved.' },
+  add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
+  reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
+  resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
+  create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
+  restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
+  apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
+  export: { title: 'Export', description: 'Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder ~/Downloads. A folder outside Downloads and the projects folder waits for the user to approve it in Design Studio.' },
+};
+
+function jsonSchema(schema: z.ZodType): Record<string, unknown> {
+  const { $schema: _drop, ...rest } = z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' }) as Record<string, unknown>;
+  return rest;
+}
+
+export const EDIT_TOOLS: ToolDef[] = (Object.keys(schemas) as Name[]).map((name) => ({
+  name,
+  title: META[name].title,
+  description: META[name].description,
+  inputSchema: jsonSchema(schemas[name]),
+  annotations: { readOnlyHint: META[name].readOnly === true, destructiveHint: META[name].destructive === true, idempotentHint: META[name].idempotent === true, openWorldHint: false },
+}));
+
+export const EDIT_NAMES = new Set<string>(Object.keys(schemas));
+
+function ok(value: unknown): ToolResult {
+  return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value, null, 2) }] };
+}
+
+function parse<N extends Name>(name: N, args: Record<string, unknown>): Input<N> {
+  const result = schemas[name].safeParse(args);
+  if (!result.success) {
+    const issue = result.error.issues[0];
+    throw new EditError(issue ? `${issue.path.join('.') || 'input'}: ${issue.message}` : 'input is not valid');
+  }
+  return result.data as Input<N>;
+}
+
+const base = (project: Project, did: string) => `/api/projects/${encodeURIComponent(project.id)}/d/${encodeURIComponent(did)}`;
+
+async function packOf(deps: EditDeps, id: string): Promise<PackSummary> {
+  const pack = (await studioCall<PackSummary[]>(deps, 'GET', '/api/packs')).find((item) => item.id === id);
+  if (!pack) throw new EditError(`unknown design system ${id}`);
+  return pack;
+}
+
+async function pageUrl(deps: EditDeps, project: Project, direction: Project['directions'][number], page: string | undefined): Promise<string> {
+  return withPagePath(await deps.preview.directionUrl(project, direction), page || undefined);
+}
+
+async function canvasContext(deps: EditDeps, input: { projectId: string; directionId?: string }): Promise<CanvasToolContext> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  return { canvas: deps.canvas, project, direction, mode: 'edit', plan: false };
+}
+
+async function busyCanvas(deps: EditDeps, input: { projectId: string; directionId?: string }): Promise<CanvasToolContext> {
+  const ctx = await canvasContext(deps, input);
+  refuseWhileRunning(deps, ctx.project, ctx.direction);
+  return ctx;
+}
+
+async function pointFrame(ctx: CanvasToolContext, ref: string, sel: string | undefined): Promise<ToolResult> {
+  const frames = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
+  const first = frames.length === 0 && ref === 'f1';
+  const frame = first ? null : findFrame(frames, ref);
+  if (!frame && !first) throw new EditError(`No frame ${ref}. Call canvas_list for the ids and labels.`);
+  return ok({ frame: frame?.id ?? 'f1', label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, note: 'Design Studio does not move the user\'s view for outside clients yet. Tell the user which frame to look at.' });
+}
+
+async function addFrame(deps: EditDeps, input: Input<'add_frame'>): Promise<ToolResult> {
+  const ctx = await busyCanvas(deps, input);
+  const spec = { ...(input.path ? { path: input.path } : {}), viewport: input.viewport ?? 'desktop', ...(input.width ? { width: input.width } : {}), ...(input.height ? { height: input.height } : {}), ...(input.label ? { label: input.label } : {}), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
+  return canvasPlace(ctx, [spec]);
+}
+
+async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promise<ToolResult> {
+  const ctx = await busyCanvas(deps, input);
+  let removed: string | null = null;
+  await deps.canvas.update(
+    ctx.project,
+    (file) => {
+      const frame = findFrame(file.frames, input.frame);
+      if (!frame) return null;
+      if (file.frames.length === 1) throw new EditError('The canvas needs at least one frame.');
+      removed = frame.id;
+      return { ...file, frames: file.frames.filter((item) => item.id !== frame.id) };
+    },
+    { source: 'agent' },
+  );
+  if (!removed) throw new EditError(`No frame ${input.frame}. Call canvas_list for the ids and labels.`);
+  return ok({ removed, note: 'The page file stays in the project.' });
+}
+
+async function writeText(file: string, content: string): Promise<void> {
+  await mkdir(path.dirname(file), { recursive: true });
+  const temp = path.join(path.dirname(file), `.${path.basename(file)}.mcp-${randomBytes(4).toString('hex')}.tmp`);
+  await writeFile(temp, content);
+  try {
+    await rename(temp, file);
+  } catch (error) {
+    await rm(temp, { force: true });
+    throw error;
+  }
+}
+
+function checkWritePath(project: Project, workTree: string, raw: string): string {
+  if (path.isAbsolute(raw) || raw.startsWith('~') || raw.includes('\0') || raw.split(/[\\/]/).some((part) => part === '..')) throw new EditError(`Path ${raw} must be relative to the project folder, with no "..".`);
+  const result = evaluateToolUse({ workTree, mode: 'edit', allowBash: false, allowInstall: false, ...(project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}) }, 'Write', { file_path: raw });
+  if (result.behavior === 'deny') throw new EditError(result.message.replace('mcp__studio__canvas_place', 'canvas_place'));
+  const relative = path.relative(workTree, path.resolve(workTree, raw)).split(path.sep).join('/');
+  if (relative === '' || relative.startsWith('..')) throw new EditError(`Path ${raw} is not a file in the project folder.`);
+  return relative;
+}
+
+async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, client: string): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  refuseWhileRunning(deps, project, direction);
+  const relative = checkWritePath(project, direction.workTree, input.path);
+  const file = path.join(direction.workTree, ...relative.split('/'));
+  const before = await readFile(file, 'utf8').catch(() => null);
+  if (before === input.content) return ok({ path: relative, changed: false, versionId: direction.headVersionId });
+  await writeText(file, input.content);
+  const version = await deps.versions.commitFile(project, direction, relative, `Edit by ${client}`, { kind: 'manual', prompt: `Edit by ${client}: ${relative}` });
+  if (version) await publishVersion({ bus: deps.bus, projects: deps.projects, versions: deps.versions, runner: deps.runner }, project, direction, version);
+  return ok({ path: relative, changed: true, created: before === null, versionId: version?.id ?? null, title: version?.title ?? null });
+}
+
+async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  refuseWhileRunning(deps, project, direction);
+  const element = await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector);
+  if (!element) throw new EditError(`No element matches ${input.selector} on the page.`);
+  if (!element.source) throw new EditError('That element has no source location, so the inspector cannot edit it. Use write_file.');
+  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}) };
+  const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
+  return ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied });
+}
+
+function frameTarget(): DesignComment['target'] {
+  return { selector: 'body', sourceLoc: null, tag: 'body', textSnippet: '', rectHint: { x: 0, y: 0, width: 1440, height: 900 } };
+}
+
+async function addComment(deps: EditDeps, input: Input<'add_comment'>, client: string): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const context = input.selector ? await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector) : null;
+  if (input.selector && !context) throw new EditError(`No element matches ${input.selector} on the page.`);
+  const target = context ? targetFromSelection(context) : frameTarget();
+  const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments`, { text: input.text, target, ...(context ? { context } : {}), status: 'draft', author: client });
+  return ok({ commentId: comment.id, number: comment.n, frameLevel: !context, author: comment.author ?? client });
+}
+
+async function replyComment(deps: EditDeps, input: Input<'reply_comment'>, client: string): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments/${encodeURIComponent(input.commentId)}/replies`, { text: input.text, author: client });
+  return ok({ commentId: comment.id, replies: comment.replies?.length ?? 0 });
+}
+
+async function resolveComment(deps: EditDeps, input: Input<'resolve_comment'>): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const comment = await studioCall<DesignComment>(deps, 'PATCH', `${base(project, direction.id)}/comments/${encodeURIComponent(input.commentId)}`, { status: 'resolved' });
+  return ok({ commentId: comment.id, status: comment.status });
+}
+
+async function createProject(deps: EditDeps, input: Input<'create_project'>): Promise<ToolResult> {
+  const pack = input.designSystemId ? await packOf(deps, input.designSystemId) : null;
+  const created = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects', { prompt: input.name, name: input.name, kind: input.kind, startRun: false, ...(pack ? { packId: pack.id } : {}) });
+  const main = created.project.directions.find((d) => d.id === 'main') ?? created.project.directions[0];
+  return ok({ projectId: created.project.id, directionId: main?.id ?? null, name: created.project.name, folder: main?.workTree ?? null, designSystem: pack?.id ?? null });
+}
+
+async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const version = await deps.versions.get(project, input.versionId);
+  refuseWhileRunning(deps, project, direction);
+  const restored = await studioCall<Version>(deps, 'POST', `${base(project, direction.id)}/restore`, { versionId: version.id });
+  return ok({ restored: true, newVersionId: restored.id, title: restored.title, from: version.id });
+}
+
+async function applyDesignSystem(deps: EditDeps, input: Input<'apply_design_system'>): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const pack = await packOf(deps, input.packId);
+  refuseWhileRunning(deps, project, direction);
+  const result = await studioCall<{ version: Version | null; notice: string | null }>(deps, 'POST', `${base(project, direction.id)}/design-system/apply`, { packId: pack.id });
+  return ok({ applied: pack.id, versionId: result.version?.id ?? null, changedFiles: result.version?.changedFiles ?? [], notice: result.notice });
+}
+
+async function exportFiles(deps: EditDeps, input: Input<'export'>, client: string): Promise<ToolResult> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  const versionId = input.versionId ?? direction.headVersionId;
+  if (!versionId) throw new EditError('This direction has no saved version yet.');
+  const version = await deps.versions.get(project, versionId);
+  const { folder, trusted } = await outputFolder(deps, input.folder);
+  if (!trusted) await approve(deps, 'export', 'Export to a folder outside Downloads and the projects folder', project.id, `${client} wants to export ${oneLine(project.name)} as ${input.format.toUpperCase()} to ${oneLine(folder, 120)}`, 'This folder is outside Downloads and the projects folder.');
+  const frames = input.frames?.map((frame) => ({ name: frame.name?.trim() || `${frame.width}x${frame.height}`, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) }));
+  const pid = encodeURIComponent(project.id);
+  if (input.format === 'handoff') {
+    const handoff = await studioCall<HandoffResult>(deps, 'POST', `/api/projects/${pid}/handoff`, { versionId: version.id, ...(frames ? { frames } : {}) });
+    const zip = await studioFile(deps, 'GET', `/api/projects/${pid}/handoff/${encodeURIComponent(path.basename(handoff.path))}/zip`);
+    return ok({ files: [await writeUnique(folder, zip.name, zip.bytes)], versionId: version.id, handoffFiles: handoff.files.length, prompt: short(handoff.prompt, 2000) });
+  }
+  const exported = await studioFile(deps, 'POST', `/api/projects/${pid}/export`, { format: input.format, versionId: version.id, frames: frames ?? [], scale: input.scale, scope: 'page' });
+  return ok({ files: [await writeUnique(folder, exported.name, exported.bytes)], versionId: version.id, bytes: exported.bytes.byteLength, ...(exported.note ? { note: exported.note } : {}) });
+}
+
+async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, client: string): Promise<ToolResult> {
+  switch (name) {
+    case 'canvas_list':
+      return canvasList(await canvasContext(deps, parse('canvas_list', args)));
+    case 'canvas_place': {
+      const input = parse('canvas_place', args);
+      return canvasPlace(await busyCanvas(deps, input), input.frames);
+    }
+    case 'canvas_point': {
+      const input = parse('canvas_point', args);
+      return pointFrame(await canvasContext(deps, input), input.frame, input.selector?.trim() || undefined);
+    }
+    case 'add_frame':
+      return addFrame(deps, parse('add_frame', args));
+    case 'remove_frame':
+      return removeFrame(deps, parse('remove_frame', args));
+    case 'write_file':
+      return writeProjectFile(deps, parse('write_file', args), client);
+    case 'edit_element':
+      return editElement(deps, parse('edit_element', args));
+    case 'add_comment':
+      return addComment(deps, parse('add_comment', args), client);
+    case 'reply_comment':
+      return replyComment(deps, parse('reply_comment', args), client);
+    case 'resolve_comment':
+      return resolveComment(deps, parse('resolve_comment', args));
+    case 'create_project':
+      return createProject(deps, parse('create_project', args));
+    case 'restore_version':
+      return restoreVersion(deps, parse('restore_version', args));
+    case 'apply_design_system':
+      return applyDesignSystem(deps, parse('apply_design_system', args));
+    case 'export':
+      return exportFiles(deps, parse('export', args), client);
+  }
+}
+
+export async function callEditTool(deps: EditDeps, name: string, args: Record<string, unknown>, client: string): Promise<ToolResult> {
+  if (!EDIT_NAMES.has(name)) throw new EditError(`unknown tool ${name}`);
+  try {
+    return await run(deps, name as Name, args, client);
+  } catch (error) {
+    if (error instanceof EditError || error instanceof FolderError) return { content: [{ type: 'text', text: error.message }], isError: true };
+    throw error;
+  }
+}

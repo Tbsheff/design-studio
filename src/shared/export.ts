@@ -1,3 +1,5 @@
+import type { McpApprovalRecord } from './contracts.js';
+
 export type ExportFormat = 'png' | 'pdf' | 'html' | 'zip' | 'handoff';
 export type ExportScale = 1 | 2 | 3;
 export type ExportScope = 'page' | 'frame';
@@ -57,25 +59,16 @@ export interface EditorInfo {
 
 export interface McpStatus {
   enabled: boolean;
-  control: boolean;
+  edits: boolean;
   running: boolean;
   url: string | null;
   command: string | null;
   error: string | null;
 }
 
-export interface McpApproval {
-  id: string;
-  tool: string;
-  title: string;
-  detail: string;
-  createdAt: number;
-  expiresAt: number;
-}
-
 export interface McpApprovalPoll {
-  control: boolean;
-  pending: McpApproval[];
+  edits: boolean;
+  pending: McpApprovalRecord[];
 }
 
 export const EXPORT_NOTE_HEADER = 'x-studio-export-note';

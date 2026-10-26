@@ -6,14 +6,16 @@ import type { ExportDeps } from '../export/source.js';
 import { createApprovalQueue } from '../mcp/approvals.js';
 import { createMcpService } from '../mcp/server.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
-import type { AgentRunner } from '../types.js';
+import type { AgentRunner, EventBus } from '../types.js';
 
 interface McpRouteDeps extends ExportDeps {
   dataDir: string;
   studioToken: string;
   runner: AgentRunner;
   canvas: CanvasService;
+  bus: EventBus;
   projectsFolder: () => Promise<string>;
+  appOpen: () => boolean;
 }
 
 const MAX_WAIT_S = 25;
@@ -25,7 +27,17 @@ async function body(c: Context): Promise<Record<string, unknown>> {
 }
 
 export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
-  const approvals = createApprovalQueue();
+  const approvals = createApprovalQueue({
+    appOpen: deps.appOpen,
+    events: {
+      opened: (approval) => {
+        if (approval.projectId) deps.bus.emit({ type: 'mcp.approval', projectId: approval.projectId, approval });
+      },
+      resolved: (approval, outcome) => {
+        if (approval.projectId) deps.bus.emit({ type: 'mcp.approval.resolved', projectId: approval.projectId, approvalId: approval.id, outcome });
+      },
+    },
+  });
   const request = async (method: string, url: string, payload?: unknown): Promise<Response> =>
     app.request(url, {
       method,
@@ -44,9 +56,9 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
   app.post('/api/mcp', async (c) => {
     const input = await body(c);
     if (input.rotate === true) await mcp.rotate();
-    if (typeof input.control === 'boolean') {
-      await mcp.setControl(input.control);
-      if (!input.control) denyPending();
+    if (typeof input.edits === 'boolean') {
+      await mcp.setEdits(input.edits);
+      if (!input.edits) denyPending();
     }
     if (typeof input.enabled === 'boolean') {
       if (!input.enabled) denyPending();
@@ -56,10 +68,10 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
   });
 
   app.get('/api/mcp/approvals', async (c) => {
-    if (!(await mcp.controlOn())) return c.json({ control: false, pending: [] } satisfies McpApprovalPoll);
+    if (!(await mcp.editsOn())) return c.json({ edits: false, pending: [] } satisfies McpApprovalPoll);
     const wait = Math.min(MAX_WAIT_S, Math.max(0, Number.parseInt(c.req.query('wait') ?? '0', 10) || 0));
     const pending = await approvals.poll(c.req.query('seen') ?? '', wait * 1000, c.req.raw.signal);
-    return c.json({ control: true, pending } satisfies McpApprovalPoll);
+    return c.json({ edits: true, pending } satisfies McpApprovalPoll);
   });
 
   app.post('/api/mcp/approvals/:id', async (c) => {

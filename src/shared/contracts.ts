@@ -300,12 +300,14 @@ export interface DesignComment {
   attachmentIds?: string[];
   mentions?: RunMention[];
   drawing?: CommentDrawing;
+  author?: string;
 }
 
 export interface CommentReply {
   id: string;
   text: string;
   createdAt: number;
+  author?: string;
 }
 
 export interface DrawStroke {
@@ -503,7 +505,22 @@ export type StudioEventBody =
   | { type: 'edit-history.changed' }
   | { type: 'versions.changed' }
   | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
-  | { type: 'canvas.point'; frameId: string; selector?: string; at: number };
+  | { type: 'canvas.point'; frameId: string; selector?: string; at: number }
+  | { type: 'mcp.approval'; approval: McpApprovalRecord }
+  | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome };
+
+export type McpApprovalOutcome = 'allow' | 'deny' | 'timeout' | 'closed';
+
+export interface McpApprovalRecord {
+  id: string;
+  tool: string;
+  action: string;
+  title: string;
+  detail: string;
+  projectId: string | null;
+  createdAt: number;
+  expiresAt: number;
+}
 
 export type CanvasWriteSource = 'user' | 'agent' | 'run' | 'restore' | 'migrate';
 

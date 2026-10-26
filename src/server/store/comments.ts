@@ -22,6 +22,7 @@ export interface CreateCommentInput {
   attachmentIds?: string[];
   mentions?: RunMention[];
   drawing?: CommentDrawing;
+  author?: string;
 }
 
 export interface UpdateCommentInput {
@@ -42,7 +43,7 @@ export interface CommentStore {
   create(projectId: string, directionId: string, input: CreateCommentInput): Promise<DesignComment>;
   update(projectId: string, directionId: string, commentId: string, input: UpdateCommentInput, actor?: CommentActor): Promise<DesignComment>;
   remove(projectId: string, directionId: string, commentId: string): Promise<void>;
-  addReply(projectId: string, directionId: string, commentId: string, text: string): Promise<DesignComment>;
+  addReply(projectId: string, directionId: string, commentId: string, text: string, author?: string): Promise<DesignComment>;
   removeReply(projectId: string, directionId: string, commentId: string, replyId: string): Promise<DesignComment>;
   reorder(projectId: string, directionId: string, ids: string[]): Promise<DesignComment[]>;
   markSent(projectId: string, directionId: string, ids: string[], runId: string): Promise<DesignComment[]>;
@@ -140,6 +141,7 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
           ...(input.attachmentIds?.length ? { attachmentIds: input.attachmentIds } : {}),
           ...(input.mentions?.length ? { mentions: input.mentions } : {}),
           ...(input.drawing ? { drawing: input.drawing } : {}),
+          ...(input.author ? { author: input.author } : {}),
         };
         data.nextN += 1;
         data.comments.push(comment);
@@ -170,13 +172,13 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
       });
     },
 
-    addReply(projectId, directionId, commentId, text) {
+    addReply(projectId, directionId, commentId, text, author) {
       return mutate(projectId, directionId, (data) => {
         const comment = find(data, commentId);
         const replies = comment.replies ?? [];
         if (replies.length >= COMMENT_REPLIES_MAX) throw new BadRequestError(`a comment can have at most ${COMMENT_REPLIES_MAX} replies`);
         const now = Date.now();
-        comment.replies = [...replies, { id: nanoid(10), text, createdAt: now }];
+        comment.replies = [...replies, { id: nanoid(10), text, createdAt: now, ...(author ? { author } : {}) }];
         comment.updatedAt = now;
         return comment;
       });

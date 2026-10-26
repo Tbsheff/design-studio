@@ -1,36 +1,54 @@
 import { randomBytes } from 'node:crypto';
-import type { McpApproval } from '../../shared/export.js';
-
-export type ApprovalOutcome = 'allow' | 'deny' | 'timeout' | 'closed';
+import type { McpApprovalOutcome, McpApprovalRecord } from '../../shared/contracts.js';
 
 export interface ApprovalAsk {
   tool: string;
+  action: string;
   title: string;
   detail: string;
+  projectId: string | null;
+}
+
+export interface ApprovalEvents {
+  opened(approval: McpApprovalRecord): void;
+  resolved(approval: McpApprovalRecord, outcome: McpApprovalOutcome): void;
 }
 
 export interface ApprovalQueue {
-  ask(input: ApprovalAsk): Promise<ApprovalOutcome>;
+  ask(input: ApprovalAsk): Promise<McpApprovalOutcome>;
   answer(id: string, allow: boolean): boolean;
-  list(): McpApproval[];
-  poll(seen: string, waitMs: number, signal?: AbortSignal): Promise<McpApproval[]>;
+  list(): McpApprovalRecord[];
+  poll(seen: string, waitMs: number, signal?: AbortSignal): Promise<McpApprovalRecord[]>;
   windowOpen(): boolean;
 }
 
 interface Pending {
-  approval: McpApproval;
-  settle: (outcome: ApprovalOutcome) => void;
+  approval: McpApprovalRecord;
+  settle: (outcome: McpApprovalOutcome) => void;
+}
+
+interface QueueOptions {
+  timeoutMs?: number;
+  now?: () => number;
+  appOpen?: () => boolean;
+  events?: ApprovalEvents;
 }
 
 export const APPROVAL_TIMEOUT_MS = 120_000;
-const WINDOW_GRACE_MS = 6_000;
+const POLL_GRACE_MS = 6_000;
 const MAX_PENDING = 10;
+const TEXT_MAX = { title: 200, detail: 600 };
 
-export function approvalKey(list: readonly McpApproval[]): string {
+export function approvalKey(list: readonly McpApprovalRecord[]): string {
   return list.map((item) => item.id).join(',');
 }
 
-export function createApprovalQueue(options: { timeoutMs?: number; now?: () => number } = {}): ApprovalQueue {
+function clean(text: string, max: number): string {
+  const flat = text.replace(/[\p{Cc}\s]+/gu, ' ').trim();
+  return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
+}
+
+export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
   const timeoutMs = options.timeoutMs ?? APPROVAL_TIMEOUT_MS;
   const now = options.now ?? Date.now;
   const pending = new Map<string, Pending>();
@@ -42,18 +60,19 @@ export function createApprovalQueue(options: { timeoutMs?: number; now?: () => n
     for (const wake of [...waiters]) wake();
   };
 
-  const list = (): McpApproval[] => [...pending.values()].map((item) => item.approval);
+  const list = (): McpApprovalRecord[] => [...pending.values()].map((item) => item.approval);
 
-  const finish = (id: string, outcome: ApprovalOutcome): boolean => {
+  const finish = (id: string, outcome: McpApprovalOutcome): boolean => {
     const item = pending.get(id);
     if (!item) return false;
     pending.delete(id);
     item.settle(outcome);
+    options.events?.resolved(item.approval, outcome);
     changed();
     return true;
   };
 
-  const windowOpen = (): boolean => polls > 0 || now() - lastPoll < WINDOW_GRACE_MS;
+  const windowOpen = (): boolean => polls > 0 || now() - lastPoll < POLL_GRACE_MS || options.appOpen?.() === true;
 
   return {
     ask(input) {
@@ -61,8 +80,8 @@ export function createApprovalQueue(options: { timeoutMs?: number; now?: () => n
       if (pending.size >= MAX_PENDING) return Promise.resolve('deny');
       const id = randomBytes(9).toString('base64url');
       const createdAt = now();
-      const approval: McpApproval = { id, tool: input.tool, title: input.title, detail: input.detail, createdAt, expiresAt: createdAt + timeoutMs };
-      return new Promise<ApprovalOutcome>((resolve) => {
+      const approval: McpApprovalRecord = { id, tool: input.tool, action: input.action, title: clean(input.title, TEXT_MAX.title), detail: clean(input.detail, TEXT_MAX.detail), projectId: input.projectId, createdAt, expiresAt: createdAt + timeoutMs };
+      return new Promise<McpApprovalOutcome>((resolve) => {
         const timer = setTimeout(() => finish(id, 'timeout'), timeoutMs);
         timer.unref?.();
         pending.set(id, {
@@ -72,6 +91,7 @@ export function createApprovalQueue(options: { timeoutMs?: number; now?: () => n
             resolve(outcome);
           },
         });
+        options.events?.opened(approval);
         changed();
       });
     },

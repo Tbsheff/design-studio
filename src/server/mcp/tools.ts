@@ -6,6 +6,8 @@ import { DESIGN_MD_FILE } from '../design-system/packs.js';
 import { readDesignSystemFiles } from '../design-system/sync.js';
 import { captureFrame, waitForPage } from '../export/capture.js';
 import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
+import { canvasOwner, readCanvasAt } from '../canvas/service.js';
+import { findFrame } from '../canvas/tools.js';
 
 export interface ToolContent {
   type: 'text' | 'image';
@@ -50,8 +52,9 @@ export const TOOLS: ToolDef[] = [
   def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
   def('get_tokens', 'Get design tokens', 'Get the design tokens of the active design system: tokens.css and a list of tokens with their CSS variables and values.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('get_design_md', 'Get DESIGN.md', 'Get the DESIGN.md rules of the project.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size.', {
+  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the size and the direction).', {
     projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE,
+    frameId: { type: 'string', description: 'Canvas frame id or @label from canvas_list. Leave out to use path, width and height.' },
     width: { type: 'integer', minimum: 320, maximum: 2560, description: 'Viewport width in px. Default 1440.' },
     height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900.' },
     fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
@@ -175,10 +178,31 @@ async function tokens(deps: ExportDeps, args: Args): Promise<ToolResult> {
   });
 }
 
-async function screenshot(deps: ExportDeps, args: Args): Promise<ToolResult> {
+interface FrameShot {
+  args: Args;
+  width?: number;
+  height?: number;
+  path?: string;
+}
+
+async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
+  const ref = str(args, 'frameId');
+  if (!ref) return { args };
+  const project = await deps.projects.get(str(args, 'projectId', true) as string);
+  const frames = (await readCanvasAt(canvasOwner(project).workTree)).canvas?.frames ?? [];
+  if (frames.length === 0 && ref === 'f1') return { args };
+  const frame = findFrame(frames, ref);
+  if (!frame) throw new ToolError(`no frame ${ref} on the canvas`);
+  const withDirection = frame.directionId && args.directionId === undefined && args.versionId === undefined ? { ...args, directionId: frame.directionId } : args;
+  return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) };
+}
+
+async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
+  const picked = await frameShot(deps, raw);
+  const args = picked.args;
   const src = await source(deps, args);
-  const page = pagePath(args);
-  const frame: ExportFrame = { name: 'Screenshot', width: int(args, 'width', 320, 2560, 1440), height: int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
+  const page = pagePath(args) ?? picked.path;
+  const frame: ExportFrame = { name: 'Screenshot', width: picked.width ?? int(args, 'width', 320, 2560, 1440), height: picked.height ?? int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
   const opened = await src.open();
   try {
     const shot = await captureFrame(deps.preview, opened.url, frame, 1, args.fullPage === true ? 'page' : 'frame', undefined, MAX_SHOT_HEIGHT);

@@ -44,6 +44,8 @@ const targetSchema = z.object({
 
 const textSchema = z.string().trim().min(1, 'text is required').max(COMMENT_TEXT_MAX);
 
+const authorSchema = z.string().trim().min(1).max(60);
+
 const coordinate = z.number().finite().min(-10_000).max(100_000);
 
 const drawingSchema = z
@@ -74,10 +76,11 @@ const createSchema = z
     attachmentIds: attachmentIdsSchema.optional(),
     mentions: z.array(z.unknown()).max(MENTION_MAX).optional(),
     drawing: drawingSchema.optional(),
+    author: authorSchema.optional(),
   })
   .refine((input) => !input.drawing || (input.attachmentIds?.length ?? 0) > 0, 'a drawing needs its image in attachmentIds');
 
-const replySchema = z.object({ text: textSchema }).strict();
+const replySchema = z.object({ text: textSchema, author: authorSchema.optional() }).strict();
 
 const updateSchema = z
   .object({
@@ -222,9 +225,9 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
   });
 
   app.post(`${base}/:cid/replies`, async (c) => {
-    const { text } = await parseBody(c, replySchema);
+    const { text, author } = await parseBody(c, replySchema);
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json(await comments.addReply(project.id, direction.id, c.req.param('cid'), text));
+    return c.json(await comments.addReply(project.id, direction.id, c.req.param('cid'), text, author));
   });
 
   app.delete(`${base}/:cid/replies/:rid`, async (c) => {

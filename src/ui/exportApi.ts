@@ -49,7 +49,7 @@ export const exportApi = {
     await call('POST', `${p(pid)}/d/${encodeURIComponent(did)}/open-in-editor`, file ? { editor, file } : { editor });
   },
   mcpStatus: async (): Promise<McpStatus> => (await call('GET', '/api/mcp')).json() as Promise<McpStatus>,
-  setMcp: async (input: { enabled?: boolean; control?: boolean; rotate?: boolean }): Promise<McpStatus> => (await call('POST', '/api/mcp', input)).json() as Promise<McpStatus>,
+  setMcp: async (input: { enabled?: boolean; edits?: boolean; rotate?: boolean }): Promise<McpStatus> => (await call('POST', '/api/mcp', input)).json() as Promise<McpStatus>,
 };
 
 export interface ExportPrefs {

@@ -62,6 +62,17 @@ These are unmodified npm packages, installed from the registry and not copied in
 
 `axe-core` is MPL-2.0, not MIT. MPL-2.0 is a file-level copyleft license: the studio may use the package unchanged, but if anyone changes an `axe-core` file, they must publish that file's source under MPL-2.0. The studio does not change it.
 
+## Bundled fonts
+
+The studio UI ships these font files in `src/ui/assets/fonts/`. They are unmodified WOFF2 subsets (latin and latin-ext) taken from the Fontsource npm packages on 2026-10-26. The app loads them locally; it does not fetch fonts from the network. The full license text is in `src/ui/assets/fonts/OFL.txt`.
+
+| Font | Source package | Copyright | License | Use |
+| --- | --- | --- | --- | --- |
+| Inter (variable, wght) | `@fontsource-variable/inter` 5.3.0 | Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter) | SIL OFL 1.1 | UI text (`--font`). |
+| Source Serif 4 (variable, opsz + wght, roman and italic) | `@fontsource-variable/source-serif-4` 5.3.1 | Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source' | SIL OFL 1.1 | Display headlines and assistant prose (`--serif`). |
+
+OFL 1.1 lets the app bundle and ship the fonts. The files must keep the license with them, and a changed version must not use the reserved name "Source". The studio does not change the files.
+
 ## Components in the packaged desktop app
 
 `npm run desktop:pack` puts these in the app bundle. They are not part of the source tree.

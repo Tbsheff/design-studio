@@ -6,11 +6,11 @@ export type ThemePref = 'system' | 'light' | 'dark';
 
 export const THEME_IPC = { get: 'studio:theme-get', set: 'studio:theme-set' } as const;
 
-const STUDIO_PAINT = { light: '#f6f8fa', dark: '#191c1f' };
+const STUDIO_PAINT = { light: '#faf9f5', dark: '#1f1e1d' };
 const SETUP_PAINT = { light: '#fbfcfe', dark: '#141619' };
 
 let file: string | null = null;
-let pref: ThemePref = 'system';
+let pref: ThemePref = 'dark';
 const painted = new Set<BrowserWindow>();
 
 function valid(value: unknown): ThemePref | null {
@@ -43,9 +43,9 @@ export function initTheme(themeFile: string): void {
   if (file) return;
   file = themeFile;
   try {
-    pref = valid((JSON.parse(readFileSync(themeFile, 'utf8')) as { theme?: unknown }).theme) ?? 'system';
+    pref = valid((JSON.parse(readFileSync(themeFile, 'utf8')) as { theme?: unknown }).theme) ?? 'dark';
   } catch {
-    pref = 'system';
+    pref = 'dark';
   }
   ipcMain.on(THEME_IPC.get, (event) => {
     event.returnValue = pref;

@@ -203,7 +203,7 @@ export function ToolChips({ tools, running, workTree, flat = false }: { tools: T
   const [open, setOpen] = useState<boolean | null>(null);
   if (tools.length === 0) return null;
   const rows = (
-    <div className="tool-list flex flex-col gap-0.5">
+    <div className="tool-list flex flex-col">
       {groupRepeats(tools, workTree).map((group) => (
         <ToolItem key={group.tool.toolUseId} group={group} workTree={workTree} running={running} />
       ))}

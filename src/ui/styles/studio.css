@@ -307,8 +307,8 @@
   padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);
-  background: var(--accent-soft);
-  color: var(--accent-text);
+  background: var(--info-tint);
+  color: var(--info);
   font: var(--w-medium) 11px / 16px var(--font);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -316,29 +316,7 @@
 
 .topbar-zoom:hover,
 .topbar-zoom[aria-expanded='true'] {
-  background: var(--accent-tint);
-}
-
-.canvas-topbar .topbar-tools {
-  height: 28px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.canvas-topbar .topbar-tools > button {
-  height: 22px;
-  min-width: 26px;
-  padding: 0 10px;
-  gap: 5px;
-  font-size: var(--t-xs);
-}
-
-.canvas-topbar .topbar-tools > button:first-child {
-  padding: 0 6px;
-}
-
-.canvas-topbar .topbar-tools > button[aria-pressed='true'] {
-  box-shadow: inset 0 0 0 0.5px var(--line-strong);
+  background: var(--info-tint-strong);
 }
 
 .canvas-topbar .btn.topbar-present,

@@ -56,6 +56,14 @@ export interface CanvasCommentTools {
   onSteer?: (text: string) => void;
 }
 
+function inEditPane(shell: CanvasShell | undefined): boolean {
+  return shell?.pane === 'design';
+}
+
+function hostedClose(shell: CanvasShell | undefined, close: () => void): (() => void) | undefined {
+  return shell ? undefined : close;
+}
+
 function pageNameOf(path: string | undefined): string {
   const file = path?.split('/').pop()?.replace(/\.html?$/i, '');
   return file && file !== 'index' ? file : 'Page';
@@ -472,7 +480,7 @@ export function Canvas(props: Props) {
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
       <div className="canvas-body">
-      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={props.shell ? undefined : pane.closeLayers} />)}
+      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div
@@ -502,6 +510,7 @@ export function Canvas(props: Props) {
                 zoom={pz.zoom}
                 frame={viewport}
                 selectMode={picking}
+                editing={inEditPane(props.shell)}
                 selection={props.selection}
                 tools={commentToolsOf(props, active.path)}
               />

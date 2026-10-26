@@ -778,8 +778,11 @@
   padding: var(--s-3);
 }
 
-.comments-composer textarea {
+.comments-composer textarea,
+.comments-composer textarea:focus,
+.comments-composer textarea:hover {
   width: 100%;
+  box-shadow: none;
   min-height: 42px;
   resize: none;
   border: 0;

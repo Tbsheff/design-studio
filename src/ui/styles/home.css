@@ -1721,10 +1721,6 @@
   right: var(--s-2);
 }
 
-.home-view-toggle {
-  height: 32px;
-}
-
 @media (max-width: 720px) {
   .home-tile-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

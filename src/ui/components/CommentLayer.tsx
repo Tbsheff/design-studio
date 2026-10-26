@@ -30,6 +30,7 @@ interface Props {
   frame: { width: number; height: number };
   commentMode: boolean;
   selectMode: boolean;
+  editing?: boolean;
   selection: SelectionContext[];
   onExitCommentMode: () => void;
   tools: CommentTools;
@@ -296,7 +297,7 @@ export function CommentLayer(props: Props) {
     !props.commentMode &&
     props.selection.length > 0 &&
     dismissedKey !== selKey &&
-    (props.selectMode || feedbackActive) &&
+    ((props.selectMode && !props.editing) || feedbackActive) &&
     !(control.composerActive && !feedbackActive) &&
     control.directionId !== null;
 

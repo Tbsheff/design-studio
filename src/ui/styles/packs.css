@@ -79,7 +79,7 @@
 
 .pack-popover-head strong {
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .pack-popover-head span {
@@ -190,7 +190,7 @@
   min-width: 0;
   padding-right: var(--s-5);
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   white-space: nowrap;
 }
 
@@ -284,7 +284,7 @@
 
 .ds-titles strong {
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .ds-titles span {

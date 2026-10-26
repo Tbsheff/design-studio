@@ -539,7 +539,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--w-medium);
   cursor: pointer;
 }
 

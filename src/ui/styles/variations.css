@@ -56,7 +56,7 @@
 .variation-card-heading h2 {
   margin: 0;
   font-size: var(--t-lg);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   color: var(--text);
 }
 
@@ -100,7 +100,7 @@
 }
 
 .variation-brief-title {
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .variation-brief-text {
@@ -229,7 +229,7 @@
 .variation-bar-title {
   flex: none;
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .variation-bar-prompt {

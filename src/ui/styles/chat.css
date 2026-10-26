@@ -45,7 +45,7 @@
 .chat-empty strong {
   color: var(--text);
   font-size: var(--t-md);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .chat-empty p {
@@ -68,7 +68,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-weight: var(--w-medium);
   font-size: var(--t-xs);
 }
 
@@ -354,7 +354,7 @@
 }
 
 .permission-head strong {
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .permission-detail {

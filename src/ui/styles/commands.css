@@ -121,7 +121,7 @@
 .cmdk-title mark {
   background: none;
   color: var(--accent-text);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .cmdk-note {
@@ -199,7 +199,7 @@
 .keysheet-head h2 {
   margin: 0;
   font-size: var(--t-md);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .keysheet-search {

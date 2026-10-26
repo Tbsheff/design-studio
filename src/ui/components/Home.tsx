@@ -133,7 +133,7 @@ function CreateButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
   const working = busy === 'create' || busy === 'ask';
   const label = busy === 'create' ? 'Creating…' : busy === 'ask' ? 'Thinking…' : 'Create';
   return (
-    <button className="btn primary has-icon" type="submit" disabled={disabled} title="Create (⌘↩)">
+    <button className="btn send has-icon" type="submit" disabled={disabled} title="Create (⌘↩)">
       {working ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
       {label}
     </button>

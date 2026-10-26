@@ -69,7 +69,7 @@
 }
 
 .toolbar-title {
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .dims-readout {
@@ -641,7 +641,7 @@ body.element-resizing .frame {
 
 .layers-title {
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .layers-frame {

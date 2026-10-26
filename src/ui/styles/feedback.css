@@ -6,7 +6,7 @@
   padding: 0 7px;
   border-radius: var(--r-full);
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   line-height: 1;
   background: var(--surface-active);
   color: var(--text-2);

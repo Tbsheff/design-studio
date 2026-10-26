@@ -48,7 +48,7 @@
 
 .nds-section-head h2 {
   font-size: var(--t-md);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .nds-section-head p {
@@ -193,7 +193,7 @@
   padding: 2px var(--s-2);
   border-radius: var(--r-full);
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   font-variant-numeric: tabular-nums;
   background: var(--surface-2);
   color: var(--text-2);
@@ -262,7 +262,7 @@
 .draft-check {
   flex: none;
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .draft-check.passed {

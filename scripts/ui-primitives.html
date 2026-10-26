@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>UI primitives</title>
+    <script>
+      document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark';
+    </script>
+    <link rel="stylesheet" href="/src/ui/styles/tokens.css" />
+    <link rel="stylesheet" href="/src/ui/styles/controls.css" />
+    <link rel="stylesheet" href="/src/ui/styles/forms.css" />
+    <link rel="stylesheet" href="/src/ui/styles/feedback.css" />
+    <style>
+      body { height: auto; padding: 40px 48px 64px; }
+      .sheet { display: grid; gap: 36px; max-width: 1080px; }
+      .sheet section { display: grid; gap: 12px; }
+      .sheet .row { flex-wrap: wrap; gap: 12px; }
+      .swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+      .swatches div { display: grid; gap: 4px; font-size: var(--t-xs); color: var(--text-2); }
+      .swatches span { height: 44px; border-radius: var(--r-md); box-shadow: var(--shadow-inset); }
+      .type-ramp { display: grid; gap: 6px; }
+      .demo-composer { width: 520px; padding: 14px; display: grid; gap: 14px; }
+      .demo-composer textarea { min-height: 44px; resize: none; padding: 0; background: transparent; box-shadow: none; font-size: var(--t-md); }
+      .demo-composer textarea:hover, .demo-composer textarea:focus { box-shadow: none; }
+      .demo-inspector { width: 300px; padding: 12px; display: grid; gap: 10px; }
+      .demo-inset { width: 420px; height: 160px; display: grid; place-items: center; color: var(--text-3); }
+      .demo-chat { width: 340px; display: grid; gap: 12px; }
+    </style>
+  </head>
+  <body>
+    <main class="sheet">
+      <section>
+        <h1 class="ui-display">What should we create?</h1>
+        <p class="muted">Design Studio UI primitives. Theme: <a class="link" href="?theme=dark">dark</a> · <a class="link" href="?theme=light">light</a></p>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Color</div>
+        <div class="swatches">
+          <div><span style="background: var(--bg)"></span>bg</div>
+          <div><span style="background: var(--surface-2)"></span>surface-2</div>
+          <div><span style="background: var(--surface-raised)"></span>surface-raised</div>
+          <div><span style="background: var(--surface-active)"></span>surface-active</div>
+          <div><span style="background: var(--surface-inset)"></span>surface-inset</div>
+          <div><span style="background: var(--line-strong)"></span>line-strong</div>
+          <div><span style="background: var(--text)"></span>text</div>
+          <div><span style="background: var(--text-2)"></span>text-2</div>
+          <div><span style="background: var(--text-3)"></span>text-3</div>
+          <div><span style="background: var(--text-faint)"></span>text-faint</div>
+          <div><span style="background: var(--brand)"></span>brand</div>
+          <div><span style="background: var(--strong)"></span>strong</div>
+          <div><span style="background: var(--accent)"></span>accent (blue)</div>
+          <div><span style="background: var(--accent-soft)"></span>accent-soft</div>
+          <div><span style="background: var(--warn-soft)"></span>warn-soft</div>
+          <div><span style="background: var(--danger)"></span>danger</div>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Type</div>
+        <div class="type-ramp">
+          <div class="ui-display">Display serif 40</div>
+          <div class="ui-display small">Display serif 28</div>
+          <div style="font-size: var(--t-xl); line-height: var(--lh-xl); font-weight: var(--w-medium)">Title 20 medium</div>
+          <div style="font-size: var(--t-lg); line-height: var(--lh-lg)">Body 16 regular</div>
+          <div style="font-size: var(--t-md)">UI 14 regular, <strong>14 medium</strong></div>
+          <div style="font-size: var(--t-sm)">UI 13 regular (body default)</div>
+          <div style="font-size: var(--t-xs); color: var(--text-2)">Caption 12 muted</div>
+          <p class="ui-prose" style="max-width: 60ch">I made three desktop directions in a calm clinical style with a serif headline and a green call to action. Tell me which one to take further.</p>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Buttons</div>
+        <div class="row">
+          <button class="btn send has-icon"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg>Create</button>
+          <button class="btn strong">Share</button>
+          <button class="btn primary">Primary (= strong)</button>
+          <button class="btn">Secondary</button>
+          <button class="btn ghost">Ghost</button>
+          <button class="btn small">Small</button>
+          <button class="btn danger">Danger</button>
+          <button class="btn strong" disabled>Disabled</button>
+          <a class="link" href="#">Quick tutorial</a>
+        </div>
+        <div class="row">
+          <button class="icon-btn send" aria-label="Send"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button>
+          <button class="icon-btn send" disabled aria-label="Send"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button>
+          <button class="icon-btn bordered" aria-label="Add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></button>
+          <button class="icon-btn" aria-label="Reload"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v2.5h-2.5"/></svg></button>
+          <button class="icon-btn small" aria-label="Close"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
+          <button class="icon-btn on" aria-label="On"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M6 3v10"/></svg></button>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Composer, pill selects, tools, zoom</div>
+        <div class="ui-composer demo-composer">
+          <textarea placeholder="Wireframe a settings page"></textarea>
+          <div class="row">
+            <button class="icon-btn bordered" aria-label="Add"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg></button>
+            <button class="ui-pill-select"><span class="ui-pill-select-label">Design system</span><span class="ui-pill-select-value">None</span><svg class="ui-pill-select-caret" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="m2.5 4 2.5 2.5L7.5 4"/></svg></button>
+            <span class="spacer"></span>
+            <button class="ui-pill-select"><span class="ui-pill-select-label">Model</span><span class="ui-pill-select-value">Opus 5.5</span><svg class="ui-pill-select-caret" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="m2.5 4 2.5 2.5L7.5 4"/></svg></button>
+            <button class="icon-btn send" aria-label="Send"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5"/></svg></button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="ui-tools" role="group" aria-label="Tool">
+            <button aria-pressed="true" aria-label="Select"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3.5 2.5 9 4.5-4 1.5-1.5 4z"/></svg></button>
+            <button aria-pressed="false">Comment</button>
+            <button aria-pressed="false">Edit</button>
+          </div>
+          <div class="ui-zoom"><button aria-label="Zoom out">−</button><span class="ui-zoom-value" style="text-align: center">59%</span><button aria-label="Zoom in">+</button></div>
+          <div class="segmented"><button class="on">Simple</button><button>Pro</button><button>Code</button><button>Tweaks</button></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Inspector field rows</div>
+        <div class="ui-card demo-inspector">
+          <div class="ui-fields">
+            <label class="ui-field wide"><span class="ui-field-label">Content</span><input value="Care that stays with you between visits" /></label>
+            <label class="ui-field"><span class="ui-field-label">Size</span><input value="76" /><span class="ui-field-unit">px</span></label>
+            <label class="ui-field"><span class="ui-field-label">Color</span><input value="#1C201F" /><span class="ui-field-swatch" style="--swatch: var(--text)"></span></label>
+            <label class="ui-field"><span class="ui-field-label">Weight</span><select><option>Regular</option><option>Medium</option></select></label>
+            <label class="ui-field"><span class="ui-field-label">Leading</span><input value="79" /><span class="ui-field-unit">px</span></label>
+            <label class="ui-field"><span class="ui-field-label">Tracking</span><input value="-0.02" /><span class="ui-field-unit">em</span></label>
+            <div class="ui-field"><span class="ui-field-label">Overflow</span><span class="ui-field-value">visible</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Menu and popover</div>
+        <div class="row" style="align-items: flex-start">
+          <div class="ui-menu" role="menu">
+            <div class="ui-menu-section">
+              <div class="ui-menu-label">Files</div>
+              <button class="ui-menu-item" role="menuitem"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 5.5 6 10a1.5 1.5 0 0 1-2-2l5-5a3 3 0 0 1 4 4L8 12"/></svg>Attach file</button>
+              <button class="ui-menu-item" role="menuitem"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 4.5h4l1.5 1.5h5.5v6.5h-11z"/></svg>Attach folder</button>
+            </div>
+            <div class="ui-menu-section">
+              <div class="ui-menu-label">Designs</div>
+              <button class="ui-menu-item" role="menuitem"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 11V3M5 6l3-3 3 3M3 13h10"/></svg>Upload .fig file<span class="ui-menu-meta">Learn how</span></button>
+              <button class="ui-menu-item" role="menuitemradio" aria-checked="true">In this window</button>
+              <button class="ui-menu-item" role="menuitem" disabled>Disabled item</button>
+            </div>
+          </div>
+          <div class="ui-popover" style="padding: 12px; width: 260px; display: grid; gap: 10px">
+            <p class="muted small-text">Set up a design system so every project starts from your colors, type and components.</p>
+            <button class="btn strong">Set up your design system</button>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Chat parts</div>
+        <div class="demo-chat">
+          <div class="ui-card" style="padding: 10px 12px; display: grid; gap: 8px; justify-items: start">
+            <span>Make UI mockups for a simple landing page</span>
+            <span class="ui-chip">Hi-fi design</span>
+          </div>
+          <div class="ui-notice"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5 14 13H2zM8 6.5v3M8 11.2v.3"/></svg>You've used 82% of your weekly limit · It resets Thu, Oct 29</div>
+          <div class="ui-notice info">Tip: press C to comment on any element.</div>
+          <div class="ui-status"><span class="ui-status-mark"></span>Laid out header</div>
+          <div class="ui-status"><span class="ui-status-mark idle"></span>Ask user ×2, Designing ×2</div>
+          <p class="ui-prose">Ask <span class="ui-mention">@Claude</span> to change the hero copy.</p>
+          <div><button class="ui-file-chip"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8H4z"/></svg>Created Landing Page.dc.html</button></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Template tiles</div>
+        <div class="ui-tile-grid" style="max-width: 640px">
+          <button class="ui-tile" aria-pressed="true"><span class="ui-tile-art"><svg width="32" height="40" viewBox="0 0 32 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h16l8 8v28H4z"/></svg></span>Blank</button>
+          <button class="ui-tile" aria-pressed="false"><span class="ui-tile-art"><svg width="24" height="40" viewBox="0 0 24 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="36" rx="4"/></svg></span>Mobile app design</button>
+          <button class="ui-tile" aria-pressed="false"><span class="ui-tile-art"><svg width="44" height="32" viewBox="0 0 44 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="40" height="28" rx="3"/></svg></span>Slides</button>
+          <button class="ui-tile" aria-pressed="false"><span class="ui-tile-art"><svg width="32" height="40" viewBox="0 0 32 40" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h16l8 8v28H4zM9 18h14M9 24h14M9 30h9"/></svg></span>Document</button>
+          <button class="ui-tile" aria-pressed="false"><span class="ui-tile-art"><svg width="44" height="32" viewBox="0 0 44 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2"><rect x="2" y="2" width="40" height="28" rx="3"/></svg></span>Wireframe</button>
+          <button class="ui-tile" aria-pressed="false"><span class="ui-tile-art"><svg width="44" height="32" viewBox="0 0 44 32" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="40" height="22" rx="3"/><path d="m19 9 7 4-7 4z"/></svg></span>Animation</button>
+        </div>
+      </section>
+
+      <section>
+        <div class="ui-section-label">Inset canvas card</div>
+        <div class="ui-inset demo-inset">canvas</div>
+      </section>
+    </main>
+  </body>
+</html>

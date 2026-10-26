@@ -205,7 +205,7 @@ export function RunError({ run, latest, onRetry }: { run: RunView; latest: boole
   if (!error || run.status === 'budget_exceeded') return null;
   return (
     <Exception ref={ref} className="run-error" role="alert">
-      <ExceptionHeader className="h-auto min-h-11 items-start py-2.5">
+      <ExceptionHeader className="run-error-head">
         <ExceptionType>Error</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>
         {latest && onRetry && run.status !== 'canceled' && (

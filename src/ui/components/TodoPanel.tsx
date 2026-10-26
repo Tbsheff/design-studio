@@ -9,12 +9,18 @@ export function todoProgress(todos: TodoItem[]): { current: number; total: numbe
 }
 
 export const TodoPanel = memo(function TodoPanel({ todos, running }: { todos: TodoItem[]; running: boolean }) {
-  const [open, setOpen] = useState(true);
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const [ranWith, setRanWith] = useState(running);
+  if (ranWith !== running) {
+    setRanWith(running);
+    setChoice(null);
+  }
+  const open = choice ?? running;
   if (todos.length === 0) return null;
   const { current, total } = todoProgress(todos);
   return (
     <section className="todo-panel" aria-label="Todo list" data-testid="todo-panel">
-      <button type="button" className="todo-head" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+      <button type="button" className="todo-head" aria-expanded={open} onClick={() => setChoice(!open)}>
         <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
         <span>Todos</span>
         <span className="todo-count tabular-nums" data-testid="todo-count">

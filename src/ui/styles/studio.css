@@ -36,8 +36,8 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  height: 40px;
-  padding: 0 var(--s-1) 0 var(--s-3);
+  height: var(--bar-h);
+  padding: 0 var(--s-2) 0 var(--pane-inset);
 }
 
 .pane-head .brand-mark {
@@ -111,8 +111,8 @@
 
 .pane-head-btn.icon-btn {
   position: relative;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--r-sm);
   color: var(--text-2);
 }
@@ -193,7 +193,7 @@
   align-items: center;
   gap: var(--s-1);
   height: 32px;
-  padding: 0 var(--s-1) 0 var(--s-3);
+  padding: 0 var(--s-2) 0 var(--pane-inset);
 }
 
 .pane-sheet-title {
@@ -222,7 +222,7 @@
   justify-items: start;
   align-content: start;
   gap: var(--s-3);
-  padding: var(--s-2) var(--s-3);
+  padding: var(--s-2) var(--pane-inset);
 }
 
 .pane-system-text {
@@ -240,10 +240,11 @@
 
 .pane-canvas .canvas-topbar {
   gap: var(--s-1);
-  height: 44px;
+  height: var(--bar-h);
   padding: 0 var(--s-2);
   background: var(--surface-inset);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0;
+  box-shadow: inset 0 -1px 0 var(--line);
   container-type: inline-size;
 }
 
@@ -254,8 +255,8 @@
 }
 
 .canvas-topbar .topbar-icon.icon-btn {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   flex: none;
   border-radius: var(--r-sm);
   color: var(--text-2);

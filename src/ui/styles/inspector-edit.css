@@ -13,8 +13,8 @@
   align-items: center;
   gap: var(--s-1);
   flex: none;
-  height: 40px;
-  padding: 0 var(--s-2) 0 var(--s-3);
+  height: var(--bar-h);
+  padding: 0 var(--s-2) 0 var(--pane-inset);
 }
 
 .edit-title {

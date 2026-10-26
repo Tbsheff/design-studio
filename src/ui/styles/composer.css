@@ -410,12 +410,8 @@
   translate: 0 0;
 }
 
-.stop-btn {
+.icon-btn.stop-btn {
   color: var(--text);
-}
-
-.stop-btn svg {
-  color: var(--danger);
 }
 
 .queued {
@@ -445,6 +441,7 @@
   padding: 2px 2px 2px var(--s-2);
   border-radius: var(--r-md);
   background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--text-2);
   font-size: var(--t-sm);
 }
@@ -520,10 +517,11 @@
 }
 
 .todo-panel {
-  margin: 0 var(--s-4) var(--s-2);
+  margin: 0 var(--s-3) var(--s-2);
   padding: var(--s-1) var(--s-2) var(--s-2);
   border-radius: var(--r-lg);
   background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
   font-size: var(--t-sm);
 }
 
@@ -600,7 +598,6 @@
 
 .todo-item.in_progress {
   color: var(--text);
-  font-weight: 500;
 }
 
 .todo-item.in_progress .todo-mark {
@@ -643,4 +640,92 @@
 .slash-opt .slash-name {
   font-family: var(--mono);
   font-weight: 500;
+}
+
+.prompt .composer.ui-composer {
+  border: 0;
+  gap: 0;
+}
+
+.prompt .composer.ui-composer.dragging {
+  box-shadow: inset 0 0 0 1px var(--accent-line), var(--shadow-sm);
+  background: var(--accent-tint);
+}
+
+.prompt .composer-input {
+  padding: var(--s-3) var(--s-3) var(--s-2);
+  font-size: var(--t-sm);
+  line-height: var(--lh-md);
+}
+
+.prompt .composer-input::placeholder {
+  color: var(--text-faint);
+}
+
+.prompt-bar {
+  align-items: center;
+}
+
+.composer-plus[aria-expanded='true'] {
+  background: var(--surface-active);
+  color: var(--text);
+}
+
+.composer-state {
+  gap: 2px;
+  padding-right: 2px;
+}
+
+.composer-menu {
+  position: fixed;
+  z-index: 90;
+  width: 248px;
+  max-height: min(520px, calc(100vh - 16px));
+  overflow-y: auto;
+  animation: pop-in var(--dur) var(--ease);
+}
+
+.model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px 0 var(--s-2);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.model-pill:hover,
+.model-pill[aria-expanded='true'] {
+  background: var(--surface-hover);
+}
+
+.model-pill-name {
+  font-weight: var(--w-medium);
+}
+
+.model-pill-effort,
+.model-pill > .icon {
+  color: var(--text-3);
+}
+
+.model-pill > .icon {
+  flex: none;
+}
+
+.icon-btn.send-btn .spinner {
+  width: 14px;
+  height: 14px;
+}
+
+@container (max-width: 300px) {
+  .model-pill-effort,
+  .context-meter {
+    display: none;
+  }
 }

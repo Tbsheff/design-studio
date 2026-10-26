@@ -13,29 +13,29 @@ interface ModeSetting {
   onChange: (mode: ComposerMode) => void;
 }
 
-interface DesignsSetting {
+export interface DesignsSetting {
   value: number;
   max: number;
   onChange: (count: number) => void;
   disabledReason: string | null;
 }
 
-interface EffortSetting {
+export interface EffortSetting {
   value: RunEffort | null;
   onChange: (effort: RunEffort | null) => void;
 }
 
 const EFFORTS = ['auto', 'low', 'medium', 'high'] as const;
 type EffortChoice = (typeof EFFORTS)[number];
-const EFFORT_LABEL: Record<EffortChoice, string> = { auto: 'Auto', low: 'Low', medium: 'Medium', high: 'High' };
-const EFFORT_HINT: Record<EffortChoice, string> = {
+export const EFFORT_LABEL: Record<EffortChoice, string> = { auto: 'Auto', low: 'Low', medium: 'Medium', high: 'High' };
+export const EFFORT_HINT: Record<EffortChoice, string> = {
   auto: 'The model picks how hard to think.',
   low: 'Fastest and cheapest. Good for small changes.',
   medium: 'A balance of speed and care.',
   high: 'Thinks the longest. Best for large or tricky work.',
 };
 
-function EffortToggle({ effort, hintId }: { effort: EffortSetting; hintId: string }) {
+export function EffortToggle({ effort, hintId }: { effort: EffortSetting; hintId: string }) {
   const choice: EffortChoice = effort.value ?? 'auto';
   const pick = (next: EffortChoice) => effort.onChange(next === 'auto' ? null : next);
   const radios = useRovingRadioGroup(EFFORTS, choice, pick);
@@ -60,15 +60,15 @@ interface Props {
 }
 
 const MODES = ['edit', 'plan', 'critique'] as const;
-const MODE_LABEL: Record<ComposerMode, string> = { edit: 'Edit', plan: 'Plan', critique: 'Critique' };
-const MODE_HINT: Record<ComposerMode, string> = {
+export const MODE_LABEL: Record<ComposerMode, string> = { edit: 'Edit', plan: 'Plan', critique: 'Critique' };
+export const MODE_HINT: Record<ComposerMode, string> = {
   edit: 'Send changes the design.',
   plan: 'Send makes a plan first. Files change only after you approve it.',
   critique: 'Send asks for a review. The design does not change.',
 };
 const GAP = 4;
 const MARGIN = 8;
-const UNPLACED: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
+export const UNPLACED: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
 
 export function runSettingsSummary(input: { mode?: ComposerMode; level: RunLevel; designs?: number; designsOn?: boolean; effort?: RunEffort | null }): string {
   const parts = [input.mode ? MODE_LABEL[input.mode] : null, levelLabel(input.level), input.effort ? `${EFFORT_LABEL[input.effort]} effort` : null];
@@ -82,7 +82,7 @@ export function designsHint(designs: DesignsSetting): string {
   return `Pick 2 to ${designs.max} to compare options.`;
 }
 
-function placeAboveOrBelow(trigger: HTMLElement, panel: HTMLElement): CSSProperties {
+export function placeAboveOrBelow(trigger: HTMLElement, panel: HTMLElement): CSSProperties {
   const rect = trigger.getBoundingClientRect();
   const left = Math.min(Math.max(MARGIN, rect.left), window.innerWidth - panel.offsetWidth - MARGIN);
   const roomAbove = rect.top - GAP - MARGIN;

@@ -950,8 +950,8 @@
 
 .comment-row-actions {
   position: absolute;
+  top: 0;
   right: var(--s-1);
-  bottom: var(--s-1);
   display: flex;
   gap: 2px;
   padding: 2px;

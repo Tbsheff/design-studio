@@ -16,7 +16,7 @@ export function FrameResizeHandles({ onPointerDown }: { onPointerDown: (e: React
   return (
     <>
       {EDGES.map(({ edge, label }) => (
-        <div key={edge} className={`frame-resize ${edge}`} aria-hidden="true" title={label} data-edge={edge} onPointerDown={(e) => onPointerDown(e, edge)} />
+        <div key={edge} className={`frame-resize ${edge}`} aria-hidden="true" data-edge={edge} onPointerDown={(e) => onPointerDown(e, edge)} />
       ))}
       <span className="frame-size-readout" aria-hidden="true" />
     </>
@@ -141,11 +141,11 @@ export function VariationControls({ variation, active, element, onMixed }: { var
   };
   return (
     <>
-      <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" title={variation.costText}>
+      <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" data-tip={variation.costText}>
         {status ? STATUS_TEXT[status] : 'No run'}
       </span>
       {active && element && variation.siblings.length > 0 && <UseInMenu siblings={variation.siblings} busy={mixing} onPick={(id) => void mix(id)} />}
-      <button type="button" className="frame-chip keep" onPointerDown={stop} onClick={variation.onKeep} data-tip="Keep this one and remove the other variation frames">
+      <button type="button" className="frame-chip keep" onPointerDown={stop} onClick={variation.onKeep}>
         Keep this one
       </button>
       {error && (

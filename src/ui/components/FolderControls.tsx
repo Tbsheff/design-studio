@@ -228,7 +228,7 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
           </button>
         </form>
       ) : (
-        <button type="button" className="folder-main" aria-pressed={active} onClick={onFilter} title={active ? 'Show all projects' : `Show projects in ${folder.label}`}>
+        <button type="button" className="folder-main" aria-pressed={active} onClick={onFilter} data-tip={active ? 'Show all projects' : `Show projects in ${folder.label}`} data-tip-align="start">
           <Icon name="folder" size={16} />
           <span className="folder-text">
             <span className="folder-label">
@@ -238,7 +238,7 @@ function FolderRow({ folder, count, active, homeDir, onFilter, onNewHere, onOpen
             <FolderPath path={folder.path} homeDir={homeDir} />
           </span>
           {folder.missing ? (
-            <span className="badge fail" title="This folder was moved or deleted. Remove it, or put it back.">
+            <span className="badge fail" data-tip="This folder was moved or deleted. Remove it, or put it back.">
               Missing
             </span>
           ) : (

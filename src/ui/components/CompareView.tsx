@@ -45,7 +45,7 @@ function ModeSwitch({ mode, onMode }: { mode: Mode; onMode: (mode: Mode) => void
           aria-checked={mode === item.id}
           tabIndex={mode === item.id ? 0 : -1}
           className={mode === item.id ? 'on' : ''}
-          data-tip={item.tip}
+          {...{ 'aria-description': item.tip }}
           onClick={() => onMode(item.id)}
         >
           {item.label}

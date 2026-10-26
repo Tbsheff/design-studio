@@ -32,7 +32,7 @@ function SkillRow({ skill, on, allowBash, onToggle }: { skill: SkillInfo; on: bo
           {skill.name}
           {skill.needsBash && !allowBash && <span className="skill-tag">Needs shell</span>}
           {!skill.modelInvocable && (
-            <span className="skill-tag muted-tag" title="SKILL.md sets disable-model-invocation, so the agent cannot load it">
+            <span className="skill-tag muted-tag" data-tip-align="end" data-tip="SKILL.md sets disable-model-invocation, so the agent cannot load it">
               Manual only
             </span>
           )}

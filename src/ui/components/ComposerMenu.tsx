@@ -74,7 +74,6 @@ function MenuItem({ icon, label, meta, checked, disabledReason, hint, onPick }: 
       role={checked === undefined ? 'menuitem' : 'menuitemradio'}
       aria-checked={checked}
       aria-disabled={off || undefined}
-      title={disabledReason ?? hint}
       tabIndex={-1}
       onClick={() => {
         if (!off) onPick();
@@ -167,7 +166,7 @@ export function PlusMenu(props: PlusMenuProps) {
             </Section>
             {designs && (
               <Section label="Designs side by side">
-                <div className="composer-menu-counts" title={designsHint(designs)}>
+                <div className="composer-menu-counts">
                   {DESIGN_COUNTS.filter((count) => count <= designs.max).map((count) => {
                     const off = count > 1 && designs.disabledReason !== null;
                     return (
@@ -255,7 +254,6 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
                   type="button"
                   role="menuitemradio"
                   className="ui-menu-item level-menu-item"
-                  title={levelHint(item)}
                   aria-checked={level === item}
                   tabIndex={-1}
                   onClick={() => {
@@ -327,9 +325,6 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
         data-testid="run-settings"
         aria-haspopup="dialog"
         aria-expanded={pop.open}
-        data-tip={`${levelLabel(level)} level · ${modelLabel(shown)}`}
-        data-tip-side="top"
-        data-tip-align="end"
         onClick={() => {
           if (!pop.open) onOpen?.();
           pop.toggle();

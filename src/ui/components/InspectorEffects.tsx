@@ -37,7 +37,7 @@ function ShadowRow({ edit, list, index }: { edit: DirectEdit; list: Shadow[]; in
           className="ins-chip-toggle"
           aria-pressed={shadow.inset}
           aria-label={`Shadow ${n} inset`}
-          title={shadow.inset ? 'Inner shadow' : 'Drop shadow'}
+          data-tip={shadow.inset ? 'Inner shadow' : 'Drop shadow'}
           onClick={() => writeShadows(edit, list.map((s, i) => (i === index ? { ...s, inset: !s.inset } : s)))}
         >
           Inset
@@ -46,7 +46,8 @@ function ShadowRow({ edit, list, index }: { edit: DirectEdit; list: Shadow[]; in
           type="button"
           className="icon-btn small"
           aria-label={`Remove shadow ${n}`}
-          title="Remove shadow"
+          data-tip="Remove shadow"
+          data-tip-align="end"
           onClick={() => writeShadows(edit, list.filter((_, i) => i !== index))}
         >
           <Icon name="minus" size={14} />
@@ -88,7 +89,8 @@ export function EffectsSection({ edit }: { edit: DirectEdit }) {
       type="button"
       className="icon-btn small"
       aria-label="Add shadow"
-      title="Add shadow"
+      data-tip="Add shadow"
+      data-tip-align="end"
       onClick={() => writeShadows(edit, [...(list ?? []), NEW_SHADOW])}
     >
       <Icon name="plus" size={14} />

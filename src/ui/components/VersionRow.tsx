@@ -3,7 +3,7 @@ import type { Version } from '../../shared/contracts';
 import { formatRelative, formatTime } from '../format';
 import { autoTitle, displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
 import { Icon, type IconName } from './Icon';
-import { levelHint, levelLabel } from './LevelControl';
+import { levelLabel } from './LevelControl';
 import { VersionThumb } from './VersionThumb';
 
 const NAME_MAX = 80;
@@ -140,7 +140,7 @@ function VersionLevel({ version: v }: { version: Version }) {
   return (
     <>
       <span className="dot" />
-      <span className={`version-level ${level}`} data-testid="version-level" title={levelHint(level)}>
+      <span className={`version-level ${level}`} data-testid="version-level">
         {levelLabel(level)}
       </span>
     </>
@@ -152,17 +152,17 @@ function VersionMeta({ version: v }: { version: Version }) {
   const files = v.changedFiles.length;
   return (
     <div className="version-meta">
-      <span className={`version-kind ${v.meta.kind}`} data-kind={v.meta.kind} title={kind.hint}>
+      <span className={`version-kind ${v.meta.kind}`} data-kind={v.meta.kind} data-tip={kind.hint} data-tip-align="start">
         <Icon name={kind.icon} size={12} />
         {kind.label}
       </span>
       <VersionLevel version={v} />
       <span className="dot" />
-      <time dateTime={new Date(v.createdAt).toISOString()} title={formatTime(v.createdAt)}>
+      <time dateTime={new Date(v.createdAt).toISOString()} data-tip={formatTime(v.createdAt)}>
         {formatRelative(v.createdAt)}
       </time>
       <span className="dot version-file-count-dot" />
-      <span className="version-file-count" title={v.changedFiles.join('\n')}>
+      <span className="version-file-count" data-tip={v.changedFiles.join('\n')}>
         {files} file{files === 1 ? '' : 's'}
       </span>
     </div>

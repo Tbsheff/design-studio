@@ -98,7 +98,8 @@ function ControlRow({ control, value, changed, draft }: { control: TweakControl;
           type="button"
           className={`icon-btn small twk-reset ${changed ? '' : 'hidden'}`}
           aria-label={`Reset ${control.label}`}
-          title="Reset"
+          data-tip="Reset"
+          data-tip-align="end"
           disabled={!changed}
           onClick={() => draft.revert(control.id)}
         >
@@ -182,7 +183,7 @@ function Header({ draft, running, onSuggest, hasControls }: Props & { hasControl
           </button>
         )}
         {hasControls && (
-          <button type="button" className="btn small ghost" disabled={running} title={running ? 'Wait for the current run to finish' : 'Ask the agent for tweak controls'} onClick={onSuggest}>
+          <button type="button" className="btn small ghost" disabled={running} data-tip={running ? 'Wait for the current run to finish' : 'Ask the agent for tweak controls'} onClick={onSuggest}>
             <Icon name="sparkle" size={13} />
             Suggest
           </button>

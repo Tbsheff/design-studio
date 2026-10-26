@@ -124,12 +124,12 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
   const meta = (
     <span className="project-meta">
       <span className="badge">{html ? 'HTML' : 'React + Vite'}</span>
-      <time className="project-time" dateTime={new Date(project.updatedAt).toISOString()} title={formatTime(project.updatedAt)}>
+      <time className="project-time" dateTime={new Date(project.updatedAt).toISOString()} data-tip={formatTime(project.updatedAt)}>
         {formatRelative(project.updatedAt)}
       </time>
       {count > 1 && <span className="truncate">{count} directions</span>}
       {pack && (
-        <span className="project-pack" title={`Design system: ${pack.name}`}>
+        <span className="project-pack" data-tip={`Design system: ${pack.name}`}>
           <Swatches swatches={keySwatches(pack)} max={4} size="sm" />
           <span className="sr-only">Design system: {pack.name}</span>
         </span>
@@ -178,7 +178,8 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
         tabIndex={active ? 0 : -1}
         aria-label={favorite ? `Remove ${project.name} from favorites` : `Add ${project.name} to favorites`}
         aria-pressed={favorite}
-        title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        data-tip={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        data-tip-align="end"
         onClick={() => homePrefs.toggleFavorite(project.id)}
       >
         <Star filled={favorite} />
@@ -191,7 +192,8 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
         aria-label={`More actions for ${project.name}`}
         aria-haspopup="menu"
         aria-expanded={menu !== null}
-        title="More actions"
+        data-tip="More actions"
+        data-tip-align="end"
         onClick={() => setMenu((current) => (current ? null : 'button'))}
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -263,16 +265,16 @@ function ViewTools() {
   const { view, favoritesOnly } = useHomeView();
   return (
     <>
-      <button type="button" className="icon-btn home-fav-filter" aria-pressed={favoritesOnly} aria-label="Show favorites only" title="Favorites" onClick={() => homePrefs.set({ favoritesOnly: !favoritesOnly })}>
+      <button type="button" className="icon-btn home-fav-filter" aria-pressed={favoritesOnly} aria-label="Show favorites only" data-tip="Favorites" onClick={() => homePrefs.set({ favoritesOnly: !favoritesOnly })}>
         <Star filled={favoritesOnly} />
       </button>
       <div className="ui-tools home-view-toggle" role="group" aria-label="Layout">
-        <button type="button" aria-pressed={view === 'list'} aria-label="List" title="List" onClick={() => homePrefs.set({ view: 'list' })}>
+        <button type="button" aria-pressed={view === 'list'} aria-label="List" data-tip="List" onClick={() => homePrefs.set({ view: 'list' })}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
             <path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01" />
           </svg>
         </button>
-        <button type="button" aria-pressed={view === 'grid'} aria-label="Grid" title="Grid" onClick={() => homePrefs.set({ view: 'grid' })}>
+        <button type="button" aria-pressed={view === 'grid'} aria-label="Grid" data-tip="Grid" data-tip-align="end" onClick={() => homePrefs.set({ view: 'grid' })}>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
             <path d="M2.75 2.75h4v4h-4zM9.25 2.75h4v4h-4zM2.75 9.25h4v4h-4zM9.25 9.25h4v4h-4z" />
           </svg>

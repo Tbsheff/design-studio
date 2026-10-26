@@ -22,7 +22,7 @@ function AliasChip({ value, swatch }: { value: string; swatch: string | null }) 
   const target = aliasPath(value);
   if (!target) return null;
   return (
-    <span className="tk-chip tkp-alias" title={`Alias of ${target}`}>
+    <span className="tk-chip tkp-alias" data-tip={`Alias of ${target}`}>
       {swatch && <span className="tk-swatch sm" style={{ background: swatch }} aria-hidden="true" />}
       <span className="truncate">{target}</span>
     </span>
@@ -42,7 +42,7 @@ function DarkSlot({ entry, shown, swatchFor, onEdit }: Pick<RowProps, 'entry' | 
   return (
     <div className="tkp-dark">
       <ColorValue label={`${name} dark value`} suffix="dark" value={shown.darkValue} swatch={swatchFor(shown.darkValue, true)} onChange={(next) => onEdit(entry, 'darkValue', next)} />
-      <button type="button" className="icon-btn small tkp-drop" aria-label={`Remove dark value for ${name}`} title="Remove dark value" onClick={() => onEdit(entry, 'darkValue', null)}>
+      <button type="button" className="icon-btn small tkp-drop" aria-label={`Remove dark value for ${name}`} data-tip="Remove dark value" data-tip-align="end" onClick={() => onEdit(entry, 'darkValue', null)}>
         <Icon name="close" size={12} />
       </button>
     </div>
@@ -79,7 +79,7 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
         </code>
         <AliasChip value={shown.value} swatch={color ? props.swatchFor(shown.value, false) : null} />
         {changed && (
-          <button type="button" className="icon-btn small tkp-revert" aria-label={`Revert ${entry.cssVar}`} title={`Revert to ${props.base.value}`} onClick={() => props.onRevert(entry.path)}>
+          <button type="button" className="icon-btn small tkp-revert" aria-label={`Revert ${entry.cssVar}`} data-tip={`Revert to ${props.base.value}`} data-tip-align="end" onClick={() => props.onRevert(entry.path)}>
             <Icon name="undo" size={12} />
           </button>
         )}

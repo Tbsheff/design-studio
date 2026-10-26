@@ -113,7 +113,8 @@ function EyeButton({ node, onToggleHidden }: { node: LayerNode; onToggleHidden: 
       tabIndex={-1}
       aria-label={node.hidden ? 'Show' : 'Hide'}
       aria-pressed={node.hidden}
-      title={node.hidden ? 'Show  ⇧⌘H' : 'Hide  ⇧⌘H'}
+      data-tip={node.hidden ? 'Show  ⇧⌘H' : 'Hide  ⇧⌘H'}
+      data-tip-align="end"
       onPointerDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
       onClick={(e) => {

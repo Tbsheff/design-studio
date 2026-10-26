@@ -65,7 +65,7 @@ function AlignGrid({ edit, isRow }: { edit: DirectEdit; isRow: boolean }) {
               className={on ? 'on' : ''}
               aria-label={label}
               aria-pressed={on}
-              title={label}
+              data-tip={label}
               onClick={() => {
                 const cell = alignCell(col, row, isRow);
                 write(edit, { 'justify-content': cell.justify, 'align-items': cell.align });
@@ -96,7 +96,7 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
                 className={direction === option.value ? 'on' : ''}
                 aria-label={option.label}
                 aria-pressed={direction === option.value}
-                title={option.label}
+                data-tip={option.label}
                 onClick={() => write(edit, { 'flex-direction': option.value })}
               >
                 <Icon name={option.icon} size={14} />
@@ -108,7 +108,7 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
             className="icon-btn ins-toggle"
             aria-label="Wrap"
             aria-pressed={wraps}
-            title={wraps ? 'Wrap: on' : 'Wrap: off'}
+            data-tip={wraps ? 'Wrap: on' : 'Wrap: off'}
             onClick={() => write(edit, { 'flex-wrap': wraps ? 'nowrap' : 'wrap' })}
           >
             <Icon name="wrap" size={14} />
@@ -127,7 +127,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', children }: { e
     if (!isFlexDisplay(edit.values.display)) write(edit, { display: 'flex' });
   });
   const remove = (
-    <button type="button" className="icon-btn small" aria-label="Remove auto layout" title="Remove auto layout" onClick={() => write(edit, { display: 'block' })}>
+    <button type="button" className="icon-btn small" aria-label="Remove auto layout" data-tip="Remove auto layout" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
       <Icon name="minus" size={14} />
     </button>
   );
@@ -201,7 +201,7 @@ function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
           className={current === option.value ? 'on' : ''}
           aria-label={option.label}
           aria-pressed={current === option.value}
-          title={option.label}
+          data-tip={option.label}
           onClick={() => write(edit, { 'align-self': current === option.value ? '' : option.value })}
         >
           <Icon name={option.icon} size={14} />

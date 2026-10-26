@@ -20,7 +20,7 @@ function runLevel(run: RunView): RunLevel | null {
 function LevelChip({ level }: { level: RunLevel | null }) {
   if (!level) return null;
   return (
-    <span className={`ui-chip level-tag ${level}`} data-testid="run-level-chip" title={levelHint(level)}>
+    <span className={`ui-chip level-tag ${level}`} data-testid="run-level-chip">
       {levelLabel(level)}
     </span>
   );
@@ -108,7 +108,7 @@ function RequestChips({ run, skills }: { run: RunView; skills: string[] }) {
         </span>
       )}
       {skills.map((id) => (
-        <span key={id} className="ui-chip skill-chip" title={`Asked the agent to use the ${id} skill`}>
+        <span key={id} className="ui-chip skill-chip" data-tip={`Asked the agent to use the ${id} skill`}>
           <Icon name="book" size={12} />
           {skillDisplayName(id)}
         </span>
@@ -138,7 +138,7 @@ export function UserMessage({ run, title, tools, replaceBody, titleSlot, onRenam
           <RunTitle title={title} slot={titleSlot} onRename={onRename} />
           <time>{formatTime(run.startedAt)}</time>
           {run.summary?.sessionNote && (
-            <span className="session-note" data-testid="session-note" title="The agent starts a new conversation because the files were restored to another version.">
+            <span className="session-note" data-testid="session-note" data-tip="The agent starts a new conversation because the files were restored to another version.">
               {run.summary.sessionNote}
             </span>
           )}
@@ -255,7 +255,7 @@ export function RunNotice({ run, latest, onRetry }: { run: RunView; latest: bool
 export function PolishThis({ disabled, onPolish }: { disabled: boolean; onPolish: () => void }) {
   return (
     <div className="polish-this flex items-center gap-2 text-xs text-muted-foreground">
-      <button type="button" className="btn small has-icon" data-testid="polish-this" disabled={disabled} title={levelHint('polish')} onClick={onPolish}>
+      <button type="button" className="btn small has-icon" data-testid="polish-this" disabled={disabled} data-tip-side="top" data-tip-align="start" data-tip={levelHint('polish')} onClick={onPolish}>
         <Icon name="sparkle" size={14} />
         Polish this
       </button>

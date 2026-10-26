@@ -67,6 +67,7 @@
 
   --tip-bg: oklch(0.236 0.003 var(--hue));
   --tip-text: oklch(0.967 0.007 var(--hue));
+  --tip-line: oklch(1 0 0 / 0.06);
   --scrim: oklch(0.2 0.01 var(--hue) / 0.32);
   --tint-hover: rgb(28 27 25 / 0.05);
   --tint-press: rgb(28 27 25 / 0.09);
@@ -234,6 +235,7 @@
 
   --tip-bg: #3a3936;
   --tip-text: rgb(250 249 245 / 0.92);
+  --tip-line: rgb(250 249 245 / 0.08);
   --scrim: oklch(0.1 0.003 var(--hue) / 0.6);
   --tint-hover: rgb(250 249 245 / 0.06);
   --tint-press: rgb(250 249 245 / 0.1);

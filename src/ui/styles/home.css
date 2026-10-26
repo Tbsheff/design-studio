@@ -222,7 +222,7 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  z-index: 30;
+  z-index: 60;
   animation: home-pop-in var(--dur) var(--ease);
 }
 
@@ -1020,7 +1020,7 @@
 
 .project-menu {
   position: absolute;
-  z-index: 20;
+  z-index: 60;
   top: calc(100% - var(--s-6));
   right: var(--s-1);
   display: grid;

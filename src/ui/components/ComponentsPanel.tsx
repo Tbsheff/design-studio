@@ -110,7 +110,7 @@ export function ComponentsPanel({ projectId, directionId, list, active, onMentio
                     type="button"
                     className="cmp-card"
                     aria-label={`Mention ${component.name}`}
-                    title={`Add @${component.name} to your message${component.file ? ` · ${component.file}` : ''}`}
+                    data-tip={`Add @${component.name} to your message${component.file ? ` · ${component.file}` : ''}`}
                     data-testid="component-card"
                     onClick={() => onMention(component)}
                   >

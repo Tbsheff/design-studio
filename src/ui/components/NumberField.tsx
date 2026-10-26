@@ -154,7 +154,7 @@ export function NumberField({ spec, short, icon, id: idProp, tokens = true, clas
   const scrub = useScrub(spec);
   return (
     <div className={`ins-field ${className ?? ''}`}>
-      <label htmlFor={id} className="ins-scrub" title={`Drag to change ${spec.label.toLowerCase()}`} {...scrub}>
+      <label htmlFor={id} className="ins-scrub" {...scrub}>
         {icon ?? short}
       </label>
       <NumberInput spec={spec} id={id} />

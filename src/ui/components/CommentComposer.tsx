@@ -174,17 +174,19 @@ function Pill({
   icon,
   label,
   title,
+  tip,
   tone,
   onRemove,
 }: {
   icon?: Parameters<typeof Icon>[0]['name'];
   label: string;
   title?: string;
+  tip?: string;
   tone?: string;
   onRemove: () => void;
 }) {
   return (
-    <span className={`comment-pill ${tone ?? ''}`} title={title} data-testid="comment-pill">
+    <span className={`comment-pill ${tone ?? ''}`} title={title} data-tip={tip} data-tip-side="top" data-testid="comment-pill">
       {icon && <Icon name={icon} size={12} />}
       <span className="comment-pill-label">{label}</span>
       <button type="button" tabIndex={-1} aria-label={`Remove ${label}`} onClick={onRemove}>
@@ -432,7 +434,7 @@ export function CommentComposer(props: ComposerProps) {
         <div className={`comment-field${leadBox.inline ? ' inline' : ''}`} onPointerDown={focusField}>
           {hasLead && (
             <span ref={leadRef} className="comment-lead">
-              {toClaude && <Pill label="@Claude" tone="claude" title="This goes to Claude" onRemove={() => setToClaude(false)} />}
+              {toClaude && <Pill label="@Claude" tone="claude" tip="This goes to Claude" onRemove={() => setToClaude(false)} />}
               {mentions.mentions.map((mention) => (
                 <Pill
                   key={mentionKey(mention)}

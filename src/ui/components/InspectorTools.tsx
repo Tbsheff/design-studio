@@ -51,9 +51,9 @@ function canvasSelectMode(): boolean {
   return collectCommands().find((command) => command.id === 'tool.select')?.title === 'Stop selecting';
 }
 
-function ToolButton({ label, pressed, disabled, tip, onClick, children }: { label: string; pressed?: boolean; disabled?: boolean; tip?: string; onClick: () => void; children: ReactNode }) {
+function ToolButton({ label, pressed, disabled, tip, align, onClick, children }: { label: string; pressed?: boolean; disabled?: boolean; tip?: string; align?: 'start' | 'end'; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" className="ins-tool" aria-label={label} aria-pressed={pressed} disabled={disabled} data-tip={tip ?? label} onClick={onClick}>
+    <button type="button" className="ins-tool" aria-label={label} aria-pressed={pressed} disabled={disabled} data-tip={tip ?? label} data-tip-align={align} onClick={onClick}>
       {children}
     </button>
   );
@@ -92,7 +92,7 @@ export function InspectorTools(props: Props) {
   return (
     <div className="ins-tools-wrap">
       <div className="ins-tools" role="toolbar" aria-label="Edit tools">
-        <ToolButton label="Select" pressed={props.selectMode} onClick={select}>
+        <ToolButton label="Select" pressed={props.selectMode} align="start" onClick={select}>
           <Icon name="pointer" size={14} />
         </ToolButton>
         <ToolButton label="Select child" disabled={!last} tip={last ? 'Select child' : 'Select an element first'} onClick={directSelect}>
@@ -105,10 +105,10 @@ export function InspectorTools(props: Props) {
           </ToolButton>
         ))}
         <span className="ins-tools-end" />
-        <ToolButton label="Undo" tip="Undo ⌘Z" onClick={() => history(false)}>
+        <ToolButton label="Undo" tip="Undo ⌘Z" align="end" onClick={() => history(false)}>
           <Icon name="undo" size={14} />
         </ToolButton>
-        <ToolButton label="Redo" tip="Redo ⇧⌘Z" onClick={() => history(true)}>
+        <ToolButton label="Redo" tip="Redo ⇧⌘Z" align="end" onClick={() => history(true)}>
           <Glyph d={GLYPHS.redo} />
         </ToolButton>
       </div>

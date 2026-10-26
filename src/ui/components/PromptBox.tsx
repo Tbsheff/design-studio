@@ -84,7 +84,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
     <ComposerSubmit
       disabled={!props.canSend}
       aria-label={props.sending ? 'Sending…' : 'Send'}
-      data-tip={`Send (${MOD_LABEL}Enter)`}
+      data-tip={`${MOD_LABEL}Enter`}
       data-tip-side="top"
       data-tip-align="end"
       render={<button className="btn send send-btn" />}
@@ -96,7 +96,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
 
 function StateChip({ label, tip, onClear }: { label: string; tip: string; onClear: () => void }) {
   return (
-    <span className="ui-chip composer-state" title={tip}>
+    <span className="ui-chip composer-state" data-tip={tip} data-tip-side="top" data-tip-align="start">
       {label}
       <button type="button" className="icon-btn chip-x" aria-label={`Clear ${label}`} onClick={onClear}>
         <Icon name="close" size={12} />

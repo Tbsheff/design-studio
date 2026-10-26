@@ -131,7 +131,7 @@ export function DimensionValue({ label, value, invalid, onChange, short, id }: V
   };
   return (
     <div className="ins-field tkp-field">
-      <label htmlFor={id} className={`ins-scrub ${parseNumber(value) ? '' : 'static'}`} title={`Drag to change ${label}`} {...scrub}>
+      <label htmlFor={id} className={`ins-scrub ${parseNumber(value) ? '' : 'static'}`} {...scrub}>
         {short}
       </label>
       <input

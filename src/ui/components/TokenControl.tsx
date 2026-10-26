@@ -70,7 +70,7 @@ function Indicator({ state, ui, label, onOpen }: { state: TokenFieldState; ui: T
   if (state.kind === 'raw') {
     const hint = state.snap ? `Near ${state.snap.cssVar}` : 'Not a design token';
     return (
-      <button type="button" className={`tk-raw ${state.snap ? 'near' : ''}`} aria-label={`${label}: raw value, ${hint.toLowerCase()}`} title={hint} onClick={() => onOpen('menu')}>
+      <button type="button" className={`tk-raw ${state.snap ? 'near' : ''}`} aria-label={`${label}: raw value, ${hint.toLowerCase()}`} data-tip={hint} data-tip-align="end" onClick={() => onOpen('menu')}>
         raw
       </button>
     );
@@ -105,12 +105,12 @@ function Control({ prop, label, edit, targets, variant = 'field', ui }: ControlP
       {variant === 'field' ? (
         <>
           <Indicator state={state} ui={ui} label={label} onOpen={toggle} />
-          <button type="button" className="tk-open" aria-label={`Choose ${label.toLowerCase()} token`} aria-haspopup="listbox" aria-expanded={pop.view === 'picker'} title="Design tokens" onClick={() => toggle('picker')}>
+          <button type="button" className="tk-open" aria-label={`Choose ${label.toLowerCase()} token`} aria-haspopup="listbox" aria-expanded={pop.view === 'picker'} data-tip="Design tokens" data-tip-align="end" onClick={() => toggle('picker')}>
             <Icon name="token" size={12} />
           </button>
         </>
       ) : (
-        <button type="button" className="tk-dot" aria-label={miniLabel(state, label)} title={current ?? (state.kind === 'raw' ? 'Raw value' : 'Choose a token')} onClick={() => toggle(state.kind === 'raw' ? 'menu' : 'picker')} />
+        <button type="button" className="tk-dot" aria-label={miniLabel(state, label)} data-tip={current ?? (state.kind === 'raw' ? 'Raw value' : 'Choose a token')} onClick={() => toggle(state.kind === 'raw' ? 'menu' : 'picker')} />
       )}
       {pop.view &&
         createPortal(

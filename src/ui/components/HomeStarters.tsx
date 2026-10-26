@@ -92,7 +92,7 @@ export function FirstRunPanel({ onClose, onSample }: { onClose: () => void; onSa
       <button type="button" className="btn small first-run-sample" disabled={busy} onClick={() => void sample()}>
         {busy ? 'Opening…' : 'Open the sample'}
       </button>
-      <button type="button" className="icon-btn small" aria-label="Close first steps" title="Close" onClick={onClose}>
+      <button type="button" className="icon-btn small" aria-label="Close first steps" data-tip="Close" data-tip-align="end" onClick={onClose}>
         <Icon name="close" size={14} />
       </button>
     </section>

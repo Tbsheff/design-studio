@@ -9,7 +9,7 @@ const PROVENANCE: Record<PackSummary['provenance'], string> = {
 function ProvenanceBadge({ pack }: { pack: PackSummary }) {
   if (pack.copiedFrom && pack.provenance === 'original') {
     return (
-      <span className="badge accent" title={`Copy of ${pack.copiedFrom}`}>
+      <span className="badge accent" data-tip={`Copy of ${pack.copiedFrom}`}>
         Copy
       </span>
     );

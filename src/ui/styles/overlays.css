@@ -446,7 +446,7 @@
 
 .theme-menu {
   position: absolute;
-  z-index: 40;
+  z-index: 60;
   top: calc(100% + var(--s-1));
   right: 0;
   display: grid;

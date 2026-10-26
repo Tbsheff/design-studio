@@ -27,13 +27,13 @@ function ModeSwatches({ pack }: { pack: PackSummary }) {
   return (
     <span className="lib-modes" data-testid="mode-swatches">
       {light && (
-        <span className="lib-mode light" title="Light mode colors">
+        <span className="lib-mode light" data-tip="Light mode colors">
           <span className="sr-only">Light</span>
           <Swatches swatches={light} />
         </span>
       )}
       {dark && (
-        <span className="lib-mode dark" title="Dark mode colors">
+        <span className="lib-mode dark" data-tip="Dark mode colors">
           <span className="sr-only">Dark</span>
           <Swatches swatches={dark} />
         </span>

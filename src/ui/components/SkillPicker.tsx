@@ -188,7 +188,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
       <p className="skill-pop-foot">
         ↑ ↓ to move, Tab to complete, Enter to run or add, Esc to close
         {manualCount > 0 && (
-          <span className="skill-pop-manual" title="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
+          <span className="skill-pop-manual" data-tip-side="top" data-tip="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
             {' · '}
             {plural(manualCount, 'manual-only skill')} not listed
           </span>
@@ -211,7 +211,7 @@ export function SkillChips({ ids, onRemove }: { ids: string[]; onRemove: (id: st
   return (
     <div className="skill-chips" aria-label="Skills for this message">
       {ids.map((id) => (
-        <span key={id} className="skill-chip" title={`The agent will use the ${id} skill`}>
+        <span key={id} className="skill-chip" data-tip-side="top" data-tip={`The agent will use the ${id} skill`}>
           <Icon name="book" size={12} />
           {skillDisplayName(id)}
           <button type="button" aria-label={`Remove skill ${id}`} onClick={() => onRemove(id)}>
@@ -257,7 +257,8 @@ export function SkillsIndicator({ projectId, settings, onSaved }: IndicatorProps
         className="skills-ind"
         data-testid="skills-indicator"
         aria-expanded={open}
-        title={catalog ? `${plural(count, 'skill')} on for this project, ${plural(enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length, 'manual-only skill')} the agent cannot load` : 'Claude skills for this project'}
+        data-tip-side="top"
+        data-tip={catalog ? `${plural(count, 'skill')} on for this project, ${plural(enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length, 'manual-only skill')} the agent cannot load` : 'Claude skills for this project'}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={() => setOpen((x) => !x)}
       >

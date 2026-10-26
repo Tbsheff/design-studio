@@ -141,7 +141,7 @@ export function AlignField({ edit }: { edit: DirectEdit }) {
           className={current === option.value ? 'on' : ''}
           aria-label={option.label}
           aria-pressed={current === option.value}
-          title={option.label}
+          data-tip={option.label}
           onClick={() => {
             edit.preview({ 'text-align': option.value });
             edit.commit();

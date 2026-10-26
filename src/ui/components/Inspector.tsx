@@ -80,7 +80,7 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
       {session.dirty && session.count > 0 && (
-        <span className="edit-count" role="status" title={unsavedLabel(session.count)}>
+        <span className="edit-count" role="status" data-tip={unsavedLabel(session.count)}>
           {session.count}
           <span className="sr-only"> unsaved edits</span>
         </span>
@@ -90,12 +90,13 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
         type="button"
         className="btn ghost small"
         disabled={session.busy !== null || session.count === 0 || blockedDiscard}
-        title={blockedDiscard ? (session.blocked ?? undefined) : 'Undo every edit since you entered Edit mode'}
+        data-tip={blockedDiscard ? (session.blocked ?? undefined) : 'Undo every edit since you entered Edit mode'}
+        data-tip-align="end"
         onClick={() => void run('discard')}
       >
         {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
       </button>
-      <button type="button" className="btn small edit-save" disabled={session.busy !== null} title="Keep the edits as one version" onClick={() => void run('save')}>
+      <button type="button" className="btn small edit-save" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
         {session.busy === 'save' ? 'Saving…' : 'Save'}
       </button>
     </div>

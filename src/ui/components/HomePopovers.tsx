@@ -4,7 +4,7 @@ import { fontStack, loadPackFonts, type PacksState } from '../packs';
 import { MODEL_OPTIONS } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
-import { levelHint, levelLabel, levelShortHint } from './LevelControl';
+import { levelLabel, levelShortHint } from './LevelControl';
 import { VariationsControl } from './VariationsControl';
 
 type Close = (refocus: boolean) => void;
@@ -258,7 +258,6 @@ export function LevelPopover({ trigger, onClose, level, onLevel }: { trigger: Re
             type="button"
             role="menuitemradio"
             className="ui-menu-item level-menu-item"
-            title={levelHint(item)}
             aria-checked={level === item}
             tabIndex={level === item ? 0 : -1}
             onClick={() => {

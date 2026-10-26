@@ -205,7 +205,7 @@ export function StudioPaneHeader(props: Props) {
           </span>
         )}
         <Status connection={props.connection} error={null} onDismiss={props.onDismissError} />
-        <button type="button" className="icon-btn pane-head-btn" aria-label="Hide chat pane" data-tip="Hide pane" onClick={props.onCollapse}>
+        <button type="button" className="icon-btn pane-head-btn" aria-label="Hide chat pane" data-tip="Hide pane" data-tip-align="end" onClick={props.onCollapse}>
           <Icon name="sidebar" size={14} />
         </button>
         <button

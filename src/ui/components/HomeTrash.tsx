@@ -48,7 +48,7 @@ function TrashRow({ item, busy, onRestore, onDelete }: { item: TrashItem; busy: 
           {item.name}
         </span>
         <span className="trash-meta">
-          <time dateTime={new Date(item.trashedAt).toISOString()} title={formatTime(item.trashedAt)}>
+          <time dateTime={new Date(item.trashedAt).toISOString()} data-tip={formatTime(item.trashedAt)}>
             Deleted {formatRelative(item.trashedAt).toLowerCase()}
           </time>
           {item.folderStays && <span> · Files in your folder stay</span>}

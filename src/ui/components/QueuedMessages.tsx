@@ -51,7 +51,7 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
       data-testid="queued-item"
     >
       {count > 1 && (
-        <span className="queued-grip" aria-hidden="true">
+        <span className="queued-grip" aria-hidden="true" data-tip="Drag, or Alt+↑ and Alt+↓, to move" data-tip-side="top" data-tip-align="start">
           ⋮⋮
         </span>
       )}
@@ -76,7 +76,7 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
           }}
         />
       ) : (
-        <button type="button" className="queued-text" title={`Edit. ${count > 1 ? 'Alt+↑ or Alt+↓ moves it.' : ''}`} onClick={() => setEditing(true)}>
+        <button type="button" className="queued-text" onClick={() => setEditing(true)}>
           {item.text}
         </button>
       )}

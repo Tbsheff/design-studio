@@ -58,7 +58,7 @@ export function PackPicker({ state, value, onChange, onNew }: Props) {
         aria-label="Design system"
         aria-haspopup="listbox"
         aria-expanded={open}
-        title={selected ? `Design system: ${selected.name}` : 'Design system'}
+        data-tip={selected ? `Design system: ${selected.name}` : 'Design system'}
         onPointerEnter={() => void loadList()}
         onFocus={() => void loadList()}
         onClick={() => (open ? close(false) : setOpen(true))}

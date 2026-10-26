@@ -131,7 +131,7 @@ function focusIn(selector: string): void {
 function SendButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
   const working = busy === 'create' || busy === 'ask';
   return (
-    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} title="Create (⌘↩)">
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip="Create  ⌘↩" data-tip-align="end">
       {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
     </button>
   );
@@ -309,7 +309,8 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
           aria-label="Add"
           aria-haspopup="menu"
           aria-expanded={pop === 'plus'}
-          title="Attach, import and options"
+          data-tip="Attach, import and options"
+          data-tip-align="start"
           onPointerEnter={() => void loadPops()}
           onClick={() => togglePop('plus')}
         >
@@ -334,7 +335,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
         className="icon-btn bordered home-square home-kind"
         aria-pressed={kind === 'react'}
         aria-label="React + Vite project"
-        title={kind === 'react' ? 'React + Vite project. Press for a plain HTML page.' : 'Plain HTML page. Press for a React + Vite project.'}
+        data-tip={kind === 'react' ? 'React + Vite project. Press for a plain HTML page.' : 'Plain HTML page. Press for a React + Vite project.'}
         onClick={() => onKind(kind === 'react' ? 'html' : 'react')}
       >
         <Icon name="code" size={16} />
@@ -633,7 +634,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
         <span className="brand">Design Studio</span>
         <div className="spacer" />
         <nav className="home-nav" aria-label="App">
-          <button type="button" className="icon-btn home-round" aria-label="Trash" title="Trash" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
+          <button type="button" className="icon-btn home-round" aria-label="Trash" data-tip="Trash" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
             <Icon name="trash" size={15} />
           </button>
           <ThemeButton />

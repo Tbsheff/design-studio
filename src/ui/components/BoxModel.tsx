@@ -27,7 +27,7 @@ function LinkToggle({ box, linked, onToggle }: { box: Box; linked: boolean; onTo
       className="icon-btn ins-link"
       aria-label={`Link ${box} sides`}
       aria-pressed={linked}
-      title={linked ? `${name}: all sides change together` : `${name}: set each side`}
+      data-tip={linked ? `${name}: all sides change together` : `${name}: set each side`}
       onClick={onToggle}
     >
       <Icon name={linked ? 'link' : 'unlink'} size={14} />

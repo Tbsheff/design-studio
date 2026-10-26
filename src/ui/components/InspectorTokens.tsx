@@ -39,7 +39,7 @@ export function SnapToggle({ ui }: { ui: TokenUi | null }) {
       type="button"
       className="btn ghost small has-icon tk-snap-toggle"
       aria-pressed={ui.snap}
-      title={ui.snap ? 'Values close to a token are written as var(--token)' : 'Values are written as typed'}
+      data-tip={ui.snap ? 'Values close to a token are written as var(--token)' : 'Values are written as typed'}
       onClick={() => ui.setSnap(!ui.snap)}
     >
       <Icon name="magnet" size={13} />

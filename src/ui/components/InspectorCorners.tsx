@@ -36,7 +36,8 @@ export function RadiusField({ edit, short = 'R' }: { edit: DirectEdit; short?: s
       className="icon-btn small ins-toggle"
       aria-label="Independent corners"
       aria-pressed={split}
-      title={split ? 'Set all corners together' : 'Set each corner'}
+      data-tip={split ? 'Set all corners together' : 'Set each corner'}
+      data-tip-align="end"
       onClick={() => setSplit((on) => !on)}
     >
       <Icon name="corners" size={14} />

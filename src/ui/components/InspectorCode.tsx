@@ -79,7 +79,8 @@ function OpenInEditor({ projectId, directionId, file }: { projectId: string; dir
       <button
         type="button"
         className="btn ghost small has-icon"
-        title={`Open ${file} in ${editor.name}`}
+        data-tip={`Open ${file} in ${editor.name}`}
+        data-tip-align="end"
         onClick={() => {
           setError(null);
           exportApi.openInEditor(projectId, directionId, editor.id, file).catch((err: unknown) => setError(errorText(err)));

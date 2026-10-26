@@ -144,7 +144,7 @@ function AppearanceSection({ edit, extras, onReveal }: { edit: DirectEdit; extra
 function BorderSection({ edit }: { edit: DirectEdit }) {
   const on = hasBorder(edit);
   const aside = on ? (
-    <button type="button" className="icon-btn small" aria-label="Remove border" title="Remove border" onClick={() => write(edit, { 'border-width': '0px', 'border-style': 'none' })}>
+    <button type="button" className="icon-btn small" aria-label="Remove border" data-tip="Remove border" data-tip-align="end" onClick={() => write(edit, { 'border-width': '0px', 'border-style': 'none' })}>
       <Icon name="minus" size={14} />
     </button>
   ) : (

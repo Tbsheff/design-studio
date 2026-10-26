@@ -36,7 +36,7 @@ export function VersionThumb({ projectId, versionId, active, label, onOpen }: Pr
   }, [inView, result, projectId, versionId]);
   const state = result === undefined ? 'loading' : result === null ? 'none' : loaded ? 'ready' : 'loading';
   return (
-    <span ref={ref} className={`version-thumb ${state}`} data-testid="version-thumb" data-state={state} aria-hidden="true" title={`Open ${label}`} onClick={onOpen}>
+    <span ref={ref} className={`version-thumb ${state}`} data-testid="version-thumb" data-state={state} aria-hidden="true" onClick={onOpen}>
       {result ? <img src={result} alt="" draggable={false} onLoad={() => setLoaded(true)} /> : result === null ? <Icon name="file" size={14} /> : null}
     </span>
   );

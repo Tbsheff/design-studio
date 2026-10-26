@@ -91,7 +91,7 @@ function FileChips({ changes, onOpen }: { changes: FileChange[]; onOpen: () => v
     <ul className="run-changes" aria-label="Changed files" data-testid="run-changes">
       {changes.map((change) => (
         <li key={change.path} className="run-change">
-          <button type="button" className="ui-file-chip" title={`${change.path} (+${change.added} −${change.removed}). Open run details`} onClick={onOpen}>
+          <button type="button" className="ui-file-chip" data-tip-align="start" data-tip={`${change.path} (+${change.added} −${change.removed}). Open run details`} onClick={onOpen}>
             <Icon name={change.created ? 'doc' : 'file'} size={14} />
             <span className="run-change-path">{fileLabel(change)}</span>
           </button>
@@ -125,7 +125,7 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, latest, onDeta
           </span>
         )}
         {summary && (
-          <span className="run-foot-meta tabular-nums" title={`$${summary.costUsd.toFixed(4)}`}>
+          <span className="run-foot-meta tabular-nums" data-tip-side="top" data-tip={`$${summary.costUsd.toFixed(4)}`}>
             {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}
           </span>
         )}

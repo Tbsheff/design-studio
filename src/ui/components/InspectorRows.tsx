@@ -117,7 +117,7 @@ export function TextStyleToggles({ edit }: { edit: DirectEdit }) {
   return (
     <div className="ins-field ins-toggles" role="group" aria-label="Text style">
       {items.map((item) => (
-        <button key={item.key} type="button" className={item.on ? 'on' : ''} aria-label={item.label} aria-pressed={item.on} title={item.label} onClick={item.run}>
+        <button key={item.key} type="button" className={item.on ? 'on' : ''} aria-label={item.label} aria-pressed={item.on} data-tip={item.label} onClick={item.run}>
           {item.glyph}
         </button>
       ))}

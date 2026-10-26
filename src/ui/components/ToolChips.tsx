@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ToolDiff } from '../../shared/contracts';
 import { Action, ActionContent, ActionIcon, ActionLabel, ActionTrigger } from '../ai/components/ai/action';
 import {
@@ -8,10 +8,9 @@ import {
   ChainOfThoughtIcon,
 } from '../ai/components/ai/chain-of-thought';
 import { Chip } from '../ai/components/ai/chip';
-import { Loader } from '../ai/components/ai/loader';
 import { formatMs } from '../format';
 import type { RunView, ToolRow } from '../runState';
-import { SKILL_TOOL, toolSubject, toolVerb } from '../toolLabels';
+import { SKILL_TOOL, toolSubject, toolTally, toolVerb } from '../toolLabels';
 import { Icon, type IconName } from './Icon';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -200,7 +199,7 @@ function GroupSummary({ tools }: { tools: ToolRow[] }) {
 
 const COLLAPSE_AFTER = 5;
 
-export function ToolChips({ tools, running, workTree }: { tools: ToolRow[]; running: boolean; workTree: string | null }) {
+export function ToolChips({ tools, running, workTree, flat = false }: { tools: ToolRow[]; running: boolean; workTree: string | null; flat?: boolean }) {
   const [open, setOpen] = useState<boolean | null>(null);
   if (tools.length === 0) return null;
   const rows = (
@@ -210,7 +209,7 @@ export function ToolChips({ tools, running, workTree }: { tools: ToolRow[]; runn
       ))}
     </div>
   );
-  if (tools.length < COLLAPSE_AFTER) return <div className="tools tool-chips">{rows}</div>;
+  if (flat || tools.length < COLLAPSE_AFTER) return <div className="tools tool-chips">{rows}</div>;
   const expanded = open ?? (running || tools.some((t) => t.isError));
   return (
     <ChainOfThought className="tools -ml-2" open={expanded} onOpenChange={(next) => setOpen(next)}>
@@ -231,35 +230,39 @@ export interface FileChange {
   path: string;
   added: number;
   removed: number;
+  created: boolean;
 }
 
 export function fileChanges(tools: ToolRow[]): FileChange[] {
   const byPath = new Map<string, FileChange>();
   for (const tool of tools) {
     if (!tool.diff || tool.isError) continue;
-    const entry = byPath.get(tool.diff.path) ?? { path: tool.diff.path, added: 0, removed: 0 };
+    const entry = byPath.get(tool.diff.path) ?? { path: tool.diff.path, added: 0, removed: 0, created: false };
     entry.added += tool.diff.added;
     entry.removed += tool.diff.removed;
+    entry.created ||= tool.diff.created;
     byPath.set(tool.diff.path, entry);
   }
   return [...byPath.values()];
 }
 
-export function RunChanges({ tools }: { tools: ToolRow[] }) {
-  const changes = fileChanges(tools);
-  if (changes.length === 0) return null;
+export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const label = useMemo(() => toolTally(tools.map((tool) => tool.name)).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)).join(', '), [tools]);
+  const failed = useMemo(() => tools.filter((tool) => tool.isError && !tool.denied).length, [tools]);
+  if (tools.length === 0) return null;
   return (
-    <ul className="run-changes" aria-label="Changed files" data-testid="run-changes">
-      {changes.map((change) => (
-        <li key={change.path} className="run-change">
-          <Icon name="file" size={12} />
-          <span className="run-change-path font-mono truncate" title={change.path}>
-            {change.path}
-          </span>
-          <DiffBadge added={change.added} removed={change.removed} />
-        </li>
-      ))}
-    </ul>
+    <div className="tool-summary" data-open={open || undefined} data-testid="tool-summary">
+      <button type="button" className="tool-summary-head" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+        <span className="tool-summary-icon" aria-hidden="true">
+          <Icon name="sparkle" size={14} />
+        </span>
+        <span className="tool-summary-label">{label}</span>
+        {failed > 0 && <span className="tool-summary-failed">{failed} failed</span>}
+        <Icon name="chevronDown" size={14} className="tool-summary-caret" />
+      </button>
+      {open && <div className="tool-summary-body">{children}</div>}
+    </div>
   );
 }
 
@@ -293,11 +296,10 @@ function statusLabel(run: RunView, workTree: string | null, now: number): string
 export function LiveStatus({ run, workTree }: { run: RunView; workTree: string | null }) {
   const elapsed = useElapsed(run.startedAt, true);
   return (
-    <div className="live-status flex min-w-0 items-center gap-2 text-sm" data-testid="live-status">
-      <Loader variant="shimmer" dots className="live-label min-w-0 truncate tabular-nums text-foreground">
-        {statusLabel(run, workTree, run.startedAt + elapsed)}
-      </Loader>
-      <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">{formatMs(Math.floor(elapsed / 1000) * 1000)}</span>
+    <div className="ui-status live-status" data-testid="live-status">
+      <span className="ui-status-mark" aria-hidden="true" />
+      <span className="live-label min-w-0 truncate">{statusLabel(run, workTree, run.startedAt + elapsed)}</span>
+      <span className="live-elapsed tabular-nums">{formatMs(Math.floor(elapsed / 1000) * 1000)}</span>
     </div>
   );
 }

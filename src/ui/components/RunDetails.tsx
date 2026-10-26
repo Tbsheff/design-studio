@@ -50,6 +50,7 @@ export function RunDetails({ projectId, run, onClose }: { projectId: string; run
       ];
   const skills = [...new Set(run.tools.filter((t) => t.name === SKILL_TOOL).map((t) => skillToolName(t.input) || 'unknown'))];
   rows.push(['Skills used', skills.length > 0 ? skills.join(', ') : 'None']);
+  const anyError = run.tools.some((t) => t.isError);
   const closeButton = useRef<HTMLButtonElement>(null);
   useReturnFocusOnUnmount();
   useEffect(() => closeButton.current?.focus(), []);
@@ -88,23 +89,29 @@ export function RunDetails({ projectId, run, onClose }: { projectId: string; run
         <h4>Tool calls ({run.tools.length})</h4>
         <div className="tools-table">
           <table className="table compact">
+            <colgroup>
+              <col className="tools-col-tool" />
+              <col />
+              <col className="tools-col-time" />
+              {anyError && <col className="tools-col-flag" />}
+            </colgroup>
             <thead>
               <tr>
                 <th>Tool</th>
                 <th>Input</th>
-                <th>Time</th>
-                <th />
+                <th className="num">Time</th>
+                {anyError && <th />}
               </tr>
             </thead>
             <tbody>
               {run.tools.map((t) => (
                 <tr key={t.toolUseId}>
-                  <td>{prettyToolName(t.name)}</td>
+                  <td className="truncate">{prettyToolName(t.name)}</td>
                   <td className="mono truncate" title={JSON.stringify(t.input)}>
                     {t.name === SKILL_TOOL ? skillToolName(t.input) : toolTarget(t.input, null)}
                   </td>
                   <td className="num">{t.durationMs === null ? 'Running…' : formatMs(t.durationMs)}</td>
-                  <td>{t.isError && <span className="badge fail">Error</span>}</td>
+                  {anyError && <td>{t.isError && <span className="badge fail">Error</span>}</td>}
                 </tr>
               ))}
             </tbody>

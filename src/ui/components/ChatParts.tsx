@@ -259,7 +259,7 @@ export function PolishThis({ disabled, onPolish }: { disabled: boolean; onPolish
         <Icon name="sparkle" size={14} />
         Polish this
       </button>
-      <span>Run every check on this version and fix what it finds.</span>
+      <span>Run every check and fix issues.</span>
     </div>
   );
 }

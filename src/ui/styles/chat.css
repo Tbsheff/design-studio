@@ -916,7 +916,7 @@
 }
 
 .run-change .ui-file-chip {
-  height: 26px;
+  height: 28px;
   border-radius: var(--r-sm);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
@@ -994,8 +994,12 @@
 }
 
 .run-foot .status {
-  margin-left: var(--s-1);
+  margin: 0 var(--s-1);
   font-size: 11px;
+}
+
+.run-foot[data-status='running'] {
+  display: none;
 }
 
 .run-foot-meta {
@@ -1004,8 +1008,8 @@
 }
 
 .btn.run-foot-details {
-  height: 24px;
-  margin-left: auto;
+  height: 28px;
+  margin: -2px 0 -2px auto;
   padding: 0 var(--s-2);
   color: var(--text-3);
   font-size: 11px;
@@ -1062,16 +1066,50 @@
 }
 
 .run-notice .run-retry {
-  height: 22px;
+  height: 28px;
+  margin: -6px 0;
   color: inherit;
   font-size: 11px;
 }
 
 .polish-this .btn {
-  height: 26px;
+  flex: none;
+  height: 28px;
   font-size: var(--t-xs);
 }
 
 .polish-this {
+  min-width: 0;
   font-size: 11px;
+}
+
+.polish-this > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer .tools-table {
+  border-radius: var(--r-md);
+}
+
+.drawer .tools-table .table {
+  table-layout: fixed;
+}
+
+.drawer .tools-table td {
+  max-width: none;
+}
+
+.drawer .tools-table .tools-col-tool {
+  width: 76px;
+}
+
+.drawer .tools-table .tools-col-time {
+  width: 60px;
+}
+
+.drawer .tools-table .tools-col-flag {
+  width: 56px;
 }

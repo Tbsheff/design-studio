@@ -9,7 +9,7 @@
   flex-direction: column;
   background: var(--surface-raised);
   color: var(--text);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   animation: pop-in var(--dur-slow) var(--ease);
@@ -36,7 +36,7 @@
   display: flex;
   align-items: flex-start;
   gap: var(--s-3);
-  padding: var(--s-5) var(--s-5) var(--s-4) var(--s-6);
+  padding: var(--s-5) var(--s-5) var(--s-4);
 }
 
 .modal-head .titles {
@@ -47,19 +47,19 @@
 }
 
 .modal-head h2 {
-  font-size: var(--t-lg);
+  font-size: var(--t-md);
 }
 
 .modal-head p {
   color: var(--text-2);
-  font-size: var(--t-sm);
+  font-size: var(--t-xs);
 }
 
 .modal-body {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0 var(--s-6) var(--s-5);
+  padding: 0 var(--s-5) var(--s-5);
   display: grid;
   gap: var(--s-4);
 }
@@ -462,7 +462,7 @@
   grid-template-columns: 16px 1fr 14px;
   align-items: center;
   gap: var(--s-2);
-  height: 32px;
+  height: 28px;
   padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);

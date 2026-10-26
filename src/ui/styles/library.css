@@ -220,7 +220,7 @@
 .lib-detail-bar {
   display: grid;
   gap: var(--s-2);
-  padding: 0 var(--s-6) var(--s-4);
+  padding: 0 var(--s-5) var(--s-4);
   border-bottom: 1px solid var(--line);
 }
 

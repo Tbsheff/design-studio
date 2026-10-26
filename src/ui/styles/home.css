@@ -1526,7 +1526,6 @@
 .trash-body {
   min-height: 120px;
   align-content: start;
-  padding-inline: var(--s-4);
 }
 
 .trash-list {

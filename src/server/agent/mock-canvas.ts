@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { CANVAS_GAP } from '../../shared/canvas-file.js';
 import { statePrefix } from '../../shared/states.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, type CanvasToolContext, type PlaceSpec, type ToolText } from '../canvas/tools.js';
@@ -105,6 +106,14 @@ async function statesSource(input: DriverInput): Promise<string> {
   return readFile(path.join(input.ctx.direction.workTree, pagePath), 'utf8').catch(() => EMPTY_PAGE);
 }
 
+async function rowBelowAll(ctx: CanvasToolContext, labels: string[], sourceId: string): Promise<PlaceSpec[]> {
+  const frames = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
+  const others = frames.filter((f) => !labels.includes(f.label ?? ''));
+  const bottom = Math.max(0, ...others.map((f) => f.y + f.height));
+  const x = frames.find((f) => f.id === sourceId)?.x ?? 0;
+  return labels.map((label, index) => ({ frame: `@${label}`, ...(index === 0 ? { x, y: bottom + CANVAS_GAP } : { rightOf: `@${labels[index - 1] ?? ''}` }) }));
+}
+
 export async function runMockStates(session: MockWriteSession, input: DriverInput, ctx: CanvasToolContext | null): Promise<string> {
   const source = input.ctx.request.states ?? { path: '', frame: 'f1', width: 1440, height: 900 };
   const react = input.ctx.project.kind === 'react';
@@ -113,14 +122,16 @@ export async function runMockStates(session: MockWriteSession, input: DriverInpu
   const files = MOCK_STATES.map((state) => ({ state, file: `states/${prefix}${state}.html` }));
   for (const { state, file } of files) await session.writeFileAsTool('Write', react ? `public/${file}` : file, mockStatePage(page, state));
   if (!ctx) return `Wrote ${files.length} state pages. The canvas is not available in this run.`;
-  const specs: PlaceSpec[] = files.map(({ state, file }, index) => ({
-    label: titleOf(state),
+  const labels = files.map(({ state }) => titleOf(state));
+  const specs: PlaceSpec[] = files.map(({ file }, index) => ({
+    label: labels[index],
     path: file,
     width: source.width,
     height: source.height,
-    ...(index === 0 ? { below: source.frame } : { rightOf: `@${titleOf(files[index - 1]?.state ?? '')}` }),
+    ...(index === 0 ? { below: source.frame } : { rightOf: `@${labels[index - 1] ?? ''}` }),
   }));
-  await mockPlace(session, ctx, specs);
+  const placed = await mockPlace(session, ctx, specs);
+  if (/overlap/.test(placed.content.map((part) => part.text).join(' '))) await mockPlace(session, ctx, await rowBelowAll(ctx, labels, source.frame));
   await mockPoint(session, ctx, `@${titleOf(MOCK_STATES[0])}`);
   return `Made ${files.length} states of ${source.path || 'the entry page'}: ${MOCK_STATES.map(titleOf).join(', ')}. Each has its own frame under the page.`;
 }

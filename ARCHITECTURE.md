@@ -596,7 +596,7 @@ frame "…" menu › Make states │ palette "Make UI states of this page" │ /
 - The state frames are ordinary frames with `path` and `label`, so they render, reload, resize and export like any extra page frame. The frame label shows the label (the state name) in place of the direction name.
 - "Make states" in the frame menu is disabled while a run is going and on frames of another direction (make that direction current first).
 - The prompt text in chat stays short; the task text is in the user message only, so the system prompt and its cache do not change.
-- Mock: `[states]` in the prompt or `RunRequest.states` writes `states/<prefix>{empty,loading,error,success}.html` (a copy of the page with `<base href="../">` and a dashed state banner; React projects write them under `public/states/`), places the four frames in a row below the source frame with the real `canvas_place`, then points at `@Empty`.
+- Mock: `[states]` in the prompt or `RunRequest.states` writes `states/<prefix>{empty,loading,error,success}.html` (a copy of the page with `<base href="../">` and a dashed state banner; React projects write them under `public/states/`), places the four frames in a row below the source frame with the real `canvas_place` (when the tool warns of an overlap, it moves the row below the lowest other frame), then points at `@Empty`.
 
 ## Lo-fi look (pm-ideas)
 

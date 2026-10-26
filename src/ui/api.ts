@@ -200,6 +200,8 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/edit-session/${action}`, { baseVersionId }, pickMessage);
     return (await res.json()) as EditSessionEnd;
   },
+  elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
+    json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>
     json<Version>('POST', `${d(pid, did)}/restore`, { versionId }),
   keep: (pid: string, did: string) => json<Version>('POST', `${d(pid, did)}/keep`),

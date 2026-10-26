@@ -1,6 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import type { Direction, EditSessionEnd, EditSessionState, Project, VersionMeta } from '../../shared/contracts.js';
-import { DirectEditError, assertCanEdit, publishVersion, type DirectEditDeps } from '../direct-edit/index.js';
+import { htmlElementSpan } from '../direct-edit/html.js';
+import { DirectEditError, assertCanEdit, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
+import { jsxElementSpan } from '../direct-edit/jsx.js';
 import type { EditHistory, HistoryStep } from '../direct-edit/history.js';
 import { BadRequestError, assertSafeId } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -16,6 +20,20 @@ interface EditHistoryRouteDeps {
 
 const SHA = /^[0-9a-f]{40}$/;
 const MAX_LISTED = 12;
+const MAX_SNIPPET = 20_000;
+
+interface ElementSource {
+  file: string;
+  line: number;
+  code: string | null;
+}
+
+function dedent(text: string): string {
+  const lines = text.split('\n');
+  const widths = lines.filter((line) => line.trim() !== '').map((line) => /^[ \t]*/.exec(line)?.[0].length ?? 0);
+  const cut = widths.length > 0 ? Math.min(...widths) : 0;
+  return lines.map((line) => line.slice(Math.min(cut, /^[ \t]*/.exec(line)?.[0].length ?? 0))).join('\n');
+}
 
 function baseOf(raw: unknown): string {
   if (typeof raw !== 'string' || !SHA.test(raw)) throw new BadRequestError('baseVersionId must be a version id');
@@ -98,6 +116,31 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
       throw error;
     }
   };
+
+  app.get('/api/projects/:pid/d/:did/source', async (c) => {
+    const file = c.req.query('file') ?? '';
+    const line = Number(c.req.query('line'));
+    const col = Number(c.req.query('col'));
+    if (!Number.isInteger(line) || line < 1 || !Number.isInteger(col) || col < 1) throw new BadRequestError('line and col must be positive whole numbers');
+    const read = withDirection(c.req.param('pid'), c.req.param('did'), async (_project, direction): Promise<ElementSource> => {
+      const target = await resolveSource(direction.workTree, file);
+      const code = await readFile(target.file, 'utf8');
+      const extension = path.extname(target.relative).toLowerCase();
+      const loc = { line, col };
+      const span = extension === '.html' || extension === '.htm' ? htmlElementSpan(code, loc) : jsxElementSpan(code, loc, extension === '.tsx');
+      if (!span) return { file: target.relative, line, code: null };
+      const lineStart = code.lastIndexOf('\n', span.start - 1) + 1;
+      const indent = /^[ \t]*/.exec(code.slice(lineStart, span.start))?.[0] ?? '';
+      const text = indent + code.slice(span.start, Math.min(span.end, span.start + MAX_SNIPPET));
+      return { file: target.relative, line, code: dedent(text) };
+    });
+    try {
+      return c.json(await read);
+    } catch (error) {
+      if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
+  });
 
   app.post('/api/projects/:pid/d/:did/edit-session/save', endRoute('save'));
   app.post('/api/projects/:pid/d/:did/edit-session/discard', endRoute('discard'));

@@ -157,6 +157,12 @@ function insertSplice(source: string, element: Element, kind: NonNullable<Source
   return { start: at, end: at, text };
 }
 
+export function htmlElementSpan(source: string, loc: SourcePosition): { start: number; end: number } | null {
+  const element = findElementAt(parse(source, { sourceCodeLocationInfo: true }), loc);
+  const location = element?.sourceCodeLocation;
+  return location ? { start: location.startOffset, end: location.endOffset } : null;
+}
+
 export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit): PatchResult {
   const document = parse(source, { sourceCodeLocationInfo: true });
   const element = findElementAt(document, loc);

@@ -81,7 +81,48 @@
 }
 
 .frame-size {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-3);
+}
+
+.frame-label {
+  max-width: calc(var(--frame-w, 100000px) / var(--inv-zoom, 1));
+}
+
+.frame-label > * {
+  flex: none;
+}
+
+.frame-label > .frame-name,
+.frame-label > .frame-menu-root:has(> .frame-chip.page) {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.frame-label > .frame-name {
+  overflow: hidden;
+}
+
+.frame-label > .frame-menu-root:has(> .frame-chip.page) {
+  flex-shrink: 4;
+}
+
+.frame-name > .frame-title {
+  flex: none;
+}
+
+.frame-name > .frame-size {
+  flex: 0 1 auto;
+}
+
+.frame-label > .frame-menu-root > .frame-chip.page {
+  max-width: min(180px, 100%);
+}
+
+.frame-number {
+  flex: none;
 }
 
 .frame-remove {

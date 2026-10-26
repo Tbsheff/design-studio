@@ -6,8 +6,8 @@ import { useProjectEvents } from './events';
 import type { CanvasFrames } from './useCanvasFrames';
 
 const POINT_FRESH_MS = 8000;
-const SELECT_AT_MS = [500, 1300];
-const ZOOM_AT_MS = [900, 1800];
+const SELECT_AT_MS = [900, 1700];
+const ZOOM_AT_MS = 500;
 
 interface PointInput {
   projectId: string;
@@ -37,10 +37,10 @@ export function useCanvasPoint(o: PointInput): void {
     cur.frames.activate(frame);
     cur.clearSelection();
     const later = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
+    later(ZOOM_AT_MS, () => latest.current.zoom('selection'));
     if (event.selector) {
       const selector = event.selector;
       for (const ms of SELECT_AT_MS) later(ms, () => latest.current.post({ type: 'select-selector', selector }));
     }
-    for (const ms of event.selector ? ZOOM_AT_MS : [ZOOM_AT_MS[0] as number]) later(ms, () => latest.current.zoom('selection'));
   });
 }

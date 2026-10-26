@@ -249,7 +249,7 @@ export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceS
       },
       { source: 'agent' },
     );
-    return text({ placed: placed.map((frame) => describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)), frames: result.canvas?.frames.length ?? 0, warnings });
+    return text({ warnings, placed: placed.map((frame) => describeFrame(frame, ctx.canvas.ownerOf(ctx.project).id)), frames: result.canvas?.frames.length ?? 0 });
   } catch (error) {
     if (error instanceof PlaceError) return failure(error.message);
     throw error;

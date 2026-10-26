@@ -59,7 +59,7 @@ export async function runMockCanvas(session: MockToolSession, ctx: CanvasToolCon
     { label: 'Mobile', viewport: 'mobile', rightOf: '@Desktop' },
     { label: 'Tablet', viewport: 'tablet', x: 0, y: 0 },
   ]);
-  const warned = /overlap/.test(firstLine(placed));
+  const warned = /overlap/.test(placed.content.map((part) => part.text).join(' '));
   if (warned) await mockPlace(session, ctx, [{ frame: '@Tablet', rightOf: '@Mobile' }]);
   await mockPoint(session, ctx, '@Mobile', 'h1');
   return warned ? 'Placed Desktop, Mobile and Tablet frames in a row; the Tablet frame overlapped Desktop, so I moved it right of Mobile. Showing the Mobile frame.' : 'Placed Desktop, Mobile and Tablet frames. Showing the Mobile frame.';

@@ -312,7 +312,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const makeStates = (frame?: CanvasFrame) => {
     const f = frame ?? activeFrame(canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport));
     const path = f.path ?? '';
-    void act(() => startRun({ prompt: statesPrompt(path), mode: 'edit', level: project.settings.defaultLevel, states: { path, frame: f.id, width: f.width, height: f.height } }, true));
+    void act(() => startRun({ prompt: statesPrompt(path || project.entry), mode: 'edit', level: project.settings.defaultLevel, states: { path, frame: f.id, width: f.width, height: f.height } }, true));
   };
   const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
   const retryRun = (run: RunView) => {

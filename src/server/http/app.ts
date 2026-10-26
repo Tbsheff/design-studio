@@ -325,7 +325,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const recordVersion = async (project: Project, direction: Direction, version: Version, resetSession?: SessionResetReason): Promise<Direction> => {
     bus.emit({ type: 'version.created', projectId: project.id, directionId: direction.id, version });
-    if (resetSession && direction.id === canvas.ownerOf(project).id && version.changedFiles.includes(CANVAS_FILE)) announceCanvas(project);
+    if (resetSession && direction.id === canvas.ownerOf(project).id) announceCanvas(project);
     const patch: Partial<Direction> = resetSession ? { headVersionId: version.id, ...freshSessionPatch(resetSession) } : { headVersionId: version.id };
     const updated = await projects.updateDirection(project.id, direction.id, patch);
     bus.emit({ type: 'direction.updated', projectId: project.id, directionId: direction.id, direction: updated });

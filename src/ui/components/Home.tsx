@@ -1,27 +1,25 @@
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent, type ReactNode, type RefObject } from 'react';
 import { formatAnswers, needsQuestions } from '../../shared/clarify';
-import { DEFAULT_SETTINGS, type ClarifyQuestion, type Project, type ProjectKind, type ProjectSettings, type Starter } from '../../shared/contracts';
-import { shortenHome, type WorkspaceFolder } from '../../shared/folders';
+import { DEFAULT_SETTINGS, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
+import type { WorkspaceFolder, WorkspaceList } from '../../shared/folders';
 import { api, errorText } from '../api';
-import { findPack, pickable, usePacks } from '../packs';
+import { findPack, pickable, usePacks, type PacksState } from '../packs';
 import { homeVariations, uiStore, useUi } from '../storage';
 import { maxVariationsFor } from '../variationsApi';
-import { Disclosure } from './Disclosure';
-import { FoldersSection, LocationField, OpenFolder, useFolderChooser } from './FolderControls';
 import { filterByFolder, locationFor, useWorkspaces } from '../useWorkspaces';
+import { useFolderChooser } from '../useFolderChooser';
+import { homePrefs, useHomePrefs, type HomeTab } from '../homePrefs';
 import { Icon } from './Icon';
 import { ThemeButton } from './ThemeButton';
-import { useRovingRadioGroup } from './LevelControl';
-import { NewProjectAdvanced } from './NewProjectAdvanced';
-import { PackPicker } from './PackPicker';
-import { RunSettings } from './RunSettings';
 import { ProjectGrid } from './ProjectGrid';
 import { reportAppStart } from '../perfTelemetry';
 import { prefetchScreensWhenIdle } from '../screens';
-import { parseDraft, toDraft } from '../settingsDraft';
+import { modelLabel, parseDraft, toDraft } from '../settingsDraft';
 import { BrandMark } from './BrandMark';
 import { ComposerChips, imageFiles, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
 import { HomeToast, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
+import type { HomeTemplate } from './HomeTemplates';
+import type { ModelSettings, PlusMenuActions } from './HomePopovers';
 
 const startersChunk = import('./HomeStarters');
 const StarterGallery = lazy(() => startersChunk.then((m) => ({ default: m.StarterGallery })));
@@ -30,28 +28,57 @@ const clarifyChunk = import('./ClarifyForm');
 const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyForm })));
 const loadTrash = () => import('./HomeTrash');
 const HomeTrash = lazy(loadTrash);
+const loadPops = () => import('./HomePopovers');
+const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
+const PackPopover = lazy(() => loadPops().then((m) => ({ default: m.PackPopover })));
+const ModelPopover = lazy(() => loadPops().then((m) => ({ default: m.ModelPopover })));
+const PackCards = lazy(() => loadPops().then((m) => ({ default: m.PackCards })));
+const loadTemplates = () => import('./HomeTemplates');
+const loadExtras = () => import('./HomeExtras');
+const FoldersSection = lazy(() => loadExtras().then((m) => ({ default: m.FoldersSection })));
 
-type Busy = 'create' | 'import' | 'ask' | null;
+type Busy = 'create' | 'import' | 'ask' | 'starter' | null;
+type Pop = 'plus' | 'pack' | 'model' | null;
 
+const EXAMPLES = ['Wireframe a settings page', 'Prototype a dashboard for tracking orders', 'A pricing page for a developer tool with three tiers', 'Turn my notes into a one-page brief', 'A mobile onboarding flow for a running app'];
+const EXAMPLE_MS = 3500;
+const LEVEL_LABEL: Record<RunLevel, string> = {
+  wireframe: 'Wireframe',
+  prototype: 'Prototype',
+  polish: 'Polish',
+};
+const TABS: { id: HomeTab; label: string }[] = [
+  { id: 'projects', label: 'Projects' },
+  { id: 'systems', label: 'Design systems' },
+  { id: 'templates', label: 'Templates' },
+];
 
-const KINDS = ['html', 'react'] as const;
+function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
+  const [mod, setMod] = useState<T | null>(null);
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    void load().then((loaded) => live && setMod(loaded));
+    return () => {
+      live = false;
+    };
+  }, [enabled, load]);
+  return mod;
+}
 
-function KindToggle({ kind, onKind }: { kind: ProjectKind; onKind: (k: ProjectKind) => void }) {
-  const radios = useRovingRadioGroup(KINDS, kind, onKind);
-  return (
-    <div className="segmented" role="radiogroup" aria-label="Project kind" onKeyDown={radios.onKeyDown}>
-      {KINDS.map((k) => (
-        <button key={k} {...radios.item(k)} type="button" role="radio" aria-checked={kind === k} className={kind === k ? 'on' : ''} onClick={() => onKind(k)}>
-          <Icon name={k === 'html' ? 'code' : 'react'} size={14} />
-          {k === 'html' ? 'HTML' : 'React + Vite'}
-        </button>
-      ))}
-    </div>
-  );
+function useExample(paused: boolean): string {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (paused) return;
+    const timer = window.setInterval(() => setIndex((n) => (n + 1) % EXAMPLES.length), EXAMPLE_MS);
+    return () => window.clearInterval(timer);
+  }, [paused]);
+  return EXAMPLES[index] ?? '';
 }
 
 function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void; onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const example = useExample(value !== '');
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -62,7 +89,7 @@ function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onC
     <textarea
       ref={ref}
       aria-label="Describe the design"
-      rows={3}
+      rows={2}
       autoFocus
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -70,73 +97,257 @@ function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onC
       onKeyDown={(e) => {
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSubmit(e);
       }}
-      placeholder="A pricing page for a developer tool with three tiers"
+      placeholder={example}
     />
   );
 }
 
-function HiddenProjectsNote({ homeDir, onMoved }: { homeDir: string | null; onMoved: () => void }) {
-  const [hidden, setHidden] = useState<{ count: number; target: string } | null>(null);
-  const [moving, setMoving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const load = () =>
-    api
-      .hiddenProjects()
-      .then(setHidden)
-      .catch(() => setHidden(null));
-  useEffect(() => {
-    void load();
-  }, []);
-  if (!hidden || hidden.count === 0) return null;
-  const move = async () => {
-    setMoving(true);
-    setError(null);
-    try {
-      const result = await api.moveHiddenProjects();
-      const first = result.failed[0];
-      if (first) setError(`Could not move ${result.failed.length} project${result.failed.length === 1 ? '' : 's'}: ${first.error}`);
-      if (result.moved.length > 0) onMoved();
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setMoving(false);
-      await load();
-    }
-  };
+function focusPrompt(home: HTMLElement | null, atEnd = false): void {
+  home?.scrollTo({ top: 0, behavior: 'smooth' });
+  window.requestAnimationFrame(() => {
+    const area = document.querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]');
+    area?.focus();
+    if (atEnd && area) area.setSelectionRange(area.value.length, area.value.length);
+  });
+}
+
+function focusOpenFolder(): void {
+  window.setTimeout(() => {
+    const row = document.querySelector<HTMLFormElement>('form.open-folder');
+    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    row?.querySelector<HTMLButtonElement>('button[type="submit"], button')?.focus();
+  }, 60);
+}
+
+function focusIn(selector: string): void {
+  window.setTimeout(() => {
+    const el = document.querySelector<HTMLElement>(selector);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el?.focus();
+  }, 60);
+}
+
+function SendButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
+  const working = busy === 'create' || busy === 'ask';
   return (
-    <div className="home-hidden-note" role="status">
-      <span>
-        {hidden.count === 1 ? "1 project is in the app's hidden folder" : `${hidden.count} projects are in the app's hidden folder`}
-      </span>
-      <button type="button" className="btn small" onClick={() => void move()} disabled={moving}>
-        {moving ? 'Moving…' : `Move to ${shortenHome(hidden.target, homeDir)}`}
-      </button>
-      {error && <span className="home-hidden-error">{error}</span>}
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} title="Create (⌘↩)">
+      {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
+    </button>
+  );
+}
+
+function PillSelect({ label, value, open, triggerRef, onOpen, ariaLabel }: { label: string; value: string; open: boolean; triggerRef: RefObject<HTMLButtonElement | null>; onOpen: () => void; ariaLabel: string }) {
+  return (
+    <button ref={triggerRef} type="button" className="ui-pill-select" aria-haspopup="dialog" aria-expanded={open} aria-label={`${ariaLabel}: ${value}`} onPointerEnter={() => void loadPops()} onFocus={() => void loadPops()} onClick={onOpen}>
+      <span className="ui-pill-select-label">{label}</span>
+      <span className="ui-pill-select-value truncate">{value}</span>
+      <svg className="ui-pill-select-caret" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true">
+        <path d={open ? 'M3.5 10L8 5.5l4.5 4.5' : 'M3.5 6L8 10.5 12.5 6'} />
+      </svg>
+    </button>
+  );
+}
+
+function Tabs({ tab }: { tab: HomeTab }) {
+  return (
+    <div className="home-tabs" role="tablist" aria-label="Library">
+      {TABS.map((item) => (
+        <button key={item.id} type="button" role="tab" aria-selected={tab === item.id} className={`home-tab${tab === item.id ? ' on' : ''}`} onClick={() => homePrefs.set({ tab: item.id })}>
+          {item.label}
+        </button>
+      ))}
     </div>
   );
 }
 
-function focusPrompt(home: HTMLElement | null): void {
-  home?.scrollTo({ top: 0, behavior: 'smooth' });
-  window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')?.focus());
-}
-
-function focusOpenFolder(): void {
-  window.requestAnimationFrame(() => {
-    const row = document.querySelector<HTMLFormElement>('form.open-folder');
-    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    row?.querySelector<HTMLButtonElement>('button[type="submit"]')?.focus();
-  });
-}
-
-function CreateButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
-  const working = busy === 'create' || busy === 'ask';
-  const label = busy === 'create' ? 'Creating…' : busy === 'ask' ? 'Thinking…' : 'Create';
+function TabPanel({ tabs, actions, children }: { tabs: ReactNode; actions?: ReactNode; children: ReactNode }) {
   return (
-    <button className="btn send has-icon" type="submit" disabled={disabled} title="Create (⌘↩)">
-      {working ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
-      {label}
-    </button>
+    <section className="home-list" aria-label="Library">
+      <div className="home-list-head">
+        {tabs}
+        <div className="spacer" />
+        {actions}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function DropHint({ on }: { on: boolean }) {
+  if (!on) return null;
+  return (
+    <div className="home-drop-hint" aria-hidden="true">
+      <Icon name="image" size={16} />
+      Drop an image or a link to use it as a reference
+    </div>
+  );
+}
+
+function folderLabel(list: WorkspaceList | null, location: string | null): string {
+  const folders = list?.folders ?? [];
+  const match = folders.find((folder) => folder.path === location) ?? folders.find((folder) => folder.default);
+  return match?.label ?? 'Design Studio';
+}
+
+function modelSummary(model: string, level: RunLevel, count: number): string {
+  const extra = count > 1 ? ` · ${count}×` : '';
+  return `${modelLabel(model).replace(/^Claude /, '')} · ${LEVEL_LABEL[level]}${extra}`;
+}
+
+function StarterRow({ template, busy, onOpen }: { template: { label: string; starter: Starter | null } | null; busy: Busy; onOpen: (starter: Starter) => void }) {
+  const starter = template?.starter;
+  if (!template || !starter) return null;
+  return (
+    <div className="home-starter-row">
+      <span className="ui-chip">{template.label} starter</span>
+      <button type="button" className="link" disabled={busy !== null} onClick={() => onOpen(starter)}>
+        {busy === 'starter' ? 'Opening…' : 'Open it now'}
+      </button>
+      <span className="home-starter-hint">No agent run, no cost</span>
+    </div>
+  );
+}
+
+type TemplatesModule = typeof import('./HomeTemplates');
+
+function TemplatesSection({ open, templates, selected, disabled, onPick }: { open: boolean; templates: TemplatesModule | null; selected: string | null; disabled: boolean; onPick: (template: HomeTemplate, starter: Starter | null) => void }) {
+  const grid = templates ? <templates.HomeTemplateGrid selected={selected} disabled={disabled} onPick={onPick} /> : <div className="home-tile-placeholder" aria-hidden="true" />;
+  return (
+    <section className="home-templates" aria-label="Choose a template">
+      <button type="button" className="ui-section-label home-templates-toggle" aria-expanded={open} onClick={() => homePrefs.set({ templatesOpen: !open })}>
+        Choose a template
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+          <path d={open ? 'M3.5 10L8 5.5l4.5 4.5' : 'M3.5 6L8 10.5 12.5 6'} />
+        </svg>
+      </button>
+      {open && grid}
+    </section>
+  );
+}
+
+function OtherTab({ tab, tabs, packs, pack, busy, onStarter, onPickPack }: { tab: HomeTab; tabs: ReactNode; packs: PacksState; pack: PackSummary | null; busy: Busy; onStarter: (starter: Starter) => Promise<void>; onPickPack: (id: string | null) => void }) {
+  if (tab === 'templates') {
+    return (
+      <TabPanel tabs={tabs}>
+        <Suspense fallback={null}>
+          <StarterGallery disabled={busy !== null} onPick={onStarter} />
+        </Suspense>
+      </TabPanel>
+    );
+  }
+  return (
+    <TabPanel
+      tabs={tabs}
+      actions={
+        <>
+          <button type="button" className="btn small" onClick={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })}>
+            New design system
+          </button>
+          <button type="button" className="btn small" onClick={() => uiStore.set({ screen: 'design-systems', libraryFrom: null })}>
+            Open library
+          </button>
+        </>
+      }
+    >
+      <p className="home-section-hint">Pick one for your next project. Edit, import and export them in the library.</p>
+      <Suspense fallback={null}>
+        <PackCards packs={pickable(packs).packs ?? []} value={pack?.id ?? null} includeNone={false} onPick={(picked) => onPickPack(picked?.id ?? null)} />
+      </Suspense>
+    </TabPanel>
+  );
+}
+
+interface ComposerBarProps {
+  fileRef: RefObject<HTMLInputElement | null>;
+  onFiles: (files: File[]) => void;
+  plusActions: Omit<PlusMenuActions, 'onDesignSystem'>;
+  locationLabel: string;
+  packs: PacksState;
+  pack: PackSummary | null;
+  kind: ProjectKind;
+  onKind: (kind: ProjectKind) => void;
+  modelValue: string;
+  modelSettings: ModelSettings;
+  busy: Busy;
+  sendDisabled: boolean;
+}
+
+function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack, kind, onKind, modelValue, modelSettings, busy, sendDisabled }: ComposerBarProps) {
+  const [pop, setPop] = useState<Pop>(null);
+  const plusRef = useRef<HTMLButtonElement>(null);
+  const packRef = useRef<HTMLButtonElement>(null);
+  const modelRef = useRef<HTMLButtonElement>(null);
+  const closePop = useCallback(
+    (refocus: boolean) => {
+      const trigger = pop === 'plus' ? plusRef : pop === 'pack' ? packRef : modelRef;
+      setPop(null);
+      if (refocus) trigger.current?.focus();
+    },
+    [pop],
+  );
+  const togglePop = (next: Exclude<Pop, null>) => setPop((current) => (current === next ? null : next));
+  return (
+    <div className="home-composer-bar">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+        multiple
+        hidden
+        onChange={(event) => {
+          onFiles(imageFiles(event.target.files));
+          event.target.value = '';
+        }}
+      />
+      <div className="home-anchor">
+        <button
+          ref={plusRef}
+          type="button"
+          className="icon-btn bordered home-square"
+          aria-label="Add"
+          aria-haspopup="menu"
+          aria-expanded={pop === 'plus'}
+          title="Attach, import and options"
+          onPointerEnter={() => void loadPops()}
+          onClick={() => togglePop('plus')}
+        >
+          <Icon name="plus" size={18} />
+        </button>
+        {pop === 'plus' && (
+          <Suspense fallback={null}>
+            <PlusMenu trigger={plusRef} onClose={closePop} locationLabel={locationLabel} actions={{ ...plusActions, onDesignSystem: () => setPop('pack') }} />
+          </Suspense>
+        )}
+      </div>
+      <div className="home-anchor">
+        <PillSelect label="Design system" ariaLabel="Design system" value={pack?.name ?? 'None'} open={pop === 'pack'} triggerRef={packRef} onOpen={() => togglePop('pack')} />
+        {pop === 'pack' && (
+          <Suspense fallback={null}>
+            <PackPopover trigger={packRef} onClose={closePop} state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
+          </Suspense>
+        )}
+      </div>
+      <button
+        type="button"
+        className="icon-btn bordered home-square home-kind"
+        aria-pressed={kind === 'react'}
+        aria-label="React + Vite project"
+        title={kind === 'react' ? 'React + Vite project. Press for a plain HTML page.' : 'Plain HTML page. Press for a React + Vite project.'}
+        onClick={() => onKind(kind === 'react' ? 'html' : 'react')}
+      >
+        <Icon name="code" size={16} />
+      </button>
+      <div className="spacer" />
+      <div className="home-anchor end">
+        <PillSelect label="Model" ariaLabel="Model and run settings" value={modelValue} open={pop === 'model'} triggerRef={modelRef} onOpen={() => togglePop('model')} />
+        {pop === 'model' && (
+          <Suspense fallback={null}>
+            <ModelPopover trigger={modelRef} onClose={closePop} settings={modelSettings} />
+          </Suspense>
+        )}
+      </div>
+      <SendButton busy={busy} disabled={sendDisabled} />
+    </div>
   );
 }
 
@@ -153,19 +364,43 @@ interface HomeCreateInput {
 }
 
 async function createFromHome(input: HomeCreateInput): Promise<Project> {
-  const extra = { ...(input.designMd.trim() ? { designMd: input.designMd } : {}), ...(input.packId ? { packId: input.packId } : {}) };
+  const extra = {
+    ...(input.designMd.trim() ? { designMd: input.designMd } : {}),
+    ...(input.packId ? { packId: input.packId } : {}),
+  };
   const fanOut = input.designCount > 1;
   const level = input.settings.defaultLevel;
   const where = input.location ? { parentPath: input.location } : {};
   const referenceUrls = input.references.map((reference) => reference.url);
   const refs = referenceUrls.length > 0 ? { referenceUrls } : {};
   const separateRun = !fanOut && input.images.length > 0;
-  const { project } = await api.createProject({ prompt: input.prompt, kind: input.kind, settings: input.settings, level, ...extra, ...where, ...(fanOut || separateRun ? { startRun: false } : {}), ...refs });
-  if (fanOut) homeVariations.set({ projectId: project.id, prompt: input.prompt, count: input.designCount, level });
+  const { project } = await api.createProject({
+    prompt: input.prompt,
+    kind: input.kind,
+    settings: input.settings,
+    level,
+    ...extra,
+    ...where,
+    ...(fanOut || separateRun ? { startRun: false } : {}),
+    ...refs,
+  });
+  if (fanOut)
+    homeVariations.set({
+      projectId: project.id,
+      prompt: input.prompt,
+      count: input.designCount,
+      level,
+    });
   const main = project.directions.find((direction) => direction.id === 'main') ?? project.directions[0];
   if (separateRun && main) {
     const uploaded = await Promise.all(input.images.map((image) => api.uploadAttachment(project.id, image.file)));
-    await api.startRun(project.id, main.id, { prompt: input.prompt, mode: 'edit', level, attachmentIds: uploaded.map((item) => item.id), ...refs });
+    await api.startRun(project.id, main.id, {
+      prompt: input.prompt,
+      mode: 'edit',
+      level,
+      attachmentIds: uploaded.map((item) => item.id),
+      ...refs,
+    });
   }
   return project;
 }
@@ -182,19 +417,28 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const designCount = Math.min(designs, maxDesigns);
   const packs = usePacks();
   const { lastPackId, lastLocation } = useUi();
+  const prefs = useHomePrefs();
   const pack = findPack(packs.packs, lastPackId);
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
   const [importPath, setImportPath] = useState('');
+  const [showOpenFolder, setShowOpenFolder] = useState(false);
+  const [advancedOpened, setAdvancedOpened] = useState(0);
+  const [template, setTemplate] = useState<{
+    id: string;
+    label: string;
+    starter: Starter | null;
+  } | null>(null);
   const chooser = useFolderChooser(setFormError);
   const homeRef = useRef<HTMLDivElement>(null);
   const { workspaces, addFolder, renameFolder, forgetFolder, setDefaultFolder } = useWorkspaces(setFormError);
-  const homeDir = workspaces ? workspaces.homeDir : null;
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
   const [query, setQuery] = useState('');
   const [toast, setToast] = useState<HomeToastState | null>(null);
   const [trashOpen, setTrashOpen] = useState(false);
   const onboarding = useOnboarding();
   const { projects, setProjects, listError, loadProjects, searchRef } = useHomeProjects();
+  const templates = useModule(loadTemplates, prefs.templatesOpen);
+  const extras = useModule(loadExtras, true);
   const listed = projects !== null || listError !== null;
   useEffect(() => {
     if (!listed) return;
@@ -205,9 +449,9 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const showToast = useCallback((next: Omit<HomeToastState, 'id'>) => setToast({ ...next, id: Date.now() }), []);
   const clearToast = useCallback(() => setToast(null), []);
 
-
   const location = locationFor(workspaces, lastLocation);
   const setLocation = (path: string | null) => uiStore.set({ lastLocation: path });
+  const locationLabel = folderLabel(workspaces, location);
 
   const removeFolder = async (target: WorkspaceFolder) => {
     if (!(await forgetFolder(target))) return;
@@ -224,6 +468,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     const picked = await chooser.choose(`Choose a folder in ${folder.label} to open`, folder.path);
     if (!picked.path) return;
     setImportPath(picked.path);
+    setShowOpenFolder(true);
     focusOpenFolder();
   };
 
@@ -238,7 +483,17 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     setBusy('create');
     setFormError(null);
     try {
-      const project = await createFromHome({ prompt: finalPrompt, kind, settings: parsed.settings, designMd, packId: pack?.id ?? null, designCount, location, images, references });
+      const project = await createFromHome({
+        prompt: finalPrompt,
+        kind,
+        settings: parsed.settings,
+        designMd,
+        packId: pack?.id ?? null,
+        designCount,
+        location,
+        images,
+        references,
+      });
       onOpen(project.id);
     } catch (err) {
       setFormError(errorText(err));
@@ -272,12 +527,28 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     onOpen(project.id);
   };
 
+  const openSelectedStarter = async (starter: Starter) => {
+    setBusy('starter');
+    setFormError(null);
+    try {
+      await openStarter(starter);
+    } catch (err) {
+      setFormError(`Could not open ${starter.name}: ${errorText(err)}`);
+      setBusy(null);
+    }
+  };
+
   const openSample = async () => {
     const { project } = await api.createSample(location ?? undefined);
     onOpen(project.id);
   };
 
-  const actions = useProjectActions({ onOpen, setProjects, loadProjects, showToast });
+  const actions = useProjectActions({
+    onOpen,
+    setProjects,
+    loadProjects,
+    showToast,
+  });
 
   const importFolder = async (path: string) => {
     setBusy('import');
@@ -291,72 +562,100 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     }
   };
 
+  const linkCode = async () => {
+    const picked = await chooser.choose('Choose a folder with an index.html or a Vite app');
+    if (picked.path) return void importFolder(picked.path);
+    if (picked.unsupported) {
+      setShowOpenFolder(true);
+      focusOpenFolder();
+    }
+  };
+
+  const pickTemplate = (picked: HomeTemplate, starter: Starter | null) => {
+    if (template?.id === picked.id) {
+      setTemplate(null);
+      return;
+    }
+    setTemplate({ id: picked.id, label: picked.label, starter });
+    setPrompt(picked.prompt);
+    setQuestions(null);
+    if (picked.kind) setKind(picked.kind);
+    const level = picked.level;
+    if (level) setSettingsDraft((d) => ({ ...d, defaultLevel: level }));
+    focusPrompt(null, true);
+  };
+
+  const changeKind = (next: ProjectKind) => {
+    setKind(next);
+    setDesigns((n) => Math.min(n, maxVariationsFor(next)));
+  };
+
+  const modelValue = modelSummary(settingsDraft.model, settingsDraft.defaultLevel, designCount);
+  const tabs = <Tabs tab={prefs.tab} />;
+  const openAdvanced = () => {
+    setAdvancedOpened((n) => n + 1);
+    focusIn('.advanced summary');
+  };
+  const plusActions = {
+    onAttachFile: () => fileRef.current?.click(),
+    onAttachFolder: () => {
+      setShowOpenFolder(true);
+      focusOpenFolder();
+    },
+    onLinkCode: () => void linkCode(),
+    onImportSystem: () => uiStore.set({ screen: 'design-systems', libraryFrom: null }),
+    onSkills: openAdvanced,
+    onLocation: () => focusIn('#new-project-location'),
+  };
+  const modelSettings: ModelSettings = {
+    model: settingsDraft.model,
+    onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
+    level: settingsDraft.defaultLevel,
+    onLevel: (defaultLevel) => setSettingsDraft((d) => ({ ...d, defaultLevel })),
+    designs: { value: designCount, max: maxDesigns, onChange: setDesigns },
+    onMore: openAdvanced,
+  };
+
   return (
     <div className="home" ref={homeRef}>
       <header className="home-header">
         <BrandMark />
         <span className="brand">Design Studio</span>
-        <nav className="home-nav" aria-label="Library">
-          <button type="button" className="btn ghost small has-icon" onClick={() => uiStore.set({ screen: 'design-systems', libraryFrom: null })}>
-            <Icon name="palette" size={14} />
-            Design systems
-          </button>
-          <button type="button" className="btn ghost small has-icon" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
-            <Icon name="trash" size={14} />
-            Trash
+        <div className="spacer" />
+        <nav className="home-nav" aria-label="App">
+          <button type="button" className="icon-btn home-round" aria-label="Trash" title="Trash" onPointerEnter={() => void loadTrash()} onClick={() => setTrashOpen(true)}>
+            <Icon name="trash" size={15} />
           </button>
           <ThemeButton />
         </nav>
       </header>
       <main className="home-main">
         <section className="home-hero">
-          <h1>Start a new project</h1>
-          <p className="home-lede">Describe a page. The agent builds it, and every change becomes a version you can compare, branch or restore.</p>
-          <form
-            className={`home-composer${dragging ? ' dragging' : ''}`}
-            onSubmit={create}
-            {...dropHandlers}
-          >
-            <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
-            <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} />
-            {dragging && (
-              <div className="home-drop-hint" aria-hidden="true">
-                <Icon name="image" size={16} />
-                Drop an image or a link to use it as a reference
-              </div>
-            )}
-            <div className="home-composer-bar">
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                multiple
-                hidden
-                onChange={(event) => {
-                  addImages(imageFiles(event.target.files));
-                  event.target.value = '';
-                }}
-              />
-              <button type="button" className="icon-btn" aria-label="Attach images" title="Attach images (or drop or paste them)" onClick={() => fileRef.current?.click()}>
-                <Icon name="paperclip" size={16} />
-              </button>
-              <KindToggle
+          <h1 className="ui-display">What should we create?</h1>
+          <div className="home-card">
+            <form className={`ui-composer home-composer${dragging ? ' dragging' : ''}`} onSubmit={create} {...dropHandlers}>
+              <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
+              <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} />
+              <DropHint on={dragging} />
+              <StarterRow template={template} busy={busy} onOpen={(starter) => void openSelectedStarter(starter)} />
+              <ComposerBar
+                fileRef={fileRef}
+                onFiles={addImages}
+                plusActions={plusActions}
+                locationLabel={locationLabel}
+                packs={packs}
+                pack={pack}
                 kind={kind}
-                onKind={(next) => {
-                  setKind(next);
-                  setDesigns((n) => Math.min(n, maxVariationsFor(next)));
-                }}
+                onKind={changeKind}
+                modelValue={modelValue}
+                modelSettings={modelSettings}
+                busy={busy}
+                sendDisabled={busy !== null || !prompt.trim() || questions !== null}
               />
-              <RunSettings
-                level={settingsDraft.defaultLevel}
-                onLevel={(defaultLevel) => setSettingsDraft((d) => ({ ...d, defaultLevel }))}
-                designs={{ value: designCount, max: maxDesigns, onChange: setDesigns, disabledReason: null }}
-              />
-              <PackPicker state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
-              <div className="spacer" />
-              <CreateButton busy={busy} disabled={busy !== null || !prompt.trim() || questions !== null} />
-            </div>
-          </form>
+            </form>
+            <Suspense fallback={null}>{onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}</Suspense>
+            <TemplatesSection open={prefs.templatesOpen} templates={templates} selected={template?.id ?? null} disabled={busy !== null} onPick={pickTemplate} />
+          </div>
           {questions && (
             <Suspense fallback={null}>
               <ClarifyForm
@@ -371,59 +670,90 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
               />
             </Suspense>
           )}
-          <LocationField
-            folders={workspaces?.folders ?? []}
-            value={location}
-            homeDir={homeDir}
-            prompt={prompt}
-            chooser={chooser}
-            onChange={setLocation}
-            onAddFolder={addFolder}
-          />
-          <NewProjectAdvanced
-            draft={settingsDraft}
-            onDraft={setSettingsDraft}
-            designMd={designMd}
-            onDesignMd={setDesignMd}
-            onError={setFormError}
-          />
           {formError && (
             <div className="alert error" role="alert">
               {formError}
             </div>
           )}
-          <Disclosure className="home-disclosure" />
-          <OpenFolder busy={busy !== null} path={importPath} homeDir={homeDir} chooser={chooser} onPath={setImportPath} onImport={(p) => void importFolder(p)} />
+          {extras && (
+            <extras.ComposerFoot
+              workspaces={workspaces}
+              location={location}
+              prompt={prompt}
+              chooser={chooser}
+              onLocation={setLocation}
+              onAddFolder={addFolder}
+              advanced={{
+                opened: advancedOpened,
+                draft: settingsDraft,
+                onDraft: setSettingsDraft,
+                designMd,
+                onDesignMd: setDesignMd,
+                onError: setFormError,
+              }}
+              openFolder={{
+                shown: showOpenFolder || importPath !== '',
+                busy: busy !== null,
+                path: importPath,
+                onPath: setImportPath,
+                onImport: (p) => void importFolder(p),
+              }}
+              onHiddenMoved={() => void loadProjects()}
+            />
+          )}
         </section>
-        <Suspense fallback={null}>
-          {onboarding.show && <FirstRunPanel onClose={onboarding.dismiss} onSample={openSample} />}
-          {projects !== null && projects.length === 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
-        </Suspense>
-        <HiddenProjectsNote homeDir={homeDir} onMoved={() => void loadProjects()} />
-        <FoldersSection
-          list={workspaces}
-          projects={projects}
-          filterId={folderFilter}
-          chooser={chooser}
-          onFilter={setFolderFilter}
-          onAdd={addFolder}
-          onRename={renameFolder}
-          onRemove={(folder) => void removeFolder(folder)}
-          onNewHere={newProjectHere}
-          onOpenHere={(folder) => void openFolderHere(folder)}
-          onSetDefault={setDefaultFolder}
-        />
-        <ProjectGrid
-          projects={shownProjects}
-          packs={packs.packs}
-          error={listError}
-          actions={actions}
-          query={query}
-          onQuery={setQuery}
-          searchRef={searchRef}
-          filter={filterFolder ? { label: filterFolder.label, onClear: () => setFolderFilter(null) } : null}
-        />
-        <Suspense fallback={null}>{projects !== null && projects.length > 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}</Suspense>
+        {prefs.tab === 'projects' && (
+          <>
+            <ProjectGrid
+              projects={shownProjects}
+              packs={packs.packs}
+              error={listError}
+              actions={actions}
+              query={query}
+              onQuery={setQuery}
+              searchRef={searchRef}
+              filter={
+                filterFolder
+                  ? {
+                      label: filterFolder.label,
+                      onClear: () => setFolderFilter(null),
+                    }
+                  : null
+              }
+              tabs={tabs}
+            />
+            <Suspense fallback={null}>
+              {projects !== null && projects.length === 0 && <StarterGallery disabled={busy !== null} onPick={openStarter} />}
+              <FoldersSection
+                list={workspaces}
+                projects={projects}
+                filterId={folderFilter}
+                chooser={chooser}
+                onFilter={setFolderFilter}
+                onAdd={addFolder}
+                onRename={renameFolder}
+                onRemove={(folder) => void removeFolder(folder)}
+                onNewHere={newProjectHere}
+                onOpenHere={(folder) => void openFolderHere(folder)}
+                onSetDefault={setDefaultFolder}
+              />
+            </Suspense>
+          </>
+        )}
+        {prefs.tab !== 'projects' && (
+          <OtherTab
+            tab={prefs.tab}
+            tabs={tabs}
+            packs={packs}
+            pack={pack}
+            busy={busy}
+            onStarter={openStarter}
+            onPickPack={(id) => {
+              uiStore.set({ lastPackId: id });
+              focusPrompt(homeRef.current);
+            }}
+          />
+        )}
       </main>
       {trashOpen && (
         <Suspense fallback={null}>

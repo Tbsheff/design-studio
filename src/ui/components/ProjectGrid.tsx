@@ -4,6 +4,7 @@ import { api } from '../api';
 import { findPack, keySwatches } from '../packs';
 import { filterProjects, gridColumns, nextGridIndex, sortProjects } from '../projectList';
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from '../storage';
+import { homePrefs, useHomePrefs } from '../homePrefs';
 import { Swatches } from './Swatches';
 import { formatRelative, formatTime } from '../format';
 import { Icon } from './Icon';
@@ -38,6 +39,14 @@ function useThumbnail(project: Project): string | null {
   return null;
 }
 
+function Star({ filled }: { filled: boolean }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round">
+      <path d="M8 1.9l1.8 3.8 4.1.5-3 2.9.8 4.1L8 11.2l-3.7 2 .8-4.1-3-2.9 4.1-.5z" />
+    </svg>
+  );
+}
+
 export interface CardActions {
   onOpen: (project: Project) => void;
   onRename: (project: Project, name: string) => Promise<void>;
@@ -55,11 +64,12 @@ interface CardProps {
   project: Project;
   pack: PackSummary | null;
   active: boolean;
+  favorite: boolean;
   actions: CardActions;
   onFocusCard: () => void;
 }
 
-function ProjectCard({ project, pack, active, actions, onFocusCard }: CardProps) {
+function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: CardProps) {
   const html = project.kind === 'html';
   const count = project.directions.length;
   const thumb = useThumbnail(project);
@@ -140,7 +150,7 @@ function ProjectCard({ project, pack, active, actions, onFocusCard }: CardProps)
   );
 
   return (
-    <div ref={cardRef} className={`project-card${menu ? ' menu-open' : ''}`} data-project-id={project.id} onContextMenu={onContextMenu}>
+    <div ref={cardRef} className={`project-card${menu ? ' menu-open' : ''}${favorite ? ' favorite' : ''}`} data-project-id={project.id} onContextMenu={onContextMenu}>
       {renaming ? (
         <div className="project-open renaming">
           {preview}
@@ -162,6 +172,17 @@ function ProjectCard({ project, pack, active, actions, onFocusCard }: CardProps)
           </span>
         </button>
       )}
+      <button
+        type="button"
+        className="project-star icon-btn small"
+        tabIndex={active ? 0 : -1}
+        aria-label={favorite ? `Remove ${project.name} from favorites` : `Add ${project.name} to favorites`}
+        aria-pressed={favorite}
+        title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        onClick={() => homePrefs.toggleFavorite(project.id)}
+      >
+        <Star filled={favorite} />
+      </button>
       <button
         ref={moreRef}
         type="button"
@@ -194,6 +215,7 @@ interface Props {
   onQuery: (query: string) => void;
   searchRef: React.RefObject<HTMLInputElement | null>;
   filter?: { label: string; onClear: () => void } | null;
+  tabs: ReactNode;
 }
 
 function ProjectListTools({ query, onQuery, searchRef, onFirst, onOpenFirst, canOpen }: { query: string; onQuery: (query: string) => void; searchRef: React.RefObject<HTMLInputElement | null>; onFirst: () => void; onOpenFirst: () => void; canOpen: boolean }) {
@@ -222,6 +244,7 @@ function ProjectListTools({ query, onQuery, searchRef, onFirst, onOpenFirst, can
           </kbd>
         )}
       </label>
+      <ViewTools />
       <label className="home-sort">
         <span className="sr-only">Sort projects</span>
         <select className="select small" value={homeSort} onChange={(event) => uiStore.set({ homeSort: event.target.value as HomeSort })}>
@@ -234,6 +257,34 @@ function ProjectListTools({ query, onQuery, searchRef, onFirst, onOpenFirst, can
       </label>
     </div>
   );
+}
+
+function ViewTools() {
+  const { view, favoritesOnly } = useHomeView();
+  return (
+    <>
+      <button type="button" className="icon-btn home-fav-filter" aria-pressed={favoritesOnly} aria-label="Show favorites only" title="Favorites" onClick={() => homePrefs.set({ favoritesOnly: !favoritesOnly })}>
+        <Star filled={favoritesOnly} />
+      </button>
+      <div className="ui-tools home-view-toggle" role="group" aria-label="Layout">
+        <button type="button" aria-pressed={view === 'list'} aria-label="List" title="List" onClick={() => homePrefs.set({ view: 'list' })}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
+            <path d="M5.5 4h8M5.5 8h8M5.5 12h8M2.5 4h.01M2.5 8h.01M2.5 12h.01" />
+          </svg>
+        </button>
+        <button type="button" aria-pressed={view === 'grid'} aria-label="Grid" title="Grid" onClick={() => homePrefs.set({ view: 'grid' })}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+            <path d="M2.75 2.75h4v4h-4zM9.25 2.75h4v4h-4zM2.75 9.25h4v4h-4zM9.25 9.25h4v4h-4z" />
+          </svg>
+        </button>
+      </div>
+    </>
+  );
+}
+
+function useHomeView() {
+  const prefs = useHomePrefs();
+  return { view: prefs.view, favoritesOnly: prefs.favoritesOnly, favorites: prefs.favorites };
 }
 
 function ProjectListStates({ projects, error, filter, query, shownCount, onClearQuery }: { projects: Project[] | null; error: string | null; filter: { label: string } | null; query: string; shownCount: number; onClearQuery: () => void }) {
@@ -296,23 +347,11 @@ function useGridFocus(shown: Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-function ListHeading({ filter, total, shownCount, searching, sort }: { filter: { label: string; onClear: () => void } | null; total: number; shownCount: number; searching: boolean; sort: HomeSort }) {
-  return (
-    <>
-      <h2 id="projects-heading">{filter ? `Projects in ${filter.label}` : sort === 'recent' ? 'Recent projects' : 'Projects'}</h2>
-      {total > 0 && <span className="count">{searching ? `${shownCount} of ${total}` : total}</span>}
-      {filter && (
-        <button type="button" className="link home-list-clear" onClick={filter.onClear}>
-          Show all
-        </button>
-      )}
-    </>
-  );
-}
-
-export function ProjectGrid({ projects, packs, error, actions, query, onQuery, searchRef, filter = null }: Props) {
+export function ProjectGrid({ projects, packs, error, actions, query, onQuery, searchRef, filter = null, tabs }: Props) {
   const { homeSort } = useUi();
-  const shown = sortProjects(filterProjects(projects ?? [], query), homeSort);
+  const { view, favoritesOnly, favorites } = useHomeView();
+  const matched = sortProjects(filterProjects(projects ?? [], query), homeSort);
+  const shown = favoritesOnly ? matched.filter((project) => favorites.includes(project.id)) : matched;
   const { gridRef, active, setActiveId, focusAt, onGridKey } = useGridFocus(shown);
   const total = projects?.length ?? 0;
   const first = shown[0];
@@ -332,17 +371,31 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
   };
 
   return (
-    <section className="home-list" aria-labelledby="projects-heading">
+    <section className="home-list" aria-label="Projects">
       <div className="home-list-head">
-        <ListHeading filter={filter} total={total} shownCount={shown.length} searching={query.trim() !== ''} sort={homeSort} />
+        {tabs}
         <div className="spacer" />
         {total > 0 && <ProjectListTools query={query} onQuery={onQuery} searchRef={searchRef} onFirst={() => focusAt(0)} onOpenFirst={() => first && actions.onOpen(first)} canOpen={first !== undefined} />}
       </div>
-      <ProjectListStates projects={projects} error={error} filter={filter} query={query} shownCount={shown.length} onClearQuery={() => onQuery('')} />
+      {filter && (
+        <p className="home-filter-note">
+          Projects in {filter.label}
+          <button type="button" className="link" onClick={filter.onClear}>
+            Show all
+          </button>
+        </p>
+      )}
+      <ProjectListStates projects={projects} error={error} filter={filter} query={query} shownCount={matched.length} onClearQuery={() => onQuery('')} />
+      {favoritesOnly && matched.length > 0 && shown.length === 0 && (
+        <div className="home-empty" role="status">
+          <Star filled={false} />
+          <span>No favorites yet. Use the star on a project to add it.</span>
+        </div>
+      )}
       {shown.length > 0 && (
-        <div className="project-grid" ref={gridRef} onKeyDown={onGridKey}>
+        <div className={`project-grid ${view}`} ref={gridRef} onKeyDown={onGridKey}>
           {shown.map((project) => (
-            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} active={project.id === active} actions={gridActions} onFocusCard={() => setActiveId(project.id)} />
+            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} active={project.id === active} favorite={favorites.includes(project.id)} actions={gridActions} onFocusCard={() => setActiveId(project.id)} />
           ))}
         </div>
       )}

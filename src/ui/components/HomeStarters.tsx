@@ -78,48 +78,23 @@ export function FirstRunPanel({ onClose, onSample }: { onClose: () => void; onSa
     }
   };
   return (
-    <section className="first-run" aria-labelledby="first-run-heading">
-      <div className="first-run-head">
-        <h2 id="first-run-heading">New here? Three steps to a first design</h2>
-        <button type="button" className="icon-btn" aria-label="Close first steps" title="Close" onClick={onClose}>
-          <Icon name="close" size={14} />
-        </button>
-      </div>
-      <ol className="first-run-steps">
-        <li>
-          <span className="first-run-num" aria-hidden="true">1</span>
-          <span className="first-run-text">
-            <strong>Pick a starter</strong>
-            <span>It opens at once and costs nothing. Or describe a page above.</span>
-          </span>
-        </li>
-        <li>
-          <span className="first-run-num" aria-hidden="true">2</span>
-          <span className="first-run-text">
-            <strong>Try a direct edit</strong>
-            <span>Press Select, click a heading and change its text or color in the inspector.</span>
-          </span>
-        </li>
-        <li>
-          <span className="first-run-num" aria-hidden="true">3</span>
-          <span className="first-run-text">
-            <strong>Make a version</strong>
-            <span>Each edit and agent run saves a version. Open Versions to compare or restore.</span>
-          </span>
-        </li>
-      </ol>
-      <div className="first-run-foot">
-        <button type="button" className="btn small has-icon" disabled={busy} onClick={() => void sample()}>
-          {busy ? <span className="spinner" /> : <Icon name="sparkle" size={14} />}
-          {busy ? 'Opening…' : 'Open the sample project'}
-        </button>
-        <span className="first-run-hint">A finished page with 2 versions to explore.</span>
+    <section className="ui-notice info first-run" aria-label="First steps">
+      <Icon name="sparkle" size={16} />
+      <p className="first-run-text">
+        <strong>New here?</strong> Describe a page or pick a template. Then press Select to edit any element, and open Versions to compare or restore.
         {error && (
           <span className="first-run-error" role="alert">
+            {' '}
             {error}
           </span>
         )}
-      </div>
+      </p>
+      <button type="button" className="btn small first-run-sample" disabled={busy} onClick={() => void sample()}>
+        {busy ? 'Opening…' : 'Open the sample'}
+      </button>
+      <button type="button" className="icon-btn small" aria-label="Close first steps" title="Close" onClick={onClose}>
+        <Icon name="close" size={14} />
+      </button>
     </section>
   );
 }

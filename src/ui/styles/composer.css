@@ -8,12 +8,14 @@
 }
 
 .prompt-bar {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  row-gap: var(--s-2);
   min-width: 0;
 }
 
 .prompt-send {
   flex: none;
+  margin-left: auto;
 }
 
 .kbd-hint {
@@ -779,8 +781,8 @@
 }
 
 .composer-pill .ui-pill-select-value {
-  font-size: 13px;
-  line-height: 13px;
+  font-size: 11px;
+  line-height: 11px;
   font-weight: var(--w-medium);
   color: var(--home-pill-value);
   white-space: nowrap;
@@ -795,8 +797,17 @@
 }
 
 @container prompt-bar (max-width: 340px) {
-  .prompt-bar .context-meter > span,
-  .prompt-bar .model-pill-version {
+  .prompt-bar .context-meter > span {
+    display: none;
+  }
+}
+
+@container prompt-bar (max-width: 300px) {
+  .prompt-bar .composer-pill.ui-pill-select {
+    padding: 0 var(--s-1);
+  }
+
+  .prompt-bar .composer-pill .ui-pill-select-caret {
     display: none;
   }
 }

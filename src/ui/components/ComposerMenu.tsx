@@ -204,8 +204,6 @@ export function PlusMenu(props: PlusMenuProps) {
   );
 }
 
-const SHORT_LEVEL: Record<RunLevel, string> = { wireframe: 'Wire', prototype: 'Proto', polish: 'Polish' };
-
 function PillCaret() {
   return (
     <svg className="ui-pill-select-caret" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true">
@@ -248,7 +246,7 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
         }}
       >
         <span className="ui-pill-select-label">Level</span>
-        <span className="ui-pill-select-value">{SHORT_LEVEL[level]}</span>
+        <span className="ui-pill-select-value">{levelLabel(level)}</span>
         <PillCaret />
       </button>
       {menu.open &&

@@ -107,8 +107,8 @@ function StateChip({ label, tip, onClear }: { label: string; tip: string; onClea
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
   edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create...' },
-  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan, or type / for commands' },
-  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique, or type / for commands' },
+  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan...' },
+  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique...' },
 };
 
 function designsBlocker(mode: ComposerMode, selectionCount: number): string | null {

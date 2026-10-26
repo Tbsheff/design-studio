@@ -77,8 +77,6 @@ function RowAction(props: { label: string; icon: IconName; tip: string; onClick:
       className="icon-btn"
       aria-label={props.label}
       data-tip={props.tip}
-      data-tip-side="top"
-      data-tip-align="end"
       aria-pressed={props.pressed}
       data-testid={props.testId}
       disabled={props.disabled}
@@ -175,7 +173,7 @@ function rowClasses(props: VersionRowProps): string {
 }
 
 export function VersionRow(props: VersionRowProps) {
-  const { version: v, isHead, picked } = props;
+  const { version: v, isHead } = props;
   const title = displayTitle(v, props.index);
   const detailId = `version-detail-${v.id.slice(0, 12)}`;
   const [renaming, setRenaming] = useState(false);
@@ -215,32 +213,41 @@ export function VersionRow(props: VersionRowProps) {
           )}
           {isHead && <span className="badge accent">Head</span>}
         </div>
-        <VersionMeta version={v} />
+        <div className="version-line">
+          <VersionMeta version={v} />
+          <VersionActions {...props} />
+        </div>
         {props.expanded && <VersionDetail version={v} index={props.index} id={detailId} onOpenVersion={props.onOpenVersion} />}
       </div>
-      <div className="version-actions">
-        <RowAction label="Open" icon="eye" tip="Open this version" onClick={props.onOpen} />
-        <RowAction label="Restore" icon="restore" tip={isHead ? 'Already the head' : 'Restore as head'} disabled={isHead || props.locked} onClick={props.onRestore} />
-        <RowAction
-          label={picked ? 'Comparing' : 'Compare'}
-          icon="compare"
-          tip={picked ? 'Remove from compare' : 'Add to compare'}
-          pressed={picked}
-          onClick={props.onToggleCompare}
-        />
-        <RowAction label="Export" icon="download" tip="Export, handoff or source zip" onClick={props.onExport} />
-        <RowAction label="Branch" icon="branch" tip="New direction from here" onClick={props.onBranch} />
-        {isHead && v.meta.level !== 'polish' && (
-          <RowAction
-            label="Polish this"
-            icon="sparkle"
-            tip="Run a Polish pass on this version"
-            testId="version-polish-this"
-            disabled={props.locked}
-            onClick={props.onPolish}
-          />
-        )}
-      </div>
     </li>
+  );
+}
+
+function VersionActions(props: VersionRowProps) {
+  const { version: v, isHead, picked } = props;
+  return (
+    <div className="version-actions" role="group" aria-label="Version actions">
+      <RowAction label="Open" icon="eye" tip="Open this version" onClick={props.onOpen} />
+      <RowAction label="Restore" icon="restore" tip={isHead ? 'Already the head' : 'Restore as head'} disabled={isHead || props.locked} onClick={props.onRestore} />
+      <RowAction
+        label={picked ? 'Comparing' : 'Compare'}
+        icon="compare"
+        tip={picked ? 'Remove from compare' : 'Add to compare'}
+        pressed={picked}
+        onClick={props.onToggleCompare}
+      />
+      <RowAction label="Export" icon="download" tip="Export, handoff or source zip" onClick={props.onExport} />
+      <RowAction label="Branch" icon="branch" tip="New direction from here" onClick={props.onBranch} />
+      {isHead && v.meta.level !== 'polish' && (
+        <RowAction
+          label="Polish this"
+          icon="sparkle"
+          tip="Run a Polish pass on this version"
+          testId="version-polish-this"
+          disabled={props.locked}
+          onClick={props.onPolish}
+        />
+      )}
+    </div>
   );
 }

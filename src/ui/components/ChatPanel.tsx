@@ -65,23 +65,28 @@ interface RunLayout {
   tail: Segment[];
 }
 
-function layoutOf(segments: Segment[]): RunLayout {
+function layoutOf(segments: Segment[], running: boolean): RunLayout {
   let lastTool = -1;
+  let lastText = -1;
   segments.forEach((segment, index) => {
     if (segment.kind === 'tools') lastTool = index;
+    if (segment.kind === 'text' && segment.text.trim()) lastText = index;
   });
+  const reply = !running && lastText !== -1 && lastText < lastTool ? segments[lastText] : undefined;
   const steps: Segment[] = [];
   const sent: Segment[] = [];
   const tail: Segment[] = [];
   segments.forEach((segment, index) => {
+    if (segment === reply) return;
     if (segment.kind === 'user') (index <= lastTool ? sent : tail).push(segment);
     else (index <= lastTool ? steps : tail).push(segment);
   });
+  if (reply) tail.unshift(reply);
   return { steps, sent, tail };
 }
 
 function RunParts({ run, running, workTree }: { run: RunView; running: boolean; workTree: string | null }) {
-  const layout = useMemo(() => layoutOf(segmentsOf(run)), [run.parts, run.tools]);
+  const layout = useMemo(() => layoutOf(segmentsOf(run), running), [run.parts, run.tools, running]);
   return (
     <>
       {layout.steps.length > 0 && (

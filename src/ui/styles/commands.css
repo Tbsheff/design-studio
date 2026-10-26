@@ -38,6 +38,7 @@
 }
 
 .cmdk-search {
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--s-2);
@@ -145,6 +146,7 @@
 }
 
 .cmdk-foot {
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--s-4);
@@ -190,6 +192,7 @@
 }
 
 .keysheet-head {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -203,6 +206,7 @@
 }
 
 .keysheet-search {
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--s-2);
@@ -235,6 +239,7 @@
 }
 
 .keysheet-tip {
+  flex: none;
   margin: var(--s-2) var(--s-4) 0;
   color: var(--text-3);
   font-size: var(--t-xs);

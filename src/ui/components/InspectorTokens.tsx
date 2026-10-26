@@ -37,13 +37,14 @@ export function SnapToggle({ ui }: { ui: TokenUi | null }) {
   return (
     <button
       type="button"
-      className="btn ghost small has-icon tk-snap-toggle"
+      className="icon-btn small tk-snap-toggle"
+      aria-label="Snap to tokens"
       aria-pressed={ui.snap}
-      data-tip={ui.snap ? 'Values close to a token are written as var(--token)' : 'Values are written as typed'}
+      data-tip={ui.snap ? 'Snap to tokens is on: values near a token use var()' : 'Snap to tokens is off: values stay as typed'}
+      data-tip-align="end"
       onClick={() => ui.setSnap(!ui.snap)}
     >
-      <Icon name="magnet" size={13} />
-      Snap to tokens
+      <Icon name="magnet" size={14} />
     </button>
   );
 }

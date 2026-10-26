@@ -2,87 +2,130 @@
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding-right: 3px;
+  min-width: 0;
+  margin-right: -4px;
 }
 
 .ins-field .ins-suffix + .tk-control {
   margin-left: -4px;
 }
 
+.ins-field:has(> .tk-control.field) {
+  container: tk-field / inline-size;
+}
+
 .tk-chip,
-.tk-raw,
 .tk-open {
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 20px;
+  height: 22px;
   border: 0;
   border-radius: var(--r-xs);
   background: transparent;
   font-size: var(--t-xs);
-  line-height: 1;
+  line-height: 16px;
   cursor: pointer;
   transition-property: background-color, color, box-shadow;
   transition-duration: var(--dur);
   transition-timing-function: var(--ease);
 }
 
-.tk-chip::after,
-.tk-raw::after,
-.tk-open::after,
 .tk-dot::after {
   content: '';
   position: absolute;
-  inset: -4px -2px;
+  inset: -8px;
+}
+
+.tk-chip,
+.tk-name-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  max-width: 112px;
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .tk-chip {
-  gap: var(--s-1);
-  max-width: 112px;
+  height: 20px;
   padding: 0 6px 0 var(--s-1);
   background: var(--accent-soft);
-  color: var(--accent-text);
-  font-family: var(--mono);
-  font-weight: 500;
 }
 
 .tk-chip:hover {
   box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 
-.tk-raw {
-  padding: 0 6px;
-  color: var(--text-3);
-  font-weight: 500;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
-}
-
-.tk-raw.near {
-  color: var(--warn);
-  box-shadow: inset 0 0 0 1px var(--warn-line);
-  background: var(--warn-soft);
-}
-
-.tk-raw:hover {
-  color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--line-input);
-}
-
 .tk-open {
   justify-content: center;
-  width: 20px;
+  gap: var(--s-1);
+  min-width: 22px;
+  max-width: 140px;
+  padding: 0 5px;
   color: var(--text-3);
+}
+
+.tk-open:has(.tk-name-chip) {
+  padding-left: 6px;
+}
+
+.tk-open > svg {
+  flex: none;
+}
+
+.tk-control.raw .tk-open::before {
+  content: '';
+  position: absolute;
+  right: 50%;
+  bottom: 50%;
+  width: 4px;
+  height: 4px;
+  margin: 0 -2px -2px 0;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
+.tk-control.raw .tk-open:has(.tk-name-chip)::before {
+  right: 11px;
+}
+
+.tk-control.raw .tk-open {
+  color: var(--text-2);
+}
+
+.tk-control.raw.near .tk-open {
+  color: var(--warn);
+}
+
+.tk-control.token .tk-open {
+  color: var(--accent-text);
+}
+
+.tk-control.token .tk-open > svg path {
+  fill: currentColor;
+}
+
+@container tk-field (width < 220px) {
+  .tk-name-chip {
+    display: none;
+  }
 }
 
 .tk-open:hover,
 .tk-open[aria-expanded='true'] {
-  color: var(--text);
   background: var(--surface-hover);
 }
 
+.tk-control.unset .tk-open:hover,
+.tk-control.unset .tk-open[aria-expanded='true'] {
+  color: var(--text);
+}
+
 .tk-chip:focus-visible,
-.tk-raw:focus-visible,
 .tk-open:focus-visible,
 .tk-dot:focus-visible {
   outline: none;
@@ -111,8 +154,9 @@
 
 .tk-control.mini {
   position: absolute;
-  top: 1px;
-  right: 1px;
+  top: 3px;
+  right: 3px;
+  margin: 0;
   padding: 0;
 }
 
@@ -162,11 +206,13 @@
 }
 
 .tk-snap-toggle[aria-pressed='true'] {
+  background: var(--accent-soft);
   color: var(--accent-text);
 }
 
-.ins-header .tk-snap-toggle + .btn {
-  margin-left: -4px;
+.tk-snap-toggle[aria-pressed='true']:hover {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 
 .tk-note {
@@ -174,8 +220,12 @@
   align-items: center;
   gap: 6px;
   flex: none;
-  margin: 0 var(--s-3) var(--s-3);
-  padding: 0 var(--s-1) 0 10px;
+  position: absolute;
+  right: var(--pane-inset);
+  bottom: var(--pane-inset);
+  left: var(--pane-inset);
+  z-index: 5;
+  padding: 0 2px 0 var(--s-3);
   height: 32px;
   border-radius: var(--r-md);
   background: var(--surface-raised);
@@ -228,7 +278,7 @@
 
 
 .tk-lint {
-  margin: var(--s-2) var(--s-3) 0;
+  margin: var(--s-3) var(--pane-inset) 0;
   padding: var(--s-2) var(--s-3);
   border: 1px solid var(--warn-line);
   border-radius: var(--r-md);

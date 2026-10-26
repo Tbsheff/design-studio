@@ -8,6 +8,7 @@ export interface MentionOption {
   label: string;
   detail: string;
   mention: RunMention;
+  icon?: IconName;
 }
 
 export function mentionKey(mention: RunMention): string {
@@ -18,12 +19,12 @@ export function mentionLabel(mention: RunMention): string {
   return mention.kind === 'file' ? (mention.path.split('/').pop() ?? mention.path) : mention.name;
 }
 
-function mentionIcon(mention: RunMention): IconName {
+export function mentionIcon(mention: RunMention): IconName {
   if (mention.kind === 'file') return 'file';
   return mention.kind === 'token' ? 'token' : 'component';
 }
 
-function mentionTitle(mention: RunMention): string {
+export function mentionTitle(mention: RunMention): string {
   if (mention.kind === 'file') return mention.path;
   if (mention.kind === 'token') return `${mention.name}: ${mention.value}`;
   return mention.file ? `@${mention.name} · ${mention.file}` : `@${mention.name}`;
@@ -47,12 +48,12 @@ export function useMentionPicker(options: readonly MentionOption[], query: strin
   return { open: query !== null, shown, current, move, setActive };
 }
 
-export function MentionList({ shown, current, loading, onPick, onHover }: { shown: MentionOption[]; current: MentionOption | null; loading: boolean; onPick: (option: MentionOption) => void; onHover: (index: number) => void }) {
+export function MentionList({ shown, current, loading, onPick, onHover, className }: { shown: MentionOption[]; current: MentionOption | null; loading: boolean; onPick: (option: MentionOption) => void; onHover: (index: number) => void; className?: string }) {
   useEffect(() => {
     if (current) document.getElementById(`mention-${current.key}`)?.scrollIntoView({ block: 'nearest' });
   }, [current]);
   return (
-    <div className="skill-pop mention-pop" data-testid="mention-list">
+    <div className={`skill-pop mention-pop ${className ?? ''}`} data-testid="mention-list">
       <ul role="listbox" aria-label="Mention a file, token or component" className="skill-opts" id="mention-options">
         {shown.map((option, index) => (
           <li
@@ -66,7 +67,7 @@ export function MentionList({ shown, current, loading, onPick, onHover }: { show
             onClick={() => onPick(option)}
           >
             <span className="skill-opt-head">
-              <Icon name={mentionIcon(option.mention)} size={13} />
+              <Icon name={option.icon ?? mentionIcon(option.mention)} size={13} />
               <strong className="mention-label">{option.label}</strong>
               <span className="skill-origin mention-detail">{option.detail}</span>
             </span>

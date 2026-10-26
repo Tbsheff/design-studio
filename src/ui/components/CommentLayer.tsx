@@ -5,7 +5,12 @@ import { reviewReport } from '../commentAnchors';
 import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
 import { isTypingTarget } from '../typingTarget';
 import type { CommentsControl } from '../useComments';
-import { COMPACT_PLACEMENT, ComposePopover, OpenCommentPopover, popoverStyle } from './CommentPopover';
+import { OpenCommentPopover } from './CommentPopover';
+import { CommentComposer, type ComposerSources, type ComposerSubmit } from './CommentComposer';
+import { AvatarFace } from './CommentAvatar';
+import { breadcrumbOf, pinPlacement, scopeText } from '../commentPlacement';
+import { mentionLabel } from './MentionPicker';
+import { useProfileInitial } from '../useProfileInitial';
 import { DrawingStrokes, PenIcon } from './DrawLayer';
 import '../styles/comments.css';
 
@@ -27,10 +32,17 @@ interface Props {
   selectMode: boolean;
   selection: SelectionContext[];
   onExitCommentMode: () => void;
+  tools: CommentTools;
+}
+
+export interface CommentTools {
+  sources: ComposerSources;
+  pageName: string;
+  onSteer?: (text: string) => void;
 }
 
 const ORPHAN_GRACE_MS = 1500;
-const PIN_SIZE = 24;
+const PIN_SIZE = 28;
 
 function visible(rect: Rect, frame: { width: number; height: number }): boolean {
   return rect.y + rect.height > 0 && rect.y < frame.height && rect.x + rect.width > 0 && rect.x < frame.width;
@@ -63,44 +75,58 @@ function selectionKey(selection: SelectionContext[]): string {
   return selection.map((s) => s.selector).join('\n');
 }
 
-function CommentPin({ comment, rect, frame, scale, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; scale: number; control: CommentsControl }) {
-  if (!rect || !visible(rect, frame)) return null;
-  const left = Math.max(0, Math.min(frame.width - PIN_SIZE * scale, rect.x - (PIN_SIZE + 4) * scale));
-  const top = Math.max(0, Math.min(frame.height - PIN_SIZE * scale, rect.y));
+function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; zoom: number; initial: string | null; control: CommentsControl }) {
+  if (!rect || !visible(rect, frame) || control.openId === comment.id) return null;
+  const place = pinPlacement(rect, zoom, frame);
+  const replies = comment.replies?.length ?? 0;
+  const repliesLabel = replies ? `, ${replies} ${replies === 1 ? 'reply' : 'replies'}` : '';
   return (
-    <div className="comment-pin-wrap" style={{ left, top, transform: `scale(${scale})` }}>
+    <div className={`comment-pin-wrap${place.flip ? ' flip' : ''}`} style={{ left: place.left, top: place.top, transform: `scale(${1 / zoom})` }}>
       <button
         type="button"
         className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}`}
         data-testid="comment-pin"
         data-comment-id={comment.id}
-        aria-label={`Comment ${comment.n}: ${comment.text}`}
-        aria-expanded={control.openId === comment.id}
+        aria-label={`Comment ${comment.n}${repliesLabel}: ${comment.text}`}
+        aria-expanded={false}
         onPointerDown={(event) => event.stopPropagation()}
-        onClick={() => control.setOpenId(control.openId === comment.id ? null : comment.id)}
+        onClick={() => control.setOpenId(comment.id)}
       >
-        {comment.n}
+        <AvatarFace initial={initial} flip={place.flip} tone={comment.status} count={replies} />
         {comment.drawing && (
           <span className="pin-pen" aria-hidden="true">
-            <PenIcon size={12} />
+            <PenIcon size={10} />
           </span>
         )}
       </button>
       <span className="comment-pin-tip" role="tooltip">
-        {comment.text}
+        <span className="comment-pin-num">#{comment.n}</span> {comment.text}
       </span>
     </div>
   );
 }
 
-function OpenComment({ comment: open, rect: openRect, zoom, frame, control }: { comment: DesignComment; rect: Rect; zoom: number; frame: Props['frame']; control: CommentsControl }) {
+function drawingCrumb(pageName: string) {
+  return { short: `${pageName} › Drawing`, full: `${pageName} › Drawing` };
+}
+
+function threadCrumb(comment: DesignComment, pageName: string) {
+  if (comment.drawing) return drawingCrumb(pageName);
+  return comment.context ? breadcrumbOf(pageName, [comment.context]) : null;
+}
+
+function OpenComment({ comment: open, rect: openRect, zoom, frame, control, initial, pageName }: { comment: DesignComment; rect: Rect; zoom: number; frame: Props['frame']; control: CommentsControl; initial: string | null; pageName: string }) {
   return (
     <>
       {open.drawing && <DrawingStrokes drawing={open.drawing} />}
       <OpenCommentPopover
         key={open.id}
         comment={open}
-        style={popoverStyle(openRect, zoom, frame)}
+        anchor={openRect}
+        zoom={zoom}
+        frame={frame}
+        breadcrumb={threadCrumb(open, pageName)}
+        initial={initial}
         busy={control.sending}
         onSend={() => {
           control.setOpenId(null);
@@ -124,13 +150,18 @@ function OpenComment({ comment: open, rect: openRect, zoom, frame, control }: { 
   );
 }
 
+function withMentions(text: string, mentions: ComposerSubmit['mentions']): string {
+  return mentions.length ? `${text} (see ${mentions.map((mention) => `@${mentionLabel(mention)}`).join(', ')})` : text;
+}
+
 export function CommentLayer(props: Props) {
   const { control, frames, zoom, frame } = props;
   const [rects, setRects] = useState<Record<string, Rect>>({});
   const [pick, setPick] = useState<SelectionContext | null>(null);
   const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const [feedbackActive, setFeedbackActive] = useState(false);
-  const feedbackInput = useRef<HTMLInputElement>(null);
+  const feedbackInput = useRef<HTMLTextAreaElement>(null);
+  const initial = useProfileInitial();
   const orphans = useRef(createOrphanTracker(ORPHAN_GRACE_MS));
   const pending = useRef(new Map<string, (contexts: (SelectionContext | null)[]) => void>());
   const recheck = useRef<number | null>(null);
@@ -279,75 +310,72 @@ export function CommentLayer(props: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [feedbackOpen, selKey]);
 
-  const scale = 1 / zoom;
   const pinned = shown.filter((c) => c.status !== 'orphaned');
   const rectOf = (comment: DesignComment): Rect | undefined => (comment.drawing ? drawingAnchor(comment.drawing) : rects[comment.id]);
   const open = openComment(control);
   const openRect = open ? (open.drawing?.box ?? rects[open.id] ?? null) : null;
   const lastSelected = props.selection[props.selection.length - 1];
+  const { tools } = props;
 
   const finishPick = () => {
     setPick(null);
     focusLater('.comment-toggle');
   };
 
+  const submitFor = (selections: SelectionContext[], finish: () => void) => async (input: ComposerSubmit) => {
+    if (input.toClaude && input.now && control.running && input.attachmentIds.length === 0 && tools.onSteer) {
+      tools.onSteer(scopeText(breadcrumbOf(tools.pageName, selections), selections, withMentions(input.text, input.mentions)));
+      finish();
+      return true;
+    }
+    const ok = await control.add(selections, input.text, input.toClaude, { mentions: input.mentions, attachmentIds: input.attachmentIds });
+    if (ok) finish();
+    return ok;
+  };
+
+  const shared = { zoom, frame, initial, running: control.running, busy: control.sending, sources: tools.sources, images: true };
+  const many = props.selection.length > 1;
+
   return (
     <>
       {pinned.map((comment) => (
-        <CommentPin key={comment.id} comment={comment} rect={rectOf(comment)} frame={frame} scale={scale} control={control} />
+        <CommentPin key={comment.id} comment={comment} rect={rectOf(comment)} frame={frame} zoom={zoom} initial={initial} control={control} />
       ))}
       {pick && (
-        <ComposePopover
+        <CommentComposer
+          {...shared}
           key={pick.selector}
-          label="Comment"
-          hint="Add a comment"
+          label="New comment"
           testId="comment-compose"
-          style={popoverStyle(pick.rect, zoom, frame)}
+          anchor={pick.rect}
+          breadcrumb={breadcrumbOf(tools.pageName, [pick])}
+          draftKey={`pick:${pick.selector}`}
           autoFocus
           trap
-          busy={control.sending}
-          onQueue={async (text) => {
-            const ok = await control.add([pick], text, false);
-            if (ok) finishPick();
-            return ok;
-          }}
-          onSendNow={async (text) => {
-            const ok = await control.add([pick], text, true);
-            if (ok) finishPick();
-            return ok;
-          }}
+          onSubmit={submitFor([pick], finishPick)}
           onCancel={finishPick}
         />
       )}
       {feedbackOpen && lastSelected && !pick && (
-        <ComposePopover
+        <CommentComposer
+          {...shared}
           key={selKey}
-          label={props.selection.length > 1 ? `Feedback on ${props.selection.length} elements` : 'Feedback on selection'}
-          hint={props.selection.length > 1 ? `Feedback on ${props.selection.length} elements (F)` : 'Quick feedback (F)'}
+          label={many ? `Comment on ${props.selection.length} elements` : 'Comment on selection'}
           testId="comment-feedback"
-          compact
-          style={popoverStyle(lastSelected.rect, zoom, frame, COMPACT_PLACEMENT)}
-          autoFocus={false}
-          trap={false}
-          busy={control.sending}
-          inputRef={feedbackInput}
-          onQueue={async (text) => {
-            const ok = await control.add(props.selection, text, false);
-            if (ok) setDismissedKey(selKey);
-            return ok;
-          }}
-          onSendNow={async (text) => {
-            const ok = await control.add(props.selection, text, true);
-            if (ok) setDismissedKey(selKey);
-            return ok;
-          }}
+          anchor={lastSelected.rect}
+          breadcrumb={breadcrumbOf(tools.pageName, props.selection)}
+          draftKey={`sel:${selKey}`}
+          autoFocus={feedbackActive}
+          trap={feedbackActive}
+          focusRef={feedbackInput}
+          onSubmit={submitFor(props.selection, () => setDismissedKey(selKey))}
           onCancel={() => {
             setDismissedKey(selKey);
-            feedbackInput.current?.blur();
+            focusLater('.stage');
           }}
         />
       )}
-      {open && openRect && <OpenComment comment={open} rect={openRect} zoom={zoom} frame={frame} control={control} />}
+      {open && openRect && <OpenComment comment={open} rect={openRect} zoom={zoom} frame={frame} control={control} initial={initial} pageName={tools.pageName} />}
     </>
   );
 }

@@ -93,12 +93,6 @@
   pointer-events: none;
 }
 
-.comment-pin .pin-pen {
-  display: inline-grid;
-  margin-left: 3px;
-  opacity: 0.85;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .draw-swatch {
     transition: none;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
-import type { Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
+import type { CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { uiStore, useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
@@ -20,7 +20,7 @@ import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type Th
 import type { BuildError, FilesChange } from '../useStudioData';
 import { CanvasToolbar, type CanvasSource } from './CanvasToolbar';
 import { RenderCheckPanel } from './RenderCheckPanel';
-import { CommentLayer } from './CommentLayer';
+import { CommentLayer, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
@@ -40,11 +40,32 @@ interface Props {
   onError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
   port?: MutableRefObject<PreviewPort | null>;
   comments?: CommentsControl;
+  commentTools?: CanvasCommentTools;
   running?: boolean;
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
   directions?: CanvasDirections;
+}
+
+export interface CanvasCommentTools {
+  tokens?: readonly CompiledTokenEntry[];
+  components?: readonly ComponentInfo[] | null;
+  onSteer?: (text: string) => void;
+}
+
+function pageNameOf(path: string | undefined): string {
+  const file = path?.split('/').pop()?.replace(/\.html?$/i, '');
+  return file && file !== 'index' ? file : 'Page';
+}
+
+function commentToolsOf(props: Props, path: string | undefined): CommentTools {
+  const tools = props.commentTools ?? {};
+  return {
+    sources: { projectId: props.projectId, directionId: props.directionId, tokens: tools.tokens, components: tools.components },
+    pageName: pageNameOf(path),
+    onSteer: tools.onSteer,
+  };
 }
 
 export interface CanvasDirections {
@@ -304,7 +325,7 @@ function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control
   return (
     <>
       <CommentLayer {...rest} control={control} commentMode={comment.on} onExitCommentMode={() => comment.setOn(false)} />
-      {draw.on && <DrawSurface draw={draw} control={control} zoom={rest.zoom} frame={rest.frame} />}
+      {draw.on && <DrawSurface draw={draw} control={control} zoom={rest.zoom} frame={rest.frame} tools={rest.tools} />}
     </>
   );
 }
@@ -475,6 +496,7 @@ export function Canvas(props: Props) {
                 frame={viewport}
                 selectMode={selectMode}
                 selection={props.selection}
+                tools={commentToolsOf(props, active.path)}
               />
             }
           />

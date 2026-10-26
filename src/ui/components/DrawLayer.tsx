@@ -4,7 +4,10 @@ import { strokesBox } from '../../shared/comments';
 import { DRAW_COLORS, DRAW_SCREEN_WIDTH, createStrokeBuilder, minStepFor, paintStrokes, renderDrawingPng, strokePath, type StrokeBuilder } from '../drawing';
 import type { CommentsControl } from '../useComments';
 import type { DrawTool } from '../useDrawTool';
-import { ComposePopover, MOD_LABEL, popoverStyle } from './CommentPopover';
+import { MOD_LABEL } from './CommentPopover';
+import { CommentComposer, type ComposerSubmit } from './CommentComposer';
+import type { CommentTools } from './CommentLayer';
+import { useProfileInitial } from '../useProfileInitial';
 import { Icon } from './Icon';
 import '../styles/drawing.css';
 
@@ -32,9 +35,11 @@ interface SurfaceProps {
   control: CommentsControl;
   zoom: number;
   frame: Frame;
+  tools: CommentTools;
 }
 
-export function DrawSurface({ draw, control, zoom, frame }: SurfaceProps) {
+export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
+  const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
   const active = useRef<{ builder: StrokeBuilder; stroke: DrawStroke; pointer: number } | null>(null);
   const [drawing, setDrawing] = useState(false);
@@ -95,13 +100,13 @@ export function DrawSurface({ draw, control, zoom, frame }: SurfaceProps) {
 
   const box = strokesBox(draw.strokes);
 
-  const submit = async (text: string, sendNow: boolean): Promise<boolean> => {
+  const submit = async ({ text, toClaude, mentions, attachmentIds }: ComposerSubmit): Promise<boolean> => {
     if (!box) return false;
     const strokes = draw.strokes;
     const value: CommentDrawing = { frame: { width: Math.round(frame.width), height: Math.round(frame.height) }, box, strokes };
     const image = await renderDrawingPng(value).catch(() => null);
     if (!image) return false;
-    const ok = await control.addDrawing({ text, drawing: value, image, sendNow });
+    const ok = await control.addDrawing({ text, drawing: value, image, toClaude, extras: { mentions, attachmentIds } });
     if (ok) draw.setOn(false);
     return ok;
   };
@@ -122,17 +127,23 @@ export function DrawSurface({ draw, control, zoom, frame }: SurfaceProps) {
         onPointerCancel={onUp}
       />
       {box && !drawing && (
-        <ComposePopover
+        <CommentComposer
           key="draw"
           label="Comment on drawing"
-          hint="Say what to change here"
           testId="draw-compose"
-          style={popoverStyle(box, zoom, frame)}
+          anchor={box}
+          zoom={zoom}
+          frame={frame}
+          breadcrumb={{ short: `${tools.pageName} › Drawing`, full: `${tools.pageName} › Drawing` }}
+          initial={initial}
+          draftKey="draw"
           autoFocus
           trap
+          running={control.running}
           busy={control.sending}
-          onQueue={(text) => submit(text, false)}
-          onSendNow={(text) => submit(text, true)}
+          sources={tools.sources}
+          images
+          onSubmit={submit}
           onCancel={() => draw.setOn(false)}
         />
       )}

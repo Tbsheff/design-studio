@@ -1,44 +1,19 @@
-import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
+import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide } from '../commentPlacement';
+import { AvatarFace } from './CommentAvatar';
 import { Icon } from './Icon';
 
 type Rect = SelectionContext['rect'];
 
-const POP_WIDTH = 288;
-const POP_HEIGHT = 112;
-const GAP = 8;
-const COMPACT_WIDTH = 460;
-const COMPACT_HEIGHT = 44;
-
 export const MOD_LABEL = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
-
-interface PopoverPlacement {
-  align?: 'start' | 'end';
-  width?: number;
-  height?: number;
-}
-
-export const COMPACT_PLACEMENT: PopoverPlacement = { align: 'end', width: COMPACT_WIDTH, height: COMPACT_HEIGHT };
-
-export function popoverStyle(rect: Rect, zoom: number, frame: { width: number; height: number }, placement: PopoverPlacement = {}): CSSProperties {
-  const scale = 1 / zoom;
-  const popWidth = placement.width ?? POP_WIDTH;
-  const width = popWidth * scale;
-  const height = (placement.height ?? POP_HEIGHT) * scale;
-  const below = rect.y + rect.height + GAP * scale;
-  const fitsBelow = below + height <= frame.height || rect.y - GAP * scale - height < 0;
-  const anchorX = placement.align === 'end' ? rect.x + rect.width - width : rect.x;
-  const left = Math.max(0, Math.min(anchorX, frame.width - width));
-  const top = fitsBelow ? Math.min(below, Math.max(0, frame.height - height)) : rect.y - GAP * scale - height;
-  return { left, top: Math.max(0, top), width: popWidth, transform: `scale(${scale})` };
-}
 
 function focusables(root: HTMLElement | null): HTMLElement[] {
   if (!root) return [];
-  return Array.from(root.querySelectorAll<HTMLElement>('input, textarea, button:not(:disabled)'));
+  return Array.from(root.querySelectorAll<HTMLElement>('input, textarea, button:not(:disabled)')).filter((element) => element.tabIndex >= 0);
 }
 
-function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
+export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
   if (event.key !== 'Tab') return;
   const items = focusables(root);
   const first = items[0];
@@ -53,104 +28,93 @@ function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
   }
 }
 
-interface ComposeProps {
-  label: string;
-  hint: string;
-  style: CSSProperties;
-  autoFocus: boolean;
-  trap: boolean;
-  busy: boolean;
-  inputRef?: RefObject<HTMLInputElement | null>;
-  onQueue: (text: string) => Promise<boolean>;
-  onSendNow: (text: string) => Promise<boolean>;
-  onCancel: () => void;
-  testId: string;
-  compact?: boolean;
-}
-
-export function ComposePopover(props: ComposeProps) {
-  const [text, setText] = useState('');
-  const own = useRef<HTMLInputElement>(null);
-  const input = props.inputRef ?? own;
-  const root = useRef<HTMLDivElement>(null);
-  const empty = text.trim() === '';
-
-  useEffect(() => {
-    if (props.autoFocus) input.current?.focus();
-  }, [props.autoFocus, input]);
-
-  const submit = async (sendNow: boolean) => {
-    if (empty || props.busy) return;
-    const ok = await (sendNow ? props.onSendNow(text) : props.onQueue(text));
-    if (ok) setText('');
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopPropagation();
-      props.onCancel();
-      return;
-    }
-    if (props.trap) trapTab(event, root.current);
-  };
-
-  const onInputKey = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
-    event.preventDefault();
-    void submit(event.metaKey || event.ctrlKey);
-  };
-
-  return (
-    <div
-      ref={root}
-      className={`comment-pop ${props.compact ? 'compact' : ''}`}
-      role="dialog"
-      aria-label={props.label}
-      data-testid={props.testId}
-      style={props.style}
-      onKeyDown={onKeyDown}
-      onPointerDown={(event) => event.stopPropagation()}
-    >
-      <input
-        ref={input}
-        className="input comment-input"
-        aria-label={props.label}
-        placeholder={props.hint}
-        value={text}
-        maxLength={2000}
-        onChange={(event) => setText(event.target.value)}
-        onKeyDown={onInputKey}
-      />
-      <div className="comment-pop-actions">
-        <button
-          type="button"
-          className="btn small"
-          disabled={empty || props.busy}
-          aria-keyshortcuts="Meta+Enter Control+Enter"
-          onClick={() => void submit(true)}
-        >
-          Send now <kbd>{MOD_LABEL}↵</kbd>
-        </button>
-        <button type="button" className="btn small primary" disabled={empty || props.busy} aria-keyshortcuts="Enter" onClick={() => void submit(false)}>
-          Add to queue <kbd>↵</kbd>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const STATUS_LABEL: Record<DesignComment['status'], string> = {
+export const STATUS_LABEL: Record<DesignComment['status'], string> = {
   draft: 'Draft',
   queued: 'Queued',
-  sent: 'Sent to agent',
+  sent: 'Sent to Claude',
   resolved: 'Resolved',
   orphaned: 'Element not found',
 };
 
+export function CommentReplies({ comment, initial, onDelete }: { comment: DesignComment; initial?: string | null; onDelete: (replyId: string) => void }) {
+  const replies = comment.replies ?? [];
+  if (replies.length === 0) return null;
+  return (
+    <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
+      {replies.map((reply, index) => (
+        <li key={reply.id} className="comment-reply" data-testid="comment-reply">
+          <AvatarFace initial={initial ?? null} tone="reply" />
+          <span className="comment-reply-text">{reply.text}</span>
+          <button type="button" className="thread-icon" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
+            <Icon name="close" size={12} />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function GrowingArea(props: {
+  label: string;
+  placeholder: string;
+  value: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+  onEnter: () => void;
+  className?: string;
+}) {
+  return (
+    <textarea
+      className={`comment-area ${props.className ?? ''}`}
+      rows={1}
+      aria-label={props.label}
+      placeholder={props.placeholder}
+      value={props.value}
+      maxLength={2000}
+      disabled={props.disabled}
+      onChange={(event) => props.onChange(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+        event.preventDefault();
+        props.onEnter();
+      }}
+    />
+  );
+}
+
+function ReplyBox({ comment, onReply }: { comment: DesignComment; onReply: (text: string) => Promise<boolean> }) {
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const send = () => {
+    if (busy || text.trim() === '') return;
+    setBusy(true);
+    void onReply(text).then((ok) => {
+      setBusy(false);
+      if (ok) setText('');
+    });
+  };
+  return (
+    <div className="comment-field reply">
+      <GrowingArea
+        className="comment-reply-input"
+        label={`Reply to comment ${comment.n}`}
+        placeholder="Reply…"
+        value={text}
+        disabled={busy}
+        onChange={setText}
+        onEnter={send}
+      />
+    </div>
+  );
+}
+
 interface OpenProps {
   comment: DesignComment;
-  style: CSSProperties;
+  anchor: Rect;
+  zoom: number;
+  frame: { width: number; height: number };
+  breadcrumb: Breadcrumb | null;
+  initial: string | null;
   busy: boolean;
   onSend: () => void;
   onSave: (text: string) => void;
@@ -162,135 +126,123 @@ interface OpenProps {
   onDeleteReply: (replyId: string) => void;
 }
 
-export function CommentReplies({ comment, onDelete }: { comment: DesignComment; onDelete: (replyId: string) => void }) {
-  const replies = comment.replies ?? [];
-  if (replies.length === 0) return null;
-  return (
-    <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
-      {replies.map((reply, index) => (
-        <li key={reply.id} className="comment-reply" data-testid="comment-reply">
-          <span className="comment-reply-text">{reply.text}</span>
-          <button type="button" className="icon-btn small" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
-            <Icon name="close" size={12} />
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function ReplyInput({ comment, onReply }: { comment: DesignComment; onReply: (text: string) => Promise<boolean> }) {
-  const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
-  return (
-    <input
-      className="input comment-input comment-reply-input"
-      aria-label={`Reply to comment ${comment.n}`}
-      placeholder="Reply"
-      value={text}
-      maxLength={2000}
-      disabled={busy}
-      onChange={(event) => setText(event.target.value)}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' || event.nativeEvent.isComposing || text.trim() === '') return;
-        event.preventDefault();
-        setBusy(true);
-        void onReply(text).then((ok) => {
-          setBusy(false);
-          if (ok) setText('');
-        });
-      }}
-    />
-  );
-}
-
-export function OpenCommentPopover({ comment, style, busy, onSend, onSave, onResolve, onReopen, onDelete, onClose, onReply, onDeleteReply }: OpenProps) {
+export function OpenCommentPopover(props: OpenProps) {
+  const { comment } = props;
   const [text, setText] = useState(comment.text);
   const root = useRef<HTMLDivElement>(null);
+  const side = useRef<CardSide | undefined>(undefined);
+  const size = useCardSize(root);
   const editable = comment.status === 'queued';
   const changed = text.trim() !== '' && text.trim() !== comment.text;
 
   useEffect(() => {
-    focusables(root.current)[0]?.focus();
+    focusables(root.current)[0]?.focus({ preventScroll: true });
   }, [comment.id]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
-      onClose();
+      props.onClose();
       return;
     }
     trapTab(event, root.current);
   };
 
-  let body: ReactNode = <p className="comment-pop-text">{comment.text}</p>;
+  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current);
+  side.current = placement.side;
+  const scale = 1 / props.zoom;
+
+  let body: ReactNode = <p className="comment-card-text">{comment.text}</p>;
   if (editable) {
     body = (
-      <input
-        className="input comment-input"
-        aria-label={`Edit comment ${comment.n}`}
-        value={text}
-        maxLength={2000}
-        onChange={(event) => setText(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== 'Enter' || !changed) return;
-          event.preventDefault();
-          onSave(text.trim());
-        }}
-      />
+      <div className="comment-field">
+        <GrowingArea
+          label={`Edit comment ${comment.n}`}
+          placeholder="Comment"
+          value={text}
+          onChange={setText}
+          onEnter={() => changed && props.onSave(text.trim())}
+        />
+      </div>
     );
   }
 
   return (
-    <div
-      ref={root}
-      className="comment-pop"
-      role="dialog"
-      aria-label={`Comment ${comment.n}`}
-      data-testid="comment-open"
-      style={style}
-      onKeyDown={onKeyDown}
-      onPointerDown={(event) => event.stopPropagation()}
-    >
-      <div className="comment-pop-head">
-        <span className="comment-num" aria-hidden="true">
-          {comment.n}
-        </span>
-        <span className="comment-pop-status">{STATUS_LABEL[comment.status]}</span>
-        <button type="button" className="icon-btn small comment-pop-close" aria-label="Close comment" onClick={onClose}>
-          <Icon name="close" size={14} />
-        </button>
+    <>
+      <div
+        className="composer-pin"
+        style={{
+          left: placement.pin.left,
+          top: placement.pin.top,
+          transform: `scale(${scale})`,
+        }}
+        aria-hidden="true"
+      >
+        <AvatarFace initial={props.initial} flip={placement.pin.flip} tone={comment.status} count={comment.replies?.length ?? 0} />
       </div>
-      {body}
-      <CommentReplies comment={comment} onDelete={onDeleteReply} />
-      <ReplyInput comment={comment} onReply={onReply} />
-      <div className="comment-pop-actions">
-        <button type="button" className="btn small ghost danger" onClick={onDelete}>
-          Delete
-        </button>
-        <div className="spacer" />
-        {comment.status !== 'resolved' && comment.status !== 'sent' && (
-          <button type="button" className="btn small" onClick={onResolve}>
-            Resolve
+      <div
+        ref={root}
+        className="comment-card thread"
+        role="dialog"
+        aria-label={`Comment ${comment.n}`}
+        data-testid="comment-open"
+        data-side={placement.side}
+        style={{
+          left: placement.card.left,
+          top: placement.card.top,
+          width: CARD_WIDTH,
+          transform: `scale(${scale})`,
+        }}
+        onKeyDown={onKeyDown}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="thread-head">
+          <span className="thread-num">#{comment.n}</span>
+          <span className={`thread-status ${comment.status}`}>{STATUS_LABEL[comment.status]}</span>
+          <span className="spacer" />
+          {comment.status !== 'resolved' && comment.status !== 'sent' && (
+            <button type="button" className="thread-icon" aria-label="Resolve" data-tip="Resolve" data-tip-side="top" onClick={props.onResolve}>
+              <Icon name="check" size={14} />
+            </button>
+          )}
+          {comment.status === 'resolved' && (
+            <button type="button" className="thread-icon" aria-label="Reopen" data-tip="Reopen" data-tip-side="top" onClick={props.onReopen}>
+              <Icon name="undo" size={14} />
+            </button>
+          )}
+          <button type="button" className="thread-icon danger" aria-label="Delete" data-tip="Delete" data-tip-side="top" onClick={props.onDelete}>
+            <Icon name="trash" size={14} />
           </button>
-        )}
-        {comment.status === 'resolved' && (
-          <button type="button" className="btn small" onClick={onReopen}>
-            Reopen
+          <button type="button" className="thread-icon" aria-label="Close comment" onClick={props.onClose}>
+            <Icon name="close" size={14} />
           </button>
+        </div>
+        {props.breadcrumb && (
+          <p className="comment-card-crumb" title={props.breadcrumb.full}>
+            {props.breadcrumb.short}
+          </p>
         )}
-        {editable && changed && (
-          <button type="button" className="btn small" onClick={() => onSave(text.trim())}>
-            Save
-          </button>
-        )}
+        {body}
+        <CommentReplies comment={comment} initial={props.initial} onDelete={props.onDeleteReply} />
+        <ReplyBox comment={comment} onReply={props.onReply} />
         {editable && (
-          <button type="button" className="btn small primary" disabled={busy} onClick={onSend}>
-            Send now
-          </button>
+          <div className="comment-card-foot">
+            {changed ? (
+              <button type="button" className="thread-text-btn" onClick={() => props.onSave(text.trim())}>
+                Save
+              </button>
+            ) : (
+              <span className="comment-card-note">Saved on the canvas</span>
+            )}
+            <span className="spacer" />
+            <button type="button" className="thread-text-btn primary" disabled={props.busy} onClick={props.onSend}>
+              <Icon name="arrowUp" size={13} />
+              Send to Claude
+            </button>
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

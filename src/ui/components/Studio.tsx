@@ -160,7 +160,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const canUndo = undoAllowed(directionId, busy || activeRun !== null, versions.length);
   useDesktopContext({ projectId, directionId, running: activeRun !== null });
   const undoRef = useRef<() => void>(() => undefined);
-  const comments = useComments(projectId, directionId, composerActive);
+  const comments = useComments(projectId, directionId, composerActive, activeRun !== null);
   const refreshSelection = useSelectionRefresh(selection, setSelection, comments.describeRef);
   const editHistory = useEditHistory({
     projectId,
@@ -359,6 +359,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               onError: data.addError,
               port,
               comments,
+              commentTools: { tokens: tokenEntries(tokens), components: componentList.components, onSteer: runControls.onSteer },
               running: activeRun !== null,
               noRuns: neverRan(data.runsLoaded, directionRuns),
               darkPreview: hasDarkMode(tokens),

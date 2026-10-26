@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { AnchorQuery, CommentDrawing, CommentStatus, CommentTarget, DesignComment, SelectionContext } from '../shared/contracts';
+import type { AnchorQuery, CommentDrawing, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../shared/contracts';
 import { anchorQueryOf, drawingTarget, targetFromSelection } from '../shared/comments';
 import { ApiError, api, errorText, json } from './api';
 import { useProjectEvents } from './events';
@@ -13,9 +13,15 @@ export interface CommentPatch {
   context?: SelectionContext;
 }
 
+export interface CommentExtras {
+  mentions?: RunMention[];
+  attachmentIds?: string[];
+}
+
 export interface CommentsControl {
   directionId: string | null;
   composerActive: boolean;
+  running: boolean;
   comments: DesignComment[];
   queued: DesignComment[];
   notice: string | null;
@@ -26,13 +32,13 @@ export interface CommentsControl {
   setOpenId: (id: string | null) => void;
   setRepinId: (id: string | null) => void;
   clearNotice: () => void;
-  add: (selections: SelectionContext[], text: string, sendNow: boolean) => Promise<boolean>;
+  add: (selections: SelectionContext[], text: string, toClaude: boolean, extras?: CommentExtras) => Promise<boolean>;
   update: (id: string, patch: CommentPatch) => Promise<void>;
   remove: (id: string) => Promise<void>;
   move: (id: string, delta: -1 | 1) => Promise<void>;
   send: (ids?: string[]) => Promise<void>;
   repin: (id: string, selection: SelectionContext) => Promise<void>;
-  addDrawing: (input: { text: string; drawing: CommentDrawing; image: Blob; sendNow: boolean }) => Promise<boolean>;
+  addDrawing: (input: { text: string; drawing: CommentDrawing; image: Blob; toClaude: boolean; extras?: CommentExtras }) => Promise<boolean>;
   reply: (id: string, text: string) => Promise<boolean>;
   removeReply: (id: string, replyId: string) => Promise<void>;
   showResolved: boolean;
@@ -72,7 +78,7 @@ async function describeWithTimeout(describe: DescribeAnchors | null, comments: D
   return out;
 }
 
-export function useComments(projectId: string, directionId: string | null, composerActive = false): CommentsControl {
+export function useComments(projectId: string, directionId: string | null, composerActive = false, running = false): CommentsControl {
   const [comments, setComments] = useState<DesignComment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -84,12 +90,16 @@ export function useComments(projectId: string, directionId: string | null, compo
   didRef.current = directionId;
   const listRef = useRef(comments);
   listRef.current = comments;
+  const runningRef = useRef(running);
+  runningRef.current = running;
+  const afterRun = useRef(new Set<string>());
 
   useEffect(() => {
     setComments([]);
     setOpenId(null);
     setRepinId(null);
     setNotice(null);
+    afterRun.current.clear();
     if (!directionId) return;
     let alive = true;
     json<DesignComment[]>('GET', base(projectId, directionId))
@@ -131,10 +141,25 @@ export function useComments(projectId: string, directionId: string | null, compo
     [call],
   );
 
+  const deliver = useCallback(
+    async (created: DesignComment[], toClaude: boolean) => {
+      if (!toClaude || created.length === 0) return;
+      const ids = created.map((comment) => comment.id);
+      if (runningRef.current) {
+        for (const id of ids) afterRun.current.add(id);
+        return;
+      }
+      listRef.current = [...listRef.current.filter((c) => !ids.includes(c.id)), ...created];
+      await send(ids);
+    },
+    [send],
+  );
+
   const add = useCallback(
-    async (selections: SelectionContext[], text: string, sendNow: boolean): Promise<boolean> => {
+    async (selections: SelectionContext[], text: string, toClaude: boolean, extras: CommentExtras = {}): Promise<boolean> => {
       const clean = text.trim();
       if (!clean || selections.length === 0) return false;
+      const now = toClaude && !runningRef.current;
       try {
         const created: DesignComment[] = [];
         for (const selection of selections) {
@@ -142,23 +167,29 @@ export function useComments(projectId: string, directionId: string | null, compo
             text: clean,
             target: targetFromSelection(selection),
             context: selection,
-            status: sendNow ? 'draft' : 'queued',
+            status: now ? 'draft' : 'queued',
+            ...(extras.mentions?.length ? { mentions: extras.mentions } : {}),
+            ...(extras.attachmentIds?.length ? { attachmentIds: extras.attachmentIds } : {}),
           });
           if (comment) created.push(comment);
         }
         setComments((prev) => [...prev.filter((c) => !created.some((n) => n.id === c.id)), ...created]);
-        if (sendNow) {
-          listRef.current = [...listRef.current.filter((c) => !created.some((n) => n.id === c.id)), ...created];
-          await send(created.map((comment) => comment.id));
-        }
+        await deliver(created, toClaude);
         return true;
       } catch (err) {
         setNotice(errorText(err));
         return false;
       }
     },
-    [call, send],
+    [call, deliver],
   );
+
+  useEffect(() => {
+    if (running || afterRun.current.size === 0) return;
+    const ready = listRef.current.filter((comment) => afterRun.current.has(comment.id) && comment.status === 'queued');
+    afterRun.current.clear();
+    if (ready.length > 0) void send(ready.map((comment) => comment.id));
+  }, [running, send]);
 
   const update = useCallback(
     async (id: string, patch: CommentPatch) => {
@@ -218,31 +249,30 @@ export function useComments(projectId: string, directionId: string | null, compo
   }, []);
 
   const addDrawing = useCallback(
-    async (input: { text: string; drawing: CommentDrawing; image: Blob; sendNow: boolean }): Promise<boolean> => {
+    async (input: { text: string; drawing: CommentDrawing; image: Blob; toClaude: boolean; extras?: CommentExtras }): Promise<boolean> => {
       const clean = input.text.trim();
       if (!clean) return false;
+      const now = input.toClaude && !runningRef.current;
       try {
         const attachment = await api.uploadAttachment(projectId, new File([input.image], 'drawing.png', { type: 'image/png' }));
         const comment = await call<DesignComment>('POST', '', {
           text: clean,
           target: drawingTarget(input.drawing.box),
-          status: input.sendNow ? 'draft' : 'queued',
-          attachmentIds: [attachment.id],
+          status: now ? 'draft' : 'queued',
+          attachmentIds: [attachment.id, ...(input.extras?.attachmentIds ?? [])].slice(0, 4),
+          ...(input.extras?.mentions?.length ? { mentions: input.extras.mentions } : {}),
           drawing: input.drawing,
         });
         if (!comment) return false;
         merge(comment);
-        if (input.sendNow) {
-          listRef.current = [...listRef.current.filter((c) => c.id !== comment.id), comment];
-          await send([comment.id]);
-        }
+        await deliver([comment], input.toClaude);
         return true;
       } catch (err) {
         setNotice(errorText(err));
         return false;
       }
     },
-    [call, merge, projectId, send],
+    [call, deliver, merge, projectId],
   );
 
   const reply = useCallback(
@@ -287,6 +317,7 @@ export function useComments(projectId: string, directionId: string | null, compo
   return {
     directionId,
     composerActive,
+    running,
     comments,
     queued,
     notice,

@@ -22,6 +22,8 @@ interface Options {
   setDraft: (value: string) => void;
   components?: readonly ComponentInfo[] | null;
   request?: MentionRequest | null;
+  lead?: readonly MentionOption[];
+  onLead?: (option: MentionOption) => void;
 }
 
 export interface MentionRequest {
@@ -33,7 +35,7 @@ export function componentMention(component: ComponentInfo): RunMention {
   return { kind: 'component', name: component.name, file: component.file, selector: component.selector };
 }
 
-export function useMentions({ projectId, directionId, tokens, draft, setDraft, components, request }: Options) {
+export function useMentions({ projectId, directionId, tokens, draft, setDraft, components, request, lead, onLead }: Options) {
   const [files, setFiles] = useState<string[] | null>(null);
   const [mentions, setMentions] = useState<RunMention[]>([]);
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -56,8 +58,8 @@ export function useMentions({ projectId, directionId, tokens, draft, setDraft, c
       const mention = componentMention(item);
       return { key: mentionKey(mention), label: item.name, detail: item.file ?? 'Component', mention };
     });
-    return [...componentOptions, ...fileOptions, ...tokenOptions].filter((option) => !picked.has(option.key));
-  }, [files, tokens, mentions, components]);
+    return [...(lead ?? []), ...componentOptions, ...fileOptions, ...tokenOptions].filter((option) => !picked.has(option.key));
+  }, [files, tokens, mentions, components, lead]);
   const add = (mention: RunMention) => setMentions((prev) => (prev.some((item) => mentionKey(item) === mentionKey(mention)) ? prev : [...prev, mention]));
   const requestSeq = request?.seq;
   useEffect(() => {
@@ -66,7 +68,8 @@ export function useMentions({ projectId, directionId, tokens, draft, setDraft, c
   const picker = useMentionPicker(options, query);
 
   const pick = (option: MentionOption) => {
-    add(option.mention);
+    if (lead?.some((item) => item.key === option.key)) onLead?.(option);
+    else add(option.mention);
     setDraft(draft.replace(/@[^\s@]*$/, '').replace(/\s+$/, (space) => (space ? ' ' : '')));
   };
 

@@ -217,7 +217,7 @@ function Basics({ form, set }: { form: DraftForm; set: (patch: Partial<DraftForm
       </label>
       <label className="field">
         <span>Mode</span>
-        <select value={form.mode} aria-label="Mode" onChange={(e) => set({ mode: e.target.value as Mode })}>
+        <select className="select" value={form.mode} aria-label="Mode" onChange={(e) => set({ mode: e.target.value as Mode })}>
           <option value="auto">Detect</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
@@ -225,7 +225,7 @@ function Basics({ form, set }: { form: DraftForm; set: (patch: Partial<DraftForm
       </label>
       <label className="field">
         <span>Start from</span>
-        <select value={form.basePackId} aria-label="Start from" onChange={(e) => set({ basePackId: e.target.value })}>
+        <select className="select" value={form.basePackId} aria-label="Start from" onChange={(e) => set({ basePackId: e.target.value })}>
           {(packs ?? []).map((pack) => (
             <option key={pack.id} value={pack.id}>
               {pack.name}
@@ -267,7 +267,6 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
         <button type="button" className="btn ghost small" onClick={onCancel} disabled={busy}>
           Back
         </button>
-        <span className="brand">New design system</span>
       </header>
       <main className="nds-main">
         <form className="nds-form" onSubmit={(e) => void submit(e)} aria-busy={busy}>
@@ -303,7 +302,8 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
             <button type="button" className="btn ghost" onClick={onCancel} disabled={busy}>
               Cancel
             </button>
-            <button type="submit" className="btn primary" disabled={!ready}>
+            <button type="submit" className="btn primary has-icon" disabled={!ready}>
+              {busy && <span className="spinner" />}
               {busy ? 'Making draft…' : 'Create draft'}
             </button>
           </div>

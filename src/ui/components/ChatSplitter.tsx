@@ -22,13 +22,13 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
       const el = columnsRef.current;
       if (!el) return null;
       const rect = el.getBoundingClientRect();
-      return clampWidth(rect.right - clientX, rect.width);
+      return clampWidth(clientX - rect.left, rect.width);
     },
     [columnsRef],
   );
 
   const currentWidth = () => {
-    const panel = columnsRef.current?.querySelector('.panel.right');
+    const panel = columnsRef.current?.querySelector('.pane-left');
     return panel instanceof HTMLElement ? panel.getBoundingClientRect().width : MIN_CHAT;
   };
 
@@ -53,7 +53,7 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.shiftKey ? 48 : 16;
-    const delta = e.key === 'ArrowLeft' ? step : e.key === 'ArrowRight' ? -step : 0;
+    const delta = e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0;
     if (delta === 0) return;
     e.preventDefault();
     const container = columnsRef.current?.getBoundingClientRect().width ?? 0;

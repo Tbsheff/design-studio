@@ -14,6 +14,7 @@ export interface CanvasActions {
   comment: { available: boolean; on: boolean; toggle: () => void };
   draw: { on: boolean; toggle: () => void } | null;
   layersOpen: boolean;
+  onLayers: () => void;
   onSource: (kind: 'live' | 'last') => void;
   dark: { on: boolean; toggle: () => void } | null;
   onCheck: () => void;
@@ -34,7 +35,7 @@ function canvasCommands(a: CanvasActions): Command[] {
   const out: Command[] = [
     ...ZOOMS.map((z) => ({ id: `view.zoom-${z.key}`, title: z.title, group: 'Canvas', icon: 'search' as const, keyId: z.keyId, keywords: z.keywords, run: () => a.zoom(z.key) })),
     { id: 'tool.select', title: a.selectMode ? 'Stop selecting' : 'Select elements', group: 'Canvas', icon: 'pointer', keyId: 'tool-select', keywords: 'pick inspect edit', run: a.onSelect },
-    { id: 'view.layers', title: a.layersOpen ? 'Hide layers' : 'Show layers', group: 'View', icon: 'layers', keyId: 'layers', keywords: 'tree outline dom', run: () => uiStore.set((s) => ({ layersOpen: !s.layersOpen })), ...needLive },
+    { id: 'view.layers', title: a.layersOpen ? 'Leave edit mode' : 'Edit and show layers', group: 'View', icon: 'layers', keyId: 'layers', keywords: 'tree outline dom inspector edit', run: a.onLayers, ...needLive },
     { id: 'view.live', title: 'Show the live preview', group: 'View', icon: 'radio', keywords: 'source current', run: () => a.onSource('live') },
     { id: 'view.last', title: 'Show the last completed version', group: 'View', icon: 'history', keywords: 'source previous', run: () => a.onSource('last'), ...(a.hasHead ? {} : { disabled: 'No version yet' }) },
     ...a.presets.map((p) => ({ id: `view.viewport-${p.id}`, title: `Preview at ${p.label}`, group: 'View', icon: p.id as Command['icon'], keywords: 'viewport size device breakpoint', run: () => uiStore.set({ viewport: { preset: p.id, width: p.width, height: p.height } }) })),
@@ -55,6 +56,7 @@ export interface CanvasInput {
   comment: { available: boolean; on: boolean; toggle: () => void; setOn: (on: boolean) => void };
   draw: { available: boolean; on: boolean; toggle: () => void };
   layersOpen: boolean;
+  onLayers: () => void;
   onSource: (source: CanvasSource) => void;
   dark: { dark: boolean; onToggle: () => void } | undefined;
   check: { run: () => void; checking: boolean };
@@ -73,6 +75,7 @@ function actionsOf(i: CanvasInput): CanvasActions {
     comment: i.comment,
     draw: i.draw.available ? i.draw : null,
     layersOpen: i.layersOpen,
+    onLayers: i.onLayers,
     onSource: (kind) => i.onSource({ kind }),
     dark: i.dark ? { on: i.dark.dark, toggle: i.dark.onToggle } : null,
     onCheck: i.check.run,

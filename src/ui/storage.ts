@@ -18,7 +18,7 @@ export interface LibraryFrom {
 
 const SCREENS: Screen[] = ['home', 'new-design-system', 'design-systems'];
 
-interface UiState {
+export interface UiState {
   activeProjectId: string | null;
   screen: Screen;
   libraryFrom: LibraryFrom | null;
@@ -32,6 +32,8 @@ interface UiState {
   snapByProject: Record<string, boolean>;
   homeSort: HomeSort;
   layersOpen: boolean;
+  paneCollapsed: boolean;
+  viewRowOpen: boolean;
 }
 
 export type HomeSort = 'recent' | 'name' | 'created';
@@ -53,6 +55,8 @@ const defaults: UiState = {
   snapByProject: {},
   homeSort: 'recent',
   layersOpen: false,
+  paneCollapsed: false,
+  viewRowOpen: false,
 };
 
 function libraryFromOf(value: unknown): LibraryFrom | null {
@@ -79,6 +83,8 @@ function loadUiState(): UiState {
       snapByProject: parsed.snapByProject && typeof parsed.snapByProject === 'object' ? parsed.snapByProject : {},
       homeSort: parsed.homeSort && HOME_SORTS.includes(parsed.homeSort) ? parsed.homeSort : 'recent',
       layersOpen: parsed.layersOpen === true,
+      paneCollapsed: parsed.paneCollapsed === true,
+      viewRowOpen: parsed.viewRowOpen === true,
     };
   } catch {
     return defaults;

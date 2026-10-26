@@ -234,11 +234,4 @@
   height: 32px;
 }
 
-@media (max-width: 1360px) {
-  .columns {
-    grid-template-columns: minmax(0, 1fr) clamp(300px, var(--chat-w, 352px), 50%);
-  }
-  .topbar-name {
-    max-width: 340px;
-  }
-}
+

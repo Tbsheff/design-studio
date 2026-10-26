@@ -80,6 +80,44 @@ export function toolVerb(name: string): string {
   return TOOL_VERBS[name] ?? prettyToolName(name);
 }
 
+const TOOL_GROUPS: Record<string, string> = {
+  Read: 'Read',
+  Write: 'Wrote',
+  Edit: 'Edited',
+  MultiEdit: 'Edited',
+  NotebookEdit: 'Edited',
+  Bash: 'Ran',
+  Grep: 'Searched',
+  Glob: 'Searched',
+  WebFetch: 'Fetched',
+  WebSearch: 'Searched',
+  TodoWrite: 'Planned',
+  Skill: 'Skill',
+  mcp__studio__render_check: 'Checked',
+  mcp__studio__screenshot: 'Checked',
+  mcp__studio__design_review: 'Checked',
+  mcp__studio__design_system_check: 'Checked',
+  mcp__studio__define_tweaks: 'Tweaks',
+};
+
+export function toolGroupLabel(name: string): string {
+  return TOOL_GROUPS[name] ?? prettyToolName(name);
+}
+
+export interface ToolTally {
+  label: string;
+  count: number;
+}
+
+export function toolTally(names: Iterable<string>): ToolTally[] {
+  const counts = new Map<string, number>();
+  for (const name of names) {
+    const label = toolGroupLabel(name);
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+  return [...counts].map(([label, count]) => ({ label, count }));
+}
+
 export function toolSubject(name: string, input: unknown, workTree: string | null): string {
   if (name === SKILL_TOOL) return skillToolName(input);
   if (name === 'TodoWrite') return '';

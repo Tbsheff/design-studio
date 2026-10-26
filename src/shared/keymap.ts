@@ -33,7 +33,7 @@ export const KEYMAP = [
   { id: 'tool-select', label: 'Select tool', keys: ['V'], group: 'Canvas' },
   { id: 'tool-comment', label: 'Comment tool', keys: ['C'], group: 'Canvas' },
   { id: 'tool-draw', label: 'Pen tool', keys: ['P'], group: 'Canvas' },
-  { id: 'layers', label: 'Layers', keys: ['Alt+1'], group: 'Canvas' },
+  { id: 'layers', label: 'Edit mode and layers', keys: ['Alt+1'], group: 'Canvas' },
   { id: 'pan', label: 'Pan', keys: ['Space'], group: 'Canvas', hold: true },
   { id: 'zoom-click', label: 'Zoom where you click', keys: ['Z'], group: 'Canvas', hold: true },
   { id: 'zoom-in', label: 'Zoom in', keys: ['=', 'Mod+='], group: 'Canvas' },

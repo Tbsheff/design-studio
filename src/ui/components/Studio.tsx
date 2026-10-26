@@ -5,7 +5,7 @@ import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, S
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { POLISH_REQUEST } from '../polish';
-import { createDraftStore, homeVariations, useDraftActive, useUi } from '../storage';
+import { createDraftStore, homeVariations, uiStore, useDraftActive, useUi } from '../storage';
 import { useDesignSystemState } from '../useDesignSystemState';
 import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
@@ -19,9 +19,9 @@ import { chatWidthStyle } from './ChatSplitter';
 import { fixPrompt } from './ErrorsPanel';
 import { DraftBar } from './DraftBar';
 import { ImproveControl, improveRequest, lastImproveRun } from './DraftImprove';
-import { RightPanel } from './RightPanel';
-import { designSystemRef } from './DesignSystemChip';
-import { StudioTopbar } from './StudioTopbar';
+import { LeftPane } from './LeftPane';
+import { StudioPaneHeader } from './StudioPaneHeader';
+import { DesignSystemChip, designSystemRef } from './DesignSystemChip';
 import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
 import { useComponents } from '../useComponents';
@@ -116,6 +116,22 @@ function runById<T>(runs: Record<string, T>, id: string | null): T | null {
   return id ? (runs[id] ?? null) : null;
 }
 
+function paneAttr(collapsed: boolean): string {
+  return collapsed ? 'collapsed' : 'open';
+}
+
+function nameOf(direction: { name: string } | null): string | null {
+  return direction?.name ?? null;
+}
+
+function kindLabel(kind: string): string {
+  return kind === 'html' ? 'HTML project' : 'React + Vite project';
+}
+
+function whenDirection<T>(did: string | null, value: T): T | null {
+  return did ? value : null;
+}
+
 function neverRan(runsLoaded: boolean, runs: readonly unknown[]): boolean {
   return runsLoaded && runs.length === 0;
 }
@@ -135,7 +151,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const [busy, setBusy] = useState(false);
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
-  const { chatWidth } = useUi();
+  const { chatWidth, paneCollapsed } = useUi();
+  const [layersHost, setLayersHost] = useState<HTMLDivElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const port = useRef<PreviewPort | null>(null);
   const editControl = useRef<DirectEditControl | null>(null);
@@ -272,6 +289,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection }), true);
 
   const polish = () => void act(() => startRun(POLISH_REQUEST));
+  const tweak = (prompt: string) => void act(() => startRun(composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection }), true));
+  const showPane = (tab: Parameters<typeof panel.choose>[0]) => {
+    if (paneCollapsed) uiStore.set({ paneCollapsed: false });
+    panel.choose(tab);
+  };
   const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
   const retryRun = (run: RunView) => {
     const request = run.request;
@@ -285,7 +307,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     onHome: guard(onExit),
     onSettings: () => setSettingsOpen(true),
     onDesignMd: () => setDesignOpen(true),
-    onPanel: panel.choose,
+    onPanel: showPane,
     onDirection: guard(data.setDirectionId),
     onStop: runControls.onCancel,
     onPolish: polish,
@@ -301,81 +323,46 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
 
 
   return (
-    <div className="studio">
-      <StudioTopbar
-        name={project.name}
-        kind={project.kind}
-        directionName={direction?.name ?? null}
-        designSystem={designSystemRef(projectId, did, project, designSystem.state)}
-        designSystemActions={packActions.actions}
-        connection={data.connection}
-        actionError={actionError}
-        onDismissError={() => setActionError(null)}
-        onExit={guard(onExit)}
-        onDesign={() => setDesignOpen(true)}
-        onSettings={() => setSettingsOpen(true)}
-        canExport={exporter.canOpen}
-        onExport={exporter.openHead}
-      />
+    <div className="studio" data-pane={paneAttr(paneCollapsed)}>
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
-        <main className="center">
-          <DraftBar
-            project={project}
-            state={designSystem.state}
-            lastChange={data.lastChange}
-            onSave={packActions.actions.onSave}
-            lastRun={improveRun}
-            improve={<ImproveControl running={activeRun !== null} run={improveRun} onImprove={(focus) => act(() => startRun(improveRequest(focus, project.settings.defaultLevel)))} />}
-          />
-          <UnfinishedSlot
-            visible={Boolean(status?.dirty) && !activeRun}
-            count={status?.changed.length ?? 0}
-            busy={busy}
-            onKeep={() => withDid((id) => refreshAfter(async () => {
-              await api.keep(projectId, id);
-              data.setStatus({ dirty: false, changed: [] });
-            }))}
-            onDiscard={() => withDid((id) => act(async () => data.setStatus(await api.discard(projectId, id))))}
-          />
-          <VariationsTop state={variations} project={project} direction={direction} runs={runs} />
-          <CenterView
-            projectId={projectId}
-            kind={project.kind}
-            compareOpen={compareOpen}
-            left={left}
-            right={right}
-            versions={versions}
-            onCloseCompare={() => setCompareOpen(false)}
-            canvas={{
-              projectId,
-              directionId: did,
-              kind: project.kind,
-              headVersionId: direction?.headVersionId ?? null,
-              source,
-              onSource: setSource,
-              lastChange: data.lastChange,
-              selection,
-              setSelection,
-              onError: data.addError,
-              port,
-              comments,
-              commentTools: { tokens: tokenEntries(tokens), components: componentList.components, onSteer: runControls.onSteer },
-              running: activeRun !== null,
-              noRuns: neverRan(data.runsLoaded, directionRuns),
-              darkPreview: hasDarkMode(tokens),
-              directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
-              onTextCommit: (selector, text) => {
-                const target = selection.length === 1 ? selection[0] : undefined;
-                if (target?.selector === selector && editControl.current?.commitText(selector, text)) return;
-                port.current?.post({ type: 'preview-reset' });
-              },
-            }}
-          />
-        </main>
-        <RightPanel
+        <LeftPane
+          collapsed={paneCollapsed}
           columnsRef={columnsRef}
           tab={panel.tab}
-          onTab={panel.choose}
+          onTab={showPane}
+          layersSlot={setLayersHost}
+          header={
+            <StudioPaneHeader
+              name={project.name}
+              kindLabel={kindLabel(project.kind)}
+              directionName={nameOf(direction)}
+              connection={data.connection}
+              actionError={actionError}
+              onDismissError={() => setActionError(null)}
+              tab={panel.tab}
+              onTab={showPane}
+              hasTokens={studioTokens.panel !== null}
+              hasComponents
+              hasTweaks
+              commentCount={comments.queued.length}
+              onRename={(name) => act(async () => data.setProject(await api.renameProject(projectId, name)))}
+              onExit={guard(onExit)}
+              onDesignMd={() => setDesignOpen(true)}
+              onSettings={() => setSettingsOpen(true)}
+              canExport={exporter.canOpen}
+              onExport={exporter.openHead}
+              onCollapse={() => uiStore.set({ paneCollapsed: true })}
+            />
+          }
+          system={
+            <>
+              <p className="pane-system-text">The design system sets the tokens, type and components the agent uses for this direction.</p>
+              <DesignSystemChip system={designSystemRef(projectId, did, project, designSystem.state)} actions={packActions.actions} onOpenDesignMd={() => setDesignOpen(true)} />
+              <button type="button" className="btn small" onClick={() => setDesignOpen(true)}>
+                Edit DESIGN.md
+              </button>
+            </>
+          }
           chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
@@ -430,7 +417,9 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
           }}
           tokens={studioTokens.panel}
-          components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', onMention: (component) => setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 })) }}
+          components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', onMention: (component) => { showPane('chat'); setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 }));
+            },
+          }}
           todos={chatState.todos}
           tweaks={{ draft: tweaks, running: activeRun !== null, onSuggest: () => void act(() => startRun(TWEAKS_REQUEST)) }}
           versions={{
@@ -462,6 +451,71 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               act(() => renameVersion(projectId, v.id, name).finally(data.refreshVersions)),
           }}
         />
+        <main className="center pane-canvas ui-inset">
+          <DraftBar
+            project={project}
+            state={designSystem.state}
+            lastChange={data.lastChange}
+            onSave={packActions.actions.onSave}
+            lastRun={improveRun}
+            improve={<ImproveControl running={activeRun !== null} run={improveRun} onImprove={(focus) => act(() => startRun(improveRequest(focus, project.settings.defaultLevel)))} />}
+          />
+          <UnfinishedSlot
+            visible={Boolean(status?.dirty) && !activeRun}
+            count={status?.changed.length ?? 0}
+            busy={busy}
+            onKeep={() => withDid((id) => refreshAfter(async () => {
+              await api.keep(projectId, id);
+              data.setStatus({ dirty: false, changed: [] });
+            }))}
+            onDiscard={() => withDid((id) => act(async () => data.setStatus(await api.discard(projectId, id))))}
+          />
+          <VariationsTop state={variations} project={project} direction={direction} runs={runs} />
+          <CenterView
+            projectId={projectId}
+            kind={project.kind}
+            compareOpen={compareOpen}
+            left={left}
+            right={right}
+            versions={versions}
+            onCloseCompare={() => setCompareOpen(false)}
+            canvas={{
+              projectId,
+              directionId: did,
+              kind: project.kind,
+              headVersionId: direction?.headVersionId ?? null,
+              source,
+              onSource: setSource,
+              lastChange: data.lastChange,
+              selection,
+              setSelection,
+              onError: data.addError,
+              port,
+              comments,
+              commentTools: { tokens: tokenEntries(tokens), components: componentList.components, onSteer: runControls.onSteer },
+              running: activeRun !== null,
+              noRuns: neverRan(data.runsLoaded, directionRuns),
+              darkPreview: hasDarkMode(tokens),
+              directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
+              shell: {
+                pane: panel.tab,
+                onPane: showPane,
+                layersHost: paneCollapsed ? null : layersHost,
+                directionName: nameOf(direction),
+                paneCollapsed,
+                onExpandPane: () => uiStore.set({ paneCollapsed: false }),
+                canExport: exporter.canOpen,
+                onExport: exporter.openHead,
+                onTweak: whenDirection(did, tweak),
+              },
+              onTextCommit: (selector, text) => {
+                const target = selection.length === 1 ? selection[0] : undefined;
+                if (target?.selector === selector && editControl.current?.commitText(selector, text)) return;
+                port.current?.post({ type: 'preview-reset' });
+              },
+            }}
+          />
+        </main>
       </div>
       <StudioModals
         project={project}

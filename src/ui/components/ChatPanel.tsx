@@ -7,11 +7,12 @@ import { Conversation, ConversationContent, ConversationScrollButton, useConvers
 import { Message, MessageContent } from '../ai/components/ai/message';
 import { canPolishRun } from '../polish';
 import type { RunView, ToolRow } from '../runState';
-import { AssistantText, PlanCard, PolishThis, RunError, RunFoot, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
+import { AssistantText, PlanCard, PolishThis, RunError, RunNotice, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
+import { RunFeedbackRow } from './ChatFeedback';
 import { UserTurn, type TurnActions } from './ChatRewind';
 import { ChatSearch } from './ChatSearch';
 import { Icon } from './Icon';
-import { LiveStatus, RunChanges, ToolChips } from './ToolChips';
+import { LiveStatus, ToolChips, ToolSummary } from './ToolChips';
 import { PermissionPrompt } from './PermissionPrompt';
 
 interface PolishProps {
@@ -46,20 +47,61 @@ function segmentsOf(run: RunView): Segment[] {
 
 const ToolSegment = memo(
   function ToolSegment({ tools, running, workTree }: { tools: ToolRow[]; running: boolean; workTree: string | null }) {
-    return <ToolChips tools={tools} running={running} workTree={workTree} />;
+    return <ToolChips tools={tools} running={running} workTree={workTree} flat />;
   },
   (a, b) => a.running === b.running && a.workTree === b.workTree && a.tools.length === b.tools.length && a.tools.every((tool, index) => tool === b.tools[index]),
 );
 
+function SegmentView({ segment, running, workTree }: { segment: Segment; running: boolean; workTree: string | null }) {
+  if (segment.kind === 'tools') return <ToolSegment tools={segment.tools} running={running} workTree={workTree} />;
+  if (segment.kind === 'user') return <SentWhileRunning text={segment.text} />;
+  if (segment.kind === 'thinking') return <Thinking text={segment.text} live={running && segment.open} />;
+  return <AssistantText text={segment.text} streaming={running && segment.open} />;
+}
+
+interface RunLayout {
+  steps: Segment[];
+  sent: Segment[];
+  tail: Segment[];
+}
+
+function layoutOf(segments: Segment[], running: boolean): RunLayout {
+  let lastTool = -1;
+  let lastText = -1;
+  segments.forEach((segment, index) => {
+    if (segment.kind === 'tools') lastTool = index;
+    if (segment.kind === 'text' && segment.text.trim()) lastText = index;
+  });
+  const reply = !running && lastText !== -1 && lastText < lastTool ? segments[lastText] : undefined;
+  const steps: Segment[] = [];
+  const sent: Segment[] = [];
+  const tail: Segment[] = [];
+  segments.forEach((segment, index) => {
+    if (segment === reply) return;
+    if (segment.kind === 'user') (index <= lastTool ? sent : tail).push(segment);
+    else (index <= lastTool ? steps : tail).push(segment);
+  });
+  if (reply) tail.unshift(reply);
+  return { steps, sent, tail };
+}
+
 function RunParts({ run, running, workTree }: { run: RunView; running: boolean; workTree: string | null }) {
+  const layout = useMemo(() => layoutOf(segmentsOf(run), running), [run.parts, run.tools, running]);
   return (
     <>
-      {segmentsOf(run).map((segment) => {
-        if (segment.kind === 'tools') return <ToolSegment key={segment.key} tools={segment.tools} running={running} workTree={workTree} />;
-        if (segment.kind === 'user') return <SentWhileRunning key={segment.key} text={segment.text} />;
-        if (segment.kind === 'thinking') return <Thinking key={segment.key} text={segment.text} live={running && segment.open} />;
-        return <AssistantText key={segment.key} text={segment.text} streaming={running && segment.open} />;
-      })}
+      {layout.steps.length > 0 && (
+        <ToolSummary tools={run.tools}>
+          {layout.steps.map((segment) => (
+            <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+          ))}
+        </ToolSummary>
+      )}
+      {layout.sent.map((segment) => (
+        <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+      ))}
+      {layout.tail.map((segment) => (
+        <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+      ))}
     </>
   );
 }
@@ -95,8 +137,8 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
           {running && <LiveStatus run={run} workTree={workTree} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
-          {!running && <RunChanges tools={run.tools} />}
-          <RunFoot run={run} onDetails={details} />
+          <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
+          <RunFeedbackRow run={run} latest={latest} onDetails={details} />
           {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
         </MessageContent>

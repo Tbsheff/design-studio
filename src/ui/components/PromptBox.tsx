@@ -8,11 +8,12 @@ import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
-import { AttachmentThumbs, ModelTag, SelectionChips, type PendingAttachment } from './ComposerParts';
+import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
+import { ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
 import { Icon } from './Icon';
 import { MOD_LABEL } from './CommentPopover';
-import { RunSettings, type ComposerMode } from './RunSettings';
+import { MODE_LABEL, type ComposerMode } from './RunSettings';
 import { SkillChips, SkillPicker, SkillsIndicator } from './SkillPicker';
 import { skillInstruction } from '../skills';
 import { useRunLevel } from '../useRunLevel';
@@ -56,19 +57,25 @@ interface VariationsPromptProps {
 function StopButton({ running, onStop }: { running: boolean; onStop: () => void }) {
   if (!running) return null;
   return (
-    <button type="button" className="btn small stop-btn has-icon" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
+    <button type="button" className="icon-btn small bordered stop-btn" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-side="top" data-tip-align="end">
       <Icon name="stop" size={14} />
-      Stop
     </button>
   );
 }
 
-function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; quiet: boolean; canQueue: boolean; onQueue: () => void }) {
+function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; onQueue: () => void }) {
   if (props.running) {
-    if (!props.canQueue) return null;
     return (
-      <button type="button" className="btn small has-icon send-btn" onClick={props.onQueue} aria-label="Queue" data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`} data-tip-side="top" data-tip-align="end">
-        <Icon name="plus" size={14} />
+      <button
+        type="button"
+        className="btn send send-btn"
+        disabled={!props.canQueue}
+        onClick={props.onQueue}
+        aria-label="Queue"
+        data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`}
+        data-tip-side="top"
+        data-tip-align="end"
+      >
         Queue
       </button>
     );
@@ -80,35 +87,26 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
       data-tip={`Send (${MOD_LABEL}Enter)`}
       data-tip-side="top"
       data-tip-align="end"
-      render={<button className={`btn small has-icon send-btn ${props.quiet ? '' : 'send'}`} />}
+      render={<button className="btn send send-btn" />}
     >
-      {props.sending ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
-      {props.sending ? 'Sending…' : 'Send'}
+      {props.sending ? <span className="spinner" /> : 'Send'}
     </ComposerSubmit>
   );
 }
 
-function KbdHint({ running }: { running: boolean }) {
-  const mod = MOD_LABEL === '⌘' ? <kbd>⌘</kbd> : <><kbd>Ctrl</kbd>+</>;
-  if (running) {
-    return (
-      <span className="kbd-hint" aria-hidden="true">
-        <kbd>↵</kbd> queue · {mod}
-        <kbd>↵</kbd> now
-      </span>
-    );
-  }
+function StateChip({ label, tip, onClear }: { label: string; tip: string; onClear: () => void }) {
   return (
-    <span className="kbd-hint" aria-hidden="true">
-      {mod}
-      <kbd>↵</kbd>
+    <span className="ui-chip composer-state" title={tip}>
+      {label}
+      <button type="button" className="icon-btn chip-x" aria-label={`Clear ${label}`} onClick={onClear}>
+        <Icon name="close" size={12} />
+      </button>
     </span>
   );
 }
 
-
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
-  edit: { label: 'Describe a change', placeholder: 'Describe a change, or type / for commands' },
+  edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create...' },
   plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan, or type / for commands' },
   critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique, or type / for commands' },
 };
@@ -180,6 +178,26 @@ export function PromptBox(props: Props) {
       if (f) URL.revokeObjectURL(f.previewUrl);
       return prev.filter((x) => x.localId !== localId);
     });
+
+  const chooseModel = (model: string) => {
+    if (model === props.model) return;
+    setError(null);
+    api
+      .updateSettings(props.projectId, { model })
+      .then(props.onSettingsSaved)
+      .catch((err: unknown) => setError(`Could not save the model: ${errorText(err)}`));
+  };
+  const insertMention = () => {
+    setPicking(false);
+    setDraft(draft === '' || /\s$/.test(draft) ? `${draft}@` : `${draft} @`);
+    focusInput();
+  };
+  const designs = props.variations && {
+    value: props.variations.count,
+    max: props.variations.max,
+    onChange: props.variations.onCount,
+    disabledReason: designsBlocker(mode, props.selection.length),
+  };
 
   const uploading = files.some((f) => !f.attachment && !f.error);
   const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft, components: props.components, request: props.mentionRequest });
@@ -287,7 +305,7 @@ export function PromptBox(props: Props) {
       {mentions.picker.open && <MentionList shown={mentions.picker.shown} current={mentions.picker.current} loading={mentions.loading} onPick={mentions.pick} onHover={mentions.picker.setActive} />}
       {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} commands={slashCommands()} onCommand={runSlash} />}
       <Composer
-        className={`composer cursor-text ${dragging ? 'bg-accent ring-2 ring-primary/40' : ''}`}
+        className={`composer ui-composer cursor-text ${dragging ? 'dragging' : ''}`}
         onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
       >
         <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
@@ -295,7 +313,7 @@ export function PromptBox(props: Props) {
         <MentionChips mentions={mentions.mentions} onRemove={mentions.remove} />
         <SkillChips ids={skillIds} onRemove={(id) => setSkillIds((prev) => prev.filter((x) => x !== id))} />
         <ComposerInput
-          className="min-h-16"
+          className="composer-input min-h-16"
           value={draft}
           aria-label={INPUT_COPY[mode].label}
           placeholder={INPUT_COPY[mode].placeholder}
@@ -308,45 +326,20 @@ export function PromptBox(props: Props) {
           onSubmit={() => void send()}
           onPaste={onPaste}
         />
-        <ComposerToolbar className="prompt-bar cursor-default gap-1 px-1.5 pt-0 pb-1.5">
-          <button
-            type="button"
-            className="icon-btn small"
-            aria-label="Attach image"
-            data-tip="Attach image"
-            data-tip-side="top"
-            data-tip-align="start"
-            onClick={() => inputRef.current?.click()}
-          >
-            <Icon name="paperclip" />
-          </button>
-          <button
-            type="button"
-            className={`icon-btn small ${picking ? 'on' : ''}`}
-            aria-label="Skills"
-            aria-expanded={picking}
-            data-tip="Commands and skills (/)"
-            data-tip-side="top"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => (picking ? closePicker() : setPicking(true))}
-          >
-            <Icon name="book" />
-          </button>
-          <RunSettings
-            mode={{ value: mode, onChange: setMode }}
-            effort={{ value: effort, onChange: setEffort }}
+        <ComposerToolbar className="prompt-bar cursor-default gap-1 px-2 pt-0 pb-2">
+          <PlusMenu
+            onAttach={() => inputRef.current?.click()}
+            onMention={insertMention}
+            onSkills={() => setPicking(true)}
+            onOpen={() => setPicking(false)}
+            mode={mode}
+            onMode={setMode}
             level={runLevel.level}
             onLevel={runLevel.choose}
-            onOpen={() => setPicking(false)}
-            designs={
-              props.variations && {
-                value: props.variations.count,
-                max: props.variations.max,
-                onChange: props.variations.onCount,
-                disabledReason: designsBlocker(mode, props.selection.length),
-              }
-            }
+            designs={designs}
           />
+          {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} tip={`${MODE_LABEL[mode]} mode. Shift+Tab cycles modes.`} onClear={() => setMode('edit')} />}
+          {designs && designs.value > 1 && designs.disabledReason === null && <StateChip label={`${designs.value} designs`} tip={`Send makes ${designs.value} designs side by side.`} onClear={() => designs.onChange(1)} />}
           <input
             ref={inputRef}
             type="file"
@@ -360,20 +353,15 @@ export function PromptBox(props: Props) {
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
             <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
-            <KbdHint running={props.running} />
+            <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={() => setPicking(false)} />
             <StopButton running={props.running} onStop={props.onCancel} />
-            <SendButton running={props.running} sending={sending} canSend={canSend} quiet={Boolean(props.queued)} canQueue={keys.canQueue} onQueue={keys.queueDraft} />
+            <SendButton running={props.running} sending={sending} canSend={canSend} canQueue={keys.canQueue} onQueue={keys.queueDraft} />
           </ComposerToolbarSpacer>
         </ComposerToolbar>
       </Composer>
       <Disclosure
         className="prompt-foot"
-        lead={
-          <>
-            <ModelTag model={props.model} />
-            <SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />
-          </>
-        }
+        lead={<SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />}
       />
     </div>
   );

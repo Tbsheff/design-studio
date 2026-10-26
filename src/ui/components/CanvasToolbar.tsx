@@ -2,8 +2,6 @@ import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
 import { PenIcon } from './DrawLayer';
-import { shortcutLabel, type KeyId } from '../../shared/keymap';
-import { IS_MAC, tipWithKey } from '../commands/keys';
 
 export const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
   { id: 'desktop', label: 'Desktop 1440', icon: 'desktop', width: 1440, height: 900 },
@@ -11,21 +9,10 @@ export const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; w
   { id: 'mobile', label: 'Mobile 390', icon: 'mobile', width: 390, height: 844 },
 ];
 
-const ZOOMS = [0.5, 0.75, 1, 1.25];
-
 export type CanvasSource = { kind: 'live' } | { kind: 'last' } | { kind: 'version'; versionId: string; title: string };
 
 interface Props {
   viewport: Viewport;
-  zoomSetting: ZoomSetting;
-  zoom: number;
-  onZoomTo: (z: number) => void;
-  onZoomStep: (direction: 1 | -1) => void;
-  onFit: () => void;
-  selectMode: boolean;
-  onToggleSelect: () => void;
-  commentMode?: boolean;
-  onToggleComment?: () => void;
   drawMode?: boolean;
   onToggleDraw?: () => void;
   source: CanvasSource;
@@ -34,7 +21,6 @@ interface Props {
   checking: boolean;
   onCheck: () => void;
   addFrame?: ReactNode;
-  layers?: ReactNode;
   theme?: { dark: boolean; onToggle: () => void };
 }
 
@@ -177,50 +163,8 @@ function SourceControls({ source, onSource, hasHead }: Pick<Props, 'source' | 'o
   );
 }
 
-const keyOf = (id: KeyId) => shortcutLabel(id, IS_MAC);
-const ZOOM_TIP = `Fit ${keyOf('zoom-fit')}  ·  Selection ${keyOf('zoom-selection')}  ·  100% ${keyOf('zoom-actual')}`;
-
-type ZoomControlProps = Pick<Props, 'zoomSetting' | 'zoom' | 'onZoomTo' | 'onZoomStep' | 'onFit'>;
-
 export function zoomOptionLabel(setting: ZoomSetting, zoom: number): string {
   return setting === 'fit' ? `Fit ${Math.round(zoom * 100)}%` : 'Fit';
-}
-
-function ZoomControls({ zoomSetting, zoom, onZoomTo, onZoomStep, onFit }: ZoomControlProps) {
-  const percent = Math.round(zoom * 100);
-  const custom = zoomSetting !== 'fit' && !ZOOMS.includes(zoomSetting);
-  return (
-    <div className="zoom-controls">
-      <button className="icon-btn small" aria-label="Zoom out" aria-keyshortcuts="- Control+- Meta+-" data-tip={tipWithKey('Zoom out', 'zoom-out')} onClick={() => onZoomStep(-1)}>
-        <Icon name="minus" />
-      </button>
-      <select
-        className="select zoom-select"
-        aria-label="Zoom"
-        data-tip={ZOOM_TIP}
-        value={zoomSetting === 'fit' ? 'fit' : String(zoomSetting)}
-        onChange={(e) => (e.target.value === 'fit' ? onFit() : onZoomTo(Number(e.target.value)))}
-      >
-        <option value="fit">{zoomOptionLabel(zoomSetting, zoom)}</option>
-        {ZOOMS.map((z) => (
-          <option key={z} value={String(z)}>
-            {Math.round(z * 100)}%
-          </option>
-        ))}
-        {custom && <option value={String(zoomSetting)}>{percent}%</option>}
-      </select>
-      <button
-        className="icon-btn small"
-        aria-label="Zoom in"
-        aria-keyshortcuts="= Control+= Meta+="
-        data-tip={tipWithKey('Zoom in', 'zoom-in')}
-        data-tip-align="end"
-        onClick={() => onZoomStep(1)}
-      >
-        <Icon name="plus" />
-      </button>
-    </div>
-  );
 }
 
 function ThemeSwitch({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
@@ -238,46 +182,18 @@ function ThemeSwitch({ dark, onToggle }: { dark: boolean; onToggle: () => void }
   );
 }
 
-export function CanvasToolbar(props: Props) {
+export function CanvasViewRow(props: Props) {
   return (
-    <div className="toolbar">
-      {props.layers}
-      {props.layers && <div className="toolbar-sep" />}
+    <div className="toolbar canvas-viewrow" role="toolbar" aria-label="View options">
       <ViewportControls viewport={props.viewport} />
       {props.addFrame}
       {props.theme && <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />
-      <button
-        className="btn small select-toggle"
-        aria-pressed={props.selectMode}
-        aria-label="Select"
-        aria-keyshortcuts="V"
-        data-tip="Pick elements to edit. Esc exits."
-        data-tip-align="end"
-        onClick={props.onToggleSelect}
-      >
-        <Icon name="pointer" />
-        <span className="label">Select</span> <kbd>V</kbd>
-      </button>
-      {props.commentMode !== undefined && (
-        <button
-          className="btn small select-toggle comment-toggle"
-          aria-pressed={props.commentMode}
-          aria-label="Comment"
-          aria-keyshortcuts="C"
-          data-tip="Pin comments on elements. Esc exits."
-          data-tip-align="end"
-          onClick={props.onToggleComment}
-        >
-          <Icon name="comment" />
-          <span className="label">Comment</span> <kbd>C</kbd>
-        </button>
-      )}
       {props.drawMode !== undefined && (
         <button
-          className="btn small select-toggle draw-toggle"
+          className="btn small ghost select-toggle draw-toggle"
           aria-pressed={props.drawMode}
           aria-label="Draw"
           aria-keyshortcuts="P"
@@ -285,27 +201,19 @@ export function CanvasToolbar(props: Props) {
           data-tip-align="end"
           onClick={props.onToggleDraw}
         >
-          <PenIcon />
+          <PenIcon size={14} />
           <span className="label">Draw</span> <kbd>P</kbd>
         </button>
       )}
-      <ZoomControls
-        zoomSetting={props.zoomSetting}
-        zoom={props.zoom}
-        onZoomTo={props.onZoomTo}
-        onZoomStep={props.onZoomStep}
-        onFit={props.onFit}
-      />
-      <div className="toolbar-sep" />
       <button
-        className="icon-btn"
+        className="icon-btn small"
         aria-label={props.checking ? 'Checking…' : 'Check render'}
         data-tip={props.checking ? 'Checking render…' : 'Check render'}
         data-tip-align="end"
         onClick={props.onCheck}
         disabled={props.checking}
       >
-        {props.checking ? <span className="spinner" /> : <Icon name="scan" />}
+        {props.checking ? <span className="spinner" /> : <Icon name="scan" size={14} />}
       </button>
     </div>
   );

@@ -172,8 +172,9 @@
 
 .draft-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-4);
+  gap: var(--s-2) var(--s-4);
   padding: var(--s-2) var(--s-4);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
@@ -183,7 +184,7 @@
   display: flex;
   align-items: center;
   gap: var(--s-3);
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   font-size: var(--t-sm);
 }
@@ -191,6 +192,7 @@
 .draft-grade {
   flex: none;
   padding: 2px var(--s-2);
+  line-height: var(--lh-body);
   border-radius: var(--r-full);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
@@ -216,6 +218,7 @@
 }
 
 .draft-fallbacks {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -226,9 +229,11 @@
 
 .draft-actions {
   display: flex;
+  flex: 1 1 360px;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--s-2);
-  flex: none;
+  min-width: 0;
 }
 
 @media (max-width: 720px) {
@@ -243,14 +248,22 @@
 
 .draft-improve {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: var(--s-2);
+  min-width: 0;
+}
+
+.draft-improve .btn {
+  flex: none;
 }
 
 .draft-focus {
+  flex: 1 1 220px;
   width: 220px;
-  min-width: 0;
-  padding: var(--s-1) var(--s-2);
+  min-width: 120px;
+  height: 28px;
+  padding: 0 var(--s-2);
   font: inherit;
   font-size: var(--t-xs);
   color: var(--text);
@@ -260,6 +273,7 @@
 }
 
 .draft-check {
+  position: relative;
   flex: none;
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
@@ -289,17 +303,17 @@
 
 .draft-problems {
   position: absolute;
-  top: 100%;
-  left: var(--s-4);
+  top: calc(100% + var(--s-1));
+  left: 0;
   z-index: 20;
-  width: min(560px, calc(100% - 2 * var(--s-4)));
+  width: min(480px, calc(100vw - 2 * var(--s-4)));
   max-height: 320px;
   overflow: auto;
-  padding: var(--s-3);
+  padding: var(--s-3) var(--s-4);
   background: var(--surface-raised);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop);
   font-weight: 400;
   color: var(--text-2);
 }

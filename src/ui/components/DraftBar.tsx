@@ -12,8 +12,6 @@ const GRADE_LABELS: Record<CoverageGrade, string> = {
   rebuild: 'Rebuild',
 };
 
-const SHOWN_FALLBACKS = 6;
-
 interface DraftInfoState {
   coverage: DesignSystemCoverage | null;
   check: DesignSystemCheckResult | null;
@@ -42,12 +40,9 @@ function cssVarOf(token: string): string {
 
 function Fallbacks({ tokens }: { tokens: string[] }) {
   if (tokens.length === 0) return <span className="draft-fallbacks">No fallback tokens</span>;
-  const shown = tokens.slice(0, SHOWN_FALLBACKS);
-  const more = tokens.length - shown.length;
   return (
-    <span className="draft-fallbacks" title={tokens.join(', ')}>
-      From base: {shown.map(cssVarOf).join(', ')}
-      {more > 0 ? ` +${more} more` : ''}
+    <span className="draft-fallbacks" tabIndex={0} data-tip={`From base: ${tokens.map(cssVarOf).join(', ')}`} data-tip-align="start">
+      {tokens.length} from base
     </span>
   );
 }

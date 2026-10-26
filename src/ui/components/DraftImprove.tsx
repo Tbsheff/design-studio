@@ -1,4 +1,5 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import { useFitPopover } from '../popoverPlacement';
 import type { DesignSystemCheckResult, RunLevel, RunRequest } from '../../shared/contracts';
 import type { RunView } from '../runState';
 
@@ -65,6 +66,9 @@ function runNote(run: RunView | null): string | null {
 export function CheckStatus({ check, run }: { check: DesignSystemCheckResult | null; run: RunView | null }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  useFitPopover(listRef, toggleRef, open);
   if (!check) return null;
   const note = runNote(run);
   if (check.passed) {
@@ -77,11 +81,11 @@ export function CheckStatus({ check, run }: { check: DesignSystemCheckResult | n
   const count = check.problems.length;
   return (
     <span className="draft-check failed">
-      <button type="button" className="draft-check-toggle" aria-expanded={open} aria-controls={listId} onClick={() => setOpen((value) => !value)}>
+      <button ref={toggleRef} type="button" className="draft-check-toggle" aria-expanded={open} aria-controls={listId} onClick={() => setOpen((value) => !value)}>
         {count} problem{count === 1 ? '' : 's'}
       </button>
       {open && (
-        <div className="draft-problems" id={listId} role="region" aria-label="Design system check problems">
+        <div ref={listRef} className="draft-problems" id={listId} role="region" aria-label="Design system check problems">
           {note && <p className="draft-problems-note">{note}</p>}
           <ul>
             {check.problems.map((problem, index) => (

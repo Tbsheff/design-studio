@@ -48,7 +48,7 @@
 }
 
 .topbar-name {
-  font-weight: 600;
+  font-weight: var(--w-medium);
   max-width: 440px;
   padding: 0 var(--s-1);
 }

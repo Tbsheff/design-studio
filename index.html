@@ -10,9 +10,9 @@
         var key = 'design-studio.theme';
         var media = matchMedia('(prefers-color-scheme: dark)');
         var host = window.studioThemeHost;
-        var pref = 'system';
+        var pref = 'dark';
         function valid(value) {
-          return value === 'light' || value === 'dark' ? value : 'system';
+          return value === 'light' || value === 'dark' || value === 'system' ? value : 'dark';
         }
         try {
           pref = valid(host ? host.initial : localStorage.getItem(key));

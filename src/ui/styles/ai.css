@@ -32,7 +32,10 @@
   --radius: var(--r-sm);
   --radius-outer: var(--r-lg);
   --font-sans: var(--font);
+  --font-serif: var(--serif);
   --font-mono: var(--mono);
+  --font-weight-semibold: var(--w-medium);
+  --font-weight-bold: var(--w-medium);
 }
 
 :where([data-ai-scope]) :where(button) {
@@ -64,6 +67,21 @@
   --tw-prose-td-borders: var(--line);
   font-size: var(--t-md);
   line-height: 1.55;
+}
+
+[data-slot='markdown'] :is(strong, b, h1, h2, h3, h4, th) {
+  font-weight: var(--w-medium);
+}
+
+.assistant-text [data-slot='markdown'] {
+  font-family: var(--serif);
+  font-size: var(--t-lg);
+  line-height: var(--lh-lg);
+  font-optical-sizing: auto;
+}
+
+.assistant-text [data-slot='markdown'] :is(code, pre, kbd) {
+  font-family: var(--mono);
 }
 
 [data-slot='markdown'] :not(pre) > code {

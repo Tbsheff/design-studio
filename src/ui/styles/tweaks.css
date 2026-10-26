@@ -25,7 +25,7 @@
 
 .twk-title {
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .twk-scroll {
@@ -227,7 +227,7 @@
 .twk-empty-title {
   margin: var(--s-1) 0 0;
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .twk-empty-text {
@@ -265,7 +265,7 @@
 
 .twk-problems-head {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .twk-problems ul {

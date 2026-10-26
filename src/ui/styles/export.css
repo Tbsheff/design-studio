@@ -201,7 +201,7 @@
 
 .export-connect h3 {
   font-size: var(--t-sm);
-  font-weight: 600;
+  font-weight: var(--w-medium);
   line-height: 20px;
   text-wrap: balance;
 }

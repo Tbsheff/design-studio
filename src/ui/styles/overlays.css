@@ -115,7 +115,7 @@
 
 .drawer-head strong {
   font-size: var(--t-md);
-  font-weight: 600;
+  font-weight: var(--w-medium);
 }
 
 .drawer-body {
@@ -361,7 +361,7 @@
 }
 
 .dmd-outline-item.level-1 {
-  font-weight: 600;
+  font-weight: var(--w-medium);
   color: var(--text);
 }
 

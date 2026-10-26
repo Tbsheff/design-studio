@@ -80,7 +80,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
       data-tip={`Send (${MOD_LABEL}Enter)`}
       data-tip-side="top"
       data-tip-align="end"
-      render={<button className={`btn small has-icon send-btn ${props.quiet ? '' : 'primary'}`} />}
+      render={<button className={`btn small has-icon send-btn ${props.quiet ? '' : 'send'}`} />}
     >
       {props.sending ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
       {props.sending ? 'Sending…' : 'Send'}

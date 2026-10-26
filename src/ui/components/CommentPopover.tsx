@@ -138,7 +138,8 @@ export function OpenCommentPopover(props: OpenProps) {
   const changed = text.trim() !== '' && text.trim() !== comment.text;
 
   useEffect(() => {
-    focusables(root.current)[0]?.focus({ preventScroll: true });
+    const target = root.current?.querySelector<HTMLTextAreaElement>('textarea:not(:disabled)') ?? focusables(root.current)[0];
+    target?.focus({ preventScroll: true });
   }, [comment.id]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

@@ -185,9 +185,14 @@ export function useComments(projectId: string, directionId: string | null, compo
   );
 
   useEffect(() => {
+    for (const id of [...afterRun.current]) {
+      if (comments.find((comment) => comment.id === id)?.status !== 'queued') afterRun.current.delete(id);
+    }
+  }, [comments]);
+
+  useEffect(() => {
     if (running || afterRun.current.size === 0) return;
     const ready = listRef.current.filter((comment) => afterRun.current.has(comment.id) && comment.status === 'queued');
-    afterRun.current.clear();
     if (ready.length > 0) void send(ready.map((comment) => comment.id));
   }, [running, send]);
 

@@ -73,7 +73,7 @@ export function useMentions({ projectId, directionId, tokens, draft, setDraft, c
     setDraft(draft.replace(/@[^\s@]*$/, '').replace(/\s+$/, (space) => (space ? ' ' : '')));
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): boolean => {
+  const onKeyDown = (event: KeyboardEvent<HTMLElement>): boolean => {
     if (!picker.open) return false;
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') picker.move(event.key === 'ArrowDown' ? 1 : -1);
     else if ((event.key === 'Enter' || event.key === 'Tab') && picker.current && !event.metaKey && !event.ctrlKey) pick(picker.current);

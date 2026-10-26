@@ -52,6 +52,7 @@ interface ComposerProps {
   busy: boolean;
   sources: ComposerSources;
   images: boolean;
+  steer: boolean;
   onSubmit: (input: ComposerSubmit) => Promise<boolean>;
   onCancel: () => void;
 }
@@ -193,11 +194,11 @@ function Pill({
   );
 }
 
-function RunHint({ images }: { images: boolean }) {
+function RunHint({ queueOnly }: { queueOnly: boolean }) {
   return (
     <p className="comment-card-hint" role="note" data-testid="comment-run-hint">
       <span className="comment-card-live" aria-hidden="true" />
-      {images ? (
+      {queueOnly ? (
         <>
           Claude is working. <kbd>↵</kbd> queues this for after the run.
         </>
@@ -207,6 +208,41 @@ function RunHint({ images }: { images: boolean }) {
         </>
       )}
     </p>
+  );
+}
+
+interface FootProps {
+  toClaude: boolean;
+  onToClaude: (on: boolean) => void;
+  blocked: boolean;
+  submitting: boolean;
+  onSubmit: () => void;
+  hint: { queueOnly: boolean } | null;
+}
+
+function ComposerFoot({ toClaude, onToClaude, blocked, submitting, onSubmit, hint }: FootProps) {
+  return (
+    <>
+      <div className="comment-card-foot">
+        <label className="comment-check">
+          <input type="checkbox" checked={toClaude} onChange={(event) => onToClaude(event.target.checked)} />
+          <span>Send to Claude</span>
+        </label>
+        <button
+          type="button"
+          className={`comment-submit${toClaude ? ' to-claude' : ''}`}
+          aria-label={toClaude ? 'Send' : 'Save comment'}
+          aria-keyshortcuts="Enter"
+          data-tip={toClaude ? 'Send  ↵' : 'Save comment  ↵'}
+          data-tip-side="top"
+          disabled={blocked}
+          onClick={onSubmit}
+        >
+          {submitting ? <span className="spinner" /> : <Icon name={toClaude ? 'arrowUp' : 'check'} size={14} />}
+        </button>
+      </div>
+      {hint && <RunHint queueOnly={hint.queueOnly} />}
+    </>
   );
 }
 
@@ -319,7 +355,7 @@ export function CommentComposer(props: ComposerProps) {
   };
 
   const onAreaKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.nativeEvent.isComposing) return;
+    if (event.nativeEvent.isComposing || mentions.onKeyDown(event)) return;
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       void submit(event.metaKey || event.ctrlKey);
@@ -445,25 +481,14 @@ export function CommentComposer(props: ComposerProps) {
             onHover={mentions.picker.setActive}
           />
         )}
-        <div className="comment-card-foot">
-          <label className="comment-check">
-            <input type="checkbox" checked={toClaude} onChange={(event) => setToClaude(event.target.checked)} />
-            <span>Send to Claude</span>
-          </label>
-          <button
-            type="button"
-            className={`comment-submit${toClaude ? ' to-claude' : ''}`}
-            aria-label={toClaude ? 'Send' : 'Save comment'}
-            aria-keyshortcuts="Enter"
-            data-tip={toClaude ? 'Send  ↵' : 'Save comment  ↵'}
-            data-tip-side="top"
-            disabled={blocked}
-            onClick={() => void submit(false)}
-          >
-            {submitting ? <span className="spinner" /> : <Icon name={toClaude ? 'arrowUp' : 'check'} size={14} />}
-          </button>
-        </div>
-        {props.running && toClaude && <RunHint images={readyImages.length > 0} />}
+        <ComposerFoot
+          toClaude={toClaude}
+          onToClaude={setToClaude}
+          blocked={blocked}
+          submitting={submitting}
+          onSubmit={() => void submit(false)}
+          hint={props.running && toClaude ? { queueOnly: !props.steer || readyImages.length > 0 } : null}
+        />
       </div>
     </>
   );

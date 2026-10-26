@@ -143,6 +143,7 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
           busy={control.sending}
           sources={tools.sources}
           images
+          steer={false}
           onSubmit={submit}
           onCancel={() => draw.setOn(false)}
         />

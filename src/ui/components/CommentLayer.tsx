@@ -344,7 +344,7 @@ export function CommentLayer(props: Props) {
     return ok;
   };
 
-  const shared = { zoom, frame, initial, running: control.running, busy: control.sending, sources: tools.sources, images: true };
+  const shared = { zoom, frame, initial, running: control.running, busy: control.sending, sources: tools.sources, images: true, steer: Boolean(tools.onSteer) };
   const many = props.selection.length > 1;
 
   return (
@@ -364,7 +364,10 @@ export function CommentLayer(props: Props) {
           autoFocus
           trap
           onSubmit={submitFor([pick], finishPick)}
-          onCancel={finishPick}
+          onCancel={() => {
+            setPick(null);
+            focusLater('.stage');
+          }}
         />
       )}
       {feedbackOpen && lastSelected && !pick && (

@@ -678,6 +678,41 @@ src/ui/commands/registry.ts (commands from useCommands sources, read only when a
 - The / list in the composer is the skill picker with app commands added: a command shows only when every query word starts a word of its slash name, so plain skill searches are unchanged. Tab completes the top row; Enter runs a command or adds a skill. Shift+Tab in the composer cycles Edit, Plan, Critique.
 - Element resize drags add `body.element-resizing` (frames take no pointer events) and hold the live HTML frame swap until the drag ends (`usePreviewFrames.holdSwap`); a swap during a drag dropped the preview style.
 
+## MCP server (Connect to Claude Code)
+
+```
+Claude Code ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1:<port>/mcp   (mcp/server.ts)
+                                                     ├─ read tools      (mcp/tools.ts, ExportDeps)
+                                                     └─ control tools   (mcp/control-tools.ts, only when Allow control is on)
+                                                          │ app.request('/api/...', x-studio-token)   same routes, locks and checks as the UI
+                                                          │ canvasPlace / canvasPoint / canvasList    same code as the agent canvas tools
+                                                          └─ approvals.ask() ──► GET /api/mcp/approvals (long poll, studio token)
+                                                                                   └─ App: McpApprovalDialog  Allow / Deny ──► POST /api/mcp/approvals/:id
+```
+
+- Settings: `<dataDir>/mcp.json` `{enabled, control, port, token}` (mode 0600). Both flags are off by default. The port is 4590; when it is taken the server picks a free port and saves it. The token is separate from the studio token. "New token" makes a new one. The server listens on 127.0.0.1 only, checks the `Host` header, refuses any `Origin` header, and needs `Authorization: Bearer <token>`. Body cap 1 MB. `requestTimeout` is 960 s, so `wait_for_run` can wait 900 s.
+- UI: Export dialog, Handoff tab, "Connect to Claude Code". The first switch starts or stops the server and shows the `claude mcp add` command. The second switch, "Allow control", shows only while the server is on. `POST /api/mcp {enabled?, control?, rotate?}`. Turning either switch off denies the open approval requests.
+- Read tools (always listed): `list_projects`, `list_versions`, `get_frame_html`, `get_tokens`, `get_design_md`, `get_screenshot`, `list_files`, `read_file`.
+- Control tools (listed only when `enabled && control`; a call while control is off gets an `isError` result that says how to turn it on). `tools/list` uses `listChanged: false`, so the client must reconnect after a change.
+
+| Tool | Calls | Approval |
+|---|---|---|
+| `create_project {name?, prompt?, kind, designSystemId?, location?}` | `POST /api/projects` (`startRun` only with a prompt) | when `location` is outside the default projects folder |
+| `start_run {projectId, directionId?, prompt, level?, mode edit/plan/critique, selector?}` | `POST /d/:did/runs`; plan = `{mode:'edit', plan:true}`; the selector becomes a `SelectionContext` from a headless render of the entry page | no |
+| `wait_for_run {runId, timeoutSeconds ≤ 900}` | `handle.done`, then `GET /api/runs/:id`; changed files from the version | no |
+| `get_run_status {runId}` | `GET /api/runs/:id`; current step = last `run.tool.started` with no `run.tool.finished`; cost only after the run | no |
+| `stop_run {runId}` | `handle.cancel()` | yes |
+| `restore_version {projectId, directionId?, versionId}` | `POST /d/:did/restore` | yes |
+| `apply_design_system {projectId, directionId?, packId}` | `POST /d/:did/design-system/apply` | yes |
+| `add_comment {projectId, directionId?, selector?, text, sendToClaude}` | `POST /d/:did/comments` (`queued`, or `draft` then `comments/send`, as the "Send to Claude" box). No selector = frame comment on `body` | no |
+| `canvas_list`, `canvas_place`, `canvas_point` | `canvas/tools.ts` with `{mode:'edit', plan:false}`, write source `agent` | no |
+| `export {projectId, directionId?, versionId?, format png/html/pdf/handoff/zip, scale, frames, folder?}` | `POST /export`, or `POST /handoff` then `GET /handoff/:folder/zip`. Files are written with `wx` and a `-2`, `-3` suffix, never over a file | when `folder` is outside `~/Downloads` and the projects folder |
+
+- Run rule: `start_run`, `restore_version`, `apply_design_system` and `add_comment` with `sendToClaude` are refused while a run is going in the direction, before any write. The routes check again under the direction lock.
+- Approvals (`mcp/approvals.ts`): the tool waits up to 120 s, then answers "refused". The approval is asked before the route call, so no direction lock is held while the user reads it; the run check runs again after Allow. The app window counts as open while a long poll is open or ended less than 6 s ago. With no window the tool is refused at once. At most 10 open requests. The UI (`src/ui/mcpApprovals.ts`, in `App`) long-polls only while control is on (otherwise it waits 30 s or the `studio:mcp-control` event). The dialog is lazy-loaded (`McpApprovalDialog`, `.modal` primitives). Escape and a backdrop click are Deny. Deny has the focus. Only the studio token can answer; the MCP token cannot.
+- Input rules: zod schemas (`z.toJSONSchema` for `inputSchema`), ids `^[A-Za-z0-9_-]{1,64}$`, prompt 20,000 characters, comment 2,000, selector 2,000, name 120. Folders (`mcp/folders.ts`): absolute (or `~/`), realpath, must be an existing folder, not inside the data dir, not `/`, `/Users`, `/Volumes`, `/private` or the home folder itself, and not inside `/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/etc`, `/var`, `/private/etc`, `/private/var`, `/dev`, `/opt`, `/Applications`, `/Network` or `~/Library`.
+- Annotations: read tools and `wait_for_run`, `get_run_status`, `canvas_list` have `readOnlyHint: true`. `stop_run`, `restore_version` and `apply_design_system` have `destructiveHint: true`. `idempotentHint: true` on `wait_for_run`, `get_run_status`, `stop_run`, `canvas_list` and `canvas_point`. `openWorldHint: false` on all.
+
 ## End-to-end tests
 
 `npm run e2e` (Playwright, installed Chrome). Each Playwright config has its own `outputDir` under `test-results/` and launches Chrome with site isolation off for tests only: Playwright maps clicks into an out-of-process iframe without the parent's CSS scale, and each project origin is its own site. Global setup builds the UI and starts the real server with `STUDIO_AGENT=mock`, a temp `STUDIO_DATA_DIR`, and ports 4270/4271/5300. The server gets `STUDIO_CLAUDE_HOME` set to a fixture home (`e2e/support/skills-fixture.ts`), so tests never read the real `~/.claude`. Specs `e2e/a-*.spec.ts` to `e2e/f-*.spec.ts` cover the release workflows; `e2e/latency.spec.ts` writes `e2e/results/latency.json` (gates: open 1000, HTML 150, React 400, select 50, user message 50, first token 1500, direct edit 200 ms, p95); `e2e/perf-r5.spec.ts` writes `e2e/results/perf-r5.json` (telemetry kinds, Home start, open from Home, versions at 100, Home grid scroll, Home JS size).

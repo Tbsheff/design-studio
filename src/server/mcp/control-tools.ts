@@ -13,7 +13,7 @@ const SELECTOR_MAX = 2000;
 const WAIT_DEFAULT_S = 300;
 const WAIT_MAX_S = 900;
 
-const id = (what: string) => z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, `${what} must be an id from list_projects`).describe(what);
+const id = (what: string) => z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, 'must be an id of 1 to 64 letters, digits, - or _').describe(what);
 const projectId = id('Project id from list_projects.');
 const directionId = id('Direction id. Leave out for the main direction.').optional();
 const selector = z.string().trim().min(1).max(SELECTOR_MAX);

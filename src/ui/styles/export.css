@@ -291,6 +291,7 @@
 }
 
 .export-control h4 {
+  margin: 0;
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
   line-height: 18px;

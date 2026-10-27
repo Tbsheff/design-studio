@@ -34,6 +34,7 @@ class ScreenBoundary extends Component<{ children: ReactNode }, { error: string 
 
 const LAYER_EVENT = 'studio:command-layer';
 const DesktopApp = 'studioDesktop' in window ? lazy(() => import('./DesktopApp')) : null;
+const McpToasts = lazy(() => import('./components/McpToasts'));
 
 function useCommandLayer() {
   const [layer, setLayer] = useState<Layer | null>(null);
@@ -101,6 +102,9 @@ export function App() {
   const notice = (
     <>
       {layer}
+      <Suspense fallback={null}>
+        <McpToasts openProjectId={ui.activeProjectId} />
+      </Suspense>
       {DesktopApp && (
         <Suspense fallback={null}>
           <DesktopApp activeProjectId={ui.activeProjectId} />

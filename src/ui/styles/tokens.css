@@ -92,6 +92,8 @@
   --pin-bg: oklch(0.3 0.006 var(--float-hue));
   --pin-fg: oklch(0.97 0.004 var(--float-hue));
   --pin-ring: var(--float-accent);
+  --agent-bg: oklch(0.8 0.025 70);
+  --agent-fg: oklch(0.24 0.01 70);
   --edge-inverse: oklch(1 0 0 / 0.16);
   --line-input: rgb(28 27 25 / 0.2);
   --accent-press: oklch(0.92 0.04 250);

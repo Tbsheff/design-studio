@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide } from '../commentPlacement';
-import { AvatarFace } from './CommentAvatar';
+import { AvatarFace, CommentAuthor } from './CommentAvatar';
 import { useProfileInitial } from '../useProfileInitial';
 import { Icon } from './Icon';
 
@@ -45,8 +45,11 @@ export function CommentReplies({ comment, onDelete }: { comment: DesignComment; 
     <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
       {replies.map((reply, index) => (
         <li key={reply.id} className="comment-reply" data-testid="comment-reply">
-          <AvatarFace initial={initial} tone="reply" />
-          <span className="comment-reply-text">{reply.text}</span>
+          <AvatarFace initial={initial} tone="reply" author={reply.author} />
+          <span className="comment-reply-text">
+            {reply.author && <span className="comment-reply-author">{reply.author}</span>}
+            {reply.text}
+          </span>
           <button type="button" className="thread-icon" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
             <Icon name="close" size={12} />
           </button>
@@ -182,7 +185,7 @@ export function OpenCommentPopover(props: OpenProps) {
         }}
         aria-hidden="true"
       >
-        <AvatarFace initial={props.initial} flip={placement.pin.flip} tone={comment.status} count={comment.replies?.length ?? 0} />
+        <AvatarFace initial={props.initial} flip={placement.pin.flip} tone={comment.status} count={comment.replies?.length ?? 0} author={comment.author} />
       </div>
       <div
         ref={root}
@@ -202,6 +205,7 @@ export function OpenCommentPopover(props: OpenProps) {
       >
         <div className="thread-head">
           <span className="thread-num">#{comment.n}</span>
+          <CommentAuthor author={comment.author} />
           <span className={`thread-status ${comment.status}`}>{STATUS_LABEL[comment.status]}</span>
           <span className="spacer" />
           {comment.status !== 'resolved' && comment.status !== 'sent' && (

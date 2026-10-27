@@ -88,12 +88,12 @@ function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment:
         className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}`}
         data-testid="comment-pin"
         data-comment-id={comment.id}
-        aria-label={`Comment ${comment.n}${repliesLabel}: ${comment.text}`}
+        aria-label={`Comment ${comment.n}${comment.author ? ` by ${comment.author}` : ''}${repliesLabel}: ${comment.text}`}
         aria-expanded={false}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={() => control.setOpenId(comment.id)}
       >
-        <AvatarFace initial={initial} flip={place.flip} tone={comment.status} count={replies} />
+        <AvatarFace initial={initial} flip={place.flip} tone={comment.status} count={replies} author={comment.author} />
         {comment.drawing && (
           <span className="pin-pen" aria-hidden="true">
             <PenIcon size={10} />
@@ -101,7 +101,7 @@ function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment:
         )}
       </button>
       <span className="comment-pin-tip" role="tooltip">
-        <span className="comment-pin-num">#{comment.n}</span> {comment.text}
+        <span className="comment-pin-num">#{comment.n}</span> {comment.author && <span className="comment-pin-author">{comment.author}:</span>} {comment.text}
       </span>
     </div>
   );

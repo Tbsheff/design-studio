@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import type { CommentsControl } from '../useComments';
+import { CommentAuthor } from './CommentAvatar';
 import { CommentReplies } from './CommentPopover';
 import { Icon } from './Icon';
 import '../styles/comments.css';
@@ -51,6 +52,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
     <li className={`comment-row ${control.openId === comment.id ? 'open' : ''}`} data-testid="comment-row" data-status="queued">
       <span className="comment-num">{comment.n}</span>
       <div className="comment-row-body">
+        <CommentAuthor author={comment.author} />
         {editing ? (
           <input
             aria-label={`Edit comment ${comment.n}`}
@@ -140,10 +142,16 @@ function DoneRow({
     <li className="comment-row" data-testid="comment-row" data-status={comment.status}>
       <span className={`comment-num ${comment.status}`}>{comment.n}</span>
       <div className="comment-row-body">
+        <CommentAuthor author={comment.author} />
         <span className="comment-row-text">{comment.text}</span>
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">
+            {comment.status === 'draft' && (
+              <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`}>
+                {targetLabel(comment)}
+              </button>
+            )}
             {runId && (
               <button type="button" onClick={() => onOpenRun(runId)}>
                 {comment.status === 'sent' ? 'Running…' : 'Open run'}
@@ -159,6 +167,12 @@ function DoneRow({
             )}
           </span>
           <div className="comment-row-actions">
+            {comment.status === 'draft' && (
+              <button type="button" className="btn small ghost" aria-label={`Resolve comment ${comment.n}`} onClick={() => void control.update(comment.id, { status: 'resolved' })}>
+                <Icon name="check" size={14} />
+                Resolve
+              </button>
+            )}
             {comment.status === 'resolved' && (
               <button
                 type="button"
@@ -270,7 +284,8 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
   const resolved = by('resolved');
   const orphaned = by('orphaned');
   const queued = control.queued;
-  const empty = control.comments.filter((comment) => comment.status !== 'draft').length === 0;
+  const outside = control.comments.filter((comment) => comment.status === 'draft' && comment.author);
+  const empty = control.comments.filter((comment) => comment.status !== 'draft' || comment.author).length === 0;
   const showResolved = control.showResolved;
   return (
     <div className="comments-pane">
@@ -299,6 +314,11 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
           )}
         </div>
       )}
+      <Section title="From outside agents" count={outside.length}>
+        {outside.map((comment) => (
+          <DoneRow key={comment.id} comment={comment} control={control} onOpenRun={onOpenRun} onOpenVersion={onOpenVersion} />
+        ))}
+      </Section>
       <Section title="Queued" count={queued.length}>
         {queued.map((comment, index) => (
           <QueuedRow key={comment.id} comment={comment} index={index} total={queued.length} control={control} />

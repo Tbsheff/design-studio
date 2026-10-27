@@ -39,6 +39,7 @@ import { emptyRun, shownPending, type RunView } from '../runState';
 import { randomToken } from '../session';
 import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
+import { useMcpFeed } from '../useMcpFeed';
 import { setTelemetryScope } from '../perfTelemetry';
 import { renameVersion } from '../versionsApi';
 import { useExportTarget } from '../useExportTarget';
@@ -247,6 +248,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     return () => window.clearTimeout(id);
   }, []);
   const rewind = useRewind({ projectId, direction, versions, status, busy, running: activeRun, act, guard, seedRun: data.seedRun, setDirectionId: data.setDirectionId, refreshVersions: data.refreshVersions });
+  const mcpFeed = useMcpFeed(projectId, directionId);
+  const mcp = useMemo(() => ({ ...mcpFeed, locked: rewind.locked, onUndo: rewind.onRestore }), [mcpFeed, rewind.locked, rewind.onRestore]);
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
 
@@ -385,7 +388,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               </div>
             </>
           }
-          chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan }}
+          chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,

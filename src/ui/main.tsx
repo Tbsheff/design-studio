@@ -13,6 +13,7 @@ import './styles/layout.css';
 import './styles/versions.css';
 import './styles/canvas.css';
 import './styles/chat.css';
+import './styles/mcp.css';
 import './styles/composer.css';
 import './styles/ai.css';
 import './styles/inspector.css';

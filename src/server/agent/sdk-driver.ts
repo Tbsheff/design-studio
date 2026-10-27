@@ -49,6 +49,7 @@ interface AttemptResult {
 
 const AGENT_ENV_KEYS = ['HOME', 'USER', 'LOGNAME', 'PATH', 'SHELL', 'TMPDIR', 'LANG', 'ANTHROPIC_API_KEY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'NODE_EXTRA_CA_CERTS'];
 export const LOGIN_SHELL_PATH_ENV = 'STUDIO_LOGIN_SHELL_PATH';
+const TODO_TOOL_ENV = 'CLAUDE_CODE_ENABLE_TASKS';
 
 function joinPath(base: string | undefined, extra: string | undefined): string | undefined {
   if (!extra) return base;
@@ -493,7 +494,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     ...(ctx.request.effort ? { effort: ctx.request.effort } : {}),
     includePartialMessages: true,
     abortController: controller,
-    env,
+    env: { ...env, [TODO_TOOL_ENV]: '0' },
     systemPrompt: buildSystemPrompt(ctx.project, ctx.request.mode, ctx.designSystem ?? null, skills.invocableCount, setup.tasteRules),
     ...(resume ? { resume } : {}),
     ...(options.onStderr ? { stderr: options.onStderr } : {}),

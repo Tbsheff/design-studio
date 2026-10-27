@@ -16,7 +16,7 @@ import { reportAppStart } from '../perfTelemetry';
 import { prefetchScreensWhenIdle } from '../screens';
 import { modelLabel, parseDraft, toDraft } from '../settingsDraft';
 import { BrandMark } from './BrandMark';
-import { ComposerChips, imageFiles, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
+import { ComposerChips, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
 import { HomeToast, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
 import type { HomeTemplate } from './HomeTemplates';
 import type { ModelSettings, PlusMenuActions } from './HomePopovers';
@@ -297,7 +297,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
         multiple
         hidden
         onChange={(event) => {
-          onFiles(imageFiles(event.target.files));
+          onFiles(Array.from(event.target.files ?? []));
           event.target.value = '';
         }}
       />

@@ -9,6 +9,7 @@ import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
+import { MAX_IMAGES, imageProblem } from './HomeComposerParts';
 import { LevelPill, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
 import { Icon, type IconName } from './Icon';
@@ -176,11 +177,15 @@ export function PromptBox(props: Props) {
   };
 
   const addFiles = (list: Iterable<File>) => {
+    let room = MAX_IMAGES - files.length;
+    const problems = new Set<string>();
     for (const file of list) {
-      if (!file.type.startsWith('image/')) {
-        setError(`${file.name} is not an image. Attach a PNG, JPEG, GIF or WebP file.`);
+      const problem = imageProblem(file) ?? (room <= 0 ? `You can attach up to ${MAX_IMAGES} images.` : null);
+      if (problem) {
+        problems.add(problem);
         continue;
       }
+      room -= 1;
       const localId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const previewUrl = URL.createObjectURL(file);
       setFiles((prev) => [...prev, { localId, name: file.name, previewUrl, attachment: null, error: null }]);
@@ -191,6 +196,7 @@ export function PromptBox(props: Props) {
           setFiles((prev) => prev.map((f) => (f.localId === localId ? { ...f, error: errorText(err) } : f))),
         );
     }
+    if (problems.size > 0) setError([...problems].join(' '));
   };
 
   const removeFile = (localId: string) =>

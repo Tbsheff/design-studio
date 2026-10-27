@@ -4,6 +4,13 @@ import { Icon } from './Icon';
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 export const MAX_IMAGES = 4;
 export const MAX_REFERENCES = 3;
+export const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
+
+export function imageProblem(file: File): string | null {
+  if (!IMAGE_TYPES.includes(file.type)) return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
+  if (file.size > MAX_IMAGE_BYTES) return `${file.name} is larger than 3.75 MB. Attach a smaller image.`;
+  return null;
+}
 
 export interface ImageDraft {
   id: string;
@@ -67,7 +74,11 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
   imagesRef.current = images;
   useEffect(() => () => imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url)), []);
 
-  const addImages = (files: File[]) => {
+  const addImages = (picked: File[]) => {
+    if (picked.length === 0) return;
+    const problems = picked.map(imageProblem).filter((problem): problem is string => problem !== null);
+    if (problems.length > 0) setFormError(problems.join(' '));
+    const files = picked.filter((file) => imageProblem(file) === null);
     if (files.length === 0) return;
     setImages((current) => {
       const room = Math.max(0, MAX_IMAGES - current.length);
@@ -118,7 +129,7 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
   const onDrop = (event: DragEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDragging(false);
-    const files = imageFiles(event.dataTransfer.files);
+    const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
       addImages(files);
       return;

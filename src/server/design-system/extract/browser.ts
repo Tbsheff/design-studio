@@ -54,6 +54,7 @@ export interface BrowserRequests {
   count: number;
   bytes: number;
   refused: string[];
+  reasons: Record<string, number>;
   skipped: number;
 }
 
@@ -180,12 +181,22 @@ function userAgent(version: string): string {
   return `Mozilla/5.0 (${platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`;
 }
 
+function hostOf(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.host || parsed.protocol;
+  } catch {
+    return 'a bad URL';
+  }
+}
+
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message.split('\n')[0]!.slice(0, 300) : String(error).slice(0, 300);
 }
 
 class RequestGuard {
-  readonly requests: BrowserRequests = { count: 0, bytes: 0, refused: [], skipped: 0 };
+  readonly requests: BrowserRequests = { count: 0, bytes: 0, refused: [], reasons: {}, skipped: 0 };
+  readonly budget = { used: 0, limit: MAX_TOTAL_BYTES };
   readonly sheets: LiveSheet[] = [];
   mainStatus = 0;
   closed = false;
@@ -199,6 +210,8 @@ class RequestGuard {
 
   refuse(url: string, why: string): void {
     if (this.requests.refused.length < 50) this.requests.refused.push(`${url.slice(0, 160)}: ${why}`);
+    const key = `${hostOf(url)}: ${why.replace(/https?:\/\/\S+/g, '').trim()}`;
+    this.requests.reasons[key] = (this.requests.reasons[key] ?? 0) + 1;
   }
 
   private async abort(route: Route, code: 'blockedbyclient' | 'failed' = 'blockedbyclient'): Promise<void> {
@@ -232,7 +245,7 @@ class RequestGuard {
       this.refuse(url, errorText(error));
       return this.abort(route);
     }
-    const cap = Math.min(TYPE_CAPS[type] ?? DEFAULT_CAP, MAX_TOTAL_BYTES - this.requests.bytes);
+    const cap = Math.min(TYPE_CAPS[type] ?? DEFAULT_CAP, MAX_TOTAL_BYTES - this.budget.used);
     if (cap <= 0) {
       this.refuse(url, `the ${MAX_TOTAL_BYTES / 1024 / 1024} MB limit for this site ran out`);
       return this.abort(route);
@@ -242,15 +255,16 @@ class RequestGuard {
   }
 
   private policy(cap: number) {
-    return { allowLoopback: this.allowLoopback, timeoutMs: REQUEST_MS, maxBytes: cap, maxRedirects: 0, deadline: this.deadline };
+    return { allowLoopback: this.allowLoopback, timeoutMs: REQUEST_MS, maxBytes: cap, maxRedirects: 0, deadline: this.deadline, budget: this.budget };
   }
 
   async follow(url: string, first: PassThroughRequest, cap: number): Promise<PassThroughResponse> {
     let current = url;
     let init = first;
     for (let hop = 0; ; hop += 1) {
-      const response = await safeRequest(current, init, this.policy(cap));
-      this.requests.bytes += response.body.length;
+      const response = await safeRequest(current, init, this.policy(cap)).finally(() => {
+        this.requests.bytes = this.budget.used;
+      });
       const location = response.headers.location;
       if (!REDIRECTS.has(response.status) || !location) return response;
       if (hop >= MAX_REDIRECTS) throw new FetchFailedError(`${url} redirected more than ${MAX_REDIRECTS} times`);
@@ -274,6 +288,23 @@ class RequestGuard {
     await route.fulfill({ status: response.status, headers, body: response.body }).catch(() => undefined);
   }
 
+  private async passThrough(route: Route, url: string, cap: number): Promise<PassThroughResponse> {
+    const request = route.request();
+    const raw = await request.allHeaders();
+    const headers = Object.fromEntries(Object.entries(raw).filter(([name]) => !name.startsWith(':') && !DROP_REQUEST_HEADERS.has(name.toLowerCase())));
+    const body = request.method() === 'POST' ? (request.postDataBuffer() ?? undefined) : undefined;
+    return this.follow(url, { method: request.method(), headers, ...(body ? { body } : {}) }, cap);
+  }
+
+  private keepSheet(url: string, type: string, response: PassThroughResponse): void {
+    if (type === 'stylesheet' && response.status >= 200 && response.status < 300 && this.sheets.length < MAX_SHEETS) this.sheets.push({ url, css: response.body.toString('utf8') });
+  }
+
+  private refuseFailure(url: string, error: unknown): void {
+    if (error instanceof FetchBlockedError) this.refuse(url, error.message);
+    else if (this.budget.used > this.budget.limit) this.refuse(url, `the ${MAX_TOTAL_BYTES / 1024 / 1024} MB limit for this site ran out`);
+  }
+
   private async forward(route: Route, url: string, type: string, cap: number): Promise<void> {
     const request = route.request();
     try {
@@ -284,19 +315,16 @@ class RequestGuard {
         this.requests.count -= 1;
         return this.fulfill(route, prefetched);
       }
-      const raw = await request.allHeaders();
-      const headers = Object.fromEntries(Object.entries(raw).filter(([name]) => !name.startsWith(':') && !DROP_REQUEST_HEADERS.has(name.toLowerCase())));
-      const body = request.method() === 'POST' ? (request.postDataBuffer() ?? undefined) : undefined;
-      const response = await this.follow(url, { method: request.method(), headers, ...(body ? { body } : {}) }, cap);
+      const response = await this.passThrough(route, url, cap);
       if (isMain) this.mainStatus = response.status;
       if (request.isNavigationRequest() && /attachment/i.test(response.headers['content-disposition'] ?? '')) {
         this.refuse(url, 'downloads are not allowed');
         return this.abort(route);
       }
-      if (type === 'stylesheet' && response.status >= 200 && response.status < 300 && this.sheets.length < MAX_SHEETS) this.sheets.push({ url, css: response.body.toString('utf8') });
+      this.keepSheet(url, type, response);
       await this.fulfill(route, response);
     } catch (error) {
-      if (error instanceof FetchBlockedError) this.refuse(url, error.message);
+      this.refuseFailure(url, error);
       await this.abort(route, error instanceof FetchBlockedError ? 'blockedbyclient' : 'failed');
     }
   }

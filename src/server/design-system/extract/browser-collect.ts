@@ -184,7 +184,7 @@ export const COLLECT_SCRIPT = String.raw`(async () => {
     for (const m of css.matchAll(/(--[A-Za-z0-9_-]{1,80})\s*:/g)) if (varNames.size < 3000) varNames.add(m[1]);
     sheets.push({ url: sheet.href || 'inline', css });
   }
-  for (let i = 0; i < root.style.length; i++) if (root.style[i].startsWith('--')) varNames.add(root.style[i]);
+  for (const owner of [root, body]) for (let i = 0; i < owner.style.length; i++) if (owner.style[i].startsWith('--')) varNames.add(owner.style[i]);
   const rootStyle = getComputedStyle(root);
   const bodyStyle = getComputedStyle(body);
   const vars = {};

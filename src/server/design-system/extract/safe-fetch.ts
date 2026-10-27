@@ -13,7 +13,13 @@ export interface FetchPolicy {
   maxBytes: number;
   maxRedirects: number;
   deadline?: number;
+  budget?: ByteBudget;
   resolve?: (hostname: string) => Promise<LookupAddress[]>;
+}
+
+export interface ByteBudget {
+  used: number;
+  limit: number;
 }
 
 export interface FetchedResource {
@@ -218,6 +224,14 @@ function requestOnce(url: URL, policy: FetchPolicy, init: WireInit = STATIC_INIT
       let size = 0;
       stream.on('data', (chunk: Buffer) => {
         size += chunk.length;
+        const budget = policy.budget;
+        if (budget) budget.used += chunk.length;
+        if (budget && budget.used > budget.limit) {
+          res.destroy();
+          stream.destroy();
+          finish(new FetchFailedError(`${url.href}: the ${Math.round(budget.limit / 1024 / 1024)} MB limit for this site ran out`));
+          return;
+        }
         if (size > policy.maxBytes) {
           res.destroy();
           stream.destroy();

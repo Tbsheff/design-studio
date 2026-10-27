@@ -10,7 +10,7 @@ import { FetchBlockedError } from './safe-fetch.js';
 import type { FetchedResource } from './safe-fetch.js';
 import type { Candidate, Harvest } from './types.js';
 import { candidate, candidatesFromVars } from './vars.js';
-import { chromaOf, colorsInText, lengthPx, lightnessOf, normalizeColor, normalizeLength, normalizeShadow, safeGoogleFontsUrl } from './values.js';
+import { chromaOf, colorsInText, googleFontsUrlFor, lengthPx, lightnessOf, normalizeColor, normalizeLength, normalizeShadow, safeGoogleFontsUrl } from './values.js';
 
 type Node = DefaultTreeAdapterMap['node'];
 type Element = DefaultTreeAdapterMap['element'];
@@ -388,8 +388,12 @@ function withoutNames(props: CustomProperties, known: Set<string>): CustomProper
 
 function browserProps(read: BrowserRead, rules: CssRule[]): CustomProperties {
   const props = customProperties(rules);
-  for (const [name, value] of Object.entries(read.live.vars)) props.root.set(name, value);
+  for (const [name, value] of Object.entries({ ...read.live.vars, ...read.live.bodyVars })) props.root.set(name, value);
   return props;
+}
+
+function loadedGoogleFamilies(read: BrowserRead): string[] {
+  return read.live.fontFaces.filter((face) => face.loaded && face.src.includes('fonts.gstatic.com')).map((face) => face.family);
 }
 
 function fillDark(candidates: Candidate[], fallback: Candidate[]): Candidate[] {
@@ -402,6 +406,19 @@ function fillDark(candidates: Candidate[], fallback: Candidate[]): Candidate[] {
 
 function livePageParts(read: BrowserRead): PageParts {
   return { links: [], inline: [], styleAttrs: [], themeColor: read.live.themeColor, fontLinks: read.live.fontLinks, darkHint: read.live.darkHint };
+}
+
+function refusalNotes(read: BrowserRead): string[] {
+  const reasons = Object.entries(read.requests.reasons).sort((a, b) => b[1] - a[1]);
+  const refusedCount = reasons.reduce((sum, [, count]) => sum + count, 0);
+  if (refusedCount === 0) return [];
+  return [`The browser refused ${refusedCount} request(s) from the page: ${reasons.slice(0, 5).map(([reason, count]) => `${reason} (${count})`).join('; ')}`];
+}
+
+function browserFontsUrl(read: BrowserRead, fromStatic: StaticRead | null): string | undefined {
+  const staticUrl = fromStatic?.result.harvest.googleFontsUrl;
+  const fontLinks = [...read.live.fontLinks, ...(staticUrl ? [staticUrl] : [])];
+  return fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null) ?? googleFontsUrlFor(loadedGoogleFamilies(read)) ?? undefined;
 }
 
 function browserHarvest(read: BrowserRead, fromStatic: StaticRead | null): UrlHarvest {
@@ -417,12 +434,11 @@ function browserHarvest(read: BrowserRead, fromStatic: StaticRead | null): UrlHa
   const sure = vars.filter((item) => item.confidence === 'high');
   const guessed = vars.filter((item) => item.confidence !== 'high');
   const candidates = fillDark([...sure, ...computed.candidates, ...guessed, ...staticVars, ...cssUsage, ...(fromStatic?.usage ?? [])], staticAll);
-  const fontLinks = [...read.live.fontLinks, ...(fromStatic?.result.harvest.googleFontsUrl ? [fromStatic.result.harvest.googleFontsUrl] : [])];
-  const googleFontsUrl = fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null);
+  const googleFontsUrl = browserFontsUrl(read, fromStatic);
   const bg = computed.bg ?? candidates.find((item) => item.token === 'color.bg' && item.value)?.value;
   const darkHint = read.live.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
   const stylesheets = read.sheets.slice(0, MAX_STYLESHEETS).map((sheet) => ({ url: sheet.url === 'inline' ? `${read.url} (inline)` : sheet.url, css: sheet.css }));
-  const notes = read.requests.refused.length > 0 ? [`The browser refused ${read.requests.refused.length} request(s) from the page: ${read.requests.refused.slice(0, 5).join('; ')}`] : [];
+  const notes = refusalNotes(read);
   return {
     harvest: { source: 'url', label: read.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
     snapshot: { url: read.url, html: read.html, stylesheets, failures: fromStatic?.result.snapshot.failures ?? [] },

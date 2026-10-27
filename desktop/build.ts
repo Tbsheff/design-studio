@@ -14,6 +14,8 @@ const TEMPLATE_CACHE = path.join(ROOT, 'build', 'react-template-cache');
 const FIRST_RUN_STATIC = ['first-run.html', 'first-run.css'];
 const NOT_SHIPPED = new Set(['playwright-core']);
 const NOT_SHIPPED_PATTERNS = [/^@anthropic-ai\/claude-agent-sdk-(darwin|linux|win32)-/];
+const WEBSITE_READER_PACKAGES = ['playwright-core'];
+const WEBSITE_READER_SKIP = [path.join('lib', 'vite')];
 const SLIM_GIT_FILES = ['bin/git', 'libexec/git-core/git', 'share/git-core/templates', 'etc/gitconfig'];
 
 export const STAGE_APP = path.join(STAGE, 'app');
@@ -130,11 +132,26 @@ function copyPackage(source: string, target: string): void {
   });
 }
 
+function copyWebsiteReader(serverDir: string, modulesRoot: string): number {
+  const dirs = WEBSITE_READER_PACKAGES.map((name) => resolvePackageDir(name, ROOT)).filter((dir): dir is string => dir !== null);
+  for (const dir of dirs) {
+    cpSync(dir, path.join(serverDir, 'node_modules', path.relative(modulesRoot, dir)), {
+      recursive: true,
+      verbatimSymlinks: true,
+      filter: (entry) => {
+        const relative = path.relative(dir, entry);
+        return !relative.split(path.sep).includes('node_modules') && !WEBSITE_READER_SKIP.some((skip) => relative === skip || relative.startsWith(`${skip}${path.sep}`));
+      },
+    });
+  }
+  return dirs.length;
+}
+
 function copyServerModules(serverDir: string, metafiles: Metafile[]): number {
   const modulesRoot = path.join(ROOT, 'node_modules');
   const dirs = dependencyClosure(importedPackages(metafiles));
   for (const dir of dirs) copyPackage(dir, path.join(serverDir, 'node_modules', path.relative(modulesRoot, dir)));
-  return dirs.length;
+  return dirs.length + copyWebsiteReader(serverDir, modulesRoot);
 }
 
 function copySlimGit(target: string): void {

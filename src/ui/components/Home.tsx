@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent, type ReactNode, type RefObject } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { formatAnswers, needsQuestions } from '../../shared/clarify';
 import { DEFAULT_SETTINGS, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../../shared/folders';
@@ -29,6 +29,7 @@ const FirstRunPanel = lazy(() => startersChunk.then((m) => ({ default: m.FirstRu
 const clarifyChunk = import('./ClarifyForm');
 const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyForm })));
 const loadTrash = () => import('./HomeTrash');
+const loadSlash = () => import('./HomeSlash');
 const HomeTrash = lazy(loadTrash);
 const loadPops = () => import('./HomePopovers');
 const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
@@ -79,7 +80,16 @@ function useExample(paused: boolean): string {
   return EXAMPLES[index] ?? '';
 }
 
-function PromptArea({ value, onChange, onSubmit, onPaste, describedBy }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void; onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void; describedBy?: string | undefined }) {
+interface PromptAreaProps {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: (e: FormEvent) => void;
+  onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void;
+  describedBy?: string | undefined;
+  menuKeys: { current: ((e: KeyboardEvent<HTMLTextAreaElement>) => boolean) | null };
+}
+
+function PromptArea({ value, onChange, onSubmit, onPaste, describedBy, menuKeys }: PromptAreaProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const example = useExample(value !== '');
   useLayoutEffect(() => {
@@ -99,6 +109,7 @@ function PromptArea({ value, onChange, onSubmit, onPaste, describedBy }: { value
       onChange={(e) => onChange(e.target.value)}
       onPaste={onPaste}
       onKeyDown={(e) => {
+        if (menuKeys.current?.(e)) return;
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) onSubmit(e);
       }}
       placeholder={example}
@@ -467,6 +478,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   } | null>(null);
   const chooser = useFolderChooser(setFormError);
   const homeRef = useRef<HTMLDivElement>(null);
+  const slashKeys = useRef<((e: KeyboardEvent<HTMLElement>) => boolean) | null>(null);
   const { workspaces, addFolder, renameFolder, forgetFolder, setDefaultFolder } = useWorkspaces(setFormError);
   const [questions, setQuestions] = useState<ClarifyQuestion[] | null>(null);
   const [query, setQuery] = useState('');
@@ -654,6 +666,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     designs: { value: designCount, max: maxDesigns, onChange: setDesigns },
     onMore: openAdvanced,
   };
+  const slashMod = useModule(loadSlash, prompt.startsWith('/'));
 
   return (
     <div className="home" ref={homeRef}>
@@ -674,7 +687,8 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <div className="home-card">
             <form className={`ui-composer home-composer${dragging ? ' dragging' : ''}`} onSubmit={create} {...dropHandlers}>
               <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
-              <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} describedBy={sendBlocker && sendBlocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined} />
+              <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} describedBy={sendBlocker && sendBlocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined} menuKeys={slashKeys} />
+              {slashMod && <slashMod.HomeSlashMenu prompt={prompt} setPrompt={setPrompt} level={modelSettings.level} onLevel={modelSettings.onLevel} model={modelSettings.model} onModel={modelSettings.onModel} keys={slashKeys} home={homeRef} />}
               <DropHint on={dragging} />
               <StarterRow template={template} busy={busy} onOpen={(starter) => void openSelectedStarter(starter)} />
               <ComposerBar

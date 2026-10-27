@@ -7,6 +7,7 @@ export interface ApprovalAsk {
   title: string;
   detail: string;
   projectId: string | null;
+  client: string;
 }
 
 export interface ApprovalEvents {
@@ -80,7 +81,7 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
       if (pending.size >= MAX_PENDING) return Promise.resolve('deny');
       const id = randomBytes(9).toString('base64url');
       const createdAt = now();
-      const approval: McpApprovalRecord = { id, tool: input.tool, action: input.action, title: clean(input.title, TEXT_MAX.title), detail: clean(input.detail, TEXT_MAX.detail), projectId: input.projectId, createdAt, expiresAt: createdAt + timeoutMs };
+      const approval: McpApprovalRecord = { id, tool: input.tool, action: input.action, title: clean(input.title, TEXT_MAX.title), detail: clean(input.detail, TEXT_MAX.detail), projectId: input.projectId, client: clean(input.client, 40), createdAt, expiresAt: createdAt + timeoutMs };
       return new Promise<McpApprovalOutcome>((resolve) => {
         const timer = setTimeout(() => finish(id, 'timeout'), timeoutMs);
         timer.unref?.();

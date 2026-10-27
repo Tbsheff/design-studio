@@ -61,7 +61,10 @@ let windowsAllowed = false;
 const renderPool = new RenderPool(() => (runtime ? [runtime.url] : []));
 const renderHost = new RenderHost(renderPool);
 let updater: Updater | null = null;
-const serverLink = new ServerLink((finished) => void native.runFinished(finished));
+const serverLink = new ServerLink(
+  (finished) => void native.runFinished(finished),
+  (notice) => native.mcpApproval(notice),
+);
 const native = new NativeShell({
   link: serverLink,
   studioWindows: () => studioWindows(),

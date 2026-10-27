@@ -1,4 +1,4 @@
-import type { McpApprovalRecord } from './contracts.js';
+import type { McpActivity, McpApprovalRecord } from './contracts.js';
 
 export type ExportFormat = 'png' | 'pdf' | 'html' | 'zip' | 'handoff';
 export type ExportScale = 1 | 2 | 3;
@@ -69,6 +69,10 @@ export interface McpStatus {
 export interface McpApprovalPoll {
   edits: boolean;
   pending: McpApprovalRecord[];
+}
+
+export interface McpActivityList {
+  activity: McpActivity[];
 }
 
 export const EXPORT_NOTE_HEADER = 'x-studio-export-note';

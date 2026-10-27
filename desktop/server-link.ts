@@ -3,6 +3,12 @@ import path from 'node:path';
 import type { Project } from '../src/shared/contracts.js';
 import { isDesktopLinkMessage, isProjectId, type DesktopLinkMessage, type DesktopRunInfo } from '../src/shared/desktop-link.js';
 
+export interface McpApprovalNotice {
+  projectId: string;
+  approvalId: string;
+  title: string;
+}
+
 export interface FinishedRun {
   run: DesktopRunInfo;
   status: string;
@@ -16,7 +22,10 @@ export class ServerLink {
   private origin: string | null = null;
   private readonly active = new Map<string, DesktopRunInfo>();
 
-  constructor(private readonly onFinished: (finished: FinishedRun) => void) {}
+  constructor(
+    private readonly onFinished: (finished: FinishedRun) => void,
+    private readonly onApproval: (notice: McpApprovalNotice) => void = () => undefined,
+  ) {}
 
   attach(child: ChildProcess, origin: string): void {
     this.token = null;
@@ -35,6 +44,8 @@ export class ServerLink {
       this.dataDir = message.dataDir;
     } else if (message.kind === 'run-started') {
       this.active.set(message.run.runId, message.run);
+    } else if (message.kind === 'mcp-approval') {
+      if (isProjectId(message.projectId) && typeof message.title === 'string') this.onApproval({ projectId: message.projectId, approvalId: message.approvalId, title: message.title.slice(0, 200) });
     } else {
       this.active.delete(message.run.runId);
       this.onFinished({ run: message.run, status: message.status, costUsd: message.costUsd, error: message.error });

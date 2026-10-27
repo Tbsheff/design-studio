@@ -29,6 +29,8 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
   'canvas.point': true,
   'mcp.approval': true,
   'mcp.approval.resolved': true,
+  'mcp.activity': true,
+  'mcp.point': true,
 };
 
 export const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody['type'][];

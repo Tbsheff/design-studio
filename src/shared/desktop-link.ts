@@ -12,12 +12,13 @@ export interface DesktopRunInfo {
 export type DesktopLinkMessage =
   | { type: typeof DESKTOP_MESSAGE; kind: 'hello'; token: string; dataDir: string }
   | { type: typeof DESKTOP_MESSAGE; kind: 'run-started'; run: DesktopRunInfo }
-  | { type: typeof DESKTOP_MESSAGE; kind: 'run-finished'; run: DesktopRunInfo; status: RunStatus; costUsd: number; error: string | null };
+  | { type: typeof DESKTOP_MESSAGE; kind: 'run-finished'; run: DesktopRunInfo; status: RunStatus; costUsd: number; error: string | null }
+  | { type: typeof DESKTOP_MESSAGE; kind: 'mcp-approval'; projectId: string; approvalId: string; title: string };
 
 export function isDesktopLinkMessage(value: unknown): value is DesktopLinkMessage {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as { type?: unknown; kind?: unknown };
-  return record.type === DESKTOP_MESSAGE && (record.kind === 'hello' || record.kind === 'run-started' || record.kind === 'run-finished');
+  return record.type === DESKTOP_MESSAGE && (record.kind === 'hello' || record.kind === 'run-started' || record.kind === 'run-finished' || record.kind === 'mcp-approval');
 }
 
 export type DesktopCommand =

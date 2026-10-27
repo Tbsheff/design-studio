@@ -4,7 +4,8 @@ import type { Direction, Project } from '../../shared/contracts.js';
 import type { CanvasService } from '../canvas/service.js';
 import type { ExportDeps } from '../export/source.js';
 import type { AgentRunner, EventBus } from '../types.js';
-import type { ApprovalQueue } from './approvals.js';
+import type { ActivityLog } from './activity.js';
+import type { ApprovalAsk, ApprovalQueue } from './approvals.js';
 import { downloadsFolder, isInside, safeFolder } from './folders.js';
 
 export interface EditDeps extends ExportDeps {
@@ -13,6 +14,7 @@ export interface EditDeps extends ExportDeps {
   canvas: CanvasService;
   bus: EventBus;
   approvals: ApprovalQueue;
+  activity: ActivityLog;
   dataDir: string;
   projectsFolder(): Promise<string>;
 }
@@ -56,8 +58,8 @@ export function refuseWhileRunning(deps: EditDeps, project: Project, direction: 
   if (deps.runner.isRunning(project.id, direction.id)) throw new EditError(RUN_BUSY);
 }
 
-export async function approve(deps: EditDeps, tool: string, action: string, projectId: string | null, title: string, detail: string): Promise<void> {
-  const outcome = await deps.approvals.ask({ tool, action, projectId, title, detail });
+export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {
+  const outcome = await deps.approvals.ask(ask);
   if (outcome === 'allow') return;
   if (outcome === 'closed') throw new EditError('Design Studio is not open, so nobody can approve this write. Open the Design Studio window, or write to ~/Downloads or the projects folder.');
   if (outcome === 'timeout') throw new EditError('Nobody approved this write in Design Studio within 2 minutes, so it was refused.');

@@ -1,8 +1,9 @@
 import type { Context, Hono } from 'hono';
 import { STUDIO_TOKEN_HEADER } from '../../shared/contracts.js';
-import type { McpApprovalPoll } from '../../shared/export.js';
+import type { McpActivityList, McpApprovalPoll } from '../../shared/export.js';
 import type { CanvasService } from '../canvas/service.js';
 import type { ExportDeps } from '../export/source.js';
+import { createActivityLog } from '../mcp/activity.js';
 import { createApprovalQueue } from '../mcp/approvals.js';
 import { createMcpService } from '../mcp/server.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
@@ -44,7 +45,8 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
       headers: { [STUDIO_TOKEN_HEADER]: deps.studioToken, ...(payload !== undefined ? { 'content-type': 'application/json' } : {}) },
       ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
     });
-  const mcp = createMcpService(deps.dataDir, deps, { ...deps, request, approvals });
+  const activity = createActivityLog(deps.dataDir, deps.bus);
+  const mcp = createMcpService(deps.dataDir, deps, { ...deps, request, approvals, activity });
   void mcp.boot();
 
   const denyPending = (): void => {
@@ -52,6 +54,11 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
   };
 
   app.get('/api/mcp', async (c) => c.json(await mcp.status()));
+
+  app.get('/api/projects/:pid/mcp/activity', async (c) => {
+    const project = await deps.projects.get(c.req.param('pid'));
+    return c.json({ activity: await activity.list(project.id) } satisfies McpActivityList);
+  });
 
   app.post('/api/mcp', async (c) => {
     const input = await body(c);

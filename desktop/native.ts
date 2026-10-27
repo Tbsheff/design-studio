@@ -5,7 +5,7 @@ import { DESKTOP_IPC, isCommandId, isDesktopContext, parseDeepLink, parseDropped
 import { buildDockMenu, buildMenu, type MenuState } from './menu.js';
 import { NOTIFY_ENV, runNotice } from './notify.js';
 import { addRecent, readRecents, writeRecents, type RecentProject } from './recents.js';
-import type { FinishedRun, ServerLink } from './server-link.js';
+import type { FinishedRun, McpApprovalNotice, ServerLink } from './server-link.js';
 import type { Updater } from './updater.js';
 
 export const DOWNLOADS_ENV = 'STUDIO_DESKTOP_DOWNLOADS';
@@ -275,6 +275,15 @@ export class NativeShell {
       this.refreshMenus();
       app.emit('studio-export', target);
     });
+  }
+
+  mcpApproval(notice: McpApprovalNotice): void {
+    if (this.deps.studioWindows().some((window) => window.isFocused())) return;
+    app.emit('studio-notification', { title: 'Approval needed', body: notice.title, projectId: notice.projectId });
+    if (process.env[NOTIFY_ENV] === 'off' || !Notification.isSupported()) return;
+    const shown = new Notification({ title: 'Approval needed', body: notice.title });
+    shown.on('click', () => this.send({ type: 'open-project', projectId: notice.projectId }));
+    shown.show();
   }
 
   async runFinished(finished: FinishedRun): Promise<void> {

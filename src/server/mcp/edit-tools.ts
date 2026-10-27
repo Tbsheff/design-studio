@@ -6,10 +6,12 @@ import { DIRECT_STYLE_PROPERTIES, type DesignComment, type DirectEditResult, typ
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { evaluateToolUse } from '../agent/permissions.js';
-import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext } from '../canvas/tools.js';
+import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
 import { publishVersion } from '../direct-edit/index.js';
 import { withPagePath } from '../export/source.js';
+import type { ActivityDraft } from './activity.js';
+import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
 import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
 import { describeElement } from './element.js';
 import { FolderError } from './folders.js';
@@ -118,7 +120,7 @@ interface Meta {
 const META: Record<Name, Meta> = {
   canvas_list: { title: 'List canvas frames', description: 'List the frames on the studio canvas of a project: id, label, page, size and position, plus what the user has selected and which frame is live.', readOnly: true, idempotent: true },
   canvas_place: { title: 'Place canvas frames', description: 'Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order. Each item: frame (id or @label to move; leave out to add), label, path, viewport or width/height, and one of below / rightOf / leftOf / above (another frame) with gap, or absolute x/y. Returns the placed frames and overlap warnings.' },
-  canvas_point: { title: 'Point at a canvas frame', description: 'Check one frame (and an optional CSS selector) and return it, so you can tell the user which frame to look at. Design Studio does not move the user\'s view for outside clients yet.', readOnly: true, idempotent: true },
+  canvas_point: { title: 'Point at a canvas frame', description: 'Show the user a small badge on the canvas that says you are pointing at one frame (and an optional CSS selector). The view moves only when the user clicks Show, so the result always has shown: false. badge: true means a studio window has the project open and the user sees the badge.', readOnly: true, idempotent: true },
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
@@ -150,6 +152,13 @@ export const EDIT_NAMES = new Set<string>(Object.keys(schemas));
 function ok(value: unknown): ToolResult {
   return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value, null, 2) }] };
 }
+
+interface Done {
+  result: ToolResult;
+  activity?: ActivityDraft;
+}
+
+const plain = (result: ToolResult): Done => ({ result });
 
 function parse<N extends Name>(name: N, args: Record<string, unknown>): Input<N> {
   const result = schemas[name].safeParse(args);
@@ -183,23 +192,37 @@ async function busyCanvas(deps: EditDeps, input: { projectId: string; directionI
   return ctx;
 }
 
-async function pointFrame(ctx: CanvasToolContext, ref: string, sel: string | undefined): Promise<ToolResult> {
+async function pointFrame(deps: EditDeps, ctx: CanvasToolContext, ref: string, sel: string | undefined, client: string): Promise<ToolResult> {
   const frames = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const first = frames.length === 0 && ref === 'f1';
   const frame = first ? null : findFrame(frames, ref);
   if (!frame && !first) throw new EditError(`No frame ${ref}. Call canvas_list for the ids and labels.`);
-  return ok({ frame: frame?.id ?? 'f1', label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, note: 'Design Studio does not move the user\'s view for outside clients yet. Tell the user which frame to look at.' });
+  const frameId = frame?.id ?? 'f1';
+  deps.bus.emit({ type: 'mcp.point', projectId: ctx.project.id, directionId: ctx.direction.id, point: { client, frameId, label: frame?.label ?? frame?.path ?? null, ...(sel ? { selector: sel } : {}), at: Date.now() } });
+  const badge = deps.canvas.presence(ctx.project.id) !== null;
+  const note = badge ? 'The user sees a badge with a Show button. The view moves only if they click it.' : 'No studio window has this project open, so nobody saw the badge. Tell the user which frame to look at.';
+  return ok({ frame: frameId, label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, badge, note });
 }
 
-async function addFrame(deps: EditDeps, input: Input<'add_frame'>): Promise<ToolResult> {
+async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string): Promise<Done> {
+  const before = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
+  const result = await canvasPlace(ctx, specs);
+  if (result.isError) return { result };
+  const after = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
+  const placed = placedFrames(specs, before, after);
+  return { result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: placeSummary(verb, specs, placed, after), frameId: placed[0]?.id ?? null } };
+}
+
+async function addFrame(deps: EditDeps, input: Input<'add_frame'>): Promise<Done> {
   const ctx = await busyCanvas(deps, input);
   const spec = { ...(input.path ? { path: input.path } : {}), viewport: input.viewport ?? 'desktop', ...(input.width ? { width: input.width } : {}), ...(input.height ? { height: input.height } : {}), ...(input.label ? { label: input.label } : {}), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
-  return canvasPlace(ctx, [spec]);
+  return placeWithActivity(ctx, [spec], 'Added');
 }
 
-async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promise<ToolResult> {
+async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promise<Done> {
   const ctx = await busyCanvas(deps, input);
   let removed: string | null = null;
+  let name = input.frame;
   await deps.canvas.update(
     ctx.project,
     (file) => {
@@ -207,12 +230,13 @@ async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promis
       if (!frame) return null;
       if (file.frames.length === 1) throw new EditError('The canvas needs at least one frame.');
       removed = frame.id;
+      name = frameName(frame, input.frame);
       return { ...file, frames: file.frames.filter((item) => item.id !== frame.id) };
     },
     { source: 'agent' },
   );
   if (!removed) throw new EditError(`No frame ${input.frame}. Call canvas_list for the ids and labels.`);
-  return ok({ removed, note: 'The page file stays in the project.' });
+  return { result: ok({ removed, note: 'The page file stays in the project.' }), activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Removed ${name}`, frameId: removed } };
 }
 
 async function writeText(file: string, content: string): Promise<void> {
@@ -236,20 +260,25 @@ function checkWritePath(project: Project, workTree: string, raw: string): string
   return relative;
 }
 
-async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, client: string): Promise<ToolResult> {
+function versionActivity(project: Project, direction: Project['directions'][number], summary: string, version: Version | null | undefined): ActivityDraft {
+  return { projectId: project.id, directionId: direction.id, summary, versionId: version?.id ?? null, beforeVersionId: version?.parentId ?? null };
+}
+
+async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
   const relative = checkWritePath(project, direction.workTree, input.path);
   const file = path.join(direction.workTree, ...relative.split('/'));
   const before = await readFile(file, 'utf8').catch(() => null);
-  if (before === input.content) return ok({ path: relative, changed: false, versionId: direction.headVersionId });
+  if (before === input.content) return plain(ok({ path: relative, changed: false, versionId: direction.headVersionId }));
   await writeText(file, input.content);
   const version = await deps.versions.commitFile(project, direction, relative, `Edit by ${client}`, { kind: 'manual', prompt: `Edit by ${client}: ${relative}` });
   if (version) await publishVersion({ bus: deps.bus, projects: deps.projects, versions: deps.versions, runner: deps.runner }, project, direction, version);
-  return ok({ path: relative, changed: true, created: before === null, versionId: version?.id ?? null, title: version?.title ?? null });
+  const result = ok({ path: relative, changed: true, created: before === null, versionId: version?.id ?? null, title: version?.title ?? null });
+  return { result, activity: versionActivity(project, direction, `${before === null ? 'Created' : 'Wrote'} ${relative}`, version) };
 }
 
-async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<ToolResult> {
+async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
   const element = await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector);
@@ -257,86 +286,93 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   if (!element.source) throw new EditError('That element has no source location, so the inspector cannot edit it. Use write_file.');
   const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}) };
   const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  return ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied });
+  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text), result.version) };
 }
 
 function frameTarget(): DesignComment['target'] {
   return { selector: 'body', sourceLoc: null, tag: 'body', textSnippet: '', rectHint: { x: 0, y: 0, width: 1440, height: 900 } };
 }
 
-async function addComment(deps: EditDeps, input: Input<'add_comment'>, client: string): Promise<ToolResult> {
+async function addComment(deps: EditDeps, input: Input<'add_comment'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const context = input.selector ? await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector) : null;
   if (input.selector && !context) throw new EditError(`No element matches ${input.selector} on the page.`);
   const target = context ? targetFromSelection(context) : frameTarget();
   const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments`, { text: input.text, target, ...(context ? { context } : {}), status: 'draft', author: client });
-  return ok({ commentId: comment.id, number: comment.n, frameLevel: !context, author: comment.author ?? client });
+  const summary = `Added comment #${comment.n}${context ? ` on ${context.tag}` : ''}`;
+  return { result: ok({ commentId: comment.id, number: comment.n, frameLevel: !context, author: comment.author ?? client }), activity: { projectId: project.id, directionId: direction.id, summary } };
 }
 
-async function replyComment(deps: EditDeps, input: Input<'reply_comment'>, client: string): Promise<ToolResult> {
+async function replyComment(deps: EditDeps, input: Input<'reply_comment'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments/${encodeURIComponent(input.commentId)}/replies`, { text: input.text, author: client });
-  return ok({ commentId: comment.id, replies: comment.replies?.length ?? 0 });
+  return { result: ok({ commentId: comment.id, replies: comment.replies?.length ?? 0 }), activity: { projectId: project.id, directionId: direction.id, summary: `Replied to comment #${comment.n}` } };
 }
 
-async function resolveComment(deps: EditDeps, input: Input<'resolve_comment'>): Promise<ToolResult> {
+async function resolveComment(deps: EditDeps, input: Input<'resolve_comment'>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const comment = await studioCall<DesignComment>(deps, 'PATCH', `${base(project, direction.id)}/comments/${encodeURIComponent(input.commentId)}`, { status: 'resolved' });
-  return ok({ commentId: comment.id, status: comment.status });
+  return { result: ok({ commentId: comment.id, status: comment.status }), activity: { projectId: project.id, directionId: direction.id, summary: `Resolved comment #${comment.n}` } };
 }
 
-async function createProject(deps: EditDeps, input: Input<'create_project'>): Promise<ToolResult> {
+async function createProject(deps: EditDeps, input: Input<'create_project'>): Promise<Done> {
   const pack = input.designSystemId ? await packOf(deps, input.designSystemId) : null;
   const created = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects', { prompt: input.name, name: input.name, kind: input.kind, startRun: false, ...(pack ? { packId: pack.id } : {}) });
   const main = created.project.directions.find((d) => d.id === 'main') ?? created.project.directions[0];
-  return ok({ projectId: created.project.id, directionId: main?.id ?? null, name: created.project.name, folder: main?.workTree ?? null, designSystem: pack?.id ?? null });
+  const result = ok({ projectId: created.project.id, directionId: main?.id ?? null, name: created.project.name, folder: main?.workTree ?? null, designSystem: pack?.id ?? null });
+  return { result, activity: { projectId: created.project.id, directionId: main?.id ?? null, summary: `Created project ${oneLine(created.project.name, 60)}` } };
 }
 
-async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<ToolResult> {
+async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const version = await deps.versions.get(project, input.versionId);
   refuseWhileRunning(deps, project, direction);
   const restored = await studioCall<Version>(deps, 'POST', `${base(project, direction.id)}/restore`, { versionId: version.id });
-  return ok({ restored: true, newVersionId: restored.id, title: restored.title, from: version.id });
+  return { result: ok({ restored: true, newVersionId: restored.id, title: restored.title, from: version.id }), activity: versionActivity(project, direction, `Restored “${versionName(version)}”`, restored) };
 }
 
-async function applyDesignSystem(deps: EditDeps, input: Input<'apply_design_system'>): Promise<ToolResult> {
+async function applyDesignSystem(deps: EditDeps, input: Input<'apply_design_system'>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const pack = await packOf(deps, input.packId);
   refuseWhileRunning(deps, project, direction);
   const result = await studioCall<{ version: Version | null; notice: string | null }>(deps, 'POST', `${base(project, direction.id)}/design-system/apply`, { packId: pack.id });
-  return ok({ applied: pack.id, versionId: result.version?.id ?? null, changedFiles: result.version?.changedFiles ?? [], notice: result.notice });
+  const output = ok({ applied: pack.id, versionId: result.version?.id ?? null, changedFiles: result.version?.changedFiles ?? [], notice: result.notice });
+  return { result: output, activity: versionActivity(project, direction, `Applied ${oneLine(pack.name, 60)}`, result.version) };
 }
 
-async function exportFiles(deps: EditDeps, input: Input<'export'>, client: string): Promise<ToolResult> {
+async function exportFiles(deps: EditDeps, input: Input<'export'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const versionId = input.versionId ?? direction.headVersionId;
   if (!versionId) throw new EditError('This direction has no saved version yet.');
   const version = await deps.versions.get(project, versionId);
   const { folder, trusted } = await outputFolder(deps, input.folder);
-  if (!trusted) await approve(deps, 'export', 'Export to a folder outside Downloads and the projects folder', project.id, `${client} wants to export ${oneLine(project.name)} as ${input.format.toUpperCase()} to ${oneLine(folder, 120)}`, 'This folder is outside Downloads and the projects folder.');
+  const format = input.format.toUpperCase();
+  if (!trusted) await approve(deps, { tool: 'export', action: 'Export to a folder outside Downloads and the projects folder', projectId: project.id, client, title: `${client} wants to export ${format} to ${oneLine(folder, 160)}`, detail: `${oneLine(project.name)}. This folder is outside Downloads and the projects folder.` });
+  const exported = (file: string): ActivityDraft => ({ projectId: project.id, directionId: direction.id, summary: `Exported ${format} to ${oneLine(file, 120)}` });
   const frames = input.frames?.map((frame) => ({ name: frame.name?.trim() || `${frame.width}x${frame.height}`, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) }));
   const pid = encodeURIComponent(project.id);
   if (input.format === 'handoff') {
     const handoff = await studioCall<HandoffResult>(deps, 'POST', `/api/projects/${pid}/handoff`, { versionId: version.id, ...(frames ? { frames } : {}) });
     const zip = await studioFile(deps, 'GET', `/api/projects/${pid}/handoff/${encodeURIComponent(path.basename(handoff.path))}/zip`);
-    return ok({ files: [await writeUnique(folder, zip.name, zip.bytes)], versionId: version.id, handoffFiles: handoff.files.length, prompt: short(handoff.prompt, 2000) });
+    const file = await writeUnique(folder, zip.name, zip.bytes);
+    return { result: ok({ files: [file], versionId: version.id, handoffFiles: handoff.files.length, prompt: short(handoff.prompt, 2000) }), activity: exported(file) };
   }
-  const exported = await studioFile(deps, 'POST', `/api/projects/${pid}/export`, { format: input.format, versionId: version.id, frames: frames ?? [], scale: input.scale, scope: 'page' });
-  return ok({ files: [await writeUnique(folder, exported.name, exported.bytes)], versionId: version.id, bytes: exported.bytes.byteLength, ...(exported.note ? { note: exported.note } : {}) });
+  const output = await studioFile(deps, 'POST', `/api/projects/${pid}/export`, { format: input.format, versionId: version.id, frames: frames ?? [], scale: input.scale, scope: 'page' });
+  const file = await writeUnique(folder, output.name, output.bytes);
+  return { result: ok({ files: [file], versionId: version.id, bytes: output.bytes.byteLength, ...(output.note ? { note: output.note } : {}) }), activity: exported(file) };
 }
 
-async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, client: string): Promise<ToolResult> {
+async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, client: string): Promise<Done> {
   switch (name) {
     case 'canvas_list':
-      return canvasList(await canvasContext(deps, parse('canvas_list', args)));
+      return plain(await canvasList(await canvasContext(deps, parse('canvas_list', args))));
     case 'canvas_place': {
       const input = parse('canvas_place', args);
-      return canvasPlace(await busyCanvas(deps, input), input.frames);
+      return placeWithActivity(await busyCanvas(deps, input), input.frames, 'Placed');
     }
     case 'canvas_point': {
       const input = parse('canvas_point', args);
-      return pointFrame(await canvasContext(deps, input), input.frame, input.selector?.trim() || undefined);
+      return plain(await pointFrame(deps, await canvasContext(deps, input), input.frame, input.selector?.trim() || undefined, client));
     }
     case 'add_frame':
       return addFrame(deps, parse('add_frame', args));
@@ -366,7 +402,9 @@ async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, cl
 export async function callEditTool(deps: EditDeps, name: string, args: Record<string, unknown>, client: string): Promise<ToolResult> {
   if (!EDIT_NAMES.has(name)) throw new EditError(`unknown tool ${name}`);
   try {
-    return await run(deps, name as Name, args, client);
+    const done = await run(deps, name as Name, args, client);
+    if (done.activity && !done.result.isError) await deps.activity.record(name, client, done.activity).catch((error: unknown) => console.error('[mcp] activity not saved', error));
+    return done.result;
   } catch (error) {
     if (error instanceof EditError || error instanceof FolderError) return { content: [{ type: 'text', text: error.message }], isError: true };
     throw error;

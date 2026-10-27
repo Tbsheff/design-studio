@@ -507,7 +507,30 @@ export type StudioEventBody =
   | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
   | { type: 'canvas.point'; frameId: string; selector?: string; at: number }
   | { type: 'mcp.approval'; approval: McpApprovalRecord }
-  | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome };
+  | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
+  | { type: 'mcp.activity'; activity: McpActivity }
+  | { type: 'mcp.point'; point: McpPoint };
+
+export interface McpActivity {
+  id: string;
+  projectId: string;
+  directionId: string | null;
+  tool: string;
+  client: string;
+  summary: string;
+  versionId: string | null;
+  beforeVersionId: string | null;
+  frameId: string | null;
+  at: number;
+}
+
+export interface McpPoint {
+  client: string;
+  frameId: string;
+  label: string | null;
+  selector?: string;
+  at: number;
+}
 
 export type McpApprovalOutcome = 'allow' | 'deny' | 'timeout' | 'closed';
 
@@ -518,6 +541,7 @@ export interface McpApprovalRecord {
   title: string;
   detail: string;
   projectId: string | null;
+  client: string;
   createdAt: number;
   expiresAt: number;
 }

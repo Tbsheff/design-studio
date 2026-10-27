@@ -13,6 +13,7 @@ export function desktopSender(env: NodeJS.ProcessEnv = process.env): Send | null
 }
 
 function runMessage(event: StudioEvent, prompts: Map<string, string>): DesktopLinkMessage | null {
+  if (event.type === 'mcp.approval') return { type: DESKTOP_MESSAGE, kind: 'mcp-approval', projectId: event.projectId, approvalId: event.approval.id, title: event.approval.title };
   if (event.type !== 'run.started' && event.type !== 'run.finished') return null;
   const directionId = event.directionId ?? '';
   if (event.type === 'run.started') {

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import type { Project, ProjectSettings, SkillInfo } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { NO_SKILLS_TEXT, enabledSkills, originText, plural, skillDisplayName, useSkillCatalog } from '../skills';
@@ -6,6 +6,7 @@ import { Icon } from './Icon';
 import { SkillsChecklist } from './SkillsChecklist';
 import { rank } from '../commands/fuzzy';
 import type { Command } from '../commands/registry';
+import type { SlashChoice, SlashSection } from './SlashMenu';
 
 function matches(skill: SkillInfo, query: string): boolean {
   const needle = query.trim().toLowerCase();
@@ -42,54 +43,9 @@ function useFitAbove(ref: RefObject<HTMLDivElement | null>, max: number) {
   }, [ref, max]);
 }
 
-function SkillOption({ skill, active, onPick }: { skill: SkillInfo; active: boolean; onPick: () => void }) {
-  return (
-    <li
-      id={`skill-opt-${skill.id}`}
-      role="option"
-      aria-selected={active}
-      className={`skill-opt ${active ? 'active' : ''}`}
-      data-tip={`${skill.description}\n${skill.sourcePath}`}
-      data-tip-side="top"
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onPick}
-    >
-      <span className="skill-opt-head">
-        <Icon name="book" size={14} />
-        <strong>{skill.name}</strong>
-        <span className="skill-opt-desc">{skill.description}</span>
-        {skill.needsBash && <span className="skill-tag" data-tip="This skill runs terminal commands. Shell commands are a project setting.">Needs shell</span>}
-        <span className="skill-origin">{originText(skill.origin)}</span>
-      </span>
-    </li>
-  );
-}
-
-function nextIndex(key: string, index: number, count: number): number {
-  if (count === 0) return 0;
-  if (key === 'ArrowDown') return (index + 1) % count;
-  if (key === 'ArrowUp') return (index - 1 + count) % count;
-  return index;
-}
-
-interface PickerProps {
-  disabled: readonly string[];
-  exclude: readonly string[];
-  onPick: (id: string) => void;
-  onClose: () => void;
-  commands?: readonly Command[];
-  onCommand?: (command: Command) => void;
-}
-
-type PickItem = { kind: 'command'; key: string; command: Command } | { kind: 'skill'; key: string; skill: SkillInfo };
-
-function slashText(query: string): string {
-  return query.replace(/^\//, '');
-}
-
 function shownCommands(commands: readonly Command[], query: string): Command[] {
-  const tokens = slashText(query).trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return [...commands];
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [...commands].sort((a, b) => (a.slash ?? '').localeCompare(b.slash ?? ''));
   const hits = commands.filter((c) => {
     const words = (c.slash ?? '').toLowerCase().split(/[\s-]+/);
     return tokens.every((t) => words.some((w) => w.startsWith(t)));
@@ -97,137 +53,59 @@ function shownCommands(commands: readonly Command[], query: string): Command[] {
   return rank(hits, tokens.join(' '), (c) => ({ title: c.slash ?? c.title })).map((r) => r.item);
 }
 
-function byGroupThenName(a: PickItem, b: PickItem): number {
-  if (a.kind !== b.kind) return a.kind === 'command' ? -1 : 1;
-  return pickName(a).localeCompare(pickName(b));
+function commandChoice(command: Command, onCommand: (command: Command) => void): SlashChoice {
+  return { id: command.id, label: `/${command.slash ?? ''}`, icon: command.icon ?? 'sparkle', hint: command.title, disabledReason: command.disabled ?? null, pick: () => onCommand(command) };
 }
 
-const GROUP_LABEL: Record<PickItem['kind'], string> = { command: 'Commands', skill: 'Skills' };
-
-function GroupLabel({ items, index }: { items: PickItem[]; index: number }) {
-  const item = items[index];
-  const mixed = items.some((other) => other.kind !== items[0]?.kind);
-  if (!item || !mixed || items[index - 1]?.kind === item.kind) return null;
-  return (
-    <li role="presentation" aria-hidden="true" className="skill-group">
-      {GROUP_LABEL[item.kind]}
-    </li>
-  );
+function skillChoice(skill: SkillInfo, onPick: (id: string) => void): SlashChoice {
+  return {
+    id: skill.id,
+    label: skill.name,
+    icon: 'book',
+    hint: skill.description,
+    meta: originText(skill.origin),
+    tip: `${skill.description}\n${skill.sourcePath}`,
+    tag: skill.needsBash ? <span className="skill-tag">Needs shell</span> : null,
+    pick: () => onPick(skill.id),
+  };
 }
 
-function pickName(item: PickItem): string {
-  return item.kind === 'command' ? (item.command.slash ?? '') : item.skill.name;
+function skillStatus(catalog: { skills: readonly SkillInfo[] } | null, error: string | null, enabled: number): string | null {
+  if (error) return `Could not load skills (${error}). Type / again to retry.`;
+  if (!catalog) return 'Loading skills…';
+  if (catalog.skills.length === 0) return NO_SKILLS_TEXT;
+  if (enabled === 0) return 'All skills are off for this project. Turn some on with the skills count below.';
+  return null;
 }
 
-function completion(item: PickItem | undefined): string | null {
-  if (!item) return null;
-  return item.kind === 'command' ? `/${item.command.slash ?? ''}` : `/${item.skill.id}`;
+interface SlashSourceProps {
+  disabled: readonly string[];
+  exclude: readonly string[];
+  commands: readonly Command[];
+  onSkill: (id: string) => void;
+  onCommand: (command: Command) => void;
 }
 
-function CommandOption({ command, active, onPick }: { command: Command; active: boolean; onPick: () => void }) {
-  return (
-    <li id={`skill-opt-cmd-${command.id}`} role="option" aria-selected={active} aria-disabled={command.disabled ? true : undefined} className={`skill-opt slash-opt ${active ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={onPick}>
-      <span className="skill-opt-head">
-        <Icon name={command.icon ?? 'sparkle'} size={14} />
-        <strong className="slash-name">/{command.slash}</strong>
-        <span className="skill-opt-desc">{command.disabled ?? command.title}</span>
-      </span>
-    </li>
-  );
-}
-
-export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [], onCommand }: PickerProps) {
+export function useSlashSections({ disabled, exclude, commands, onSkill, onCommand }: SlashSourceProps) {
   const { catalog, error } = useSkillCatalog();
-  const [query, setQuery] = useState('');
-  const [active, setActive] = useState<number | null>(null);
-  const ref = useDismiss(onClose);
-  const all = enabledSkills(catalog, disabled).filter((skill) => skill.modelInvocable && !exclude.includes(skill.id));
-  const shown = all.filter((skill) => matches(skill, slashText(query)));
-  const listed: PickItem[] = [
-    ...shownCommands(commands, query).map((command): PickItem => ({ kind: 'command', key: `cmd-${command.id}`, command })),
-    ...shown.map((skill): PickItem => ({ kind: 'skill', key: skill.id, skill })),
-  ];
-  const empty = slashText(query).trim() === '';
-  const items = empty ? [...listed].sort(byGroupThenName) : listed;
-  const browsing = empty && active === null;
-  const current = browsing ? undefined : items[Math.min(active ?? 0, Math.max(0, items.length - 1))];
-  const manualCount = enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length;
-  useFitAbove(ref, 420);
-  useEffect(() => {
-    if (current) document.getElementById(`skill-opt-${current.key}`)?.scrollIntoView({ block: 'nearest' });
-  }, [current]);
-
-  const choose = (item: PickItem | undefined) => {
-    if (item?.kind === 'skill') onPick(item.skill.id);
-    else if (item && !item.command.disabled) onCommand?.(item.command);
+  const on = enabledSkills(catalog, disabled);
+  const all = on.filter((skill) => skill.modelInvocable && !exclude.includes(skill.id));
+  const manualCount = on.filter((skill) => !skill.modelInvocable).length;
+  const status = skillStatus(catalog, error, all.length);
+  const sections = (query: string): SlashSection[] => {
+    const skills = all.filter((skill) => matches(skill, query));
+    return [
+      { label: 'Commands', items: shownCommands(commands, query).map((command) => commandChoice(command, onCommand)) },
+      { label: 'Skills', items: (query === '' ? [...skills].sort((a, b) => a.name.localeCompare(b.name)) : skills).map((skill) => skillChoice(skill, onSkill)), status: query === '' ? status : null },
+    ];
   };
-
-  const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    const done = completion(current);
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      choose(current);
-    } else if (e.key === 'Tab' && !e.shiftKey && done) {
-      e.preventDefault();
-      setQuery(done);
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActive((index) => (index === null ? (e.key === 'ArrowDown' ? 0 : items.length - 1) : nextIndex(e.key, index, items.length)));
-    }
-  };
-
-  return (
-    <div ref={ref} className="skill-pop" role="dialog" aria-label="Skills and commands">
-      <input
-        autoFocus
-        className="skill-search"
-        aria-label={commands.length > 0 ? 'Search skills and commands' : 'Search skills'}
-        role="combobox"
-        aria-expanded="true"
-        aria-controls="skill-options"
-        aria-activedescendant={current ? `skill-opt-${current.key}` : undefined}
-        placeholder={commands.length > 0 ? 'Search skills or commands' : 'Search skills'}
-        spellCheck={false}
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setActive(null);
-        }}
-        onKeyDown={onKey}
-      />
-      <ul id="skill-options" role="listbox" aria-label={commands.length > 0 ? 'Skills and commands' : 'Skills'} className="skill-opts">
-        {items.map((item, index) => (
-          <Fragment key={item.key}>
-            <GroupLabel items={items} index={index} />
-            {item.kind === 'command' ? <CommandOption command={item.command} active={item === current} onPick={() => choose(item)} /> : <SkillOption skill={item.skill} active={item === current} onPick={() => choose(item)} />}
-          </Fragment>
-        ))}
-        <PickerBody catalogLoaded={Boolean(catalog)} error={error} total={catalog?.skills.length ?? 0} enabled={all.length}>
-          {items.length === 0 && <li className="skill-empty">No skills or commands match.</li>}
-        </PickerBody>
-      </ul>
-      <p className="skill-pop-foot">
-        ↑↓ move · Tab complete · ↵ choose · Esc close
-        {manualCount > 0 && (
-          <span className="skill-pop-manual" data-tip-side="top" data-tip="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
-            {' · '}
-            {plural(manualCount, 'manual-only skill')} not listed
-          </span>
-        )}
-      </p>
-    </div>
-  );
-}
-
-function PickerBody(props: { catalogLoaded: boolean; error: string | null; total: number; enabled: number; children: ReactNode }) {
-  if (props.error) return <li className="skill-empty">Could not load skills ({props.error}). Close this list and open it again to retry.</li>;
-  if (!props.catalogLoaded) return <li className="skill-empty">Loading skills…</li>;
-  if (props.total === 0) return <li className="skill-empty" data-testid="skills-empty">{NO_SKILLS_TEXT}</li>;
-  if (props.enabled === 0) return <li className="skill-empty">All skills are off for this project. Turn some on with the skills count below.</li>;
-  return <>{props.children}</>;
+  const note =
+    manualCount > 0 ? (
+      <span data-tip-side="top" data-tip="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
+        {plural(manualCount, 'manual-only skill')} not listed
+      </span>
+    ) : null;
+  return { sections, note };
 }
 
 export function SkillChips({ ids, onRemove }: { ids: string[]; onRemove: (id: string) => void }) {

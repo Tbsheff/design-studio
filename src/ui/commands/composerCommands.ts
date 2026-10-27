@@ -75,7 +75,7 @@ export function composerCommands(a: ComposerActions): Command[] {
 
 const SLASH_OF: Record<string, string> = {
   'version.export': 'export',
-  'project.settings': 'model',
+  'project.settings': 'settings',
   'run.polish': 'polish',
   'edit.undo': 'undo',
   'panel.versions': 'versions',

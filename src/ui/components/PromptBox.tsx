@@ -10,12 +10,14 @@ import { Composer, ComposerInput, ComposerToolbar, ComposerToolbarSpacer } from 
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
 import { ComposerAlert, MAX_IMAGES, imageProblem } from './HomeComposerParts';
-import { LevelPill, ModelPill, PlusMenu } from './ComposerMenu';
+import { LevelPill, MODE_SHORT_HINT, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
 import { Icon, type IconName } from './Icon';
 import { MOD_LABEL } from './CommentPopover';
 import { MODE_LABEL, type ComposerMode } from './RunSettings';
-import { SkillChips, SkillPicker, SkillsIndicator } from './SkillPicker';
+import { SkillChips, SkillsIndicator, useSlashSections } from './SkillPicker';
+import { SlashMenu, useSlashMenu, type SlashGroup } from './SlashMenu';
+import { effortGroup, levelGroup, modelGroup } from './slashGroups';
 import { skillInstruction } from '../skills';
 import { useRunLevel } from '../useRunLevel';
 import { useDesktopCommand } from '../desktop';
@@ -152,6 +154,13 @@ function StateChip({ label, short, tip, onClear }: { label: string; short: React
 }
 
 const MODE_ICON: Record<ComposerMode, IconName> = { edit: 'pencil', plan: 'doc', critique: 'eye' };
+const MODES: readonly ComposerMode[] = ['edit', 'plan', 'critique'];
+
+function modeGroup(mode: ComposerMode, onMode: (mode: ComposerMode) => void): SlashGroup {
+  return { id: 'mode', label: 'Mode', icon: 'chat', value: MODE_LABEL[mode], choices: MODES.map((item) => ({ id: item, label: MODE_LABEL[item], icon: MODE_ICON[item], hint: MODE_SHORT_HINT[item], checked: item === mode, pick: () => onMode(item) })) };
+}
+
+const SLASH_HIDDEN = /^composer\.(mode|level)-/;
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
   edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create…' },
@@ -212,32 +221,19 @@ export function PromptBox(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const reasonId = useId();
   const [skillIds, setSkillIds] = useState<string[]>([]);
-  const [picking, setPicking] = useState(false);
   const runLevel = useRunLevel(props.projectId, props.settings.defaultLevel, props.onSettingsSaved);
   const draft = useDraft(props.draft);
   const setDraft = props.draft.set;
 
-  const closePicker = () => {
-    setPicking(false);
-    window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt textarea')?.focus());
-  };
   const focusInput = () => window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]')?.focus());
   useCommands(() => composerCommands({ mode, setMode, level: runLevel.level, setLevel: runLevel.choose, variations: props.variations, focus: focusInput }));
-  const runSlash = (command: Command) => {
-    setPicking(false);
-    command.run();
-  };
-  const pickSkill = (id: string) => {
-    setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    closePicker();
-  };
-  const onDraft = (value: string) => {
-    if (value === '/' && draft === '') {
-      setPicking(true);
-      return;
-    }
-    setDraft(value);
-  };
+  const slashSource = useSlashSections({
+    disabled: props.settings.disabledSkills ?? [],
+    exclude: skillIds,
+    commands: slashCommands().filter((command) => !SLASH_HIDDEN.test(command.id)),
+    onSkill: (id) => setSkillIds((prev) => (prev.includes(id) ? prev : [...prev, id])),
+    onCommand: (command: Command) => command.run(),
+  });
 
   const addFiles = (list: Iterable<File>) => {
     let room = MAX_IMAGES - files.length;
@@ -277,8 +273,17 @@ export function PromptBox(props: Props) {
       .then(props.onSettingsSaved)
       .catch((err: unknown) => setError(`Could not save the model: ${errorText(err)}`));
   };
+  const slash = useSlashMenu({
+    draft,
+    setDraft,
+    groups: [levelGroup(runLevel.level, runLevel.choose), modelGroup(props.model, runLevel.level, chooseModel), effortGroup(effort, setEffort), modeGroup(mode, setMode)],
+    sections: slashSource.sections,
+    note: slashSource.note,
+    label: 'Settings, commands and skills',
+  });
+  const promptRef = useRef<HTMLDivElement>(null);
   const insertMention = () => {
-    setPicking(false);
+    slash.close();
     setDraft(draft === '' || /\s$/.test(draft) ? `${draft}@` : `${draft} @`);
     focusInput();
   };
@@ -299,7 +304,7 @@ export function PromptBox(props: Props) {
       historySearch.start();
       return;
     }
-    if (inInput && mentions.onKeyDown(event)) return;
+    if (inInput && (slash.onKeyDown(event) || mentions.onKeyDown(event))) return;
     if (inInput && isModeCycleKey(event)) {
       event.preventDefault();
       setMode(nextMode(mode));
@@ -366,6 +371,7 @@ export function PromptBox(props: Props) {
 
   return (
     <div
+      ref={promptRef}
       className={`prompt ${dragging ? 'dragging' : ''}`}
       data-ai-scope=""
       onDragOver={(e) => {
@@ -395,7 +401,7 @@ export function PromptBox(props: Props) {
         }}
       />
       {mentions.picker.open && <MentionList shown={mentions.picker.shown} current={mentions.picker.current} loading={mentions.loading} onPick={mentions.pick} onHover={mentions.picker.setActive} />}
-      {picking && <SkillPicker disabled={props.settings.disabledSkills ?? []} exclude={skillIds} onPick={pickSkill} onClose={closePicker} commands={slashCommands()} onCommand={runSlash} />}
+      {slash.open && <SlashMenu view={slash.view} anchor={() => promptRef.current?.querySelector<HTMLElement>('.composer') ?? null} input={() => promptRef.current?.querySelector<HTMLElement>('[data-slot="composer-input"]') ?? null} onClose={slash.close} />}
       <Composer
         className={`composer ui-composer cursor-text ${dragging ? 'dragging' : ''}`}
         onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
@@ -412,9 +418,10 @@ export function PromptBox(props: Props) {
           maxRows={9}
           submitOnEnter={false}
           aria-describedby={status.spoken ? reasonId : undefined}
+          {...slash.inputProps}
           onValueChange={(value) => {
             keys.resetHistory();
-            onDraft(value);
+            setDraft(value);
           }}
           onSubmit={() => void send()}
           onPaste={onPaste}
@@ -423,8 +430,11 @@ export function PromptBox(props: Props) {
           <PlusMenu
             onAttach={() => inputRef.current?.click()}
             onMention={insertMention}
-            onSkills={() => setPicking(true)}
-            onOpen={() => setPicking(false)}
+            onSkills={() => {
+              slash.openMenu();
+              focusInput();
+            }}
+            onOpen={slash.close}
             mode={mode}
             onMode={setMode}
             designs={designs}
@@ -443,8 +453,8 @@ export function PromptBox(props: Props) {
             }}
           />
           <ComposerToolbarSpacer className="prompt-send gap-1">
-            <LevelPill level={runLevel.level} onLevel={runLevel.choose} onOpen={() => setPicking(false)} />
-            <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={() => setPicking(false)} />
+            <LevelPill level={runLevel.level} onLevel={runLevel.choose} onOpen={slash.close} />
+            <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={slash.close} />
             <SendButton
               running={props.running}
               sending={sending}

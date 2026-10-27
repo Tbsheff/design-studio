@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { RUN_LEVELS, type RunLevel } from '../../shared/contracts';
-import { LEVEL_PRESETS } from '../../shared/run-levels';
-import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
+import { MODEL_OPTIONS } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { usePresence } from '../usePresence';
 import { Icon, type IconName } from './Icon';
 import { StableText } from './StableText';
+import { effectiveModel, shortModel } from './slashGroups';
 import { ChoiceItem, levelGist, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
 import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_HINT, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
 
@@ -121,7 +121,7 @@ interface PlusMenuProps {
 }
 
 const MODES: readonly ComposerMode[] = ['edit', 'plan', 'critique'];
-const MODE_SHORT_HINT: Record<ComposerMode, string> = { edit: 'Changes the design', plan: 'You approve first', critique: 'Review only' };
+export const MODE_SHORT_HINT: Record<ComposerMode, string> = { edit: 'Changes the design', plan: 'You approve first', critique: 'Review only' };
 const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 export function PlusMenu(props: PlusMenuProps) {
@@ -278,15 +278,6 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
         )}
     </>
   );
-}
-
-export function effectiveModel(model: string, level: RunLevel): string {
-  const preset = LEVEL_PRESETS[level].model;
-  return preset === 'project' ? model : preset;
-}
-
-function shortModel(id: string): string {
-  return modelLabel(id).replace(/^Claude /, '');
 }
 
 function ModelToggle({ value, onChange, locked }: { value: string; onChange: (id: string) => void; locked: boolean }) {

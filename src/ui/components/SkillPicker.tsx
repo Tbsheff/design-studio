@@ -57,7 +57,7 @@ function SkillOption({ skill, active, onPick }: { skill: SkillInfo; active: bool
         <Icon name="book" size={13} />
         <strong>{skill.name}</strong>
         <span className="skill-origin">{originText(skill.origin)}</span>
-        {skill.needsBash && <span className="skill-tag">Needs shell</span>}
+        {skill.needsBash && <span className="skill-tag" data-tip="This skill runs terminal commands. Shell commands are a project setting.">Needs shell</span>}
       </span>
       <span className="skill-opt-desc">{skill.description}</span>
     </li>

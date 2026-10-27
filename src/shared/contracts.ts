@@ -968,7 +968,7 @@ export const DEFAULT_SETTINGS: ProjectSettings = {
   model: 'claude-sonnet-5-5',
   maxBudgetUsd: null,
   maxTurns: 40,
-  allowBash: false,
+  allowBash: true,
   allowInstall: false,
   disabledSkills: [],
   defaultLevel: 'prototype',

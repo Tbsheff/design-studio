@@ -157,11 +157,11 @@ export function buildSystemPrompt(
   tasteRules: TasteRule[] = [],
 ): string {
   const kindRules = project.kind === 'html' ? HTML_RULES : REACT_RULES;
-  const shellAllowed = !project.designSystemFor;
+  const shellAllowed = true;
   const policy = `## Project policy
 - Entry file: \`${project.entry}\`.
 - Shell commands: ${shellAllowed && project.settings.allowBash ? 'allowed' : 'not available'}.
-- Package installs: ${shellAllowed && project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.`;
+- Package installs: ${shellAllowed && project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.${project.designSystemFor && project.settings.allowBash ? '\n- `source/` is read only, also for shell commands: read it, never write, move or delete inside it.' : ''}`;
   const sections =
     mode === 'critique'
       ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES, CANVAS_RULES]

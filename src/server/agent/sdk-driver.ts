@@ -12,6 +12,7 @@ import { captureBaseline, type RunToolState } from './check-tool.js';
 import { runFinalCheck } from './final-check.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
+import { lockReadOnly } from './read-only-lock.js';
 import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
 import { buildSystemPrompt } from './prompt.js';
 import { withRunLevel } from './run-level.js';
@@ -345,7 +346,7 @@ const SKILLS_OFF_MESSAGE = 'Skills are off in wireframe runs. Build the wirefram
 function buildPolicy(input: DriverInput, skills: PreparedSkills, config: ResolvedRunConfig): ToolPolicy {
   const { ctx } = input;
   const settings = ctx.project.settings;
-  const shellAllowed = !ctx.project.designSystemFor;
+  const shellAllowed = true;
   return {
     ...(config.preset.skills ? {} : { skillsOff: SKILLS_OFF_MESSAGE }),
     workTree: ctx.direction.workTree,
@@ -709,6 +710,15 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   }
 
   return async (input) => {
+    const locked = input.ctx.project.designSystemFor && input.ctx.project.settings.allowBash ? await lockReadOnly(input.ctx.direction.workTree, [SOURCE_DIR]) : null;
+    try {
+      return await runAttempts(input);
+    } finally {
+      await locked?.();
+    }
+  };
+
+  async function runAttempts(input: DriverInput): Promise<DriverOutcome> {
     const parts = await buildUserMessageParts(input.ctx);
     const resume = input.ctx.direction.sessionId;
     if (!resume) return (await attempt(input, parts, null)).outcome;
@@ -721,5 +731,5 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       console.warn(`[agent] resume of session ${resume} threw (${error instanceof Error ? error.message : String(error)}); retrying without resume`);
     }
     return (await attempt(input, parts, null)).outcome;
-  };
+  }
 }

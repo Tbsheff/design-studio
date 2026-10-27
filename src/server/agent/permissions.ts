@@ -257,9 +257,30 @@ function checkSkill(policy: ToolPolicy, input: Record<string, unknown>): string 
   return known ? null : `Skill ${requested} is not turned on for this project.`;
 }
 
+const READ_ONLY_COMMANDS = new Set(['cat', 'ls', 'head', 'tail', 'grep', 'rg', 'wc', 'file', 'stat', 'du', 'tree', 'find', 'cd', 'pwd', 'echo', 'sort', 'uniq', 'jq']);
+const FIND_WRITES = /\s-(delete|exec|execdir|ok|okdir|fprint\w*|fls)\b/;
+
+function touchesReadOnlyDir(policy: ToolPolicy, command: string): string | null {
+  const dirs = policy.readOnlyDirs ?? [];
+  for (const dir of dirs) {
+    const pattern = new RegExp(`(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|[\\s'")]|$)`);
+    if (!pattern.test(command)) continue;
+    if (/[>]|\btee\b/.test(command)) return dir;
+    const segments = command.split(/&&|\|\||;|\||\n/).map((part) => part.trim()).filter(Boolean);
+    const writes = segments.some((segment) => {
+      const word = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/)[0] ?? '';
+      return !READ_ONLY_COMMANDS.has(word) || (word === 'find' && FIND_WRITES.test(segment));
+    });
+    if (writes) return dir;
+  }
+  return null;
+}
+
 function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const command = input['command'];
   if (typeof command !== 'string') return 'Bash needs a command string.';
+  const readOnly = touchesReadOnlyDir(policy, command);
+  if (readOnly) return `${readOnly}/ holds the untrusted source material of this design system. Shell commands may only read it (cat, ls, grep, find, head); change the design-system files instead.`;
   if (!policy.allowInstall && isInstallCommand(command)) {
     return 'Package managers, downloads and inline code (sh -c, eval, node -e, python -c) are turned off for this project.';
   }

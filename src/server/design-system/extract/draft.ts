@@ -9,6 +9,7 @@ import { firstHeading, harvestDesignText } from './design-md.js';
 import { FolderScanError, scanFolder } from './folder.js';
 import type { FolderScan } from './folder.js';
 import { renderKitPage } from './kit-page.js';
+import type { KitGroup } from './kit-page.js';
 import { mapDraft } from './map.js';
 import { CSS_POLICY, FetchBlockedError, PAGE_POLICY, checkUrl, safeFetch } from './safe-fetch.js';
 import { TokensFileError, harvestTokensFile } from './tokens-file.js';
@@ -108,7 +109,7 @@ function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-function chooseMode(request: DraftRequest, harvests: Harvest[], urlHarvests: UrlHarvest[]): 'light' | 'dark' {
+export function chooseMode(request: DraftRequest, harvests: Harvest[], urlHarvests: UrlHarvest[]): 'light' | 'dark' {
   if (request.mode !== 'auto') return request.mode;
   const bg = harvests.flatMap((harvest) => harvest.candidates).find((candidate) => candidate.token === 'color.bg' && candidate.value)?.value;
   if (bg !== undefined) return (lightnessOf(bg) ?? 1) < 0.35 ? 'dark' : 'light';
@@ -141,7 +142,7 @@ function evidence(coverage: Coverage, urlHarvests: UrlHarvest[], folder: FolderS
   return `${lines.join('\n')}\n`;
 }
 
-async function readUrls(request: DraftRequest, deps: DraftDeps, allowLoopback: boolean, reports: SourceReport[]): Promise<UrlHarvest[]> {
+export function checkDraftUrls(request: DraftRequest, allowLoopback: boolean): void {
   for (const url of request.urls) {
     try {
       checkUrl(url, allowLoopback);
@@ -149,6 +150,10 @@ async function readUrls(request: DraftRequest, deps: DraftDeps, allowLoopback: b
       throw new BadRequestError(`Cannot read ${url.slice(0, 200)}: ${errorText(error)}`);
     }
   }
+}
+
+async function readUrls(request: DraftRequest, deps: DraftDeps, allowLoopback: boolean, reports: SourceReport[]): Promise<UrlHarvest[]> {
+  checkDraftUrls(request, allowLoopback);
   const out: UrlHarvest[] = [];
   for (const url of request.urls) {
     try {
@@ -173,7 +178,7 @@ function snapshotFiles(urlHarvests: UrlHarvest[]): DraftFile[] {
   });
 }
 
-interface Harvested {
+export interface Harvested {
   harvests: Harvest[];
   reports: SourceReport[];
   folder: FolderScan | null;
@@ -249,10 +254,23 @@ function sourceFiles(request: DraftRequest, harvested: Harvested, coverage: Cove
   ];
 }
 
-export async function buildDraft(request: DraftRequest, deps: DraftDeps, options: { allowLoopback: boolean; imageCount: number }): Promise<Draft> {
-  const base: LoadedPack | null = await deps.registry.get(request.basePackId);
+export async function draftBase(registry: PackRegistry, request: DraftRequest): Promise<LoadedPack> {
+  const base: LoadedPack | null = await registry.get(request.basePackId);
   if (!base) throw new BadRequestError(`unknown base pack: ${request.basePackId}`);
+  return base;
+}
+
+export async function buildDraft(request: DraftRequest, deps: DraftDeps, options: { allowLoopback: boolean; imageCount: number }): Promise<Draft> {
+  const base = await draftBase(deps.registry, request);
   const harvested = await harvestAll(request, deps, options);
+  return assembleDraft(request, base, harvested);
+}
+
+export function emptyHarvested(): Harvested {
+  return { harvests: [], reports: [], folder: null, urlHarvests: [] };
+}
+
+export function assembleDraft(request: DraftRequest, base: LoadedPack, harvested: Harvested, pending: readonly KitGroup[] = []): Draft {
   const name = draftName(request);
   const mode = chooseMode(request, harvested.harvests, harvested.urlHarvests);
   const mapped = mapDraft(base, harvested.harvests, mode, harvested.reports);
@@ -263,7 +281,7 @@ export async function buildDraft(request: DraftRequest, deps: DraftDeps, options
     name,
     mode,
     coverage: mapped.coverage,
-    kitHtml: renderKitPage({ name, mode, ...(mapped.fonts.googleFontsUrl ? { googleFontsUrl: mapped.fonts.googleFontsUrl } : {}) }),
+    kitHtml: renderKitPage({ name, mode, ...(mapped.fonts.googleFontsUrl ? { googleFontsUrl: mapped.fonts.googleFontsUrl } : {}), ...(pending.length > 0 ? { pending } : {}) }),
     files: sourceFiles(request, harvested, mapped.coverage),
     inputs: inputsOf(request, base),
     pack: {

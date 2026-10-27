@@ -509,7 +509,8 @@ export type StudioEventBody =
   | { type: 'mcp.approval'; approval: McpApprovalRecord }
   | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
   | { type: 'mcp.activity'; activity: McpActivity }
-  | { type: 'mcp.point'; point: McpPoint };
+  | { type: 'mcp.point'; point: McpPoint }
+  | { type: 'design-system.sources'; sources: DraftSourcesState };
 
 export interface McpActivity {
   id: string;
@@ -657,14 +658,14 @@ export const API_ROUTES = {
   checkPack: 'GET /api/packs/:id/check -> DesignSystemCheckResult (tokens, contrast, DESIGN.md and pack fonts; no kit page rules)',
   openPackEditor: 'POST /api/packs/:id/editor -> OpenPackEditorResult (the backing project whose designSystemFor is the pack id, else a new one with a kit page; 400 built-in)',
   applyPack: 'POST /api/projects/:pid/d/:did/design-system/apply {packId} -> ApplyPackResult (one version "Apply <name> design system" or "Switch to <name> design system"; keeps ## Project notes; 409 run active, 400 unknown pack)',
-  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?, asNew?} -> SavePackResult (asNew creates a new user pack; else updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active)',
+  savePack: 'POST /api/projects/:pid/d/:did/design-system/save {name, packId?, asNew?} -> SavePackResult (asNew creates a new user pack; else updates packId, else the user pack named in pack.json, else creates one; then pack.json names the saved pack, one version "Save <name> to library" when it changed; 400 built-in packId or invalid files, 404 no design system, 409 run active, 409 check_failed in a design-system project while the check fails unless force: true)',
   getDesignSystem: 'GET /api/projects/:pid/d/:did/design-system -> DesignSystemState',
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
   importProject: 'POST /api/projects/import {path} -> {project}',
-  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult (draft user pack + backing HTML project "<name> design system" with a kit page and source/; one version; 400 no source, blocked URL, bad tokens file or folder)',
-  getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo (404 when the project is not a design-system project)',
+  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself. 400 no source, blocked URL, unknown base pack',
+  getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
   addWorkspace: 'POST /api/workspaces {path, label?} -> WorkspaceFolder (realpath, must be a folder; same path returns the saved entry)',
@@ -1072,6 +1073,31 @@ export interface DraftSourceReport {
   error?: string;
 }
 
+export type DraftSourceState = 'queued' | 'reading' | 'read' | 'thin' | 'blocked' | 'failed';
+
+export interface DraftSourceStatus {
+  id: string;
+  kind: DraftSourceKind | 'images';
+  label: string;
+  state: DraftSourceState;
+  detail: string;
+  ms?: number;
+}
+
+export interface DraftImproveStart {
+  state: 'waiting' | 'started' | 'skipped';
+  runId?: string;
+  reason?: string;
+}
+
+export interface DraftSourcesState {
+  sources: DraftSourceStatus[];
+  done: boolean;
+  startedAt: number;
+  finishedAt?: number;
+  improve: DraftImproveStart;
+}
+
 export type CoverageConfidence = 'high' | 'medium' | 'fallback';
 
 export interface CoverageEntry {
@@ -1132,6 +1158,7 @@ export interface DesignSystemDraftInfo {
   packId: string;
   coverage: DesignSystemCoverage | null;
   check: DesignSystemCheckResult;
+  sources?: DraftSourcesState | null;
 }
 
 export interface CreateUserPackInput {

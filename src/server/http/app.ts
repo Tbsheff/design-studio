@@ -12,6 +12,7 @@ import type {
   DirectEditBatchResult,
   DirectEditResult,
   DirectionVariation,
+  DraftImproveStart,
   Project,
   ProjectKind,
   ProjectSettings,
@@ -53,6 +54,8 @@ import { registerRunTitleRoutes } from './run-title-routes.js';
 import { listWorkTree, parseMentions, readMentionFiles } from './mentions.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { draftAttachmentIds } from '../design-system/draft-project.js';
+import { createLiveDrafts } from '../design-system/draft-live.js';
+import { createFetcher } from '../design-system/extract/draft.js';
 import { registerPackRoutes } from './packs-routes.js';
 import { registerComponentRoutes } from './components-routes.js';
 import { createComponentService } from '../components/thumbs.js';
@@ -753,6 +756,7 @@ export function createApp(deps: AppDeps): Hono {
     await waitForStop(c.req.param('pid'), c.req.param('did'));
     const runId = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       if (runner.isRunning(project.id, direction.id)) throw new ConflictError('run_in_progress');
+      if (liveDrafts.isReading(project.id)) throw new ConflictError('The studio is still reading the sources. Wait until they finish.');
       return startRun(project, direction, await withTaskInputs(project, direction, request));
     });
     return c.json({ runId });
@@ -1009,7 +1013,36 @@ export function createApp(deps: AppDeps): Hono {
     },
   });
 
+  const startDraftImprove = async (projectId: string): Promise<DraftImproveStart> => {
+    const main = projects.mainDirection(await projects.get(projectId));
+    return withDirection(projectId, main.id, async (project, direction) => {
+      if (runner.isRunning(project.id, direction.id)) return { state: 'skipped', reason: 'Another run was in progress, so the AI step did not start. Use Improve with AI.' };
+      const level = project.settings.defaultLevel === 'wireframe' ? 'prototype' : project.settings.defaultLevel;
+      const request: RunRequest = { prompt: 'Improve this design system.', mode: 'edit', task: 'design-system', level };
+      return { state: 'started', runId: await startRun(project, direction, await withTaskInputs(project, direction, request)) };
+    });
+  };
+
+  const withMain = async <T>(projectId: string, task: (project: Project, direction: Direction) => Promise<T>): Promise<T> => withDirection(projectId, projects.mainDirection(await projects.get(projectId)).id, task);
+
+  const liveDrafts = createLiveDrafts({
+    library,
+    projectDir: (projectId) => projects.projectDir(projectId),
+    getProject: (projectId) => projects.get(projectId),
+    mainDirection: (project) => projects.mainDirection(project),
+    fetcher: createFetcher(config.fetchAllowLoopback === true),
+    emit: (project, sources) => bus.emit({ type: 'design-system.sources', projectId: project.id, directionId: projects.mainDirection(project).id, sources }),
+    withMain,
+    commit: (project, title) =>
+      withMain(project.id, async (current, direction) => {
+        await commitInit(current, title, 'manual');
+        await emitStatus(current, direction);
+      }),
+    startImprove: startDraftImprove,
+  });
+
   registerDesignSystemRoutes(app, {
+    live: liveDrafts,
     library,
     projects,
     versions,

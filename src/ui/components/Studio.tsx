@@ -23,6 +23,7 @@ import { chatWidthStyle } from './ChatSplitter';
 import { fixPrompt } from './ErrorsPanel';
 import { DraftBar } from './DraftBar';
 import { ImproveControl, improveRequest, lastImproveRun } from './DraftImprove';
+import { useDraftChrome } from './DraftSources';
 import { LeftPane } from './LeftPane';
 import { StudioPaneHeader } from './StudioPaneHeader';
 import { DesignSystemChip, designSystemRef } from './DesignSystemChip';
@@ -211,6 +212,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const componentList = useComponents(projectId, directionId, data.lastChange);
   const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(null);
   const chatState = useChatState(directionRuns);
+  const draftChrome = useDraftChrome(projectId, project);
 
   useHomeVariationsHandoff(projectId, project !== null && direction !== null, variations.propose);
 
@@ -388,6 +390,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               </div>
             </>
           }
+          banner={draftChrome.banner}
           chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
@@ -500,12 +503,14 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             project={project}
             state={designSystem.state}
             lastChange={data.lastChange}
-            onSave={packActions.actions.onSave}
+            onSave={(name, packId, force) => packActions.actions.onSave(name, packId, false, force)}
             lastRun={improveRun}
-            improve={<ImproveControl running={activeRun !== null} run={improveRun} onImprove={(focus) => act(() => startRun(improveRequest(focus, project.settings.defaultLevel)))} />}
+            reading={draftChrome.reading}
+            running={activeRun !== null}
+            improve={<ImproveControl running={draftChrome.locked(activeRun !== null)} run={improveRun} onImprove={(focus) => act(() => startRun(improveRequest(focus, project.settings.defaultLevel)))} />}
           />
           <UnfinishedSlot
-            visible={Boolean(status?.dirty) && !activeRun}
+            visible={draftChrome.unfinished(Boolean(status?.dirty) && !activeRun)}
             count={status?.changed.length ?? 0}
             busy={busy}
             onKeep={() => withDid((id) => refreshAfter(async () => {

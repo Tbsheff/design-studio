@@ -4,8 +4,10 @@ import type { Context, Hono } from 'hono';
 import type { Attachment, DesignSystemCoverage, DesignSystemDraftInfo, DesignSystemDraftResult, Direction, OpenPackEditorResult, Project } from '../../shared/contracts.js';
 import { checkDesignSystem } from '../design-system/check.js';
 import { readCoverage } from '../design-system/draft-project.js';
-import { KIT_PAGE_FILE, renderKitPage } from '../design-system/extract/kit-page.js';
-import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, buildDraft, createFetcher, parseDraftRequest } from '../design-system/extract/draft.js';
+import type { LiveDrafts } from '../design-system/draft-live.js';
+import { KIT_GROUPS, KIT_PAGE_FILE, renderKitPage } from '../design-system/extract/kit-page.js';
+import { COVERAGE_FILE, MAX_TOKENS_FILE_BYTES, META_FILE, assembleDraft, buildDraft, checkDraftUrls, createFetcher, draftBase, emptyHarvested, parseDraftRequest } from '../design-system/extract/draft.js';
+import type { DraftRequest } from '../design-system/extract/draft.js';
 import type { Draft, DraftFile } from '../design-system/extract/draft.js';
 import { libraryCoverage } from '../design-system/extract/map.js';
 import type { Fetcher } from '../design-system/extract/url.js';
@@ -30,6 +32,7 @@ export interface DesignSystemRouteDeps {
   readBody: (c: Context) => Promise<Record<string, unknown>>;
   allowLoopback: boolean;
   fetcher?: Fetcher;
+  live?: LiveDrafts;
 }
 
 interface ImageInput {
@@ -149,11 +152,28 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     return project;
   };
 
+  const createLive = async (live: LiveDrafts, request: DraftRequest, images: ImageInput[], started: number): Promise<DesignSystemDraftResult> => {
+    checkDraftUrls(request, deps.allowLoopback);
+    const base = await draftBase(library.registry, request);
+    const draft = assembleDraft(request, base, emptyHarvested(), KIT_GROUPS);
+    const pack = await library.createUserPack(draft.pack);
+    let project: Project;
+    try {
+      project = await createBacking({ name: draft.name, kitHtml: draft.kitHtml, files: draft.files, inputs: draft.inputs }, pack, images);
+    } catch (error) {
+      await library.deletePack(pack.manifest.id).catch((cleanup: unknown) => console.error('[design-systems] could not remove the draft pack', cleanup));
+      throw error;
+    }
+    live.start({ project, packId: pack.manifest.id, request, base, imageCount: images.length });
+    return { project, pack: pack.summary, coverage: draft.coverage, ms: Date.now() - started };
+  };
+
   app.post('/api/design-systems/draft', async (c) => {
     const started = Date.now();
     const body = await readDraftBody(c, deps.readBody);
     const merged = body.tokensFile && typeof body.raw === 'object' && body.raw !== null ? { ...body.raw, tokensFile: body.tokensFile } : body.raw;
     const request = parseDraftRequest(merged, body.images.length);
+    if (deps.live) return c.json(await createLive(deps.live, request, body.images, started));
     const draft = await buildDraft(request, { registry: library.registry, fetcher }, { allowLoopback: deps.allowLoopback, imageCount: body.images.length });
     const pack = await library.createUserPack(draft.pack);
     let project: Project;
@@ -184,7 +204,7 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     const project = await projects.get(c.req.param('pid'));
     if (!project.designSystemFor) throw new NotFoundError('This project is not a design-system project');
     const workTree = projects.mainDirection(project).workTree;
-    const info: DesignSystemDraftInfo = { packId: project.designSystemFor, coverage: await readCoverage(workTree), check: await checkDesignSystem(workTree) };
+    const info: DesignSystemDraftInfo = { packId: project.designSystemFor, coverage: await readCoverage(workTree), check: await checkDesignSystem(workTree), sources: (await deps.live?.read(project.id)) ?? null };
     return c.json(info);
   });
 }

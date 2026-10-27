@@ -2,6 +2,10 @@ import { REQUIRED_TOKENS } from '../../../shared/contracts.js';
 
 export const KIT_PAGE_FILE = 'index.html';
 
+export type KitGroup = 'colors' | 'type' | 'spacing' | 'radius' | 'components';
+
+export const KIT_GROUPS: readonly KitGroup[] = ['colors', 'type', 'spacing', 'radius', 'components'];
+
 function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -57,6 +61,30 @@ const STYLE = `
     th { color: var(--fg-muted); font-weight: 600; }
     .tag { display: inline-block; padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--accent); color: var(--accent-fg); font-size: var(--text-xs); }`;
 
+const PENDING_STYLE = `
+    .kit-reading { display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding: var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--fg-muted); font-size: var(--text-sm); }
+    .kit-reading::before { content: ""; width: var(--space-2); height: var(--space-2); border-radius: var(--radius-pill); background: var(--primary); animation: kit-pulse 1.2s ease-in-out infinite; }
+    section[data-pending] > h2::after { content: " · reading sources"; color: var(--fg-muted); font-family: var(--font-body); font-size: var(--text-sm); font-weight: 400; }
+    .skel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--space-3); }
+    .skel-rows { display: grid; gap: var(--space-3); }
+    .skel { height: 48px; border-radius: var(--radius-md); background: var(--surface); border: 1px solid var(--border); animation: kit-pulse 1.4s ease-in-out infinite; }
+    .skel.line { height: var(--space-4); }
+    .skel.wide { height: 120px; }
+    @keyframes kit-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+    @media (prefers-reduced-motion: reduce) { .skel, .kit-reading::before { animation: none; } }`;
+
+function skeleton(group: KitGroup): string {
+  if (group === 'colors') return `        <div class="skel-grid">\n${Array.from({ length: 12 }, () => '          <div class="skel"></div>').join('\n')}\n        </div>`;
+  if (group === 'components') return `        <div class="skel-grid">\n${Array.from({ length: 3 }, () => '          <div class="skel wide"></div>').join('\n')}\n        </div>`;
+  const rows = group === 'type' ? 6 : 4;
+  return `        <div class="skel-rows">\n${Array.from({ length: rows }, () => '          <div class="skel line"></div>').join('\n')}\n        </div>`;
+}
+
+function section(label: string, group: KitGroup, pending: ReadonlySet<KitGroup>, body: string): string {
+  if (!pending.has(group)) return `      <section aria-label="${label}">\n        <h2>${label}</h2>\n${body}\n      </section>`;
+  return `      <section aria-label="${label}" data-pending="${group}" aria-busy="true">\n        <h2>${label}</h2>\n${skeleton(group)}\n      </section>`;
+}
+
 function swatches(): string {
   return REQUIRED_TOKENS.color
     .map((name) => `          <div class="swatch" data-token="${name}"><div class="chip" style="background: var(--${name})"></div><span>${name}</span><code>--${name}</code></div>`)
@@ -72,69 +100,8 @@ ${swatches()}
       </div>`;
 }
 
-export function renderKitPage(input: { name: string; mode: 'light' | 'dark'; googleFontsUrl?: string }): string {
-  const name = escapeHtml(input.name);
-  const fonts = input.googleFontsUrl
-    ? `\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link rel="stylesheet" href="${escapeHtml(input.googleFontsUrl)}">`
-    : '';
-  const palettes = input.mode === 'dark' ? palette('Colors', '') : `${palette('Light', '')}\n${palette('Dark', ' dark')}`;
-  const typeRows = [...REQUIRED_TOKENS.text]
-    .reverse()
-    .map((step) => `        <div class="type-row"><code>--text-${step}</code><span style="font-size: var(--text-${step})">The quick brown fox</span></div>`)
-    .join('\n');
-  const spaceRows = REQUIRED_TOKENS.space.map((step) => `        <div class="scale-row"><code>--space-${step}</code><div class="bar" style="width: var(--space-${step})"></div></div>`).join('\n');
-  const radii = REQUIRED_TOKENS.radius.map((step) => `        <div class="box" style="border-radius: var(--radius-${step})">--radius-${step}</div>`).join('\n');
-  const shadows = REQUIRED_TOKENS.shadow.map((step) => `        <div class="box" style="box-shadow: var(--shadow-${step}); border-radius: var(--radius-md)">--shadow-${step}</div>`).join('\n');
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${name} kit</title>${fonts}
-    <link rel="stylesheet" href="design-system/tokens.css">
-    <style>${STYLE}
-    </style>
-  </head>
-  <body>
-    <main class="kit">
-      <header class="kit-head">
-        <h1>${name}</h1>
-        <p>Design system kit. Every value on this page comes from design-system/tokens.css.</p>
-      </header>
-      <section aria-label="Colors">
-        <h2>Colors</h2>
-        <div class="palettes">
-${palettes}
-        </div>
-      </section>
-      <section aria-label="Typography">
-        <h2>Typography</h2>
-        <div class="families">
-          <div class="family" style="font-family: var(--font-display)"><code>--font-display</code><strong>Aa Display</strong></div>
-          <div class="family" style="font-family: var(--font-body)"><code>--font-body</code><strong>Aa Body</strong></div>
-          <div class="family" style="font-family: var(--font-mono)"><code>--font-mono</code><strong>Aa Mono</strong></div>
-        </div>
-${typeRows}
-      </section>
-      <section aria-label="Spacing">
-        <h2>Spacing</h2>
-${spaceRows}
-      </section>
-      <section aria-label="Radius">
-        <h2>Radius</h2>
-        <div class="boxes">
-${radii}
-        </div>
-      </section>
-      <section aria-label="Elevation">
-        <h2>Elevation</h2>
-        <div class="boxes">
-${shadows}
-        </div>
-      </section>
-      <section aria-label="Components">
-        <h2>Components</h2>
-        <div class="components">
+function components(name: string): string {
+  return `        <div class="components">
           <div class="panel">
             <div class="row">
               <button class="btn btn-primary" type="button">Primary</button>
@@ -172,8 +139,51 @@ ${shadows}
             <tr><td>Pricing</td><td>Draft</td><td>Yesterday</td></tr>
             <tr><td>Docs</td><td>Review</td><td>Mon</td></tr>
           </tbody>
-        </table>
-      </section>
+        </table>`;
+}
+
+export function renderKitPage(input: { name: string; mode: 'light' | 'dark'; googleFontsUrl?: string; pending?: readonly KitGroup[] }): string {
+  const name = escapeHtml(input.name);
+  const pending = new Set(input.pending ?? []);
+  const reading = pending.size > 0 ? '\n        <p class="kit-reading" role="status">Reading your sources. Each group fills in when a source is read.</p>' : '';
+  const fonts = input.googleFontsUrl
+    ? `\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link rel="stylesheet" href="${escapeHtml(input.googleFontsUrl)}">`
+    : '';
+  const palettes = input.mode === 'dark' ? palette('Colors', '') : `${palette('Light', '')}\n${palette('Dark', ' dark')}`;
+  const typeRows = [...REQUIRED_TOKENS.text]
+    .reverse()
+    .map((step) => `        <div class="type-row"><code>--text-${step}</code><span style="font-size: var(--text-${step})">The quick brown fox</span></div>`)
+    .join('\n');
+  const spaceRows = REQUIRED_TOKENS.space.map((step) => `        <div class="scale-row"><code>--space-${step}</code><div class="bar" style="width: var(--space-${step})"></div></div>`).join('\n');
+  const radii = REQUIRED_TOKENS.radius.map((step) => `        <div class="box" style="border-radius: var(--radius-${step})">--radius-${step}</div>`).join('\n');
+  const shadows = REQUIRED_TOKENS.shadow.map((step) => `        <div class="box" style="box-shadow: var(--shadow-${step}); border-radius: var(--radius-md)">--shadow-${step}</div>`).join('\n');
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${name} kit</title>${fonts}
+    <link rel="stylesheet" href="design-system/tokens.css">
+    <style>${STYLE}${pending.size > 0 ? PENDING_STYLE : ''}
+    </style>
+  </head>
+  <body>
+    <main class="kit">
+      <header class="kit-head">
+        <h1>${name}</h1>
+        <p>Design system kit. Every value on this page comes from design-system/tokens.css.</p>${reading}
+      </header>
+${section('Colors', 'colors', pending, `        <div class="palettes">\n${palettes}\n        </div>`)}
+${section('Typography', 'type', pending, `        <div class="families">
+          <div class="family" style="font-family: var(--font-display)"><code>--font-display</code><strong>Aa Display</strong></div>
+          <div class="family" style="font-family: var(--font-body)"><code>--font-body</code><strong>Aa Body</strong></div>
+          <div class="family" style="font-family: var(--font-mono)"><code>--font-mono</code><strong>Aa Mono</strong></div>
+        </div>
+${typeRows}`)}
+${section('Spacing', 'spacing', pending, spaceRows)}
+${section('Radius', 'radius', pending, `        <div class="boxes">\n${radii}\n        </div>`)}
+${section('Elevation', 'radius', pending, `        <div class="boxes">\n${shadows}\n        </div>`)}
+${section('Components', 'components', pending, components(name))}
     </main>
   </body>
 </html>

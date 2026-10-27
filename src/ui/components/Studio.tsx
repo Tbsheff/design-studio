@@ -390,7 +390,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               </div>
             </>
           }
-          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
+          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,

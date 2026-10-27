@@ -123,9 +123,10 @@ interface EntryProps extends TurnProps {
   onDetails: (runId: string) => void;
   polish: PolishProps;
   offline: boolean;
+  onStop: (() => void) | undefined;
 }
 
-const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
+const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, onStop, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
   const running = run.status === 'running';
@@ -137,7 +138,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
         <MessageContent className="run-body gap-3">
           <RunParts run={run} running={running} workTree={workTree} />
           {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
-          {running && <LiveStatus run={run} workTree={workTree} offline={offline} />}
+          {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunFeedbackRow run={run} latest={latest} onDetails={details} />
@@ -245,6 +246,7 @@ interface Props {
   mcp?: McpFeedControl | null;
   lead?: ReactNode;
   offline?: boolean;
+  onStop?: () => void;
 }
 
 const RUN_ANNOUNCE: Record<RunView['status'], string> = {
@@ -266,7 +268,7 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
   );
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline }: Props) {
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -311,7 +313,7 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
           {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
           {timeline.map((item) =>
             item.kind === 'run' ? (
-              <RunEntry key={item.key} run={item.run} latest={item.run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={Boolean(offline)} {...turnProps(item.run, rewind, titles[item.run.runId] ?? item.run.summary?.title, actions)} />
+              <RunEntry key={item.key} run={item.run} latest={item.run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={Boolean(offline)} onStop={onStop} {...turnProps(item.run, rewind, titles[item.run.runId] ?? item.run.summary?.title, actions)} />
             ) : (
               <McpItem key={item.key} item={item} mcp={mcp} />
             ),

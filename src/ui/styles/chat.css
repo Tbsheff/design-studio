@@ -903,6 +903,18 @@
   font-size: 11px;
 }
 
+.icon-btn.live-stop {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  margin: -2px -6px -2px -4px;
+  color: var(--text-3);
+}
+
+.icon-btn.live-stop:hover {
+  color: var(--text);
+}
+
 .run-feedback {
   display: grid;
   gap: 6px;

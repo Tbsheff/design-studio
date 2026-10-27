@@ -273,16 +273,18 @@
   min-height: 0;
   background: var(--surface-inset);
   box-shadow:
-    inset 0 0 0 1px var(--line),
-    -1px 0 0 oklch(0.2 0.01 var(--hue) / 0.08),
-    -6px 0 16px -6px oklch(0.2 0.01 var(--hue) / 0.16);
+    inset 0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.14),
+    0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.04),
+    0 1px 3px oklch(0.2 0.01 var(--hue) / 0.08),
+    0 4px 14px oklch(0.2 0.01 var(--hue) / 0.08);
 }
 
 :root[data-theme='dark'] .pane-canvas.center {
   box-shadow:
-    inset 0 0 0 1px var(--line),
-    -1px 0 0 oklch(0 0 0 / 0.35),
-    -6px 0 16px -6px oklch(0 0 0 / 0.55);
+    inset 0 0 0 1px oklch(1 0 0 / 0.1),
+    0 0 0 1px oklch(0 0 0 / 0.4),
+    0 1px 3px oklch(0 0 0 / 0.35),
+    0 4px 14px oklch(0 0 0 / 0.35);
 }
 
 .pane-canvas .canvas-topbar {

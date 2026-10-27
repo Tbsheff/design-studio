@@ -45,6 +45,7 @@ interface Props {
   tokens?: CompiledTokenEntry[];
   components?: ComponentInfo[] | null;
   mentionRequest?: MentionRequest | null;
+  waitReason?: string | null;
 }
 
 interface VariationsPromptProps {
@@ -54,16 +55,15 @@ interface VariationsPromptProps {
   onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
 }
 
-function StopButton({ running, onStop }: { running: boolean; onStop: () => void }) {
-  if (!running) return null;
-  return (
-    <button type="button" className="icon-btn small bordered stop-btn" onClick={onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Stop (Esc)" data-tip-align="end">
-      <Icon name="stop" size={14} />
-    </button>
-  );
-}
-
-function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; onQueue: () => void }) {
+function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; hasDraft: boolean; onQueue: () => void; onStop: () => void }) {
+  if (props.running && !props.hasDraft) {
+    return (
+      <button type="button" className="btn send-btn stop-btn has-icon" onClick={props.onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Esc" data-tip-align="end">
+        <Icon name="stop" size={12} />
+        Stop
+      </button>
+    );
+  }
   if (props.running) {
     return (
       <button
@@ -72,7 +72,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
         disabled={!props.canQueue}
         onClick={props.onQueue}
         aria-label="Queue"
-        data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵)`}
+        data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`}
         data-tip-align="end"
       >
         Queue
@@ -113,6 +113,22 @@ const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> =
   plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan...' },
   critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique...' },
 };
+
+const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
+
+function sendReady(state: { running: boolean; blocked: boolean; busy: boolean; empty: boolean }): boolean {
+  return !state.running && !state.blocked && !state.busy && !state.empty;
+}
+
+function inputPlaceholder(mode: ComposerMode, running: boolean, waitReason: string | null | undefined): string {
+  if (waitReason) return waitReason;
+  return running ? RUNNING_PLACEHOLDER : INPUT_COPY[mode].placeholder;
+}
+
+function sendErrorText(err: unknown): string {
+  if (err instanceof TypeError) return 'Could not reach the studio. Your message is still here. Check that the studio runs, then send again.';
+  return errorText(err);
+}
 
 function designsBlocker(mode: ComposerMode, selectionCount: number): string | null {
   if (mode === 'critique') return 'Critique makes one review.';
@@ -221,7 +237,7 @@ export function PromptBox(props: Props) {
     keys.onKeyDown(event);
   };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
-  const canSend = !props.running && !props.disabled && !sending && !uploading && (draft.trim().length > 0 || skillIds.length > 0);
+  const canSend = sendReady({ running: props.running, blocked: props.disabled || Boolean(props.waitReason), busy: sending || uploading, empty: draft.trim() === '' && skillIds.length === 0 });
 
   const send = async () => {
     if (!canSend) return;
@@ -242,7 +258,7 @@ export function PromptBox(props: Props) {
       keys.resetHistory();
     } catch (err) {
       if (!props.draft.get().trim()) setDraft(sentDraft);
-      setError(errorText(err));
+      setError(sendErrorText(err));
     } finally {
       setSending(false);
     }
@@ -319,7 +335,7 @@ export function PromptBox(props: Props) {
           className="composer-input min-h-16"
           value={draft}
           aria-label={INPUT_COPY[mode].label}
-          placeholder={INPUT_COPY[mode].placeholder}
+          placeholder={inputPlaceholder(mode, props.running, props.waitReason)}
           maxRows={9}
           submitOnEnter={false}
           onValueChange={(value) => {
@@ -355,8 +371,18 @@ export function PromptBox(props: Props) {
           <ComposerToolbarSpacer className="prompt-send gap-1">
             <LevelPill level={runLevel.level} onLevel={runLevel.choose} onOpen={() => setPicking(false)} />
             <ModelPill model={props.model} level={runLevel.level} effort={{ value: effort, onChange: setEffort }} onModel={chooseModel} onOpen={() => setPicking(false)} />
-            <StopButton running={props.running} onStop={props.onCancel} />
-            <SendButton running={props.running} sending={sending} canSend={canSend} canQueue={keys.canQueue} onQueue={keys.queueDraft} />
+            <SendButton
+              running={props.running}
+              sending={sending}
+              canSend={canSend}
+              canQueue={keys.canQueue}
+              hasDraft={draft.trim().length > 0}
+              onQueue={keys.queueDraft}
+              onStop={() => {
+                props.onCancel();
+                focusInput();
+              }}
+            />
           </ComposerToolbarSpacer>
         </ComposerToolbar>
       </Composer>

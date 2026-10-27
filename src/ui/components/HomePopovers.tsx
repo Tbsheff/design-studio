@@ -21,9 +21,9 @@ function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
   items[(next + items.length) % items.length]?.focus();
 }
 
-function Pop({ trigger, onClose, className, label, role = 'dialog', children, onKeyDown }: { trigger: RefObject<HTMLElement | null>; onClose: Close; className: string; label: string; role?: 'dialog' | 'menu'; children: ReactNode; onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void }) {
+function Pop({ trigger, onClose, className, label, role = 'dialog', children, onKeyDown, closing = false }: { trigger: RefObject<HTMLElement | null>; onClose: Close; className: string; label: string; role?: 'dialog' | 'menu'; children: ReactNode; onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void; closing?: boolean | undefined }) {
   const root = useRef<HTMLDivElement>(null);
-  usePopover(true, root, onClose, trigger);
+  usePopover(!closing, root, onClose, trigger);
   useFitPopover(root, trigger, true);
   useEffect(() => {
     const first = root.current?.querySelector<HTMLElement>('[aria-checked="true"], [aria-pressed="true"]') ?? root.current?.querySelector<HTMLElement>(FOCUS_ITEMS);
@@ -35,6 +35,8 @@ function Pop({ trigger, onClose, className, label, role = 'dialog', children, on
       className={`ui-popover home-pop ${className}`}
       role={role}
       aria-label={label}
+      data-closing={closing || undefined}
+      inert={closing || undefined}
       onKeyDown={(event) => {
         if (event.key === 'Tab' && role === 'menu') {
           event.preventDefault();
@@ -68,13 +70,13 @@ function Item({ icon, label, meta, onClick }: { icon: Parameters<typeof Icon>[0]
   );
 }
 
-export function PlusMenu({ trigger, onClose, actions, locationLabel }: { trigger: RefObject<HTMLElement | null>; onClose: Close; actions: PlusMenuActions; locationLabel: string }) {
+export function PlusMenu({ trigger, onClose, actions, locationLabel, closing }: { trigger: RefObject<HTMLElement | null>; onClose: Close; actions: PlusMenuActions; locationLabel: string; closing?: boolean }) {
   const run = (action: () => void) => () => {
     onClose(false);
     action();
   };
   return (
-    <Pop trigger={trigger} onClose={onClose} className="ui-menu home-plus-menu" label="Add to the project" role="menu" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
+    <Pop trigger={trigger} closing={closing} onClose={onClose} className="ui-menu home-plus-menu" label="Add to the project" role="menu" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
       <div className="ui-menu-section">
         <span className="ui-menu-label">Files</span>
         <Item icon="paperclip" label="Attach images" meta="⌘V" onClick={run(actions.onAttachFile)} />
@@ -175,9 +177,9 @@ export function PackCards({ packs, value, includeNone, onPick }: { packs: PackSu
   );
 }
 
-export function PackPopover({ trigger, onClose, state, value, onChange, onNew }: { trigger: RefObject<HTMLElement | null>; onClose: Close; state: PacksState; value: string | null; onChange: (id: string | null) => void; onNew: () => void }) {
+export function PackPopover({ trigger, onClose, state, value, onChange, onNew, closing }: { trigger: RefObject<HTMLElement | null>; onClose: Close; state: PacksState; value: string | null; onChange: (id: string | null) => void; onNew: () => void; closing?: boolean }) {
   return (
-    <Pop trigger={trigger} onClose={onClose} className="home-pack-pop" label="Design system" onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}>
+    <Pop trigger={trigger} closing={closing} onClose={onClose} className="home-pack-pop" label="Design system" onKeyDown={(event) => moveFocus(event, FOCUS_ITEMS)}>
       <p className="home-pop-lede">Set up a design system so every project starts from your colors, type and components.</p>
       <button type="button" className="btn strong home-pop-cta" onClick={onNew}>
         Set up your design system
@@ -205,10 +207,10 @@ export interface ModelSettings {
   onMore: () => void;
 }
 
-export function ModelPopover({ trigger, onClose, settings }: { trigger: RefObject<HTMLElement | null>; onClose: Close; settings: ModelSettings }) {
+export function ModelPopover({ trigger, onClose, settings, closing }: { trigger: RefObject<HTMLElement | null>; onClose: Close; settings: ModelSettings; closing?: boolean }) {
   const { designs } = settings;
   return (
-    <Pop trigger={trigger} onClose={onClose} className="home-model-pop" label="Model and run settings">
+    <Pop trigger={trigger} closing={closing} onClose={onClose} className="home-model-pop" label="Model and run settings">
       <div className="ui-menu-section" role="radiogroup" aria-label="Model" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
         <span className="ui-menu-label">Model</span>
         {MODEL_OPTIONS.map((option) => (
@@ -249,9 +251,9 @@ export function ModelPopover({ trigger, onClose, settings }: { trigger: RefObjec
   );
 }
 
-export function LevelPopover({ trigger, onClose, level, onLevel }: { trigger: RefObject<HTMLElement | null>; onClose: Close; level: RunLevel; onLevel: (level: RunLevel) => void }) {
+export function LevelPopover({ trigger, onClose, level, onLevel, closing }: { trigger: RefObject<HTMLElement | null>; onClose: Close; level: RunLevel; onLevel: (level: RunLevel) => void; closing?: boolean }) {
   return (
-    <Pop trigger={trigger} onClose={onClose} className="home-level-pop" label="Level" role="menu" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
+    <Pop trigger={trigger} closing={closing} onClose={onClose} className="home-level-pop" label="Level" role="menu" onKeyDown={(event) => moveFocus(event, '.ui-menu-item')}>
       <div className="ui-menu-section" role="group" aria-label="Level">
         <span className="ui-menu-label">Level</span>
         {RUN_LEVELS.map((item) => (

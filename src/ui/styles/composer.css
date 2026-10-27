@@ -58,7 +58,36 @@
   border-radius: var(--r-lg);
   background: var(--surface-raised);
   box-shadow: var(--shadow-pop);
-  animation: pop-in var(--dur) var(--ease);
+}
+
+.composer-menu,
+.run-settings-pop {
+  animation: composer-pop-in 150ms var(--ease-out);
+}
+
+.composer-menu[data-closing],
+.run-settings-pop[data-closing] {
+  pointer-events: none;
+  animation: composer-pop-out 100ms var(--ease-out) forwards;
+}
+
+.skill-pop {
+  transform-origin: bottom center;
+  animation: composer-pop-in 120ms var(--ease-out);
+}
+
+@keyframes composer-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--pop-dy, 4px)) scale(0.97);
+  }
+}
+
+@keyframes composer-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--pop-dy, 4px) / 2)) scale(0.98);
+  }
 }
 
 .rs-group {
@@ -756,7 +785,6 @@
   width: 248px;
   max-height: min(520px, calc(100vh - 16px));
   overflow-y: auto;
-  animation: pop-in var(--dur) var(--ease);
 }
 
 .composer-menu-counts {

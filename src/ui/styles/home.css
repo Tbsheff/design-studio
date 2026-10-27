@@ -277,18 +277,32 @@
   top: calc(100% + 6px);
   left: 0;
   z-index: 60;
-  animation: home-pop-in var(--dur) var(--ease);
+  transform-origin: top left;
+  animation: home-pop-in 150ms var(--ease-out);
 }
 
 .home-anchor.end .home-pop {
   left: auto;
   right: 0;
+  transform-origin: top right;
+}
+
+.home-pop[data-closing] {
+  pointer-events: none;
+  animation: home-pop-out 100ms var(--ease-out) forwards;
 }
 
 @keyframes home-pop-in {
   from {
     opacity: 0;
-    translate: 0 -4px;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+@keyframes home-pop-out {
+  to {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
   }
 }
 

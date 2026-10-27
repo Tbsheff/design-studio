@@ -10,6 +10,7 @@ import { filterByFolder, locationFor, useWorkspaces } from '../useWorkspaces';
 import { useFolderChooser } from '../useFolderChooser';
 import { homePrefs, useHomePrefs, type HomeTab } from '../homePrefs';
 import { Icon } from './Icon';
+import { usePresence } from '../usePresence';
 import { ThemeButton } from './ThemeButton';
 import { ProjectGrid } from './ProjectGrid';
 import { reportAppStart } from '../perfTelemetry';
@@ -277,6 +278,7 @@ interface ComposerBarProps {
 
 function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack, kind, onKind, modelValue, modelSettings, busy, sendDisabled }: ComposerBarProps) {
   const [pop, setPop] = useState<Pop>(null);
+  const shownPop = usePresence(pop);
   const plusRef = useRef<HTMLButtonElement>(null);
   const packRef = useRef<HTMLButtonElement>(null);
   const modelRef = useRef<HTMLButtonElement>(null);
@@ -318,17 +320,17 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
         >
           <Icon name="plus" size={16} />
         </button>
-        {pop === 'plus' && (
+        {shownPop.shown === 'plus' && (
           <Suspense fallback={null}>
-            <PlusMenu trigger={plusRef} onClose={closePop} locationLabel={locationLabel} actions={{ ...plusActions, onDesignSystem: () => setPop('pack') }} />
+            <PlusMenu trigger={plusRef} closing={shownPop.closing} onClose={closePop} locationLabel={locationLabel} actions={{ ...plusActions, onDesignSystem: () => setPop('pack') }} />
           </Suspense>
         )}
       </div>
       <div className="home-anchor">
         <PillSelect label="Design system" ariaLabel="Design system" value={pack?.name ?? 'None'} open={pop === 'pack'} triggerRef={packRef} onOpen={() => togglePop('pack')} />
-        {pop === 'pack' && (
+        {shownPop.shown === 'pack' && (
           <Suspense fallback={null}>
-            <PackPopover trigger={packRef} onClose={closePop} state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
+            <PackPopover trigger={packRef} closing={shownPop.closing} onClose={closePop} state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />
           </Suspense>
         )}
       </div>
@@ -345,17 +347,17 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
       <div className="spacer" />
       <div className="home-anchor end">
         <PillSelect label="Level" ariaLabel="Level" value={LEVEL_LABEL[modelSettings.level]} open={pop === 'level'} triggerRef={levelRef} onOpen={() => togglePop('level')} />
-        {pop === 'level' && (
+        {shownPop.shown === 'level' && (
           <Suspense fallback={null}>
-            <LevelPopover trigger={levelRef} onClose={closePop} level={modelSettings.level} onLevel={modelSettings.onLevel} />
+            <LevelPopover trigger={levelRef} closing={shownPop.closing} onClose={closePop} level={modelSettings.level} onLevel={modelSettings.onLevel} />
           </Suspense>
         )}
       </div>
       <div className="home-anchor end">
         <PillSelect label="Model" ariaLabel="Model and run settings" value={modelValue} open={pop === 'model'} triggerRef={modelRef} onOpen={() => togglePop('model')} />
-        {pop === 'model' && (
+        {shownPop.shown === 'model' && (
           <Suspense fallback={null}>
-            <ModelPopover trigger={modelRef} onClose={closePop} settings={modelSettings} />
+            <ModelPopover trigger={modelRef} closing={shownPop.closing} onClose={closePop} settings={modelSettings} />
           </Suspense>
         )}
       </div>

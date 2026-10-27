@@ -4,6 +4,7 @@ import { RUN_LEVELS, type RunLevel } from '../../shared/contracts';
 import { LEVEL_PRESETS } from '../../shared/run-levels';
 import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
 import { usePopover } from '../usePopover';
+import { usePresence } from '../usePresence';
 import { Icon, type IconName } from './Icon';
 import { levelHint, levelLabel, levelShortHint, useRovingRadioGroup } from './LevelControl';
 import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
@@ -11,10 +12,10 @@ import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_LABEL, UNPLACED, designsH
 function usePlacedPopover(trigger: RefObject<HTMLButtonElement | null>, panel: RefObject<HTMLDivElement | null>) {
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState<CSSProperties>(UNPLACED);
+  const presence = usePresence(open ? true : null);
   const close = useCallback(
     (refocus: boolean) => {
       setOpen(false);
-      setStyle(UNPLACED);
       if (refocus) trigger.current?.focus();
     },
     [trigger],
@@ -34,7 +35,15 @@ function usePlacedPopover(trigger: RefObject<HTMLButtonElement | null>, panel: R
       observer.disconnect();
     };
   }, [open, trigger, panel]);
-  return { open, style, close, toggle: () => (open ? close(false) : setOpen(true)) };
+  const show = () => {
+    setStyle(UNPLACED);
+    setOpen(true);
+  };
+  return { open, shown: presence.shown !== null, closing: presence.closing, style, close, toggle: () => (open ? close(false) : show()) };
+}
+
+function panelProps(menu: { closing: boolean; style: CSSProperties }) {
+  return { style: menu.style, 'data-closing': menu.closing || undefined, inert: menu.closing || undefined };
 }
 
 const ITEM = '[role^="menuitem"]:not([aria-disabled="true"])';
@@ -148,9 +157,9 @@ export function PlusMenu(props: PlusMenuProps) {
       >
         <Icon name="plus" size={16} />
       </button>
-      {menu.open &&
+      {menu.shown &&
         createPortal(
-          <div ref={panel} className="ui-menu composer-menu" role="menu" aria-label="Add and settings" style={menu.style} onKeyDown={(event) => menuKeys(event, menu.close)}>
+          <div ref={panel} className="ui-menu composer-menu" role="menu" aria-label="Add and settings" {...panelProps(menu)} onKeyDown={(event) => menuKeys(event, menu.close)}>
             <Section label="Add">
               <MenuItem icon="paperclip" label="Attach image" onPick={act(props.onAttach)} />
               <MenuItem icon="file" label="Mention a file or token" meta="@" onPick={act(props.onMention)} />
@@ -242,9 +251,9 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
         <span className="ui-pill-select-value">{levelLabel(level)}</span>
         <PillCaret />
       </button>
-      {menu.open &&
+      {menu.shown &&
         createPortal(
-          <div ref={panel} className="ui-menu composer-menu level-menu" role="menu" aria-label="Level" style={menu.style} onKeyDown={(event) => menuKeys(event, menu.close)}>
+          <div ref={panel} className="ui-menu composer-menu level-menu" role="menu" aria-label="Level" {...panelProps(menu)} onKeyDown={(event) => menuKeys(event, menu.close)}>
             <Section label="Level">
               {RUN_LEVELS.map((item) => (
                 <button
@@ -335,9 +344,9 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
         </span>
         <PillCaret />
       </button>
-      {pop.open &&
+      {pop.shown &&
         createPortal(
-          <div className="run-settings-pop" ref={panel} style={pop.style} role="dialog" aria-label="Model and effort" data-testid="run-settings-popover">
+          <div className="run-settings-pop" ref={panel} {...panelProps(pop)} role="dialog" aria-label="Model and effort" data-testid="run-settings-popover">
             <section className="rs-group">
               <h3 className="rs-label">Model</h3>
               <ModelToggle value={shown} onChange={onModel} locked={locked} />

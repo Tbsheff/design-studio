@@ -82,7 +82,12 @@ export function designsHint(designs: DesignsSetting): string {
 }
 
 export function placeAboveOrBelow(trigger: HTMLElement, panel: HTMLElement): CSSProperties {
-  return placeFixed(trigger, panel, { prefer: 'above' });
+  const placed = placeFixed(trigger, panel, { prefer: 'above' });
+  const rect = trigger.getBoundingClientRect();
+  const left = typeof placed.left === 'number' ? placed.left : rect.left;
+  const x = Math.round(rect.left + rect.width / 2 - left);
+  const above = placed.bottom !== undefined;
+  return { ...placed, transformOrigin: `${x}px ${above ? 'bottom' : 'top'}`, '--pop-dy': above ? '4px' : '-4px' } as CSSProperties;
 }
 
 function ModeToggle({ mode, hintId }: { mode: ModeSetting; hintId: string }) {

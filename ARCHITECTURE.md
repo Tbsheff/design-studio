@@ -680,7 +680,7 @@ run end: RunSummary.parts (tool refs by id) ─► same order after reload; old 
 - Plan mode: `RunRequest.plan`; `findToolProblem` refuses write tools, Bash and tweaks with `PLAN_MODE_DENY`. The run ends with a plan card; Approve starts a build run with the plan text.
 - Todos: `TodoWrite` is in the allowed tool list; the latest todo input of the direction pins above the composer and comes back after reload from the run summaries.
 - Context meter: input + cache-read + cache-write tokens of the last API call (`message_start` usage), over the model window. Effort goes in `RunRequest.effort` and the SDK `effort` option. `system/api_retry` messages become `run.retry` events.
-- Streaming: `markdownBlocks.ts` splits finished markdown blocks; each finished block is memoized and only the open tail re-parses. The chat scroll sticks to the bottom only while the user is at the bottom, and a new run sticks it again.
+- Streaming: `markdownBlocks.ts` splits finished markdown blocks; each finished block is memoized and only the open tail re-parses. The chat scroll follows new content until the user scrolls up (wheel up, a press on the scrollbar, Page Up, Arrow Up or Home); only user input turns follow off, so a late `scroll` event after a programmatic scroll cannot. Reaching the bottom, Scroll to latest or a new run turns it on again.
 - `@` mentions: the studio lists work-tree files (`listWorkTree` in `http/mentions.ts`) and the direction's tokens; `shared/fuzzy.ts` ranks them. `RunRequest.mentions` carries the picks; the server reads each picked file (capped) into the prompt, and a token goes in as its name and value.
 
 ## Speed and telemetry (Round 5)

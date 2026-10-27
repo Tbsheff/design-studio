@@ -96,7 +96,7 @@ export function ConversationContent({
     if (!v) return;
     const distance = v.scrollHeight - v.scrollTop - v.clientHeight;
     const atBottom = distance < 24;
-    wasAtBottomRef.current = atBottom;
+    if (atBottom) wasAtBottomRef.current = true;
     setIsAtBottom(atBottom);
   }, [viewportRef, setIsAtBottom, wasAtBottomRef]);
 
@@ -161,7 +161,7 @@ export function ConversationScrollButton({
   onClick,
   ...props
 }: useRender.ComponentProps<"button">) {
-  const { isAtBottom, scrollToBottom } = useConversation();
+  const { isAtBottom, scrollToBottom, wasAtBottomRef } = useConversationContext();
 
   return useRender({
     render,
@@ -173,6 +173,7 @@ export function ConversationScrollButton({
       "data-at-bottom": isAtBottom ? "true" : "false",
       "aria-label": "Scroll to latest",
       onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+        wasAtBottomRef.current = true;
         scrollToBottom();
         onClick?.(event);
       },

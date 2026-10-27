@@ -17,7 +17,7 @@ import { reportAppStart } from '../perfTelemetry';
 import { prefetchScreensWhenIdle } from '../screens';
 import { modelLabel, parseDraft, toDraft } from '../settingsDraft';
 import { BrandMark } from './BrandMark';
-import { ComposerChips, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
+import { ComposerAlert, ComposerChips, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
 import { HomeToast, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
 import type { HomeTemplate } from './HomeTemplates';
 import type { ModelSettings, PlusMenuActions } from './HomePopovers';
@@ -707,11 +707,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
               </>
             )}
           </div>
-          {formError && (
-            <div className="alert error" role="alert">
-              {formError}
-            </div>
-          )}
+          {formError && <ComposerAlert onClose={() => setFormError(null)}>{formError}</ComposerAlert>}
           {extras && (
             <extras.ComposerFoot
               workspaces={workspaces}

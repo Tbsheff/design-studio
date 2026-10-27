@@ -6,6 +6,7 @@ interface RunLevelState {
   level: RunLevel;
   error: string | null;
   choose: (level: RunLevel) => void;
+  clearError: () => void;
 }
 
 export function useRunLevel(projectId: string, saved: RunLevel | undefined, onSaved: (project: Project) => void): RunLevelState {
@@ -35,5 +36,5 @@ export function useRunLevel(projectId: string, saved: RunLevel | undefined, onSa
       });
   };
 
-  return { level, error, choose };
+  return { level, error, choose, clearError: () => setError(null) };
 }

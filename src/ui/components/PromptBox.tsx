@@ -9,7 +9,7 @@ import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
-import { MAX_IMAGES, imageProblem } from './HomeComposerParts';
+import { ComposerAlert, MAX_IMAGES, imageProblem } from './HomeComposerParts';
 import { LevelPill, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
 import { Icon, type IconName } from './Icon';
@@ -154,9 +154,9 @@ function StateChip({ label, short, tip, onClear }: { label: string; short: React
 const MODE_ICON: Record<ComposerMode, IconName> = { edit: 'pencil', plan: 'doc', critique: 'eye' };
 
 const INPUT_COPY: Record<ComposerMode, { label: string; placeholder: string }> = {
-  edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create...' },
-  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan...' },
-  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique...' },
+  edit: { label: 'Describe what you want to create', placeholder: 'Describe what you want to create…' },
+  plan: { label: 'Describe what to plan', placeholder: 'Describe what to plan…' },
+  critique: { label: 'Ask for a critique', placeholder: 'Ask for a critique…' },
 };
 
 const RUNNING_PLACEHOLDER = `Queue a note (↵) or send it now (${MOD_LABEL}↵)`;
@@ -379,20 +379,12 @@ export function PromptBox(props: Props) {
       {files
         .filter((f) => f.error)
         .map((f) => (
-          <div key={f.localId} className="alert error" role="alert">
+          <ComposerAlert key={f.localId} onClose={() => removeFile(f.localId)}>
             {f.name}: {f.error}
-          </div>
+          </ComposerAlert>
         ))}
-      {error && (
-        <div className="alert error" role="alert">
-          {error}
-        </div>
-      )}
-      {runLevel.error && (
-        <div className="alert error" role="alert">
-          {runLevel.error}
-        </div>
-      )}
+      {error && <ComposerAlert onClose={() => setError(null)}>{error}</ComposerAlert>}
+      {runLevel.error && <ComposerAlert onClose={runLevel.clearError}>{runLevel.error}</ComposerAlert>}
       <QueuedMessages items={keys.queue} onChange={keys.setQueue} />
       <HistorySearch
         search={historySearch}

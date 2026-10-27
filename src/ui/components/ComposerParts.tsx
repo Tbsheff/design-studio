@@ -45,12 +45,20 @@ function ThumbState({ file }: { file: PendingAttachment }) {
   );
 }
 
+const NAME_ROOM = 30;
+
+function shortName(name: string): string {
+  if (name.length <= NAME_ROOM) return name;
+  const tail = name.slice(-12);
+  return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
+}
+
 export function AttachmentThumbs({ files, onRemove }: { files: PendingAttachment[]; onRemove: (localId: string) => void }) {
   if (files.length === 0) return null;
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
-      {files.map((f) => (
-        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className="thumb size-13" data-tip={f.error ?? f.name} data-tip-side="top">
+      {files.map((f, index) => (
+        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className="thumb size-13" data-tip={f.error ?? shortName(f.name)} data-tip-side="top" data-tip-align={index < 2 ? 'start' : 'end'}>
           <AttachmentMedia>
             <img data-slot="attachment-media-img" src={f.previewUrl} alt={f.name} className={f.error ? 'opacity-35' : ''} />
           </AttachmentMedia>

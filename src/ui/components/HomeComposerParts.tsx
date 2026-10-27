@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type ReactNode } from 'react';
 import { Icon } from './Icon';
 
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -10,6 +10,17 @@ export function imageProblem(file: File): string | null {
   if (!IMAGE_TYPES.includes(file.type)) return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
   if (file.size > MAX_IMAGE_BYTES) return `${file.name} is larger than 3.75 MB. Attach a smaller image.`;
   return null;
+}
+
+export function ComposerAlert({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+  return (
+    <div className="alert error composer-alert" role="alert">
+      <span className="composer-alert-text">{children}</span>
+      <button type="button" className="icon-btn composer-alert-close" aria-label="Dismiss" onClick={onClose}>
+        <Icon name="close" size={12} />
+      </button>
+    </div>
+  );
 }
 
 export interface ImageDraft {

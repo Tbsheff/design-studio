@@ -3,6 +3,38 @@
   padding: var(--s-3) var(--pane-inset) var(--s-12);
 }
 
+.chat-conversation,
+.chat {
+  overflow-x: hidden;
+}
+
+.chat > div {
+  min-width: 0;
+}
+
+.chat > div > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.chat :is(p, li, h1, h2, h3, h4, blockquote, td, th, a, :not(pre) > code) {
+  overflow-wrap: anywhere;
+}
+
+.chat :is(pre, table) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.chat table {
+  display: block;
+}
+
+.chat :is(img, video, svg, canvas) {
+  max-width: 100%;
+  height: auto;
+}
+
 .icon-btn.chat-scroll-btn {
   position: absolute;
   z-index: 10;

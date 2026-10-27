@@ -49,7 +49,8 @@ function SkillOption({ skill, active, onPick }: { skill: SkillInfo; active: bool
       role="option"
       aria-selected={active}
       className={`skill-opt ${active ? 'active' : ''}`}
-      title={skill.sourcePath}
+      data-tip={skill.sourcePath}
+      data-tip-side="top"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onPick}
     >
@@ -88,12 +89,16 @@ function slashText(query: string): string {
 
 function shownCommands(commands: readonly Command[], query: string): Command[] {
   const tokens = slashText(query).trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return [];
+  if (tokens.length === 0) return [...commands];
   const hits = commands.filter((c) => {
     const words = (c.slash ?? '').toLowerCase().split(/[\s-]+/);
     return tokens.every((t) => words.some((w) => w.startsWith(t)));
   });
   return rank(hits, tokens.join(' '), (c) => ({ title: c.slash ?? c.title })).map((r) => r.item);
+}
+
+function pickName(item: PickItem): string {
+  return item.kind === 'command' ? (item.command.slash ?? '') : item.skill.name;
 }
 
 function completion(item: PickItem | undefined): string | null {
@@ -117,15 +122,18 @@ function CommandOption({ command, active, onPick }: { command: Command; active: 
 export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [], onCommand }: PickerProps) {
   const { catalog, error } = useSkillCatalog();
   const [query, setQuery] = useState('');
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState<number | null>(null);
   const ref = useDismiss(onClose);
   const all = enabledSkills(catalog, disabled).filter((skill) => skill.modelInvocable && !exclude.includes(skill.id));
   const shown = all.filter((skill) => matches(skill, slashText(query)));
-  const items: PickItem[] = [
+  const listed: PickItem[] = [
     ...shownCommands(commands, query).map((command): PickItem => ({ kind: 'command', key: `cmd-${command.id}`, command })),
     ...shown.map((skill): PickItem => ({ kind: 'skill', key: skill.id, skill })),
   ];
-  const current = items[Math.min(active, Math.max(0, items.length - 1))];
+  const empty = slashText(query).trim() === '';
+  const items = empty ? [...listed].sort((a, b) => pickName(a).localeCompare(pickName(b))) : listed;
+  const browsing = empty && active === null;
+  const current = browsing ? undefined : items[Math.min(active ?? 0, Math.max(0, items.length - 1))];
   const manualCount = enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length;
   useFitAbove(ref, 420);
   useEffect(() => {
@@ -150,7 +158,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
       setQuery(done);
     } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      setActive((index) => nextIndex(e.key, index, items.length));
+      setActive((index) => (index === null ? (e.key === 'ArrowDown' ? 0 : items.length - 1) : nextIndex(e.key, index, items.length)));
     }
   };
 
@@ -169,7 +177,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
-          setActive(0);
+          setActive(null);
         }}
         onKeyDown={onKey}
       />
@@ -182,7 +190,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
           ),
         )}
         <PickerBody catalogLoaded={Boolean(catalog)} error={error} total={catalog?.skills.length ?? 0} enabled={all.length}>
-          {shown.length === 0 && <li className="skill-empty">No skills match.</li>}
+          {items.length === 0 && <li className="skill-empty">No skills or commands match.</li>}
         </PickerBody>
       </ul>
       <p className="skill-pop-foot">

@@ -302,6 +302,8 @@ New design system page (sources: website URLs ≤3, DESIGN.md, brief, tokens fil
   → UI opens the project; DraftBar (name, grade, fallback tokens, Save to library, slot for "Improve with AI")
 ```
 
+The app now uses the live path in "Design systems: live drafts" below; `buildDraft` (one synchronous pass) stays for callers without `live`.
+
 - Fetch (`extract/safe-fetch.ts`): `node:http(s)` with a `lookup` that resolves every address, refuses the request when any is blocked, and connects to the checked address (no DNS rebinding gap). IP-literal hosts are checked directly. Blocked: `0/8 10/8 100.64/10 127/8 169.254/16 172.16/12 192.0.0/24 192.168/16 198.18/15`, test nets, multicast and reserved, `:: ::1 fc00::/7 fe80::/10 ff00::/8 64:ff9b::/96`, IPv4-mapped v6, and the names `localhost`, `*.localhost`, `*.local`, `*.internal` and single-label hosts. http/https only, no user info. Redirects are followed by hand (≤3) and every hop is checked again. 10 s per request and 20 s in total per website (page, redirects and all stylesheets; `harvestUrl` races each fetch against the time left and `safeFetch` cuts its timer to it; stylesheets not read are listed as failures and the rest of the harvest is kept), `accept-encoding: identity` (a compressed body is refused), the body is streamed and cut at 2 MB (page) or 1 MB (CSS), up to 20 stylesheets (links, `<style>`, one level of `@import`). A blocked URL answers 400; a failed fetch is a source error in the coverage report.
 - `STUDIO_FETCH_ALLOW_LOOPBACK=1` opens 127/8, `::1` and `localhost` only (never other private ranges). `loadConfig` ignores it when `STUDIO_RESOURCES_DIR` is set (packaged app). Only `e2e/support/server.ts` sets it.
 - Fetched content is data: it is never run and never goes into a prompt as text. Only validated values leave it: colors (parsed by culori, written as OKLCH), lengths, shadows (≤ 4 layers, each 2–4 lengths, one color culori parses and an optional `inset`, nothing else), and font stacks cut to the first family (`[A-Za-z0-9 .\-_]{1,32}`, ≤ 4 words) plus known system fallbacks and a generic family. The page title and copy are not used. The snapshot is stored as `source/url-N/page.html.txt` and `style-K.css.txt`, so the preview never serves it as HTML.
@@ -362,6 +364,36 @@ Home "Design systems" · chip Change dialog "Manage…" (libraryFrom = {projectI
 - Apply to current project: `libraryFrom` persists in localStorage beside the screen and is checked against the project list on load.
 - Problems: `GET /api/packs/problems` shows as a closed `<details>` notice ("1 design system could not load").
 - Delete: the route marks each backing project of the pack `designSystemDeleted`, and Open in editor skips those. So a new pack with the same id gets a new backing project.
+
+## Design systems: live drafts (instant draft, sources card, auto Improve, save gate)
+
+```
+New design system (drop zone: images, tokens .json/.css, .md · website field ≤3 · brief · Start from presets · Advanced: tokens file, code folder, DESIGN.md)
+  → POST /api/design-systems/draft                         answers in about 1 s
+      sync: zod, "at least one source", checkUrl (private address = 400), base pack exists
+      assembleDraft(request, base, no harvests, pending = every kit group) → draft user pack + backing project + init version
+      liveDrafts.start()  (draft-live.ts, in memory per project + <dataDir>/projects/<id>/design-system-sources.json)
+  → UI opens the project at once
+background, per source (DESIGN.md, brief, tokens file, folder, then websites 2 at a time):
+  queued → reading → read | thin | blocked | failed      event design-system.sources {sources: DraftSourcesState}
+  after each source (one promise chain, per-direction lock):
+      assembleDraft(all results so far, sorted in the old source order) → library.updateUserPack → applyPack
+      → kit page (groups with no real value yet stay skeleton: data-pending) + source/coverage.json  → file watch reloads the preview
+  all done: full files (snapshots, evidence, meta.json) → version "Read sources" → startImprove once
+      → same run as Improve with AI (task design-system, withTaskInputs adds the draft images, check-gated retries)
+```
+
+- States: `read` (values found, detail like "16 colors, 3 fonts, 2 radii, Google Fonts link"), `thin` (fewer than 3 values), `blocked` (401/403/429/451, bot or challenge text, or a private address after DNS: "This site blocks automated reading. Paste its CSS or a DESIGN.md instead."), `failed` (404, time limit, no DNS, connection refused or reset, bad tokens file, bad folder), each with a plain sentence that says what to do. A brief or a DESIGN.md with no values is `read` ("Kept for the AI step"). Images are `read` at once with "N images: used by the AI step". `ms` is the time per source.
+- The classification reads only error classes and messages from `safe-fetch.ts` and `url.ts`; it does not import anything else from them, so the website reader can change.
+- Stale state: when the server restarts during a read, `read()` returns the stored state with every unfinished source as `failed` and the AI step as `skipped`.
+- Never twice: `improve` in the state file goes `waiting → started {runId} | skipped {reason}`. A reload, a second tab or a restart does not start it again. It is skipped when no source could be read, or when another run is active. "Stop" on the run is the opt-out; the Improve button stays for later rounds.
+- While sources are read: `POST .../runs` answers 409 in the backing project, the UI turns off Improve and Save and hides the Unfinished banner.
+- UI: `DraftSources` (in `.pane-chat`, above the chat, 8 px card) gets the state from `GET .../design-system-draft` (`sources`) and then from the event. When all sources are done it folds to the problem rows (thin, blocked, failed) and a toggle shows all rows.
+- Kit page: `renderKitPage({pending})` swaps a group for skeleton blocks that use only `var(--token)` (the kit-colors rule still holds). The final write has no `pending`, so it equals the slice 2 kit page.
+- Images (vision): the draft images are project attachments; `withTaskInputs` adds them to the design-system run and `toSdkPrompt` sends them as image content blocks. The `<source-images>` note and `DESIGN_SYSTEM_TASK` tell the agent to read colors, type, spacing, radius, shadows, mood and logo use and to write the findings into tokens.json and DESIGN.md. Limits are the slice 2 ones (≤ 8 images, ≤ 8 MB each, PNG, JPEG, GIF, WebP).
+- Todos: `DESIGN_SYSTEM_TASK` step 0 makes the agent plan with `TodoWrite` and update it per step, so the plan shows in the todo panel. The SDK driver sets `CLAUDE_CODE_ENABLE_TASKS=0` in the agent env; without it Claude Code offers TaskCreate/TaskUpdate instead of TodoWrite and the panel stays empty.
+- Save gate: `POST .../design-system/save` in a backing project runs `checkDesignSystem` first and answers 409 `{error: "check_failed", problems}` when it fails, unless the body has `force: true`. The DraftBar turns Save off while the check fails, while sources are read and while a run is active (reason in `data-tip` and an sr-only line). "Save anyway" opens a small confirm ("The check found N problems. Save anyway?") and sends `force`.
+- Mock: the design-system mock plans with TodoWrite (5 steps) and says "Got N image blocks in the user message." from `buildUserMessageParts`.
 
 ## Design systems (phase 3): live token editing
 

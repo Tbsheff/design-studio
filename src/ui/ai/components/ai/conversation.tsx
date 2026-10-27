@@ -90,6 +90,7 @@ export function ConversationContent({
   const { viewportRef, isAtBottom, setIsAtBottom, wasAtBottomRef } =
     useConversationContext();
   const contentRef = useRef<HTMLDivElement | null>(null);
+  const lastTopRef = useRef(0);
 
   const recompute = useCallback(() => {
     const v = viewportRef.current;
@@ -131,6 +132,10 @@ export function ConversationContent({
       "data-slot": "conversation-content",
       "data-at-bottom": isAtBottom ? "true" : "false",
       onScroll: (event: React.UIEvent<HTMLDivElement>) => {
+        const v = event.currentTarget;
+        const movedUp = v.scrollTop < lastTopRef.current - 1;
+        lastTopRef.current = v.scrollTop;
+        if (movedUp && v.scrollHeight - v.scrollTop - v.clientHeight >= 24) wasAtBottomRef.current = false;
         recompute();
         onScroll?.(event);
       },

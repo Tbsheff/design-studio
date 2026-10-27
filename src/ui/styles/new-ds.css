@@ -338,7 +338,7 @@
 .draft-actions {
   display: flex;
   flex-wrap: wrap;
-  flex: 1 1 360px;
+  flex: 1 0 auto;
   align-items: center;
   justify-content: flex-end;
   gap: var(--s-2);

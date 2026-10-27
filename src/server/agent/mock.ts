@@ -608,6 +608,7 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined): P
     await sleep(2000, input.signal);
   }
   if (prompt.includes('[long]')) await session.stream(longReply(), 96, 8);
+  if (prompt.includes('[slowlong]')) await session.stream(longReply(), 64, 60);
   if (prompt.includes('[todo]')) {
     await session.fakeTool('TodoWrite', { todos: mockTodos(0) }, 'Todo list', STEP_TOOL_MS);
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html', STEP_TOOL_MS);
@@ -620,7 +621,7 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined): P
   }
   const finalText = await runMockScenario(input, session, canvas);
   const outcome: DriverOutcome = {
-    status: 'completed',
+    status: prompt.includes('[budget]') ? 'budget_exceeded' : 'completed',
     usage: { ...MOCK_USAGE },
     costUsd: 0,
     durationMs: Date.now() - startedAt,

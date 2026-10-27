@@ -14,7 +14,19 @@ const DRAFT_NOTE = /^Draft made from: .*$\n?\n?/m;
 interface MockDesignSystemWriter {
   say(text: string): Promise<void>;
   writeFileAsTool(toolName: 'Write' | 'Edit', relativePath: string, content: string): Promise<void>;
-  fakeTool(name: string, input: Record<string, unknown>, summary: string): Promise<void>;
+  fakeTool(name: string, input: Record<string, unknown>, summary: string, ms?: number): Promise<void>;
+}
+
+const TODO_TOOL = 'TodoWrite';
+const TODO_STEP_MS = 700;
+const DS_TODO_STEPS = ['Read coverage and evidence', 'Read the source images', 'Edit tokens.json', 'Write DESIGN.md', 'Check light and dark'];
+
+function dsTodos(current: number) {
+  return DS_TODO_STEPS.map((content, index) => ({ content, activeForm: `${content}…`, status: index < current ? 'completed' : index === current ? 'in_progress' : 'pending' }));
+}
+
+async function todo(session: MockDesignSystemWriter, current: number): Promise<void> {
+  await session.fakeTool(TODO_TOOL, { todos: dsTodos(current) }, 'Todo list', TODO_STEP_MS);
 }
 
 function isTodo(line: string): boolean {
@@ -49,13 +61,21 @@ async function checkSteps(session: MockDesignSystemWriter): Promise<void> {
   await session.fakeTool(DESIGN_SYSTEM_CHECK_TOOL, {}, DESIGN_SYSTEM_CHECK_TOOL);
 }
 
-export async function runMockDesignSystem(session: MockDesignSystemWriter, workTree: string, prompt: string): Promise<string> {
+export async function runMockDesignSystem(session: MockDesignSystemWriter, workTree: string, prompt: string, imageBlocks = 0): Promise<string> {
+  await todo(session, 0);
   await session.say('Reading the coverage and the source evidence, then filling in the design system.');
+  await todo(session, 1);
+  const images = `Got ${imageBlocks} image block${imageBlocks === 1 ? '' : 's'} in the user message.`;
+  await session.say(images);
   const keepLast = prompt.includes(MOCK_DS_FAIL_ONCE) || prompt.includes(MOCK_DS_FAIL_ALWAYS);
-  await session.writeFileAsTool('Edit', DESIGN_MD_FILE, fillTodos(await readText(workTree, DESIGN_MD_FILE), keepLast));
+  await todo(session, 2);
   await improveTokens(session, workTree);
+  await todo(session, 3);
+  await session.writeFileAsTool('Edit', DESIGN_MD_FILE, fillTodos(await readText(workTree, DESIGN_MD_FILE), keepLast));
+  await todo(session, 4);
   await checkSteps(session);
-  const finalText = 'Filled in DESIGN.md and checked the tokens and the kit page in light and dark.';
+  await todo(session, DS_TODO_STEPS.length);
+  const finalText = `Filled in DESIGN.md and checked the tokens and the kit page in light and dark. ${images}`;
   await session.say(finalText);
   return finalText;
 }

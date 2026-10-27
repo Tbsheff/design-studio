@@ -7,7 +7,7 @@ import { checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions
 import { createBashGate } from './ask-gate.js';
 import { queuedText } from './lifecycle.js';
 import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
-import { buildUserText } from './user-message.js';
+import { buildUserMessageParts, buildUserText } from './user-message.js';
 import { runVariationMock } from '../variations/mock-pages.js';
 import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
 import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-system.js';
@@ -548,7 +548,7 @@ function wantsTweaks(input: DriverInput): boolean {
 }
 
 async function runMockScenario(input: DriverInput, session: MockSession, canvas: CanvasService | undefined): Promise<string> {
-  if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt);
+  if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt, (await buildUserMessageParts(input.ctx)).images.length);
   if (wantsMockCanvas(input)) return runMockCanvas(session, mockCanvasContext(input, canvas));
   if (wantsMockStates(input)) return runMockStates(session, input, mockCanvasContext(input, canvas));
   const tweaksOnly = input.ctx.request.task === 'tweaks';

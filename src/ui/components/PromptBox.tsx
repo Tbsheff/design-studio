@@ -1,4 +1,4 @@
-import { useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions, type MentionRequest } from '../useMentions';
@@ -6,7 +6,7 @@ import { HistorySearch, useHistorySearch } from './HistorySearch';
 import { ContextMeter } from './ContextMeter';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
-import { Composer, ComposerInput, ComposerSubmit, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
+import { Composer, ComposerInput, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
 import { MAX_IMAGES, imageProblem } from './HomeComposerParts';
@@ -58,42 +58,82 @@ interface VariationsPromptProps {
   onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
 }
 
-function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; hasDraft: boolean; tip: string; onQueue: () => void; onStop: () => void }) {
-  if (props.running && !props.hasDraft) {
-    return (
-      <button type="button" className="btn send-btn stop-btn has-icon" onClick={props.onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Esc" data-tip-align="end" data-tip-side="top">
-        <Icon name="stop" size={12} />
-        Stop
-      </button>
-    );
+type SendState = 'send' | 'queue' | 'stop';
+
+const SEND_LABEL: Record<SendState, string> = { send: 'Send', queue: 'Queue', stop: 'Stop' };
+
+function useMorph(key: string): boolean {
+  const last = useRef<string | null>(null);
+  const morphed = useRef(false);
+  if (last.current !== key) {
+    morphed.current = last.current !== null;
+    last.current = key;
   }
-  if (props.running) {
-    return (
-      <button
-        type="button"
-        className="btn send send-btn"
-        disabled={!props.canQueue}
-        onClick={props.onQueue}
-        aria-label="Queue"
-        data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`}
-        data-tip-align="end"
-        data-tip-side="top"
-      >
-        Queue
-      </button>
-    );
-  }
+  return morphed.current;
+}
+
+interface SendProps {
+  running: boolean;
+  sending: boolean;
+  canSend: boolean;
+  canQueue: boolean;
+  hasDraft: boolean;
+  tip: string;
+  onSend: () => void;
+  onQueue: () => void;
+  onStop: () => void;
+}
+
+interface SendView {
+  state: SendState;
+  busy: boolean;
+  disabled: boolean;
+  tip: string;
+  keys?: string;
+  onClick: () => void;
+}
+
+const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`;
+const SEND_CLASS: Record<SendState, string> = { send: 'btn send send-btn', queue: 'btn send send-btn', stop: 'btn send-btn stop-btn' };
+
+function sendView(props: SendProps): SendView {
+  if (props.running && !props.hasDraft) return { state: 'stop', busy: false, disabled: false, tip: 'Stop (Esc)', keys: 'Escape', onClick: props.onStop };
+  if (props.running) return { state: 'queue', busy: false, disabled: !props.canQueue, tip: QUEUE_TIP, onClick: props.onQueue };
+  return { state: 'send', busy: props.sending, disabled: !props.canSend, tip: props.tip, onClick: props.onSend };
+}
+
+function SendButton(props: SendProps) {
+  const view = sendView(props);
+  const key = view.busy ? 'busy' : view.state;
+  const morph = useMorph(key);
   return (
-    <ComposerSubmit
-      disabled={!props.canSend}
-      aria-label={props.sending ? 'Sending…' : 'Send'}
-      data-tip={props.tip}
+    <button
+      type="button"
+      className={SEND_CLASS[view.state]}
+      data-state={key}
+      disabled={view.disabled}
+      onClick={view.onClick}
+      aria-label={view.busy ? 'Sending…' : SEND_LABEL[view.state]}
+      aria-busy={view.busy || undefined}
+      aria-keyshortcuts={view.keys}
+      data-tip={view.tip}
       data-tip-align="end"
       data-tip-side="top"
-      render={<button className="btn send send-btn" />}
     >
-      {props.sending ? <span className="spinner" /> : 'Send'}
-    </ComposerSubmit>
+      <span key={key} className={morph ? 'send-label morph' : 'send-label'}>
+        {view.state === 'stop' && <Icon name="stop" size={12} />}
+        {view.busy ? <span className="spinner" /> : SEND_LABEL[view.state]}
+      </span>
+    </button>
+  );
+}
+
+function ReasonText({ id, text }: { id: string; text: string | null }) {
+  if (!text) return null;
+  return (
+    <span id={id} className="sr-only">
+      {text}
+    </span>
   );
 }
 
@@ -130,12 +170,24 @@ function inputPlaceholder(mode: ComposerMode, running: boolean, waitReason: stri
   return running ? RUNNING_PLACEHOLDER : INPUT_COPY[mode].placeholder;
 }
 
-function sendTip(state: { waitReason: string | null | undefined; loading: boolean; uploading: boolean; empty: boolean }): string {
+const EMPTY_REASON = 'Type a message to send';
+
+interface SendStatus {
+  tip: string;
+  spoken: string | null;
+}
+
+function sendStatus(state: { running: boolean; waitReason: string | null | undefined; loading: boolean; uploading: boolean; empty: boolean }): SendStatus {
+  const blocker = state.running ? null : sendBlocker(state);
+  return { tip: blocker ?? `Send (${MOD_LABEL}↵)`, spoken: blocker === EMPTY_REASON ? null : blocker };
+}
+
+function sendBlocker(state: { waitReason: string | null | undefined; loading: boolean; uploading: boolean; empty: boolean }): string | null {
   if (state.waitReason) return state.waitReason;
   if (state.loading) return 'Wait for the design to load';
   if (state.uploading) return 'Wait for the images to upload';
-  if (state.empty) return 'Type a message to send';
-  return `Send (${MOD_LABEL}Enter)`;
+  if (state.empty) return EMPTY_REASON;
+  return null;
 }
 
 function sendErrorText(err: unknown): string {
@@ -158,6 +210,7 @@ export function PromptBox(props: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const reasonId = useId();
   const [skillIds, setSkillIds] = useState<string[]>([]);
   const [picking, setPicking] = useState(false);
   const runLevel = useRunLevel(props.projectId, props.settings.defaultLevel, props.onSettingsSaved);
@@ -256,6 +309,7 @@ export function PromptBox(props: Props) {
   };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
   const emptyDraft = draft.trim() === '' && skillIds.length === 0;
+  const status = sendStatus({ running: props.running, waitReason: props.waitReason, loading: props.disabled, uploading, empty: emptyDraft });
   const canSend = sendReady({ running: props.running, blocked: props.disabled || Boolean(props.waitReason), busy: sending || uploading, empty: emptyDraft });
 
   const send = async () => {
@@ -365,6 +419,7 @@ export function PromptBox(props: Props) {
           placeholder={inputPlaceholder(mode, props.running, props.waitReason)}
           maxRows={9}
           submitOnEnter={false}
+          aria-describedby={status.spoken ? reasonId : undefined}
           onValueChange={(value) => {
             keys.resetHistory();
             onDraft(value);
@@ -404,7 +459,8 @@ export function PromptBox(props: Props) {
               canSend={canSend}
               canQueue={keys.canQueue}
               hasDraft={draft.trim().length > 0}
-              tip={sendTip({ waitReason: props.waitReason, loading: props.disabled, uploading, empty: emptyDraft })}
+              tip={status.tip}
+              onSend={() => void send()}
               onQueue={keys.queueDraft}
               onStop={() => {
                 props.onCancel();
@@ -412,6 +468,7 @@ export function PromptBox(props: Props) {
               }}
             />
           </ComposerToolbarSpacer>
+          <ReasonText id={reasonId} text={status.spoken} />
         </ComposerToolbar>
       </Composer>
       <Disclosure

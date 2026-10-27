@@ -78,7 +78,7 @@ function useExample(paused: boolean): string {
   return EXAMPLES[index] ?? '';
 }
 
-function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void; onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void }) {
+function PromptArea({ value, onChange, onSubmit, onPaste, describedBy }: { value: string; onChange: (v: string) => void; onSubmit: (e: FormEvent) => void; onPaste: (e: ClipboardEvent<HTMLTextAreaElement>) => void; describedBy?: string | undefined }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const example = useExample(value !== '');
   useLayoutEffect(() => {
@@ -91,6 +91,7 @@ function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onC
     <textarea
       ref={ref}
       aria-label="Describe the design"
+      aria-describedby={describedBy}
       rows={2}
       autoFocus
       value={value}
@@ -131,11 +132,21 @@ function focusIn(selector: string): void {
 
 const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
 
+const HOME_REASON_ID = 'home-send-reason';
+const EMPTY_PROMPT = 'Describe the design first';
+
 function SendButton({ busy, disabled, reason }: { busy: Busy; disabled: boolean; reason: string | null }) {
   const working = busy === 'create' || busy === 'ask';
   return (
-    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end">
-      {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-busy={working || undefined} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end">
+      <span key={working ? 'busy' : 'idle'} className="home-send-glyph">
+        {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
+      </span>
+      {reason && reason !== EMPTY_PROMPT && (
+        <span id={HOME_REASON_ID} className="sr-only">
+          {reason}
+        </span>
+      )}
     </button>
   );
 }
@@ -369,7 +380,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
 function homeSendBlocker(busy: Busy, prompt: string, asking: boolean): string | null {
   if (busy !== null) return 'Working on it';
   if (asking) return 'Answer or skip the questions below';
-  if (!prompt.trim()) return 'Describe the design first';
+  if (!prompt.trim()) return EMPTY_PROMPT;
   return null;
 }
 
@@ -629,6 +640,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     onSkills: openAdvanced,
     onLocation: () => focusIn('#new-project-location'),
   };
+  const sendBlocker = homeSendBlocker(busy, prompt, questions !== null);
   const modelSettings: ModelSettings = {
     model: settingsDraft.model,
     onModel: (model) => setSettingsDraft((d) => ({ ...d, model })),
@@ -657,7 +669,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
           <div className="home-card">
             <form className={`ui-composer home-composer${dragging ? ' dragging' : ''}`} onSubmit={create} {...dropHandlers}>
               <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
-              <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} />
+              <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} describedBy={sendBlocker && sendBlocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined} />
               <DropHint on={dragging} />
               <StarterRow template={template} busy={busy} onOpen={(starter) => void openSelectedStarter(starter)} />
               <ComposerBar
@@ -672,7 +684,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 modelValue={modelValue}
                 modelSettings={modelSettings}
                 busy={busy}
-                sendDisabled={homeSendBlocker(busy, prompt, questions !== null)}
+                sendDisabled={sendBlocker}
               />
             </form>
             {questions ? (

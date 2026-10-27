@@ -1927,3 +1927,20 @@
     width: min(380px, calc(100vw - 32px));
   }
 }
+
+.home-send-glyph {
+  display: grid;
+  place-items: center;
+}
+
+.home-send[aria-busy] .home-send-glyph {
+  animation: send-glyph-in 180ms var(--ease-out);
+}
+
+@keyframes send-glyph-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(0.6);
+  }
+}

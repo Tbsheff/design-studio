@@ -982,3 +982,22 @@
     padding-inline: var(--s-2);
   }
 }
+
+.send-btn .send-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.send-btn .send-label.morph {
+  animation: send-label-in 180ms var(--ease-out);
+}
+
+@keyframes send-label-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(0.9);
+  }
+}

@@ -455,9 +455,9 @@
   position: absolute;
   top: calc(100% + var(--s-1));
   left: 0;
-  z-index: 20;
-  width: min(480px, calc(100vw - 2 * var(--s-4)));
-  max-height: 320px;
+  z-index: 60;
+  width: min(420px, calc(100vw - 2 * var(--s-4)));
+  max-height: 360px;
   overflow: auto;
   padding: var(--s-3) var(--s-4);
   background: var(--surface-raised);
@@ -468,11 +468,56 @@
   color: var(--text-2);
 }
 
+.draft-problems {
+  display: grid;
+  gap: var(--s-3);
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+}
+
+.draft-problem-group {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.draft-problem-group h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  font-weight: var(--w-medium);
+  color: var(--text-2);
+}
+
+.draft-problem-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--surface-hover);
+  color: var(--text-2);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .draft-problems ul {
   margin: 0;
   padding-left: var(--s-4);
   display: grid;
-  gap: var(--s-1);
+  gap: 2px;
+  color: var(--text);
+}
+
+.draft-problems-hint {
+  margin: 0;
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
 }
 
 .draft-problems-note {

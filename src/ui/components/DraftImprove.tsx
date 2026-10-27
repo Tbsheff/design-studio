@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import { useFitPopover } from '../popoverPlacement';
-import type { DesignSystemCheckResult, RunLevel, RunRequest } from '../../shared/contracts';
+import type { DesignSystemCheckResult, DesignSystemCheckRule, RunLevel, RunRequest } from '../../shared/contracts';
 import type { RunView } from '../runState';
 
 export const IMPROVE_PROMPT = 'Improve this design system.';
@@ -63,6 +63,33 @@ function runNote(run: RunView | null): string | null {
   return null;
 }
 
+const RULE_LABEL: Record<DesignSystemCheckRule, string> = {
+  'design-md': 'DESIGN.md sections to write',
+  tokens: 'Tokens',
+  contrast: 'Contrast',
+  'kit-colors': 'Kit page colors',
+  fonts: 'Fonts',
+};
+
+const RULE_ORDER: DesignSystemCheckRule[] = ['contrast', 'tokens', 'fonts', 'kit-colors', 'design-md'];
+
+const MORE = /^(\d+) more .+ not listed\.?$/;
+
+function problemText(rule: DesignSystemCheckRule, message: string): string {
+  const more = MORE.exec(message)?.[1];
+  if (more) return `And ${more} more`;
+  if (rule !== 'design-md') return message;
+  const todo = /to-do line:\s*_?\s*To do:\s*(.+?)_?\s*$/i.exec(message);
+  const found = todo?.[1];
+  if (!found) return message;
+  const text = found.trim().replace(/\.$/, '');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function groupProblems(problems: DesignSystemCheckResult['problems']): Array<{ rule: DesignSystemCheckRule; items: string[] }> {
+  return RULE_ORDER.map((rule) => ({ rule, items: problems.filter((problem) => problem.rule === rule).map((problem) => problemText(rule, problem.message)) })).filter((group) => group.items.length > 0);
+}
+
 export function CheckStatus({ check, run }: { check: DesignSystemCheckResult | null; run: RunView | null }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
@@ -87,13 +114,19 @@ export function CheckStatus({ check, run }: { check: DesignSystemCheckResult | n
       {open && (
         <div ref={listRef} className="draft-problems" id={listId} role="region" aria-label="Design system check problems">
           {note && <p className="draft-problems-note">{note}</p>}
-          <ul>
-            {check.problems.map((problem, index) => (
-              <li key={`${problem.rule}-${index}`}>
-                <span className="draft-rule">{problem.rule}</span> {problem.message}
-              </li>
-            ))}
-          </ul>
+          {groupProblems(check.problems).map((group) => (
+            <section key={group.rule} className="draft-problem-group">
+              <h3>
+                {RULE_LABEL[group.rule]} <span className="draft-problem-count">{group.items.length}</span>
+              </h3>
+              <ul>
+                {group.items.map((text, index) => (
+                  <li key={`${group.rule}-${index}`}>{text}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          <p className="draft-problems-hint">Improve with AI fills these in, or edit DESIGN.md yourself.</p>
         </div>
       )}
     </span>

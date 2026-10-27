@@ -1218,7 +1218,12 @@
 }
 
 .slash-label {
-  flex: 0 1 auto;
+  flex: none;
+  max-width: 70%;
+}
+
+.slash-lock {
+  color: var(--text-faint);
 }
 
 .slash-hint {

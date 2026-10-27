@@ -99,6 +99,10 @@ interface Options {
   label: string;
 }
 
+function lockReason(group: SlashGroup | null | undefined): string | null {
+  return group?.choices.find((choice) => choice.disabledReason)?.disabledReason ?? null;
+}
+
 export function useSlashMenu({ draft, setDraft, groups, sections, note, label }: Options) {
   const listId = useId();
   const [path, setPath] = useState<string | null>(null);
@@ -181,6 +185,7 @@ export function useSlashMenu({ draft, setDraft, groups, sections, note, label }:
     current,
     query: filter,
     heading: group?.label ?? null,
+    lock: lockReason(group),
     label: group?.label ?? label,
     statuses: shownSections.filter((section) => section.status && section.items.length === 0),
     note: group || filter !== '' ? null : note,
@@ -254,7 +259,7 @@ function RowBody({ row }: { row: Row }) {
     <>
       <Icon name={choice.icon} size={16} />
       <span className="slash-label">{choice.label}</span>
-      {(choice.disabledReason ?? choice.hint) && <span className="slash-hint">{choice.disabledReason ?? choice.hint}</span>}
+      {choice.hint && <span className="slash-hint">{choice.hint}</span>}
       {choice.tag}
       {(choice.meta || choice.checked) && (
         <span className="slash-end">
@@ -279,6 +284,7 @@ export function SlashMenu({ view, anchor, input, onClose }: { view: SlashMenuVie
       {view.heading && (
         <div className="slash-heading" aria-hidden="true">
           {view.heading}
+          {view.lock && <span className="slash-lock"> · {view.lock}</span>}
         </div>
       )}
       <div
@@ -310,6 +316,7 @@ export function SlashMenu({ view, anchor, input, onClose }: { view: SlashMenuVie
                 aria-selected={row === view.current}
                 aria-checked={row.kind === 'choice' && row.choice.checked !== undefined ? row.choice.checked : undefined}
                 aria-disabled={off || undefined}
+                aria-description={off && row.kind === 'choice' ? (row.choice.disabledReason ?? undefined) : undefined}
                 aria-label={row.kind === 'group' ? `${row.group.label}: ${row.group.value}` : undefined}
                 className="slash-row"
                 data-highlighted={row === view.current || undefined}

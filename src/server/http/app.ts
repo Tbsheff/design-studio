@@ -208,6 +208,7 @@ const settingsSchema = z
     maxTurns: z.number().int().min(1).max(200),
     allowBash: z.boolean(),
     allowInstall: z.boolean(),
+    autoApprove: z.boolean(),
     disabledSkills: z
       .array(z.string().regex(/^[^:\s]+:[^:\s]+$/, 'must be a skill id like plugin:skill; see GET /api/skills'))
       .max(1000)

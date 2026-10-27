@@ -68,6 +68,10 @@ export function SettingsFields({ draft, onChange, shellExtra }: Props) {
         />
         <span>Allow installing packages</span>
       </label>
+      <label className={`check ${draft.allowBash ? '' : 'disabled'}`}>
+        <input type="checkbox" checked={draft.allowBash && draft.autoApprove} disabled={!draft.allowBash} onChange={(e) => set({ autoApprove: e.target.checked })} />
+        <span>Auto mode: run commands without asking</span>
+      </label>
       <p className="warn-line">
         Shell commands run on this computer in the project folder. Installs download and run third-party code. Turn these on
         only for projects you trust.

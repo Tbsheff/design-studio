@@ -12,6 +12,7 @@ export interface SettingsDraft {
   maxTurns: string;
   allowBash: boolean;
   allowInstall: boolean;
+  autoApprove: boolean;
   disabledSkills: string[];
   defaultLevel: RunLevel;
 }
@@ -23,6 +24,7 @@ export function toDraft(settings: ProjectSettings): SettingsDraft {
     maxTurns: String(settings.maxTurns),
     allowBash: settings.allowBash,
     allowInstall: settings.allowInstall,
+    autoApprove: settings.autoApprove ?? true,
     disabledSkills: [...(settings.disabledSkills ?? [])],
     defaultLevel: settings.defaultLevel ?? 'prototype',
   };
@@ -41,6 +43,7 @@ export function parseDraft(draft: SettingsDraft): { settings: ProjectSettings } 
       maxTurns: turns,
       allowBash: draft.allowBash,
       allowInstall: draft.allowBash && draft.allowInstall,
+      autoApprove: draft.autoApprove,
       disabledSkills: [...draft.disabledSkills],
       defaultLevel: draft.defaultLevel,
     },

@@ -629,7 +629,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       log: newLoopLog(),
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
-    return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
+    return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
   }
 
   async function runSegment(input: DriverInput, setup: AttemptSegment, sent: UserMessageParts, prior: PriorSession | null): Promise<{ state: StreamState; outcome: DriverOutcome }> {

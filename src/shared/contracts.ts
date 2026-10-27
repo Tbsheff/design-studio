@@ -8,6 +8,7 @@ export interface ProjectSettings {
   maxTurns: number;
   allowBash: boolean;
   allowInstall: boolean;
+  autoApprove: boolean;
   disabledSkills: string[];
   defaultLevel: RunLevel;
 }
@@ -969,7 +970,8 @@ export const DEFAULT_SETTINGS: ProjectSettings = {
   maxBudgetUsd: null,
   maxTurns: 40,
   allowBash: true,
-  allowInstall: false,
+  allowInstall: true,
+  autoApprove: true,
   disabledSkills: [],
   defaultLevel: 'prototype',
 };

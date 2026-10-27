@@ -282,7 +282,8 @@ function useElapsed(since: number, active: boolean): number {
   return Math.max(0, now - since);
 }
 
-function statusLabel(run: RunView, workTree: string | null, now: number): string {
+function statusLabel(run: RunView, workTree: string | null, now: number, offline: boolean): string {
+  if (offline) return 'Lost the connection. Reconnecting…';
   if (run.permissions.length > 0) return 'Waiting for your answer';
   if (run.retry) {
     const seconds = Math.max(0, Math.ceil((run.retry.until - now) / 1000));
@@ -299,13 +300,19 @@ function statusLabel(run: RunView, workTree: string | null, now: number): string
   return run.parts.length > 0 ? 'Working' : 'Starting';
 }
 
-export function LiveStatus({ run, workTree }: { run: RunView; workTree: string | null }) {
+function elapsedText(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
+}
+
+export function LiveStatus({ run, workTree, offline = false }: { run: RunView; workTree: string | null; offline?: boolean }) {
   const elapsed = useElapsed(run.startedAt, true);
   return (
-    <div className="ui-status live-status" data-testid="live-status">
+    <div className="ui-status live-status" data-testid="live-status" data-offline={offline || undefined}>
       <span className="ui-status-mark" aria-hidden="true" />
-      <span className="live-label min-w-0 truncate">{statusLabel(run, workTree, run.startedAt + elapsed)}</span>
-      <span className="live-elapsed tabular-nums">{formatMs(Math.floor(elapsed / 1000) * 1000)}</span>
+      <span className="live-label min-w-0 truncate">{statusLabel(run, workTree, run.startedAt + elapsed, offline)}</span>
+      <span className="live-elapsed tabular-nums">{elapsedText(elapsed)}</span>
     </div>
   );
 }

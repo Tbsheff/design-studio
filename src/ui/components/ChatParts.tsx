@@ -204,7 +204,7 @@ export function RunError({ run, latest, onRetry }: { run: RunView; latest: boole
   }, [error, latest]);
   if (!error || run.status === 'budget_exceeded') return null;
   return (
-    <Exception ref={ref} className="run-error" role="alert">
+    <Exception ref={ref} className="run-error" role="alert" data-long={error.length > 60 || undefined}>
       <ExceptionHeader className="run-error-head">
         <ExceptionType>Error</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>

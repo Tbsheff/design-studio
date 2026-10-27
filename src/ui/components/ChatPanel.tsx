@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Direction } from '../../shared/contracts';
 import { forkBaseOf, runMatches, runQueryTerms } from '../../shared/rewind';
 import { renameRun } from '../runHistoryApi';
@@ -122,9 +122,10 @@ interface EntryProps extends TurnProps {
   workTree: string | null;
   onDetails: (runId: string) => void;
   polish: PolishProps;
+  offline: boolean;
 }
 
-const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
+const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
   const running = run.status === 'running';
@@ -136,7 +137,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
         <MessageContent className="run-body gap-3">
           <RunParts run={run} running={running} workTree={workTree} />
           {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
-          {running && <LiveStatus run={run} workTree={workTree} />}
+          {running && <LiveStatus run={run} workTree={workTree} offline={offline} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunFeedbackRow run={run} latest={latest} onDetails={details} />
@@ -192,6 +193,10 @@ function EmptyChat() {
   );
 }
 
+function EmptyState({ empty }: { empty: boolean }) {
+  return empty ? <EmptyChat /> : null;
+}
+
 const WAIT_TIP = 'Wait for the run to finish';
 
 function turnProps(run: RunView, rewind: RewindControl | undefined, title: string | undefined, actions: TurnActions | null): TurnProps {
@@ -238,6 +243,8 @@ interface Props {
   onRetry?: (run: RunView) => void;
   onApprovePlan?: (run: RunView) => void;
   mcp?: McpFeedControl | null;
+  lead?: ReactNode;
+  offline?: boolean;
 }
 
 const RUN_ANNOUNCE: Record<RunView['status'], string> = {
@@ -250,7 +257,8 @@ const RUN_ANNOUNCE: Record<RunView['status'], string> = {
 
 function RunAnnouncer({ run }: { run: RunView | undefined }) {
   const queued = run?.status === 'running' ? run.queue.length : 0;
-  const text = run ? `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ''}` : '';
+  const asking = run?.status === 'running' ? run.permissions[0] : undefined;
+  const text = !run ? '' : asking ? `The agent needs your answer: ${asking.title}` : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ''}`;
   return (
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {text}
@@ -258,7 +266,7 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
   );
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null }: Props) {
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
@@ -298,11 +306,12 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
       {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">
-          {runs.length === 0 && !pending && !feedShown(mcp) && <EmptyChat />}
+          {lead}
+          {lead ?? <EmptyState empty={runs.length === 0 && !pending && !feedShown(mcp)} />}
           {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
           {timeline.map((item) =>
             item.kind === 'run' ? (
-              <RunEntry key={item.key} run={item.run} latest={item.run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} {...turnProps(item.run, rewind, titles[item.run.runId] ?? item.run.summary?.title, actions)} />
+              <RunEntry key={item.key} run={item.run} latest={item.run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={Boolean(offline)} {...turnProps(item.run, rewind, titles[item.run.runId] ?? item.run.summary?.title, actions)} />
             ) : (
               <McpItem key={item.key} item={item} mcp={mcp} />
             ),

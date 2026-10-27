@@ -13,7 +13,7 @@ const STATUS_LABEL: Record<RunStatus, string> = {
   completed: 'Completed',
   canceled: 'Stopped',
   failed: 'Failed',
-  budget_exceeded: 'Spending limit reached',
+  budget_exceeded: 'Limit reached',
 };
 
 const THUMB_PATH = 'M5 7.25v6.25H2.5V7.25zM5 7.25 7.6 2.5c.9 0 1.6.7 1.6 1.6v2.4h3.3c.8 0 1.4.7 1.3 1.5l-.8 4.4c-.1.6-.7 1.1-1.3 1.1H5';

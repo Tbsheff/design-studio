@@ -134,6 +134,7 @@ export function DraftSources({ state }: { state: DraftSourcesState | null }) {
 export interface DraftChrome {
   banner: ReactNode;
   reading: boolean;
+  waitReason: string | null;
   locked: (running: boolean) => boolean;
   unfinished: (visible: boolean) => boolean;
 }
@@ -145,6 +146,7 @@ export function useDraftChrome(projectId: string, project: Project | null): Draf
   return {
     banner: backing ? <DraftSources state={state} /> : null,
     reading,
+    waitReason: reading ? 'Wait for the sources to finish reading...' : null,
     locked: (running) => running || reading,
     unfinished: (visible) => visible && !reading,
   };

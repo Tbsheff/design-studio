@@ -23,7 +23,6 @@ interface Props {
   onTab: (tab: PanelTab) => void;
   header: ReactNode;
   system: ReactNode;
-  banner?: ReactNode;
   chat: ComponentProps<typeof ChatPanel>;
   errors: ComponentProps<typeof ErrorsPanel>;
   prompt: ComponentProps<typeof PromptBox>;
@@ -109,7 +108,6 @@ export function LeftPane(props: Props) {
       {props.header}
       <div className="pane-body">
         <div className="pane-chat" hidden={!chat}>
-          {props.banner}
           <ChatPanel {...props.chat} />
         </div>
         {edit && (

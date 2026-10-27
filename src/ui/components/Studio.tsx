@@ -390,8 +390,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               </div>
             </>
           }
-          banner={draftChrome.banner}
-          chat={{ rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
+          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,
@@ -412,6 +411,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             tokens: tokenEntries(tokens),
             components: componentList.components,
             mentionRequest,
+            waitReason: draftChrome.waitReason,
             variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
           }}
           inspector={{

@@ -321,6 +321,7 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
         type="button"
         className="ui-pill-select composer-pill model-pill"
         data-testid="run-settings"
+        aria-label={`Model: ${shortModel(shown)}`}
         aria-haspopup="dialog"
         aria-expanded={pop.open}
         onClick={() => {

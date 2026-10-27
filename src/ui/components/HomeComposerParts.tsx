@@ -43,7 +43,7 @@ export function ComposerChips({ images, references, onRemoveImage, onRemoveRefer
   return (
     <ul className="home-chips" aria-label="Attached to this prompt">
       {images.map((image) => (
-        <li key={image.id} className="home-chip image" title={image.file.name}>
+        <li key={image.id} className="home-chip image" data-tip={image.file.name}>
           <img src={image.url} alt="" />
           <span className="truncate">{image.file.name}</span>
           <button type="button" className="home-chip-remove" aria-label={`Remove ${image.file.name}`} onClick={() => onRemoveImage(image.id)}>
@@ -52,7 +52,7 @@ export function ComposerChips({ images, references, onRemoveImage, onRemoveRefer
         </li>
       ))}
       {references.map((reference) => (
-        <li key={reference.url} className="home-chip reference" title={`Use as reference: ${reference.url}`}>
+        <li key={reference.url} className="home-chip reference" data-tip={`Use as reference: ${reference.url}`}>
           <Icon name="globe" size={14} />
           <span className="home-chip-label">Use as reference</span>
           <span className="truncate home-chip-host">{reference.host}</span>

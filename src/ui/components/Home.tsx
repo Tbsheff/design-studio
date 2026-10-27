@@ -96,7 +96,7 @@ function PromptArea({ value, onChange, onSubmit, onPaste }: { value: string; onC
       onChange={(e) => onChange(e.target.value)}
       onPaste={onPaste}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSubmit(e);
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) onSubmit(e);
       }}
       placeholder={example}
     />
@@ -128,10 +128,12 @@ function focusIn(selector: string): void {
   }, 60);
 }
 
-function SendButton({ busy, disabled }: { busy: Busy; disabled: boolean }) {
+const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+
+function SendButton({ busy, disabled, reason }: { busy: Busy; disabled: boolean; reason: string | null }) {
   const working = busy === 'create' || busy === 'ask';
   return (
-    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip="Create  ⌘↩" data-tip-align="end">
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end">
       {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
     </button>
   );
@@ -270,7 +272,7 @@ interface ComposerBarProps {
   modelValue: string;
   modelSettings: ModelSettings;
   busy: Busy;
-  sendDisabled: boolean;
+  sendDisabled: string | null;
 }
 
 function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack, kind, onKind, modelValue, modelSettings, busy, sendDisabled }: ComposerBarProps) {
@@ -357,9 +359,16 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
           </Suspense>
         )}
       </div>
-      <SendButton busy={busy} disabled={sendDisabled} />
+      <SendButton busy={busy} disabled={sendDisabled !== null} reason={sendDisabled} />
     </div>
   );
+}
+
+function homeSendBlocker(busy: Busy, prompt: string, asking: boolean): string | null {
+  if (busy !== null) return 'Working on it';
+  if (asking) return 'Answer or skip the questions below';
+  if (!prompt.trim()) return 'Describe the design first';
+  return null;
 }
 
 interface HomeCreateInput {
@@ -661,7 +670,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 modelValue={modelValue}
                 modelSettings={modelSettings}
                 busy={busy}
-                sendDisabled={busy !== null || !prompt.trim() || questions !== null}
+                sendDisabled={homeSendBlocker(busy, prompt, questions !== null)}
               />
             </form>
             {questions ? (

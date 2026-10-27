@@ -58,10 +58,10 @@ interface VariationsPromptProps {
   onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
 }
 
-function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; hasDraft: boolean; onQueue: () => void; onStop: () => void }) {
+function SendButton(props: { running: boolean; sending: boolean; canSend: boolean; canQueue: boolean; hasDraft: boolean; tip: string; onQueue: () => void; onStop: () => void }) {
   if (props.running && !props.hasDraft) {
     return (
-      <button type="button" className="btn send-btn stop-btn has-icon" onClick={props.onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Esc" data-tip-align="end">
+      <button type="button" className="btn send-btn stop-btn has-icon" onClick={props.onStop} aria-label="Stop" aria-keyshortcuts="Escape" data-tip="Esc" data-tip-align="end" data-tip-side="top">
         <Icon name="stop" size={12} />
         Stop
       </button>
@@ -77,6 +77,7 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
         aria-label="Queue"
         data-tip={`Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`}
         data-tip-align="end"
+        data-tip-side="top"
       >
         Queue
       </button>
@@ -86,8 +87,9 @@ function SendButton(props: { running: boolean; sending: boolean; canSend: boolea
     <ComposerSubmit
       disabled={!props.canSend}
       aria-label={props.sending ? 'Sending…' : 'Send'}
-      data-tip={`${MOD_LABEL}Enter`}
+      data-tip={props.tip}
       data-tip-align="end"
+      data-tip-side="top"
       render={<button className="btn send send-btn" />}
     >
       {props.sending ? <span className="spinner" /> : 'Send'}
@@ -126,6 +128,14 @@ function sendReady(state: { running: boolean; blocked: boolean; busy: boolean; e
 function inputPlaceholder(mode: ComposerMode, running: boolean, waitReason: string | null | undefined): string {
   if (waitReason) return waitReason;
   return running ? RUNNING_PLACEHOLDER : INPUT_COPY[mode].placeholder;
+}
+
+function sendTip(state: { waitReason: string | null | undefined; loading: boolean; uploading: boolean; empty: boolean }): string {
+  if (state.waitReason) return state.waitReason;
+  if (state.loading) return 'Wait for the design to load';
+  if (state.uploading) return 'Wait for the images to upload';
+  if (state.empty) return 'Type a message to send';
+  return `Send (${MOD_LABEL}Enter)`;
 }
 
 function sendErrorText(err: unknown): string {
@@ -245,7 +255,8 @@ export function PromptBox(props: Props) {
     keys.onKeyDown(event);
   };
   const keys = useComposerKeys({ draft, setDraft, blocked: files.length > 0, running: props.running, queue: props.queue, history: props.history, onQueueChange: props.onQueueChange, onSteer: props.onSteer });
-  const canSend = sendReady({ running: props.running, blocked: props.disabled || Boolean(props.waitReason), busy: sending || uploading, empty: draft.trim() === '' && skillIds.length === 0 });
+  const emptyDraft = draft.trim() === '' && skillIds.length === 0;
+  const canSend = sendReady({ running: props.running, blocked: props.disabled || Boolean(props.waitReason), busy: sending || uploading, empty: emptyDraft });
 
   const send = async () => {
     if (!canSend) return;
@@ -318,8 +329,16 @@ export function PromptBox(props: Props) {
             {f.name}: {f.error}
           </div>
         ))}
-      {error && <div className="alert error">{error}</div>}
-      {runLevel.error && <div className="alert error">{runLevel.error}</div>}
+      {error && (
+        <div className="alert error" role="alert">
+          {error}
+        </div>
+      )}
+      {runLevel.error && (
+        <div className="alert error" role="alert">
+          {runLevel.error}
+        </div>
+      )}
       <QueuedMessages items={keys.queue} onChange={keys.setQueue} />
       <HistorySearch
         search={historySearch}
@@ -385,6 +404,7 @@ export function PromptBox(props: Props) {
               canSend={canSend}
               canQueue={keys.canQueue}
               hasDraft={draft.trim().length > 0}
+              tip={sendTip({ waitReason: props.waitReason, loading: props.disabled, uploading, empty: emptyDraft })}
               onQueue={keys.queueDraft}
               onStop={() => {
                 props.onCancel();

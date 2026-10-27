@@ -87,7 +87,7 @@ export function MentionChips({ mentions, onRemove }: { mentions: RunMention[]; o
       {mentions.map((mention) => {
         const key = mentionKey(mention);
         return (
-          <span key={key} className="skill-chip mention-chip" title={mentionTitle(mention)} data-testid="mention-chip">
+          <span key={key} className="skill-chip mention-chip" data-tip-side="top" data-tip={mentionTitle(mention)} data-testid="mention-chip">
             <Icon name={mentionIcon(mention)} size={12} />
             {mentionLabel(mention)}
             <button type="button" aria-label={`Remove ${mentionLabel(mention)}`} onClick={() => onRemove(key)}>

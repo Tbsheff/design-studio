@@ -17,7 +17,7 @@ export function SelectionChips({ selection, onRemove }: { selection: SelectionCo
   return (
     <div className="chips flex flex-wrap gap-1 px-2 pt-2">
       {selection.map((s) => (
-        <Chip key={s.selector} size="sm" className="chip max-w-full py-0.5 pr-0.5 text-primary" title={s.selector}>
+        <Chip key={s.selector} size="sm" className="chip max-w-full py-0.5 pr-0.5 text-primary" data-tip={s.selector} data-tip-side="top">
           <Icon name="pointer" size={12} />
           <span className="chip-text min-w-0 truncate font-mono">
             <span className="chip-tag font-bold">{s.tag}</span>
@@ -50,7 +50,7 @@ export function AttachmentThumbs({ files, onRemove }: { files: PendingAttachment
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
       {files.map((f) => (
-        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className="thumb size-13" title={f.error ?? f.name}>
+        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className="thumb size-13" data-tip={f.error ?? f.name} data-tip-side="top">
           <AttachmentMedia>
             <img data-slot="attachment-media-img" src={f.previewUrl} alt={f.name} className={f.error ? 'opacity-35' : ''} />
           </AttachmentMedia>
@@ -71,7 +71,7 @@ export function AttachmentThumbs({ files, onRemove }: { files: PendingAttachment
 
 export function ModelTag({ model }: { model: string }) {
   return (
-    <Chip size="sm" className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap" data-testid="active-model" title={`Model: ${model}`}>
+    <Chip size="sm" className="model-tag mr-1 shrink-0 font-semibold whitespace-nowrap" data-testid="active-model" data-tip={`Model: ${model}`}>
       <Icon name="sparkle" size={12} />
       {modelLabel(model).replace(/^Claude /, '')}
       <span className="sr-only">({model})</span>

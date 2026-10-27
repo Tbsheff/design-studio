@@ -30,6 +30,7 @@ import { DrawBar, DrawSurface } from './DrawLayer';
 import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
 import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
+import { McpPointBadge } from './McpPointBadge';
 
 interface Props {
   projectId: string;
@@ -461,7 +462,7 @@ export function Canvas(props: Props) {
   });
 
   useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
-  useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
+  const pointBadge = useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
   const lofiList = useCanvasLofi(projectId);
   useLofiFrames(stageRef, kind, directionId, lofiList);
   const liveDirection = frameDirection(active, directionId);
@@ -558,6 +559,7 @@ export function Canvas(props: Props) {
         {capture && <div className="capture" data-testid="pan-capture" />}
         <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
         <EditNotice edits={layerEdits} />
+        <McpPointBadge badge={pointBadge} frameName={(id) => { const f = canvasFrames.layout.frames.find((item) => item.id === id); return f ? frameName(f) : id; }} />
       </div>
       </div>
     </div>

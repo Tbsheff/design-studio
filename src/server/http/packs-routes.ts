@@ -4,7 +4,7 @@ import { DirectEditError } from '../direct-edit/index.js';
 import type { PackLibrary } from '../design-system/library.js';
 import { packProblems } from '../design-system/packs.js';
 import { MAX_IMPORT_ZIP_BYTES, PackExistsError, parseImportMode } from '../design-system/pack-import.js';
-import { applyPackToDirection, parseApplyRequest, saveDirectionPack } from '../design-system/project-pack.js';
+import { SaveCheckError, applyPackToDirection, parseApplyRequest, saveDirectionPack } from '../design-system/project-pack.js';
 import type { ProjectPackDeps } from '../design-system/project-pack.js';
 import { BadRequestError } from '../store/errors.js';
 
@@ -103,6 +103,7 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
     try {
       return c.json(await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => saveDirectionPack(editDeps, library, project, direction, body)));
     } catch (error) {
+      if (error instanceof SaveCheckError) return c.json({ error: 'check_failed', message: error.message, problems: error.problems }, 409);
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;
     }

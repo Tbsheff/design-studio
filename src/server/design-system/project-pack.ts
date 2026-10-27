@@ -7,6 +7,7 @@ import { DirectEditError, publishVersion } from '../direct-edit/index.js';
 import type { DirectEditDeps } from '../direct-edit/index.js';
 import { BadRequestError, NotFoundError, isNodeError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
+import { checkDesignSystem } from './check.js';
 import { readSnapshot, restoreSnapshots } from './create-token.js';
 import { splitDesignMd } from './design-md.js';
 import type { PackLibrary } from './library.js';
@@ -25,7 +26,16 @@ export const NOT_WIRED_NOTICE = 'Design system files added. This imported projec
 const APPLY_FILES = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
 
 const applySchema = z.object({ packId: z.string().trim().min(1).max(64) }).strict();
-const saveSchema = z.object({ name: z.string().trim().min(1).max(80), packId: z.string().trim().min(1).max(64).optional(), asNew: z.boolean().optional() }).strict();
+const saveSchema = z.object({ name: z.string().trim().min(1).max(80), packId: z.string().trim().min(1).max(64).optional(), asNew: z.boolean().optional(), force: z.boolean().optional() }).strict();
+
+export class SaveCheckError extends Error {
+  readonly problems: number;
+
+  constructor(problems: number) {
+    super(`The check found ${problems} problem${problems === 1 ? '' : 's'}. Fix them, or save anyway.`);
+    this.problems = problems;
+  }
+}
 
 async function readOptional(file: string): Promise<string | null> {
   try {
@@ -42,7 +52,7 @@ export function parseApplyRequest(raw: unknown): { packId: string } {
   return parsed.data;
 }
 
-export function parseSaveRequest(raw: unknown): { name: string; packId?: string; asNew?: boolean } {
+export function parseSaveRequest(raw: unknown): { name: string; packId?: string; asNew?: boolean; force?: boolean } {
   const parsed = saveSchema.safeParse(raw);
   if (!parsed.success) throw new BadRequestError(`invalid request: ${formatIssues('', parsed.error).map((line) => line.trim()).join('; ')}`);
   return parsed.data;
@@ -135,6 +145,10 @@ export async function saveDirectionPack(deps: ProjectPackDeps, library: PackLibr
     throw new DirectEditError('run_in_progress', 'The agent is editing this direction; wait for the run to finish');
   }
   const workTree = direction.workTree;
+  if (project.designSystemFor && request.force !== true) {
+    const check = await checkDesignSystem(workTree);
+    if (!check.passed) throw new SaveCheckError(check.problems.length);
+  }
   const tokensText = await readOptional(path.join(workTree, TOKENS_FILE));
   const manifestText = await readOptional(path.join(workTree, PACK_FILE));
   if (tokensText === null || manifestText === null) throw new NotFoundError('This direction has no design system');

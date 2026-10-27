@@ -143,7 +143,10 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/design-system/apply`, { packId }, pickMessage);
     return (await res.json()) as ApplyPackResult;
   },
-  savePack: (pid: string, did: string, input: { name: string; packId?: string; asNew?: boolean }) => json<SavePackResult>('POST', `${d(pid, did)}/design-system/save`, input),
+  savePack: async (pid: string, did: string, input: { name: string; packId?: string; asNew?: boolean; force?: boolean }) => {
+    const res = await request('POST', `${d(pid, did)}/design-system/save`, input, pickMessage);
+    return (await res.json()) as SavePackResult;
+  },
   createDesignSystemDraft: (form: FormData) => json<DesignSystemDraftResult>('POST', '/api/design-systems/draft', form),
   getDesignSystemDraft: (pid: string) => json<DesignSystemDraftInfo>('GET', `${p(pid)}/design-system-draft`),
   createToken: async (pid: string, did: string, req: CreateTokenRequest) => {

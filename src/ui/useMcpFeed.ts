@@ -39,6 +39,7 @@ export function useMcpFeed(projectId: string, directionId: string | null): McpFe
     if (event.type === 'mcp.activity') setActivity((prev) => mergeActivity(prev, [event.activity]));
     else if (event.type === 'mcp.approval') {
       const { approval } = event;
+      if (approval.expiresAt <= Date.now()) return;
       setApprovals((prev) => (prev.some((card) => card.approval.id === approval.id) ? prev : [...prev, { approval, outcome: null }]));
     } else if (event.type === 'mcp.approval.resolved') {
       setApprovals((prev) => prev.map((card) => (card.approval.id === event.approvalId ? { ...card, outcome: event.outcome } : card)));

@@ -6,6 +6,7 @@ import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { usePresence } from '../usePresence';
 import { Icon, type IconName } from './Icon';
+import { StableText } from './StableText';
 import { ChoiceItem, levelGist, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
 import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_HINT, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
 
@@ -248,7 +249,9 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
         }}
       >
         <span className="ui-pill-select-label">Level</span>
-        <span className="ui-pill-select-value">{levelLabel(level)}</span>
+        <span className="ui-pill-select-value">
+          <StableText sizes={RUN_LEVELS.map(levelLabel)}>{levelLabel(level)}</StableText>
+        </span>
         <PillCaret />
       </button>
       {menu.shown &&
@@ -337,7 +340,9 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
       >
         <span className="ui-pill-select-label">Model</span>
         <span className="ui-pill-select-value model-pill-name" data-testid="active-model">
-          <ModelName name={shortModel(shown)} />
+          <StableText sizes={MODEL_OPTIONS.map((option) => <ModelName key={option.id} name={shortModel(option.id)} />)}>
+            <ModelName name={shortModel(shown)} />
+          </StableText>
         </span>
         <PillCaret />
       </button>

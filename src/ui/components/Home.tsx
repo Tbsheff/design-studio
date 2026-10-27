@@ -15,7 +15,8 @@ import { ThemeButton } from './ThemeButton';
 import { ProjectGrid } from './ProjectGrid';
 import { reportAppStart } from '../perfTelemetry';
 import { prefetchScreensWhenIdle } from '../screens';
-import { modelLabel, parseDraft, toDraft } from '../settingsDraft';
+import { MODEL_OPTIONS, modelLabel, parseDraft, toDraft } from '../settingsDraft';
+import { StableText } from './StableText';
 import { BrandMark } from './BrandMark';
 import { ComposerAlert, ComposerChips, useComposerAttachments, type ImageDraft, type ReferenceDraft } from './HomeComposerParts';
 import { HomeToast, useHomeProjects, useOnboarding, useProjectActions, type HomeToastState } from './HomeSections';
@@ -151,11 +152,13 @@ function SendButton({ busy, disabled, reason }: { busy: Busy; disabled: boolean;
   );
 }
 
-function PillSelect({ label, value, open, triggerRef, onOpen, ariaLabel }: { label: string; value: string; open: boolean; triggerRef: RefObject<HTMLButtonElement | null>; onOpen: () => void; ariaLabel: string }) {
+function PillSelect({ label, value, sizes = [], open, triggerRef, onOpen, ariaLabel }: { label: string; value: string; sizes?: readonly string[]; open: boolean; triggerRef: RefObject<HTMLButtonElement | null>; onOpen: () => void; ariaLabel: string }) {
   return (
     <button ref={triggerRef} type="button" className="ui-pill-select" aria-haspopup="dialog" aria-expanded={open} aria-label={`${ariaLabel}: ${value}`} onPointerEnter={() => void loadPops()} onFocus={() => void loadPops()} onClick={onOpen}>
       <span className="ui-pill-select-label">{label}</span>
-      <span className="ui-pill-select-value truncate">{value}</span>
+      <span className="ui-pill-select-value truncate">
+        <StableText sizes={sizes}>{value}</StableText>
+      </span>
       <svg className="ui-pill-select-caret" width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden="true">
         <path d={open ? 'M3.5 10L8 5.5l4.5 4.5' : 'M3.5 6L8 10.5 12.5 6'} />
       </svg>
@@ -282,12 +285,13 @@ interface ComposerBarProps {
   kind: ProjectKind;
   onKind: (kind: ProjectKind) => void;
   modelValue: string;
+  modelSizes: string[];
   modelSettings: ModelSettings;
   busy: Busy;
   sendDisabled: string | null;
 }
 
-function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack, kind, onKind, modelValue, modelSettings, busy, sendDisabled }: ComposerBarProps) {
+function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack, kind, onKind, modelValue, modelSizes, modelSettings, busy, sendDisabled }: ComposerBarProps) {
   const [pop, setPop] = useState<Pop>(null);
   const shownPop = usePresence(pop);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -357,7 +361,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
       </button>
       <div className="spacer" />
       <div className="home-anchor end">
-        <PillSelect label="Level" ariaLabel="Level" value={LEVEL_LABEL[modelSettings.level]} open={pop === 'level'} triggerRef={levelRef} onOpen={() => togglePop('level')} />
+        <PillSelect label="Level" ariaLabel="Level" value={LEVEL_LABEL[modelSettings.level]} sizes={Object.values(LEVEL_LABEL)} open={pop === 'level'} triggerRef={levelRef} onOpen={() => togglePop('level')} />
         {shownPop.shown === 'level' && (
           <Suspense fallback={null}>
             <LevelPopover trigger={levelRef} closing={shownPop.closing} onClose={closePop} level={modelSettings.level} onLevel={modelSettings.onLevel} />
@@ -365,7 +369,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
         )}
       </div>
       <div className="home-anchor end">
-        <PillSelect label="Model" ariaLabel="Model and run settings" value={modelValue} open={pop === 'model'} triggerRef={modelRef} onOpen={() => togglePop('model')} />
+        <PillSelect label="Model" ariaLabel="Model and run settings" value={modelValue} sizes={modelSizes} open={pop === 'model'} triggerRef={modelRef} onOpen={() => togglePop('model')} />
         {shownPop.shown === 'model' && (
           <Suspense fallback={null}>
             <ModelPopover trigger={modelRef} closing={shownPop.closing} onClose={closePop} settings={modelSettings} />
@@ -624,6 +628,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const modelValue = modelSummary(settingsDraft.model, designCount);
+  const modelSizes = MODEL_OPTIONS.map((option) => modelSummary(option.id, designCount));
   const tabs = <Tabs tab={prefs.tab} />;
   const openAdvanced = () => {
     setAdvancedOpened((n) => n + 1);
@@ -682,6 +687,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 kind={kind}
                 onKind={changeKind}
                 modelValue={modelValue}
+                modelSizes={modelSizes}
                 modelSettings={modelSettings}
                 busy={busy}
                 sendDisabled={sendBlocker}

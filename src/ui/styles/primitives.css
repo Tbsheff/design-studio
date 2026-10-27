@@ -636,3 +636,17 @@
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--text);
 }
+
+.stable-text {
+  display: inline-grid;
+  justify-items: start;
+}
+
+.stable-text > * {
+  grid-area: 1 / 1;
+}
+
+.stable-text-size {
+  visibility: hidden;
+  pointer-events: none;
+}

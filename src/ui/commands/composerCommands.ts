@@ -1,5 +1,7 @@
 import type { RunLevel } from '../../shared/contracts';
 import { LEVEL_PRESETS } from '../../shared/run-levels';
+import { matchesKey, type KeyInput } from '../../shared/keymap';
+import { IS_MAC } from './keys';
 import type { ComposerMode } from '../components/RunSettings';
 import { collectCommands, type Command } from './registry';
 
@@ -11,8 +13,8 @@ export function nextMode(mode: ComposerMode, step: 1 | -1 = 1): ComposerMode {
   return MODE_ORDER[(at + step + MODE_ORDER.length) % MODE_ORDER.length] ?? 'edit';
 }
 
-export function isModeCycleKey(event: { key: string; shiftKey: boolean; metaKey: boolean; ctrlKey: boolean; altKey: boolean }): boolean {
-  return event.key === 'Tab' && event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey;
+export function isModeCycleKey(event: KeyInput): boolean {
+  return matchesKey('composer-mode', event, IS_MAC);
 }
 
 export interface ComposerActions {

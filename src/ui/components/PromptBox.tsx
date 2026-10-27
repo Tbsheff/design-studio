@@ -21,6 +21,8 @@ import { useDesktopCommand } from '../desktop';
 import { useDraft, type DraftStore } from '../storage';
 import { useCommands, type Command } from '../commands/registry';
 import { composerCommands, isModeCycleKey, nextMode, slashCommands } from '../commands/composerCommands';
+import { IS_MAC } from '../commands/keys';
+import { shortcutLabel } from '../../shared/keymap';
 
 interface Props {
   projectId: string;
@@ -355,7 +357,7 @@ export function PromptBox(props: Props) {
             onMode={setMode}
             designs={designs}
           />
-          {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} short={<Icon name={MODE_ICON[mode]} size={14} />} tip={`${MODE_LABEL[mode]} mode. Shift+Tab cycles modes.`} onClear={() => setMode('edit')} />}
+          {mode !== 'edit' && <StateChip label={MODE_LABEL[mode]} short={<Icon name={MODE_ICON[mode]} size={14} />} tip={`${MODE_LABEL[mode]} mode. ${shortcutLabel('composer-mode', IS_MAC)} cycles modes.`} onClear={() => setMode('edit')} />}
           {designs && designs.value > 1 && designs.disabledReason === null && <StateChip label={`${designs.value} designs`} short={`${designs.value}×`} tip={`Send makes ${designs.value} designs side by side.`} onClear={() => designs.onChange(1)} />}
           <input
             ref={inputRef}

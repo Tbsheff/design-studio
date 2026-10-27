@@ -23,7 +23,7 @@ export const KEYMAP = [
 
   { id: 'run', label: 'Send', keys: ['Mod+Enter'], group: 'Run and chat' },
   { id: 'stop', label: 'Stop the run', keys: ['Esc', 'Mod+.'], group: 'Run and chat' },
-  { id: 'composer-mode', label: 'Next run mode (Edit, Plan, Critique)', keys: ['Shift+Tab'], group: 'Run and chat' },
+  { id: 'composer-mode', label: 'Next run mode (Edit, Plan, Critique)', keys: ['Mod+Shift+M'], group: 'Run and chat' },
   { id: 'slash', label: 'Commands and skills', keys: ['/'], group: 'Run and chat' },
   { id: 'mention', label: 'Mention a file or token', keys: ['@'], group: 'Run and chat' },
   { id: 'prompt-history', label: 'Last prompt', keys: ['↑'], group: 'Run and chat' },

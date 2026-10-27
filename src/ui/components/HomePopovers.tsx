@@ -5,7 +5,7 @@ import { MODEL_OPTIONS } from '../settingsDraft';
 import { useFitPopover } from '../popoverPlacement';
 import { usePopover } from '../usePopover';
 import { Icon } from './Icon';
-import { levelLabel, levelShortHint } from './LevelControl';
+import { ChoiceItem, levelGist, levelHint, levelLabel } from './LevelControl';
 import { VariationsControl } from './VariationsControl';
 
 type Close = (refocus: boolean) => void;
@@ -257,21 +257,19 @@ export function LevelPopover({ trigger, onClose, level, onLevel, closing }: { tr
       <div className="ui-menu-section" role="group" aria-label="Level">
         <span className="ui-menu-label">Level</span>
         {RUN_LEVELS.map((item) => (
-          <button
+          <ChoiceItem
             key={item}
-            type="button"
-            role="menuitemradio"
-            className="ui-menu-item has-hint level-menu-item"
-            aria-checked={level === item}
-            tabIndex={level === item ? 0 : -1}
-            onClick={() => {
+            label={levelLabel(item)}
+            hint={levelGist(item).hint}
+            meta={levelGist(item).cost}
+            full={levelHint(item)}
+            checked={level === item}
+            focusable
+            onPick={() => {
               onLevel(item);
               onClose(true);
             }}
-          >
-            <span>{levelLabel(item)}</span>
-            <span className="ui-menu-hint">{levelShortHint(item)}</span>
-          </button>
+          />
         ))}
       </div>
     </Pop>

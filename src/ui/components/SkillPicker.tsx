@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import type { Project, ProjectSettings, SkillInfo } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { NO_SKILLS_TEXT, enabledSkills, originText, plural, skillDisplayName, useSkillCatalog } from '../skills';
@@ -49,18 +49,18 @@ function SkillOption({ skill, active, onPick }: { skill: SkillInfo; active: bool
       role="option"
       aria-selected={active}
       className={`skill-opt ${active ? 'active' : ''}`}
-      data-tip={skill.sourcePath}
+      data-tip={`${skill.description}\n${skill.sourcePath}`}
       data-tip-side="top"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onPick}
     >
       <span className="skill-opt-head">
-        <Icon name="book" size={13} />
+        <Icon name="book" size={14} />
         <strong>{skill.name}</strong>
-        <span className="skill-origin">{originText(skill.origin)}</span>
+        <span className="skill-opt-desc">{skill.description}</span>
         {skill.needsBash && <span className="skill-tag" data-tip="This skill runs terminal commands. Shell commands are a project setting.">Needs shell</span>}
+        <span className="skill-origin">{originText(skill.origin)}</span>
       </span>
-      <span className="skill-opt-desc">{skill.description}</span>
     </li>
   );
 }
@@ -97,6 +97,24 @@ function shownCommands(commands: readonly Command[], query: string): Command[] {
   return rank(hits, tokens.join(' '), (c) => ({ title: c.slash ?? c.title })).map((r) => r.item);
 }
 
+function byGroupThenName(a: PickItem, b: PickItem): number {
+  if (a.kind !== b.kind) return a.kind === 'command' ? -1 : 1;
+  return pickName(a).localeCompare(pickName(b));
+}
+
+const GROUP_LABEL: Record<PickItem['kind'], string> = { command: 'Commands', skill: 'Skills' };
+
+function GroupLabel({ items, index }: { items: PickItem[]; index: number }) {
+  const item = items[index];
+  const mixed = items.some((other) => other.kind !== items[0]?.kind);
+  if (!item || !mixed || items[index - 1]?.kind === item.kind) return null;
+  return (
+    <li role="presentation" aria-hidden="true" className="skill-group">
+      {GROUP_LABEL[item.kind]}
+    </li>
+  );
+}
+
 function pickName(item: PickItem): string {
   return item.kind === 'command' ? (item.command.slash ?? '') : item.skill.name;
 }
@@ -110,11 +128,10 @@ function CommandOption({ command, active, onPick }: { command: Command; active: 
   return (
     <li id={`skill-opt-cmd-${command.id}`} role="option" aria-selected={active} aria-disabled={command.disabled ? true : undefined} className={`skill-opt slash-opt ${active ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={onPick}>
       <span className="skill-opt-head">
-        <Icon name={command.icon ?? 'sparkle'} size={13} />
+        <Icon name={command.icon ?? 'sparkle'} size={14} />
         <strong className="slash-name">/{command.slash}</strong>
-        <span className="skill-origin">App</span>
+        <span className="skill-opt-desc">{command.disabled ?? command.title}</span>
       </span>
-      <span className="skill-opt-desc">{command.disabled ?? command.title}</span>
     </li>
   );
 }
@@ -131,7 +148,7 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
     ...shown.map((skill): PickItem => ({ kind: 'skill', key: skill.id, skill })),
   ];
   const empty = slashText(query).trim() === '';
-  const items = empty ? [...listed].sort((a, b) => pickName(a).localeCompare(pickName(b))) : listed;
+  const items = empty ? [...listed].sort(byGroupThenName) : listed;
   const browsing = empty && active === null;
   const current = browsing ? undefined : items[Math.min(active ?? 0, Math.max(0, items.length - 1))];
   const manualCount = enabledSkills(catalog, disabled).filter((skill) => !skill.modelInvocable).length;
@@ -163,11 +180,11 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
   };
 
   return (
-    <div ref={ref} className="skill-pop" role="dialog" aria-label="Pick a skill">
+    <div ref={ref} className="skill-pop" role="dialog" aria-label="Skills and commands">
       <input
         autoFocus
         className="skill-search"
-        aria-label="Search skills"
+        aria-label={commands.length > 0 ? 'Search skills and commands' : 'Search skills'}
         role="combobox"
         aria-expanded="true"
         aria-controls="skill-options"
@@ -181,20 +198,19 @@ export function SkillPicker({ disabled, exclude, onPick, onClose, commands = [],
         }}
         onKeyDown={onKey}
       />
-      <ul id="skill-options" role="listbox" aria-label="Skills" className="skill-opts">
-        {items.map((item) =>
-          item.kind === 'command' ? (
-            <CommandOption key={item.key} command={item.command} active={item === current} onPick={() => choose(item)} />
-          ) : (
-            <SkillOption key={item.key} skill={item.skill} active={item === current} onPick={() => choose(item)} />
-          ),
-        )}
+      <ul id="skill-options" role="listbox" aria-label={commands.length > 0 ? 'Skills and commands' : 'Skills'} className="skill-opts">
+        {items.map((item, index) => (
+          <Fragment key={item.key}>
+            <GroupLabel items={items} index={index} />
+            {item.kind === 'command' ? <CommandOption command={item.command} active={item === current} onPick={() => choose(item)} /> : <SkillOption skill={item.skill} active={item === current} onPick={() => choose(item)} />}
+          </Fragment>
+        ))}
         <PickerBody catalogLoaded={Boolean(catalog)} error={error} total={catalog?.skills.length ?? 0} enabled={all.length}>
           {items.length === 0 && <li className="skill-empty">No skills or commands match.</li>}
         </PickerBody>
       </ul>
       <p className="skill-pop-foot">
-        ↑ ↓ to move, Tab to complete, Enter to run or add, Esc to close
+        ↑↓ move · Tab complete · ↵ choose · Esc close
         {manualCount > 0 && (
           <span className="skill-pop-manual" data-tip-side="top" data-tip="These skills set disable-model-invocation in SKILL.md, so the agent cannot load them. Run them yourself in Claude Code.">
             {' · '}

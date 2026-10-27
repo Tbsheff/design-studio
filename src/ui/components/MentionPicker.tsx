@@ -67,15 +67,15 @@ export function MentionList({ shown, current, loading, onPick, onHover, classNam
             onClick={() => onPick(option)}
           >
             <span className="skill-opt-head">
-              <Icon name={option.icon ?? mentionIcon(option.mention)} size={13} />
+              <Icon name={option.icon ?? mentionIcon(option.mention)} size={14} />
               <strong className="mention-label">{option.label}</strong>
-              <span className="skill-origin mention-detail">{option.detail}</span>
+              {option.detail && option.detail !== option.label && <span className="skill-origin mention-detail">{option.detail}</span>}
             </span>
           </li>
         ))}
         {shown.length === 0 && <li className="skill-empty">{loading ? 'Loading files…' : 'Nothing matches.'}</li>}
       </ul>
-      <p className="skill-pop-foot">↑ ↓ to move, Enter or Tab to add, Esc to close</p>
+      <p className="skill-pop-foot">↑↓ move · ↵ or Tab add · Esc close</p>
     </div>
   );
 }

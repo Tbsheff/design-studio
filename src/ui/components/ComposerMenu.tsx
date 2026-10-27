@@ -6,8 +6,8 @@ import { MODEL_OPTIONS, modelLabel } from '../settingsDraft';
 import { usePopover } from '../usePopover';
 import { usePresence } from '../usePresence';
 import { Icon, type IconName } from './Icon';
-import { levelHint, levelLabel, levelShortHint, useRovingRadioGroup } from './LevelControl';
-import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
+import { ChoiceItem, levelGist, levelHint, levelLabel, useRovingRadioGroup } from './LevelControl';
+import { EFFORT_HINT, EFFORT_LABEL, EffortToggle, MODE_HINT, MODE_LABEL, UNPLACED, designsHint, placeAboveOrBelow, type ComposerMode, type DesignsSetting, type EffortSetting } from './RunSettings';
 
 function usePlacedPopover(trigger: RefObject<HTMLButtonElement | null>, panel: RefObject<HTMLDivElement | null>) {
   const [open, setOpen] = useState(false);
@@ -120,7 +120,7 @@ interface PlusMenuProps {
 }
 
 const MODES: readonly ComposerMode[] = ['edit', 'plan', 'critique'];
-const MODE_SHORT_HINT: Record<ComposerMode, string> = { edit: 'Changes the design', plan: 'Plan first, then you approve', critique: 'Review only, no changes' };
+const MODE_SHORT_HINT: Record<ComposerMode, string> = { edit: 'Changes the design', plan: 'You approve first', critique: 'Review only' };
 const DESIGN_COUNTS = [1, 2, 3, 4] as const;
 
 export function PlusMenu(props: PlusMenuProps) {
@@ -167,7 +167,7 @@ export function PlusMenu(props: PlusMenuProps) {
             </Section>
             <Section label="Mode">
               {MODES.map((mode) => (
-                <MenuItem key={mode} label={MODE_LABEL[mode]} hint={MODE_SHORT_HINT[mode]} checked={props.mode === mode} onPick={() => props.onMode(mode)} />
+                <ChoiceItem key={mode} label={MODE_LABEL[mode]} hint={MODE_SHORT_HINT[mode]} full={MODE_HINT[mode]} checked={props.mode === mode} onPick={() => props.onMode(mode)} />
               ))}
             </Section>
             {designs && (
@@ -256,21 +256,18 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
           <div ref={panel} className="ui-menu composer-menu level-menu" role="menu" aria-label="Level" {...panelProps(menu)} onKeyDown={(event) => menuKeys(event, menu.close)}>
             <Section label="Level">
               {RUN_LEVELS.map((item) => (
-                <button
+                <ChoiceItem
                   key={item}
-                  type="button"
-                  role="menuitemradio"
-                  className="ui-menu-item has-hint level-menu-item"
-                  aria-checked={level === item}
-                  tabIndex={-1}
-                  onClick={() => {
+                  label={levelLabel(item)}
+                  hint={levelGist(item).hint}
+                  meta={levelGist(item).cost}
+                  full={levelHint(item)}
+                  checked={level === item}
+                  onPick={() => {
                     onLevel(item);
                     menu.close(true);
                   }}
-                >
-                  <span>{levelLabel(item)}</span>
-                  <span className="ui-menu-hint">{levelShortHint(item)}</span>
-                </button>
+                />
               ))}
             </Section>
           </div>,

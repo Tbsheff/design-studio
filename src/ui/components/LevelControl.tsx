@@ -84,8 +84,34 @@ export function levelHint(level: RunLevel): string {
   return LEVEL_PRESETS[level].hint;
 }
 
+export function levelGist(level: RunLevel): { hint: string; cost: string | null } {
+  const match = /^(.*?) \(usually ([^,)]+)/.exec(LEVEL_PRESETS[level].hint);
+  if (!match) return { hint: levelShortHint(level), cost: null };
+  return { hint: match[1] ?? '', cost: (match[2] ?? '').replace(' to ', '–') };
+}
+
 export function levelShortHint(level: RunLevel): string {
   const hint = LEVEL_PRESETS[level].hint;
   const match = /^(.*?) \(usually ([^,)]+)/.exec(hint);
   return match ? `${match[1]}, ${match[2]}` : (hint.split('. ')[0] ?? hint);
+}
+
+export function ChoiceItem({ label, hint, meta, full, checked, focusable, onPick }: { label: string; hint: string; meta?: string | null; full: string; checked: boolean; focusable?: boolean; onPick: () => void }) {
+  const id = useId();
+  return (
+    <button type="button" role="menuitemradio" className="ui-menu-item choice-item" aria-checked={checked} aria-describedby={id} tabIndex={focusable && checked ? 0 : -1} onClick={onPick}>
+      <span className="choice-label">{label}</span>
+      <span className="choice-hint" aria-hidden="true">
+        {hint}
+      </span>
+      {meta && (
+        <span className="ui-menu-meta" aria-hidden="true">
+          {meta}
+        </span>
+      )}
+      <span id={id} hidden>
+        {full}
+      </span>
+    </button>
+  );
 }

@@ -270,7 +270,7 @@ export function emptyHarvested(): Harvested {
   return { harvests: [], reports: [], folder: null, urlHarvests: [] };
 }
 
-export function assembleDraft(request: DraftRequest, base: LoadedPack, harvested: Harvested, pending: readonly KitGroup[] = []): Draft {
+export function assembleDraft(request: DraftRequest, base: LoadedPack, harvested: Harvested, pending: readonly KitGroup[] = [], logo?: string): Draft {
   const name = draftName(request);
   const mode = chooseMode(request, harvested.harvests, harvested.urlHarvests);
   const mapped = mapDraft(base, harvested.harvests, mode, harvested.reports);
@@ -281,7 +281,7 @@ export function assembleDraft(request: DraftRequest, base: LoadedPack, harvested
     name,
     mode,
     coverage: mapped.coverage,
-    kitHtml: renderKitPage({ name, mode, ...(mapped.fonts.googleFontsUrl ? { googleFontsUrl: mapped.fonts.googleFontsUrl } : {}), ...(pending.length > 0 ? { pending } : {}) }),
+    kitHtml: renderKitPage({ name, mode, ...(mapped.fonts.googleFontsUrl ? { googleFontsUrl: mapped.fonts.googleFontsUrl } : {}), ...(pending.length > 0 ? { pending } : {}), ...(logo ? { logo } : {}) }),
     files: sourceFiles(request, harvested, mapped.coverage),
     inputs: inputsOf(request, base),
     pack: {

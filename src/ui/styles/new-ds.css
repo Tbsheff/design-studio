@@ -847,6 +847,14 @@
   color: var(--text);
 }
 
+.ds-src-note-line {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  text-wrap: pretty;
+}
+
 .ds-src-time {
   color: var(--text-3);
   font-variant-numeric: tabular-nums;

@@ -16,6 +16,9 @@ const STYLE = `
     .kit { max-width: 1120px; margin: 0 auto; padding: var(--space-12) var(--space-8); display: grid; gap: var(--space-12); }
     .kit-head h1 { font-family: var(--font-display); font-size: var(--text-4xl); line-height: 1.1; margin: 0 0 var(--space-2); }
     .kit-head p, .kit-note { color: var(--fg-muted); margin: 0; }
+    .kit-logo { display: inline-grid; gap: var(--space-2); margin: var(--space-4) 0 0; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+    .kit-logo img { display: block; max-height: 64px; max-width: 240px; }
+    .kit-logo figcaption { font-size: var(--text-xs); color: var(--fg-muted); }
     section > h2 { font-family: var(--font-display); font-size: var(--text-xl); margin: 0 0 var(--space-4); }
     .palettes { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-6); }
     .palette { background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); }
@@ -142,7 +145,12 @@ function components(name: string): string {
         </table>`;
 }
 
-export function renderKitPage(input: { name: string; mode: 'light' | 'dark'; googleFontsUrl?: string; pending?: readonly KitGroup[] }): string {
+function logoBlock(src: string | undefined): string {
+  if (!src) return '';
+  return `\n        <figure class="kit-logo"><img src="${escapeHtml(src)}" alt="Logo from the website"><figcaption>Logo from the website</figcaption></figure>`;
+}
+
+export function renderKitPage(input: { name: string; mode: 'light' | 'dark'; googleFontsUrl?: string; pending?: readonly KitGroup[]; logo?: string }): string {
   const name = escapeHtml(input.name);
   const pending = new Set(input.pending ?? []);
   const reading = pending.size > 0 ? '\n        <p class="kit-reading" role="status">Reading your sources. Each group fills in when a source is read.</p>' : '';
@@ -171,7 +179,7 @@ export function renderKitPage(input: { name: string; mode: 'light' | 'dark'; goo
     <main class="kit">
       <header class="kit-head">
         <h1>${name}</h1>
-        <p>Design system kit. Every value on this page comes from design-system/tokens.css.</p>${reading}
+        <p>Design system kit. Every value on this page comes from design-system/tokens.css.</p>${reading}${logoBlock(input.logo)}
       </header>
 ${section('Colors', 'colors', pending, `        <div class="palettes">\n${palettes}\n        </div>`)}
 ${section('Typography', 'type', pending, `        <div class="families">

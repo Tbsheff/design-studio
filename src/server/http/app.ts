@@ -1039,6 +1039,7 @@ export function createApp(deps: AppDeps): Hono {
         await emitStatus(current, direction);
       }),
     startImprove: startDraftImprove,
+    saveAttachment: (projectId, file) => projects.saveAttachment(projectId, file),
   });
 
   registerDesignSystemRoutes(app, {

@@ -1,9 +1,9 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { CoverageEntry, Direction, DraftImproveStart, DraftSourceStatus, DraftSourcesState, Project } from '../../shared/contracts.js';
+import type { Attachment, CoverageEntry, Direction, DraftImproveStart, DraftSourceStatus, DraftSourcesState, Project } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
 import { harvestDesignText } from './extract/design-md.js';
-import { assembleDraft, emptyHarvested, META_FILE } from './extract/draft.js';
+import { SOURCE_DIR, assembleDraft, emptyHarvested, META_FILE } from './extract/draft.js';
 import type { Draft, DraftFile, DraftRequest, Harvested } from './extract/draft.js';
 import { FolderScanError, scanFolder } from './extract/folder.js';
 import type { FolderScan } from './extract/folder.js';
@@ -23,6 +23,8 @@ const THIN_VALUES = 3;
 const URL_CONCURRENCY = 2;
 const FINAL_STATES = new Set(['read', 'thin', 'blocked', 'failed']);
 const PASTE_HINT = 'Paste its CSS or a DESIGN.md instead.';
+const MAX_SHOT_BYTES = Math.floor(3.75 * 1024 * 1024);
+const LOGO_FILE = 'logo.png';
 
 export interface LiveDraftDeps {
   library: PackLibrary;
@@ -34,6 +36,7 @@ export interface LiveDraftDeps {
   withMain: <T>(projectId: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   commit: (project: Project, title: string) => Promise<void>;
   startImprove: (projectId: string) => Promise<DraftImproveStart>;
+  saveAttachment: (projectId: string, file: { name: string; mime: string; bytes: Uint8Array }) => Promise<Attachment>;
 }
 
 export interface LiveDraftStart {
@@ -60,6 +63,8 @@ interface SourceResult {
   report: SourceReport;
   url?: UrlHarvest;
   folder?: FolderScan;
+  note?: string;
+  method?: 'browser' | 'static';
 }
 
 function plural(count: number, one: string, many = `${one}s`): string {
@@ -132,6 +137,22 @@ export function urlProblem(error: unknown): { state: 'blocked' | 'failed'; detai
   return { state: 'failed', detail: `The studio could not read this site. ${PASTE_HINT}` };
 }
 
+function urlNote(result: UrlHarvest): string | undefined {
+  const notes = (result.notes ?? []).filter((note) => !result.blocked || !note.includes(result.blocked));
+  if (result.screenshot) notes.push(result.screenshot.length <= MAX_SHOT_BYTES ? 'The page screenshot goes to the AI step.' : 'The page screenshot was too large for the AI step.');
+  return notes.length > 0 ? notes.join(' ') : undefined;
+}
+
+function urlResult(result: UrlHarvest): SourceResult {
+  const thinText = result.method === 'browser' ? PASTE_HINT : `The site may set its styles with JavaScript. ${PASTE_HINT}`;
+  const base = harvested(result.harvest, 'url', result.snapshot.url, thinText);
+  const extra = { url: result, report: { kind: 'url' as const, label: result.snapshot.url, ok: true, found: base.report.found }, ...(result.method ? { method: result.method } : {}) };
+  const note = urlNote(result);
+  const withNote = note ? { note } : {};
+  if (result.blocked) return { ...base, ...extra, ...withNote, state: 'blocked', detail: `This site blocks automated reading (${result.blocked}). The studio kept what a plain read found${base.detail && base.state === 'read' ? `: ${base.detail}` : ''}. ${PASTE_HINT}` };
+  return { ...base, ...extra, ...withNote };
+}
+
 async function readSource(source: Planned, request: DraftRequest, fetcher: Fetcher): Promise<SourceResult> {
   const failed = (detail: string, error: unknown, kind: SourceReport['kind']): SourceResult => ({ state: 'failed', detail, report: { kind, label: source.label, ok: false, found: 0, error: errorText(error) } });
   if (source.kind === 'design-md') return harvested(harvestDesignText(request.designMd ?? '', 'design-md', 'DESIGN.md'), 'design-md', 'DESIGN.md', '');
@@ -157,8 +178,7 @@ async function readSource(source: Planned, request: DraftRequest, fetcher: Fetch
   const url = request.urls[index] ?? '';
   try {
     const result = await harvestUrl(url, fetcher);
-    const thin = harvested(result.harvest, 'url', result.snapshot.url, `The site may set its styles with JavaScript. ${PASTE_HINT}`);
-    return { ...thin, url: result, report: { kind: 'url', label: result.snapshot.url, ok: true, found: thin.report.found } };
+    return urlResult(result);
   } catch (error) {
     const problem = urlProblem(error);
     return { state: problem.state, detail: problem.detail, report: { kind: 'url', label: url, ok: false, found: 0, error: errorText(error) } };
@@ -197,10 +217,13 @@ async function writeFiles(workTree: string, files: DraftFile[]): Promise<void> {
   }
 }
 
-async function updateMeta(workTree: string, draft: Draft): Promise<void> {
+async function updateMeta(workTree: string, draft: Draft, job: Job): Promise<void> {
   const file = path.join(workTree, META_FILE);
   const meta = (await readJson<Record<string, unknown>>(file)) ?? {};
-  const next = { ...meta, inputs: draft.inputs, files: [KIT_PAGE_FILE, ...draft.files.map((item) => item.path)] };
+  const listed = Array.isArray(meta.attachments) ? (meta.attachments as unknown[]) : [];
+  const shots = job.shots.map((item) => ({ id: item.id, name: item.name, mime: item.mime, from: 'website screenshot' }));
+  const extra = job.logo ? [job.logo] : [];
+  const next = { ...meta, inputs: draft.inputs, attachments: [...listed, ...shots], files: [KIT_PAGE_FILE, ...extra, ...draft.files.map((item) => item.path)] };
   await writeFile(file, `${JSON.stringify(next, null, 2)}\n`);
 }
 
@@ -209,6 +232,8 @@ interface Job {
   planned: Planned[];
   results: Map<string, SourceResult>;
   chain: Promise<void>;
+  shots: Attachment[];
+  logo: string | null;
 }
 
 function staleState(state: DraftSourcesState): DraftSourcesState {
@@ -251,20 +276,21 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
   const rebuild = async (projectId: string, input: LiveDraftStart, job: Job, done: boolean): Promise<void> => {
     await deps.withMain(projectId, async (project, direction) => {
       const merged = merge(job);
-      const first = assembleDraft(input.request, input.base, merged);
-      const draft = done ? first : assembleDraft(input.request, input.base, merged, pendingGroups(first.coverage.tokens, done));
+      const logo = job.logo ?? undefined;
+      const first = assembleDraft(input.request, input.base, merged, [], logo);
+      const draft = done ? first : assembleDraft(input.request, input.base, merged, pendingGroups(first.coverage.tokens, done), logo);
       const pack = await deps.library.updateUserPack(input.packId, { ...draft.pack, draft: true });
       await applyPack(project, direction.workTree, pack);
       const files = done ? draft.files : draft.files.filter((file) => file.path.endsWith('coverage.json'));
       await writeFiles(direction.workTree, [{ path: KIT_PAGE_FILE, content: draft.kitHtml }, ...files]);
-      if (done) await updateMeta(direction.workTree, draft);
+      if (done) await updateMeta(direction.workTree, draft, job);
     });
   };
 
   const finish = async (projectId: string, input: LiveDraftStart, job: Job): Promise<void> => {
     await rebuild(projectId, input, job, true);
     job.state = { ...job.state, done: true, finishedAt: Date.now() };
-    const read = job.state.sources.some((source) => source.state === 'read' || source.state === 'thin');
+    const read = [...job.results.values()].some((result) => result.report.ok) || job.state.sources.some((source) => source.kind === 'images');
     await deps.commit(await deps.getProject(projectId), 'Read sources');
     if (job.state.improve.state !== 'waiting') return;
     if (!read) {
@@ -278,6 +304,19 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     } catch (error) {
       job.state = { ...job.state, improve: { state: 'skipped', reason: `The AI step did not start: ${errorText(error)}` } };
     }
+  };
+
+  const keepPageImages = async (projectId: string, job: Job, source: Planned, result: SourceResult): Promise<void> => {
+    const shot = result.url?.screenshot;
+    if (shot && shot.length <= MAX_SHOT_BYTES) job.shots.push(await deps.saveAttachment(projectId, { name: `${source.id}-screenshot.png`, mime: 'image/png', bytes: new Uint8Array(shot) }));
+    const logo = result.url?.logo;
+    if (!logo || job.logo) return;
+    const relative = `${SOURCE_DIR}/${source.id}/${LOGO_FILE}`;
+    await deps.withMain(projectId, async (_project, direction) => {
+      await mkdir(path.join(direction.workTree, SOURCE_DIR, source.id), { recursive: true });
+      await writeFile(path.join(direction.workTree, relative), logo);
+    });
+    job.logo = relative;
   };
 
   const runSource = async (projectId: string, input: LiveDraftStart, job: Job, source: Planned): Promise<void> => {
@@ -295,7 +334,8 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     }
     job.chain = job.chain.then(async () => {
       job.results.set(source.id, result);
-      setSource(job, source.id, { state: result.state, detail: result.detail, ms: Date.now() - startedAt });
+      await keepPageImages(projectId, job, source, result).catch((error: unknown) => console.error('[design-systems] could not keep the page screenshot or logo', error));
+      setSource(job, source.id, { state: result.state, detail: result.detail, ms: Date.now() - startedAt, ...(result.note ? { note: result.note } : {}), ...(result.method ? { method: result.method } : {}) });
       await rebuild(projectId, input, job, false).catch((error: unknown) => console.error('[design-systems] could not update the draft after a source', error));
       await save(projectId, job);
     });
@@ -326,7 +366,7 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
       const projectId = input.project.id;
       const state = this.plan(input.request, input.imageCount);
       const planned = state.sources.map((source, order) => ({ ...source, order })).filter((source) => source.kind !== 'images');
-      const job: Job = { state, planned, results: new Map(), chain: Promise.resolve() };
+      const job: Job = { state, planned, results: new Map(), chain: Promise.resolve(), shots: [], logo: null };
       jobs.set(projectId, job);
       void save(projectId, job)
         .then(() => run(input, job))

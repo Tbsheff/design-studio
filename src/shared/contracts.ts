@@ -1081,6 +1081,8 @@ export interface DraftSourceStatus {
   label: string;
   state: DraftSourceState;
   detail: string;
+  note?: string;
+  method?: 'browser' | 'static';
   ms?: number;
 }
 

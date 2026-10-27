@@ -71,8 +71,10 @@ function SourceRow({ source }: { source: DraftSourceStatus }) {
         </div>
         <p className="ds-src-detail">
           {source.detail}
+          {source.method === 'browser' && <span className="ds-src-time"> · read in a browser</span>}
           {time && source.state !== 'reading' && <span className="ds-src-time"> · {time}</span>}
         </p>
+        {source.note && <p className="ds-src-note-line">{source.note}</p>}
       </div>
     </li>
   );

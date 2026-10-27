@@ -695,7 +695,7 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 ```
 
 - Settings: `<dataDir>/mcp.json` `{enabled, edits, port, token}` (mode 0600). Both flags are off by default. The port is 4590; when it is taken the server picks a free port and saves it. The token is separate from the studio token. The server listens on 127.0.0.1 only, checks the `Host` header, refuses any `Origin` header and needs `Authorization: Bearer <token>`. Body cap 1 MB.
-- UI: Export dialog, Handoff tab, "Connect to Claude Code". The first switch starts or stops the server. The second switch, "Allow edits", shows while the server is on. `POST /api/mcp {enabled?, edits?, rotate?}`. Turning either switch off denies the open approval requests. There is no approval UI yet.
+- UI: Export dialog, Handoff tab, "Connect to Claude Code". The first switch starts or stops the server. The second switch, "Allow edits", shows while the server is on. `POST /api/mcp {enabled?, edits?, rotate?}`. Turning either switch off denies the open approval requests. The approval UI and the activity feed are in "MCP in the app" below.
 - Client name: `initialize` reads `clientInfo.title` or `clientInfo.name` (letters, digits, ` ._@()-`, 40 characters; default "MCP client") and returns an `mcp-session-id` header. Later calls with that header use the name for version titles ("Edit by <client>") and comment authors.
 - Read tools (always listed): `list_projects`, `list_versions`, `get_frame_html`, `get_tokens`, `get_design_md`, `get_screenshot` (also `frameId`: a canvas frame id or `@label` sets the page, the size and the direction), `list_files`, `read_file`.
 - Edit tools (listed only when `enabled && edits`; a call while edits are off gets an `isError` result that says how to turn it on). `tools/list` uses `listChanged: false`, so the client must reconnect after a change.
@@ -704,7 +704,7 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 |---|---|---|
 | `canvas_list {projectId, directionId?}` | `canvasList` | no |
 | `canvas_place {projectId, directionId?, frames[]}` | `canvasPlace`, write source `agent` | yes |
-| `canvas_point {projectId, directionId?, frame, selector?}` | checks the frame and returns it; it does not move the user's view yet | no |
+| `canvas_point {projectId, directionId?, frame, selector?}` | checks the frame, emits `mcp.point`; returns `shown: false` always and `badge: true` when a studio window has the project open | no |
 | `add_frame {projectId, directionId?, path?, viewport?, width?, height?, label?, rightOf?, below?}` | `canvasPlace` with one new frame | yes |
 | `remove_frame {projectId, frame}` | `canvas.update` without the frame (the last frame stays) | yes |
 | `write_file {projectId, directionId?, path, content ≤ 512 KB}` | atomic write, `versions.commitFile` "Edit by <client>", `publishVersion` | yes |
@@ -718,10 +718,30 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 
 - Run rule: the tools marked "yes" answer "A studio run is editing this design. Try again when it finishes." while a studio run is going in that direction. The routes check again under the direction lock.
 - write_file paths: relative, no `..`, then the studio agent's Write policy: inside the work tree after realpath (symlinks out are refused), not `.git` or `node_modules`, not `.studio/`, not `design-system/tokens.css`, not the tweaks file, not build config files run as code, and not `source/` in design-system draft projects.
-- Approvals (`mcp/approvals.ts`): a pending record `{id, tool, action, title, detail, projectId, createdAt, expiresAt}`. The tool call waits up to 120 s, then refuses. Title and detail are one line with control characters removed (200 and 600 characters). At most 10 open. The app counts as open while a project event stream or an approvals long poll is open (6 s grace). With no app open the tool is refused at once. Only the studio token can answer.
+- Approvals (`mcp/approvals.ts`): a pending record `{id, tool, action, title, detail, projectId, client, createdAt, expiresAt}`. The tool call waits up to 120 s, then refuses. Title and detail are one line with control characters removed (200 and 600 characters). At most 10 open. The app counts as open while a project event stream or an approvals long poll is open (6 s grace). With no app open the tool is refused at once. Only the studio token can answer.
 - Folders (`mcp/folders.ts`): absolute (or `~/`), realpath, an existing folder, not inside the data dir, not `/`, `/Users`, `/Volumes`, `/private` or the home folder itself, and not inside `/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/etc`, `/var`, `/private/etc`, `/private/var`, `/dev`, `/opt`, `/Applications`, `/Network` or `~/Library`.
 - Input rules: zod schemas (`z.toJSONSchema` for `inputSchema`), ids `^[A-Za-z0-9_-]{1,64}$`, comment 2,000 characters, selector 2,000, name 120, style keys from `DIRECT_STYLE_PROPERTIES`.
 - Annotations: `readOnlyHint: true` on the read tools, `canvas_list` and `canvas_point`. `destructiveHint: true` only on `restore_version`, `remove_frame` and `apply_design_system`. `idempotentHint: true` on `canvas_list`, `canvas_point`, `remove_frame` and `resolve_comment`. `openWorldHint: false` on all.
+
+### MCP in the app
+
+```
+edit tool call ──► handler returns {result, activity?} ──► callEditTool: on success activity.record()
+  mcp/activity.ts  <data>/projects/<pid>/mcp-activity.json (last 200) ──► bus mcp.activity {activity}
+canvas_point ──► bus mcp.point {client, frameId, label, selector?, at}   (not canvas.point: that one moves the view)
+approvals.ask ──► bus mcp.approval ──► desktop-link 'mcp-approval' ──► native.mcpApproval (Notification when no window is focused)
+UI: useMcpFeed (GET /api/projects/:pid/mcp/activity + events, dedupe by id) ──► ChatPanel timeline
+    useCanvasPoint ──► McpPointBadge          App ──► lazy McpToasts (GET /api/mcp/approvals long poll)
+```
+
+- Activity: `McpActivity {id, projectId, directionId, tool, client, summary, versionId, beforeVersionId, frameId, at}`. The server writes the summary (`mcp/activity-text.ts`): "Wrote index.html", "Created about.html", "Edited h1 color and text", "Placed Mobile below Desktop", "Added Mobile right of Desktop", "Removed Mobile", "Restored “<version title>”" (the app shows no version numbers, so the title stands in for "v12"), "Applied Warm Human", "Added comment #3 on h1", "Replied to comment #3", "Resolved comment #3", "Created project X", "Exported PNG to <file>". Calls that change nothing (`canvas_list`, `canvas_point`, `write_file` with the same text, errors) record nothing. `beforeVersionId` is the parent of the version the call made.
+- Feed: the left chat pane merges runs (`startedAt`) and activity (`at`) by time (`McpFeed.timelineOf`). Consecutive entries from one client make one block; a run or an approval card between them starts a new block. The block header has the client name, a dot that is green while the last entry is under 60 s old, and Disconnect (`POST /api/mcp {edits:false}`; the server stays on, open approvals are denied). A block shows the last 5 rows and "Show N earlier". Only entries of the open direction (or with no direction) show. Search hides the feed.
+- Undo: a row with `versionId` and `beforeVersionId` has Undo, which calls the same restore as the Versions panel (`useRewind.onRestore(beforeVersionId)`), so it is a normal "Restored …" version. It is off while a run or another action is going. The "Undone" mark is local to the page.
+- Approval card: `mcp.approval` / `mcp.approval.resolved` from the project event stream (the stream replays from seq 0, so old requests show again as one line). Pending: title, detail, Allow once / Deny (`POST /api/mcp/approvals/:id`), and the time left. Resolved: one line "Allowed", "Denied", "Expired" or "Closed". A pending card past `expiresAt` shows as Expired. There is no env var for the 120 s timeout.
+- Toasts: `McpToasts` (lazy, not in Home JS) long-polls `GET /api/mcp/approvals?wait=25` (15 s pause while edits are off). It shows requests for any project that is not open in the studio, so on Home it shows them all. The long poll also counts as "app open" for the approval queue.
+- Desktop: the server sends `{kind: 'mcp-approval', projectId, approvalId, title}` over the desktop link; `native.mcpApproval` shows a Notification "Approval needed" only when no studio window is focused (and not with `STUDIO_DESKTOP_NOTIFY=off`); a click opens the project.
+- Pointing badge: `mcp.point` events younger than 20 s show a floating card at the top of the canvas: "<client> is pointing at <frame label>", Show and a close button. It hides after 20 s, on Show or on close. Only Show moves the view: unhide the frame, make it live, zoom to it, then `select-selector` if the call sent a selector. The studio agent's `canvas.point` keeps its old behavior.
+- Comments: a comment or reply with `author` shows the author's initial on the pin in `--agent-bg` / `--agent-fg` (a fixed stone color, no dark value, like the pin tokens), the name in the thread card head, on replies and in the pin tip. The Comments pane lists draft comments that have an author under "From outside agents" with Resolve; the author also shows on queued, sent and resolved rows.
 
 ## End-to-end tests
 

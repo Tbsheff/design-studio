@@ -4,6 +4,8 @@ import http from 'node:http';
 import https from 'node:https';
 import { BlockList, isIP } from 'node:net';
 import type { LookupFunction } from 'node:net';
+import type { Readable } from 'node:stream';
+import zlib from 'node:zlib';
 
 export interface FetchPolicy {
   allowLoopback: boolean;
@@ -11,7 +13,13 @@ export interface FetchPolicy {
   maxBytes: number;
   maxRedirects: number;
   deadline?: number;
+  budget?: ByteBudget;
   resolve?: (hostname: string) => Promise<LookupAddress[]>;
+}
+
+export interface ByteBudget {
+  used: number;
+  limit: number;
 }
 
 export interface FetchedResource {
@@ -146,62 +154,124 @@ function requestLimitMs(policy: FetchPolicy): number {
   return Math.max(1, Math.min(policy.timeoutMs, policy.deadline - Date.now()));
 }
 
-function requestOnce(url: URL, policy: FetchPolicy): Promise<{ status: number; location: string | null; contentType: string; body: Buffer }> {
+interface WireInit {
+  method: string;
+  headers: Record<string, string>;
+  body?: Buffer;
+  decompress: boolean;
+}
+
+interface RawResponse {
+  status: number;
+  location: string | null;
+  contentType: string;
+  headers: Record<string, string>;
+  body: Buffer;
+}
+
+const STATIC_INIT: WireInit = {
+  method: 'GET',
+  headers: { accept: 'text/html,text/css,*/*;q=0.5', 'accept-encoding': 'identity', 'user-agent': 'DesignStudio/0.1 (design system import)' },
+  decompress: false,
+};
+
+function flatHeaders(raw: http.IncomingHttpHeaders): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, value] of Object.entries(raw)) {
+    if (value === undefined) continue;
+    out[name] = Array.isArray(value) ? value.join(name === 'set-cookie' ? '\n' : ', ') : value;
+  }
+  return out;
+}
+
+function decoded(res: http.IncomingMessage, encoding: string): Readable | null {
+  if (encoding === 'identity' || encoding === '') return res;
+  if (encoding === 'gzip' || encoding === 'x-gzip') return res.pipe(zlib.createGunzip());
+  if (encoding === 'deflate') return res.pipe(zlib.createInflate());
+  if (encoding === 'br') return res.pipe(zlib.createBrotliDecompress());
+  return null;
+}
+
+function requestOnce(url: URL, policy: FetchPolicy, init: WireInit = STATIC_INIT): Promise<RawResponse> {
   return new Promise((resolve, reject) => {
     const client = url.protocol === 'https:' ? https : http;
     let settled = false;
-    const finish = (error: Error | null, value?: { status: number; location: string | null; contentType: string; body: Buffer }) => {
+    const finish = (error: Error | null, value?: RawResponse) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       if (error) reject(error);
       else resolve(value!);
     };
-    const req = client.request(
-      url,
-      {
-        method: 'GET',
-        lookup: guardedLookup(policy),
-        headers: { accept: 'text/html,text/css,*/*;q=0.5', 'accept-encoding': 'identity', 'user-agent': 'DesignStudio/0.1 (design system import)' },
-      },
-      (res) => {
-        const status = res.statusCode ?? 0;
-        const location = typeof res.headers.location === 'string' ? res.headers.location : null;
-        const contentType = String(res.headers['content-type'] ?? '');
-        if (REDIRECTS.has(status)) {
-          res.resume();
-          finish(null, { status, location, contentType, body: Buffer.alloc(0) });
-          return;
-        }
-        const encoding = String(res.headers['content-encoding'] ?? 'identity').toLowerCase();
-        if (encoding !== 'identity' && encoding !== '') {
+    const req = client.request(url, { method: init.method, lookup: guardedLookup(policy), headers: init.headers }, (res) => {
+      const status = res.statusCode ?? 0;
+      const location = typeof res.headers.location === 'string' ? res.headers.location : null;
+      const contentType = String(res.headers['content-type'] ?? '');
+      const headers = flatHeaders(res.headers);
+      if (REDIRECTS.has(status)) {
+        res.resume();
+        finish(null, { status, location, contentType, headers, body: Buffer.alloc(0) });
+        return;
+      }
+      const encoding = String(res.headers['content-encoding'] ?? 'identity').toLowerCase();
+      const stream = init.decompress ? decoded(res, encoding) : encoding === 'identity' || encoding === '' ? res : null;
+      if (!stream) {
+        res.destroy();
+        finish(new FetchFailedError(`${url.host} sent a compressed body (${encoding})`));
+        return;
+      }
+      const chunks: Buffer[] = [];
+      let size = 0;
+      stream.on('data', (chunk: Buffer) => {
+        size += chunk.length;
+        const budget = policy.budget;
+        if (budget) budget.used += chunk.length;
+        if (budget && budget.used > budget.limit) {
           res.destroy();
-          finish(new FetchFailedError(`${url.host} sent a compressed body (${encoding})`));
+          stream.destroy();
+          finish(new FetchFailedError(`${url.href}: the ${Math.round(budget.limit / 1024 / 1024)} MB limit for this site ran out`));
           return;
         }
-        const chunks: Buffer[] = [];
-        let size = 0;
-        res.on('data', (chunk: Buffer) => {
-          size += chunk.length;
-          if (size > policy.maxBytes) {
-            res.destroy();
-            finish(new FetchFailedError(`${url.href} is larger than ${Math.round(policy.maxBytes / 1024)} KB`));
-            return;
-          }
-          chunks.push(chunk);
-        });
-        res.on('end', () => finish(null, { status, location, contentType, body: Buffer.concat(chunks) }));
-        res.on('error', (error) => finish(error));
-      },
-    );
+        if (size > policy.maxBytes) {
+          res.destroy();
+          stream.destroy();
+          finish(new FetchFailedError(`${url.href} is larger than ${Math.round(policy.maxBytes / 1024)} KB`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      stream.on('end', () => finish(null, { status, location, contentType, headers, body: Buffer.concat(chunks) }));
+      stream.on('error', (error) => finish(error));
+      if (stream !== res) res.on('error', (error) => finish(error));
+    });
     const limitMs = requestLimitMs(policy);
     const timer = setTimeout(() => {
       req.destroy();
       finish(new FetchFailedError(`${url.href} did not answer within ${Math.max(1, Math.round(limitMs / 1000))} s`));
     }, limitMs);
     req.on('error', (error) => finish(error instanceof FetchBlockedError || error instanceof FetchFailedError ? error : new FetchFailedError(`${url.host}: ${error.message}`)));
-    req.end();
+    req.end(init.body);
   });
+}
+
+export interface PassThroughRequest {
+  method: string;
+  headers: Record<string, string>;
+  body?: Buffer;
+}
+
+export interface PassThroughResponse {
+  url: string;
+  status: number;
+  headers: Record<string, string>;
+  body: Buffer;
+}
+
+export async function safeRequest(raw: string, request: PassThroughRequest, policy: FetchPolicy): Promise<PassThroughResponse> {
+  const url = checkUrl(raw, policy.allowLoopback);
+  if (policy.deadline !== undefined && Date.now() >= policy.deadline) throw new FetchFailedError(`${url.href}: the time limit for this site ran out`);
+  const response = await requestOnce(url, policy, { method: request.method, headers: { ...request.headers, 'accept-encoding': 'gzip, deflate, br' }, ...(request.body ? { body: request.body } : {}), decompress: true });
+  return { url: url.href, status: response.status, headers: response.headers, body: response.body };
 }
 
 export async function safeFetch(raw: string, policy: FetchPolicy): Promise<FetchedResource> {

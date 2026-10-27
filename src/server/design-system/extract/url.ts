@@ -1,12 +1,16 @@
 import { parse } from 'parse5';
 import type { DefaultTreeAdapterMap } from 'parse5';
+import { BROWSER_TOTAL_MS, browserReadsEnabled, readWithBrowser } from './browser.js';
+import type { BrowserOutcome, BrowserRead } from './browser.js';
+import { computedCandidates } from './browser-tokens.js';
 import { cssImports, customProperties, parseCss, resolveVars } from './css.js';
-import type { CssRule } from './css.js';
+import type { CssRule, CustomProperties } from './css.js';
+import { resourcesDir } from '../../resources.js';
 import { FetchBlockedError } from './safe-fetch.js';
 import type { FetchedResource } from './safe-fetch.js';
 import type { Candidate, Harvest } from './types.js';
 import { candidate, candidatesFromVars } from './vars.js';
-import { chromaOf, colorsInText, lengthPx, lightnessOf, normalizeColor, normalizeLength, normalizeShadow, safeGoogleFontsUrl } from './values.js';
+import { chromaOf, colorsInText, googleFontsUrlFor, lengthPx, lightnessOf, normalizeColor, normalizeLength, normalizeShadow, safeGoogleFontsUrl } from './values.js';
 
 type Node = DefaultTreeAdapterMap['node'];
 type Element = DefaultTreeAdapterMap['element'];
@@ -39,9 +43,22 @@ export interface UrlSnapshot {
   failures: string[];
 }
 
+export type ReadMethod = 'browser' | 'static';
+
 export interface UrlHarvest {
   harvest: Harvest;
   snapshot: UrlSnapshot;
+  method?: ReadMethod;
+  screenshot?: Buffer;
+  logo?: Buffer;
+  blocked?: string;
+  notes?: string[];
+  ms?: number;
+}
+
+export interface HarvestOptions {
+  browser?: boolean;
+  allowLoopback?: boolean;
 }
 
 export interface PageParts {
@@ -331,7 +348,13 @@ async function fetchPage(url: string, fetcher: Fetcher, clock: SiteClock) {
   }
 }
 
-export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TOTAL_MS): Promise<UrlHarvest> {
+interface StaticRead {
+  result: UrlHarvest;
+  props: CustomProperties;
+  usage: Candidate[];
+}
+
+async function readStatic(url: string, fetcher: Fetcher, totalMs: number): Promise<StaticRead> {
   const clock: SiteClock = { deadline: Date.now() + totalMs, totalMs };
   const page = await fetchPage(url, fetcher, clock);
   const type = page.contentType.toLowerCase();
@@ -343,12 +366,137 @@ export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TO
   const rules = [...parts.inline, ...stylesheets.map((sheet) => sheet.css)].flatMap((css) => parseCss(css)).concat(parts.styleAttrs);
   const props = customProperties(rules);
   const label = new URL(page.url).host;
-  const candidates = [...candidatesFromVars(props, 'url', label), ...usageCandidates(rules, props.root, parts, label)];
+  const usage = usageCandidates(rules, props.root, parts, label);
+  const candidates = [...candidatesFromVars(props, 'url', label), ...usage];
   const googleFontsUrl = parts.fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null);
   const bg = candidates.find((item) => item.token === 'color.bg' && item.value)?.value;
   const darkHint = parts.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
   return {
-    harvest: { source: 'url', label: page.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
-    snapshot: { url: page.url, html, stylesheets, failures },
+    result: {
+      harvest: { source: 'url', label: page.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
+      snapshot: { url: page.url, html, stylesheets, failures },
+    },
+    props,
+    usage,
   };
+}
+
+function withoutNames(props: CustomProperties, known: Set<string>): CustomProperties {
+  const keep = (map: Map<string, string>) => new Map([...map].filter(([name]) => !known.has(name)));
+  return { ...props, root: keep(props.root), dark: keep(props.dark) };
+}
+
+function browserProps(read: BrowserRead, rules: CssRule[]): CustomProperties {
+  const props = customProperties(rules);
+  for (const [name, value] of Object.entries({ ...read.live.vars, ...read.live.bodyVars })) props.root.set(name, value);
+  return props;
+}
+
+function loadedGoogleFamilies(read: BrowserRead): string[] {
+  return read.live.fontFaces.filter((face) => face.loaded && face.src.includes('fonts.gstatic.com')).map((face) => face.family);
+}
+
+function fillDark(candidates: Candidate[], fallback: Candidate[]): Candidate[] {
+  return candidates.map((item) => {
+    if (item.dark !== undefined || !item.token.startsWith('color.')) return item;
+    const dark = fallback.find((other) => other.token === item.token && other.dark !== undefined)?.dark;
+    return dark ? { ...item, dark } : item;
+  });
+}
+
+function livePageParts(read: BrowserRead): PageParts {
+  return { links: [], inline: [], styleAttrs: [], themeColor: read.live.themeColor, fontLinks: read.live.fontLinks, darkHint: read.live.darkHint };
+}
+
+function refusalNotes(read: BrowserRead): string[] {
+  const reasons = Object.entries(read.requests.reasons).sort((a, b) => b[1] - a[1]);
+  const refusedCount = reasons.reduce((sum, [, count]) => sum + count, 0);
+  if (refusedCount === 0) return [];
+  return [`The browser refused ${refusedCount} request(s) from the page: ${reasons.slice(0, 5).map(([reason, count]) => `${reason} (${count})`).join('; ')}`];
+}
+
+function browserFontsUrl(read: BrowserRead, fromStatic: StaticRead | null): string | undefined {
+  const staticUrl = fromStatic?.result.harvest.googleFontsUrl;
+  const fontLinks = [...read.live.fontLinks, ...(staticUrl ? [staticUrl] : [])];
+  return fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null) ?? googleFontsUrlFor(loadedGoogleFamilies(read)) ?? undefined;
+}
+
+function browserHarvest(read: BrowserRead, fromStatic: StaticRead | null): UrlHarvest {
+  const label = new URL(read.url).host;
+  const rules = read.sheets.flatMap((sheet) => parseCss(sheet.css));
+  const props = browserProps(read, rules);
+  const known = new Set([...props.root.keys(), ...props.dark.keys()]);
+  const vars = candidatesFromVars(props, 'url', label);
+  const computed = computedCandidates(read.live, label);
+  const cssUsage = usageCandidates(rules, props.root, livePageParts(read), label);
+  const staticVars = fromStatic ? candidatesFromVars(withoutNames(fromStatic.props, known), 'url', `${label} (plain fetch)`) : [];
+  const staticAll = fromStatic?.result.harvest.candidates ?? [];
+  const sure = vars.filter((item) => item.confidence === 'high');
+  const guessed = vars.filter((item) => item.confidence !== 'high');
+  const candidates = fillDark([...sure, ...computed.candidates, ...guessed, ...staticVars, ...cssUsage, ...(fromStatic?.usage ?? [])], staticAll);
+  const googleFontsUrl = browserFontsUrl(read, fromStatic);
+  const bg = computed.bg ?? candidates.find((item) => item.token === 'color.bg' && item.value)?.value;
+  const darkHint = read.live.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
+  const stylesheets = read.sheets.slice(0, MAX_STYLESHEETS).map((sheet) => ({ url: sheet.url === 'inline' ? `${read.url} (inline)` : sheet.url, css: sheet.css }));
+  const notes = refusalNotes(read);
+  return {
+    harvest: { source: 'url', label: read.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
+    snapshot: { url: read.url, html: read.html, stylesheets, failures: fromStatic?.result.snapshot.failures ?? [] },
+    method: 'browser',
+    ...(read.screenshot ? { screenshot: read.screenshot } : {}),
+    ...(read.logo ? { logo: read.logo } : {}),
+    ...(notes.length > 0 ? { notes } : {}),
+  };
+}
+
+function defaultAllowLoopback(): boolean {
+  return process.env.STUDIO_FETCH_ALLOW_LOOPBACK === '1' && !resourcesDir();
+}
+
+function shouldUseBrowser(options: HarvestOptions, totalMs: number): boolean {
+  if (options.browser !== undefined) return options.browser;
+  return browserReadsEnabled() && totalMs >= 3000;
+}
+
+function outcomeNote(outcome: BrowserOutcome): string | null {
+  if (outcome.kind === 'unavailable') return outcome.note;
+  if (outcome.kind === 'failed') return `The browser could not read the page: ${outcome.error}`;
+  return null;
+}
+
+async function settle<T>(work: Promise<T>): Promise<{ ok: true; value: T } | { ok: false; error: unknown }> {
+  try {
+    return { ok: true, value: await work };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
+export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TOTAL_MS, options: HarvestOptions = {}): Promise<UrlHarvest> {
+  const started = Date.now();
+  const useBrowser = shouldUseBrowser(options, totalMs);
+  const deadline = started + Math.min(totalMs, BROWSER_TOTAL_MS);
+  const browserWork = useBrowser ? readWithBrowser(url, { allowLoopback: options.allowLoopback ?? defaultAllowLoopback(), deadline }) : null;
+  const plain = await settle(readStatic(url, fetcher, totalMs));
+  if (!plain.ok && plain.error instanceof FetchBlockedError) {
+    void browserWork?.catch(() => undefined);
+    throw plain.error;
+  }
+  if (!browserWork) {
+    if (!plain.ok) throw plain.error;
+    return { ...plain.value.result, method: 'static', ms: Date.now() - started };
+  }
+  const outcome = await browserWork.catch((error: unknown): BrowserOutcome => ({ kind: 'failed', error: error instanceof Error ? error.message : String(error) }));
+  const ms = Date.now() - started;
+  if (outcome.kind === 'read' && !outcome.read.blocked) {
+    const merged = browserHarvest(outcome.read, plain.ok ? plain.value : null);
+    return { ...merged, ms };
+  }
+  const blocked = outcome.kind === 'read' ? outcome.read.blocked : undefined;
+  const note = blocked ? `The browser saw a wall: ${blocked}. The plain fetch was used instead.` : outcomeNote(outcome);
+  if (!plain.ok) {
+    const reason = plain.error instanceof Error ? plain.error.message : String(plain.error);
+    throw new Error(blocked ? `${reason} (${blocked})` : reason);
+  }
+  return { ...plain.value.result, method: 'static', ...(blocked ? { blocked } : {}), ...(note ? { notes: [note] } : {}), ms };
 }

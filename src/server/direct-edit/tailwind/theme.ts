@@ -15,6 +15,7 @@ export interface ThemeColor {
   name: string;
   color: Oklch | null;
   project: boolean;
+  rank: number;
 }
 
 export interface TailwindTheme {
@@ -240,10 +241,10 @@ function mergedSheet(sheets: Array<{ sheet: CssTokenSheet; project: boolean }>):
   return { sheet: { declarations, blocks: [], tailwind: true, themeBlocks: 1 }, projectNames };
 }
 
-function addColor(theme: TailwindTheme, name: string, value: string, project: boolean): void {
+function addColor(theme: TailwindTheme, name: string, value: string, project: boolean, rank = 2): void {
   if (theme.colorNames.has(name)) theme.colors = theme.colors.filter((entry) => entry.name !== name);
   theme.colorNames.add(name);
-  theme.colors.push({ name, color: parseColor(value)?.color ?? null, project });
+  theme.colors.push({ name, color: parseColor(value)?.color ?? null, project, rank });
 }
 
 type ScaleSlot = [keyof Pick<TailwindTheme, 'spacing' | 'text' | 'radius' | 'fontWeight' | 'leading' | 'tracking'>, (value: string) => number | null];
@@ -257,10 +258,10 @@ const SCALES: Partial<Record<ThemeNamespace, ScaleSlot>> = {
   tracking: ['tracking', emValue],
 };
 
-function addToken(theme: TailwindTheme, ns: ThemeNamespace, key: string, value: string, project: boolean): void {
+function addToken(theme: TailwindTheme, ns: ThemeNamespace, key: string, value: string, project: boolean, rank = 2): void {
   if (key === '*') return;
   const name = key === 'DEFAULT' ? '' : key;
-  if (ns === 'color') return addColor(theme, name, value, project);
+  if (ns === 'color') return addColor(theme, name, value, project, rank);
   const scale = SCALES[ns];
   if (scale) {
     const parsed = scale[1](value);
@@ -274,17 +275,17 @@ const V3_COLOR_VAR = /^--([a-z][a-z0-9-]*)$/;
 const VAR_ALIAS = /^var\(\s*(--[A-Za-z0-9_-]+)\s*\)$/;
 
 function addThemeToken(theme: TailwindTheme, token: AppToken, spot: { ns: ThemeNamespace; key: string }, project: boolean): void {
-  addToken(theme, spot.ns, spot.key, token.value, project);
-  theme.vars.set(token.name, { ns: spot.ns, name: spot.key === 'DEFAULT' ? '' : spot.key });
   const raw = token.lights.filter(isThemeDecl).at(-1)?.value ?? '';
   const alias = VAR_ALIAS.exec(raw)?.[1];
+  addToken(theme, spot.ns, spot.key, token.value, project, alias ? (alias.startsWith('--color-') ? 1 : 0) : 2);
+  theme.vars.set(token.name, { ns: spot.ns, name: spot.key === 'DEFAULT' ? '' : spot.key });
   if (alias && !theme.vars.has(alias)) theme.vars.set(alias, { ns: spot.ns, name: spot.key });
 }
 
 function addV3Color(theme: TailwindTheme, token: AppToken): void {
   const name = V3_COLOR_VAR.exec(token.name)?.[1];
   if (!name || token.type !== 'color') return;
-  addColor(theme, name, token.value, true);
+  addColor(theme, name, token.value, true, 0);
   theme.vars.set(token.name, { ns: 'color', name });
 }
 

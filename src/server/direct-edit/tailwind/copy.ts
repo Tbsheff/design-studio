@@ -51,7 +51,10 @@ function blankSite(): ClassSite {
 export function tailwindClassesFor(styles: Array<[string, string]>, theme: TailwindTheme): string[] {
   const edits: ClassEdit[] = [];
   const extra: string[] = [];
-  const expanded = styles.flatMap(([prop, value]): Array<[string, string]> => (prop === 'border' ? borderParts(value) : [[prop, value]]));
+  const hasBorder = styles.some(([prop]) => prop === 'border' || /^border(-(top|right|bottom|left))?-width$/.test(prop));
+  const expanded = styles
+    .flatMap(([prop, value]): Array<[string, string]> => (prop === 'border' ? borderParts(value) : [[prop, value]]))
+    .filter(([prop]) => hasBorder || !/^border-(top|right|bottom|left)-(style|color)$/.test(prop));
   for (const [prop, value] of expanded) {
     const mapped = isMappedProperty(prop) ? cssEdits(prop, value, theme) : null;
     if (mapped) edits.push(...mapped.map((edit) => ({ ...edit, variants: '' })));

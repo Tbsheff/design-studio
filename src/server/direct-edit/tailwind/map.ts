@@ -185,12 +185,14 @@ interface ColorHit {
   name: string;
   diff: number;
   project: boolean;
+  rank: number;
 }
 
 function betterHit(hit: ColorHit, best: ColorHit | null): boolean {
   if (!best || hit.diff < best.diff - 1e-6) return true;
   if (Math.abs(hit.diff - best.diff) > 1e-6) return false;
   if (hit.project !== best.project) return hit.project;
+  if (hit.rank !== best.rank) return hit.rank < best.rank;
   return hit.name.length < best.name.length;
 }
 
@@ -198,7 +200,7 @@ function nearestColor(target: ParsedColor, theme: TailwindTheme): string | null 
   let best: ColorHit | null = null;
   for (const entry of theme.colors) {
     if (!entry.color) continue;
-    const hit = { name: entry.name, diff: colorDistance(target.color, entry.color), project: entry.project };
+    const hit = { name: entry.name, diff: colorDistance(target.color, entry.color), project: entry.project, rank: entry.rank };
     if (hit.diff <= COLOR_TOLERANCE && betterHit(hit, best)) best = hit;
   }
   if (!best) return null;

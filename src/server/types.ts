@@ -19,6 +19,7 @@ import type {
   StudioEvent,
   StudioEventInput,
   Version,
+  VersionChanges,
   VersionMeta,
   WorkTreeStatus,
 } from '../shared/contracts.js';
@@ -76,6 +77,7 @@ export interface VersionStore {
   exportZip(project: Project, versionId: string): Promise<Uint8Array>;
   sessionSince?(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan>;
   endSession?(project: Project, direction: Direction, baseVersionId: string, action: 'save' | 'discard', title: string, meta: VersionMeta): Promise<SessionEndResult>;
+  diffFiles?(project: Project, from: string, to: string): Promise<VersionChanges>;
 }
 
 export interface SessionSpan {

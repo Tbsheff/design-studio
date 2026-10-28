@@ -18,6 +18,7 @@ import { ObjectStore, gitIdent, type CommitInfo } from './git-objects.js';
 import { createDirectStore } from './version-direct.js';
 import { createWarmQueue } from './version-warm.js';
 import { FastPathUnavailable, diffTrees } from './version-fast.js';
+import { diffVersionFiles } from './version-diff.js';
 
 export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.next/', '.turbo/', '.studio/*', `!${CANVAS_FILE}`, `!${LINKS_FILE}`, '.DS_Store'];
 const LAYOUT_FILES = [CANVAS_FILE, LINKS_FILE];
@@ -928,6 +929,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         }
         return finalDir;
       });
+    },
+
+    async diffFiles(project: Project, from: string, to: string) {
+      const [a, b] = await Promise.all([requireCommit(project, from), requireCommit(project, to)]);
+      return diffVersionFiles(async (args) => (await runGit(repoScope(project), args)).stdout, a, b);
     },
 
     async exportZip(project: Project, versionId: string): Promise<Uint8Array> {

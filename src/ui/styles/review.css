@@ -32,6 +32,10 @@
   color: var(--on-measure);
 }
 
+:root[data-theme='dark'] .review-badge.high {
+  color: var(--bg);
+}
+
 .review-badge.medium {
   background: var(--warn-soft);
   color: var(--warn);

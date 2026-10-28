@@ -1033,6 +1033,18 @@ export const DIRECT_STYLE_PROPERTIES = [
   'overflow',
   'text-shadow',
   'transform',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'min-width',
+  'max-width',
+  'min-height',
+  'max-height',
+  'row-gap',
+  'column-gap',
+  'justify-items',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

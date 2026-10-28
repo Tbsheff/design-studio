@@ -74,6 +74,18 @@ const STYLE_KEYS = [
   'border-width',
   'border-style',
   'border-color',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'min-width',
+  'max-width',
+  'min-height',
+  'max-height',
+  'row-gap',
+  'column-gap',
+  'justify-items',
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;

@@ -4,12 +4,16 @@ import type * as t from '@babel/types';
 import MagicString from 'magic-string';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
-import { hasClassChange, nextClassList } from './classes.js';
+import { hasClassChange } from './classes.js';
 import { leadingWhitespaceStart } from './splice.js';
 import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
+import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
+import { jsxClassSite } from './tailwind/jsx-site.js';
+import type { TailwindOutcome } from '../../shared/contracts.js';
 
 interface JsxPatchOptions {
   typescript?: boolean;
+  tailwind?: TailwindTheme | null;
 }
 
 interface StyleEntry {
@@ -282,34 +286,6 @@ function patchName(magic: MagicString, source: string, element: t.JSXElement, na
   magic.overwrite(startOf(literal), endOf(literal), `${quote}${name}${quote}`);
 }
 
-const CLASS_ATTRS = new Set(['className', 'class']);
-
-function classAttribute(element: t.JSXElement): t.JSXAttribute | null {
-  for (const attribute of element.openingElement.attributes) {
-    if (attribute.type === 'JSXAttribute' && attribute.name.type === 'JSXIdentifier' && CLASS_ATTRS.has(attribute.name.name)) return attribute;
-  }
-  return null;
-}
-
-function patchClasses(magic: MagicString, source: string, element: t.JSXElement, change: NonNullable<SourceEdit['classes']>): void {
-  const attribute = classAttribute(element);
-  if (!attribute) {
-    const next = nextClassList('', change);
-    if (next !== '') magic.appendLeft(endOf(element.openingElement.name), ` className="${next}"`);
-    return;
-  }
-  const value = attribute.value;
-  const literal = value?.type === 'StringLiteral' ? value : value?.type === 'JSXExpressionContainer' && value.expression.type === 'StringLiteral' ? value.expression : null;
-  if (!literal) throw new DirectEditError('attribute_not_literal', 'The className is not a plain string (a template, cn() or a variable), so its classes cannot be edited directly; edit the file instead');
-  const next = nextClassList(literal.value, change);
-  if (next === '') {
-    magic.remove(leadingWhitespaceStart(source, startOf(attribute)), endOf(attribute));
-    return;
-  }
-  const quote = source[startOf(literal)] === "'" ? "'" : '"';
-  magic.overwrite(startOf(literal), endOf(literal), stringLiteral(next, quote));
-}
-
 function movedPosition(code: string, offset: number, typescript: boolean): SourcePosition {
   const moved = jsxElementAt(parseSource(code, typescript).program, offset);
   const start = moved?.openingElement.loc?.start;
@@ -339,9 +315,39 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   if (edit.name !== undefined) patchName(magic, source, element, edit.name);
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
-  if (styleKeys.length > 0) patchStyle(magic, source, element, style);
+  const tailwind = patchClassesOrStyle(magic, source, element, style, edit, options.tailwind ?? null);
   const classes = hasClassChange(edit.classes);
-  if (hasClassChange(edit.classes)) patchClasses(magic, source, element, edit.classes);
   if (edit.text !== undefined) patchText(magic, source, element, edit.text);
-  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) } };
+  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) }, ...(tailwind ? { tailwind } : {}) };
+}
+
+function inlineKeys(element: t.JSXElement): Set<string> | null {
+  const attribute = styleAttribute(element);
+  if (!attribute) return new Set();
+  const value = attribute.value;
+  if (value?.type !== 'JSXExpressionContainer' || value.expression.type !== 'ObjectExpression') return null;
+  return new Set(value.expression.properties.map(keyOf).filter((key): key is string => key !== null));
+}
+
+function patchClassesOrStyle(magic: MagicString, source: string, element: t.JSXElement, style: Record<string, string | null>, edit: SourceEdit, theme: TailwindTheme | null): TailwindOutcome | undefined {
+  const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, theme);
+  if (decision.kind !== 'classes') {
+    if (Object.keys(style).length > 0) patchStyle(magic, source, element, style);
+    return decision.kind === 'inline' ? decision.fallback.outcome : undefined;
+  }
+  for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
+  const mapped = new Set(decision.patch.inlineProps);
+  const present = inlineKeys(element);
+  const inline: Record<string, string | null> = {};
+  for (const [prop, value] of Object.entries(style)) {
+    if (!mapped.has(prop)) inline[prop] = value;
+    else if (present?.has(camelCaseProp(prop))) inline[prop] = null;
+  }
+  if (Object.keys(inline).length > 0) patchStyle(magic, source, element, inline);
+  return decision.patch.outcome;
+}
+
+export function jsxClassInfo(source: string, loc: SourcePosition, typescript: boolean, theme: TailwindTheme | null): TailwindOutcome | null {
+  const element = findJsxElement(parseSource(source, typescript).program, loc);
+  return element ? describeSite(jsxClassSite(source, element), theme) : null;
 }

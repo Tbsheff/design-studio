@@ -3,9 +3,12 @@ import type { DefaultTreeAdapterMap } from 'parse5';
 import { applyDeclarationChanges, parseDeclarations, serializeDeclarations } from './css.js';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
-import { hasClassChange, nextClassList } from './classes.js';
+import { hasClassChange } from './classes.js';
 import { applySplices, leadingWhitespaceStart, type Splice } from './splice.js';
 import { htmlNameSplice, htmlPositionAt, planHtmlMove } from './structure.js';
+import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
+import { htmlClassSite } from './tailwind/html-site.js';
+import type { TailwindOutcome } from '../../shared/contracts.js';
 
 type ParentNode = DefaultTreeAdapterMap['parentNode'];
 type ChildNode = DefaultTreeAdapterMap['childNode'];
@@ -107,19 +110,6 @@ function styleSplice(source: string, element: Element, style: Record<string, str
   return { start: insertAt, end: insertAt, text: ` style="${escapeAttr(serialized)}"` };
 }
 
-function classSplice(source: string, element: Element, change: NonNullable<SourceEdit['classes']>): Splice | null {
-  const attr = element.attrs.find((entry) => entry.name === 'class');
-  const location = element.sourceCodeLocation?.attrs?.class;
-  const next = nextClassList(attr?.value ?? '', change);
-  if (attr && location) {
-    if (next === '') return { start: leadingWhitespaceStart(source, location.startOffset), end: location.endOffset, text: '' };
-    return { start: location.startOffset, end: location.endOffset, text: `class="${escapeAttr(next)}"` };
-  }
-  if (next === '') return null;
-  const insertAt = startTagOf(element).startOffset + 1 + element.tagName.length;
-  return { start: insertAt, end: insertAt, text: ` class="${escapeAttr(next)}"` };
-}
-
 function assertTextTarget(element: Element): ChildNode[] {
   if (VOID_ELEMENTS.has(element.tagName) || NON_TEXT_ELEMENTS.has(element.tagName)) {
     throw new DirectEditError('text_not_editable', `The text of <${element.tagName}> cannot be edited directly`);
@@ -177,7 +167,30 @@ export function htmlElementSpan(source: string, loc: SourcePosition): { start: n
   return location ? { start: location.startOffset, end: location.endOffset } : null;
 }
 
-export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit): PatchResult {
+function classOrStyleSplices(source: string, element: Element, style: Record<string, string | null>, edit: SourceEdit, theme: TailwindTheme | null): { splices: Splice[]; tailwind?: TailwindOutcome } {
+  const decision = decideClassEdit(() => htmlClassSite(source, element), style, edit.classes, theme);
+  if (decision.kind !== 'classes') {
+    const splice = Object.keys(style).length > 0 ? styleSplice(source, element, style) : null;
+    return { splices: splice ? [splice] : [], ...(decision.kind === 'inline' ? { tailwind: decision.fallback.outcome } : {}) };
+  }
+  const mapped = new Set(decision.patch.inlineProps);
+  const attr = element.attrs.find((entry) => entry.name === 'style');
+  const present = new Set(attr ? parseDeclarations(attr.value).map((entry) => entry.prop) : []);
+  const inline: Record<string, string | null> = {};
+  for (const [prop, value] of Object.entries(style)) {
+    if (!mapped.has(prop)) inline[prop] = value;
+    else if (present.has(prop)) inline[prop] = null;
+  }
+  const styleChange = Object.keys(inline).length > 0 ? styleSplice(source, element, inline) : null;
+  return { splices: [...decision.patch.plan.splices, ...(styleChange ? [styleChange] : [])], tailwind: decision.patch.outcome };
+}
+
+export function htmlClassInfo(source: string, loc: SourcePosition, theme: TailwindTheme | null): TailwindOutcome | null {
+  const element = findElementAt(parse(source, { sourceCodeLocationInfo: true }), loc);
+  return element ? describeSite(htmlClassSite(source, element), theme) : null;
+}
+
+export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit, theme: TailwindTheme | null = null): PatchResult {
   const document = parse(source, { sourceCodeLocationInfo: true });
   const element = findElementAt(document, loc);
   if (!element) throw new DirectEditError('element_not_found', `No element starts at line ${loc.line}, column ${loc.col}`);
@@ -197,16 +210,10 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit)
   }
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
-  if (styleKeys.length > 0) {
-    const splice = styleSplice(source, element, style);
-    if (splice) splices.push(splice);
-  }
+  const classed = classOrStyleSplices(source, element, style, edit, theme);
+  splices.push(...classed.splices);
   const classes = hasClassChange(edit.classes);
-  if (hasClassChange(edit.classes)) {
-    const splice = classSplice(source, element, edit.classes);
-    if (splice) splices.push(splice);
-  }
   const hasText = edit.text !== undefined;
   if (edit.text !== undefined) splices.push(textSplice(source, element, edit.text));
-  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText, ...(classes ? { classes } : {}) } };
+  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText, ...(classes ? { classes } : {}) }, ...(classed.tailwind ? { tailwind: classed.tailwind } : {}) };
 }

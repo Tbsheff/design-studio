@@ -52,7 +52,7 @@ const schemas = {
       directionId,
       path: pagePath,
       selector: selector.describe('CSS selector of one element on the page.'),
-      style: style.optional().describe('CSS properties to set. null removes the property.'),
+      style: style.optional().describe('CSS properties to set. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
       classes: classes.optional(),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
@@ -136,7 +136,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style, the text or the classes of one element, found by CSS selector on a page, with the same code path as the studio inspector. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
+  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -269,7 +269,8 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
   const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}) };
   const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
+  const tailwind = result.tailwind ? { classes: result.tailwind.classes, wrote: result.tailwind.mode, ...(result.tailwind.note ? { note: result.tailwind.note } : {}) } : {};
+  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied, ...tailwind }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
 }
 
 function frameTarget(): DesignComment['target'] {

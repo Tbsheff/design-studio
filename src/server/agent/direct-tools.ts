@@ -31,7 +31,7 @@ export const editElementShape = {
   path: z.string().trim().max(300).optional().describe('Page path, for example "about.html". Leave out for the entry page.'),
   style: z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict().optional().describe('CSS properties to set inline. null removes the property.'),
   text: z.string().max(5000).optional().describe('New text of a leaf element.'),
-  classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Class names to add or remove on a plain class / className string.'),
+  classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge().'),
   op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), unwrap or move (into targetSelector, as its last child).'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
 };
@@ -106,13 +106,15 @@ async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElemen
   const workTree = deps.ctx.direction.workTree;
   const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
   const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(input.classes ? { classes: input.classes } : {}) });
-  const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree));
+  const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree), { projectKind: deps.ctx.project.kind });
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
   if (plan.patch.code === plan.original) return text(`${plan.target.relative}: the values were already set.`);
   await writeAtomic(plan.target.file, plan.patch.code);
   const parts = [...plan.patch.applied.style, ...(plan.patch.applied.classes ? ['classes'] : []), ...(plan.patch.applied.text ? ['text'] : [])];
-  return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${element.source.line}. ${RUN_NOTE}`);
+  const tailwind = plan.patch.tailwind;
+  const classNote = tailwind && tailwind.mode !== 'none' ? ` Classes now: ${tailwind.classes.join(' ') || '(none)'}.${tailwind.note ? ` ${tailwind.note}` : ''}` : '';
+  return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${element.source.line}.${classNote} ${RUN_NOTE}`);
 }
 
 export async function runEditElement(deps: DirectToolDeps, args: EditElementArgs): Promise<ToolText> {

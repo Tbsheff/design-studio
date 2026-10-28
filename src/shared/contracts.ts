@@ -765,7 +765,8 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
+  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null} (the class list of the element and whether style edits write classes or inline style)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -965,6 +966,13 @@ export interface ClassChange {
   remove?: string[];
 }
 
+export interface TailwindOutcome {
+  mode: 'classes' | 'inline' | 'none';
+  classes: string[];
+  dynamic: boolean;
+  note: string | null;
+}
+
 export type ReorderMove = 'up' | 'down';
 
 export const INSERT_KINDS = ['text', 'frame', 'rect', 'ellipse'] as const;
@@ -1040,12 +1048,13 @@ export interface DirectEditResult {
   version: Version;
   applied: { style: string[]; text: boolean; classes?: boolean };
   moved?: SourceLoc;
+  tailwind?: TailwindOutcome;
 }
 
 export interface DirectEditBatchResult {
   files: string[];
   version: Version;
-  applied: { file: string; style: string[]; text: boolean; classes?: boolean }[];
+  applied: { file: string; style: string[]; text: boolean; classes?: boolean; tailwind?: TailwindOutcome }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

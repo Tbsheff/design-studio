@@ -10,6 +10,7 @@ import { BoxModel } from './BoxModel';
 import { CopyCodeMenu } from './CopyCodeMenu';
 import { Icon } from './Icon';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
+import { ClassLine, useElementClasses } from './InspectorClasses';
 import { RadiusField } from './InspectorCorners';
 import { EffectsSection } from './InspectorEffects';
 import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
@@ -246,6 +247,8 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext }) 
     edit.commit();
   };
   const source = props.target.source;
+  const classInfo = useElementClasses(props.projectId, props.directionId, source, savedAt);
+  const classLine = classInfo && edit.tailwind?.note ? { ...classInfo, note: edit.tailwind.note } : classInfo;
   return (
     <TokenUiContext.Provider value={tk.ui}>
       <div className="inspector ins-simple" aria-label="Design inspector">
@@ -253,6 +256,7 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext }) 
         <MetaRow tag={props.target.tag} where={source ? `${source.file}:${source.line}` : ''} status={edit.status} ui={tk.ui} onReset={edit.reset}>
           <CopyCssButton authored={authored} />
         </MetaRow>
+        <ClassLine info={classLine} />
         <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
         <div className="ins-scroll">
           <ErrorLine status={edit.status} />

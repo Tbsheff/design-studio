@@ -8,6 +8,7 @@ import { DirectEditError } from './errors.js';
 import type { PatchResult } from './errors.js';
 import { patchHtml } from './html.js';
 import { patchJsx } from './jsx.js';
+import { tailwindThemeFor, type TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
 
@@ -98,12 +99,21 @@ export async function resolveSource(workTree: string, file: string): Promise<Res
   return { file: real, relative: segments.join('/') };
 }
 
-export function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
+export function patchSource(relative: string, source: string, request: DirectEditRequest, tailwind: TailwindTheme | null = null): PatchResult {
   const extension = path.extname(relative).toLowerCase();
   const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes };
   const position = { line: request.source.line, col: request.source.col };
-  if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit);
-  return patchJsx(source, position, edit, { typescript: extension === '.tsx' });
+  if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit, tailwind);
+  return patchJsx(source, position, edit, { typescript: extension === '.tsx', tailwind });
+}
+
+export interface EditScope {
+  projectKind: Project['kind'];
+}
+
+export async function themeForFile(workTree: string, relative: string, text: string, scope: EditScope | undefined): Promise<TailwindTheme | null> {
+  if (!scope) return null;
+  return tailwindThemeFor(workTree, { relative, text }, scope);
 }
 
 export async function writeAtomic(file: string, content: string): Promise<void> {
@@ -150,6 +160,8 @@ export function editSummary(request: DirectEditRequest): string {
   if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
   if (request.move !== undefined) parts.push(`move ${request.move}`);
   if (request.insert !== undefined) parts.push(`insert ${request.insert}`);
+  for (const token of request.classes?.add ?? []) parts.push(`add class ${token}`);
+  for (const token of request.classes?.remove ?? []) parts.push(`remove class ${token}`);
   return `Direct edit of ${request.source.file}:${request.source.line}:${request.source.col}: ${parts.join('; ')}`;
 }
 
@@ -169,7 +181,7 @@ async function unchangedResult(
   patch: PatchResult,
 ): Promise<DirectEditResult> {
   const version = await deps.versions.get(project, headVersionId);
-  return { file: relative, version, applied: patch.applied };
+  return { file: relative, version, applied: patch.applied, ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
 }
 
 async function writeAndCommit(
@@ -207,17 +219,18 @@ export function assertCanEdit(deps: Pick<DirectEditDeps, 'runner'>, project: Pro
   return direction.headVersionId;
 }
 
-export async function planDirectEdit(workTree: string, request: DirectEditRequest, known: Set<string> | null): Promise<PlannedEdit> {
+export async function planDirectEdit(workTree: string, request: DirectEditRequest, known: Set<string> | null, scope?: EditScope): Promise<PlannedEdit> {
   assertKnownTokens(request.style, known);
   const target = await resolveSource(workTree, request.source.file);
   const original = await readFile(target.file, 'utf8');
-  return { request, target, original, patch: patchSource(target.relative, original, request) };
+  const theme = await themeForFile(workTree, target.relative, original, scope);
+  return { request, target, original, patch: patchSource(target.relative, original, request, theme) };
 }
 
 export async function applyDirectEdit(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<DirectEditResult> {
   const request = parseDirectEditRequest(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
-  const plan = await planDirectEdit(direction.workTree, request, await knownTokenVars(direction.workTree));
+  const plan = await planDirectEdit(direction.workTree, request, await knownTokenVars(direction.workTree), { projectKind: project.kind });
   const { target, original, patch } = plan;
   if (patch.code === original) return unchangedResult(deps, project, headVersionId, target.relative, patch);
   const version = await writeAndCommit(deps, project, direction, target, original, patch, request);
@@ -229,7 +242,7 @@ export async function applyDirectEdit(deps: DirectEditDeps, project: Project, di
     files: [{ file: target.file, relative: target.relative, before: original, after: patch.code }],
   });
   await publishVersion(deps, project, direction, version);
-  return { file: target.relative, version, applied: patch.applied, ...movedLoc(request.source.file, patch) };
+  return { file: target.relative, version, applied: patch.applied, ...movedLoc(request.source.file, patch), ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
 }
 
 function movedLoc(file: string, patch: PatchResult): Pick<DirectEditResult, 'moved'> {

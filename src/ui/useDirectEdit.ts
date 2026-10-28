@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { DirectEditRequest, DirectStyleProperty, SelectionContext } from '../shared/contracts';
+import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome } from '../shared/contracts';
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
@@ -78,6 +78,7 @@ export function useDirectEdit(o: Options) {
   const [textDraft, setTextDraftState] = useState<string | null>(null);
   const textRef = useRef(textDraft);
   const [status, setStatus] = useState<SaveStatus>({ kind: 'idle' });
+  const [tailwind, setTailwind] = useState<TailwindOutcome | null>(null);
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
@@ -156,7 +157,8 @@ export function useDirectEdit(o: Options) {
     setStatus({ kind: 'saving' });
     const request = api
       .directEdit(cur.projectId, cur.directionId, req)
-      .then(() => {
+      .then((result) => {
+        setTailwind(result.tailwind ?? null);
         committed.current = { style: { ...committed.current.style, ...style }, text: text ?? committed.current.text };
         cur.onCommitted({ selector: req.selector, style, text });
         setStatus({ kind: 'saved', at: Date.now() });
@@ -272,7 +274,7 @@ export function useDirectEdit(o: Options) {
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
-  return { values, mixed: NO_MIXED, text, status, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
+  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

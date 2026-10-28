@@ -23,7 +23,7 @@ export const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const styleValue = z.string().max(200).nullable();
 export const style = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();
 const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
-export const classes = z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().describe('Class names to add to or remove from the class / className attribute (a plain string only; a template, cn() or a variable is refused).');
+export const classes = z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().describe('Tailwind classes to add or remove, with any variant prefix (md:p-8, hover:bg-primary). An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge(); a class built at runtime or a cva() result is refused.');
 export const hasClasses = (input: { classes?: { add?: string[]; remove?: string[] } }) => (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
 
 export interface Meta {

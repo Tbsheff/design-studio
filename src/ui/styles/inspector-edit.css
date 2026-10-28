@@ -765,6 +765,39 @@
   box-shadow: none;
 }
 
+.ins-classes {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px var(--s-2);
+  flex: none;
+  padding: 0 var(--pane-inset) var(--s-2);
+}
+
+.ins-classes-label {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.ins-classes-list {
+  min-width: 0;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.ins-classes-more {
+  color: var(--text-3);
+}
+
+.ins-classes-note {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 .ins-source-block {
   display: grid;
   gap: 2px;

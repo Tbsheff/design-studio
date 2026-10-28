@@ -31,6 +31,7 @@ import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './js
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
+import { APP_DOCTOR_DESCRIPTION, runAppDoctor } from './doctor-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -633,5 +634,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runResolveComment(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool] });
+  const appDoctorTool = tool(
+    'app_doctor',
+    APP_DOCTOR_DESCRIPTION,
+    { fresh: z.boolean().optional() },
+    (args) => runAppDoctor(deps, args.fresh === true),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, appDoctorTool] });
 }

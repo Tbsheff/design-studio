@@ -18,7 +18,7 @@ import { AutoLayoutSection, SizeRows } from './InspectorLayout';
 import { MultiCreateTokenHost, MultiNote } from './InspectorMulti';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
-import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { CreateTokenHost, FontField, MatchSection, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { InspectorSource } from './InspectorSource';
 import { NumberField } from './NumberField';
 
@@ -262,6 +262,7 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext }) 
           <ErrorLine status={edit.status} />
           <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
           <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
+          <MatchSection projectId={props.projectId} directionId={props.directionId} selection={[props.target]} port={props.port} tokens={props.tokens} edit={edit} />
           <InspectorOtherStyles css={authored.css} />
           <div className="ins-export">
             <CopyCodeMenu projectId={props.projectId} directionId={props.directionId} selector={props.target.selector} variant="row" />
@@ -303,6 +304,7 @@ export function SimpleMultiEditor(props: EditorProps) {
           <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
             <SimpleSections edit={edit} ui={tk.ui} selection={null} />
           </fieldset>
+          <MatchSection projectId={props.projectId} directionId={props.directionId} selection={props.selection} port={props.port} tokens={props.tokens} edit={edit} />
         </div>
         <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
       </div>

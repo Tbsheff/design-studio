@@ -47,12 +47,21 @@ function missText(miss: RuleMiss): string {
   return `${miss.prop} is ${miss.actual}, ${miss.cls} gives ${miss.expected}`;
 }
 
+const SIDES: [string, string[]][] = [
+  ['border-radius', RADIUS],
+  ['padding', ['padding-top', 'padding-right', 'padding-bottom', 'padding-left']],
+  ['margin', ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']],
+];
+
+function collapse(misses: RuleMiss[], name: string, props: string[]): RuleMiss[] {
+  const parts = misses.filter((miss) => miss.prop && props.includes(miss.prop));
+  const first = parts[0];
+  const even = first && parts.length === props.length && parts.every((miss) => miss.actual === first.actual && miss.expected === first.expected);
+  return even ? [...misses.filter((miss) => !parts.includes(miss)), { ...first, prop: name }] : misses;
+}
+
 function compact(misses: RuleMiss[]): RuleMiss[] {
-  const corners = misses.filter((miss) => miss.prop && RADIUS.includes(miss.prop));
-  const first = corners[0];
-  const even = first && corners.length === RADIUS.length && corners.every((miss) => miss.actual === first.actual && miss.expected === first.expected);
-  if (!even) return misses;
-  return [...misses.filter((miss) => !corners.includes(miss)), { ...first, prop: 'border-radius' }];
+  return SIDES.reduce((list, [name, props]) => collapse(list, name, props), misses);
 }
 
 function radiusStyle(misses: RuleMiss[]): Partial<Record<DirectStyleProperty, string>> {

@@ -70,6 +70,8 @@ import { registerComponentRoutes } from './components-routes.js';
 import { registerPropsRoutes } from './props-routes.js';
 import { registerReviewRoutes } from './review-routes.js';
 import { registerRulesRoutes, rulesLoader } from './rules-routes.js';
+import { loadRepoContext } from '../agent/repo-context.js';
+import { registerRunContextRoutes } from './run-context-routes.js';
 import { registerInsertRoutes } from './insert-routes.js';
 import { createComponentService } from '../components/thumbs.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -441,8 +443,12 @@ export function createApp(deps: AppDeps): Hono {
       console.error('[http] design rules load failed', error);
       return [];
     });
+    const repoContext = await loadRepoContext(project, direction.workTree).then((state) => state.text).catch((error: unknown) => {
+      console.error('[http] repo context load failed', error);
+      return null;
+    });
     await markLofi(project, direction, request);
-    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, designRules, previewUrl, mentionFiles, target });
+    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, designRules, previewUrl, mentionFiles, target, repoContext });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
@@ -1162,6 +1168,7 @@ export function createApp(deps: AppDeps): Hono {
   registerFlowRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });
+  registerRunContextRoutes(app, { loadDirection });
   const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
 

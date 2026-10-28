@@ -24,6 +24,7 @@ import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
+import { getRunContextShape, runGetRunContext } from './context-tool.js';
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
 import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } from './run-target.js';
@@ -633,5 +634,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runResolveComment(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool] });
+  const getRunContextTool = tool(
+    'get_run_context',
+    'Read only. Read the repo context of this run again with the same server code as the MCP get_run_context tool: the app folder and workspace root AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md, cut to about 8 KB, secret-looking lines left out. The run message already has it as <repo_context>; call this only when you need the file list or a fresh copy.',
+    getRunContextShape,
+    () => runGetRunContext(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool] });
 }

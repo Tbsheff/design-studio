@@ -15,7 +15,7 @@ export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/',
 const NEVER_TRACKED = ['node_modules'];
 const MAX_SCOPED_PATHS = 500;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
-const APP_EXCLUDES = ['*.onnx', '*.mlmodelc/', '*.mlpackage/', '*.sqlite', '*.db', '*.m4a', '*.mp3', '*.wav', '*.mp4', '*.mov', '*.zip', '*.tar', '*.tgz', '*.gz', '.env', '.env.*', '!.env.example', '*.pem', '*.key'];
+const APP_EXCLUDES = ['.studio/', '*.onnx', '*.mlmodelc/', '*.mlpackage/', '*.sqlite', '*.db', '*.m4a', '*.mp3', '*.wav', '*.mp4', '*.mov', '*.zip', '*.tar', '*.tgz', '*.gz', '.env', '.env.*', '!.env.example', '*.pem', '*.key'];
 
 const META_PREFIX = 'studio-meta: ';
 const MAX_ORIGIN_DEPTH = 64;
@@ -457,7 +457,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
     commitFile(project: Project, direction: Direction, relative: string | string[], title: string, meta: VersionMeta): Promise<Version | null> {
       const listed = Array.isArray(relative) ? relative : [relative];
-      const paths = existsSync(canvasOf(direction)) && !listed.includes(CANVAS_FILE) ? [...listed, CANVAS_FILE] : listed;
+      const paths = !project.app && existsSync(canvasOf(direction)) && !listed.includes(CANVAS_FILE) ? [...listed, CANVAS_FILE] : listed;
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tempIndex = path.join(gitDirOf(project), `index-file-${randomBytes(6).toString('hex')}`);
@@ -507,7 +507,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tree = head === null ? null : await treeOf(project, head);
-        const canvas = await readFile(canvasOf(direction)).catch(() => null);
+        const canvas = project.app ? null : await readFile(canvasOf(direction)).catch(() => null);
         await resetWorkTree(project, direction, tree, tree, 'trash');
         if (canvas) {
           await mkdir(path.dirname(canvasOf(direction)), { recursive: true });

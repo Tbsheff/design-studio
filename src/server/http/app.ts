@@ -301,7 +301,7 @@ export function createApp(deps: AppDeps): Hono {
   const directionLock = createKeyedMutex();
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
   const editDeps = { bus, projects, versions, runner, history: editHistory };
-  const canvas = deps.canvas ?? createCanvasService(bus);
+  const canvas = deps.canvas ?? createCanvasService(bus, (projectId) => projects.projectDir(projectId));
   const announceCanvas = (project: Project): void => {
     void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));
   };

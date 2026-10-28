@@ -8,7 +8,7 @@ import { findTokenFile } from '../design-system/app-tokens/detect.js';
 import { readAppTokensAt, usesAppTokens } from '../design-system/app-tokens/source.js';
 import { captureFrame, waitForPage } from '../export/capture.js';
 import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
+import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { listAppRoutes } from '../app/routes.js';
 
@@ -217,7 +217,7 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
   const ref = str(args, 'frameId');
   if (!ref) return { args };
   const project = await deps.projects.get(str(args, 'projectId', true) as string);
-  const frames = (await readCanvasAt(canvasOwner(project).workTree)).canvas?.frames ?? [];
+  const frames = (await readProjectCanvas(project, (projectId) => deps.projects.projectDir(projectId))).canvas?.frames ?? [];
   if (frames.length === 0 && ref === 'f1') return { args };
   const frame = findFrame(frames, ref);
   if (!frame) throw new ToolError(`no frame ${ref} on the canvas`);

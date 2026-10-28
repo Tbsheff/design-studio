@@ -42,6 +42,20 @@ export function canvasPath(workTree: string): string {
   return path.join(workTree, ...CANVAS_FILE.split('/'));
 }
 
+export type ProjectDirOf = (projectId: string) => string;
+
+const APP_CANVAS_FILE = 'canvas.json';
+
+export function canvasFileOf(project: Project, projectDir: ProjectDirOf | null): string {
+  return project.app && projectDir ? path.join(projectDir(project.id), APP_CANVAS_FILE) : canvasPath(canvasOwner(project).workTree);
+}
+
+export async function readProjectCanvas(project: Project, projectDir: ProjectDirOf | null): Promise<{ canvas: CanvasFile | null; text: string | null }> {
+  const text = await readFile(canvasFileOf(project, projectDir), 'utf8').catch(() => null);
+  if (text === null) return project.app && projectDir ? readCanvasAt(canvasOwner(project).workTree) : { canvas: null, text: null };
+  return { canvas: parseCanvasText(text), text };
+}
+
 function hashOf(text: string): string {
   return createHash('sha1').update(text).digest('hex').slice(0, 16);
 }
@@ -64,12 +78,12 @@ async function writeAtomic(target: string, text: string): Promise<void> {
   }
 }
 
-export function createCanvasService(bus: EventBus): CanvasService {
+export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | null = null): CanvasService {
   const lock = createKeyedMutex();
   const presences = new Map<string, CanvasPresence>();
 
   const snapshotOf = async (project: Project): Promise<CanvasSnapshot> => {
-    const { canvas, text } = await readCanvasAt(canvasOwner(project).workTree);
+    const { canvas, text } = await readProjectCanvas(project, projectDir);
     if (canvas === null || text === null) return { canvas: null, hash: null };
     return { canvas, hash: hashOf(serializeCanvasFile(canvas)) };
   };
@@ -88,12 +102,12 @@ export function createCanvasService(bus: EventBus): CanvasService {
 
   const store = async (project: Project, canvas: CanvasFile, write: CanvasWrite): Promise<CanvasSnapshot> => {
     const text = serializeCanvasFile(canvas);
-    const owner = canvasOwner(project);
-    const current = await readFile(canvasPath(owner.workTree), 'utf8').catch(() => null);
+    const file = canvasFileOf(project, projectDir);
+    const current = await readFile(file, 'utf8').catch(() => null);
     const saved = parseCanvasText(text) ?? emptyCanvasFile();
     const snapshot = { canvas: saved, hash: hashOf(text) };
     if (current === text) return snapshot;
-    await writeAtomic(canvasPath(owner.workTree), text);
+    await writeAtomic(file, text);
     emit(project, snapshot, write);
     return snapshot;
   };

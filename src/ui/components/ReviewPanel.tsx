@@ -40,18 +40,18 @@ function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
       <button type="button" className="review-target" disabled={!finding.selector} data-tip={finding.selector ? 'Select on the canvas' : undefined} onClick={() => a.onSelect(finding)}>
         <span className={`review-sev ${finding.severity}`} aria-label={SEVERITY_WORD[finding.severity]} />
         <span className="truncate">{finding.element}</span>
+        {finding.copies && finding.copies > 1 && <span className="review-copies">{finding.copies} copies</span>}
       </button>
       <p className="review-msg">{finding.message}</p>
       <div className="review-actions">
         {finding.source && <code className="review-src truncate">{finding.source}</code>}
-        <div className="spacer" />
         {finding.fix ? (
           <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? 'Apply this fix as one version you can undo'} data-tip-align="end" onClick={() => a.onFix([finding])}>
             {busy ? <span className="spinner" /> : <Icon name="check" size={12} />}
-            {finding.fix.label}
+            <span>{finding.fix.label}</span>
           </button>
         ) : (
-          <button type="button" className="btn small ghost" disabled={!a.canAsk} data-tip={a.canAsk ? 'Put this finding in the chat box. You send it.' : 'Chat is not available here'} data-tip-align="end" onClick={() => a.onAsk(finding)}>
+          <button type="button" className="btn small" disabled={!a.canAsk} data-tip={a.canAsk ? 'Put this finding in the chat box. You send it.' : 'Chat is not available here'} data-tip-align="end" onClick={() => a.onAsk(finding)}>
             <Icon name="chat" size={12} />
             Ask agent
           </button>
@@ -70,7 +70,7 @@ function Group({ kind, list, a }: { kind: ReviewKind; list: ReviewFinding[]; a: 
         <span className="review-count num">{list.length}</span>
         <div className="spacer" />
         {fixable.length > 1 && (
-          <button type="button" className="btn small ghost" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? `Apply ${fixable.length} fixes as one version`} data-tip-align="end" onClick={() => a.onFix(fixable)}>
+          <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? `Apply ${fixable.length} fixes as one version`} data-tip-align="end" onClick={() => a.onFix(fixable)}>
             Fix all {fixable.length}
           </button>
         )}

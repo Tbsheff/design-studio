@@ -70,9 +70,9 @@ export function RunDetails({ projectId, run, onClose }: { projectId: string; run
         </button>
       </div>
       <div className="drawer-body">
-        <div className="drawer-id">
+        <div className="drawer-id" data-tip={run.runId}>
           <span className="badge">Run</span>
-          <span className="mono muted truncate" title={run.runId}>
+          <span className="mono muted truncate">
             {run.runId}
           </span>
         </div>
@@ -105,9 +105,9 @@ export function RunDetails({ projectId, run, onClose }: { projectId: string; run
             </thead>
             <tbody>
               {run.tools.map((t) => (
-                <tr key={t.toolUseId}>
+                <tr key={t.toolUseId} data-tip={JSON.stringify(t.input)}>
                   <td className="truncate">{prettyToolName(t.name)}</td>
-                  <td className="mono truncate" title={JSON.stringify(t.input)}>
+                  <td className="mono truncate">
                     {t.name === SKILL_TOOL ? skillToolName(t.input) : toolTarget(t.input, null)}
                   </td>
                   <td className="num">{t.durationMs === null ? 'Running…' : formatMs(t.durationMs)}</td>

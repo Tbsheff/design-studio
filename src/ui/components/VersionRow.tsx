@@ -196,6 +196,8 @@ export function VersionRow(props: VersionRowProps) {
               ref={toggle}
               type="button"
               className="version-toggle"
+              data-tip={v.meta.prompt ?? v.title}
+              data-tip-align="start"
               aria-expanded={props.expanded}
               aria-controls={props.expanded ? detailId : undefined}
               aria-keyshortcuts="F2"
@@ -208,7 +210,7 @@ export function VersionRow(props: VersionRowProps) {
                 }
               }}
             >
-              <span title={v.meta.prompt ?? v.title}>{title}</span>
+              <span>{title}</span>
             </button>
           )}
           {isHead && <span className="badge accent">Head</span>}

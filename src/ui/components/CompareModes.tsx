@@ -28,9 +28,9 @@ const clampPct = (value: number) => Math.min(100, Math.max(0, value));
 
 function Label({ side, title, align }: { side: 'A' | 'B'; title: string; align: 'start' | 'end' }) {
   return (
-    <div className={`compare-label ${align}`}>
+    <div className={`compare-label ${align}`} data-tip={title}>
       <span className="badge accent">{side}</span>
-      <span className="compare-title truncate" title={title}>
+      <span className="compare-title truncate">
         {title}
       </span>
     </div>

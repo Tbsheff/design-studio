@@ -25,7 +25,7 @@ function matches(skill: SkillInfo, query: string): boolean {
 
 function SkillRow({ skill, on, allowBash, onToggle }: { skill: SkillInfo; on: boolean; allowBash: boolean; onToggle: (on: boolean) => void }) {
   return (
-    <label className="check skill-row" title={skill.sourcePath}>
+    <label className="check skill-row" data-tip={skill.sourcePath}>
       <input type="checkbox" aria-label={`Skill ${skill.id}`} checked={on} onChange={(e) => onToggle(e.target.checked)} />
       <span className="skill-text">
         <span className="skill-name">

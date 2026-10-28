@@ -37,7 +37,7 @@
   border-radius: var(--r-full);
   background: var(--pin-bg);
   color: var(--pin-fg);
-  font: 500 11px/1 var(--font);
+  font: 500 var(--t-2xs)/1 var(--font);
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
 }
@@ -55,7 +55,7 @@
   border-radius: var(--r-full);
   background: var(--pin-bg);
   color: var(--pin-fg);
-  font: 600 10px/1 var(--font);
+  font: 600 var(--t-2xs)/1 var(--font);
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 1.5px var(--halo-solid);
 }
@@ -70,7 +70,7 @@
 }
 
 .avatar-pin.reply .avatar-face {
-  font-size: 10px;
+  font-size: var(--t-2xs);
 }
 
 .comment-pin-wrap,
@@ -742,7 +742,7 @@
   border-radius: 3px var(--r-full) var(--r-full) var(--r-full);
   background: var(--pin-bg);
   color: var(--pin-fg);
-  font: 500 11px/1 var(--font);
+  font: 500 var(--t-2xs)/1 var(--font);
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 2px var(--pin-ring);
   -webkit-font-smoothing: antialiased;
@@ -1085,6 +1085,6 @@
   border-radius: var(--r-full);
   background: var(--halo-soft);
   color: inherit;
-  font: 500 11px/1 var(--font);
+  font: 500 var(--t-2xs)/1 var(--font);
   box-shadow: none;
 }

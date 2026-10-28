@@ -21,6 +21,7 @@ export interface CanvasActions {
   onCheck: () => void;
   checking: boolean;
   presets: { id: Viewport['preset']; label: string; width: number; height: number }[];
+  play: () => void;
 }
 
 const ZOOMS: { key: ZoomKey; title: string; keyId: KeyId; keywords: string }[] = [
@@ -40,6 +41,7 @@ function canvasCommands(a: CanvasActions): Command[] {
     { id: 'view.live', title: 'Show the live preview', group: 'View', icon: 'radio', keywords: 'source current', run: () => a.onSource('live') },
     { id: 'view.last', title: 'Show the last completed version', group: 'View', icon: 'history', keywords: 'source previous', run: () => a.onSource('last'), ...(a.hasHead ? {} : { disabled: 'No version yet' }) },
     ...a.presets.map((p) => ({ id: `view.viewport-${p.id}`, title: `Preview at ${p.label}`, group: 'View', icon: p.id as Command['icon'], keywords: 'viewport size device breakpoint', run: () => uiStore.set({ viewport: { preset: p.id, width: p.width, height: p.height } }) })),
+    { id: 'present.play', title: 'Play prototype', group: 'Canvas', icon: 'play', keywords: 'present prototype links click through', run: a.play },
     { id: 'canvas.check', title: 'Check render', group: 'Canvas', icon: 'scan', keywords: 'accessibility errors overflow', run: a.onCheck, ...(a.checking ? { disabled: 'Checking now' } : {}) },
   ];
   if (a.comment.available) out.push({ id: 'tool.comment', title: a.comment.on ? 'Stop commenting' : 'Add comments', group: 'Canvas', icon: 'comment', keyId: 'tool-comment', keywords: 'pin feedback note', run: a.comment.toggle });
@@ -63,6 +65,7 @@ export interface CanvasInput {
   dark: { dark: boolean; onToggle: () => void } | undefined;
   lofi?: { on: boolean; onToggle: () => void } | undefined;
   check: { run: () => void; checking: boolean };
+  play: () => void;
 }
 
 function actionsOf(i: CanvasInput): CanvasActions {
@@ -85,6 +88,7 @@ function actionsOf(i: CanvasInput): CanvasActions {
     onCheck: i.check.run,
     checking: i.check.checking,
     presets: PRESETS,
+    play: i.play,
   };
 }
 

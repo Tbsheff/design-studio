@@ -99,7 +99,7 @@ function HandoffResultView({ target, result, editors, onError }: { target: Expor
   const run = (task: () => Promise<void>) => void task().catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)));
   return (
     <div className="export-handoff-result">
-      <div className="export-path" title={result.path}>
+      <div className="export-path" data-tip={result.path}>
         <Icon name="folder" size={14} />
         <span className="truncate">…/handoff/{folder}</span>
       </div>
@@ -177,8 +177,8 @@ function ConnectClaudeCode() {
       ) : null}
       {on && status?.command ? (
         <>
-          <div className="export-command">
-            <code className="truncate" title={status.command}>{status.command}</code>
+          <div className="export-command" data-tip={status.command}>
+            <code className="truncate">{status.command}</code>
             <button type="button" className="btn small has-icon" onClick={() => copy('mcp', status.command as string)}>
               <Icon name={copied === 'mcp' ? 'check' : 'copy'} size={14} />
               <span aria-live="polite">{copied === 'mcp' ? 'Copied' : 'Copy command'}</span>
@@ -356,9 +356,9 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
         </span>
       ) : null}
       {status.kind === 'done' ? (
-        <span className="export-done">
+        <span className="export-done" data-tip={status.text}>
           <Icon name="check" size={14} />
-          <span className="truncate" title={status.text}>
+          <span className="truncate">
             {status.text}
           </span>
           {status.note ? <span className="export-sub">· {status.note}</span> : null}
@@ -408,9 +408,9 @@ export function ExportDialog({ target, onClose }: Props) {
   return (
     <dialog ref={dialog.ref} className="modal export-dialog" aria-label="Export" onMouseDown={dialog.onMouseDown}>
       <div className="modal-head">
-        <div className="titles">
+        <div className="titles" data-tip={target.versionLabel} data-tip-align="start">
           <h2>Export</h2>
-          <p className="truncate" title={target.versionLabel}>
+          <p className="truncate">
             {target.versionLabel}
           </p>
         </div>

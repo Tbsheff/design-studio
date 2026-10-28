@@ -413,8 +413,6 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               onExit={guard(onExit)}
               onDesignMd={() => setDesignOpen(true)}
               onSettings={() => setSettingsOpen(true)}
-              canExport={exporter.canOpen}
-              onExport={exporter.openHead}
               onCollapse={() => uiStore.set({ paneCollapsed: true })}
             />
           }

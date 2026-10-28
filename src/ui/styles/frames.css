@@ -70,7 +70,7 @@
   border-radius: var(--r-xs);
   background: var(--text);
   color: var(--bg);
-  font: var(--w-medium) 11px / 16px var(--font);
+  font: var(--w-medium) var(--t-2xs) / 16px var(--font);
   font-variant-numeric: tabular-nums;
 }
 

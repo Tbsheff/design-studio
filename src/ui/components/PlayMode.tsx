@@ -178,7 +178,7 @@ export default function PlayMode(p: Props) {
         <span className="play-title" data-testid="play-title">
           {shownFrame ? p.frameTitle(shownFrame) : 'Loading…'}
         </span>
-        <span className="play-hint">Click a linked element</span>
+        <span className="play-hint">{p.file.links.length === 0 ? 'No links yet. Use the Prototype tool to link frames.' : 'Click a linked element'}</span>
         <button type="button" className="btn small ghost" onClick={restart}>
           <Icon name="restore" size={12} />
           Restart <kbd>R</kbd>

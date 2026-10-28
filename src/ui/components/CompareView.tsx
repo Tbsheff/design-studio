@@ -60,9 +60,9 @@ function SidePane(props: BoardProps & { side: 'A' | 'B' }) {
   const title = props.side === 'A' ? props.olderTitle : props.newerTitle;
   return (
     <div className="compare-pane">
-      <div className="compare-label">
+      <div className="compare-label" data-tip={title}>
         <span className="badge accent">{props.side}</span>
-        <span className="compare-title truncate" title={title}>
+        <span className="compare-title truncate">
           {title}
         </span>
       </div>

@@ -97,7 +97,6 @@ export function usePrototype(o: Options) {
           hasSelection={single !== undefined}
           frameTitle={frameTitle}
           linkTitle={linkTitle}
-          onPlay={play}
           onError={o.notify}
         />
       )}

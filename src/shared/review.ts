@@ -39,6 +39,7 @@ export interface ReviewFinding {
   message: string;
   fix: ReviewFix | null;
   ask: string;
+  copies?: number;
 }
 
 export interface ReviewResult {

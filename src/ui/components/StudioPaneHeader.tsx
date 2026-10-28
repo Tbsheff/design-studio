@@ -25,8 +25,6 @@ interface Props {
   onExit: () => void;
   onDesignMd: () => void;
   onSettings: () => void;
-  canExport: boolean;
-  onExport: () => void;
   onCollapse: () => void;
 }
 
@@ -85,7 +83,6 @@ function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onSta
   ];
   const project: Item[] = [
     { id: 'rename', label: 'Rename', icon: 'pencil', run: props.onStartRename },
-    { id: 'export', label: 'Export and handoff', icon: 'download', run: props.onExport, disabled: !props.canExport },
     { id: 'settings', label: 'Project settings', icon: 'settings', run: props.onSettings },
   ];
   const themes: Item[] = (['system', 'light', 'dark'] as const).map((value) => ({
@@ -194,7 +191,8 @@ export function StudioPaneHeader(props: Props) {
               className="pane-project"
               aria-haspopup="menu"
               aria-expanded={open}
-              title={props.name}
+              data-tip={open ? undefined : props.name}
+              data-tip-align="start"
               onClick={() => setOpen((v) => !v)}
               onDoubleClick={() => setRenaming(true)}
             >

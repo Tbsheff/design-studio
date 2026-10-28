@@ -59,7 +59,7 @@ export function PermissionPrompt({ runId, request }: { runId: string; request: P
             Allow once
           </button>
           {rule && (
-            <button type="button" className="btn small permission-always" disabled={busy} title={rule} aria-label={`Always allow ${rule}`} onClick={() => answer({ allow: true, always: rule })}>
+            <button type="button" className="btn small permission-always" disabled={busy} data-tip={rule} aria-label={`Always allow ${rule}`} onClick={() => answer({ allow: true, always: rule })}>
               Always <code className="permission-rule">{rule}</code>
             </button>
           )}

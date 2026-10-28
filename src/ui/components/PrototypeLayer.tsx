@@ -6,6 +6,7 @@ import type { CanvasFrame } from '../canvasFrames';
 import { linksApi } from '../linksApi';
 import type { LinkState } from '../useLinkRects';
 import { Icon } from './Icon';
+import { UiSelect, type UiSelectOption } from './UiSelect';
 import '../styles/prototype.css';
 
 interface Point {
@@ -125,16 +126,18 @@ export function LinkArrows({ states, frames, active, startId, arrows, selectedId
           })}
       </svg>
       {start && (
-        <span className="link-start" style={{ left: start.x, top: start.y }}>
-          <Icon name="play" size={10} />
-          Start
+        <span className="link-start-anchor" style={{ left: start.x + start.width, top: start.y }}>
+          <span className="link-start">
+            <Icon name="play" size={10} />
+            Start
+          </span>
         </span>
       )}
       {[...brokenByFrame].map(([frameId, list]) => {
         const box = frameBox(frameId);
         if (!box) return null;
         return (
-          <span key={frameId} className="link-broken-badge" data-testid="link-broken" style={{ left: box.x + box.width, top: box.y }} title={list.map((state) => LINK_ISSUE_TEXT[state.issue ?? 'element-missing']).join('\n')}>
+          <span key={frameId} className="link-broken-badge" data-testid="link-broken" style={{ left: box.x + box.width, top: box.y }} data-tip={list.map((state) => LINK_ISSUE_TEXT[state.issue ?? 'element-missing']).join('\n')}>
             <Icon name="unlink" size={11} />
             {list.length} broken
           </span>
@@ -235,7 +238,6 @@ interface BarProps {
   hasSelection: boolean;
   frameTitle: (frame: CanvasFrame) => string;
   linkTitle: (link: PrototypeLink) => string;
-  onPlay: () => void;
   onError: (message: string) => void;
 }
 
@@ -249,33 +251,23 @@ function LinkEditor({ projectId, state, frames, frameTitle, onError }: { project
   const options = frames.filter((frame) => frame.id !== link.from.frame);
   const target = isBackTarget(link.to) ? null : link.to.frame;
   const missing = target && !options.some((frame) => frame.id === target) ? target : null;
+  const targets: UiSelectOption[] = [
+    ...options.map((frame) => ({ value: frame.id, label: `Go to ${frameTitle(frame)}` })),
+    ...(missing ? [{ value: missing, label: 'Missing frame' }] : []),
+    { value: 'back', label: 'Back' },
+  ];
+  const transitions = LINK_TRANSITIONS.map((transition) => ({ value: transition, label: transitionLabel(transition) }));
   return (
     <div className="proto-editor" data-testid="link-editor">
       <span className="proto-label">On click</span>
-      <select
+      <UiSelect
         className="proto-select"
         aria-label="Link target"
         value={targetValue(link.to)}
-        onChange={(event) => {
-          const value = event.target.value;
-          void linksApi.update(projectId, link.id, { to: value === 'back' ? { back: true } : { frame: value } }).catch(fail);
-        }}
-      >
-        {options.map((frame) => (
-          <option key={frame.id} value={frame.id}>
-            Go to {frameTitle(frame)}
-          </option>
-        ))}
-        {missing && <option value={missing}>Missing frame</option>}
-        <option value="back">Back</option>
-      </select>
-      <select className="proto-select" aria-label="Transition" value={link.transition} onChange={(event) => void linksApi.update(projectId, link.id, { transition: event.target.value as LinkTransition }).catch(fail)}>
-        {LINK_TRANSITIONS.map((transition) => (
-          <option key={transition} value={transition}>
-            {transitionLabel(transition)}
-          </option>
-        ))}
-      </select>
+        options={targets}
+        onChange={(value) => void linksApi.update(projectId, link.id, { to: value === 'back' ? { back: true } : { frame: value } }).catch(fail)}
+      />
+      <UiSelect className="proto-select" aria-label="Transition" value={link.transition} options={transitions} onChange={(value: LinkTransition) => void linksApi.update(projectId, link.id, { transition: value }).catch(fail)} />
       {state.issue && (
         <span className="proto-broken" role="status">
           {LINK_ISSUE_TEXT[state.issue]}
@@ -311,24 +303,15 @@ export function PrototypeBar(p: BarProps) {
   const [listOpen, setListOpen] = useState(false);
   const broken = p.states.filter((state) => state.issue !== null).length;
   const fail = (error: unknown) => p.onError(error instanceof Error ? error.message : String(error));
+  const starts = p.frames.map((frame) => ({ value: frame.id, label: p.frameTitle(frame) }));
   return (
     <div className="proto-bar" role="toolbar" aria-label="Prototype" data-testid="proto-bar" onPointerDown={(event) => event.stopPropagation()}>
-      <label className="proto-start">
-        <Icon name="play" size={12} />
-        <span className="proto-label">Start</span>
-        <select className="proto-select" aria-label="Start frame" value={p.startId} onChange={(event) => void linksApi.setStart(p.projectId, event.target.value).catch(fail)}>
-          {p.frames.map((frame) => (
-            <option key={frame.id} value={frame.id}>
-              {p.frameTitle(frame)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <UiSelect className="proto-select proto-start" aria-label="Start frame" tip="Start frame for Play" icon={<Icon name="play" size={12} />} value={p.startId} options={starts} onChange={(value) => void linksApi.setStart(p.projectId, value).catch(fail)} />
       <div className="toolbar-sep" />
       {p.selected ? (
         <LinkEditor projectId={p.projectId} state={p.selected} frames={p.frames} frameTitle={p.frameTitle} onError={p.onError} />
       ) : (
-        <span className="proto-hint">{p.hasSelection ? 'Drag the + handle to a frame to link it.' : 'Click an element, then drag its + handle to a frame.'}</span>
+        <span className="proto-hint truncate">{p.hasSelection ? 'Drag the + handle to a frame to link it.' : 'Click an element, then drag its + handle to a frame.'}</span>
       )}
       <div className="toolbar-sep" />
       <span className="topbar-anchor">
@@ -339,10 +322,6 @@ export function PrototypeBar(p: BarProps) {
         </button>
         {listOpen && <LinkList projectId={p.projectId} states={p.states} linkTitle={p.linkTitle} onError={p.onError} />}
       </span>
-      <button type="button" className="btn small strong" data-testid="proto-play" onClick={p.onPlay}>
-        <Icon name="play" size={12} />
-        Play
-      </button>
     </div>
   );
 }

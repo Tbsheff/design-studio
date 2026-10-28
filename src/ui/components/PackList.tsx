@@ -57,12 +57,12 @@ function PackCard({ pack }: { pack: PackSummary }) {
           Quick brown fox
         </span>
       </span>
-      <span className="pack-text">
+      <span className="pack-text" data-tip={pack.description}>
         <span className="pack-name">
           <span className="truncate">{pack.name}</span>
           {pack.source === 'user' && <span className="pack-yours">Yours</span>}
         </span>
-        <span className="pack-desc" title={pack.description}>{pack.description}</span>
+        <span className="pack-desc">{pack.description}</span>
         <Swatches swatches={pack.swatches} max={7} />
       </span>
     </>

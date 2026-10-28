@@ -95,8 +95,8 @@ function studioCommands(a: StudioActions): Command[] {
     },
     { id: 'edit.undo', title: 'Undo', group: 'Version', icon: 'undo', keyId: 'undo', run: a.onUndo, ...(a.canUndo ? {} : { disabled: 'Nothing to undo' }) },
     { id: 'edit.redo', title: 'Redo', group: 'Version', icon: 'restore', keyId: 'redo', run: a.onRedo, ...(a.canRedo ? {} : { disabled: 'Nothing to redo' }) },
-    { id: 'version.export', title: 'Export this version as a zip', group: 'Version', icon: 'download', keywords: 'download source files', run: () => a.exportId && a.onExport(a.exportId), ...(a.exportId ? {} : { disabled: 'No version yet' }) },
-    ...(a.onShip ? [{ id: 'version.ship', title: 'Ship as branch and PR', group: 'Version', icon: 'branch' as const, keywords: 'git commit push pull request github gh', run: a.onShip }] : []),
+    { id: 'version.export', title: 'Export…', group: 'Version', icon: 'download', keywords: 'share download png pdf html handoff zip source files', run: () => a.exportId && a.onExport(a.exportId), ...(a.exportId ? {} : { disabled: 'No version yet' }) },
+    ...(a.onShip ? [{ id: 'version.ship', title: 'Ship as a pull request…', group: 'Version', icon: 'branch' as const, keywords: 'share branch git commit push pull request github gh', run: a.onShip }] : []),
     { id: 'view.next-region', title: 'Focus the next region', group: 'View', icon: 'sidebar', keyId: 'focus-next-region', keywords: 'f6 toolbar canvas inspector chat', run: () => moveRegion(1) },
   ];
 }

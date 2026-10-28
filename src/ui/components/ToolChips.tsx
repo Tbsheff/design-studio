@@ -160,7 +160,7 @@ function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: str
       open={open ?? state === 'error'}
       onOpenChange={(next) => setOpen(next)}
     >
-      <ActionTrigger className="tool-trigger max-w-full min-w-0 py-0.5 text-xs" title={tool.summary || target || tool.name}>
+      <ActionTrigger className="tool-trigger max-w-full min-w-0 py-0.5 text-xs" data-tip={tool.summary || target || tool.name}>
         <ActionIcon className={STATE_TONE[state]}>
           <ToolStateIcon tool={tool} state={state} />
         </ActionIcon>
@@ -257,11 +257,11 @@ export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: R
   if (tools.length === 0) return null;
   return (
     <div className="tool-summary" data-open={open || undefined} data-testid="tool-summary">
-      <button type="button" className="tool-summary-head" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+      <button type="button" className="tool-summary-head" aria-expanded={open} data-tip={label === full ? undefined : full} onClick={() => setOpen((value) => !value)}>
         <span className="tool-summary-icon" aria-hidden="true">
           <Icon name="sparkle" size={14} />
         </span>
-        <span className="tool-summary-label" title={label === full ? undefined : full}>
+        <span className="tool-summary-label">
           {label}
         </span>
         {failed > 0 && <span className="tool-summary-failed">{failed} failed</span>}

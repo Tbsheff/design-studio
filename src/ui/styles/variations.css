@@ -19,7 +19,7 @@
 
 .variation-card-layer {
   position: absolute;
-  inset: 56px 0 auto 0;
+  inset: calc(56px + var(--viewrow-h, 0px)) 0 auto 0;
   z-index: 20;
   display: flex;
   justify-content: center;

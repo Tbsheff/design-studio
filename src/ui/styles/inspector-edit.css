@@ -33,7 +33,7 @@
   border-radius: var(--r-full);
   background: var(--accent-soft);
   color: var(--accent-text);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
   font-variant-numeric: tabular-nums;
 }
@@ -284,7 +284,7 @@
 }
 
 .ins-meta .ins-tag {
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .ins-meta .icon-btn {
@@ -310,7 +310,7 @@
 
 .edit-pane .ins-section-head h3 {
   color: var(--text-2);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
   line-height: 16px;
 }
@@ -569,7 +569,7 @@
   overflow: hidden;
   color: var(--text-2);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: rtl;
@@ -595,7 +595,7 @@
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--text);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   line-height: 17px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -816,11 +816,11 @@
 
 .ins-source-label {
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .ins-source-path {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   color: var(--text-2);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -831,7 +831,7 @@
 
 .ins-source-note {
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .ins-shared {
@@ -854,7 +854,7 @@
 
 .ins-shared code,
 .ins-data-text code {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   overflow-wrap: anywhere;
 }
 

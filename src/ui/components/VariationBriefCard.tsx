@@ -115,9 +115,9 @@ export function VariationBriefCard({ project, draft, onEdit, onRemove, onStart, 
   return (
     <section className="variation-card" role="dialog" aria-modal="false" aria-labelledby="variation-card-title" data-testid="variation-brief-card">
       <header className="variation-card-head">
-        <div className="variation-card-heading">
+        <div className="variation-card-heading" data-tip={draft.prompt} data-tip-align="start">
           <h2 id="variation-card-title">{draft.element ? 'Element variants' : 'Directions to try'}</h2>
-          <p className="variation-card-prompt truncate" title={draft.prompt}>
+          <p className="variation-card-prompt truncate">
             {draft.element ? `${count} versions of the ${draft.element.tag}: “${draft.prompt}”` : `${count} designs for “${draft.prompt}”`}
           </p>
         </div>

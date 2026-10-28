@@ -29,7 +29,7 @@ const fixSchema = z
   .refine((input) => (input.findingId === undefined) !== (input.findingIds === undefined), 'pass findingId or findingIds');
 
 function outline(finding: ReviewFinding) {
-  return { id: finding.id, kind: finding.kind, severity: finding.severity, element: finding.element, selector: finding.selector, source: finding.source, message: finding.message, fix: finding.fix ? finding.fix.label : null };
+  return { id: finding.id, kind: finding.kind, severity: finding.severity, element: finding.element, selector: finding.selector, source: finding.source, message: finding.message, fix: finding.fix ? finding.fix.label : null, ...(finding.copies ? { copies: finding.copies } : {}) };
 }
 
 const reviewFrame = defineTool(
@@ -37,7 +37,7 @@ const reviewFrame = defineTool(
   reviewSchema,
   {
     title: 'Review a frame',
-    description: 'Run the studio Review panel checks on one canvas frame and return the findings: color contrast (with the nearest passing color token), tap target size, missing alt text and other axe-core accessibility rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Each finding has an id, severity, element, selector, source and message; fix is the label of a direct fix that needs no judgment, or null when it needs judgment. Read only. Apply a fix with apply_fix.',
+    description: 'Run the studio Review panel checks on one canvas frame and return the findings: color contrast (with the nearest passing color token), tap target size, missing alt text and other axe-core accessibility rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Each finding has an id, severity, element, selector, source and message; copies counts the repeats of one source line (for example a .map() list), and one fix changes all of them; fix is the label of a direct fix that needs no judgment, or null when it needs judgment. Read only. Apply a fix with apply_fix.',
     readOnly: true,
     idempotent: true,
   },

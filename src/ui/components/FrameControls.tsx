@@ -248,7 +248,15 @@ export function VariationControls({ variation, active, element, onMixed }: { var
   );
 }
 
-export function FramePageMenu({ path, listPages, onPath }: { path: string; listPages: (() => Promise<string[]>) | null; onPath: (path: string) => void }) {
+function pageLabel(page: string, routes: boolean): string {
+  return routes ? `/${page}` : page;
+}
+
+function isCurrentPage(page: string, path: string, routes: boolean): boolean {
+  return routes ? page === path : page === (path || 'index.html');
+}
+
+export function FramePageMenu({ path, listPages, onPath, routes = false }: { path: string; listPages: (() => Promise<string[]>) | null; onPath: (path: string) => void; routes?: boolean }) {
   const menu = useMenu();
   const [draft, setDraft] = useState(path);
   const [pages, setPages] = useState<string[] | null>(null);
@@ -313,24 +321,24 @@ export function FramePageMenu({ path, listPages, onPath }: { path: string; listP
                 value={draft}
                 spellCheck={false}
                 aria-invalid={invalid}
-                placeholder={listPages ? 'about.html' : 'pricing'}
+                placeholder={routes ? 'settings' : listPages ? 'about.html' : 'pricing'}
                 onChange={(e) => {
                   setDraft(e.target.value);
                   setInvalid(false);
                 }}
               />
             </label>
-            {invalid && <p className="frame-page-hint error">Use a path inside the project, like about.html. No “..”.</p>}
+            {invalid && <p className="frame-page-hint error">{routes ? 'Use a route inside the app, like /settings. No “..”.' : 'Use a path inside the project, like about.html. No “..”.'}</p>}
           </form>
           {listPages && (
             <div role="menu" aria-label="Pages" onKeyDown={(e) => menuKeys(e, menu.close)}>
               {pages === null && <p className="frame-page-hint">Loading pages…</p>}
               {pages?.length === 0 && <p className="frame-page-hint">No other pages yet.</p>}
               {pages?.map((page) => (
-                <button key={page} type="button" role="menuitem" aria-current={page === (path || 'index.html') ? 'true' : undefined} onClick={() => apply(page === 'index.html' ? '' : page)}>
+                <button key={page} type="button" role="menuitem" aria-current={isCurrentPage(page, path, routes) ? 'true' : undefined} onClick={() => apply(page === 'index.html' ? '' : page)}>
                   <Icon name="file" size={14} />
-                  <span>{page}</span>
-                  {page === (path || 'index.html') && <Icon name="check" size={14} />}
+                  <span className="truncate">{pageLabel(page, routes)}</span>
+                  {isCurrentPage(page, path, routes) && <Icon name="check" size={14} />}
                 </button>
               ))}
             </div>

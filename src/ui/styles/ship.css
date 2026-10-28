@@ -1,5 +1,62 @@
 .ship-dialog {
+  width: min(600px, calc(100vw - 32px));
+}
+
+.ship-dialog:has(.ship-files-wrap) {
   width: min(960px, calc(100vw - 32px));
+}
+
+.ship-empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.ship-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: var(--s-1);
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-2);
+}
+
+.ship-empty-title {
+  margin: 0;
+  color: var(--text);
+  font: var(--w-medium) var(--t-sm) / var(--lh-sm) var(--font);
+}
+
+.ship-empty-text {
+  margin: 0;
+  color: var(--text-2);
+  font: var(--w-regular) var(--t-xs) / var(--lh-xs) var(--font);
+}
+
+.ship-empty-command {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  width: 100%;
+  margin-top: var(--s-1);
+  padding: 2px 2px 2px var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ship-empty-command code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  font: var(--t-xs) / var(--lh-xs) var(--mono);
 }
 
 .ship-body {
@@ -121,7 +178,7 @@
   margin: 0;
   padding: var(--s-2);
   font-family: var(--mono);
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   line-height: 1.5;
   white-space: pre;
 }

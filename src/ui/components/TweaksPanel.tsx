@@ -90,8 +90,8 @@ function ControlRow({ control, value, changed, draft }: { control: TweakControl;
   const labelFor = control.type === 'color' ? undefined : `twk-${control.id}`;
   return (
     <li className={`twk-row twk-row-${control.type} ${changed ? 'changed' : ''}`} data-tweak={control.id}>
-      <div className="twk-row-head">
-        <label className="twk-label truncate" htmlFor={labelFor} title={control.cssVar}>
+      <div className="twk-row-head" data-tip={control.cssVar}>
+        <label className="twk-label truncate" htmlFor={labelFor}>
           {control.label}
         </label>
         {control.type !== 'color' && <span className="twk-readout">{readout(control, value)}</span>}

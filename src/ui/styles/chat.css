@@ -619,7 +619,7 @@
   margin: -2px 0;
   padding: 0 6px;
   border-radius: var(--r-xs);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .run-title-input:focus {
@@ -715,7 +715,7 @@
   min-height: 0;
   padding: 0 var(--s-1);
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .msg.user .msg-meta:not(:has(.run-title, .run-title-input, .session-note)) {
@@ -760,7 +760,7 @@
 .msg-chips .ui-chip {
   height: 20px;
   padding: 0 6px;
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .msg-chips .ui-chip.skill-chip {
@@ -786,7 +786,7 @@
   align-items: center;
   gap: 6px;
   color: var(--text-2);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
 }
 
@@ -831,7 +831,7 @@
   padding: 0 10px;
   border-radius: var(--r-md);
   color: var(--text-2);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
   line-height: 16px;
   text-align: left;
@@ -932,7 +932,7 @@
 .live-elapsed {
   flex: none;
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .icon-btn.live-stop {
@@ -989,7 +989,7 @@
   min-height: 24px;
   margin-left: -4px;
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .run-foot .icon-btn.small {
@@ -1062,7 +1062,7 @@
 .run-foot .status {
   flex: none;
   margin: 0 var(--s-1);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   white-space: nowrap;
 }
 
@@ -1094,7 +1094,7 @@
   margin: -2px 0 -2px auto;
   padding: 0 var(--s-2);
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .run-rating {
@@ -1151,7 +1151,7 @@
   height: 28px;
   margin: -6px 0;
   color: inherit;
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .polish-this .btn {
@@ -1162,7 +1162,7 @@
 
 .polish-this {
   min-width: 0;
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .polish-this > span {

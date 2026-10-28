@@ -509,7 +509,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     includePartialMessages: true,
     abortController: controller,
     env: { ...env, [TODO_TOOL_ENV]: '0' },
-    systemPrompt: buildSystemPrompt(ctx.project, ctx.request.mode, ctx.designSystem ?? null, skills.invocableCount, setup.tasteRules),
+    systemPrompt: buildSystemPrompt(ctx.project, ctx.request.mode, ctx.designSystem ?? null, skills.invocableCount, setup.tasteRules, ctx.designRules ?? []),
     ...(resume ? { resume } : {}),
     ...(options.onStderr ? { stderr: options.onStderr } : {}),
     ...(options.claudeExecutable ? { pathToClaudeCodeExecutable: options.claudeExecutable } : {}),

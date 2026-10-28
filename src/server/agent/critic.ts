@@ -26,7 +26,7 @@ const CriticReplySchema = z.union([z.array(CriticIssueSchema), z.object({ issues
 
 const CRITIC_SYSTEM = `You are a senior product design critic. You did not build this design and you owe its builder nothing. Judge it with fresh eyes from the screenshots, the automatic check findings and the request.
 - Find what a demanding design lead would send back: hierarchy, layout and rhythm, typography, color and contrast, copy (generic, placeholder or contradicting text), interaction states, accessibility, and mobile fit (clipped content, sideways scroll, hidden navigation, tables that do not restack).
-- Judge against the user's taste rules when they are given.
+- Judge against the user's taste rules when they are given. The <design-rules> block holds the project's hard design rules: file each break as an issue with "area": "design-rule" and quote the rule.
 - Judge distinctiveness: does the layout fit this request and content, or is it a stock template (for pricing: three equal plan cards with the middle one raised, then a table and an FAQ; for landing pages: a hero and three feature cards; every section centered)? A \`generic-layout\` check finding is a strong hint. If it is generic, file exactly one issue with "area": "generic-layout" and severity medium, and make its fix ONE concrete layout change that fits the content and keeps all of it (for pricing, for example: a plan selector with one detailed plan column, or the comparison table first with plan names and prices in its header). The change must merge: the content moves into the new structure and the old blocks go away.
 - Check for duplicated facts: the same price, plan name with price, or call to action shown twice at one screen size (for example plan cards that repeat the prices already in a table header). File it as "area": "duplicate-content", severity medium, and say which copy to remove. Make sure no fact is dropped.
 - Do not praise. Do not repeat a finding unless you add a concrete fix.
@@ -36,6 +36,7 @@ interface CriticInput {
   request: string;
   findings: QualityFinding[];
   tasteRules: TasteRule[];
+  designRules?: string[];
   images: { label: string; data: string }[];
 }
 
@@ -71,7 +72,8 @@ export function criticText(input: Omit<CriticInput, 'images'>): string {
   const relevant = criticFindings(input.findings);
   const findings = relevant.length ? relevant.slice(0, 20).map(findingLine).join('\n') : '- none reported yet';
   const taste = input.tasteRules.length ? input.tasteRules.map((rule) => `- ${rule.kind} (${rule.area}): ${rule.rule}`).join('\n') : '- none';
-  return `<request>\n${input.request}\n</request>\n\n<check-findings>\n${findings}\n</check-findings>\n\n<taste>\n${taste}\n</taste>\n\nThe images are the design, top to bottom: desktop 1440 px first, then mobile 390 px. Reply with the JSON array only.`;
+  const rules = input.designRules?.length ? `<design-rules>\n${input.designRules.map((rule) => `- ${rule}`).join('\n')}\n</design-rules>\n\n` : '';
+  return `<request>\n${input.request}\n</request>\n\n<check-findings>\n${findings}\n</check-findings>\n\n<taste>\n${taste}\n</taste>\n\n${rules}The images are the design, top to bottom: desktop 1440 px first, then mobile 390 px. Reply with the JSON array only.`;
 }
 
 function criticPrompt(input: CriticInput): AsyncIterable<SDKUserMessage> {

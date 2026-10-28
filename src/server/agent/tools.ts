@@ -249,7 +249,7 @@ export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {})
   run.criticCalls += 1;
   try {
     const images = await criticImages(deps.preview, target.url, criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls));
-    const input = { request: deps.ctx.request.prompt, findings: run.lastFindings, tasteRules: deps.tasteRules ?? [], images };
+    const input = { request: deps.ctx.request.prompt, findings: run.lastFindings, tasteRules: deps.tasteRules ?? [], designRules: (deps.ctx.designRules ?? []).map((rule) => rule.text), images };
     const result = await runCritic(await loadQuery(deps), input, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, deps.env);
     run.criticCostUsd += result.costUsd;
     await writeFile(`${criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls)}.json`, `${JSON.stringify({ model: run.config.criticModel, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`);

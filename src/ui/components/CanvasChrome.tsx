@@ -19,6 +19,7 @@ export interface CanvasShell {
   canExport: boolean;
   onExport: () => void;
   onTweak: ((prompt: string) => void) | null;
+  onShip?: (() => void) | null;
 }
 
 type SetSelectMode = (update: (m: boolean) => boolean) => void;
@@ -146,7 +147,7 @@ function useFileMenu(p: ChromeProps) {
 const NOOP = () => undefined;
 
 function barShell(shell: CanvasShell | undefined) {
-  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null };
+  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null, onShip: null };
   return shell;
 }
 
@@ -199,6 +200,7 @@ export function CanvasChrome(p: ChromeProps) {
         presentDisabled={!p.presentUrl}
         canExport={bar.canExport}
         onExport={bar.onExport}
+        onShip={bar.onShip ?? null}
       />
       {tweakOpen && onTweak && <TweakPrompt scope={scopeOf(p.selection)} onSend={onTweak} onClose={closeTweak} />}
       {viewOpen && <CanvasViewRow viewport={p.ui.viewport} {...p.view} />}

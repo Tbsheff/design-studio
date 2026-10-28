@@ -44,7 +44,7 @@ function openingStartsAt(node: t.Node, position: SourcePosition): node is t.JSXE
   return start !== undefined && start.line === position.line && start.column + 1 === position.col;
 }
 
-function findJsxElement(root: t.Node, position: SourcePosition): t.JSXElement | null {
+export function findJsxElement(root: t.Node, position: SourcePosition): t.JSXElement | null {
   const stack: t.Node[] = [root];
   while (stack.length > 0) {
     const node = stack.pop();
@@ -55,7 +55,7 @@ function findJsxElement(root: t.Node, position: SourcePosition): t.JSXElement | 
   return null;
 }
 
-function parseSource(source: string, typescript: boolean): t.File {
+export function parseSource(source: string, typescript: boolean): t.File {
   const plugins: ParserPlugin[] = typescript ? ['jsx', 'typescript'] : ['jsx'];
   try {
     return parse(source, { sourceType: 'module', plugins, errorRecovery: false });

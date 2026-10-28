@@ -61,21 +61,23 @@ function batchPrompt(edits: DirectEditRequest[]): string {
   return prompt.length > MAX_PROMPT ? `${prompt.slice(0, MAX_PROMPT - 1)}…` : prompt;
 }
 
-async function restoreOriginals(groups: FileGroup[]): Promise<void> {
+export type WrittenFile = Pick<FileGroup, 'target' | 'original' | 'code'>;
+
+async function restoreOriginals(groups: WrittenFile[]): Promise<void> {
   const results = await Promise.allSettled(groups.map((group) => writeAtomic(group.target.file, group.original)));
   const failed = results.filter((result) => result.status === 'rejected').length;
   if (failed > 0) console.error(`direct edit batch: could not restore ${failed} file(s) after a failed edit`);
 }
 
-async function writeAndCommitAll(
+export async function writeAndCommitAll(
   deps: DirectEditDeps,
   project: Project,
   direction: Direction,
-  changed: FileGroup[],
+  changed: WrittenFile[],
   title: string,
   meta: VersionMeta,
 ): Promise<Version> {
-  const written: FileGroup[] = [];
+  const written: WrittenFile[] = [];
   try {
     for (const group of changed) {
       written.push(group);

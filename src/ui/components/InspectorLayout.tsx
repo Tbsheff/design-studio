@@ -204,7 +204,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
   useLayoutKeys(
     root,
     () => {
-      if (!isFlexDisplay(edit.values.display)) write(edit, { display: 'flex' });
+      if (!isFlexDisplay(edit.values.display) && !isGridDisplay(edit.values.display)) write(edit, { display: 'flex' });
     },
     () => {
       if (isFlexDisplay(edit.values.display)) write(edit, { display: 'block' });
@@ -221,7 +221,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
           <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
-          {!flex && (
+          {!flex && !grid && (
             <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" data-tip="⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'flex' })}>
               <Icon name="plus" size={14} />
               Add auto layout

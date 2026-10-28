@@ -975,12 +975,12 @@
 }
 
 .ins-select-matching {
-  padding: 0 var(--pane-inset) var(--s-2);
+  padding-bottom: var(--s-1);
   gap: 0 var(--s-3);
 }
 
 .ins-select-matching-note {
-  margin: 0 var(--pane-inset) var(--s-2);
+  margin: 0 0 var(--s-2);
   color: var(--text-2);
   font-size: var(--t-xs);
 }

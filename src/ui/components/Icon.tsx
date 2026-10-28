@@ -25,7 +25,7 @@ const PATHS = {
   arrowUp: 'M8 13V3.5M4 7.25L8 3.25l4 4',
   stop: 'M4.5 4.5h7v7h-7z',
   lock: 'M4 7.25h8v6.5H4zM5.75 7.25V5a2.25 2.25 0 0 1 4.5 0v2.25',
-  unlock: 'M4 7.25h8v6.5H4zM5.75 7.25V5a2.25 2.25 0 0 1 4.4-.7',
+  unlock: 'M4 7.25h8v6.5H4zM5.75 7.25V4.5a2.25 2.25 0 0 1 4.5 0',
   folder: 'M1.75 4.25V12.5h12.5V5.5H7.75L6.25 3.75h-4.5z',
   chevronRight: 'M6 3.5L10.5 8 6 12.5',
   chevronDown: 'M3.5 6L8 10.5 12.5 6',

@@ -114,6 +114,7 @@ export interface AgentRunContext {
   previewUrl: string | null;
   mentionFiles?: MentionFile[];
   target?: RunTarget | null;
+  repoContext?: string | null;
 }
 
 export interface MentionFile {

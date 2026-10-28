@@ -134,7 +134,7 @@ function taskBlocks(ctx: Pick<AgentRunContext, 'request'> & { attachments?: read
   return blocks;
 }
 
-export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles' | 'target'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
+export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles' | 'target' | 'repoContext'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
   const blocks = [ctx.request.prompt.trim(), ...taskBlocks(ctx)];
   const canvas = canvasContextBlock(ctx.target, ctx.request.selection);
   if (canvas) blocks.push(canvas);
@@ -152,6 +152,7 @@ export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' 
   if (comments.length) blocks.push(formatComments(comments));
   const mentions = mentionsBlock(ctx.request.mentions ?? [], ctx.mentionFiles ?? []);
   if (mentions) blocks.push(mentions);
+  if (ctx.repoContext) blocks.push(ctx.repoContext);
   if ((!ctx.designSystem || ctx.designSystem.source) && ctx.designMd && ctx.designMd.trim()) {
     blocks.push(`<design_md>\n${ctx.designMd.trim()}\n</design_md>`);
   }

@@ -1,0 +1,274 @@
+.ship-dialog {
+  width: min(960px, calc(100vw - 32px));
+}
+
+.ship-body {
+  display: grid;
+  gap: var(--s-3);
+  max-height: min(72vh, 760px);
+  overflow: auto;
+}
+
+.ship-base {
+  max-width: 420px;
+}
+
+.ship-files-wrap {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) 1fr;
+  gap: var(--s-2);
+  min-height: 220px;
+  max-height: 340px;
+}
+
+.ship-files {
+  list-style: none;
+  margin: 0;
+  padding: var(--s-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 1px;
+}
+
+.ship-files li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--s-1);
+  padding-left: var(--s-1);
+  border-radius: var(--r-sm);
+}
+
+.ship-files li.active {
+  background: var(--surface-active);
+}
+
+.ship-file {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 28px;
+  padding: 0 var(--s-1);
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+
+.ship-file:hover {
+  background: var(--surface-hover);
+}
+
+.ship-status {
+  font-family: var(--mono);
+  font-weight: var(--w-medium);
+  color: var(--text-3);
+}
+
+.ship-status.added {
+  color: var(--ok);
+}
+
+.ship-status.deleted {
+  color: var(--danger);
+}
+
+.ship-counts {
+  display: inline-flex;
+  gap: 4px;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ship-counts .add,
+.ship-diff .add {
+  color: var(--ok);
+}
+
+.ship-counts .del,
+.ship-diff .del {
+  color: var(--danger);
+}
+
+.ship-file .ui-icon,
+.ship-file svg {
+  color: var(--warn);
+}
+
+.ship-diff {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  overflow: auto;
+  min-width: 0;
+}
+
+.ship-diff.empty {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.ship-diff pre {
+  margin: 0;
+  padding: var(--s-2);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.ship-diff .add {
+  display: block;
+  background: var(--ok-soft);
+}
+
+.ship-diff .del {
+  display: block;
+  background: var(--danger-soft);
+}
+
+.ship-diff .hunk {
+  color: var(--text-3);
+}
+
+.ship-diff-note {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--t-xs);
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.ship-diff-note.conflict,
+.ship-diff-note.refused {
+  background: var(--warn-soft);
+  color: var(--text);
+}
+
+.ship-warn {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.ship-fields {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--s-2) var(--s-3);
+}
+
+.ship-wide {
+  grid-column: 1 / -1;
+}
+
+.ship-modes {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-2);
+}
+
+.ship-modes legend {
+  font-size: var(--t-xs);
+  color: var(--text-2);
+  margin-bottom: var(--s-1);
+}
+
+.ship-mode {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--s-1);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-size: var(--t-sm);
+}
+
+.ship-mode:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ship-mode small {
+  grid-column: 2;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.ship-mode.off {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ship-spacer {
+  flex: 1;
+}
+
+.ship-foot-note {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.ship-result {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.ship-result-lead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0;
+}
+
+.ship-result-lead svg {
+  color: var(--ok);
+}
+
+.ship-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s-1) var(--s-3);
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+.ship-facts dt {
+  color: var(--text-3);
+}
+
+.ship-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.ship-settings {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.ship-settings h3 {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+}
+
+.ship-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}

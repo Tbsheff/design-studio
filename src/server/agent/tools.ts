@@ -16,6 +16,7 @@ import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
+import { prepareShip } from '../git/ship-prepare.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -208,6 +209,18 @@ export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, 'ctx'>) {
   }
 }
 
+export async function runPrepareShip(deps: Pick<StudioToolDeps, 'ctx' | 'runsDir'>) {
+  if (!deps.ctx.project.app) return errorText('prepare_ship works only in an attached app project.');
+  try {
+    const plan = await prepareShip({ projectDir: path.dirname(deps.runsDir), project: deps.ctx.project });
+    const files = plan.files.map((f) => ({ path: f.path, status: f.status, additions: f.additions, deletions: f.deletions, refused: f.refused, conflict: f.conflict }));
+    const text = JSON.stringify({ blocked: plan.blocked, base: plan.base?.title ?? null, checkedOut: plan.repo?.branch ?? null, files, defaults: plan.defaults, note: 'Only the user can ship, with the Ship button in the studio. Tell them what is ready and what blocks it.' }, null, 2);
+    return { content: [{ type: 'text' as const, text }] };
+  } catch (error) {
+    return errorText(`prepare_ship failed: ${describeError(error)}`);
+  }
+}
+
 export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSdkServerConfigWithInstance> {
   const { createSdkMcpServer, tool } = await import('@anthropic-ai/claude-agent-sdk');
   const counters: StudioToolCounters = deps.run ? (deps.run.counters ??= { shots: 0, checks: 0 }) : { shots: 0, checks: 0 };
@@ -307,5 +320,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetToken(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool] });
+  const prepareShipTool = tool(
+    'prepare_ship',
+    'Attached app projects only. Read only. Lists the files the studio changed since the last ship (or since the app was attached), the files that cannot ship (secrets, .env, conflicts with the user\'s own changes) and the default branch name and pull request text. You cannot ship; only the user can, with the Ship button.',
+    {},
+    () => runPrepareShip(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool] });
 }

@@ -32,7 +32,7 @@ interface StoredVersionMeta extends VersionMeta {
   createdAt: number;
 }
 
-interface GitScope {
+export interface GitScope {
   gitDir: string;
   workTree?: string;
   indexFile?: string;
@@ -76,7 +76,7 @@ function gitEnv(scope: GitScope): NodeJS.ProcessEnv {
   return env;
 }
 
-async function runGit(scope: GitScope, args: string[], options: { cwd?: string } = {}): Promise<GitResult> {
+export async function runGit(scope: GitScope, args: string[], options: { cwd?: string } = {}): Promise<GitResult> {
   const binary = await resolveGitBinary();
   return new Promise((resolve, reject) => {
     execFile(
@@ -94,7 +94,7 @@ async function runGit(scope: GitScope, args: string[], options: { cwd?: string }
   });
 }
 
-async function runGitBuffer(scope: GitScope, args: string[]): Promise<Uint8Array> {
+export async function runGitBuffer(scope: GitScope, args: string[]): Promise<Uint8Array> {
   const binary = await resolveGitBinary();
   return new Promise((resolve, reject) => {
     execFile(

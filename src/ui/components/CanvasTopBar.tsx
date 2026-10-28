@@ -142,6 +142,7 @@ interface Props {
   presentDisabled: boolean;
   canExport: boolean;
   onExport: () => void;
+  onShip?: (() => void) | null;
 }
 
 export function CanvasTopBar(p: Props) {
@@ -207,6 +208,12 @@ export function CanvasTopBar(p: Props) {
         <span>Present</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
+      {p.onShip && (
+        <button type="button" className="btn ghost topbar-ship" data-tip="Commit studio changes to a new branch and open a PR" data-tip-align="end" onClick={p.onShip}>
+          <Icon name="branch" size={14} />
+          Ship
+        </button>
+      )}
       <button type="button" className="icon-btn topbar-icon" aria-label="Export" disabled={!p.canExport} data-tip={p.canExport ? 'Export, handoff and Claude Code' : 'Save a version to export'} data-tip-align="end" onClick={p.onExport}>
         <Icon name="download" size={14} />
       </button>

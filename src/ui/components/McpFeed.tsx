@@ -51,6 +51,7 @@ const TOOL_ICONS: Record<string, IconName> = {
   resolve_comment: 'check',
   create_project: 'plus',
   export: 'download',
+  ship: 'branch',
   batch_edit: 'layers',
   undo: 'undo',
   redo: 'reload',

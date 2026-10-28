@@ -47,6 +47,16 @@ import { useExportTarget } from '../useExportTarget';
 import type { ExportTarget } from '../exportApi';
 
 const ExportDialog = lazy(() => import('./ExportDialog').then((m) => ({ default: m.ExportDialog })));
+const ShipDialog = lazy(() => import('./ShipDialog'));
+
+function ShipLayer({ projectId, open, onClose }: { projectId: string; open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <Suspense fallback={null}>
+      <ShipDialog projectId={projectId} onClose={onClose} />
+    </Suspense>
+  );
+}
 
 function ExportLayer({ target, onClose }: { target: ExportTarget | null; onClose: () => void }) {
   if (!target) return null;
@@ -114,6 +124,10 @@ function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
   return effort ? { effort } : {};
 }
 
+function shipOpener(project: { app?: unknown }, setOpen: (open: boolean) => void): (() => void) | null {
+  return project.app ? () => setOpen(true) : null;
+}
+
 function exportTarget(versions: Version[], direction: { headVersionId: string | null } | null): string | null {
   return (versions.find((v) => v.id === direction?.headVersionId) ?? versions[0])?.id ?? null;
 }
@@ -154,6 +168,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const [detailsRunId, setDetailsRunId] = useState<string | null>(null);
   const [designOpen, setDesignOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shipOpen, setShipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
@@ -325,6 +340,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
   };
 
+  const openShip = shipOpener(project, setShipOpen);
   commandActions.current = {
     running: Boolean(activeRun),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name })),
@@ -343,6 +359,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     onRedo: editHistory.redo.onRedo,
     exportId: exportTarget(versions, direction),
     onExport: (id) => exporter.open({ versionId: id }),
+    onShip: openShip,
   };
 
   const [left, right] = compare.map((picked) => versions.find((v) => v.id === picked.id) ?? picked);
@@ -558,6 +575,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                 canExport: exporter.canOpen,
                 onExport: exporter.openHead,
                 onTweak: whenDirection(did, tweak),
+                onShip: openShip,
               },
               onTextCommit: (selector, text) => {
                 const target = selection.length === 1 ? selection[0] : undefined;
@@ -577,6 +595,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onCloseSettings={() => setSettingsOpen(false)}
       />
       <ExportLayer target={exporter.target} onClose={exporter.close} />
+      <ShipLayer projectId={projectId} open={shipOpen} onClose={() => setShipOpen(false)} />
       <StudioToast text={firstText(editHistory.toast, packActions.toast?.text)} />
     </div>
   );

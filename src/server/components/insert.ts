@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import type * as t from '@babel/types';
 import { z } from 'zod';
 import type { Direction, Project, SourceLoc, VersionMeta } from '../../shared/contracts.js';
-import { INSERT_POSITIONS, INSERT_TEXT_MAX, type InsertComponentRequest, type InsertComponentResult } from '../../shared/insert.js';
+import { INSERT_POSITIONS, INSERT_TEXT_MAX, type InsertComponentRequest, type InsertComponentResult, type InsertTarget } from '../../shared/insert.js';
 import { OWNERS_MAX, OWNER_STACK_MAX, PROP_NAME, PROP_TEXT_MAX, PROPS_MAX, type ComponentSchema, type PropSpec, type PropValue } from '../../shared/props.js';
 import { writeAndCommitAll } from '../direct-edit/batch.js';
 import { DirectEditError } from '../direct-edit/errors.js';
@@ -153,14 +153,16 @@ function rootOwner(code: string, file: string, at: SourceLoc, tag: string | unde
   return null;
 }
 
-async function useSiteTarget(scope: InsertScope, root: string, request: InsertComponentRequest, owner: LibraryEntry): Promise<SourceLoc> {
+async function useSiteTarget(scope: InsertScope, root: string, request: TargetRequest, owner: LibraryEntry): Promise<SourceLoc> {
   const found = (request.target.owners ?? []).find((item) => item.name === owner.local || item.name === owner.name);
   const use = found ? await ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, found).catch(() => null) : null;
   if (use) return use;
   throw refuse(`This is the top element of <${owner.name}> in ${owner.file}, so the insert would change every ${owner.name}. Select the ${owner.name} on the page, or pass the file:line:col of the <${owner.name}> tag where the page uses it`);
 }
 
-interface ResolvedTarget {
+type TargetRequest = { target: InsertTarget };
+
+export interface ResolvedTarget {
   target: ResolvedSource;
   code: string;
   at: SourceLoc;
@@ -177,7 +179,7 @@ function tagMatches(relative: string, code: string, at: SourceLoc, tag: string |
   }
 }
 
-async function nearestUseSite(scope: InsertScope, root: string, request: InsertComponentRequest): Promise<SourceLoc | null> {
+async function nearestUseSite(scope: InsertScope, root: string, request: TargetRequest): Promise<SourceLoc | null> {
   const owner = request.target.owners?.find((item) => /^[A-Z]/.test(item.name));
   return owner ? ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, owner).catch(() => null) : null;
 }
@@ -187,7 +189,7 @@ async function retargeted(scope: InsertScope, use: SourceLoc): Promise<ResolvedT
   return { target, code: await readFile(target.file, 'utf8'), at: use, tag: undefined, usedAt: use };
 }
 
-async function resolveTarget(scope: InsertScope, root: string, request: InsertComponentRequest, entries: LibraryEntry[]): Promise<ResolvedTarget> {
+export async function resolveTarget(scope: InsertScope, root: string, request: TargetRequest, entries: LibraryEntry[]): Promise<ResolvedTarget> {
   const source = request.target.source;
   if (!source) {
     const use = await nearestUseSite(scope, root, request);
@@ -206,7 +208,7 @@ async function resolveTarget(scope: InsertScope, root: string, request: InsertCo
 
 const ALIAS_LIKE = /^(@\/|~\/|#|@[\w.-]+\/[\w.-]+\/)/;
 
-function seenImports(specifiers: Map<string, string[]>): SeenImport[] {
+export function seenImports(specifiers: Map<string, string[]>): SeenImport[] {
   const out: SeenImport[] = [];
   const done = new Set<string>();
   for (const [from, list] of specifiers) {
@@ -241,7 +243,7 @@ export async function planInsertComponent(scope: InsertScope, raw: unknown): Pro
   const need: ImportNeed = { name: entry.name, kind: entry.kind, componentFile: entry.absolute, targetFile: resolved.target.file, root: library.root, seen: seenImports(library.specifiers), allowPaths: scope.project.app?.framework === 'next' };
   const importPlan = planImport(ts, resolved.code, ast, need);
   const place = request.position === 'inside' ? { into: node } : { after: node };
-  const plan = planInsert(resolved.code, { text: jsx, place, closeTag: doc.closeTag, ...(importPlan.splice ? { extra: importPlan.splice } : {}) });
+  const plan = planInsert(resolved.code, { pieces: [jsx], place, closeTag: doc.closeTag, ...(importPlan.splice ? { extras: [importPlan.splice] } : {}) });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
   const select = positions.map((position) => ({ file: resolved.target.relative, ...position, tag: entry.name }));

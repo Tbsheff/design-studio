@@ -46,3 +46,31 @@ export interface InsertComponentResult {
   importAdded: boolean;
   usedAt: SourceLoc | null;
 }
+
+export type JsxInsertPosition = 'inside' | 'before' | 'after' | 'replace';
+
+export const JSX_INSERT_POSITIONS: readonly JsxInsertPosition[] = ['inside', 'before', 'after', 'replace'];
+export const JSX_SNIPPET_MAX = 20000;
+export const JSX_IMPORTS_MAX = 40;
+
+export interface InsertJsxRequest {
+  target: InsertTarget;
+  position: JsxInsertPosition;
+  jsx: string;
+  imports?: Record<string, string>;
+}
+
+export interface InsertJsxImport {
+  name: string;
+  specifier: string;
+  added: boolean;
+}
+
+export interface InsertJsxResult {
+  file: string;
+  version: Version | null;
+  select: (SourceLoc & { tag: string })[];
+  imports: InsertJsxImport[];
+  usedAt: SourceLoc | null;
+  title: string;
+}

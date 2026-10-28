@@ -20,7 +20,7 @@ interface FileResult extends WrittenFile {
   placeTag: string | null;
 }
 
-const VERB: Record<StructureOp, string> = { delete: 'Delete', duplicate: 'Duplicate', wrap: 'Wrap', unwrap: 'Unwrap', move: 'Move' };
+const VERB: Record<StructureOp, string> = { delete: 'Delete', duplicate: 'Duplicate', wrap: 'Wrap', unwrap: 'Unwrap', move: 'Move', clear: 'Clear text in' };
 const ONE_FILE_OPS = new Set<StructureOp>(['wrap', 'move']);
 const FALLBACK_GAP = '8px';
 const GAP_TOKEN = '--space-2';

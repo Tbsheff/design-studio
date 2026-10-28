@@ -227,18 +227,21 @@ function directiveEnd(ast: t.File): number {
   return last?.end ?? -1;
 }
 
-function newLine(code: string, ast: t.File, need: ImportNeed, specifier: string): NonNullable<ImportPlan['splice']> {
+function importLines(code: string, ast: t.File, lines: { binding: string; specifier: string }[]): NonNullable<ImportPlan['splice']> {
   const all = imports(ast);
   const last = all.at(-1);
   const sample = last ?? all[0];
   const quote = sample?.source.start != null ? (code[sample.source.start] === '"' ? '"' : "'") : "'";
   const semi = sample?.end != null ? code[sample.end - 1] === ';' : true;
-  const binding = need.kind === 'default' ? need.name : `{ ${need.name} }`;
-  const line = `import ${binding} from ${quote}${specifier}${quote}${semi ? ';' : ''}`;
-  if (last?.end != null) return { start: last.end, end: last.end, text: `\n${line}` };
+  const text = lines.map((line) => `import ${line.binding} from ${quote}${line.specifier}${quote}${semi ? ';' : ''}`).join('\n');
+  if (last?.end != null) return { start: last.end, end: last.end, text: `\n${text}` };
   const after = directiveEnd(ast);
-  if (after >= 0) return { start: after, end: after, text: `\n\n${line}` };
-  return { start: 0, end: 0, text: `${line}\n\n` };
+  if (after >= 0) return { start: after, end: after, text: `\n\n${text}` };
+  return { start: 0, end: 0, text: `${text}\n\n` };
+}
+
+function newLine(code: string, ast: t.File, need: ImportNeed, specifier: string): NonNullable<ImportPlan['splice']> {
+  return importLines(code, ast, [{ binding: need.kind === 'default' ? need.name : `{ ${need.name} }`, specifier }]);
 }
 
 export function planImport(ts: Ts | null, code: string, ast: t.File, need: ImportNeed): ImportPlan {
@@ -253,4 +256,71 @@ export function planImport(ts: Ts | null, code: string, ast: t.File, need: Impor
   }
   const specifier = pickSpecifier(ts, need, resolves);
   return { splice: newLine(code, ast, need, specifier), specifier, added: true };
+}
+
+export interface ImportItem {
+  name: string;
+  specifier: string;
+  added: boolean;
+}
+
+export interface ImportsPlan {
+  splices: NonNullable<ImportPlan['splice']>[];
+  items: ImportItem[];
+}
+
+interface ImportGroups {
+  extend: Map<t.ImportDeclaration, string[]>;
+  fresh: Map<string, { named: string[]; fallback: string | null }>;
+  items: ImportItem[];
+}
+
+function addTo<K>(map: Map<K, string[]>, key: K, name: string): void {
+  map.set(key, [...(map.get(key) ?? []), name]);
+}
+
+function groupNeed(ts: Ts | null, ast: t.File, need: ImportNeed, groups: ImportGroups, declared: Set<string>): void {
+  const resolves = importResolver(ts, need);
+  const existing = existingBinding(ast, need, resolves);
+  if (existing) {
+    groups.items.push({ name: need.name, specifier: existing.specifier, added: false });
+    return;
+  }
+  if (declared.has(need.name)) throw refuse(`This file already has its own ${need.name}, so the component ${need.name} cannot be added here; rename it in the snippet or edit the file`);
+  const decl = imports(ast).find((item) => resolves(item.source.value) && extendSplice(item, need) !== null);
+  if (decl) {
+    addTo(groups.extend, decl, need.name);
+    groups.items.push({ name: need.name, specifier: decl.source.value, added: true });
+    return;
+  }
+  const specifier = pickSpecifier(ts, need, resolves);
+  const entry = groups.fresh.get(specifier) ?? { named: [], fallback: null };
+  if (need.kind === 'default' && entry.fallback && entry.fallback !== need.name) throw refuse(`${entry.fallback} and ${need.name} are both the default export of "${specifier}"; use one name`);
+  if (need.kind === 'default') entry.fallback = need.name;
+  else entry.named.push(need.name);
+  groups.fresh.set(specifier, entry);
+  groups.items.push({ name: need.name, specifier, added: true });
+}
+
+function extendText(decl: t.ImportDeclaration, names: string[]): NonNullable<ImportPlan['splice']> {
+  const last = decl.specifiers.filter((item): item is t.ImportSpecifier => item.type === 'ImportSpecifier').at(-1);
+  if (last?.end != null) return { start: last.end, end: last.end, text: `, ${names.join(', ')}` };
+  const fallback = decl.specifiers.find((item) => item.type === 'ImportDefaultSpecifier');
+  const at = fallback?.end ?? 0;
+  return { start: at, end: at, text: `, { ${names.join(', ')} }` };
+}
+
+function bindingOf(entry: { named: string[]; fallback: string | null }): string {
+  const named = entry.named.length > 0 ? `{ ${entry.named.join(', ')} }` : '';
+  return [entry.fallback, named].filter(Boolean).join(', ');
+}
+
+export function planImports(ts: Ts | null, code: string, ast: t.File, needs: ImportNeed[]): ImportsPlan {
+  const groups: ImportGroups = { extend: new Map(), fresh: new Map(), items: [] };
+  const declared = declaredNames(ast);
+  for (const need of needs) groupNeed(ts, ast, need, groups, declared);
+  const splices = [...groups.extend].map(([decl, names]) => extendText(decl, names));
+  const lines = [...groups.fresh].map(([specifier, entry]) => ({ binding: bindingOf(entry), specifier }));
+  if (lines.length > 0) splices.push(importLines(code, ast, lines));
+  return { splices, items: groups.items };
 }

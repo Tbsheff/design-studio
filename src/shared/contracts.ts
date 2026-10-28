@@ -1046,7 +1046,7 @@ export interface DirectEditBatch {
   edits: DirectEditRequest[];
 }
 
-export const STRUCTURE_OPS = ['delete', 'duplicate', 'wrap', 'unwrap', 'move'] as const;
+export const STRUCTURE_OPS = ['delete', 'duplicate', 'wrap', 'unwrap', 'move', 'clear'] as const;
 export type StructureOp = (typeof STRUCTURE_OPS)[number];
 
 export interface StructureTarget {

@@ -7,7 +7,7 @@ import type { SourcePosition } from './errors.js';
 import { findElementAt } from './html.js';
 import { findJsxElement, parseSource } from './jsx.js';
 import { leadingWhitespaceStart } from './splice.js';
-import { assertNotMapped, jsxAncestors } from './structure.js';
+import { assertNotMapped, jsxAncestors, jsxElementsOnLine } from './structure.js';
 import { refuse, type Frame, type StructNode } from './structure-ops.js';
 
 type HtmlElement = DefaultTreeAdapterMap['element'];
@@ -124,11 +124,17 @@ function jsxNode(source: string, element: t.JSXElement, ancestors: t.Node[]): St
   return { start, end, tag: jsxTag(source, element), parent: parent?.start ?? -1, root: !isJsxParent(parent), fixed: false, inner, selfClose: jsxSelfClose(source, element), children };
 }
 
+function onlyOnLine(source: string, root: t.Node, loc: SourcePosition, tag: string | undefined): t.JSXElement | null {
+  if (tag === undefined) return null;
+  const matches = jsxElementsOnLine(root, loc.line).filter((element) => jsxTag(source, element) === tag);
+  return matches.length === 1 ? (matches[0] ?? null) : null;
+}
+
 function jsxDoc(source: string, typescript: boolean): StructureDoc {
   const ast = parseSource(source, typescript);
   return {
     node(loc, role, tag) {
-      const element = findJsxElement(ast.program, loc);
+      const element = findJsxElement(ast.program, loc) ?? onlyOnLine(source, ast.program, loc, tag);
       if (!element) throw notFound(loc);
       assertSameTag(tag, jsxTag(source, element));
       const ancestors = jsxAncestors(ast.program, element);

@@ -17,6 +17,7 @@ interface FileWork {
 interface FileResult extends WrittenFile {
   select: StructureEditResult['select'];
   tags: string[];
+  placeTag: string | null;
 }
 
 const VERB: Record<StructureOp, string> = { delete: 'Delete', duplicate: 'Duplicate', wrap: 'Wrap', unwrap: 'Unwrap', move: 'Move' };
@@ -61,12 +62,14 @@ async function planFile(work: FileWork, request: StructureEditRequest, gap: stri
   const doc = structureDoc(work.target.relative, original);
   const locate = (target: StructureTarget, role: 'target' | 'into' | 'ref') => doc.node(target.source, role, target.tag);
   const nodes = work.targets.map((target) => locate(target, 'target'));
-  const plan = planStructure(original, { op: request.op, nodes, place: placement(request, locate), frame: doc.frame(gap), closeTag: doc.closeTag });
+  const place = placement(request, locate);
+  const plan = planStructure(original, { op: request.op, nodes, place, frame: doc.frame(gap), closeTag: doc.closeTag });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
   const selectTag = (offset: number) => /^<([A-Za-z][\w.-]*)/.exec(plan.code.slice(offset, offset + 80))?.[1]?.toLowerCase() ?? '';
   const select = positions.map((position, index) => ({ file: work.file, ...position, tag: selectTag(plan.select[index] ?? 0) }));
-  return { target: work.target, original, code: plan.code, select, tags: nodes.map((node) => node.tag) };
+  const placeTag = (place.into ?? place.before ?? place.after)?.tag ?? null;
+  return { target: work.target, original, code: plan.code, select, tags: nodes.map((node) => node.tag), placeTag };
 }
 
 function subject(tags: string[]): string {
@@ -96,8 +99,7 @@ export async function applyStructureEdit(deps: DirectEditDeps, project: Project,
   const results = await Promise.all(groups.map((group) => planFile(group, request, gap)));
   const changed = results.filter((result) => result.code !== result.original);
   if (changed.length === 0) return { files: [], version: await deps.versions.get(project, headVersionId), select: [] };
-  const place = request.into ?? request.before ?? request.after;
-  const title = structureTitle(request, results.flatMap((result) => result.tags), place?.tag ?? null);
+  const title = structureTitle(request, results.flatMap((result) => result.tags), results[0]?.placeTag ?? null);
   const meta: VersionMeta = { kind: 'manual', prompt: structurePrompt(request) };
   const version = await writeAndCommitAll(deps, project, direction, changed, title, meta);
   deps.history?.record({

@@ -1,4 +1,5 @@
 import { SOURCE_LOC_ATTR } from '../shared/contracts.js';
+import { pathOf } from './select-match.js';
 
 const KEYS_MAX = 500;
 const KEY_MAX = 2000;
@@ -18,7 +19,14 @@ function locKey(element: Element, loc: string): string {
   return `loc:${loc}#${Math.max(0, Array.prototype.indexOf.call(same, element))}`;
 }
 
-function resolveKey(key: string): Element | null {
+function pageOf(key: string): { page: string; rest: string } {
+  const at = key.indexOf('|');
+  return at < 0 ? { page: '', rest: key } : { page: key.slice(0, at), rest: key.slice(at + 1) };
+}
+
+function resolveKey(raw: string): Element | null {
+  const { page, rest: key } = pageOf(raw);
+  if (page !== window.location.pathname) return null;
   try {
     if (key.startsWith('sel:')) return document.querySelector(key.slice(4));
     const match = /^loc:(.*)#(\d+)$/.exec(key);
@@ -33,7 +41,7 @@ function pointOf(event: Event): { x: number; y: number } | null {
   return event instanceof MouseEvent ? { x: event.clientX, y: event.clientY } : null;
 }
 
-export function createLockSet(selectorOf: (element: Element) => string, useLoc: boolean): LockSet {
+export function createLockSet(useLoc: boolean): LockSet {
   let keys = new Set<string>();
   const held = new Map<string, Element>();
   let cache: Element[] | null = null;
@@ -41,7 +49,7 @@ export function createLockSet(selectorOf: (element: Element) => string, useLoc: 
 
   const keyOf = (element: Element): string => {
     const loc = useLoc ? element.getAttribute(SOURCE_LOC_ATTR) : null;
-    return loc ? locKey(element, loc) : `sel:${selectorOf(element)}`;
+    return `${window.location.pathname}|${loc ? locKey(element, loc) : `sel:${pathOf(element)}`}`;
   };
 
   const lockedElements = (): Element[] => {

@@ -69,6 +69,7 @@ interface Options {
   live: boolean;
   lastChange: FilesChange | null;
   selectMode: boolean;
+  marquee?: boolean;
   selection: SelectionContext[];
   setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
   onError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
@@ -191,7 +192,7 @@ export function usePreviewFrames(o: Options) {
 
   const syncFrame = useCallback(
     (frame: BridgeFrame) => {
-      postToFrame(frame, { type: 'set-mode', mode: opts.current.selectMode ? 'select' : 'none' });
+      postToFrame(frame, { type: 'set-mode', mode: opts.current.selectMode ? 'select' : 'none', marquee: opts.current.marquee === true });
       postToFrame(frame, { type: 'text-edit-allowed', allowed: opts.current.textEditAllowed === true });
       requestRects(frame);
     },
@@ -305,9 +306,9 @@ export function usePreviewFrames(o: Options) {
 
   useEffect(() => {
     const f = frontFrame();
-    if (f) postToFrame(f, { type: 'set-mode', mode: o.selectMode ? 'select' : 'none' });
+    if (f) postToFrame(f, { type: 'set-mode', mode: o.selectMode ? 'select' : 'none', marquee: o.marquee === true });
     if (!o.selectMode) setHover(null);
-  }, [o.selectMode, frontToken, frontFrame]);
+  }, [o.selectMode, o.marquee, frontToken, frontFrame]);
 
   useEffect(() => {
     const f = frontFrame();

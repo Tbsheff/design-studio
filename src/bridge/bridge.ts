@@ -774,6 +774,7 @@ function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker 
 function startBridge(session: BridgeSession): void {
   const parentWindow = window.parent;
   let mode: 'select' | 'none' = 'none';
+  let marqueeOn = false;
   let hoverFrame = 0;
   let pendingHover: Element | null = null;
   let lastHover: Element | null = null;
@@ -833,7 +834,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const layers = createLayerIndex();
-  const locks = createLockSet(selectorFor, APP_MODE !== 'next');
+  const locks = createLockSet(APP_MODE !== 'next');
   const hitOf = (event: Event): Element | null => locks.hit(event, eventElement(event));
   let selected: Element | null = null;
   let selectedAt = -Infinity;
@@ -912,7 +913,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const marquee = createMarquee({
-    enabled: () => mode === 'select' && !textEditor.editing(),
+    enabled: () => mode === 'select' && marqueeOn && !textEditor.editing(),
     locked: (element) => locks.isLocked(element),
     show: (rect) => {
       if (rect && lastHover) {
@@ -1070,6 +1071,7 @@ function startBridge(session: BridgeSession): void {
   const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
     'set-mode': (message) => {
       mode = message.mode === 'select' ? 'select' : 'none';
+      marqueeOn = message.marquee === true;
       lastHover = null;
       pendingHover = null;
     },

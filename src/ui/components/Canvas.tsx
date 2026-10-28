@@ -426,6 +426,10 @@ function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control
   );
 }
 
+function marqueeAllowed(picking: boolean, prototype: boolean, comment: boolean): boolean {
+  return picking && !prototype && !comment;
+}
+
 export function Canvas(props: Props) {
   const { projectId, directionId, kind, source, headVersionId } = props;
   const ui = useUi();
@@ -484,6 +488,7 @@ export function Canvas(props: Props) {
     live,
     lastChange: props.lastChange,
     selectMode: picking || commentMode,
+    marquee: marqueeAllowed(pane.picking, protoOn, commentMode),
     selection: props.selection,
     setSelection: comment.guard(props.setSelection),
     onError: props.onError,

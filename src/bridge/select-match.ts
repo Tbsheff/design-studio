@@ -88,7 +88,7 @@ export function isMatchKind(value: unknown): value is MatchKind {
   return typeof value === 'string' && (MATCH_KINDS as readonly string[]).includes(value);
 }
 
-function pathOf(element: Element): string {
+export function pathOf(element: Element): string {
   const parts: string[] = [];
   for (let node: Element | null = element; node?.parentElement && node !== document.body; node = node.parentElement) {
     parts.unshift(`${node.tagName.toLowerCase()}:nth-child(${Array.prototype.indexOf.call(node.parentElement.children, node) + 1})`);

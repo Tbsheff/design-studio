@@ -457,6 +457,25 @@ Components tab → GET /api/projects/:pid/d/:did/components   (inventory.ts)
 - Pack cards: the server sends the dark swatches in `PackSummary`, and only the `DesignSystems` chunk draws the light and dark pair, so Home stays under its byte gate.
 - DESIGN.md editor (`DesignMdModal.tsx`): outline from headings, a live preview with `markdownBlocks` (no raw HTML, comments dropped), and a save prompt on Close, Cancel, Esc and backdrop click when there are changes.
 
+## App tokens (imported app folders)
+
+```
+imported folder (not created, no studio pack) → app-tokens/detect.ts findTokenFile
+  components.json tailwind.css > known paths (root, apps/*, packages/*) > bounded walk (skips public/, build, dot dirs)
+  score = tokens + @theme 100 + @import "tailwindcss" 50 + components.json 200; cached per work tree
+→ app-tokens/read-css.ts readCssTokens: @theme (any modifier, top level), :root/html/:host, .dark / [data-theme=dark]
+  (also inside @layer and prefers-color-scheme media); value offsets and lines; comments masked, so trailing comments stay out
+→ app-tokens/tokens.ts: one token per name; light = last unlayered :root decl, else last @theme decl; dark = last .dark decl;
+  var() resolved; path = <namespace>.<name without -->; Tailwind namespaces map to color, font, font-weight, text, space,
+  radius, shadow, inset-shadow, drop-shadow, breakpoint, container, leading, tracking, other
+→ DesignSystemState {entries (resolved values), source}; entry.source = {file, line, value, darkLine, darkValue, lines}
+```
+
+- Preview and commit use the tokens.json routes. Commit re-reads the file under the direction lock, replaces only the value span of the winning declaration (a new dark value is one line at the end of the last `.dark` block; removing dark drops that line), parses the result again and checks every token, then `commitFile([file])` as "Update tokens: …". Values may use `var()`; `; { } < >`, comments and line breaks are refused. The file must be inside the work tree after realpath.
+- MCP `get_tokens` returns each token with value, resolved, dark, file and line. `set_token {name, value, theme}` calls the commit route. The agent prompt gets an `<app_tokens>` list. The inspector has no Create token for app CSS.
+- Import accepts a folder with a package.json when a token file is found. On macOS an imported folder uses one recursive `fs.watch` (chokidar opened one fd per file: 45k on Bonaparte, and git spawn then failed with EBADF).
+- Design system from a code folder: the detected token file is read first with the same reader; canonical names (`--primary`, `--background`, `--foreground`, `--radius-md`) win over synonyms (`--brand-primary`); dark follows `var()`; next/font imports in app layouts give the body font; Tailwind v4 default text, space and radius fill gaps when the file imports tailwindcss. Each picked token keeps `$extensions["studio.appVar"]`, extra tokens keep their real names, and the handoff shows an App token column. The grade is Excellent only when bg, fg, primary and body font come from canonical names or next/font.
+
 ## Tweaks (live controls)
 
 ```

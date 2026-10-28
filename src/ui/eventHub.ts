@@ -34,6 +34,7 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
   'mcp.point': true,
   'design-system.sources': true,
   'app.status': true,
+  'frame-states.changed': true,
 };
 
 export const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody['type'][];

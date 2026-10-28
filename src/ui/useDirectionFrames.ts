@@ -4,6 +4,8 @@ import { api } from './api';
 import { frameSrc } from './bridge';
 import { markOf, withElementMark } from './elementMark';
 import { frameDirection, withFramePath, type CanvasFrame } from './canvasFrames';
+import { frameStateUrl } from './frameStates';
+import type { FrameStatesView } from '../shared/frame-state';
 import { randomToken } from './session';
 import { useTokenFrames } from './tokenFrames';
 import { passiveSrc } from './useCanvasFrames';
@@ -29,6 +31,7 @@ interface Options {
   lastChange: FilesChange | null;
   hold: boolean;
   directions: Direction[] | undefined;
+  frameStates?: FrameStatesView | null;
 }
 
 function useDirectionUrls(projectId: string, ids: string[]): Record<string, string> {
@@ -75,7 +78,7 @@ export function useDirectionFrames(o: Options) {
     const isCurrent = directionId !== null && directionId === o.currentId;
     const base = directionId === null ? null : isCurrent ? o.currentUrl : withElementMark(urls[directionId] ?? null, markOf(o.directions, directionId));
     const gated = !isCurrent || o.live;
-    const build = (change: FilesChange | null) => (base ? frameSrc(passiveSrc(withFramePath(base, frame.path), o.kind, change) as string, token, { [BRIDGE_PASSIVE_PARAM]: '1' }) : null);
+    const build = (change: FilesChange | null) => (base ? frameSrc(frameStateUrl(passiveSrc(withFramePath(base, frame.path), o.kind, change) as string, o.frameStates ?? null, frame.id), token, { [BRIDGE_PASSIVE_PARAM]: '1' }) : null);
     const src = build(gated ? gate.shownFor(frame.id) : null);
     const next = gated ? gate.nextFor(frame.id) : null;
     const nextSrc = next ? build(next) : null;

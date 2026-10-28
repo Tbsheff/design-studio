@@ -12,10 +12,12 @@ interface Classified {
   kind: TodoKind;
   files: string[];
   words: string[];
+  needsReview: boolean;
 }
 
 const PREP_START = /^(load|read|find|explore|look|study|plan|brief|research|inspect|understand|gather|survey|locate|open|learn|pick|choose|decide|outline|sketch)\b/;
 const CHECK_WORDS = /\b(checks?|review|verify|qa|test|critic|screenshots?|audit|final)\b/;
+const REVIEW_ONLY = /\b(review|critic|final|audit|screenshots?)\b/;
 const FIX_WORDS = /\b(fix|fixes|polish|tweak|tweaks|refine)\b/;
 const PLACE_WORDS = /\b(place|frames?|canvas)\b/;
 const FILE_TOKEN = /[\w@()[\]-]+(?:\/[\w@()[\]-]+)*\.(?:html|tsx|jsx|ts|js|css|md|json|mdx|vue|svelte)\b/g;
@@ -29,7 +31,7 @@ function classify(content: string): Classified {
   const plain = text.replace(FILE_TOKEN, ' ');
   const words = [...new Set(plain.split(/[^a-z0-9-]+/).filter((word) => word.length >= 3 && !STOP_WORDS.has(word)))];
   const kind = kindOf(text, files.length > 0);
-  return { kind, files, words };
+  return { kind, files, words, needsReview: REVIEW_ONLY.test(text) };
 }
 
 function kindOf(text: string, namesFile: boolean): TodoKind {
@@ -96,6 +98,10 @@ function onCheck(state: ReplayState, ok: boolean): void {
   if (state.wroteAfterReview) for (const index of open(state, 'fix')) finish(state, index, 'Fixes were written after the review and the render check passed.');
 }
 
+function onPassingCheck(state: ReplayState): void {
+  for (const index of open(state, 'check')) if (!(state.todos[index] as Classified).needsReview) finish(state, index, 'The render check passed.');
+}
+
 function apply(state: ReplayState, event: TodoEvidence): void {
   if (event.kind === 'write') {
     state.anyWork = true;
@@ -104,6 +110,7 @@ function apply(state: ReplayState, event: TodoEvidence): void {
   } else if (event.kind === 'check') {
     state.anyWork = true;
     onCheck(state, event.ok);
+    if (event.ok) onPassingCheck(state);
     state.reviewed = true;
   } else if (event.kind === 'place') {
     state.anyWork = true;

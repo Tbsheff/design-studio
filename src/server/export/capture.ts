@@ -33,7 +33,7 @@ export function pngDimensions(bytes: Buffer): { width: number; height: number } 
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-function selectorClipExpression(selector: string, padding: number): string {
+export function selectorClipExpression(selector: string, padding: number): string {
   return `(() => {
     let element = null;
     try { element = document.querySelector(${JSON.stringify(selector)}); } catch (error) { return null; }
@@ -48,6 +48,10 @@ function selectorClipExpression(selector: string, padding: number): string {
     const y = Math.max(0, box.top + window.scrollY - pad);
     return { x, y, width: Math.min(right, box.right + window.scrollX + pad) - x, height: Math.min(bottom, box.bottom + window.scrollY + pad) - y };
   })()`;
+}
+
+export async function hideDevChrome(page: { evaluate<T>(expression: string): Promise<T> }): Promise<void> {
+  await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
 }
 
 export async function waitForPage(page: { evaluate<T>(expression: string): Promise<T> }): Promise<void> {

@@ -59,7 +59,7 @@ export interface ExportPrefs {
 }
 
 const DEFAULT_PREFS: ExportPrefs = { format: 'png', scale: 2, scope: 'page' };
-const FORMATS: ExportFormat[] = ['png', 'pdf', 'html', 'zip', 'handoff'];
+const FORMATS: ExportFormat[] = ['png', 'pdf', 'html', 'zip', 'handoff', 'svg', 'pptx'];
 
 export function readExportPrefs(): ExportPrefs {
   try {

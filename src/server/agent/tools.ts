@@ -36,6 +36,7 @@ import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, w
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
 import { APP_DOCTOR_DESCRIPTION, runAppDoctor } from './doctor-tool.js';
+import { EXPORT_FRAME_AGENT_DESCRIPTION, exportFrameShape, runExportFrame } from './export-tool.js';
 import { CREATE_COMPONENT_AGENT_DESCRIPTION, SWAP_INSTANCE_AGENT_DESCRIPTION, createComponentShape, runCreateComponent, runSwapInstance, swapInstanceShape } from './component-create-tool.js';
 
 const VIEWPORTS = {
@@ -71,6 +72,7 @@ export interface StudioToolDeps {
   env?: Record<string, string | undefined>;
   canvas?: CanvasService;
   comments?: CommentStore;
+  exportsDir?: string;
 }
 
 const CANVAS_OFF = 'The canvas is not available in this run.';
@@ -671,5 +673,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const swapInstanceTool = tool('swap_instance', SWAP_INSTANCE_AGENT_DESCRIPTION, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool] });
+  const exportFrameTool = tool('export_frame', EXPORT_FRAME_AGENT_DESCRIPTION, exportFrameShape, withLayerIds(deps, (args) => runExportFrame(deps, args)));
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool] });
 }

@@ -10,6 +10,7 @@ import { listEditors, openInEditor, revealInFinder } from '../export/editors.js'
 import { buildHandoff, handoffRoot, zipHandoff } from '../export/handoff.js';
 import { inlineHtml } from '../export/inline-html.js';
 import { imagesToPdf } from '../export/pdf.js';
+import { exportVector, type VectorFile } from '../export/vector-export.js';
 import { parseFrame, parseFrames, parseScale, resolveSource, type ExportDeps } from '../export/source.js';
 import type { CommentStore } from '../store/comments.js';
 import { BadRequestError, NotFoundError, assertSafeId } from '../store/errors.js';
@@ -19,7 +20,7 @@ export interface ExportRouteDeps extends ExportDeps {
   studioToken: string;
 }
 
-const FORMATS: readonly Exclude<ExportFormat, 'handoff'>[] = ['png', 'pdf', 'html', 'zip'];
+const FORMATS: readonly Exclude<ExportFormat, 'handoff'>[] = ['png', 'pdf', 'html', 'zip', 'svg', 'pptx'];
 const MAX_SELECTOR = 2000;
 
 async function body(c: Context): Promise<Record<string, unknown>> {
@@ -49,6 +50,10 @@ function file(bytes: Uint8Array, type: string, name: string, note?: string): Res
   };
   if (note) headers[EXPORT_NOTE_HEADER] = note;
   return new Response(new Uint8Array(bytes), { headers });
+}
+
+function fileArgs(out: VectorFile): [Uint8Array, string, string, string | undefined] {
+  return [out.bytes, out.type, out.name, out.note ?? undefined];
 }
 
 function shotName(shot: Shot, index: number, scale: number): string {
@@ -113,7 +118,7 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   app.post('/api/projects/:pid/export', async (c) => {
     const input = await body(c);
     const format = input.format as Exclude<ExportFormat, 'handoff'>;
-    if (!FORMATS.includes(format)) throw new BadRequestError('format must be png, pdf, html or zip');
+    if (!FORMATS.includes(format)) throw new BadRequestError('format must be png, pdf, html, zip, svg or pptx');
     const source = await resolveSource(deps, c.req.param('pid'), text(input, 'versionId'));
     const stem = `${exportFileStem(source.project.name)}-${source.version.id.slice(0, 7)}`;
     if (format === 'zip') return file(await deps.versions.exportZip(source.project, source.version.id), 'application/zip', `${stem}.zip`);
@@ -125,6 +130,7 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     try {
       const job: ImageJob = { deps, url: opened.url, stem, name: source.project.name, frames, scale, scope, selector };
       if (format === 'html') return await exportHtml(job, source.project.kind, secrets);
+      if (format === 'svg' || format === 'pptx') return file(...fileArgs(await exportVector(job.deps.preview, job.url, { format, frames, scope, selector, name: job.name, stem })));
       return await exportImages(job, format);
     } finally {
       await opened.release().catch(() => undefined);

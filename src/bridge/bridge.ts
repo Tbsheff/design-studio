@@ -10,7 +10,7 @@ import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
-import { USED_AT_ATTR, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
+import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
@@ -102,6 +102,8 @@ function rememberSession(session: BridgeSession): void {
 }
 
 const APP_MODE = appSourceMode();
+const SELECT_RETRIES = 20;
+const SELECT_RETRY_MS = 250;
 const REDIRECTED_FROM = new URL(window.location.href).searchParams.get(APP_REDIRECT_PARAM);
 
 function stripBridgeParams(url: URL): void {
@@ -971,21 +973,29 @@ function startBridge(session: BridgeSession): void {
       post({ type: 'authored', requestId: message.requestId, rules, inline: element ? livePreview.authoredInline(element).slice(0, AUTHORED_MAX_BYTES) : '' });
     },
     'select-selector': (message) => {
-      if (typeof message.selector !== 'string' || message.selector.length > 400) return;
-      let element: Element | null = null;
-      try {
-        element = document.querySelector(message.selector);
-      } catch {
-        element = null;
-      }
-      if (element) {
-        element.scrollIntoView({ block: 'center', inline: 'nearest' });
-        postSelect(element, false);
-      }
+      const selector = message.selector;
+      if (typeof selector !== 'string' || selector.length > 400) return;
+      const attempt = (left: number): void => {
+        let element: Element | null = null;
+        try {
+          element = document.querySelector(selector);
+        } catch {
+          return;
+        }
+        const ready = element && (APP_MODE !== 'next' || appHydrated(element));
+        if (element && (ready || left === 0)) {
+          element.scrollIntoView({ block: 'center', inline: 'nearest' });
+          postSelect(element, false);
+        } else if (left > 0 && APP_MODE === 'next') window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+      };
+      attempt(SELECT_RETRIES);
     },
     'select-source': (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);
+      else if (APP_MODE === 'next' && typeof message.sourceLoc === 'string' && typeof message.tag === 'string') {
+        void appElementBySource(message.sourceLoc, message.tag).then((found) => found && postSelect(found, false));
+      }
     },
     'text-edit-allowed': (message) => textEditor.allow(message.allowed === true),
     'text-edit-stop': () => textEditor.cancel(),

@@ -32,6 +32,7 @@ const CACHE_LIMIT = 5000;
 const SOURCE_EXT = /\.(tsx|ts|jsx|js|mjs|cjs|mdx)$/;
 const cache = new Map<string, string | null>();
 const MAP_TTL_MS = 30_000;
+const STALE_MAP_RETRY_MS = 1500;
 const MAX_MAPS = 200;
 const chunkMaps = new Map<string, { consumer: Promise<SourceMapConsumer | null>; at: number }>();
 const lineCounts = new Map<string, number>();
@@ -172,12 +173,11 @@ export function sourcesShifted(upstream: string, root: string, paths: string[]):
     shifted = true;
   }
   if (!shifted) return false;
-  for (const key of cache.keys()) if (key.startsWith(`${upstream}|`)) cache.delete(key);
-  for (const url of chunkMaps.keys()) if (url.startsWith(upstream)) chunkMaps.delete(url);
+  forgetUpstream(upstream);
   return true;
 }
 
-export async function resolveStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
+async function lookUpStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
   const parsed = stacks.map((stack) => parseStack(stack).map((frame) => ({ ...frame, file: toUpstream(frame.file, previewOrigin, target.upstream) })));
   const unknown = new Map<string, StackFrame>();
   for (const frames of parsed) for (const frame of frames) if (!cache.has(`${target.upstream}|${keyOf(frame)}`)) unknown.set(keyOf(frame), frame);
@@ -204,4 +204,29 @@ export async function resolveStackSources(target: SourceTarget, stacks: string[]
     }
     return null;
   });
+}
+
+function opensElement(target: SourceTarget, source: string): boolean {
+  const match = /^(.*):(\d+):(\d+)$/.exec(source);
+  if (!match) return false;
+  try {
+    const line = readFileSync(path.join(target.workTree, match[1] ?? ''), 'utf8').split('\n')[Number(match[2]) - 1];
+    return line?.[Number(match[3]) - 1] === '<';
+  } catch {
+    return false;
+  }
+}
+
+function forgetUpstream(upstream: string): void {
+  for (const key of cache.keys()) if (key.startsWith(`${upstream}|`)) cache.delete(key);
+  for (const url of chunkMaps.keys()) if (url.startsWith(upstream)) chunkMaps.delete(url);
+}
+
+export async function resolveStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
+  const first = await lookUpStackSources(target, stacks, previewOrigin);
+  if (first.every((source) => source === null || opensElement(target, source))) return first;
+  forgetUpstream(target.upstream);
+  await new Promise((resolve) => setTimeout(resolve, STALE_MAP_RETRY_MS));
+  const second = await lookUpStackSources(target, stacks, previewOrigin);
+  return second.map((source) => (source && opensElement(target, source) ? source : null));
 }

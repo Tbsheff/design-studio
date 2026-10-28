@@ -20,6 +20,8 @@ interface DebugFiber {
 }
 
 const HOST_COMPONENT = 5;
+const MAX_SOURCE_CANDIDATES = 150;
+const SOURCE_BATCH = 10;
 const pending = new WeakMap<Element, Promise<string | null>>();
 
 export function appSourceMode(): string | null {
@@ -83,6 +85,10 @@ async function resolveStacks(stacks: string[]): Promise<(string | null)[]> {
   return Array.isArray(body.sources) ? body.sources.map((source) => (typeof source === 'string' ? source : null)) : stacks.map(() => null);
 }
 
+export function appHydrated(element: Element): boolean {
+  return hostElementOf(element) !== null;
+}
+
 export function appSourceFor(element: Element): Promise<string | null> {
   const host = hostElementOf(element);
   if (!host) return Promise.resolve(null);
@@ -104,4 +110,23 @@ export function appSourceFor(element: Element): Promise<string | null> {
     .finally(() => pending.delete(host.element));
   pending.set(host.element, lookup);
   return lookup;
+}
+
+let finding: string | null = null;
+
+export async function appElementBySource(loc: string, tag: string): Promise<Element | null> {
+  if (finding === loc || !/^[a-z][a-z0-9-]*$/.test(tag)) return null;
+  finding = loc;
+  try {
+    const candidates = Array.from(document.querySelectorAll(tag)).slice(0, MAX_SOURCE_CANDIDATES);
+    for (let start = 0; start < candidates.length; start += SOURCE_BATCH) {
+      const batch = candidates.slice(start, start + SOURCE_BATCH);
+      const sources = await Promise.all(batch.map(appSourceFor));
+      const index = sources.indexOf(loc);
+      if (index >= 0) return batch[index] ?? null;
+    }
+    return null;
+  } finally {
+    finding = null;
+  }
 }

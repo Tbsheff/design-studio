@@ -11,6 +11,7 @@ import { useElementClasses } from './InspectorClasses';
 import { InspectorCode } from './InspectorCode';
 import { InspectorAppContext } from './InspectorShared';
 import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
+import { InspectorArrange } from './InspectorArrange';
 import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import { resetEditVariant, useEditVariant } from '../editVariant';
@@ -275,6 +276,7 @@ export function Inspector(props: InspectorProps) {
         <LeavePrompt session={session} />
         <Tabs tab={tab} onTab={onTab} />
         {(tab === 'simple' || tab === 'pro') && <InspectorTools {...props} />}
+        <InspectorArrange {...props} showBar={tab === 'simple'} />
         <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
           {tab === 'simple' && <SimpleTab {...props} />}
           {tab === 'pro' && <ProTab {...props} />}

@@ -47,6 +47,8 @@ import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
+import { applyStyleReplace } from '../direct-edit/replace.js';
+import { isStyleReplaceBody, type StyleReplaceResult } from '../../shared/style-search.js';
 import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
@@ -860,8 +862,10 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/projects/:pid/d/:did/direct-edit', async (c) => {
     const body = await readBody(c);
     try {
-      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        isStructureEdit(body)
+      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult | StyleReplaceResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
+        isStyleReplaceBody(body)
+          ? applyStyleReplace(editDeps, project, direction, body)
+          : isStructureEdit(body)
           ? applyStructureEdit(editDeps, project, direction, body)
           : isDirectEditBatch(body)
             ? applyDirectEditBatch(editDeps, project, direction, body)

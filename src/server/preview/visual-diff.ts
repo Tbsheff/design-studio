@@ -70,7 +70,15 @@ export function diffImages(before: PNG, after: PNG, masks: ProbeRect[]): VisualD
   }
   const diff = Buffer.alloc(width * height * 4);
   const changed = pixelmatch(a, b, diff, width, height, { threshold: 0.1, diffMask: true, diffColor: [255, 0, 0], diffColorAlt: [255, 0, 0] });
-  return { ...base, changedPct: Math.round((changed / (width * height)) * 1000) / 10, bands: bandsOf(diff, width, height) };
+  const grown = masks.length === 0 ? Math.abs(before.height - after.height) : 0;
+  const pct = ((changed + grown * width) / (width * (height + grown))) * 100;
+  return { ...base, changedPct: Math.round(pct * 10) / 10, bands: [...bandsOf(diff, width, height), ...grownBands(height, grown)] };
+}
+
+function grownBands(from: number, rows: number): DiffBand[] {
+  const bands: DiffBand[] = [];
+  for (let y = from; y < from + rows; y += BAND_HEIGHT) bands.push({ y, height: Math.min(BAND_HEIGHT, from + rows - y), changedPct: 100 });
+  return bands;
 }
 
 export interface DiffMask {

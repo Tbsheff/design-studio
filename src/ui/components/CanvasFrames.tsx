@@ -3,6 +3,8 @@ import { FRAME_PRESETS, frameName, type CanvasFrame } from '../canvasFrames';
 import { FrameResizeHandles, type ResizeEdge } from './FrameControls';
 import { FlowFromHere } from './FlowFromHere';
 import { FrameStateMenu } from './FrameStateMenu';
+import { FrameSkeleton } from './FrameSkeleton';
+import { pageFileOf } from '../useFirstBuild';
 import { Icon } from './Icon';
 import { PREVIEW_PAINTED_EVENT } from '../useEditHistory';
 
@@ -128,6 +130,7 @@ interface PassiveProps {
   frame: CanvasFrame;
   src: string | null;
   nextSrc: string | null;
+  pending?: { step: string | null; missing: boolean };
   sandbox?: string;
   offset: { x: number; y: number };
   label: LabelProps;
@@ -136,7 +139,7 @@ interface PassiveProps {
   onNextLoad: (id: string) => void;
 }
 
-export function PassiveFrame({ frame, src, nextSrc, sandbox, offset, label, register, frameRef, onNextLoad }: PassiveProps) {
+export function PassiveFrame({ frame, src, nextSrc, pending, sandbox, offset, label, register, frameRef, onNextLoad }: PassiveProps) {
   const name = label.badge ? `Variation ${label.badge.label}` : frameName(frame);
   const box = useRef<HTMLDivElement | null>(null);
   const armed = usePassiveMount(box);
@@ -167,6 +170,7 @@ export function PassiveFrame({ frame, src, nextSrc, sandbox, offset, label, regi
           />
         ) : null,
       )}
+      {pending && <FrameSkeleton step={pending.step} page={pageFileOf(frame.path)} missing={pending.missing ? pageFileOf(frame.path) : undefined} />}
       <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => (label.onBodyPointerDown ? label.onBodyPointerDown(e, frame, true) : label.onPointerDown(e, frame))} />
       <FrameLabel {...label} />
       <FrameResizeHandles onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)} />

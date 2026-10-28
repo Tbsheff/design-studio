@@ -1092,3 +1092,131 @@ body.element-resizing .frame {
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
+
+.frame-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: var(--frame-bg);
+  pointer-events: none;
+}
+
+.frame-skeleton-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding: var(--s-6) 10%;
+  animation: frame-skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+.sk-block {
+  display: block;
+  border-radius: var(--r-md);
+  background: var(--frame-skeleton);
+}
+
+.sk-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.sk-logo {
+  width: 96px;
+  height: 24px;
+  margin-right: auto;
+}
+
+.sk-link {
+  width: 64px;
+  height: 12px;
+}
+
+.sk-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-top: var(--s-8);
+}
+
+.sk-title {
+  width: 62%;
+  height: 40px;
+}
+
+.sk-title.short {
+  width: 40%;
+}
+
+.sk-text {
+  width: 48%;
+  height: 14px;
+  margin-top: var(--s-2);
+}
+
+.sk-button {
+  width: 120px;
+  height: 36px;
+  margin-top: var(--s-4);
+}
+
+.sk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-6);
+}
+
+.sk-card {
+  height: 160px;
+  border-radius: var(--r-lg);
+}
+
+.frame-skeleton-step {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: 80%;
+  color: var(--frame-skeleton-text);
+  font-size: var(--t-2xl);
+  white-space: nowrap;
+}
+
+.frame-skeleton-step .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 2.5px;
+}
+
+.frame-skeleton-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.frame-skeleton-page-name {
+  color: var(--frame-skeleton-text);
+  opacity: 0.7;
+}
+
+@keyframes frame-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-skeleton-page {
+    animation: none;
+  }
+}
+
+.frame-skeleton.idle .frame-skeleton-step {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+}

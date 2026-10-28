@@ -340,6 +340,14 @@ function statusLabel(run: RunView, workTree: string | null, now: number, offline
   return run.parts.length > 0 ? 'Working' : 'Starting';
 }
 
+export function runStepText(run: RunView | null, workTree: string | null): string | null {
+  if (!run) return null;
+  const todo = run.todos?.find((item) => item.status === 'in_progress' && !item.skipped);
+  if (todo) return todo.activeForm || todo.content;
+  if (run.retry) return 'Waiting to retry';
+  return statusLabel(run, workTree, Date.now(), false);
+}
+
 function elapsedText(ms: number): string {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);

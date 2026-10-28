@@ -21,6 +21,7 @@ import { FLOW_MAX_DEPTH, type FlowInput } from '../../shared/route-flow.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
+import { runSetImage, setImageShape } from './image-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
 import { runSelectMatching, selectMatchingShape } from './select-tool.js';
@@ -37,6 +38,7 @@ import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, w
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
 import { runAppDoctor } from './doctor-tool.js';
+import { exportFrameShape, runExportFrame } from './export-tool.js';
 import { createComponentShape, runCreateComponent, runSwapInstance, swapInstanceShape } from './component-create-tool.js';
 
 const VIEWPORTS = {
@@ -79,6 +81,7 @@ export interface StudioToolDeps {
   env?: Record<string, string | undefined>;
   canvas?: CanvasService;
   comments?: CommentStore;
+  exportsDir?: string;
 }
 
 const CANVAS_OFF = 'The canvas is not available in this run.';
@@ -679,9 +682,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const swapInstanceTool = tool('swap_instance', TOOL_SHORT.swap_instance, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
 
+  const exportFrameTool = tool('export_frame', TOOL_SHORT.export_frame, exportFrameShape, withLayerIds(deps, (args) => runExportFrame(deps, args)));
+
+  const setImageTool = tool('set_image', TOOL_SHORT.set_image, setImageShape, (args) => runSetImage(deps, args));
+
   const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode);
   const helpTool = tool(HELP_TOOL, TOOL_SHORT.studio_help, { tool: z.string().trim().max(40).describe('Tool name without the mcp__studio__ prefix.') }, async (args) => ({ content: [{ type: 'text' as const, text: studioHelp(args.tool, allowed) }] }), { annotations: { readOnlyHint: true } });
-  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, helpTool];
+  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, helpTool];
   return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: all.filter((entry) => allowed.has(entry.name)) });
 }
 

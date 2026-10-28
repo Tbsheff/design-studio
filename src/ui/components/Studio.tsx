@@ -3,6 +3,7 @@ import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
 import type { CommentPrefill, CompiledTokenEntry, Project, RunCanvasRef, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import { useRunCanvas } from '../useRunCanvas';
+import { runStepText } from './ToolChips';
 import type { PrefillRequest } from '../useCommentPrefill';
 import { RunCommentsContext } from './RunComments';
 import { statesPrompt } from '../../shared/states';
@@ -203,6 +204,10 @@ async function askAgent(prompt: string, draft: DraftStore, showChat: () => Promi
     input?.focus();
     input?.setSelectionRange(prompt.length, prompt.length);
   });
+}
+
+function runStepOf(run: RunView | null, direction: { workTree: string } | null | undefined): string | null {
+  return runStepText(run, direction?.workTree ?? null);
 }
 
 export function Studio({ projectId, onExit }: { projectId: string; onExit: () => void }) {
@@ -638,6 +643,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               comments,
               commentTools: { tokens: tokenEntries(tokens), components: componentList.components, onSteer: runControls.onSteer },
               running: activeRun !== null,
+              runStep: runStepOf(activeRun, direction),
               noRuns: neverRan(data.runsLoaded, directionRuns),
               darkPreview: hasDarkMode(tokens),
               onMakeStates: did ? makeStates : undefined,

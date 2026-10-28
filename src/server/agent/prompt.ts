@@ -110,6 +110,7 @@ Which tool to use:
 - A group of new elements: \`insert_jsx\` (markup only); \`clear_text\` removes stray text next to child elements.
 - Raw colors or sizes on the page: \`find_styles\`, then \`replace_style\` with a token. One token value: \`set_token\`, not a hand edit of tokens.json or the token CSS.
 - Align, space evenly or tidy up siblings: \`arrange\`; distances: \`measure\`.
+- Replace or place an image, or set its fit, focal point or alt text: \`set_image\` (\`selector\`, \`path\` of an attached or project image or an https \`url\`, \`fit\`, \`focal\`, \`alt\`). It copies the file into the assets folder.
 - Logic, data wiring, new files, elements made by \`.map()\` or a condition, or many changes at once: Edit or Write.
 - All of them count as edits: run the checks the <run-level> block asks for after them.`;
 

@@ -21,7 +21,9 @@ interface FormatInfo {
 
 const FORMATS: FormatInfo[] = [
   { id: 'png', label: 'PNG', icon: 'image', hint: 'One image per frame. Many frames download as a zip.', action: 'Export PNG' },
+  { id: 'svg', label: 'SVG', icon: 'pencil', hint: 'Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.', action: 'Export SVG' },
   { id: 'pdf', label: 'PDF', icon: 'doc', hint: 'One page per frame, at 2× for sharp print.', action: 'Export PDF' },
+  { id: 'pptx', label: 'PPTX', icon: 'play', hint: 'One slide per frame, or per slide of a deck, with text you can edit in Keynote or PowerPoint.', action: 'Export PPTX' },
   { id: 'html', label: 'HTML', icon: 'code', hint: 'One file with CSS, fonts and images inside. Opens offline.', action: 'Export HTML' },
   { id: 'zip', label: 'Source', icon: 'folder', hint: 'The project files of this version as a zip.', action: 'Export zip' },
   { id: 'handoff', label: 'Handoff', icon: 'terminal', hint: 'A folder for a coding agent: HANDOFF.md, tokens, screens and source.', action: 'Create handoff' },
@@ -231,7 +233,7 @@ function useExportOptions(target: ExportTarget): Options {
   const [scope, setScope] = useState<ExportScope>(initial.scope);
   const frames = useMemo(() => canvasFrameChoices(target.projectId, target.directionId), [target.projectId, target.directionId]);
   const [picked, setPicked] = useState<Set<string>>(() => new Set(frames.map((f) => f.id)));
-  const selectionOnly = Boolean(target.selector) && format === 'png';
+  const selectionOnly = Boolean(target.selector) && (format === 'png' || format === 'svg');
   return {
     format,
     scale,
@@ -335,7 +337,7 @@ function OptionFields({ options }: { options: Options }) {
           {first && !selectionOnly ? <span className="export-sub export-size">{first.width * scale} px wide</span> : null}
         </div>
       ) : null}
-      {(format === 'png' && !selectionOnly) || format === 'pdf' ? (
+      {((format === 'png' || format === 'svg') && !selectionOnly) || format === 'pdf' ? (
         <div className="export-field export-inline">
           <span className="export-label">Area</span>
           <Segmented label="Area" value={scope} options={[{ id: 'page' as ExportScope, label: 'Full page' }, { id: 'frame' as ExportScope, label: 'Frame only' }]} onChange={options.chooseScope} />

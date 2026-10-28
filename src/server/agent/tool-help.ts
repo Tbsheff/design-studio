@@ -4,6 +4,8 @@ import { APP_DOCTOR_DESCRIPTION } from './doctor-tool.js';
 import { CREATE_COMPONENT_AGENT_DESCRIPTION, SWAP_INSTANCE_AGENT_DESCRIPTION } from './component-create-tool.js';
 import { SELECT_MATCHING_DESCRIPTION } from './select-tool.js';
 import { DIFF_VERSIONS_DESCRIPTION } from './version-diff-tool.js';
+import { EXPORT_FRAME_AGENT_DESCRIPTION } from './export-tool.js';
+import { SET_IMAGE_AGENT_DESCRIPTION } from './image-tool.js';
 
 export const TOOL_SHORT = {
   screenshot: 'PNG screenshots of one page (default: the <canvas-context> frame), up to four images from y offset `from`. The text says if more of the page is below.',
@@ -44,6 +46,8 @@ export const TOOL_SHORT = {
   component_preview: 'Read only. Render one library component alone with default props, as an image.',
   create_component: 'Turn one element into a reusable React component file with inferred props and cva variants, and use it at the old place.',
   swap_instance: 'Replace one component instance with another library component, keeping matching props.',
+  export_frame: 'Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.',
+  set_image: 'Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.',
   studio_help: 'Full description of one studio tool: when to use it, what it refuses, and the fields of its result.',
 } as const;
 
@@ -88,4 +92,6 @@ export const TOOL_HELP: Record<Exclude<StudioToolName, 'studio_help'>, string> =
   component_preview: 'Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.',
   create_component: CREATE_COMPONENT_AGENT_DESCRIPTION,
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
+  export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
+  set_image: SET_IMAGE_AGENT_DESCRIPTION,
 };

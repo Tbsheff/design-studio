@@ -6,6 +6,7 @@ import type { ExportFrame, ExportScale, ExportScope } from '../../shared/export.
 import type { RenderClip } from '../../shared/render-rpc.js';
 import { BadRequestError } from '../store/errors.js';
 import type { PreviewService } from '../types.js';
+import { expandScrollRoot } from '../preview/scroll-root.js';
 import { withPagePath } from './source.js';
 
 const MAX_OUTPUT_PIXELS = 80_000_000;
@@ -33,7 +34,7 @@ export function pngDimensions(bytes: Buffer): { width: number; height: number } 
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-function selectorClipExpression(selector: string, padding: number): string {
+export function selectorClipExpression(selector: string, padding: number): string {
   return `(() => {
     let element = null;
     try { element = document.querySelector(${JSON.stringify(selector)}); } catch (error) { return null; }
@@ -50,6 +51,10 @@ function selectorClipExpression(selector: string, padding: number): string {
   })()`;
 }
 
+export async function hideDevChrome(page: { evaluate<T>(expression: string): Promise<T> }): Promise<void> {
+  await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
+}
+
 export async function waitForPage(page: { evaluate<T>(expression: string): Promise<T> }): Promise<void> {
   await Promise.race([page.evaluate(READY_EXPRESSION).catch(() => undefined), new Promise((done) => setTimeout(done, 8000).unref())]);
 }
@@ -62,6 +67,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
     return await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height, scale }, async (page) => {
       await waitForPage(page);
       await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
+      if (selector || scope !== 'frame') await expandScrollRoot(page);
       let clip: RenderClip;
       if (selector) {
         const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector, padding));

@@ -20,11 +20,13 @@ export const EDIT_ELEMENT_TOOL = 'mcp__studio__edit_element';
 export const SET_TOKEN_TOOL = 'mcp__studio__set_token';
 export const SET_PROPS_TOOL = 'mcp__studio__set_props';
 export const INSERT_COMPONENT_TOOL = 'mcp__studio__insert_component';
+export const INSERT_JSX_TOOL = 'mcp__studio__insert_jsx';
+export const CLEAR_TEXT_TOOL = 'mcp__studio__clear_text';
 export const FIND_STYLES_TOOL = 'mcp__studio__find_styles';
 export const REPLACE_STYLE_TOOL = 'mcp__studio__replace_style';
 export const REVIEW_FRAME_TOOL = 'mcp__studio__review_frame';
-const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL]);
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, LIST_LINKS_TOOL, EDIT_LINKS_TOOL, LIST_FRAME_STATES_TOOL, SET_FRAME_STATE_TOOL, SET_FRAME_SESSION_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, FIND_STYLES_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL, 'mcp__studio__prepare_ship', REVIEW_FRAME_TOOL] as const;
+const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL, INSERT_JSX_TOOL, CLEAR_TEXT_TOOL]);
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, LIST_LINKS_TOOL, EDIT_LINKS_TOOL, LIST_FRAME_STATES_TOOL, SET_FRAME_STATE_TOOL, SET_FRAME_SESSION_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, FIND_STYLES_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL, INSERT_JSX_TOOL, CLEAR_TEXT_TOOL, 'mcp__studio__prepare_ship', REVIEW_FRAME_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);

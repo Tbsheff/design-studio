@@ -2,6 +2,7 @@ import type { Context, Hono } from 'hono';
 import type { Direction, Project } from '../../shared/contracts.js';
 import { applyInsertComponent } from '../components/insert.js';
 import { listInsertable } from '../components/insert-list.js';
+import { applyClearText, applyInsertJsx } from '../direct-edit/jsx-insert.js';
 import { DirectEditError, type DirectEditDeps } from '../direct-edit/index.js';
 import type { PreviewService } from '../types.js';
 
@@ -28,16 +29,20 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
     return c.json(await listInsertable(project, direction.workTree));
   });
 
-  app.post('/api/projects/:pid/d/:did/insert', async (c) => {
-    const body = await deps.readBody(c);
-    try {
-      const result = await deps.withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) =>
-        applyInsertComponent(deps.editDeps, { project, direction, workTree: direction.workTree, previewOrigin: await previewOriginOf(deps.preview, project, direction) }, body),
-      );
-      return c.json(result);
-    } catch (error) {
-      if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
-      throw error;
-    }
-  });
+  const insertRoute = (route: string, apply: typeof applyInsertComponent | typeof applyInsertJsx | typeof applyClearText) =>
+    app.post(route, async (c) => {
+      const body = await deps.readBody(c);
+      try {
+        const result = await deps.withDirection(c.req.param('pid') as string, c.req.param('did') as string, async (project, direction) =>
+          apply(deps.editDeps, { project, direction, workTree: direction.workTree, previewOrigin: await previewOriginOf(deps.preview, project, direction) }, body),
+        );
+        return c.json(result);
+      } catch (error) {
+        if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
+        throw error;
+      }
+    });
+  insertRoute('/api/projects/:pid/d/:did/insert', applyInsertComponent);
+  insertRoute('/api/projects/:pid/d/:did/insert/jsx', applyInsertJsx);
+  insertRoute('/api/projects/:pid/d/:did/insert/clear-text', applyClearText);
 }

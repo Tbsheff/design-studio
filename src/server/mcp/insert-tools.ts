@@ -26,20 +26,24 @@ const insertSchema = z
       .refine((props) => Object.keys(props).length <= PROPS_MAX, `pass at most ${PROPS_MAX} props`)
       .optional()
       .describe('Props to set, for example {"variant": "outline"}. Required props that you leave out get a default from the props type.'),
-    text: z.string().max(INSERT_TEXT_MAX).optional().describe('Child text, for example "Save". Default: the component name.'),
+    text: z.string().max(INSERT_TEXT_MAX).optional().describe('Child text, for example "Save". Default: the component name, and that text stays when you later insert children into it, so pass "" for a container such as Card. To build a group (a Card with a header, rows and buttons) use insert_jsx instead: one call, one undo step.'),
   })
   .strict()
   .refine((input) => (input.targetSelector === undefined) !== (input.targetSource === undefined), 'pass targetSelector or targetSource, not both');
 
-type Input = z.output<typeof insertSchema>;
-
-function parseLoc(raw: string): InsertTarget['source'] {
+export function parseLoc(raw: string): InsertTarget['source'] {
   const match = LOC.exec(raw);
   if (!match) throw new EditError('targetSource must be file:line:col, for example src/App.tsx:12:7');
   return { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) };
 }
 
-async function targetOf(deps: EditDeps, project: Project, direction: Direction, input: Input): Promise<InsertTarget> {
+export interface TargetInput {
+  targetSelector?: string | undefined;
+  targetSource?: string | undefined;
+  path?: string | undefined;
+}
+
+export async function targetOf(deps: EditDeps, project: Project, direction: Direction, input: TargetInput): Promise<InsertTarget> {
   if (input.targetSource) return { source: parseLoc(input.targetSource) };
   const sel = input.targetSelector ?? '';
   const url = await pageUrl(deps, project, direction, input.path);

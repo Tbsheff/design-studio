@@ -25,6 +25,7 @@ export interface Placement {
   into?: StructNode;
   before?: StructNode;
   after?: StructNode;
+  replace?: StructNode;
 }
 
 export interface OpInput {
@@ -45,12 +46,25 @@ interface Splice extends Range {
   marks: number[];
 }
 
-const INDENT_STEP = '  ';
+const DEFAULT_INDENT = '  ';
+const CLEARABLE = /^(?:[^{}<]|\{\s*(?:"[^"\\\n]*"|'[^'\\\n]*'|`[^`$\\]*`)\s*\})*$/;
 const NO_REINDENT = /<pre|<textarea|`/i;
 const ROOT_MESSAGE = 'This is the top element of a component, so it cannot be removed or copied here; ask the agent';
 
 export function refuse(message: string): DirectEditError {
   return new DirectEditError('cannot_restructure', message);
+}
+
+export function indentUnit(source: string): string {
+  let tabs = 0;
+  let unit = 0;
+  for (const match of source.matchAll(/^([ \t]+)\S/gm)) {
+    const lead = match[1] as string;
+    if (lead.startsWith('\t')) tabs += 1;
+    else if (lead.length >= 2 && (unit === 0 || lead.length < unit)) unit = lead.length;
+  }
+  if (tabs > 0 && unit === 0) return '\t';
+  return unit >= 2 && unit <= 8 ? ' '.repeat(unit) : DEFAULT_INDENT;
 }
 
 function lineStart(source: string, offset: number): number {
@@ -139,10 +153,11 @@ function wrapOp(source: string, nodes: StructNode[], frame: Frame): Splice[] {
   if (nodes.some((node) => node.fixed)) throw refuse(`<${nodes.find((node) => node.fixed)?.tag}> cannot be wrapped`);
   if (nodes.length > 1 && nodes.some((node) => node.root)) throw refuse(ROOT_MESSAGE);
   const indent = indentAt(source, first.start);
+  const step = indentUnit(source);
   const texts = nodes.map((node) => ({ text: source.slice(node.start, node.end), indent: indentAt(source, node.start) }));
   const lined = indent !== null && ownLine(source, first);
   const inner = lined
-    ? texts.map((entry) => `\n${indent}${INDENT_STEP}${reindent(entry.text, entry.indent, indent + INDENT_STEP)}`).join('') + `\n${indent}`
+    ? texts.map((entry) => `\n${indent}${step}${reindent(entry.text, entry.indent, indent + step)}`).join('') + `\n${indent}`
     : texts.map((entry) => entry.text).join('');
   const wrapper = { start: first.start, end: first.end, text: `${frame.open}${inner}${frame.close}`, marks: [0] };
   return [wrapper, ...rest.map((node) => removal(source, node))];
@@ -209,7 +224,7 @@ function assertContainer(parent: StructNode): void {
 function intoSplice(source: string, texts: (indent: string | null) => string[], parent: StructNode, closeTag: string): Splice {
   assertContainer(parent);
   const parentIndent = indentAt(source, parent.start);
-  const childIndent = parentIndent === null ? null : parentIndent + INDENT_STEP;
+  const childIndent = parentIndent === null ? null : parentIndent + indentUnit(source);
   const pieces = texts(childIndent);
   if (childIndent === null) {
     const inline = joinInline(pieces);
@@ -252,7 +267,7 @@ function besideSplice(source: string, texts: (indent: string | null) => string[]
 }
 
 function placeRef(place: Placement): StructNode {
-  const ref = place.into ?? place.before ?? place.after;
+  const ref = place.into ?? place.before ?? place.after ?? place.replace;
   if (!ref) throw refuse('Say where to move the element');
   return ref;
 }
@@ -267,22 +282,65 @@ function moveOp(source: string, nodes: StructNode[], place: Placement, closeTag:
 }
 
 export interface InsertInput {
-  text: string;
+  pieces: string[];
   place: Placement;
   closeTag: (node: StructNode) => string;
-  extra?: Range & { text: string };
+  extras?: (Range & { text: string })[];
 }
 
 function indentLines(text: string, indent: string | null): string {
   return indent === null ? text : text.split('\n').map((line, index) => (index > 0 && line !== '' ? indent + line : line)).join('\n');
 }
 
+function replaceSplice(source: string, texts: (indent: string | null) => string[], node: StructNode): Splice {
+  if (node.fixed) throw refuse(`<${node.tag}> cannot be replaced`);
+  const indent = indentAt(source, node.start);
+  const joined = indent === null || !ownLine(source, node) ? joinInline(texts(null)) : joinLines(texts(indent), indent, '\n');
+  const lead = indent === null || !ownLine(source, node) ? 0 : 1 + indent.length;
+  return { start: node.start, end: node.end, text: joined.text.slice(lead), marks: joined.marks.map((mark) => mark - lead) };
+}
+
+function insertSplice(source: string, input: InsertInput, ref: StructNode): Splice {
+  const texts = (indent: string | null) => input.pieces.map((piece) => indentLines(piece, indent));
+  if (input.place.into) return intoSplice(source, texts, input.place.into, input.closeTag(input.place.into));
+  if (input.place.replace) return replaceSplice(source, texts, input.place.replace);
+  return besideSplice(source, texts, ref, input.place.after !== undefined);
+}
+
 export function planInsert(source: string, input: InsertInput): OpPlan {
   const ref = placeRef(input.place);
   if (ref.fixed) throw refuse(`<${ref.tag}> cannot be changed this way`);
-  const texts = (indent: string | null) => [indentLines(input.text, indent)];
-  const insert = input.place.into ? intoSplice(source, texts, input.place.into, input.closeTag(input.place.into)) : besideSplice(source, texts, ref, input.place.after !== undefined);
-  return applyTracked(source, [insert, ...(input.extra ? [{ ...input.extra, marks: [] }] : [])]);
+  return applyTracked(source, [insertSplice(source, input, ref), ...(input.extras ?? []).map((extra) => ({ ...extra, marks: [] }))]);
+}
+
+function gapsOf(node: StructNode): Range[] {
+  const inner = node.inner as Range;
+  const bounds = [inner.start, ...node.children.flatMap((child) => [child.start, child.end]), inner.end];
+  const out: Range[] = [];
+  for (let index = 0; index + 1 < bounds.length; index += 2) out.push({ start: bounds[index] as number, end: bounds[index + 1] as number });
+  return out;
+}
+
+function clearOne(source: string, node: StructNode): Splice[] {
+  if (node.fixed || !node.inner) throw refuse(`<${node.tag}> has no text to clear`);
+  const parentIndent = indentAt(source, node.start);
+  const lined = parentIndent !== null && source.slice(node.inner.start, node.inner.end).includes('\n');
+  const gaps = gapsOf(node);
+  const splices: Splice[] = [];
+  gaps.forEach((gap, index) => {
+    const text = source.slice(gap.start, gap.end);
+    if (text.trim() === '' || !CLEARABLE.test(text)) return;
+    const last = index === gaps.length - 1;
+    const keep = node.children.length === 0 || !lined ? '' : `\n${parentIndent}${last ? '' : indentUnit(source)}`;
+    splices.push({ ...gap, text: keep, marks: [] });
+  });
+  if (splices.length === 0 && node.root) throw refuse(`<${node.tag}> is the top element of a component, so its text comes from where the page uses it. Use clear_text with this selector to clear the text at that use`);
+  if (splices.length === 0) throw refuse(`<${node.tag}> has no plain text to clear. Text from a prop or a { } expression stays; edit it at its source`);
+  return [{ start: node.start, end: node.start, text: '', marks: [0] }, ...splices];
+}
+
+function clearOp(source: string, nodes: StructNode[]): Splice[] {
+  return nodes.flatMap((node) => clearOne(source, node));
 }
 
 export function outermost(nodes: StructNode[]): StructNode[] {
@@ -296,6 +354,7 @@ export function planStructure(source: string, input: OpInput): OpPlan {
   if (input.op === 'duplicate') return applyTracked(source, duplicateOp(source, nodes));
   if (input.op === 'wrap') return applyTracked(source, wrapOp(source, nodes, input.frame));
   if (input.op === 'unwrap') return applyTracked(source, unwrapOp(source, nodes));
+  if (input.op === 'clear') return applyTracked(source, clearOp(source, nodes));
   return applyTracked(source, moveOp(source, nodes, input.place, input.closeTag));
 }
 

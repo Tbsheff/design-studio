@@ -29,7 +29,7 @@ function text(message: string, isError = false): ToolText {
   return { content: [{ type: 'text', text: message }], ...(isError ? { isError: true } : {}) };
 }
 
-async function targetOf(deps: DirectToolDeps, input: z.output<typeof schema>): Promise<InsertTarget | string> {
+export async function targetOf(deps: DirectToolDeps, input: { targetSelector?: string | undefined; targetSource?: string | undefined; path?: string | undefined }): Promise<InsertTarget | string> {
   if (input.targetSource) {
     const match = LOC.exec(input.targetSource);
     return match ? { source: { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) } } : 'targetSource must be file:line:col.';

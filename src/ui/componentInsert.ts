@@ -1,4 +1,4 @@
-import type { InsertComponentRequest, InsertComponentResult, InsertPosition, InsertableComponent, InsertableList } from '../shared/insert';
+import type { InsertComponentRequest, InsertComponentResult, InsertJsxRequest, InsertJsxResult, InsertPosition, InsertableComponent, InsertableList } from '../shared/insert';
 import { ApiError, json } from './api';
 
 const d = (pid: string, did: string) => `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
@@ -6,6 +6,7 @@ const d = (pid: string, did: string) => `/api/projects/${encodeURIComponent(pid)
 export const insertApi = {
   list: (pid: string, did: string) => json<InsertableList>('GET', `${d(pid, did)}/insert/components`),
   insert: (pid: string, did: string, request: InsertComponentRequest) => json<InsertComponentResult>('POST', `${d(pid, did)}/insert`, request),
+  insertJsx: (pid: string, did: string, request: InsertJsxRequest) => json<InsertJsxResult>('POST', `${d(pid, did)}/insert/jsx`, request),
 };
 
 export function insertError(error: unknown): string {

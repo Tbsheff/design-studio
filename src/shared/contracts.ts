@@ -592,7 +592,8 @@ export type StudioEventBody =
   | { type: 'mcp.activity'; activity: McpActivity }
   | { type: 'mcp.point'; point: McpPoint }
   | { type: 'design-system.sources'; sources: DraftSourcesState }
-  | { type: 'app.status'; status: AppServerStatus };
+  | { type: 'app.status'; status: AppServerStatus }
+  | { type: 'frame-states.changed'; states: import('./frame-state.js').FrameStatesView };
 
 export interface McpActivity {
   id: string;

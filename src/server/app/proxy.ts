@@ -3,9 +3,11 @@ import net from 'node:net';
 import type { Duplex } from 'node:stream';
 import { BRIDGE_CHANGES_PATH, BRIDGE_PARENT_ORIGIN_PARAM, BRIDGE_SCRIPT_PATH, BRIDGE_TOKEN_PARAM } from '../../shared/contracts.js';
 import { APP_REDIRECT_PARAM, APP_SOURCE_PATH } from '../../shared/app.js';
+import { FRAME_STATE_ATTR, stateOfHost } from '../../shared/frame-state.js';
+import { answerState, captureSessionCookies, sendEmptied, wantsEmpty, withStateHeaders, type ActiveFrameState } from './frame-state-proxy.js';
 import { resolveStackSources, type SourceTarget } from './source-map.js';
 
-const HOST_PATTERN = /^p-([0-9a-f]{2,128})\.localhost(?::(\d+))?$/;
+const HOST_PATTERN = /^(?:s-[a-z][a-z0-9-]{0,23}\.)?p-([0-9a-f]{2,128})\.localhost(?::(\d+))?$/;
 const DROPPED_RESPONSE_HEADERS = new Set(['x-frame-options', 'strict-transport-security', 'content-length', 'transfer-encoding', 'connection', 'keep-alive']);
 const HEAD_SCAN_LIMIT = 64 * 1024;
 const MAX_SOURCE_BODY = 256 * 1024;
@@ -20,6 +22,11 @@ export interface AppProxyOptions {
   bridgeScript: () => Promise<string>;
   targetFor: (projectId: string) => Promise<AppTarget | null>;
   isApp: (projectId: string) => Promise<boolean>;
+  stateFor?: (projectId: string, stateId: string) => Promise<ActiveFrameState | null>;
+}
+
+function hostState(hostHeader: string | undefined): string | null {
+  return stateOfHost((hostHeader ?? '').replace(/:\d+$/, ''))?.state ?? null;
 }
 
 export function projectIdFromHost(hostHeader: string | undefined, port: number): string | null {
@@ -79,11 +86,13 @@ function messagePage(title: string, detail: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><script src="${BRIDGE_SCRIPT_PATH}" data-studio-app="message"></script><style>body{font:14px/1.5 system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#f5f5f4;color:#292524}main{max-width:460px;padding:24px}h1{font-size:16px;margin:0 0 8px}p{margin:0 0 8px;color:#57534e}code{font-size:12px;word-break:break-all}</style></head><body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(detail)}</p></main></body></html>`;
 }
 
-function bridgeTag(): string {
-  return `<script src="${BRIDGE_SCRIPT_PATH}" data-studio-app="next"></script>`;
+function bridgeTag(stateId: string | null): string {
+  const state = stateId ? ` ${FRAME_STATE_ATTR}="${escapeHtml(stateId)}"` : '';
+  return `<script src="${BRIDGE_SCRIPT_PATH}" data-studio-app="next"${state}></script>`;
 }
 
-function injectBridge(res: http.ServerResponse, upstreamRes: http.IncomingMessage): void {
+function injectBridge(res: http.ServerResponse, upstreamRes: http.IncomingMessage, stateId: string | null): void {
+  const tag = bridgeTag(stateId);
   let buffered = '';
   let done = false;
   upstreamRes.setEncoding('utf8');
@@ -96,17 +105,17 @@ function injectBridge(res: http.ServerResponse, upstreamRes: http.IncomingMessag
     const head = /<head\b[^>]*>/i.exec(buffered);
     if (head) {
       const at = head.index + head[0].length;
-      res.write(buffered.slice(0, at) + bridgeTag() + buffered.slice(at));
+      res.write(buffered.slice(0, at) + tag + buffered.slice(at));
       done = true;
       buffered = '';
     } else if (buffered.length > HEAD_SCAN_LIMIT) {
-      res.write(bridgeTag() + buffered);
+      res.write(tag + buffered);
       done = true;
       buffered = '';
     }
   });
   upstreamRes.on('end', () => {
-    if (!done && buffered !== '') res.write(/<html/i.test(buffered) ? buffered.replace(/<html\b[^>]*>/i, (tag) => tag + bridgeTag()) : bridgeTag() + buffered);
+    if (!done && buffered !== '') res.write(/<html/i.test(buffered) ? buffered.replace(/<html\b[^>]*>/i, (open) => open + tag) : tag + buffered);
     res.end();
   });
   upstreamRes.on('error', () => res.destroy());
@@ -197,9 +206,10 @@ export function createAppProxy(options: AppProxyOptions) {
     sendText(res, 200, messagePage('This route leaves the app', detail), 'text/html; charset=utf-8', options.studioOrigin);
   };
 
-  const onUpstream = (req: http.IncomingMessage, res: http.ServerResponse, upstream: URL, upstreamRes: http.IncomingMessage): void => {
+  const onUpstream = (req: http.IncomingMessage, res: http.ServerResponse, upstream: URL, upstreamRes: http.IncomingMessage, state: ActiveFrameState | null): void => {
     const status = upstreamRes.statusCode ?? 502;
     const headers = responseHeaders(upstreamRes);
+    captureSessionCookies(state, headers);
     const isRedirect = status >= 300 && status < 400;
     const location = isRedirect && typeof upstreamRes.headers.location === 'string' ? redirectLocation(req, upstreamRes.headers.location, upstream) : null;
     if (location && 'external' in location) {
@@ -209,14 +219,16 @@ export function createAppProxy(options: AppProxyOptions) {
     }
     if (location) headers.location = location.local;
     const html = (upstreamRes.headers['content-type'] ?? '').includes('text/html') && req.method !== 'HEAD' && status !== 204 && status !== 304;
+    if (wantsEmpty(state, req)) return sendEmptied(req, res, upstreamRes, status, headers);
     res.writeHead(status, headers);
-    if (html) injectBridge(res, upstreamRes);
+    if (html) injectBridge(res, upstreamRes, state?.resolved.def.id ?? null);
     else upstreamRes.pipe(res);
   };
 
-  const proxyRequest = (req: http.IncomingMessage, res: http.ServerResponse, target: AppTarget): void => {
+  const proxyRequest = (req: http.IncomingMessage, res: http.ServerResponse, target: AppTarget, state: ActiveFrameState | null): void => {
     const upstream = new URL(target.upstream);
-    const outgoing = http.request({ host: upstream.hostname, port: upstream.port, method: req.method, path: req.url, headers: upstreamHeaders(req, upstream, previewOriginOf(req)) }, (upstreamRes) => onUpstream(req, res, upstream, upstreamRes));
+    const headers = withStateHeaders(upstreamHeaders(req, upstream, previewOriginOf(req)), state);
+    const outgoing = http.request({ host: upstream.hostname, port: upstream.port, method: req.method, path: req.url, headers }, (upstreamRes) => onUpstream(req, res, upstream, upstreamRes, state));
     outgoing.on('error', (error) => {
       if (res.headersSent) {
         res.destroy();
@@ -259,7 +271,10 @@ export function createAppProxy(options: AppProxyOptions) {
         await serveSource(req, res, target);
         return;
       }
-      proxyRequest(req, res, target);
+      const stateId = hostState(req.headers.host);
+      const state = stateId && options.stateFor ? await options.stateFor(projectId, stateId).catch(() => null) : null;
+      if (state && answerState(req, res, state, isDocumentRequest(req))) return;
+      proxyRequest(req, res, target, state);
     },
 
     async upgrade(req: http.IncomingMessage, socket: Duplex, head: Buffer, projectId: string): Promise<void> {

@@ -419,7 +419,7 @@ function mergeOutcomes(total: DriverOutcome, next: DriverOutcome): DriverOutcome
 function withLoopReport(outcome: DriverOutcome, run: RunToolState, reason: StopReason | null, continuations: number): DriverOutcome {
   if (!run.log) return outcome;
   const steps = checkSteps(run.log).map((step) => ({ loop: step.loop, ...step.counts }));
-  const report = loopReport(run.log, reason, continuations);
+  const report = [loopReport(run.log, reason, continuations), run.regressionNote].filter(Boolean).join(' ');
   return { ...outcome, finalText: `${outcome.finalText}\n\n${report}`, loop: { loops: loopsDone(run.log), continuations, stopReason: reason ?? 'not-completed', steps } };
 }
 

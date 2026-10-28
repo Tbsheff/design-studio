@@ -38,6 +38,7 @@ export interface RunToolState {
   lastScreens?: RunScreen[];
   reviewShots?: CriticImage[];
   regressionDone?: boolean;
+  regressionNote?: string;
 }
 
 function selectionLocs(selection: SelectionContext[] | undefined): string[] {

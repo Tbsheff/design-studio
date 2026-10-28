@@ -29,6 +29,7 @@ export async function desktopRegression(input: RegressionInput): Promise<CriticI
   await warmScreens(input.preview, input.ctx.project, screens);
   const pairs = await regressionPairs(input.preview, run.reviewShots ?? [], screens, prefix);
   if (pairs.length === 0) {
+    run.regressionNote = 'Desktop regression check: no screen changed on desktop since the last design_review.';
     await writeFile(`${prefix}.json`, `${JSON.stringify({ changedScreens: 0, issues: [] }, null, 2)}\n`);
     return [];
   }
@@ -37,7 +38,9 @@ export async function desktopRegression(input: RegressionInput): Promise<CriticI
   const result = await runCritic(input.queryFn, request, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, input.env);
   run.criticCostUsd += result.costUsd;
   await writeFile(`${prefix}.json`, `${JSON.stringify({ model: run.config.criticModel, changedScreens: pairs.map((pair) => pair.after.screen), costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`);
-  return result.issues.filter((issue) => issue.severity !== 'low');
+  const kept = result.issues.filter((issue) => issue.severity !== 'low');
+  run.regressionNote = `Desktop regression check: ${pairs.length} screen(s) changed on desktop since the last design_review (${pairs.map((pair) => pair.after.screen).join(', ')}); ${result.error ? 'the critic reply could not be read' : `${kept.length} high or medium regression(s) found`}.`;
+  return kept;
 }
 
 export function regressionPrompt(issues: readonly CriticIssue[]): string {

@@ -10,6 +10,8 @@ import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
+import { USED_AT_ATTR, appSourceFor, appSourceMode } from './app-source.js';
+import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -99,9 +101,13 @@ function rememberSession(session: BridgeSession): void {
   }
 }
 
+const APP_MODE = appSourceMode();
+const REDIRECTED_FROM = new URL(window.location.href).searchParams.get(APP_REDIRECT_PARAM);
+
 function stripBridgeParams(url: URL): void {
   url.searchParams.delete(BRIDGE_TOKEN_PARAM);
   url.searchParams.delete(BRIDGE_PARENT_ORIGIN_PARAM);
+  url.searchParams.delete(APP_REDIRECT_PARAM);
   try {
     window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
   } catch {
@@ -198,8 +204,13 @@ function parseLoc(value: string): SourceLoc | null {
 }
 
 function sourceOf(element: Element): SourceLoc | null {
-  const owner = element.closest(`[${SOURCE_LOC_ATTR}]`);
+  const owner = APP_MODE === 'next' ? element : element.closest(`[${SOURCE_LOC_ATTR}]`);
   const value = owner?.getAttribute(SOURCE_LOC_ATTR);
+  return value ? parseLoc(value) : null;
+}
+
+function usedAtOf(element: Element): SourceLoc | null {
+  const value = element.getAttribute(USED_AT_ATTR);
   return value ? parseLoc(value) : null;
 }
 
@@ -235,6 +246,7 @@ function selectionFor(element: Element): SelectionContext {
     styles: stylesOf(element),
     rect: rectOf(element),
     source: sourceOf(element),
+    ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element) } : {}),
     ancestors: ancestorsOf(element),
   };
 }
@@ -772,6 +784,7 @@ function startBridge(session: BridgeSession): void {
     lastHover = element;
     lastAlt = altHeld;
     postHover(element);
+    if (element && APP_MODE === 'next') void appSourceFor(element);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
@@ -793,7 +806,15 @@ function startBridge(session: BridgeSession): void {
     event.stopImmediatePropagation();
   };
 
+  const lookUpAppSource = (element: Element, additive: boolean): void => {
+    if (APP_MODE !== 'next' || element.hasAttribute(SOURCE_LOC_ATTR)) return;
+    void appSourceFor(element).then((source) => {
+      if (source && selected === element) postSelect(element, additive);
+    });
+  };
+
   const postSelect = (element: Element, additive: boolean): void => {
+    lookUpAppSource(element, additive);
     selected = element;
     selectedAt = performance.now();
     post({
@@ -1021,7 +1042,7 @@ function startBridge(session: BridgeSession): void {
 
   const announce = (): void => {
     reloadIfChangedDuringLoad();
-    post({ type: 'ready', url: window.location.href });
+    post({ type: 'ready', url: window.location.href, ...(REDIRECTED_FROM ? { redirectedFrom: REDIRECTED_FROM } : {}) });
     schedulePainted();
     new MutationObserver(schedulePainted).observe(document.documentElement, {
       subtree: true,

@@ -16,6 +16,21 @@ const REACT_RULES = `## Project kind: react
 - Never install packages unless the project policy below says installs are allowed. Use what is already in \`package.json\`.
 - Keep components typed and the dev server compiling. A broken import breaks the preview.`;
 
+export function buildAppRules(project: Pick<Project, 'app'>, workTree: string): string | null {
+  const app = project.app;
+  if (!app) return null;
+  const appRoot = app.appDir === '.' ? 'the working directory' : `\`${app.appDir}/\``;
+  const framework = app.framework === 'next' ? 'Next.js (app router). Pages are `app/**/page.tsx` under the app root; route groups in parentheses do not change the URL' : 'Vite';
+  const server = app.mode === 'url' ? `runs at ${app.url ?? 'the URL the user gave'}; the user owns it` : 'is started by the studio';
+  return `## Project kind: attached ${app.framework === 'next' ? 'Next.js' : 'Vite'} app
+- This is the user's real app, not a copy. The working directory is the folder the user attached: \`${workTree}\`. The app root is ${appRoot}.
+- Framework: ${framework}. Shared packages (for example \`packages/ui\`) are part of the working directory; reuse their components and Tailwind classes instead of writing new CSS.
+- Every edit goes to the real source files and shows up in the user's repository diff. Make the smallest change that does the job, match the code style around it, and never reformat a file.
+- The dev server ${server} and hot-reloads your edits. Do not start, stop or restart it.
+- Never touch \`next.config.*\`, \`package.json\`, lock files, \`.env*\` files, keys or credentials. The studio denies them.
+- Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.`;
+}
+
 const EDITING_RULES = `## How to edit
 - Read the relevant file before you change it.
 - For a follow-up request, change existing code with the smallest exact Edit calls. Never regenerate or rewrite a whole file that already exists.
@@ -181,10 +196,10 @@ export function buildSystemPrompt(
   skillCount = 0,
   tasteRules: TasteRule[] = [],
 ): string {
-  const kindRules = project.kind === 'html' ? HTML_RULES : REACT_RULES;
+  const kindRules = buildAppRules(project, project.directions[0]?.workTree ?? '.') ?? (project.kind === 'html' ? HTML_RULES : REACT_RULES);
   const shellAllowed = true;
   const policy = `## Project policy
-- Entry file: \`${project.entry}\`.
+- ${project.app ? 'Entry route' : 'Entry file'}: \`${project.entry}\`.
 - Shell commands: ${shellAllowed && project.settings.allowBash ? 'allowed' : 'not available'}.
 - Package installs: ${shellAllowed && project.settings.allowInstall ? 'allowed when the request needs them' : 'not allowed'}.${project.designSystemFor && project.settings.allowBash ? '\n- `source/` is read only, also for shell commands: read it, never write, move or delete inside it.' : ''}`;
   const sections =

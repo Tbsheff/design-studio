@@ -10,6 +10,7 @@ import { captureFrame, waitForPage } from '../export/capture.js';
 import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
 import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
+import { listAppRoutes } from '../app/routes.js';
 
 export interface ToolContent {
   type: 'text' | 'image';
@@ -36,7 +37,7 @@ type Args = Record<string, unknown>;
 const MAX_TEXT = 256 * 1024;
 const MAX_FILES = 2000;
 const MAX_SHOT_HEIGHT = 6000;
-const SKIP = new Set(['node_modules', '.git', '.studio', 'dist', '.vite', '.DS_Store']);
+const SKIP = new Set(['node_modules', '.git', '.studio', 'dist', '.vite', '.next', '.turbo', '.DS_Store']);
 const TEXT_EXT = new Set(['.html', '.htm', '.css', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.json', '.md', '.txt', '.svg', '.xml', '.yml', '.yaml', '.toml']);
 
 const PROJECT = { type: 'string', description: 'Project id from list_projects' };
@@ -61,6 +62,7 @@ export const TOOLS: ToolDef[] = [
     height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900.' },
     fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
   }, ['projectId']),
+  def('list_routes', 'List app routes', 'List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group.', { projectId: PROJECT }, ['projectId']),
   def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
 ];
@@ -142,6 +144,7 @@ function summary(project: Project): unknown {
     entry: project.entry || 'index.html',
     updatedAt: new Date(project.updatedAt).toISOString(),
     folder: project.imported?.sourcePath ?? project.directions[0]?.workTree ?? null,
+    ...(project.app ? { app: { framework: project.app.framework, appDir: project.app.appDir, mode: project.app.mode } } : {}),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name, headVersionId: d.headVersionId })),
   };
 }
@@ -261,6 +264,13 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
     }
     case 'get_screenshot':
       return screenshot(deps, args);
+    case 'list_routes': {
+      const project = await deps.projects.get(str(args, 'projectId', true) as string);
+      if (!project.app) throw new ToolError('this project is not an attached app');
+      const main = project.directions[0];
+      if (!main) throw new ToolError('project has no direction');
+      return json({ appDir: project.app.appDir, framework: project.app.framework, routes: await listAppRoutes(main.workTree, project.app.appDir) });
+    }
     case 'list_files': {
       const src = await source(deps, args);
       return json({ versionId: src.version.id, files: await listFiles(await src.files()) });

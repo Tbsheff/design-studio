@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { ProjectKind, SelectionContext } from '../shared/contracts';
-import { isBackTarget, startFrameOf, type PrototypeLink } from '../shared/links';
+import { isBackTarget, startFrameOf, withImplicit, type PrototypeLink } from '../shared/links';
 import { api } from './api';
 import { frameDirection, frameName, withFramePath, type CanvasFrame } from './canvasFrames';
 import { frameStateOf, useCurrentFrameStates } from './frameStates';
 import { withFrameStateHost } from '../shared/frame-state';
-import { linksApi, useLinks } from './linksApi';
+import { linksApi, useImplicitLinks, useLinks } from './linksApi';
 import { useLinkRects } from './useLinkRects';
 import { LinkArrows, LinkDragLine, LinkHandle, linkOfSelection, linkSourceOf, PrototypeBar, useLinkDrag } from './components/PrototypeLayer';
 
@@ -37,7 +37,9 @@ export function usePrototype(o: Options) {
   const on = o.on;
   const [arrows, setArrows] = useState(true);
   const [playing, setPlaying] = useState(false);
-  const file = useLinks(o.projectId);
+  const saved = useLinks(o.projectId);
+  const implicit = useImplicitLinks(o.projectId, o.frames.map((frame) => `${frame.id}:${frame.path ?? ''}`).join(','));
+  const file = withImplicit(saved, implicit);
   const clear = useRef(o.clearSelection);
   clear.current = o.clearSelection;
   const lastActive = useRef(o.active.id);

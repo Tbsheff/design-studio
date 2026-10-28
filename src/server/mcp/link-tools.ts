@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { addLink, frameLabel, linkSpecSchema, listLinks, probeWithPreview, removeLink, setStartFrame } from '../canvas/link-tools.js';
+import { addLink, frameLabel, keepLinks, linkSpecSchema, listLinks, probeWithPreview, removeLink, setStartFrame } from '../canvas/link-tools.js';
 import { frameRef, type CanvasToolContext } from '../canvas/tools.js';
 import { EditError, loadTarget, refuseWhileRunning, type EditDeps } from './edit-deps.js';
 import { defineTool, directionId, projectId, type Done } from './edit-kit.js';
@@ -33,10 +33,11 @@ const listLinksTool = defineTool(
 const addLinkTool = defineTool(
   'add_link',
   z.object({ projectId, directionId, ...linkSpecSchema.shape }).strict(),
-  { title: 'Add prototype link', description: `Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame with a transition (instant, dissolve, slide-left, slide-right). toFrame "back" goes back to the frame before. A second link on the same element replaces the first. The element must exist on the rendered page. ${LINKS_NOTE}` },
+  { title: 'Add prototype link', description: `Link an element (CSS selector on the page of fromFrame) to another frame: on click, go to toFrame (action navigate) or open it as a modal or drawer over the current frame, with a transition (instant, dissolve, slide, push, move-in, move-out, smart-animate), a duration and an easing. toFrame "back" goes back to the frame before. A second link on the same element replaces the first. The element must exist on the rendered page. ${LINKS_NOTE}` },
   async (deps, input, _client) => {
     const ctx = await contextOf(deps, input, true);
-    const done = await addLink(ctx, { fromFrame: input.fromFrame, selector: input.selector, toFrame: input.toFrame, ...(input.transition ? { transition: input.transition } : {}) }, probeOf(deps, ctx));
+    const { projectId: _project, directionId: _direction, ...spec } = input;
+    const done = await addLink(ctx, spec, probeOf(deps, ctx));
     const refused = failed(done);
     if (refused || !done.link) return refused ?? { result: done.result };
     return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Linked ${done.title ?? done.link.id}`, frameId: done.link.from.frame } };
@@ -70,4 +71,16 @@ const setStartTool = defineTool(
   },
 );
 
-export const LINK_TOOLS = [listLinksTool, addLinkTool, removeLinkTool, setStartTool];
+const keepLinksTool = defineTool(
+  'keep_links',
+  z.object({ projectId, directionId, linkIds: z.array(z.string().regex(/^i[0-9a-z]{1,12}$/)).max(50).optional().describe('Implicit link ids from list_links (implicit: true). Omit to keep all.') }).strict(),
+  { title: 'Keep implicit prototype links', description: `Save implicit links (found from <a href> or location.href between pages, or Next.js <Link>) as normal prototype links, so they show solid on the canvas and add_link can change their action or transition. Play already uses implicit links without this. ${LINKS_NOTE}`, idempotent: true },
+  async (deps, input) => {
+    const ctx = await contextOf(deps, input, true);
+    const result = await keepLinks(ctx, input.linkIds && input.linkIds.length > 0 ? input.linkIds : 'all', probeOf(deps, ctx));
+    if (result.isError) return { result };
+    return { result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: 'Kept implicit prototype links' } };
+  },
+);
+
+export const LINK_TOOLS = [listLinksTool, addLinkTool, removeLinkTool, setStartTool, keepLinksTool];

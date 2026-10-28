@@ -1,7 +1,7 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { SelectionContext } from '../../shared/contracts';
-import { cleanLinkText, isBackTarget, LINK_ISSUE_TEXT, LINK_TRANSITIONS, transitionLabel, type LinksFile, type LinkTarget, type LinkTransition, type PrototypeLink } from '../../shared/links';
+import { ACTION_LABELS, cleanLinkText, EASING_LABELS, isBackTarget, LINK_ACTIONS, LINK_EASING_DEFAULT, LINK_EASINGS, LINK_ISSUE_TEXT, LINK_TRANSITIONS, linkAction, linkDuration, transitionLabel, type LinkAction, type LinkEasing, type LinkMotion, type LinksFile, type LinkTarget, type LinkTransition, type PrototypeLink } from '../../shared/links';
 import type { CanvasFrame } from '../canvasFrames';
 import { linksApi } from '../linksApi';
 import type { LinkState } from '../useLinkRects';
@@ -112,7 +112,7 @@ export function LinkArrows({ states, frames, active, startId, arrows, selectedId
             const rect = { x: from.x + state.rect.x, y: from.y + state.rect.y, width: state.rect.width, height: state.rect.height };
             const target = isBackTarget(state.link.to) ? null : frameBox(state.link.to.frame);
             const broken = state.issue !== null;
-            const cls = `link-arrow${broken ? ' broken' : ''}${state.link.id === selectedId ? ' selected' : ''}`;
+            const cls = `link-arrow${broken ? ' broken' : ''}${state.link.implicit ? ' implicit' : ''}${state.link.action ? ' overlay' : ''}${state.link.id === selectedId ? ' selected' : ''}`;
             return (
               <g key={state.link.id} className={cls} data-link-id={state.link.id}>
                 <rect className="link-hotspot" x={rect.x} y={rect.y} width={rect.width} height={rect.height} vectorEffect="non-scaling-stroke" />
@@ -245,39 +245,78 @@ function targetValue(to: LinkTarget): string {
   return isBackTarget(to) ? 'back' : to.frame;
 }
 
-function LinkEditor({ projectId, state, frames, frameTitle, onError }: { projectId: string; state: LinkState; frames: CanvasFrame[]; frameTitle: (frame: CanvasFrame) => string; onError: (message: string) => void }) {
-  const link = state.link;
-  const fail = (error: unknown) => onError(error instanceof Error ? error.message : String(error));
+const DURATIONS = [150, 200, 320, 500, 800, 1200];
+
+function motionOptions(link: PrototypeLink) {
+  const duration = linkDuration(link);
+  const durations = DURATIONS.includes(duration) ? DURATIONS : [...DURATIONS, duration].sort((a, b) => a - b);
+  return {
+    actions: LINK_ACTIONS.filter((action) => action === 'navigate' || !isBackTarget(link.to)).map((action) => ({ value: action, label: ACTION_LABELS[action] })),
+    transitions: LINK_TRANSITIONS.map((transition) => ({ value: transition, label: transitionLabel(transition) })),
+    durations: durations.map((ms) => ({ value: String(ms), label: `${ms} ms` })),
+    easings: LINK_EASINGS.map((easing) => ({ value: easing, label: EASING_LABELS[easing] })),
+  };
+}
+
+function targetOptions(link: PrototypeLink, frames: CanvasFrame[], frameTitle: (frame: CanvasFrame) => string): UiSelectOption[] {
   const options = frames.filter((frame) => frame.id !== link.from.frame);
   const target = isBackTarget(link.to) ? null : link.to.frame;
   const missing = target && !options.some((frame) => frame.id === target) ? target : null;
-  const targets: UiSelectOption[] = [
-    ...options.map((frame) => ({ value: frame.id, label: `Go to ${frameTitle(frame)}` })),
-    ...(missing ? [{ value: missing, label: 'Missing frame' }] : []),
-    { value: 'back', label: 'Back' },
-  ];
-  const transitions = LINK_TRANSITIONS.map((transition) => ({ value: transition, label: transitionLabel(transition) }));
+  return [...options.map((frame) => ({ value: frame.id, label: `Go to ${frameTitle(frame)}` })), ...(missing ? [{ value: missing, label: 'Missing frame' }] : []), { value: 'back', label: 'Back' }];
+}
+
+function LinkEditor({ projectId, state, frames, frameTitle, onError }: { projectId: string; state: LinkState; frames: CanvasFrame[]; frameTitle: (frame: CanvasFrame) => string; onError: (message: string) => void }) {
+  const link = state.link;
+  const fail = (error: unknown) => onError(error instanceof Error ? error.message : String(error));
+  const change = (next: { to?: LinkTarget } & LinkMotion) => {
+    if (!link.implicit) return void linksApi.update(projectId, link.id, next).catch(fail);
+    const { to, ...motion } = next;
+    void linksApi
+      .keep(projectId, [link.id], motion)
+      .then((file) => {
+        const kept = to ? file.links.find((item) => item.from.frame === link.from.frame && item.from.selector === link.from.selector) : undefined;
+        if (kept && to) return linksApi.update(projectId, kept.id, { to });
+      })
+      .catch(fail);
+  };
+  const opts = motionOptions(link);
   return (
     <div className="proto-editor" data-testid="link-editor">
-      <span className="proto-label">On click</span>
-      <UiSelect
-        className="proto-select"
-        aria-label="Link target"
-        value={targetValue(link.to)}
-        options={targets}
-        onChange={(value) => void linksApi.update(projectId, link.id, { to: value === 'back' ? { back: true } : { frame: value } }).catch(fail)}
-      />
-      <UiSelect className="proto-select" aria-label="Transition" value={link.transition} options={transitions} onChange={(value: LinkTransition) => void linksApi.update(projectId, link.id, { transition: value }).catch(fail)} />
+      {link.implicit && (
+        <span className="proto-found" data-tip="Found from a link in the page code. Keep it to save it with the canvas.">
+          Found in page
+        </span>
+      )}
+      <UiSelect className="proto-select" aria-label="Link target" value={isBackTarget(link.to) ? 'back' : link.to.frame} options={targetOptions(link, frames, frameTitle)} onChange={(value) => change({ to: value === 'back' ? { back: true } : { frame: value } })} />
+      <UiSelect className="proto-select" aria-label="Action" value={linkAction(link)} options={opts.actions} onChange={(value: LinkAction) => change({ action: value })} />
+      <UiSelect className="proto-select" aria-label="Transition" value={link.transition} options={opts.transitions} onChange={(value: LinkTransition) => change({ transition: value })} />
+      {link.transition !== 'instant' && (
+        <>
+          <UiSelect className="proto-select proto-narrow" aria-label="Duration" value={String(linkDuration(link))} options={opts.durations} onChange={(value) => change({ duration: Number(value) })} />
+          <UiSelect className="proto-select proto-narrow" aria-label="Easing" value={link.easing ?? LINK_EASING_DEFAULT} options={opts.easings} onChange={(value: LinkEasing) => change({ easing: value })} />
+        </>
+      )}
       {state.issue && (
         <span className="proto-broken" role="status">
           {LINK_ISSUE_TEXT[state.issue]}
         </span>
       )}
-      <button type="button" className="icon-btn small" aria-label="Remove link" data-tip="Remove link" onClick={() => void linksApi.remove(projectId, link.id).catch(fail)}>
-        <Icon name="unlink" size={14} />
-      </button>
+      {link.implicit ? (
+        <button type="button" className="btn small" data-testid="link-keep" onClick={() => void linksApi.keep(projectId, [link.id]).catch(fail)}>
+          Keep
+        </button>
+      ) : (
+        <button type="button" className="icon-btn small" aria-label="Remove link" data-tip="Remove link" onClick={() => void linksApi.remove(projectId, link.id).catch(fail)}>
+          <Icon name="unlink" size={14} />
+        </button>
+      )}
     </div>
   );
+}
+
+function rowMeta(link: PrototypeLink): string {
+  const action = linkAction(link);
+  return action === 'navigate' ? transitionLabel(link.transition) : `${ACTION_LABELS[action]}, ${transitionLabel(link.transition).toLowerCase()}`;
 }
 
 function LinkList({ projectId, states, linkTitle, onError }: { projectId: string; states: LinkState[]; linkTitle: (link: PrototypeLink) => string; onError: (message: string) => void }) {
@@ -286,13 +325,19 @@ function LinkList({ projectId, states, linkTitle, onError }: { projectId: string
     <div className="proto-list ui-popover" role="list" aria-label="Prototype links" data-testid="link-list">
       {states.length === 0 && <div className="proto-empty">No links yet.</div>}
       {states.map((state) => (
-        <div key={state.link.id} role="listitem" className={`proto-row${state.issue ? ' broken' : ''}`}>
+        <div key={state.link.id} role="listitem" className={`proto-row${state.issue ? ' broken' : ''}${state.link.implicit ? ' implicit' : ''}`}>
           <Icon name={state.issue ? 'unlink' : 'link'} size={12} />
           <span className="truncate">{linkTitle(state.link)}</span>
-          <span className="proto-meta">{state.issue ? LINK_ISSUE_TEXT[state.issue] : transitionLabel(state.link.transition)}</span>
-          <button type="button" className="icon-btn small" aria-label={`Remove link ${linkTitle(state.link)}`} onClick={() => void linksApi.remove(projectId, state.link.id).catch(fail)}>
-            <Icon name="close" size={12} />
-          </button>
+          <span className="proto-meta">{state.issue ? LINK_ISSUE_TEXT[state.issue] : state.link.implicit ? 'Found in page' : rowMeta(state.link)}</span>
+          {state.link.implicit ? (
+            <button type="button" className="icon-btn small" aria-label={`Keep link ${linkTitle(state.link)}`} data-tip="Keep" onClick={() => void linksApi.keep(projectId, [state.link.id]).catch(fail)}>
+              <Icon name="check" size={12} />
+            </button>
+          ) : (
+            <button type="button" className="icon-btn small" aria-label={`Remove link ${linkTitle(state.link)}`} onClick={() => void linksApi.remove(projectId, state.link.id).catch(fail)}>
+              <Icon name="close" size={12} />
+            </button>
+          )}
         </div>
       ))}
     </div>
@@ -302,6 +347,8 @@ function LinkList({ projectId, states, linkTitle, onError }: { projectId: string
 export function PrototypeBar(p: BarProps) {
   const [listOpen, setListOpen] = useState(false);
   const broken = p.states.filter((state) => state.issue !== null).length;
+  const found = p.states.filter((state) => state.link.implicit).length;
+  const savedCount = p.file.links.length - found;
   const fail = (error: unknown) => p.onError(error instanceof Error ? error.message : String(error));
   const starts = p.frames.map((frame) => ({ value: frame.id, label: p.frameTitle(frame) }));
   return (
@@ -317,11 +364,21 @@ export function PrototypeBar(p: BarProps) {
       <span className="topbar-anchor">
         <button type="button" className={`btn small ghost${broken ? ' proto-has-broken' : ''}`} aria-expanded={listOpen} onClick={() => setListOpen((open) => !open)}>
           <Icon name="link" size={12} />
-          {p.file.links.length} {p.file.links.length === 1 ? 'link' : 'links'}
+          {savedCount} {savedCount === 1 ? 'link' : 'links'}
+          {found > 0 && (
+            <span className="proto-found-count" data-testid="link-found-count">
+              {found} found
+            </span>
+          )}
           {broken > 0 && <span className="proto-broken-count">{broken} broken</span>}
         </button>
         {listOpen && <LinkList projectId={p.projectId} states={p.states} linkTitle={p.linkTitle} onError={p.onError} />}
       </span>
+      {found > 0 && (
+        <button type="button" className="btn small ghost" data-testid="link-keep-all" data-tip="Save the links found in the page code" onClick={() => void linksApi.keep(p.projectId, 'all').catch(fail)}>
+          Keep all
+        </button>
+      )}
     </div>
   );
 }

@@ -1051,6 +1051,7 @@ function startBridge(session: BridgeSession): void {
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
     'track-links': (message) => links.track(message.links),
     'play-links': (message) => links.play(message.links),
+    'play-fx': (message) => links.fx(message),
     'request-tree': () => post({ type: 'tree', ...layers.build() }),
     'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
     'select-node': (message) => {

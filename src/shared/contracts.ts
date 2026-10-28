@@ -892,6 +892,8 @@ export const BRIDGE_CHANGES_PATH = '/__studio/changes';
 
 export type PlayKey = 'exit' | 'restart' | 'back';
 
+export type LinkRect = NonNullable<LinkRectReport['rect']>;
+
 export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
@@ -934,7 +936,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
   | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
   | { ns: 'studio'; token: string; type: 'arrange-key'; key: string }
-  | { ns: 'studio'; token: string; type: 'optimistic-result'; id: string; outcome: OptimisticOutcome; reason?: string; ms: number };
+  | { ns: 'studio'; token: string; type: 'optimistic-result'; id: string; outcome: OptimisticOutcome; reason?: string; ms: number }
+  | { ns: 'studio'; token: string; type: 'play-layers'; layers: Record<string, LinkRect> };
 
 export interface LayerNode {
   id: number;
@@ -1028,7 +1031,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string }
   | { ns: 'studio'; token: string; type: 'optimistic-apply'; id: string; patch: DomPatch; written: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-settle'; id: string; ok: boolean; classes?: ClassDelta; reason?: string }
-  | { ns: 'studio'; token: string; type: 'optimistic-drop' };
+  | { ns: 'studio'; token: string; type: 'optimistic-drop' }
+  | { ns: 'studio'; token: string; type: 'play-fx'; layers: Record<string, LinkRect>; duration: number; easing: string };
 
 export interface ClassDelta {
   add: string[];

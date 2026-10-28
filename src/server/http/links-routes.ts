@@ -1,6 +1,7 @@
 import type { Context, Hono } from 'hono';
 import { isFrameId } from '../../shared/canvas-file.js';
-import { isLinkId, isLinkTransition, parseLink, upsertLink, type LinkTarget, type PrototypeLink } from '../../shared/links.js';
+import { isImplicitId, isLinkAction, isLinkEasing, isLinkId, isLinkTransition, motionOf, parseLink, upsertLink, withMotion, type LinkTarget, type PrototypeLink } from '../../shared/links.js';
+import { implicitLinks, keepImplicit } from '../canvas/implicit-links.js';
 import type { CanvasService } from '../canvas/service.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -41,13 +42,29 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
     const links = await canvas.links.update(
       project,
       (file) => {
-        const next = upsertLink(file, { from: parsed.from, to: parsed.to, transition: parsed.transition });
+        const { id: _id, ...rest } = parsed;
+        const next = upsertLink(file, rest);
         saved = next.link;
         return next.file;
       },
       'user',
     );
     return c.json({ links, link: saved });
+  });
+
+  app.get('/api/projects/:pid/links/implicit', async (c) => {
+    const project = await projects.get(c.req.param('pid'));
+    return c.json({ implicit: await implicitLinks({ canvas, project }) });
+  });
+
+  app.post('/api/projects/:pid/links/keep', async (c) => {
+    const body = await readBody(c);
+    const project = await projects.get(c.req.param('pid'));
+    const ids = body.ids === 'all' ? 'all' : Array.isArray(body.ids) ? body.ids.filter(isImplicitId) : [];
+    if (ids !== 'all' && ids.length === 0) throw new BadRequestError('ids must be implicit link ids or "all"');
+    const done = await keepImplicit({ canvas, project }, ids, 'user', motionOf(body));
+    if (done.kept.length === 0) throw new NotFoundError('implicit link not found');
+    return c.json({ links: done.file, kept: done.kept });
   });
 
   app.patch('/api/projects/:pid/links/:lid', async (c) => {
@@ -57,6 +74,9 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
     const to = body.to === undefined ? undefined : targetOf(body.to);
     if (to === null) throw new BadRequestError('to must be {frame} or {back: true}');
     if (body.transition !== undefined && !isLinkTransition(body.transition)) throw new BadRequestError('unknown transition');
+    if (body.action !== undefined && !isLinkAction(body.action)) throw new BadRequestError('action must be navigate, modal or drawer');
+    if (body.easing !== undefined && !isLinkEasing(body.easing)) throw new BadRequestError('unknown easing');
+    const motion = motionOf(body);
     let found = false;
     const links = await canvas.links.update(
       project,
@@ -65,7 +85,7 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
         if (!found) return null;
         return {
           ...file,
-          links: file.links.map((link) => (link.id !== id ? link : { ...link, ...(to ? { to } : {}), ...(isLinkTransition(body.transition) ? { transition: body.transition } : {}) })),
+          links: file.links.map((link) => (link.id !== id ? link : withMotion({ ...link, ...(to ? { to } : {}) }, motion))),
         };
       },
       'user',

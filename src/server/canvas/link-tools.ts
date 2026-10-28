@@ -4,14 +4,23 @@ import {
   cleanLinkSelector,
   cleanLinkText,
   isBackTarget,
+  LINK_ACTIONS,
+  LINK_DURATION_DEFAULT,
+  LINK_DURATION_MAX,
+  LINK_DURATION_MIN,
+  LINK_EASINGS,
   LINK_ISSUE_TEXT,
   LINK_SELECTOR_MAX,
   LINK_TEXT_MAX,
   LINK_TRANSITIONS,
+  linkAction,
+  linkDuration,
+  withMotion,
   startFrameOf,
   staticLinkIssue,
   upsertLink,
   type LinkIssue,
+  type LinkMotion,
   type LinkQuery,
   type LinksFile,
   type LinkTransition,
@@ -24,6 +33,7 @@ import { withFrameStateHost } from '../../shared/frame-state.js';
 import { waitForPage } from '../export/capture.js';
 import { withPagePath } from '../export/source.js';
 import type { PreviewService } from '../types.js';
+import { implicitLinks, keepImplicit, type AnchorReader, type PageAnchor } from './implicit-links.js';
 import { findFrame, frameRef, type CanvasToolContext, type ToolText } from './tools.js';
 
 export const BACK_REF = 'back';
@@ -33,7 +43,13 @@ export const linkSpecSchema = z
     fromFrame: frameRef.describe('Frame id or @label of the frame that has the element.'),
     selector: z.string().trim().min(1).max(LINK_SELECTOR_MAX).describe('CSS selector of the element to click, for example "#sign-in" or "button.primary".'),
     toFrame: frameRef.describe('Frame id or @label to go to on click, or "back" to go back to the frame before.'),
-    transition: z.enum(LINK_TRANSITIONS).optional().describe('instant (default), dissolve, slide-left or slide-right.'),
+    transition: z
+      .enum(LINK_TRANSITIONS)
+      .optional()
+      .describe('instant (default), dissolve, slide-left, slide-right (both frames move sideways), push-up, push-down, move-in (the new frame moves up over the old one), move-out (the old frame moves down off the new one), or smart-animate (layers with the same id, or the same tag and text, move from their old place to the new one; the rest fade in). Use smart-animate between two states of one screen.'),
+    action: z.enum(LINK_ACTIONS).optional().describe('navigate (default) replaces the frame; modal opens toFrame centred over the current frame; drawer opens it from the right edge. A backdrop click or Esc closes an overlay, and a "back" link inside it closes it too. Make modal and drawer frames the size of the dialog or panel, not a full page.'),
+    duration: z.number().int().min(LINK_DURATION_MIN).max(LINK_DURATION_MAX).optional().describe(`Transition length in ms. Default ${LINK_DURATION_DEFAULT}.`),
+    easing: z.enum(LINK_EASINGS).optional().describe('ease-out (default), ease-in, ease-in-out, linear or spring (small overshoot).'),
   })
   .strict();
 
@@ -44,7 +60,25 @@ export interface ProbedElement {
   text: string;
 }
 
-export type LinkProbe = (frame: CanvasFileFrame, queries: LinkQuery[]) => Promise<(ProbedElement | null)[]>;
+export type LinkProbe = ((frame: CanvasFileFrame, queries: LinkQuery[]) => Promise<(ProbedElement | null)[]>) & { anchors?: AnchorReader };
+
+const ANCHOR_SCRIPT = `(() => {
+  const out = [];
+  const css = (v) => v.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"');
+  const loc = /(?:window\\.)?location(?:\\.href)?\\s*=\\s*['"]([^'"]+)['"]|location\\.(?:assign|replace)\\(\\s*['"]([^'"]+)['"]/;
+  for (const el of Array.from(document.querySelectorAll('a[href], [onclick]')).slice(0, 200)) {
+    const tag = el.tagName.toLowerCase();
+    const id = el.id && /^[A-Za-z_][\\w-]*$/.test(el.id) ? el.id : null;
+    const raw = tag === 'a' ? el.getAttribute('href') : (loc.exec(el.getAttribute('onclick') || '') || []).slice(1).find(Boolean);
+    if (!raw) continue;
+    const selector = id ? '#' + id : tag === 'a' ? 'a[href="' + css(raw) + '"]' : tag + '[onclick*="' + css(raw) + '"]';
+    out.push({ href: raw, selector, tag, text: (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, ${LINK_TEXT_MAX}) });
+    if (out.length >= 60) break;
+  }
+  const counts = {};
+  for (const a of out) counts[a.selector] = (counts[a.selector] || 0) + 1;
+  return out.map((a) => (counts[a.selector] > 1 && a.text ? a : { href: a.href, selector: a.selector, tag: a.tag }));
+})()`;
 
 function resolveScript(queries: LinkQuery[]): string {
   return `(${JSON.stringify(queries)}).map((q) => {
@@ -105,14 +139,17 @@ async function withStateHost(project: Project, frameId: string, url: string): Pr
 export function probeWithPreview(preview: Pick<PreviewService, 'directionUrl' | 'withPage'>, project: Project, fallback: Direction): LinkProbe | undefined {
   const withPage = preview.withPage?.bind(preview);
   if (!withPage) return undefined;
-  return async (frame, queries) => {
+  const run = async <T>(frame: CanvasFileFrame, script: string): Promise<T> => {
     const direction = project.directions.find((item) => item.id === frame.directionId) ?? fallback;
     const url = await withStateHost(project, frame.id, withPagePath(await preview.directionUrl(project, direction), frame.path || undefined));
     return withPage(url, { width: frame.width, height: frame.height }, async (page) => {
       await waitForPage(page);
-      return page.evaluate<(ProbedElement | null)[]>(resolveScript(queries));
+      return page.evaluate<T>(script);
     });
   };
+  const probe: LinkProbe = (frame, queries) => run<(ProbedElement | null)[]>(frame, resolveScript(queries));
+  probe.anchors = (frame) => run<PageAnchor[]>(frame, ANCHOR_SCRIPT);
+  return probe;
 }
 
 function queryOf(link: PrototypeLink): LinkQuery {
@@ -127,11 +164,21 @@ function describeLink(link: PrototypeLink, frames: readonly CanvasFileFrame[], i
     selector: link.from.selector,
     ...(link.from.text ? { text: link.from.text } : {}),
     toFrame: isBackTarget(link.to) ? BACK_REF : link.to.frame,
+    action: linkAction(link),
     transition: link.transition,
+    duration: linkDuration(link),
+    ...(link.easing ? { easing: link.easing } : {}),
     title: linkTitle(link, frames),
     broken: issue ? LINK_ISSUE_TEXT[issue] : null,
+    ...(link.implicit ? { implicit: true } : {}),
     ...(link.from.frame === start ? { onStartFrame: true } : {}),
   };
+}
+
+const IMPLICIT_NOTE = 'Links with implicit: true come from <a href> (or location.href onclick, or Next.js <Link>/router.push) between pages. Play and Flow use them as they are; keep_links (or edit_links keep) saves them so you can change the action or transition.';
+
+function implicitOf(ctx: CanvasToolContext, probe: LinkProbe | undefined, file: LinksFile): Promise<PrototypeLink[]> {
+  return implicitLinks({ canvas: ctx.canvas, project: ctx.project, ...(probe?.anchors ? { render: probe.anchors } : {}) }, file).catch(() => []);
 }
 
 export async function listLinks(ctx: CanvasToolContext, probe?: LinkProbe): Promise<ToolText> {
@@ -152,11 +199,24 @@ export async function listLinks(ctx: CanvasToolContext, probe?: LinkProbe): Prom
     }
   }
   const start = startFrameOf(file, frames);
+  const implicit = await implicitOf(ctx, probe, file);
+  const all = [...file.links, ...implicit];
+  const notes = [all.length === 0 ? 'No prototype links yet. add_link makes one; Play in the studio then starts at startFrame.' : checked ? 'Each saved link was checked against the rendered page.' : null, implicit.length > 0 ? IMPLICIT_NOTE : null].filter(Boolean);
   return text({
     startFrame: start,
-    links: file.links.map((link) => describeLink(link, frames, issues.get(link.id) ?? null, start)),
-    note: file.links.length === 0 ? 'No prototype links yet. add_link makes one; Play in the studio then starts at startFrame.' : checked ? 'Each link was checked against the rendered page.' : undefined,
+    links: all.map((link) => describeLink(link, frames, issues.get(link.id) ?? null, start)),
+    note: notes.length > 0 ? notes.join(' ') : undefined,
   });
+}
+
+export async function keepLinks(ctx: CanvasToolContext, ids: readonly string[] | 'all', probe?: LinkProbe, motion: LinkMotion = {}): Promise<ToolText> {
+  if (ctx.plan) return failure('Plan mode is on, so the links stay as they are.');
+  if (ctx.mode === 'critique') return failure('Links are not available in critique runs.');
+  const frames = await framesOf(ctx);
+  const done = await keepImplicit({ canvas: ctx.canvas, project: ctx.project, ...(probe?.anchors ? { render: probe.anchors } : {}) }, ids, 'agent', motion);
+  if (done.kept.length === 0) return failure(done.missing.length > 0 ? `No implicit link ${done.missing.join(', ')}. Call list_links for the ids (implicit: true).` : 'No implicit links to keep.');
+  const start = startFrameOf(done.file, frames);
+  return text({ kept: done.kept.map((link) => describeLink(link, frames, null, start)), ...(done.missing.length > 0 ? { notFound: done.missing } : {}), links: done.file.links.length });
 }
 
 export async function addLink(ctx: CanvasToolContext, spec: LinkSpec, probe?: LinkProbe): Promise<{ result: ToolText; link?: PrototypeLink; title?: string }> {
@@ -168,6 +228,7 @@ export async function addLink(ctx: CanvasToolContext, spec: LinkSpec, probe?: Li
     const back = spec.toFrame.trim().toLowerCase() === BACK_REF;
     const to = back ? null : frameOf(frames, spec.toFrame);
     if (to && to.id === from.id) throw new LinkError('A link goes to another frame. Pick a different toFrame, or "back".');
+    if (back && spec.action && spec.action !== 'navigate') throw new LinkError('A "back" link cannot open an overlay. Use action navigate, or a toFrame.');
     const selector = cleanLinkSelector(spec.selector);
     if (!selector) throw new LinkError('selector is empty or too long.');
     let hint: { tag?: string; text?: string } = {};
@@ -184,7 +245,8 @@ export async function addLink(ctx: CanvasToolContext, spec: LinkSpec, probe?: Li
     const file = await ctx.canvas.links.update(
       ctx.project,
       (current) => {
-        const next = upsertLink(current, { from: { frame: from.id, path: from.path ?? '', selector, ...hint }, to: to ? { frame: to.id } : { back: true }, transition });
+        const base: Omit<PrototypeLink, 'id'> = { from: { frame: from.id, path: from.path ?? '', selector, ...hint }, to: to ? { frame: to.id } : { back: true }, transition };
+        const next = upsertLink(current, withMotion(base, { ...(spec.action ? { action: spec.action } : {}), ...(spec.duration !== undefined ? { duration: spec.duration } : {}), ...(spec.easing ? { easing: spec.easing } : {}) }));
         saved = next.link;
         return next.file;
       },
@@ -241,21 +303,34 @@ export const editLinksShape = {
   add: z.array(linkSpecSchema).max(20).optional().describe('Links to add (or replace, for the same element).'),
   remove: z.array(z.string().regex(/^l\d{1,5}$/)).max(50).optional().describe('Link ids from list_links to remove.'),
   startFrame: frameRef.optional().describe('Frame id or @label where Play starts.'),
+  keep: z.array(z.string().regex(/^(i[0-9a-z]{1,12}|all)$/)).max(50).optional().describe('Ids of implicit links (implicit: true in list_links, from <a href> between pages) to save as normal links, or ["all"]. Then add the same selector again to change its action or transition.'),
 };
 
 export interface EditLinksArgs {
   add?: LinkSpec[];
   remove?: string[];
   startFrame?: string;
+  keep?: string[];
 }
 
 function firstText(result: ToolText): string {
   return result.content[0]?.text ?? '';
 }
 
+async function keepStep(ctx: CanvasToolContext, keep: string[] | undefined, probe?: LinkProbe): Promise<{ failed: boolean; line: string } | null> {
+  if (!keep || keep.length === 0) return null;
+  const done = await keepLinks(ctx, keep.includes('all') ? 'all' : keep, probe);
+  return done.isError ? { failed: true, line: `Not kept: ${firstText(done)}` } : { failed: false, line: `Kept implicit links: ${firstText(done)}` };
+}
+
 export async function editLinks(ctx: CanvasToolContext, args: EditLinksArgs, probe?: LinkProbe): Promise<ToolText> {
   const lines: string[] = [];
   let failed = false;
+  const kept = await keepStep(ctx, args.keep, probe);
+  if (kept) {
+    failed ||= kept.failed;
+    lines.push(kept.line);
+  }
   for (const spec of args.add ?? []) {
     const done = await addLink(ctx, spec, probe);
     failed ||= done.result.isError === true;
@@ -271,6 +346,6 @@ export async function editLinks(ctx: CanvasToolContext, args: EditLinksArgs, pro
     failed ||= done.result.isError === true;
     lines.push(done.result.isError ? `Start frame not set: ${firstText(done.result)}` : `Play starts at ${done.frame ? frameLabel(done.frame) : args.startFrame}`);
   }
-  if (lines.length === 0) return failure('Pass add, remove or startFrame.');
+  if (lines.length === 0) return failure('Pass add, remove, keep or startFrame.');
   return { content: [{ type: 'text', text: lines.join('\n') }], ...(failed ? { isError: true } : {}) };
 }

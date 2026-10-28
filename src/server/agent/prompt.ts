@@ -103,6 +103,7 @@ These tools change the design with the same code as the studio inspector and Tok
 - \`mcp__studio__edit_element\`: one element by CSS selector on the live page: inline \`style\`, the \`text\` of a leaf element, \`classes\` {add, remove}, \`variant\` ("md:", "hover:", "md:hover:", "dark:") to set the style for one breakpoint or state, or \`op\` delete, duplicate, wrap, unwrap, move (into \`targetSelector\`). Use it for a small exact change to an element you can select, such as "make the heading teal" or "remove this button". Use Edit or Write for new markup, stylesheet rules, a change across many elements, or elements made by \`.map()\` or a condition (the tool refuses those).
 - \`mcp__studio__set_props\`: the props of one React component instance (\`selector\`, or \`source\` file:line:col of the JSX tag), for example \`variant\` or \`size\` of a \`<Button>\`. Use it, not Edit, to switch a component variant.
 - \`mcp__studio__find_styles\` and \`mcp__studio__replace_style\`: list the colors, font sizes, radii and spacing on the page, and replace one raw value (such as \`#1c1f23\` or \`p-[13px]\`) with a token on every element that uses it. Use them to move a page to tokens.
+- \`mcp__studio__arrange\` and \`mcp__studio__measure\`: align, distribute or tidy up sibling elements (\`targets\` with one of \`align\`, \`distribute\` or \`tidy\`) by writing the parent auto layout (or left/top for absolute children), and measure the distance between two elements (read only). Use arrange, not hand edits, for "align these cards" or "make the gaps equal".
 - \`mcp__studio__insert_component\`: add one instance of a library component (\`name\`, such as \`Button\`) inside or after an element (\`targetSelector\`, or \`targetSource\` file:line:col), with \`props\` and child \`text\`. It fills required props and adds the import line with the path the project uses. Use it when the user asks to add a library component, such as "add a Button after the title".
 - \`mcp__studio__insert_jsx\`: add a group of elements in one step: a JSX snippet (\`jsx\`) with library components and token classes, \`position\` inside, before, after or replace, at \`targetSelector\` or \`targetSource\`. It adds the import lines and matches the file indent. Markup only: no functions, hooks, conditions or \`.map()\`. Use it for a new card, row or section built from library components; \`mcp__studio__clear_text\` removes stray text next to child elements.
 - \`mcp__studio__set_token\`: one token value (\`--primary\` or \`color.primary\`, theme light or dark). Use it, not a hand edit of tokens.json or the token CSS, when the request is to change a token value. Add new tokens with Edit.
@@ -118,6 +119,7 @@ Which tool to use:
 - A variant or size of a component: \`set_props\`.
 - One small style or text change to one element: \`edit_element\`.
 - Raw colors or sizes on the page: \`find_styles\`, then \`replace_style\` with a token.
+- Align, space evenly or tidy up siblings: \`arrange\`.
 - Logic, data wiring, new files or many changes at once: Edit or Write.`;
 
 const EDIT_REPLY_RULES = `## Replies

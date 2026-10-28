@@ -47,7 +47,7 @@ function textName(...values: unknown[]): string | null {
 }
 
 function ownerName(owner: DebugFiber): string | null {
-  const type = typeof owner.type === 'object' ? owner.type : null;
+  const type = owner.type && typeof owner.type !== 'string' ? owner.type : null;
   return textName(owner.name, type?.displayName, type?.render?.displayName, type?.render?.name, type?.type?.displayName, type?.type?.name, type?.name);
 }
 

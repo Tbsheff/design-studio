@@ -187,16 +187,16 @@ function ComponentSection(props: InspectorProps) {
 }
 
 function SimpleTab(props: InspectorProps) {
-  const [useFor, setUseFor] = useState<string | null>(null);
+  const [componentFor, setComponentFor] = useState<string | null>(null);
   const variant = useEditVariant();
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
   const shared = props.appDir ? sharedSourceOf(target, props.appDir) : null;
-  const editingUse = Boolean(shared?.use && shared.name && useFor === target.selector);
+  const editingUse = Boolean(shared?.use && shared.name && componentFor !== target.selector);
   const effective = editingUse && shared?.use && shared.name ? { ...target, source: shared.use, component: shared.name, usedAt: null } : target;
-  const sharedEditing = shared ? { shared, editingUse, onToggle: () => setUseFor(editingUse ? null : target.selector) } : null;
+  const sharedEditing = shared ? { shared, editingUse, onToggle: () => setComponentFor(editingUse ? target.selector : null) } : null;
   return (
     <SimpleEditor key={`${target.selector}|${variant}${editingUse ? '|use' : ''}`} {...props} target={effective} sharedEditing={sharedEditing} component={<ComponentSection {...props} />} />
   );

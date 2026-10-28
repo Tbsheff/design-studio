@@ -12,7 +12,7 @@ interface IdlePage {
 }
 
 const MAX_IDLE = 12;
-const MAX_ACTIVE = { playwright: 6, electron: 3 } as const;
+const MAX_ACTIVE = { playwright: 6, electron: 4 } as const;
 const IDLE_CLOSE_MS = 10 * 60_000;
 
 function sizeKey(size: PageSize): string {

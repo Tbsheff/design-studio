@@ -27,6 +27,7 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
   'versions.changed': true,
   'canvas.changed': true,
   'canvas.point': true,
+  'links.changed': true,
   'mcp.approval': true,
   'mcp.approval.resolved': true,
   'mcp.activity': true,

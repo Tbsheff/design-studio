@@ -5,17 +5,22 @@ import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { LOFI_STYLE_ID } from '../shared/lofi.js';
 import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
+import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
+import { createForceState, type ForcedState } from './force-state.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
+import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
+import { componentOwners } from './component-owner.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_PASSIVE_PARAM,
+  ELEMENT_MARK_PARAM,
   BRIDGE_TOKEN_PARAM,
   DIRECT_STYLE_PROPERTIES,
   SOURCE_LOC_ATTR,
@@ -249,6 +254,7 @@ function selectionFor(element: Element): SelectionContext {
     rect: rectOf(element),
     source: sourceOf(element),
     ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element), usedBy: componentUseOf(element) } : {}),
+    owners: componentOwners(element),
     ancestors: ancestorsOf(element),
   };
 }
@@ -829,6 +835,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onClick = (event: MouseEvent): void => {
+    if (mode !== 'select' && links.onClick(event)) return;
     if (mode !== 'select' || textEditor.owns(eventElement(event))) return block(event);
     block(event);
     const element = eventElement(event);
@@ -872,6 +879,7 @@ function startBridge(session: BridgeSession): void {
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (textEditor.onKeyDown(event)) return;
+    if (mode !== 'select' && links.onKeyDown(event)) return;
     onAltChange(event);
     const reorder = reorderMoveOf(event);
     if (reorder && selected?.isConnected && !isTypingElement(eventElement(event))) {
@@ -905,6 +913,7 @@ function startBridge(session: BridgeSession): void {
 
   const onScroll = (): void => {
     anchors.schedule();
+    links.schedule();
     if (scrollFrame) return;
     scrollFrame = window.requestAnimationFrame(() => {
       scrollFrame = 0;
@@ -914,6 +923,7 @@ function startBridge(session: BridgeSession): void {
 
   const rects = createRectTracker(post);
   const anchors = createAnchorTracker(post);
+  const links = createLinkBridge(post);
   const livePreview = createLivePreview();
   const textEditor = createTextEditor({
     post,
@@ -928,6 +938,21 @@ function startBridge(session: BridgeSession): void {
   });
   const previewStyles = createPreviewStyles();
   const themeControl = createThemeControl();
+  let forcedDark = false;
+  const repostSelected = (): void => {
+    if (selected?.isConnected) postSelect(selected, false);
+  };
+  const forceState = createForceState(repostSelected);
+  const onForceState = (message: Extract<ParentToBridge, { type: 'force-state' }>): void => {
+    const states = (Array.isArray(message.states) ? message.states : []).filter((state): state is ForcedState => state === 'hover' || state === 'focus' || state === 'active');
+    const selector = typeof message.selector === 'string' && message.selector.length <= 2000 ? message.selector : null;
+    const dark = message.dark === true && selector !== null;
+    if (dark !== forcedDark) themeControl.set(dark ? 'dark' : null);
+    forcedDark = dark;
+    forceState.set(selector, states, dark, message.track === true);
+    if (selector && !selected?.isConnected) selected = queryElement(selector);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(repostSelected));
+  };
   const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
     'set-mode': (message) => {
       mode = message.mode === 'select' ? 'select' : 'none';
@@ -952,7 +977,10 @@ function startBridge(session: BridgeSession): void {
     'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
     'lofi-preview': (message) => previewStyles.apply('lofi', message.css),
     'set-theme': (message) => themeControl.set(message.theme),
+    'force-state': onForceState,
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
+    'track-links': (message) => links.track(message.links),
+    'play-links': (message) => links.play(message.links),
     'request-tree': () => post({ type: 'tree', ...layers.build() }),
     'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
     'select-node': (message) => {
@@ -990,6 +1018,7 @@ function startBridge(session: BridgeSession): void {
       };
       attempt(SELECT_RETRIES);
     },
+    'find-styles': (message) => findStyles(message, { selectorOf: selectorFor, select: postSelect, reply: (requestId, result, selected) => post({ type: 'styles-found', requestId, result, selected }) }),
     'select-source': (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);
@@ -1038,8 +1067,10 @@ function startBridge(session: BridgeSession): void {
 
   let paintScheduled = false;
   const schedulePainted = (): void => {
+    forceState.schedule();
     rects.schedule();
     anchors.schedule();
+    links.schedule();
     if (paintScheduled) return;
     paintScheduled = true;
     window.requestAnimationFrame(() => {
@@ -1068,10 +1099,21 @@ function startBridge(session: BridgeSession): void {
   }
 }
 
+function markScopedElement(): void {
+  const loc = new URL(window.location.href).searchParams.get(ELEMENT_MARK_PARAM);
+  if (!loc || document.getElementById('studio-element-mark')) return;
+  const style = document.createElement('style');
+  style.id = 'studio-element-mark';
+  style.textContent = `[${SOURCE_LOC_ATTR}="${CSS.escape(loc)}"]{outline:2px solid oklch(0.62 0.19 255) !important;outline-offset:4px !important;}`;
+  (document.head ?? document.documentElement).appendChild(style);
+}
+
 const marker = '__studioBridgeStarted';
 const globalScope = window as unknown as Record<string, unknown>;
 if (!globalScope[marker]) {
   globalScope[marker] = true;
+  exposeHeadlessScan(selectorFor);
+  markScopedElement();
   const session = readSession();
   if (session) startBridge(session);
 }

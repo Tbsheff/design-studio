@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Project } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { useModalDialog } from '../usePopover';
 import { CommandRules } from './CommandRules';
 import { Icon } from './Icon';
 import { parseDraft, SettingsFields, toDraft } from './SettingsFields';
+import { ShipTemplates } from './ShipTemplates';
 
 interface Props {
   project: Project;
@@ -16,6 +17,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
   const [draft, setDraft] = useState(() => toDraft(project.settings));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const saveShip = useRef<(() => Promise<void>) | null>(null);
 
   const dialog = useModalDialog(onClose);
 
@@ -28,6 +30,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
     setSaving(true);
     setError(null);
     try {
+      await saveShip.current?.();
       onSaved(await api.updateSettings(project.id, parsed.settings));
       onClose();
     } catch (err) {
@@ -50,6 +53,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
       </div>
       <div className="modal-body">
         <SettingsFields draft={draft} onChange={setDraft} shellExtra={<CommandRules projectId={project.id} />} />
+        {project.app && <ShipTemplates projectId={project.id} saveRef={saveShip} />}
         {error && (
           <div className="alert error" role="alert">
             {error}

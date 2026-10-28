@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, DirectEditRequest, DirectEditResult, Project, Version, VersionMeta } from '../../shared/contracts.js';
+import { variantLabel } from '../../shared/variants.js';
 import { isNodeError } from '../store/errors.js';
 import type { AgentRunner, EventBus, ProjectStore, VersionStore } from '../types.js';
 import { DirectEditError } from './errors.js';
@@ -101,7 +102,7 @@ export async function resolveSource(workTree: string, file: string): Promise<Res
 
 export function patchSource(relative: string, source: string, request: DirectEditRequest, tailwind: TailwindTheme | null = null): PatchResult {
   const extension = path.extname(relative).toLowerCase();
-  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes, component: request.component };
+  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes, component: request.component, variant: request.variant };
   const position = { line: request.source.line, col: request.source.col };
   if (extension === '.html' || extension === '.htm') {
     if (request.component !== undefined) throw new DirectEditError('invalid_request', 'Component uses can be edited in .jsx and .tsx files only');
@@ -140,6 +141,11 @@ function visibilityTitle(tag: string, style: DirectEditRequest['style']): string
 }
 
 function editTitle(tag: string, applied: PatchResult['applied'], request: DirectEditRequest): string {
+  const title = baseTitle(tag, applied, request);
+  return request.variant ? `${title} (${variantLabel(request.variant)})` : title;
+}
+
+function baseTitle(tag: string, applied: PatchResult['applied'], request: DirectEditRequest): string {
   if (request.move !== undefined) return `Move ${tag} ${request.move}`;
   if (request.insert !== undefined) return `Add ${INSERT_LABEL[request.insert].toLowerCase()} to ${tag}`;
   const visibility = visibilityTitle(tag, request.style);
@@ -152,6 +158,15 @@ function editTitle(tag: string, applied: PatchResult['applied'], request: Direct
   return `Edit ${tag}: ${parts.join(', ')}`;
 }
 
+function otherParts(request: DirectEditRequest): string[] {
+  const parts: string[] = [];
+  if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
+  if (request.move !== undefined) parts.push(`move ${request.move}`);
+  if (request.insert !== undefined) parts.push(`insert ${request.insert}`);
+  if (request.variant) parts.push(`variant ${request.variant}`);
+  return parts;
+}
+
 export function editSummary(request: DirectEditRequest): string {
   const parts = Object.entries(request.style ?? {}).map(([prop, value]) => (value === null ? `remove ${prop}` : `${prop}: ${value}`));
   if (request.text !== undefined) {
@@ -160,9 +175,7 @@ export function editSummary(request: DirectEditRequest): string {
   }
   if (request.classes?.add?.length) parts.push(`add class ${request.classes.add.join(' ')}`);
   if (request.classes?.remove?.length) parts.push(`remove class ${request.classes.remove.join(' ')}`);
-  if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
-  if (request.move !== undefined) parts.push(`move ${request.move}`);
-  if (request.insert !== undefined) parts.push(`insert ${request.insert}`);
+  parts.push(...otherParts(request));
   for (const token of request.classes?.add ?? []) parts.push(`add class ${token}`);
   for (const token of request.classes?.remove ?? []) parts.push(`remove class ${token}`);
   return `Direct edit of ${request.source.file}:${request.source.line}:${request.source.col}: ${parts.join('; ')}`;

@@ -15,6 +15,11 @@ import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
+import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
+import { prepareShip } from '../git/ship-prepare.js';
+import { runSetProps, setPropsShape } from './props-tool.js';
+import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
+import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -71,6 +76,18 @@ export function runCanvasPlace(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, fra
 
 export function runCanvasPoint(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: { frame: string; selector?: string }) {
   return withCanvas(deps, 'canvas_point', (ctx) => canvasPoint(ctx, args));
+}
+
+function agentLinkProbe(deps: Pick<StudioToolDeps, 'ctx' | 'preview'>): LinkProbe | undefined {
+  return probeWithPreview(deps.preview, deps.ctx.project, deps.ctx.direction);
+}
+
+export function runListLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>) {
+  return withCanvas(deps, 'list_links', (ctx) => listLinks(ctx, agentLinkProbe(deps)));
+}
+
+export function runEditLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>, args: EditLinksArgs) {
+  return withCanvas(deps, 'edit_links', (ctx) => editLinks(ctx, args, agentLinkProbe(deps)));
 }
 
 function errorText(message: string) {
@@ -195,6 +212,18 @@ export async function runDesignSystemCheck(deps: Pick<StudioToolDeps, 'ctx'>) {
   }
 }
 
+export async function runPrepareShip(deps: Pick<StudioToolDeps, 'ctx' | 'runsDir'>) {
+  if (!deps.ctx.project.app) return errorText('prepare_ship works only in an attached app project.');
+  try {
+    const plan = await prepareShip({ projectDir: path.dirname(deps.runsDir), project: deps.ctx.project });
+    const files = plan.files.map((f) => ({ path: f.path, status: f.status, additions: f.additions, deletions: f.deletions, refused: f.refused, conflict: f.conflict }));
+    const text = JSON.stringify({ blocked: plan.blocked, base: plan.base?.title ?? null, checkedOut: plan.repo?.branch ?? null, files, defaults: plan.defaults, note: 'Only the user can ship, with the Ship button in the studio. Tell them what is ready and what blocks it.' }, null, 2);
+    return { content: [{ type: 'text' as const, text }] };
+  } catch (error) {
+    return errorText(`prepare_ship failed: ${describeError(error)}`);
+  }
+}
+
 export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSdkServerConfigWithInstance> {
   const { createSdkMcpServer, tool } = await import('@anthropic-ai/claude-agent-sdk');
   const counters: StudioToolCounters = deps.run ? (deps.run.counters ??= { shots: 0, checks: 0 }) : { shots: 0, checks: 0 };
@@ -265,6 +294,21 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
+  const listLinksTool = tool(
+    'list_links',
+    'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
+    {},
+    () => runListLinks(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const editLinksTool = tool(
+    'edit_links',
+    'Add, replace or remove prototype links and set the Play start frame. add: [{fromFrame, selector, toFrame, transition?}] links the element (CSS selector on the page of fromFrame, which must exist on the rendered page) to toFrame (frame id or @label, or "back"); transition is instant, dissolve, slide-left or slide-right. A new link on the same element replaces the old one. remove: link ids. startFrame: frame id or @label. Links live in the studio, not in the page code.',
+    editLinksShape,
+    (args) => runEditLinks(deps, args),
+  );
+
   const editElementTool = tool(
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
@@ -279,5 +323,43 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetToken(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, editElementTool, setTokenTool] });
+  const prepareShipTool = tool(
+    'prepare_ship',
+    'Attached app projects only. Read only. Lists the files the studio changed since the last ship (or since the app was attached), the files that cannot ship (secrets, .env, conflicts with the user\'s own changes) and the default branch name and pull request text. You cannot ship; only the user can, with the Ship button.',
+    {},
+    () => runPrepareShip(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const setPropsTool = tool(
+    'set_props',
+    'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
+    setPropsShape,
+    (args) => runSetProps(deps, args),
+  );
+
+  const findStylesTool = tool(
+    'find_styles',
+    'Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.',
+    findStylesShape,
+    (args) => runFindStyles(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const replaceStyleTool = tool(
+    'replace_style',
+    'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
+    replaceStyleShape,
+    (args) => runReplaceStyle(deps, args),
+  );
+
+  const reviewFrameTool = tool(
+    'review_frame',
+    'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
+    reviewFrameShape,
+    (args) => runReviewFrameTool(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool] });
 }

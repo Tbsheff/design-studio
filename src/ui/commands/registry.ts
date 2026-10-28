@@ -43,6 +43,11 @@ export function runCommand(id: string): boolean {
   return true;
 }
 
+export function commandBlocker(id: string): string | null {
+  const command = collectCommands().find((c) => c.id === id);
+  return command ? (command.disabled ?? null) : 'Not available here';
+}
+
 export function openLayer(layer: CommandLayer): void {
   window.dispatchEvent(new CustomEvent(LAYER_EVENT, { detail: layer }));
 }

@@ -1,5 +1,6 @@
 import type { Project } from '../../shared/contracts';
 import { api } from '../api';
+import { requestOpenApp } from '../openAppRequest';
 import { pickFolder } from '../folderPicker';
 import { uiStore } from '../storage';
 import type { Command } from './registry';
@@ -10,9 +11,9 @@ function focusNewProject(): void {
 
 async function openFolder(): Promise<void> {
   const picked = await pickFolder({ title: 'Open a folder' });
-  if (picked.kind !== 'picked') return;
-  const { project } = await api.importProject(picked.path);
-  uiStore.set({ activeProjectId: project.id });
+  if (picked.kind === 'canceled') return;
+  uiStore.set({ activeProjectId: null, screen: 'home' });
+  requestOpenApp(picked.kind === 'picked' ? picked.path : '');
 }
 
 type ThemePref = 'system' | 'light' | 'dark';

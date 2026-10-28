@@ -650,3 +650,13 @@
   visibility: hidden;
   pointer-events: none;
 }
+
+.ui-menu-note {
+  max-width: 260px;
+  margin: 0;
+  padding: 4px var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+  white-space: normal;
+}

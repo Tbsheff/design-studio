@@ -14,6 +14,7 @@ type DirectEditErrorCode =
   | 'cannot_restructure'
   | 'attribute_not_literal'
   | 'classes_not_editable'
+  | 'variant_not_supported'
   | 'no_change'
   | 'stale_selection'
   | 'no_base_version'
@@ -67,6 +68,7 @@ export interface SourceEdit {
   insert?: 'text' | 'frame' | 'rect' | 'ellipse';
   classes?: ClassChange;
   component?: string;
+  variant?: string;
 }
 
 export interface PatchResult {

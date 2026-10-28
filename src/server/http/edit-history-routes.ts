@@ -162,7 +162,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     if (!Number.isInteger(line) || line < 1 || !Number.isInteger(col) || col < 1) throw new BadRequestError('line and col must be positive whole numbers');
     try {
       const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
-      return c.json(await elementClassInfo(direction.workTree, project.kind, { file, line, col }));
+      return c.json(await elementClassInfo(direction.workTree, project.kind, { file, line, col }, c.req.query('variant') ?? ''));
     } catch (error) {
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;

@@ -81,7 +81,8 @@ export async function finishAttach(deps: AppRouteDeps, attached: Project): Promi
   const fresh = attached.directions[0]?.headVersionId === null;
   deps.preview.apps?.forget(attached.id);
   deps.watch(attached, deps.projects.mainDirection(attached));
-  void deps.preview.apps?.ensure(attached).catch(() => undefined);
+  const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
+  if (attached.app?.mode === 'url') await starting;
   if (fresh) {
     await deps.versions.ensureRepo(attached);
     void deps.commitInit(attached).catch((error: unknown) => console.error(`[app] first version of ${attached.id} failed`, error));

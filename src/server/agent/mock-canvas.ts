@@ -5,7 +5,8 @@ import { statePrefix } from '../../shared/states.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, type CanvasToolContext, type PlaceSpec, type ToolText } from '../canvas/tools.js';
 import type { DriverInput, DriverSink } from './lifecycle.js';
-import { CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL } from './permissions.js';
+import { CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, EDIT_LINKS_TOOL, LIST_LINKS_TOOL } from './permissions.js';
+import { editLinks, listLinks, type LinkProbe } from '../canvas/link-tools.js';
 
 export const MOCK_CANVAS_TAG = '[canvas]';
 
@@ -134,4 +135,21 @@ export async function runMockStates(session: MockWriteSession, input: DriverInpu
   if (/overlap/.test(placed.content.map((part) => part.text).join(' '))) await mockPlace(session, ctx, await rowBelowAll(ctx, labels, source.frame));
   await mockPoint(session, ctx, `@${titleOf(MOCK_STATES[0])}`);
   return `Made ${files.length} states of ${source.path || 'the entry page'}: ${MOCK_STATES.map(titleOf).join(', ')}. Each has its own frame under the page.`;
+}
+
+export const MOCK_LINKS_TAG = '[links]';
+const MOCK_LINKS_RE = /\[links\]\s+(\S+)\s+(.+?)\s*->\s*(\S+)/;
+
+export function wantsMockLinks(input: DriverInput): boolean {
+  return input.ctx.request.prompt.includes(MOCK_LINKS_TAG);
+}
+
+export async function runMockLinks(session: MockToolSession, ctx: CanvasToolContext | null, probe: LinkProbe | undefined, prompt: string): Promise<string> {
+  if (!ctx) return 'The canvas is not available in this run.';
+  await mockCanvasTool(session, LIST_LINKS_TOOL, {}, () => listLinks(ctx, probe));
+  const match = MOCK_LINKS_RE.exec(prompt);
+  if (!match) return 'Say [links] <fromFrame> <selector> -> <toFrame>.';
+  const spec = { fromFrame: match[1] as string, selector: match[2] as string, toFrame: match[3] as string };
+  const result = await mockCanvasTool(session, EDIT_LINKS_TOOL, { add: [spec] }, () => editLinks(ctx, { add: [spec] }, probe));
+  return result.content.map((part) => part.text).join('\n');
 }

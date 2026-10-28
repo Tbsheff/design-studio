@@ -57,7 +57,19 @@ studio-data/
 - Saved folders: `GET/POST /api/workspaces`, `PATCH/DELETE /api/workspaces/:id`. Add realpaths the folder, refuses files, missing paths and the data dir, and returns the saved entry for a path it already has. List marks a folder that is gone as `missing`. Delete only forgets the entry. Home shows the projects whose `imported.sourcePath` is inside each folder (path-segment match) and can filter the project grid by folder. The last Location lives in the UI store (`lastLocation`).
 - Folder picker: the UI uses `window.studioDesktop.pickFolder` in the app, else `POST /api/pick-folder` (token and Origin like every route, plus `sec-fetch-site: same-origin` when sent). The server runs `/usr/bin/osascript` with `execFile` and the prompt and default folder as `argv` (`on run argv … choose folder`), one dialog at a time (409), 10 min timeout (504), error -128 = cancel (204), not macOS = 501 (the UI then shows the paste field). The picked path is realpathed. The text field stays as a collapsed "Or paste a path" fallback.
 - Imported project: the `main` direction's work tree is the user's folder. Extra directions are copies in `directions/<did>/` with `node_modules` symlinked and their own Vite `cacheDir`.
-- We never write into the user's `.git` or `vite.config.*`.
+- We never write into the user's `.git` or `vite.config.*`. One exception: Ship (below), and only when the user clicks it (or clicks Allow on an MCP `ship` card).
+
+## Ship as branch and PR (attached apps)
+
+- Files: `src/server/git/{user-git,ship-prepare,ship,ship-store}.ts`, `src/server/http/ship-routes.ts`, `src/server/mcp/ship-tools.ts`, `src/shared/ship.ts`, `src/ui/components/{ShipDialog,ShipTemplates}.tsx`. Entry: the Ship button in the canvas top bar and "Ship as branch and PR" in ⌘K, only for `project.app`.
+- `GET /api/projects/:pid/ship?base=<vid>` (read only) lists the files changed in shadow git between the base and the main head, with diffs (40 KB per file, 400 KB total), repo-relative paths (`rev-parse --show-prefix`), base choices (last ship, when attached, older versions), template vars and defaults. Default base: the last ship, else the root version.
+- User git runs with no `GIT_*`, `STUDIO_*` or `ANTHROPIC_*` env, `GIT_OPTIONAL_LOCKS=0`, `GIT_TERMINAL_PROMPT=0`, ssh `BatchMode`, and a timeout on every call. Reads are `rev-parse`, `ls-tree`, `ls-files -s`, `config --get`; prepare never writes.
+- Per file, refused: `.env*` (also `.env.example`), `node_modules`, `.git`, `.studio/`, key and cert files, credentials names, submodules, and content with a `PRIVATE KEY-----` header. Conflict (cannot ship): disk ≠ studio head, user index ≠ user HEAD, or user HEAD ≠ studio base. A last-ship base that the checked-out commit does not have yet shows as conflicts; pick "When attached" to ship everything again.
+- `POST /api/projects/:pid/ship {baseVersionId, headVersionId, files, branch, commitMessage, title, body, mode: branch|push|pr}`: refused while a run is going; per repo mutex; prepare runs again inside the lock; head must match. Branch: `check-ref-format --branch`, must not exist. Then `worktree add --no-checkout -b <b> <dataDir>/ship-worktrees/<pid>-<rand> <HEAD sha>`, `read-tree HEAD`, write only the picked files from shadow blobs, `add`/`rm --cached`, `commit -F -` (the user's identity), `worktree remove --force`. Every write has `-c core.hooksPath=<dataDir>/ship-worktrees/no-hooks` (hooks never run). On failure the new branch is deleted (`update-ref -d`). The user's checked-out branch, working tree and index do not change.
+- push: `git push --no-verify <remote> refs/heads/b:refs/heads/b` (no `+`, no upstream config). pr: push, then `gh pr create --head b --title --body-file [--base <current branch if the remote has it>]`. PR mode needs `gh` on PATH and a GitHub URL in the raw `remote.<name>.url`. A gh failure after the push returns `prError`, not an error.
+- `projects/<pid>/ship.json`: `{settings: {user, branchTemplate, bodyTemplate, issueId}, history: ShipRecord[20]}`; `GET/PUT .../ship/settings`, edited in Project settings. Placeholders `{user} {slug} {issue} {ISSUE} {title} {summary} {versions} {files}`; a line whose placeholders are all empty is dropped; branch names are lower-cased and cleaned. Bonaparte: user `tsheffield`, branch `{user}/{issue}-{slug}`, body `Fixes {ISSUE}…`.
+- Each ship records an activity row (`tool: 'ship'`, client "You" or the MCP client) in the MCP feed.
+- MCP: `prepare_ship` (read only) and `ship` (approval card `tool: 'ship'` naming the branch, file count and push/PR; refused when no window is open). The in-app agent has `mcp__studio__prepare_ship` only; it cannot ship.
 
 ## Versions (shadow git, plumbing only)
 
@@ -258,6 +270,29 @@ direct edit (inspector, batch, MCP edit_element, agent edit_element) → planDir
 - `classes.add` uses the same grouping: `p-6` replaces `p-4`, `md:p-8` replaces `md:p-6`; an unknown class is appended once.
 - `GET /api/projects/:pid/d/:did/classes?file&line&col` → `{tailwind}`; the inspector shows it as a read-only Classes line under the meta row (`InspectorClasses.tsx`), with the note of the last edit.
 - Copy as Tailwind (`export/copy-code.ts`) runs the computed styles through the same mapper (`tailwind/copy.ts`) with the project theme, or the default v4 theme.
+
+### Component props (instance panel)
+
+```
+bridge selection.owners (component-owner.ts: React fibers up .return, tags 0/1/11/14/15, name + _debugStack, ≤6)
+  → POST /d/:did/props/instance {owners, usedAt?, use?}
+  → use-site.ts: first app frame of each stack (no node_modules, .vite) → pathname on the direction's own Vite origin
+       → inline source map (source-map-js) → line → uppercase JSX element on that line (name match, column nearest)
+       attached Next apps: selection.usedAt
+  → props-schema.ts: import resolved with the TS compiler API (tsconfig paths), barrel re-exports ≤3 hops, inside the work tree
+       cva() (Babel): variants, defaultVariants, linked by the xVariants( call in the component body
+       own props (TS checker on the first call-signature param): declared in the work tree, not node_modules;
+       boolean → toggle, string-literal union → select, string/ReactNode → text, number; cache by file mtime
+  → ComponentInstance {use, component, values (literal attributes), dynamic, spread, uses}
+POST /d/:did/props {source, props} → direct-edit/props.ts: replace / add (new line at the same indent on multiline tags) / remove
+  the attribute; a value equal to the default (or false with no default) removes it; expressions → attribute_not_literal
+POST /d/:did/props/variant-classes {file, cva, prop, value, style?, classes?} → the variant string literal as a ClassSite → tailwind decideClassEdit
+```
+
+- Both writes are normal direct edits: direction lock, run check, one version, one history record, `publishVersion`.
+- UI: lazy `InspectorProps.tsx` at the top of the Simple tab; "Edit variant styles" warns that it changes every use.
+- MCP `list_components` (read-only hint, listed with the edit tools) and `set_props {selector | source, props}` (headless probe `owner-probe.ts`, then the same routes; feed row "Set Button variant secondary"). Agent `mcp__studio__set_props` uses `planSetProps` and writes without a version, like `edit_element`.
+- TypeScript loads on the first schema read (`import('typescript')`); without it only cva variants show.
 
 ### Edit history (Round 4)
 
@@ -575,6 +610,7 @@ Composer: Run settings popover, Designs 1|2|3|4 (1 = off), Edit mode, no selecti
 - "Keep this one" on a variation frame label removes the other variation frames from the canvas only; the directions stay. The bar over the canvas ("one of 3 variations", Show all) puts the frames back.
 - Mix: on the live variation frame B with a selection, "Use in…" on its label → A. `POST /api/projects/:pid/variations/mix {fromDirectionId, toDirectionId, element}` starts an Edit run on A with `RunRequest.reference` (not `selection`, so the selection rules and visual-diff masks stay off): B's outerHTML, computed styles, source loc and up to 40 lines of B's source from the loc (realpath-checked in B's work tree), in a `<reference-element>` block that says to keep A's tokens.
 - The mock agent logs `run.sent` for every run, writes a different full page per brief index (layout, font, palette, `data-variation`), and for a reference appends `.mock-mix[data-from]`.
+- Element variants ("Try variants"): one selected element with a source loc, from the canvas menu, the inspector tool row, `/variants`, ⌘K (`selection.try-variants`, disabled with the reason) or chat ("try 3 versions of this card", `elementVariantsIntent`). A dialog asks for a note and a count (2-4, React 3). Briefs and start take `element`; the start route builds an `ElementScope` (`variations/scope.ts`: file, line range, start offset, suffix length, sha256 of prefix, suffix and element; refuses attached apps, a dirty source file and a loc with no element span) and puts it on each run (`RunRequest.scope`) and direction (`variation.scope`). The run prompt gets an `<element-scope>` block. After a completed run, `lifecycle.guardScope` fails the run when any other file changed or the prefix or suffix bytes differ, discards the work tree and sets `variation.rejected` (the frame label shows a short reason, the full one on hover). Frames outline the element with `__studio_mark=<loc>` (the bridge adds a `[data-studio-loc]` outline); the prefix stays the same, so the loc matches in every variant. Keep (`POST .../variations/:gid/keep {directionId}`, `keepElementVariant`) refuses a running, rejected or unchanged variant and a source file that changed since the start, writes the variant's file into the source direction as one `keep` version, and marks the group directions `settled` kept or discarded; the UI removes the group frames. The directions stay on disk. MCP: read-only `list_variants` and edit tool `keep_variant`; no tool starts a variant run. Mock: a scoped variant styles the element's start tag (`data-variant`); `[escape]` in the prompt makes the last variant also edit outside the element.
 - Home: the Run settings popover has Level and Designs (no Mode). Designs > 1 creates the project with `startRun: false`, hands `{projectId, prompt, count, level}` to the studio in memory (`homeVariations` in `storage.ts`, one shot, not saved), and the studio calls `useVariations.propose` when the project and its direction load. The user lands on the brief card; Start works as in the studio. The fan-out forks from the main head (the React starter) or from empty (HTML with no pack). Designs = 1 keeps one first run.
 
 ## Pinned comments (queue)
@@ -713,6 +749,27 @@ bridge PREVIEW_LAYERS 'lofi' → <style id="studio-lofi-preview"> last in <head>
 - The flag is per direction and lives in `.studio/canvas.json`, so it reloads, goes into versions, and follows restore. A run at Prototype or Polish level turns it off, because those levels mean real visual design.
 - The layer only changes the preview. User files, export, handoff and screenshots taken by the agent stay as they are.
 
+## Prototype links and Play (round 2)
+
+```
+Prototype tool: click an element (bridge select) → drag its + handle (parent DOM) onto a frame
+  → elementsFromPoint → closest('[data-frame-id]') → POST /api/projects/:pid/links
+MCP add_link / agent edit_links ──► canvas/link-tools.ts (render check of the selector) ──┐
+UI PATCH / DELETE / PUT start ──► http/links-routes.ts ───────────────────────────────────┤
+                                                                                          ▼
+              <main work tree>/.studio/links.json (canvas.links, own mutex key) ──► links.changed {links, source}
+canvas frames (live + passive bridges) ◄─ track-links ─ useLinkRects ─ link-rects ─► arrows, broken marks
+Play layer iframes (fresh token, passive param) ◄─ play-links ─ PlayMode ─ play-click / play-key ─► next frame
+```
+
+- Format (`src/shared/links.ts`): `{version: 1, start?: frameId, links: [{id: l<n>, from: {frame, path, selector, tag?, text?}, to: {frame} | {back: true}, transition}]}`. Transitions: `instant`, `dissolve`, `slide-left`, `slide-right`. Keys sorted, links sorted by id, one link per (frame, selector); a second link on the same element replaces the first. Not in `canvas-file.ts`, so a per-frame mode can change that file without a conflict.
+- Versions: the file is a layout file like `canvas.json`: `!.studio/links.json` in the excludes, `commitFile` adds it, `status` hides it, `discard` keeps its bytes, and `canvas.announce` (restore, undo, edit-session discard) also sends `links.changed`. A link edit makes no version; it goes into the next one.
+- Broken (derived, never stored): the from frame or the target frame is gone, the from frame shows another page than `from.path`, or the element cannot be found. Element lookup (`bridge/play.ts` `resolveLink`, and the same rules in the `list_links` render script): the selector with the same tag and the same text (an `#id` selector skips the text check), else the first element with that tag and text, else missing. An empty `canvas.json` counts as the default frame `f1`.
+- Canvas: arrows and the Start flag draw only with the Prototype tool on, in one SVG inside `.artboard` (artboard coordinates, `non-scaling-stroke`); the view row has a "Link arrows" switch. A link to a frame on the left curves over the frames. Entering a frame with the Prototype tool on clears the selection, so a handle never belongs to another frame.
+- Play (Present › Play prototype, or Play in the prototype bar): opens at `start` (else the first frame), each frame at its own size scaled to fit. The iframe gets a new token and `BRIDGE_PASSIVE_PARAM`, so it never replaces the canvas frame's session in `sessionStorage`. The bridge stops a click on a linked element in the capture phase (`preventDefault`, `stopImmediatePropagation`) and sends `play-click`; other clicks run as usual, so app links and Next.js client navigation still work. Keys: Esc exits, R restarts, Backspace (and ← in the parent) goes back; the bridge forwards them when focus is in the frame and not in a text field. Back uses a history stack and the reverse slide.
+- Agent tools: `mcp__studio__list_links` (read only) and `mcp__studio__edit_links {add, remove, startFrame}` (refused in plan mode and critique runs, in `NO_CHANGE_TOOLS`). Mock: `[links] <fromFrame> <selector> -> <toFrame>`.
+- Limits: a full page load inside an attached app during Play drops the Play bridge for that iframe, so linked clicks stop until the next frame change. A new frame can reuse the id of a removed frame (`nextFrameId`), which makes an old broken link point at it.
+
 ## Versions, chat rewind and comments (Round 7)
 
 - Version thumbnails: `GET /api/projects/:pid/versions/:vid/thumb` shoots the version snapshot on the first request (one shared shot queue, one at a time) and then serves `thumbs/v-<vid>.png`. The Versions panel fetches only rows in view while the panel is open, at most 2 at a time.
@@ -824,6 +881,9 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 | `design_system_status {projectId}` | `GET /api/projects/:pid/design-system-draft` (sources, coverage, check) | no |
 | `save_design_system {projectId, name?, force, reason?}` | refuses while sources are read or the check fails; `force` needs `reason` (shown in the feed row); then `POST /d/main/design-system/save` | yes |
 | `list_design_systems {drafts}` | `GET /api/packs` plus the backing project id of each draft | no |
+| `list_links {projectId, directionId?, check?}` | `canvas/link-tools.ts` `listLinks`; one render per page with links marks `broken` | no |
+| `add_link {projectId, directionId?, fromFrame, selector, toFrame \| "back", transition?}` | render check of the selector on the from frame's page, then `canvas.links.update` (source `agent`) | yes |
+| `remove_link {projectId, directionId?, linkId}`, `set_start_frame {projectId, directionId?, frame}` | `canvas.links.update` | yes |
 
 - Edit history: `edit_element`, `batch_edit` edits, `set_token` and `write_file` of an existing file record into the same `direct-edit/history.ts` stack as the UI, so `undo` from MCP and ⌘Z in the studio step the same entries. New files and `batch_edit` files with a new file are not recorded; use `restore_version`.
 - Improve with AI is a studio run, so `create_design_system` passes `improve=off`: `LiveDraftStart.autoImprove: false` starts the draft with `improve: skipped` and the reason "Started from an outside agent…". The Improve button in the app still works.

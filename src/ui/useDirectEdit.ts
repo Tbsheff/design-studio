@@ -3,6 +3,7 @@ import type { DirectEditRequest, DirectStyleProperty, SelectionContext, Tailwind
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
+import { editVariantStore } from './editVariant';
 
 export type SaveStatus =
   | { kind: 'idle' }
@@ -31,6 +32,7 @@ interface Options {
   onCommitted: (commit: DirectEditCommit) => void;
   onStale: (message: string) => void;
   rewrite?: StyleRewrite;
+  variant?: string;
 }
 
 type StyleRewrite = (style: Partial<StyleValues>) => Partial<StyleValues>;
@@ -57,14 +59,15 @@ function failureText(err: unknown): string {
   return errorText(err);
 }
 
-export function buildEditRequest(selection: SelectionContext, style: Partial<StyleValues>, text?: string): DirectEditRequest | null {
+export function buildEditRequest(selection: SelectionContext, style: Partial<StyleValues>, text?: string, editVariant = editVariantStore.get()): DirectEditRequest | null {
   const source = selection.source;
   if (!source) return null;
   const hasStyle = Object.keys(style).length > 0;
   if (!hasStyle && text === undefined) return null;
   const wire = Object.fromEntries(Object.entries(style).map(([prop, value]) => [prop, value.trim() === '' ? null : value.trim()]));
   const target = selection.component ? { component: selection.component } : { tag: selection.tag.toLowerCase() };
-  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text } : {}) };
+  const variant = hasStyle ? editVariant : '';
+  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text } : {}), ...(variant ? { variant } : {}) };
 }
 
 export function useDirectEdit(o: Options) {
@@ -152,7 +155,7 @@ export function useDirectEdit(o: Options) {
     const style = rewriteDraft(changedProps(draftRef.current, baseRef.current));
     const pendingText = textRef.current;
     const text = pendingText !== null && pendingText !== cur.selection.text ? pendingText : undefined;
-    const req = buildEditRequest(cur.selection, style, text);
+    const req = buildEditRequest(cur.selection, style, text, cur.variant);
     if (!req || !cur.directionId) return;
     setStatus({ kind: 'saving' });
     const request = api

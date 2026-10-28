@@ -24,6 +24,7 @@ const styleValue = z.string().max(200).nullable();
 export const style = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();
 const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
 export const classes = z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().describe('Tailwind classes to add or remove, with any variant prefix (md:p-8, hover:bg-primary). An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge(); a class built at runtime or a cva() result is refused.');
+export const variant = z.string().trim().max(60).describe("Breakpoint and state the style applies to, with the same code path as the studio inspector variant bar: \"md:\" (768 px and up), \"lg:\", \"hover:\", \"focus:\", \"active:\", \"dark:\" or a mix such as \"md:hover:\". In a Tailwind project style becomes prefixed classes (md:p-6, hover:bg-primary); in a plain HTML page it becomes a media query or :hover rule; other files refuse it. Leave out for the base style.");
 export const hasClasses = (input: { classes?: { add?: string[]; remove?: string[] } }) => (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
 
 export interface Meta {

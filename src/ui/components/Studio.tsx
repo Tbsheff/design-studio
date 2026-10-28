@@ -8,6 +8,7 @@ import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { POLISH_REQUEST } from '../polish';
 import { createDraftStore, homeVariations, uiStore, useDraftActive, useUi, type DraftStore } from '../storage';
+import { setLeaveCheck } from '../route';
 import { useDesignSystemState } from '../useDesignSystemState';
 import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
@@ -15,6 +16,7 @@ import type { PreviewPort } from '../bridge';
 import { inspectorEmptyReason, isDirectEditable, type InspectorTab } from './Inspector';
 import type { EditSessionHandle } from '../useEditSession';
 import { runCommand } from '../commands/registry';
+import { useTryVariants } from '../useTryVariants';
 import { usePanelTab } from '../usePanelTab';
 import { undoAllowed } from '../useUndoShortcut';
 import { mergeCommit, type DirectEditControl } from '../useDirectEdit';
@@ -47,6 +49,16 @@ import { useExportTarget } from '../useExportTarget';
 import type { ExportTarget } from '../exportApi';
 
 const ExportDialog = lazy(() => import('./ExportDialog').then((m) => ({ default: m.ExportDialog })));
+const ShipDialog = lazy(() => import('./ShipDialog'));
+
+function ShipLayer({ projectId, open, onClose }: { projectId: string; open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <Suspense fallback={null}>
+      <ShipDialog projectId={projectId} onClose={onClose} />
+    </Suspense>
+  );
+}
 
 function ExportLayer({ target, onClose }: { target: ExportTarget | null; onClose: () => void }) {
   if (!target) return null;
@@ -114,6 +126,10 @@ function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
   return effort ? { effort } : {};
 }
 
+function shipOpener(project: { app?: unknown }, setOpen: (open: boolean) => void): (() => void) | null {
+  return project.app ? () => setOpen(true) : null;
+}
+
 function exportTarget(versions: Version[], direction: { headVersionId: string | null } | null): string | null {
   return (versions.find((v) => v.id === direction?.headVersionId) ?? versions[0])?.id ?? null;
 }
@@ -168,6 +184,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const [detailsRunId, setDetailsRunId] = useState<string | null>(null);
   const [designOpen, setDesignOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shipOpen, setShipOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
@@ -222,6 +239,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const historyChain = editHistory.undoChain(canUndo, () => undoRef.current());
   const studioTokens = useStudioTokens({ projectId, directionId, tokens, ...tweaks.undoChain(historyChain.canUndo, historyChain.onUndo), redo: editHistory.redo, onCommitted: () => data.refreshVersions() });
   const { guard } = studioTokens;
+  const leaveCheck = studioTokens.draft.confirmLeave;
+  useEffect(() => {
+    setLeaveCheck(leaveCheck);
+    return () => setLeaveCheck(null);
+  }, [leaveCheck]);
   const detailsRun = runById(runs, detailsRunId);
   const componentList = useComponents(projectId, directionId, data.lastChange);
   const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(null);
@@ -259,6 +281,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
   const exporter = useExportTarget(projectId, direction, versions);
   const commandActions = useStudioCommands();
+  const tryVariants = useTryVariants(project, selection, variations);
   useEffect(() => {
     const id = window.setTimeout(prefetchCommandLayer, 1500);
     return () => window.clearTimeout(id);
@@ -339,6 +362,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
   };
 
+  const openShip = shipOpener(project, setShipOpen);
   commandActions.current = {
     running: Boolean(activeRun),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name })),
@@ -357,6 +381,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     onRedo: editHistory.redo.onRedo,
     exportId: exportTarget(versions, direction),
     onExport: (id) => exporter.open({ versionId: id }),
+    onShip: openShip,
   };
 
   const [left, right] = compare.map((picked) => versions.find((v) => v.id === picked.id) ?? picked);
@@ -426,7 +451,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             components: componentList.components,
             mentionRequest,
             waitReason: draftChrome.waitReason,
-            variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
+            variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose, onElement: tryVariants },
           }}
           inspector={{
             projectId,
@@ -574,6 +599,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                 canExport: exporter.canOpen,
                 onExport: exporter.openHead,
                 onTweak: whenDirection(did, tweak),
+                onShip: openShip,
+                onAskAgent: (text) => {
+                  draft.set(text);
+                  void showPane('chat');
+                },
               },
               onTextCommit: (selector, text) => {
                 const target = selection.length === 1 ? selection[0] : undefined;
@@ -593,6 +623,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
         onCloseSettings={() => setSettingsOpen(false)}
       />
       <ExportLayer target={exporter.target} onClose={exporter.close} />
+      <ShipLayer projectId={projectId} open={shipOpen} onClose={() => setShipOpen(false)} />
       <StudioToast text={firstText(editHistory.toast, packActions.toast?.text)} />
     </div>
   );

@@ -1,3 +1,4 @@
+import type { StyleReplaceRequest, StyleReplaceResult } from '../shared/style-search';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
@@ -48,7 +49,9 @@ import {
   type WorkTreeStatus,
 } from '../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../shared/folders';
+import type { VariantSupport } from '../shared/variants';
 import type { CanvasFile } from '../shared/canvas-file';
+import type { FolderInspection } from '../shared/open-app';
 
 export interface CanvasSnapshot {
   directionId: string;
@@ -57,6 +60,7 @@ export interface CanvasSnapshot {
 }
 import type { CommitTweaksResult, TweaksState, TweakValue } from '../shared/tweaks';
 import { getSession } from './session';
+import type { ReviewFixResult, ReviewRequest, ReviewResult } from '../shared/review';
 
 export class ApiError extends Error {
   constructor(
@@ -187,11 +191,7 @@ export const api = {
   setDefaultFolder: (path: string) => json<WorkspaceList>('PUT', '/api/workspaces/default', { path }),
   hiddenProjects: () => json<{ count: number; target: string }>('GET', '/api/hidden-projects'),
   moveHiddenProjects: () => json<{ moved: string[]; failed: { projectId: string; error: string }[] }>('POST', '/api/hidden-projects/move'),
-  pickFolder: async (input: { title: string; defaultPath?: string }): Promise<string | null> => {
-    const res = await request('POST', '/api/pick-folder', input);
-    if (res.status === 204) return null;
-    return ((await res.json()) as { path: string }).path;
-  },
+  inspectFolder: (path: string, appDir?: string) => json<FolderInspection>('POST', '/api/folders/inspect', { path, ...(appDir ? { appDir } : {}) }),
   getProject: (pid: string) => json<Project>('GET', p(pid)),
   updateSettings: (pid: string, settings: Partial<ProjectSettings>) => json<Project>('PATCH', `${p(pid)}/settings`, settings),
   uploadAttachment: (pid: string, file: File) => {
@@ -223,8 +223,8 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/edit-session/${action}`, { baseVersionId }, pickMessage);
     return (await res.json()) as EditSessionEnd;
   },
-  elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
-    json<{ tailwind: TailwindOutcome | null; element: ElementSourceInfo | null }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
+  elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }, variant = '') =>
+    json<{ tailwind: TailwindOutcome | null; element: ElementSourceInfo | null; variants?: VariantSupport }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${encodeURIComponent(variant)}` : ''}`),
   elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
     json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>
@@ -255,6 +255,8 @@ export const api = {
     json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/permissions/${encodeURIComponent(requestId)}`, decision),
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
+  review: (pid: string, did: string, body: ReviewRequest) => json<ReviewResult>('POST', `${d(pid, did)}/review`, body),
+  reviewFix: (pid: string, did: string, findingIds: string[]) => json<ReviewFixResult>('POST', `${d(pid, did)}/review/fix`, { findingIds }),
 };
 
 function editKind(req: DirectEditRequest): string {
@@ -283,4 +285,8 @@ export function errorText(err: unknown): string {
 export function eventsUrl(pid: string, after: number): string {
   const token = encodeURIComponent(getSession().token);
   return `${p(pid)}/events?token=${token}&after=${after}`;
+}
+
+export function replaceStyle(pid: string, did: string, req: StyleReplaceRequest): Promise<StyleReplaceResult> {
+  return timedEdit(pid, did, 'replace-style', req.matches.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, { replaceStyle: req }, pickMessage)).json()) as StyleReplaceResult);
 }

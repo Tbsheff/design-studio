@@ -102,8 +102,8 @@ export interface PanZoom {
   zoomTo: (z: number) => void;
   zoomStep: (direction: 1 | -1) => void;
   fit: () => void;
+  zoomToActive: () => void;
   freeze: () => void;
-  centerActive: () => void;
   applyZoomKey: (key: ZoomKey) => void;
   frameWheel: (frame: HTMLIFrameElement | null, e: FrameWheel) => void;
 }
@@ -183,17 +183,6 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     if (fitMode) offset.current = { x: 0, y: 0 };
   }, [fitMode, aw, ah, bx, by, bw, bh]);
 
-  const centerPending = useRef(false);
-  useLayoutEffect(() => {
-    if (!centerPending.current) return;
-    centerPending.current = false;
-    if (zoomOverride.current === null && live.current.setting === 'fit') return;
-    offset.current = { x: 0, y: 0 };
-  });
-  const centerActive = useCallback(() => {
-    centerPending.current = true;
-  }, []);
-
   useLayoutEffect(() => paint());
 
   const commit = useCallback((zoom: ZoomSetting) => {
@@ -256,6 +245,18 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     },
     [commit],
   );
+
+  const pendingFocus = useRef(false);
+  const zoomToActive = useCallback(() => {
+    pendingFocus.current = true;
+    rerender();
+  }, []);
+  useLayoutEffect(() => {
+    if (!pendingFocus.current) return;
+    pendingFocus.current = false;
+    const { active } = live.current.layout;
+    zoomToBox({ x: 0, y: 0, width: active.width, height: active.height });
+  });
 
   const freeze = useCallback(() => {
     const cur = live.current;
@@ -387,8 +388,8 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     zoomTo,
     zoomStep,
     fit,
+    zoomToActive,
     freeze,
-    centerActive,
     applyZoomKey,
     frameWheel,
   };

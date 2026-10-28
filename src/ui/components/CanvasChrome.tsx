@@ -19,6 +19,8 @@ export interface CanvasShell {
   canExport: boolean;
   onExport: () => void;
   onTweak: ((prompt: string) => void) | null;
+  onShip?: (() => void) | null;
+  onAskAgent?: (text: string) => void;
 }
 
 type SetSelectMode = (update: (m: boolean) => boolean) => void;
@@ -66,7 +68,8 @@ function fileNameOf(frame: CanvasFrame, kind: ProjectKind, directionName: string
   return directionName ?? 'Design';
 }
 
-function toolOf(pane: PanelTab | undefined, comment: boolean, select: boolean): CanvasTool {
+function toolOf(pane: PanelTab | undefined, comment: boolean, select: boolean, proto: boolean): CanvasTool {
+  if (proto) return 'prototype';
   if (comment) return 'comment';
   if (pane === 'design') return 'edit';
   return select ? 'select' : null;
@@ -113,6 +116,7 @@ interface ChromeProps {
   selection: SelectionContext[];
   stage: () => HTMLElement | null;
   view: Omit<ComponentProps<typeof CanvasViewRow>, 'viewport'>;
+  proto: { on: boolean; set: (on: boolean) => void; play: () => void };
 }
 
 function useFileMenu(p: ChromeProps) {
@@ -146,12 +150,12 @@ function useFileMenu(p: ChromeProps) {
 const NOOP = () => undefined;
 
 function barShell(shell: CanvasShell | undefined) {
-  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null };
+  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null, onShip: null };
   return shell;
 }
 
 export function CanvasChrome(p: ChromeProps) {
-  const [present, setPresent] = useState<Exclude<PresentMode, 'new-window'> | null>(null);
+  const [present, setPresent] = useState<Exclude<PresentMode, 'new-window' | 'play'> | null>(null);
   const [tweakOpen, setTweakOpen] = useState(false);
   const closePresent = useCallback(() => setPresent(null), []);
   const closeTweak = useCallback(() => setTweakOpen(false), []);
@@ -159,6 +163,10 @@ export function CanvasChrome(p: ChromeProps) {
   const shell = p.shell;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === 'version';
   const onTool = (next: Exclude<CanvasTool, null>) => {
+    if (next === 'prototype') return p.proto.set(!p.proto.on);
+    const leavingProto = p.proto.on;
+    p.proto.set(false);
+    if (next === 'edit' && leavingProto && shell?.pane === 'design') return;
     if (next === 'comment') return p.comment.toggle();
     if (next === 'edit') return p.toggleEdit();
     const editing = shell?.pane === 'design';
@@ -167,6 +175,7 @@ export function CanvasChrome(p: ChromeProps) {
     p.setSelectMode((m) => editing || !m);
   };
   const onPresent = (mode: PresentMode) => {
+    if (mode === 'play') return p.proto.play();
     if (!p.presentUrl) return;
     if (mode === 'new-window') window.open(p.presentUrl, '_blank', 'noopener');
     else setPresent(mode);
@@ -190,7 +199,7 @@ export function CanvasChrome(p: ChromeProps) {
         onZoomTo={p.zoom.zoomTo}
         onZoomStep={p.zoom.zoomStep}
         onFit={p.zoom.fit}
-        tool={toolOf(shell?.pane, p.comment.on, p.selectMode)}
+        tool={toolOf(shell?.pane, p.comment.on, p.selectMode, p.proto.on)}
         commentAvailable={p.comment.available}
         onTool={onTool}
         viewOpen={viewOpen}
@@ -199,6 +208,7 @@ export function CanvasChrome(p: ChromeProps) {
         presentDisabled={!p.presentUrl}
         canExport={bar.canExport}
         onExport={bar.onExport}
+        onShip={bar.onShip ?? null}
       />
       {tweakOpen && onTweak && <TweakPrompt scope={scopeOf(p.selection)} onSend={onTweak} onClose={closeTweak} />}
       {viewOpen && <CanvasViewRow viewport={p.ui.viewport} {...p.view} />}

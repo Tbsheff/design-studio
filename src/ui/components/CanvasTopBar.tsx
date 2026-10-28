@@ -5,8 +5,8 @@ import { Icon, type IconName } from './Icon';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { shortcutLabel } from '../../shared/keymap';
 
-export type CanvasTool = 'select' | 'comment' | 'edit' | null;
-export type PresentMode = 'window' | 'fullscreen' | 'new-window';
+export type CanvasTool = 'select' | 'comment' | 'edit' | 'prototype' | null;
+export type PresentMode = 'window' | 'fullscreen' | 'new-window' | 'play';
 
 export interface MenuEntry {
   id: string;
@@ -15,12 +15,14 @@ export interface MenuEntry {
   meta?: string;
   checked?: boolean;
   disabled?: boolean;
+  tip?: string;
   run: () => void;
 }
 
 export interface MenuGroup {
   label?: string;
   items: MenuEntry[];
+  note?: string;
 }
 
 function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
@@ -37,7 +39,7 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
   return (
     <div ref={root} className={`ui-menu topbar-menu align-${align}`} role="menu" aria-label={label} onKeyDown={onMenuKey}>
       {groups
-        .filter((g) => g.items.length > 0)
+        .filter((g) => g.items.length > 0 || g.note)
         .map((group, i) => (
           <div key={group.label ?? i} className="ui-menu-section">
             {group.label && <div className="ui-menu-label">{group.label}</div>}
@@ -49,6 +51,8 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
                 aria-checked={item.checked}
                 className="ui-menu-item"
                 disabled={item.disabled}
+                data-tip={item.tip}
+                data-tip-align="start"
                 onClick={() => {
                   onClose(true);
                   item.run();
@@ -59,10 +63,20 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
                 {item.meta && <span className="ui-menu-meta">{item.meta}</span>}
               </button>
             ))}
+            {group.note && <p className="ui-menu-note">{group.note}</p>}
           </div>
         ))}
     </div>
   );
+}
+
+function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null }): MenuGroup[] {
+  const exportItem: MenuEntry = { id: 'export', label: 'Export…', icon: 'download', meta: 'PNG, PDF, HTML, handoff', disabled: !p.canExport, run: p.onExport, ...(p.canExport ? {} : { tip: 'Save a version to export' }) };
+  const ship = p.onShip;
+  return [
+    { items: [exportItem, ...(ship ? [{ id: 'ship', label: 'Ship as a pull request…', icon: 'branch' as const, run: ship }] : [])] },
+    { items: [], note: 'No share links yet. Designs stay on this computer.' },
+  ];
 }
 
 export function DropMenu({ label, groups, className, align = 'start', tip, children, onOpen }: { label: string; groups: () => MenuGroup[]; className: string; align?: 'start' | 'end'; tip?: string; children: ReactNode; onOpen?: () => void }) {
@@ -142,12 +156,14 @@ interface Props {
   presentDisabled: boolean;
   canExport: boolean;
   onExport: () => void;
+  onShip?: (() => void) | null;
 }
 
 export function CanvasTopBar(p: Props) {
   const presentGroups = (): MenuGroup[] => [
     {
       items: [
+        { id: 'play', label: 'Play prototype', icon: 'link', run: () => p.onPresent('play') },
         { id: 'window', label: 'In this window', icon: 'play', run: () => p.onPresent('window') },
         { id: 'fullscreen', label: 'Fullscreen', icon: 'expand', run: () => p.onPresent('fullscreen') },
         { id: 'new-window', label: 'New window', icon: 'window', run: () => p.onPresent('new-window') },
@@ -186,8 +202,9 @@ export function CanvasTopBar(p: Props) {
       <div className="spacer" />
       <ZoomPill zoom={p.zoom} setting={p.zoomSetting} onZoomTo={p.onZoomTo} onFit={p.onFit} onStep={p.onZoomStep} />
       <div className="ui-tools topbar-tools" role="group" aria-label="Tool">
-        <button type="button" aria-pressed={p.tool === 'select'} aria-label="Select" aria-keyshortcuts="V" data-tip={tipWithKey('Select elements', 'tool-select')} onClick={() => p.onTool('select')}>
+        <button type="button" aria-pressed={p.tool === 'select'} aria-keyshortcuts="V" data-tip={tipWithKey('Select elements', 'tool-select')} onClick={() => p.onTool('select')}>
           <Icon name="pointer" size={14} />
+          <span>Select</span>
         </button>
         <button type="button" aria-pressed={p.tool === 'comment'} aria-keyshortcuts="C" disabled={!p.commentAvailable} data-tip={p.commentAvailable ? tipWithKey('Comment', 'tool-comment') : 'Comments work on the live preview'} onClick={() => p.onTool('comment')}>
           <Icon name="comment" size={14} />
@@ -197,18 +214,30 @@ export function CanvasTopBar(p: Props) {
           <Icon name="edit" size={14} />
           <span>Edit</span>
         </button>
+        <button type="button" aria-pressed={p.tool === 'prototype'} data-tip="Link elements to frames, then Play" onClick={() => p.onTool('prototype')}>
+          <Icon name="link" size={14} />
+          <span>Prototype</span>
+        </button>
       </div>
+      <span data-topbar-slot="review" style={{ display: 'contents' }} />
       <DropMenu label="Present" className="btn ghost topbar-present" groups={presentGroups} align="end">
         <span>Present</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
+      {p.onShip && (
+        <button type="button" className="btn ghost topbar-ship" data-tip="Commit studio changes to a new branch and open a PR" data-tip-align="end" onClick={p.onShip}>
+          <Icon name="branch" size={14} />
+          Ship
+        </button>
+      )}
       <button type="button" className="icon-btn topbar-icon" aria-label="Export" disabled={!p.canExport} data-tip={p.canExport ? 'Export, handoff and Claude Code' : 'Save a version to export'} data-tip-align="end" onClick={p.onExport}>
         <Icon name="download" size={14} />
       </button>
-      <button type="button" className="btn strong topbar-share" disabled={!p.canExport} data-tip={p.canExport ? 'Share as a handoff' : 'Save a version to share'} data-tip-align="end" onClick={p.onExport}>
+      <DropMenu label="Share" className="btn strong topbar-share" groups={() => shareGroups(p)} align="end" tip={p.onShip ? 'Export or ship as a pull request' : 'Export files or a handoff'}>
         <Icon name="share" size={14} />
         Share
-      </button>
+        <Icon name="chevronDown" size={12} />
+      </DropMenu>
       <span className="topbar-avatar" aria-hidden="true">Y</span>
     </div>
   );

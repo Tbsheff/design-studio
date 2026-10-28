@@ -1,4 +1,4 @@
-import { useEffect, useState, type MutableRefObject, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { SharedSource } from '../../shared/app';
 import type { SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
@@ -12,6 +12,8 @@ import { CopyCodeMenu } from './CopyCodeMenu';
 import { Icon } from './Icon';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
 import { ClassLine, useElementClasses } from './InspectorClasses';
+import { InspectorVariantBar } from './InspectorVariantBar';
+import { VariantScopeContext, useEditVariant } from '../editVariant';
 import { RadiusField } from './InspectorCorners';
 import { EffectsSection } from './InspectorEffects';
 import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
@@ -19,7 +21,7 @@ import { AutoLayoutSection, SizeRows } from './InspectorLayout';
 import { MultiCreateTokenHost, MultiNote } from './InspectorMulti';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
-import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { CreateTokenHost, FontField, MatchSection, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { InspectorSource } from './InspectorSource';
 import { InspectorAppContext, SharedSourceNote, dataTextPrompt, useInspectorApp } from './InspectorShared';
 import { NumberField } from './NumberField';
@@ -238,6 +240,7 @@ function MetaRow({ tag, where, status, ui, onReset, resetDisabled, children }: {
 }
 
 export function SimpleEditor(props: EditorProps & { target: SelectionContext; sharedEditing?: SharedEditing | null }) {
+  const variant = useEditVariant();
   const scope = { projectId: props.projectId, directionId: props.directionId, selection: props.target, tokens: props.tokens, onCommitted: props.onCommitted };
   const tk = useInspectorTokens(scope);
   const edit = useDirectEdit({
@@ -249,6 +252,7 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext; sh
     onCommitted: props.onCommitted,
     onStale: props.onStale,
     rewrite: tk.ui ? tk.snap.rewrite : undefined,
+    variant,
   });
   const authored = useAuthoredCss(props.port, props.target.selector);
   const savedAt = edit.status.kind === 'saved' ? edit.status.at : 0;
@@ -262,35 +266,41 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext; sh
     edit.commit();
   };
   const source = props.target.source;
-  const classInfo = useElementClasses(props.projectId, props.directionId, source, savedAt);
-  const tailwind = classInfo?.element?.component && !props.target.component ? null : (classInfo?.tailwind ?? null);
-  const classLine = tailwind && edit.tailwind?.note ? { ...tailwind, note: edit.tailwind.note } : tailwind;
+  const classes = useElementClasses(props.projectId, props.directionId, source, savedAt, variant);
+  const classInfo = classes.element?.component && !props.target.component ? null : classes.tailwind;
+  const classLine = classInfo && edit.tailwind?.note ? { ...classInfo, note: edit.tailwind.note } : classInfo;
   const app = useInspectorApp();
   const sharedEditing = props.sharedEditing;
+  const variantProps = classes.variants?.props;
+  const variantScope = useMemo(() => ({ prefix: variant, props: new Set(variantProps ?? []) }), [variant, variantProps]);
   return (
-    <InspectorAppContext.Provider value={{ ...app, element: classInfo?.element ?? null }}>
-      <TokenUiContext.Provider value={tk.ui}>
-        <div className="inspector ins-simple" aria-label="Design inspector">
-          <InspectorBreadcrumb selection={props.target} port={props.port} />
-          <MetaRow tag={props.target.tag} where={source ? `${source.file}:${source.line}` : ''} status={edit.status} ui={tk.ui} onReset={edit.reset}>
-            <CopyCssButton authored={authored} />
-          </MetaRow>
-          <ClassLine info={classLine} />
-          <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
-          {sharedEditing && <SharedSourceNote shared={sharedEditing.shared} editingUse={sharedEditing.editingUse} canUse={sharedEditing.editingUse || classInfo?.element?.forwardsClassName === true} onToggle={sharedEditing.onToggle} />}
-          <div className="ins-scroll">
-            <ErrorLine status={edit.status} text={props.target.text} />
-            <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
-            <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
-            <InspectorOtherStyles css={authored.css} />
-            <div className="ins-export">
-              <CopyCodeMenu projectId={props.projectId} directionId={props.directionId} selector={props.target.selector} variant="row" />
+    <InspectorAppContext.Provider value={{ ...app, element: classes.element }}>
+      <VariantScopeContext.Provider value={variantScope}>
+        <TokenUiContext.Provider value={tk.ui}>
+          <div className="inspector ins-simple" aria-label="Design inspector">
+            <InspectorBreadcrumb selection={props.target} port={props.port} />
+            <MetaRow tag={props.target.tag} where={source ? `${source.file}:${source.line}` : ''} status={edit.status} ui={tk.ui} onReset={edit.reset}>
+              <CopyCssButton authored={authored} />
+            </MetaRow>
+            <ClassLine info={classLine} />
+            <InspectorVariantBar selector={props.target.selector} port={props.port} support={classes.variants} />
+            <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
+            {sharedEditing && <SharedSourceNote shared={sharedEditing.shared} editingUse={sharedEditing.editingUse} canUse={sharedEditing.editingUse || classes.element?.forwardsClassName === true} onToggle={sharedEditing.onToggle} />}
+            <div className="ins-scroll">
+              <ErrorLine status={edit.status} text={props.target.text} />
+              <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
+              <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
+              <MatchSection projectId={props.projectId} directionId={props.directionId} selection={[props.target]} port={props.port} tokens={props.tokens} edit={edit} />
+              <InspectorOtherStyles css={authored.css} />
+              <div className="ins-export">
+                <CopyCodeMenu projectId={props.projectId} directionId={props.directionId} selector={props.target.selector} variant="row" />
+              </div>
             </div>
+            <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
           </div>
-          <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
-        </div>
-        <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
-      </TokenUiContext.Provider>
+          <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
+        </TokenUiContext.Provider>
+      </VariantScopeContext.Provider>
     </InspectorAppContext.Provider>
   );
 }
@@ -324,6 +334,7 @@ export function SimpleMultiEditor(props: EditorProps) {
           <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
             <SimpleSections edit={edit} ui={tk.ui} selection={null} />
           </fieldset>
+          <MatchSection projectId={props.projectId} directionId={props.directionId} selection={props.selection} port={props.port} tokens={props.tokens} edit={edit} />
         </div>
         <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
       </div>

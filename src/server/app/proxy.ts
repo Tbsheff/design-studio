@@ -222,7 +222,7 @@ export function createAppProxy(options: AppProxyOptions) {
         res.destroy();
         return;
       }
-      if (isDocumentRequest(req)) sendText(res, 502, messagePage('The app dev server is not answering', `${target.upstream}: ${error.message}. Open the app panel in the canvas toolbar to see the dev server log.`), 'text/html; charset=utf-8', options.studioOrigin);
+      if (isDocumentRequest(req)) sendText(res, 502, messagePage('The app dev server is not answering', `${target.upstream}: ${error.message}. Press the app button at the bottom left of the canvas for the log and the fix.`), 'text/html; charset=utf-8', options.studioOrigin);
       else sendText(res, 502, error.message);
     });
     req.pipe(outgoing);
@@ -247,7 +247,7 @@ export function createAppProxy(options: AppProxyOptions) {
         target = await options.targetFor(projectId);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (isDocumentRequest(req)) sendText(res, 503, messagePage('The app dev server did not start', `${message} Open the app panel in the canvas toolbar to see the log and start it again.`), 'text/html; charset=utf-8', options.studioOrigin);
+        if (isDocumentRequest(req)) sendText(res, 503, messagePage('The app dev server is not running', `${message} Press the app button at the bottom left of the canvas for the log and the fix.`), 'text/html; charset=utf-8', options.studioOrigin);
         else sendText(res, 503, message);
         return;
       }

@@ -19,9 +19,10 @@ interface DraftInfoState {
   error: string | null;
 }
 
-function useDraftInfo(projectId: string, lastChange: unknown, runStatus: string | undefined): DraftInfoState {
+function useDraftInfo(projectId: string | null, lastChange: unknown, runStatus: string | undefined): DraftInfoState {
   const [state, setState] = useState<DraftInfoState>({ coverage: null, check: null, error: null });
   useEffect(() => {
+    if (!projectId) return;
     let live = true;
     api
       .getDesignSystemDraft(projectId)
@@ -215,7 +216,7 @@ function SaveControls({ check, ready, readyId, reading, running, onSave }: SaveP
 export function DraftBar({ project, state, lastChange, onSave, improve, lastRun = null, reading = false, running = false }: Props) {
   const packId = project.designSystemFor ?? null;
   const { packs } = usePacks();
-  const { coverage, check, error } = useDraftInfo(project.id, lastChange, lastRun?.status);
+  const { coverage, check, error } = useDraftInfo(packId ? project.id : null, lastChange, lastRun?.status);
   const readyId = useId();
   if (!packId) return null;
   const name = state?.manifest?.name ?? findPack(packs, packId)?.name ?? project.name;

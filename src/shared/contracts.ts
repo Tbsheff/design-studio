@@ -1,5 +1,8 @@
 import type { CanvasFile } from './canvas-file';
+import type { LinkQuery, LinkRectReport, LinksFile } from './links';
 import type { StatesRequest } from './states';
+import type { ElementScope } from './element-variants';
+import type { StyleQuery, StyleScanResult } from './style-search';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -72,6 +75,9 @@ export interface DirectionVariation extends VariationBrief {
   index: number;
   count: number;
   prompt: string;
+  scope?: ElementScope | null;
+  rejected?: string | null;
+  settled?: 'kept' | 'discarded' | null;
 }
 
 export interface ReferenceElement {
@@ -89,6 +95,7 @@ export interface VariationBriefsRequest {
   prompt: string;
   count: number;
   fromDirectionId?: string | null;
+  element?: SelectionContext | null;
 }
 
 export interface VariationBriefsResult {
@@ -105,6 +112,7 @@ export interface VariationStartRequest {
   level?: RunLevel;
   fromDirectionId?: string | null;
   attachmentIds?: string[];
+  element?: SelectionContext | null;
 }
 
 export interface VariationStartItem {
@@ -278,6 +286,7 @@ export interface SelectionContext {
   usedAt?: SourceLoc | null;
   usedBy?: ComponentUse | null;
   component?: string;
+  owners?: { name: string; stack: string }[];
   ancestors: string[];
   path?: string[];
 }
@@ -336,6 +345,7 @@ export interface RunRequest {
   plan?: boolean;
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
+  scope?: ElementScope;
   reference?: ReferenceElement;
   selection?: SelectionContext[];
   attachmentIds?: string[];
@@ -576,6 +586,7 @@ export type StudioEventBody =
   | { type: 'versions.changed' }
   | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
   | { type: 'canvas.point'; frameId: string; selector?: string; at: number }
+  | { type: 'links.changed'; links: LinksFile; source: CanvasWriteSource }
   | { type: 'mcp.approval'; approval: McpApprovalRecord }
   | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
   | { type: 'mcp.activity'; activity: McpActivity }
@@ -784,8 +795,8 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
-  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version',
+  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null, variants: VariantSupport} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -801,9 +812,12 @@ export const STUDIO_TOKEN_HEADER = 'x-studio-token';
 export const BRIDGE_TOKEN_PARAM = '__studio_token';
 export const BRIDGE_PARENT_ORIGIN_PARAM = '__studio_parent';
 export const BRIDGE_PASSIVE_PARAM = '__studio_passive';
+export const ELEMENT_MARK_PARAM = '__studio_mark';
 export const SOURCE_LOC_ATTR = 'data-studio-loc';
 export const BRIDGE_SCRIPT_PATH = '/__studio/bridge.js';
 export const BRIDGE_CHANGES_PATH = '/__studio/changes';
+
+export type PlayKey = 'exit' | 'restart' | 'back';
 
 export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
@@ -812,6 +826,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }
   | { ns: 'studio'; token: string; type: 'tree'; nodes: LayerNode[]; truncated: boolean }
   | { ns: 'studio'; token: string; type: 'rects'; selectors: string[]; rects: (SelectionContext['rect'] | null)[] }
+  | { ns: 'studio'; token: string; type: 'styles-found'; requestId: string; result: StyleScanResult; selected: number }
   | { ns: 'studio'; token: string; type: 'error'; kind: 'console' | 'runtime' | 'unhandledrejection'; message: string; stack?: string; source?: string; line?: number }
   | { ns: 'studio'; token: string; type: 'scroll' }
   | { ns: 'studio'; token: string; type: 'mode-exited' }
@@ -830,6 +845,9 @@ export type BridgeToParent =
     }
   | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey; at: number }
   | { ns: 'studio'; token: string; type: 'anchor-rects'; anchors: AnchorReport[] }
+  | { ns: 'studio'; token: string; type: 'link-rects'; links: LinkRectReport[] }
+  | { ns: 'studio'; token: string; type: 'play-click'; id: string }
+  | { ns: 'studio'; token: string; type: 'play-key'; key: PlayKey }
   | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] }
   | { ns: 'studio'; token: string; type: 'text-edit'; selector: string; state: 'start' | 'cancel' }
   | { ns: 'studio'; token: string; type: 'text-commit'; selector: string; text: string; at: number }
@@ -912,7 +930,10 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
+  | { ns: 'studio'; token: string; type: 'force-state'; selector: string | null; states: ('hover' | 'focus' | 'active')[]; dark: boolean; track: boolean }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
+  | { ns: 'studio'; token: string; type: 'track-links'; links: LinkQuery[] }
+  | { ns: 'studio'; token: string; type: 'play-links'; links: LinkQuery[] | null }
   | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'request-tree' }
   | { ns: 'studio'; token: string; type: 'hover-node'; id: number | null }
@@ -922,7 +943,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'text-edit-stop' }
   | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
-  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string };
+  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
+  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -979,6 +1001,7 @@ export interface DirectEditRequest {
   insert?: InsertKind;
   classes?: ClassChange;
   component?: string;
+  variant?: string;
 }
 
 export interface ClassChange {

@@ -1,5 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
-import type { Direction, Project, RunStatus } from '../../shared/contracts';
+import type { Direction, DirectionVariation, Project, RunStatus } from '../../shared/contracts';
+import type { ElementScope } from '../../shared/element-variants';
+import type { FrameVariation } from './FrameControls';
 import { errorText } from '../api';
 import { canvasStore } from '../canvasFrames';
 import { framesOnCanvas, keepVariationFrame, showVariationFrames } from '../canvasVariations';
@@ -8,12 +10,14 @@ import { budgetFor, money, type VariationsState } from '../useVariations';
 import { groupOf } from '../variationsApi';
 import type { CanvasDirections } from './Canvas';
 import { Icon } from './Icon';
+import { ElementVariantsDialog } from './ElementVariantsDialog';
 import { VariationBriefCard } from './VariationBriefCard';
 
 interface GroupRun {
   status: RunStatus | null;
   costUsd: number;
   running: boolean;
+  error: string | null;
 }
 
 function groupRun(runs: RunMap, directionId: string): GroupRun {
@@ -22,7 +26,7 @@ function groupRun(runs: RunMap, directionId: string): GroupRun {
     .sort((a, b) => a.startedAt - b.startedAt);
   const latest = list[list.length - 1];
   const costUsd = list.reduce((sum, run) => sum + (run.summary?.costUsd ?? 0), 0);
-  return { status: latest?.status ?? null, costUsd, running: list.some((run) => run.status === 'running') };
+  return { status: latest?.status ?? null, costUsd, running: list.some((run) => run.status === 'running'), error: latest?.summary?.error ?? null };
 }
 
 function labelOf(direction: Direction): string {
@@ -136,6 +140,19 @@ export function VariationsTop(props: TopProps) {
           </button>
         </div>
       )}
+      {state.ask && !state.draft && (
+        <div className="variation-card-layer">
+          <ElementVariantsDialog
+            project={project}
+            element={state.ask}
+            onCancel={() => state.askElement(null)}
+            onStart={(note, count) => {
+              const element = state.ask;
+              if (element) void state.proposeElement(element, note, count, project.settings.defaultLevel);
+            }}
+          />
+        </div>
+      )}
       {state.draft && (
         <div className="variation-card-layer">
           <VariationBriefCard project={project} draft={state.draft} onEdit={state.editBrief} onRemove={state.removeBrief} onStart={state.start} onSkip={state.skip} onDismiss={state.dismiss} />
@@ -162,6 +179,7 @@ export function canvasVariations({ state, project, runs, setDirectionId }: Canva
       if (!direction || !variation) return undefined;
       const group = groupOf(project, variation.groupId);
       const run = groupRun(runs, directionId);
+      if (variation.scope) return elementVariation({ state, project, setDirectionId, direction, variation, scope: variation.scope, group, run });
       return {
         label: variation.label,
         title: variation.title,
@@ -183,5 +201,51 @@ export function canvasVariations({ state, project, runs, setDirectionId }: Canva
         },
       };
     },
+  };
+}
+
+interface ElementVariationInput {
+  state: VariationsState;
+  project: Project;
+  setDirectionId: (id: string) => void;
+  direction: Direction;
+  variation: DirectionVariation;
+  scope: ElementScope;
+  group: Direction[];
+  run: GroupRun;
+}
+
+function keepBlocker(variation: DirectionVariation, run: GroupRun, error: string | null): string | null {
+  if (variation.settled === 'kept') return 'Already kept in the main design';
+  if (variation.settled === 'discarded') return 'Another variant was kept';
+  if (run.running) return 'Wait for this variant to finish';
+  if (error || run.status === 'failed') return 'This variant failed, so it cannot be kept';
+  if (run.status !== 'completed') return 'This variant has no finished run';
+  return null;
+}
+
+function elementVariation({ state, project, setDirectionId, direction, variation, scope, group, run }: ElementVariationInput): FrameVariation {
+  const error = variation.rejected ?? (run.status === 'failed' ? run.error : null);
+  return {
+    label: variation.label,
+    title: variation.title,
+    status: run.status,
+    costText: `${money(run.costUsd)} spent`,
+    siblings: [],
+    scoped: true,
+    error,
+    keepBlocked: keepBlocker(variation, run, error),
+    onKeep: async () => {
+      await state.keepElement(variation.groupId, direction.id);
+      keepVariationFrame(
+        project.id,
+        scope.sourceDirectionId,
+        group.map((d) => d.id),
+      );
+      setDirectionId(scope.sourceDirectionId);
+      state.setGroupId(null);
+      state.keepNotice(`Kept variant ${variation.label} (${variation.title}) in the design as one version. The other variants were discarded.`);
+    },
+    onMix: async () => undefined,
   };
 }

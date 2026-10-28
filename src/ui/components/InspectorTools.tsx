@@ -2,7 +2,8 @@ import { useState, type MutableRefObject, type ReactNode } from 'react';
 import type { InsertKind, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import type { PreviewPort } from '../bridge';
-import { collectCommands, runCommand } from '../commands/registry';
+import { collectCommands, commandBlocker, runCommand } from '../commands/registry';
+import { TRY_VARIANTS_COMMAND } from '../../shared/element-variants';
 import type { DirectEditControl } from '../useDirectEdit';
 import { PREVIEW_HISTORY_EVENT } from '../useUndoShortcut';
 import { Icon } from './Icon';
@@ -59,6 +60,23 @@ function ToolButton({ label, pressed, disabled, tip, align, onClick, children }:
   );
 }
 
+function VariantsButton() {
+  const blocked = commandBlocker(TRY_VARIANTS_COMMAND);
+  return (
+    <button
+      type="button"
+      className="ins-tool"
+      aria-label="Try variants"
+      aria-disabled={blocked ? true : undefined}
+      data-tip={blocked ? `Try variants: ${blocked}` : 'Try variants of this element'}
+      data-testid="inspector-try-variants"
+      onClick={() => runCommand(TRY_VARIANTS_COMMAND)}
+    >
+      <Icon name="compare" size={14} />
+    </button>
+  );
+}
+
 export function InspectorTools(props: Props) {
   const [notice, setNotice] = useState<string | null>(null);
   const last = props.selection.at(-1);
@@ -104,6 +122,8 @@ export function InspectorTools(props: Props) {
             <Glyph d={item.glyph} />
           </ToolButton>
         ))}
+        <span className="ins-tools-sep" aria-hidden="true" />
+        <VariantsButton />
         <span className="ins-tools-end" />
         <ToolButton label="Undo" tip="Undo ⌘Z" align="end" onClick={() => history(false)}>
           <Icon name="undo" size={14} />

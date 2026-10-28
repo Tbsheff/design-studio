@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
+import { markOf, withElementMark } from '../elementMark';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
 import { boundsOf, canHideFrame, canvasStore, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, useCanvasLofi, withFramePath, type CanvasFrame } from '../canvasFrames';
@@ -22,6 +23,7 @@ import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
 import { RenderCheckPanel } from './RenderCheckPanel';
+import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
@@ -32,6 +34,7 @@ import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
 import { appRoutePages, useAppCanvas } from './AppCanvas';
+import { usePrototype } from '../usePrototype';
 
 interface Props {
   projectId: string;
@@ -337,7 +340,7 @@ function stageCursor(pz: { panning: boolean; spaceHeld: boolean; zoomHeld: boole
   return pz.zoomHeld ? 'zoom-in' : '';
 }
 
-function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void) {
+function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, onEscape: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -346,6 +349,7 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void) 
         setSelectMode((m) => !m);
       } else if (e.key === 'Escape') {
         setSelectMode(() => false);
+        onEscape();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -397,10 +401,21 @@ export function Canvas(props: Props) {
   const commentMode = comment.on;
   const live = source.kind === 'live';
   const pane = useShellPane(props.shell, comment, selectMode, setSelectMode, live, ui.layersOpen);
-  const { layersOpen, toggleEdit, picking } = pane;
+  const [protoOn, setProtoOn] = useState(false);
+  const { layersOpen, toggleEdit } = pane;
+  const picking = pane.picking || protoOn;
+  const setProto = (next: boolean) => {
+    setProtoOn(next);
+    if (!next) return;
+    comment.setOn(false);
+    setSelectMode(() => false);
+    if (props.shell?.pane === 'design') void props.shell.onPane('chat');
+  };
   const draw = useCanvasDraw(comment, picking, setSelectMode);
 
-  const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const preview = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const urlError = preview.urlError;
+  const baseUrl = withElementMark(preview.baseUrl, markOf(knownList(props.directions), directionId));
   const liveUrl = livePageUrl(baseUrl, active);
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
@@ -420,6 +435,7 @@ export function Canvas(props: Props) {
     onError: props.onError,
     onModeExited: () => {
       setSelectMode(false);
+      setProtoOn(false);
       comment.setOn(false);
     },
     onFrameWheel: pz.frameWheel,
@@ -449,7 +465,10 @@ export function Canvas(props: Props) {
 
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
-  useSelectKey(setSelectMode);
+  useSelectKey(setSelectMode, () => setProtoOn(false));
+  useEffect(() => {
+    if (selectMode || comment.on) setProtoOn(false);
+  }, [selectMode, comment.on]);
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
   useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
@@ -488,7 +507,8 @@ export function Canvas(props: Props) {
     return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
   };
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
-  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, center: pz.centerActive, size: viewport });
+  const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
+  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
@@ -517,10 +537,12 @@ export function Canvas(props: Props) {
         sandbox={sandbox}
         selection={props.selection}
         stage={() => stageRef.current}
-        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch }}
+        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch, links: proto.viewToggle }}
+        proto={{ on: protoOn, set: setProto, play: proto.play }}
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
+      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} />
       {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
@@ -563,7 +585,9 @@ export function Canvas(props: Props) {
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          {proto.artboard}
         </div>
+        {proto.stage}
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />
         {capture && <div className="capture" data-testid="pan-capture" />}

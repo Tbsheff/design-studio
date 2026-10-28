@@ -47,6 +47,8 @@ import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
+import { applyStyleReplace } from '../direct-edit/replace.js';
+import { isStyleReplaceBody, type StyleReplaceResult } from '../../shared/style-search.js';
 import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
@@ -62,6 +64,8 @@ import { createLiveDrafts } from '../design-system/draft-live.js';
 import { createFetcher } from '../design-system/extract/draft.js';
 import { registerPackRoutes } from './packs-routes.js';
 import { registerComponentRoutes } from './components-routes.js';
+import { registerPropsRoutes } from './props-routes.js';
+import { registerReviewRoutes } from './review-routes.js';
 import { createComponentService } from '../components/thumbs.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, RunHandle, ServerConfig, VersionStore } from '../types.js';
@@ -70,6 +74,7 @@ import { registerVariationRoutes } from '../variations/routes.js';
 import { createWorkspaceStore, type WorkspaceStore } from '../store/workspaces.js';
 import { createDefaultFolderStore, type DefaultFolderStore } from '../store/default-folder.js';
 import { createFolderPicker, type FolderPicker } from './pick-folder.js';
+import { registerFolderInspectRoutes } from './folder-inspect-routes.js';
 import { nameFromPrompt } from '../../shared/folders.js';
 import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
 import { createProjectLibrary } from '../store/project-library.js';
@@ -84,6 +89,7 @@ import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 import { registerMcpRoutes } from './mcp-routes.js';
+import { registerShipRoutes } from './ship-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -514,6 +520,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const appRouteDeps = { projects, versions, preview, readBody, commitInit: (project: Project) => commitInit(project), watch: (project: Project, direction: Direction) => watchDirection(project, direction) };
   registerAppRoutes(app, appRouteDeps);
+  registerFolderInspectRoutes(app, { projects, readBody });
 
   app.post('/api/projects/import', async (c) => {
     const body = await readBody(c);
@@ -858,8 +865,10 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/projects/:pid/d/:did/direct-edit', async (c) => {
     const body = await readBody(c);
     try {
-      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        isStructureEdit(body)
+      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult | StyleReplaceResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
+        isStyleReplaceBody(body)
+          ? applyStyleReplace(editDeps, project, direction, body)
+          : isStructureEdit(body)
           ? applyStructureEdit(editDeps, project, direction, body)
           : isDirectEditBatch(body)
             ? applyDirectEditBatch(editDeps, project, direction, body)
@@ -1016,6 +1025,8 @@ export function createApp(deps: AppDeps): Hono {
     service: createComponentService({ preview, scratchDir: (projectId) => path.join(projects.projectDir(projectId), '.component-shots') }),
     loadDirection,
   });
+  registerPropsRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
+  registerReviewRoutes(app, { editDeps, preview, canvas, readBody, loadDirection, withDirection });
 
   const library = createPackLibrary(packs);
   registerPackRoutes(app, {
@@ -1090,8 +1101,9 @@ export function createApp(deps: AppDeps): Hono {
   } });
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
-  registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
-  registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
+  registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });
+  const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
+  registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

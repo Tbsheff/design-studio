@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type ElementSourceInfo, type SelectionContext, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import { STRUCTURE_OPS, TOKENS_FILE, type AppServerStatus, type CompiledTokenEntry, type ElementSourceInfo, type SelectionContext, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
@@ -9,11 +9,17 @@ import { publishVersion } from '../direct-edit/index.js';
 import type { ActivityDraft } from './activity.js';
 import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
 import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
-import { base, checkWritePath, classes, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
+import { base, checkWritePath, classes, variant, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
 import { describeElement } from './element.js';
 import { FolderError, safeFolder } from './folders.js';
 import { HISTORY_TOOLS } from './history-tools.js';
 import { LIBRARY_TOOLS } from './library-tools.js';
+import { LINK_TOOLS } from './link-tools.js';
+import { SHIP_TOOLS } from './ship-tools.js';
+import { VARIANT_TOOLS } from './variant-tools.js';
+import { PROPS_TOOLS } from './props-tools.js';
+import { STYLE_TOOLS } from './style-tools.js';
+import { REVIEW_TOOLS } from './review-tools.js';
 import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
@@ -56,11 +62,12 @@ const schemas = {
       text: z.string().max(5000).optional().describe('New text content of the element.'),
       classes: classes.optional(),
       target: z.enum(['element', 'use']).optional().describe('Attached apps only. "use" edits the className prop (and text) where the shared component is used, for example <Button className="..."> in the page file, so only this use changes. Leave out to edit the element in its own file, which changes every use of a shared component.'),
+      variant: variant.optional(),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
-    .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined), 'pass style, text or classes, or op alone')
+    .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined && input.variant === undefined), 'pass style, text or classes, or op alone')
     .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none')
     .refine((input) => input.target !== 'use' || input.op === undefined, 'target use takes style, classes or text, not op'),
   add_comment: z
@@ -138,7 +145,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. In an attached app, an element inside a shared component (a file outside the app folder, such as packages/ui/button.tsx) changes every use; the result says so, and target "use" edits the className of this one use instead. The source file changes and a version is saved, so the user can undo it.' },
+  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Pass variant ("md:", "hover:", "md:hover:", "dark:") to set the style for a breakpoint or state only. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. In an attached app, an element inside a shared component (a file outside the app folder, such as packages/ui/button.tsx) changes every use; the result says so, and target "use" edits the className of this one use instead. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -156,7 +163,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
@@ -293,7 +300,7 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
   const use = input.target === 'use' ? await useSiteTarget(deps, project, direction.id, element, input.selector) : null;
   const target = use ? { source: use.source, component: use.component } : { source: element.source, tag: element.tag };
-  const body = { ...target, selector: input.selector, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}) };
+  const body = { ...target, selector: input.selector, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) };
   const note = use ? null : sharedNote(project, element);
   let result: DirectEditResult;
   try {
@@ -346,7 +353,9 @@ async function attachApp(deps: EditDeps, input: Input<'attach_app'>, client: str
   if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: 'The studio agent and write_file can then change the real files in this folder.' });
   const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
   const main = project.directions[0];
-  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, next: 'Call list_routes, then add_route_frame.' });
+  const state = await studioCall<{ status: AppServerStatus | null }>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/app`).catch(() => ({ status: null }));
+  const server = state.status ? { state: state.status.state, upstream: state.status.upstream, message: state.status.message } : null;
+  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, server, next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
   return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Attached ${oneLine(project.name, 60)}` } };
 }
 

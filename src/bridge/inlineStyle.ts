@@ -72,24 +72,42 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
   };
 }
 
-function containerSize(element: HTMLElement, fixed: boolean): { width: number; height: number } {
+interface Container {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+}
+
+function containerOf(element: HTMLElement, fixed: boolean): Container {
   const parent = fixed ? null : element.offsetParent;
-  if (parent instanceof HTMLElement && parent !== document.body) return { width: parent.clientWidth, height: parent.clientHeight };
-  return { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
+  if (parent instanceof HTMLElement && parent !== document.body) {
+    const box = parent.getBoundingClientRect();
+    return { width: parent.clientWidth, height: parent.clientHeight, x: box.left + parent.clientLeft, y: box.top + parent.clientTop };
+  }
+  const scrolled = fixed ? { x: 0, y: 0 } : { x: -window.scrollX, y: -window.scrollY };
+  return { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight, ...scrolled };
+}
+
+function exact(value: number): string {
+  return `${Number(value.toFixed(2))}px`;
 }
 
 function constraintStyles(element: Element, computed: CSSStyleDeclaration, box: Partial<Record<string, string>>): Record<string, string> {
   if (!(element instanceof HTMLElement)) return {};
-  const parent = containerSize(element, computed.position === 'fixed');
+  const parent = containerOf(element, computed.position === 'fixed');
+  const rect = element.getBoundingClientRect();
   return {
     'authored-left': box.left ?? '',
     'authored-right': box.right ?? '',
     'authored-top': box.top ?? '',
     'authored-bottom': box.bottom ?? '',
-    'container-width': `${Math.round(parent.width)}px`,
-    'container-height': `${Math.round(parent.height)}px`,
-    'box-width': `${Math.round(element.offsetWidth)}px`,
-    'box-height': `${Math.round(element.offsetHeight)}px`,
+    'container-width': exact(parent.width),
+    'container-height': exact(parent.height),
+    'pin-left': exact(rect.left - parent.x - (parseFloat(computed.marginLeft) || 0)),
+    'pin-top': exact(rect.top - parent.y - (parseFloat(computed.marginTop) || 0)),
+    'box-width': exact(rect.width),
+    'box-height': exact(rect.height),
   };
 }
 

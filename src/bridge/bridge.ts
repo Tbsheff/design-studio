@@ -1229,6 +1229,8 @@ function startBridge(session: BridgeSession): void {
       window.requestAnimationFrame(() => {
         paintScheduled = false;
         post({ type: 'painted', at: performance.timeOrigin + performance.now() });
+        const moved = locks.refresh();
+        if (moved) post({ type: 'locks', keys: moved });
       });
     });
   };

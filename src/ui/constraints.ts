@@ -12,8 +12,8 @@ interface AxisKeys {
 }
 
 const AXES: Record<PinAxis, AxisKeys> = {
-  x: { start: 'left', end: 'right', size: 'width', offset: 'offset-left', container: 'container-width', box: 'box-width' },
-  y: { start: 'top', end: 'bottom', size: 'height', offset: 'offset-top', container: 'container-height', box: 'box-height' },
+  x: { start: 'left', end: 'right', size: 'width', offset: 'pin-left', container: 'container-width', box: 'box-width' },
+  y: { start: 'top', end: 'bottom', size: 'height', offset: 'pin-top', container: 'container-height', box: 'box-height' },
 };
 
 export const PIN_OPTIONS: Record<PinAxis, { value: PinMode; label: string }[]> = {
@@ -50,7 +50,7 @@ export function pinModeOf(axis: PinAxis, styles: Record<string, string>): PinMod
 }
 
 function px(value: number): string {
-  return `${Math.round(value)}px`;
+  return `${Number(value.toFixed(2))}px`;
 }
 
 function percent(value: number): string {
@@ -58,7 +58,7 @@ function percent(value: number): string {
 }
 
 function centered(offset: number): string {
-  const rounded = Math.round(offset);
+  const rounded = Number(offset.toFixed(2));
   if (rounded === 0) return '50%';
   return `calc(50% ${rounded < 0 ? '-' : '+'} ${Math.abs(rounded)}px)`;
 }

@@ -10,6 +10,7 @@ export interface LockSet {
   ownLocked(element: Element): boolean;
   isLocked(element: Element): boolean;
   hit(event: Event, element: Element | null): Element | null;
+  refresh(): string[] | null;
 }
 
 function locKey(element: Element, loc: string): string {
@@ -34,6 +35,7 @@ function pointOf(event: Event): { x: number; y: number } | null {
 
 export function createLockSet(selectorOf: (element: Element) => string, useLoc: boolean): LockSet {
   let keys = new Set<string>();
+  const held = new Map<string, Element>();
   let cache: Element[] | null = null;
   let cacheFrame = 0;
 
@@ -45,7 +47,13 @@ export function createLockSet(selectorOf: (element: Element) => string, useLoc: 
   const lockedElements = (): Element[] => {
     if (keys.size === 0) return [];
     if (cache) return cache;
-    cache = [...keys].map(resolveKey).filter((element): element is Element => element !== null);
+    cache = [...keys].map((key) => {
+      const known = held.get(key);
+      if (known?.isConnected) return known;
+      const found = resolveKey(key);
+      if (found) held.set(key, found);
+      return found;
+    }).filter((element): element is Element => element !== null);
     cacheFrame = window.requestAnimationFrame(() => {
       cache = null;
       cacheFrame = 0;
@@ -65,18 +73,41 @@ export function createLockSet(selectorOf: (element: Element) => string, useLoc: 
     set(next) {
       const list = Array.isArray(next) ? next.filter((key): key is string => typeof key === 'string' && key.length <= KEY_MAX) : [];
       keys = new Set(list.slice(0, KEYS_MAX));
+      for (const key of [...held.keys()]) if (!keys.has(key)) held.delete(key);
       reset();
     },
     keys: () => [...keys],
     lock(element, locked) {
       const key = keyOf(element);
-      if (locked) keys.add(key);
-      else for (const known of [...keys]) if (known === key || resolveKey(known) === element) keys.delete(known);
+      if (locked) {
+        keys.add(key);
+        held.set(key, element);
+      } else {
+        for (const known of [...keys]) {
+          if (known !== key && held.get(known) !== element && resolveKey(known) !== element) continue;
+          keys.delete(known);
+          held.delete(known);
+        }
+      }
       reset();
       return [...keys];
     },
     ownLocked: (element) => lockedElements().includes(element),
     isLocked,
+    refresh() {
+      let changed = false;
+      for (const [key, element] of [...held]) {
+        const next = element.isConnected ? keyOf(element) : key;
+        if (next === key) continue;
+        keys.delete(key);
+        held.delete(key);
+        keys.add(next);
+        held.set(next, element);
+        changed = true;
+      }
+      if (changed) reset();
+      return changed ? [...keys] : null;
+    },
     hit(event, element) {
       if (!element || keys.size === 0 || !isLocked(element)) return element;
       const point = pointOf(event);

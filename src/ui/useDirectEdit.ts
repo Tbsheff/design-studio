@@ -90,6 +90,7 @@ export function useDirectEdit(o: Options) {
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
+  const forced = useRef(new Set<DirectStyleProperty>());
 
   const setDraft = useCallback((next: Partial<StyleValues>) => {
     draftRef.current = next;
@@ -109,6 +110,7 @@ export function useDirectEdit(o: Options) {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
     again.current = false;
+    forced.current.clear();
     setDraft({});
     setTextDraft(null);
   }, [setDraft, setTextDraft]);
@@ -150,7 +152,9 @@ export function useDirectEdit(o: Options) {
       return;
     }
     const cur = opts.current;
-    const style = rewriteDraft(changedProps(draftRef.current, baseRef.current));
+    const kept = Object.fromEntries([...forced.current].filter((prop) => prop in draftRef.current).map((prop) => [prop, draftRef.current[prop]]));
+    forced.current.clear();
+    const style = rewriteDraft({ ...changedProps(draftRef.current, baseRef.current), ...kept });
     const pendingText = textRef.current;
     const text = pendingText !== null && pendingText !== cur.selection.text ? pendingText : undefined;
     const req = buildEditRequest(cur.selection, style, text, cur.variant);
@@ -200,7 +204,8 @@ export function useDirectEdit(o: Options) {
   );
 
   const preview = useCallback(
-    (patch: Partial<StyleValues>) => {
+    (patch: Partial<StyleValues>, force = false) => {
+      if (force) for (const prop of Object.keys(patch) as DirectStyleProperty[]) forced.current.add(prop);
       setDraft({ ...draftRef.current, ...patch });
       post({ type: 'preview-style', selector: opts.current.selection.selector, style: patch });
       setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s));

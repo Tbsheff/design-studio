@@ -32,6 +32,7 @@ export function parseLayerTree(raw: { nodes?: unknown; truncated?: unknown }): L
       childCount: count(n.childCount),
       hidden: n.hidden === true,
       ...(typeof n.loc === 'string' && n.loc.length <= LOC_MAX ? { loc: n.loc } : {}),
+      ...(n.locked === true ? { locked: true } : {}),
     });
   }
   return { nodes, truncated: raw.truncated === true };

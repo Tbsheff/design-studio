@@ -369,18 +369,33 @@ const PIN_TIPS: Record<PinAxis, string> = {
   y: 'How the element follows when its container gets taller or shorter',
 };
 
-function PinSelect({ axis, edit, selection }: { axis: PinAxis; edit: DirectEdit; selection: SelectionContext }) {
-  const mode = pinModeOf(axis, selection.styles);
+function PinSelect({ axis, mode, edit, selection, onPick }: { axis: PinAxis; mode: PinMode; edit: DirectEdit; selection: SelectionContext; onPick: (axis: PinAxis, mode: PinMode) => void }) {
+  const change = (next: PinMode) => {
+    if (next === mode) return;
+    edit.preview(pinPatch(axis, next, selection.styles), true);
+    edit.commit();
+    onPick(axis, next);
+  };
   return (
     <div className="ins-field select ins-pin" data-tip={PIN_TIPS[axis]} data-tip-align="end">
       <span className="ins-scrub static">{axis === 'x' ? 'H' : 'V'}</span>
-      <UiSelect className="ins-select" aria-label={axis === 'x' ? 'Horizontal constraint' : 'Vertical constraint'} value={mode} options={PIN_OPTIONS[axis]} onChange={(next: PinMode) => next !== mode && write(edit, pinPatch(axis, next, selection.styles))} />
+      <UiSelect className="ins-select" aria-label={axis === 'x' ? 'Horizontal constraint' : 'Vertical constraint'} value={mode} options={PIN_OPTIONS[axis]} onChange={change} />
     </div>
   );
 }
 
+function usePinModes(selection: SelectionContext): { modes: Record<PinAxis, PinMode>; pick: (axis: PinAxis, mode: PinMode) => void } {
+  const authored = ['left', 'right', 'top', 'bottom'].map((side) => selection.styles[`authored-${side}`] ?? '').join('|');
+  const [picked, setPicked] = useState<{ key: string; modes: Partial<Record<PinAxis, PinMode>> }>({ key: authored, modes: {} });
+  const fresh = picked.key === `${selection.selector}|${authored}` ? picked.modes : {};
+  const modes = { x: fresh.x ?? pinModeOf('x', selection.styles), y: fresh.y ?? pinModeOf('y', selection.styles) };
+  const pick = (axis: PinAxis, mode: PinMode) => setPicked({ key: `${selection.selector}|${authored}`, modes: { ...fresh, [axis]: mode } });
+  return { modes, pick };
+}
+
 function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
-  const fields = [...pinFields('x', pinModeOf('x', selection.styles)), ...pinFields('y', pinModeOf('y', selection.styles))];
+  const { modes, pick } = usePinModes(selection);
+  const fields = [...pinFields('x', modes.x), ...pinFields('y', modes.y)];
   return (
     <>
       {fields.length > 0 && (
@@ -391,8 +406,8 @@ function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: Sele
         </div>
       )}
       <div className="ins-grid ins-constraints" role="group" aria-label="Constraints">
-        <PinSelect axis="x" edit={edit} selection={selection} />
-        <PinSelect axis="y" edit={edit} selection={selection} />
+        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={pick} />
+        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={pick} />
       </div>
     </>
   );

@@ -58,6 +58,11 @@ export function siteRequest(site: EditSite): { source: SourceLoc; component: str
   return site.kind === 'use' ? { source: site.source, component: site.component } : { source: site.source, tag: site.tag };
 }
 
+export function editedAtLabel(site: EditSite | undefined): 'use' | 'component' | 'element' {
+  if (site?.kind === 'use') return 'use';
+  return site?.shared ? 'component' : 'element';
+}
+
 export function siteNote(site: EditSite): string | null {
   if (site.kind === 'use') return `Edited this use of <${site.component}> at ${locText(site.source)}; ${site.shared.file} did not change. Pass target "component" to change every ${site.component} instead.`;
   if (!site.shared) return null;

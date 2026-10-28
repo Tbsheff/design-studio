@@ -254,7 +254,7 @@ export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
   });
 }
 
-export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceSpec[]): Promise<ToolText> {
+export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceSpec[], options: { seed?: boolean } = {}): Promise<ToolText> {
   if (ctx.plan) return failure('Plan mode is on, so the canvas stays as it is. Describe the frames in the plan.');
   if (ctx.mode === 'critique') return failure('canvas_place is not available in critique runs. Use canvas_point to show a frame.');
   if (specs.length === 0) return failure('Pass at least one frame to place.');
@@ -264,7 +264,7 @@ export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceS
     const result = await ctx.canvas.update(
       ctx.project,
       (file) => {
-        const next = applyPlacement(seedDefault(file, ctx), specs, ctx.direction.id);
+        const next = applyPlacement(options.seed === false ? file : seedDefault(file, ctx), specs, ctx.direction.id);
         placed = next.placed;
         warnings = overlapWarnings(next.file.frames, placed.map((frame) => frame.id));
         return next.file;

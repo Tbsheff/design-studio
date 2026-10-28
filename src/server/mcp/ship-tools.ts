@@ -7,7 +7,13 @@ const SHIP_NOTE = 'Ship works on an attached app project whose folder is in a gi
 
 const versionId = z.string().regex(/^[0-9a-f]{40,64}$/, 'must be a version id from prepare_ship').optional();
 
-const prepareInput = z.object({ projectId, baseVersionId: versionId.describe('Base version id. Leave out for the last ship, or the version made when the app was attached.') }).strict();
+const prepareInput = z
+  .object({
+    projectId,
+    baseVersionId: versionId.describe('Base version id. Leave out for the last ship, or the version made when the app was attached.'),
+    title: z.string().max(SHIP_TEXT_MAX.title).optional().describe('Name of the change, for example "Add Recent F2F documents card". The default branch name, commit message and pull request text come from it. Leave out for a name made from all versions since the base.'),
+  })
+  .strict();
 
 const shipInput = z
   .object({
@@ -16,15 +22,16 @@ const shipInput = z
     files: z.array(z.string().max(1000)).max(500).optional().describe('Repo-relative paths from prepare_ship. Leave out for every file that is not refused and has no conflict.'),
     branch: z.string().max(SHIP_TEXT_MAX.branch).optional().describe('Branch name. Leave out for the name from the project branch template.'),
     commitMessage: z.string().max(SHIP_TEXT_MAX.commitMessage).optional(),
-    title: z.string().max(SHIP_TEXT_MAX.title).optional().describe('Pull request title.'),
+    title: z.string().max(SHIP_TEXT_MAX.title).optional().describe('Name of the change and pull request title. When branch, commitMessage or body are left out, their defaults come from this title. Leave out for a name made from all versions since the base.'),
     body: z.string().max(SHIP_TEXT_MAX.body).optional().describe('Pull request body. Leave out for the project body template.'),
     mode: z.enum(['branch', 'push', 'pr']).default('branch').describe('branch: commit on a new local branch only. push: also push it to the remote. pr: push and open a pull request with gh.'),
   })
   .strict();
 
-async function prepared(deps: EditDeps, pid: string, base: string | undefined): Promise<ShipPrepare> {
+async function prepared(deps: EditDeps, pid: string, base: string | undefined, title?: string): Promise<ShipPrepare> {
   const { project } = await loadTarget(deps, pid);
-  return studioCall<ShipPrepare>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/ship${base ? `?base=${base}` : ''}`);
+  const query = new URLSearchParams({ ...(base ? { base } : {}), ...(title?.trim() ? { title: title.trim() } : {}) }).toString();
+  return studioCall<ShipPrepare>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/ship${query ? `?${query}` : ''}`);
 }
 
 function describe(plan: ShipPrepare): unknown {
@@ -46,7 +53,7 @@ const prepareShip = defineTool(
   'prepare_ship',
   prepareInput,
   { title: 'Prepare ship', description: `List the files the studio changed since a base version, with diffs, refused files, conflicts with the user's own changes, and the default branch name, commit message and pull request text. Read only. ${SHIP_NOTE}`, readOnly: true, idempotent: true },
-  async (deps, input) => ({ result: ok(describe(await prepared(deps, input.projectId, input.baseVersionId))) }),
+  async (deps, input) => ({ result: ok(describe(await prepared(deps, input.projectId, input.baseVersionId, input.title))) }),
 );
 
 function approvalDetail(plan: ShipPrepare, repo: ShipRepoInfo, mode: ShipMode, title: string, files: string[]): string {
@@ -60,7 +67,7 @@ const ship = defineTool(
   shipInput,
   { title: 'Ship as branch or PR', description: `Commit studio changes to a new branch in the user's repo and, if asked, push it and open a pull request. The user must click Allow in Design Studio first; without the window open it is refused. Call prepare_ship first. ${SHIP_NOTE}` },
   async (deps, input, client) => {
-    const plan = await prepared(deps, input.projectId, input.baseVersionId);
+    const plan = await prepared(deps, input.projectId, input.baseVersionId, input.title);
     if (plan.blocked || !plan.base || !plan.headVersionId || !plan.repo) throw new EditError(plan.blocked ?? 'Nothing to ship.');
     const files = input.files ?? plan.files.filter((f) => !f.refused && !f.conflict).map((f) => f.path);
     if (files.length === 0) throw new EditError('No file can be shipped. Call prepare_ship to see the refused files and conflicts.');

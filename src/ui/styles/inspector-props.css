@@ -160,3 +160,15 @@
 .prp-variant .ins-input {
   min-width: 0;
 }
+
+.prp-kit {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.prp-kit .prp-kit-thumb {
+  height: 48px;
+  margin: 0;
+}

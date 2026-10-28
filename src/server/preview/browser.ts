@@ -12,6 +12,7 @@ import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from 
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
 import { WarmPages } from './page-pool.js';
 import { renderSettled } from './render-wait.js';
+import { expandScrollRoot } from './scroll-root.js';
 import { PeekPages } from './peek-pages.js';
 import { waitForPage } from '../export/capture.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
@@ -297,6 +298,7 @@ export class BrowserPool {
   async screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string> {
     return this.withPage(url, viewport, async (page) => {
       await mkdir(path.dirname(outPath), { recursive: true });
+      await expandScrollRoot(page);
       await page.screenshot(outPath);
       return outPath;
     });
@@ -304,6 +306,7 @@ export class BrowserPool {
 
   async elementShots(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]> {
     return this.withPage(url, viewport, async (page) => {
+      await expandScrollRoot(page);
       const clips = await page.evaluate<(RenderClip | null)[]>(elementClipsExpression(selectors));
       await mkdir(path.dirname(outPrefix), { recursive: true });
       const out: (string | null)[] = [];
@@ -349,6 +352,7 @@ export class BrowserPool {
         await page.evaluate(STILL_EXPRESSION).catch(() => undefined);
         await settle(page);
       }
+      await expandScrollRoot(page);
       const pageHeight = await page.evaluate<number>(PAGE_HEIGHT_EXPRESSION);
       const tiles = planTiles(pageHeight, request.tileHeight, request.from, request.maxTiles);
       await mkdir(path.dirname(request.outPrefix), { recursive: true });
@@ -376,7 +380,10 @@ export class BrowserPool {
       state.pageErrors.push(`quality probe failed: ${errorText(error)}`);
       return null;
     });
-    await timed(state.timings, 'screenshot', () => page.screenshot(screenshotPath));
+    await timed(state.timings, 'screenshot', async () => {
+      await expandScrollRoot(page);
+      await page.screenshot(screenshotPath);
+    });
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
@@ -449,6 +456,7 @@ export class BrowserPool {
     return this.withPage(url, { width: spec.width, height: spec.height }, async (page) => {
       const probe = await page.evaluate<QualityProbeResult>(qualityProbeExpression({ tapTargets: false, placeholder: false, selectionLocs, cap: 0 }));
       await mkdir(path.dirname(outPath), { recursive: true });
+      await expandScrollRoot(page);
       await page.screenshot(outPath);
       return { path: outPath, selectionRects: probe.selectionRects, nav: probe.nav };
     });

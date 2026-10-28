@@ -18,6 +18,7 @@ export interface Library {
   root: string;
   scan: string[];
   entries: LibraryEntry[];
+  locals: LibraryEntry[];
   files: string[];
   imports: Map<string, Map<string, string>>;
   texts: Map<string, string>;
@@ -31,7 +32,7 @@ export interface NamedImport {
 interface FileInfo {
   stamp: string;
   text: string;
-  entries: Omit<LibraryEntry, 'uses' | 'file' | 'folder' | 'absolute' | 'id'>[];
+  entries: (Omit<LibraryEntry, 'uses' | 'file' | 'folder' | 'absolute' | 'id'> & { exported: boolean })[];
   specifiers: string[];
   named: NamedImport[];
 }
@@ -100,10 +101,10 @@ async function fileInfo(file: string): Promise<FileInfo | null> {
   const ast = parseModuleFile(text, file);
   const exported = ast ? exportNames(ast) : new Map<string, string>();
   const entries = (ast ? declaredComponents(ast) : []).flatMap((item) => {
+    if (item.name === 'App') return [];
     const name = exported.get(item.name);
-    if (!name || item.name === 'App') return [];
     const kind: ExportKind = name === 'default' ? 'default' : 'named';
-    return [{ name: kind === 'default' ? item.name : name, local: item.name, kind, line: item.line, children: takesChildren(text.slice(item.start, item.end)) }];
+    return [{ name: !name || kind === 'default' ? item.name : name, local: item.name, kind, line: item.line, children: takesChildren(text.slice(item.start, item.end)), exported: name !== undefined }];
   });
   const specifiers = [...text.matchAll(IMPORT_FROM)].map((match) => match[1] as string).filter((spec) => !spec.startsWith('.'));
   const next = { stamp, text, entries, specifiers, named: ast ? namedImports(ast) : [] };
@@ -179,6 +180,7 @@ export async function loadLibrary(project: Project, workTree: string): Promise<L
   const infos = await Promise.all(files.map(async (file) => ({ file, info: await fileInfo(file) })));
   const rank = rankFiles(scan);
   const entries: LibraryEntry[] = [];
+  const locals: LibraryEntry[] = [];
   const specifiers = new Map<string, string[]>();
   const imports = new Map<string, Map<string, string>>();
   const texts = new Map<string, string>();
@@ -192,12 +194,12 @@ export async function loadLibrary(project: Project, workTree: string): Promise<L
       imports.set(item.name, byFile);
     }
     const relative = path.relative(root, file).split(path.sep).join('/');
-    for (const entry of info.entries) entries.push({ ...entry, id: `${relative}#${entry.name}`, file: relative, folder: path.posix.dirname(relative), absolute: file, uses: 0 });
+    for (const { exported, ...entry } of info.entries) (exported ? entries : locals).push({ ...entry, id: `${relative}#${entry.name}`, file: relative, folder: path.posix.dirname(relative), absolute: file, uses: 0 });
   }
-  const counts = countTags(infos.map((item) => item.info?.text ?? ''), new Set(entries.map((entry) => entry.local)));
-  for (const entry of entries) entry.uses = counts.get(entry.local) ?? 0;
+  const counts = countTags(infos.map((item) => item.info?.text ?? ''), new Set([...entries, ...locals].map((entry) => entry.local)));
+  for (const entry of [...entries, ...locals]) entry.uses = counts.get(entry.local) ?? 0;
   entries.sort((a, b) => Number(a.uses === 0) - Number(b.uses === 0) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
-  return { root, scan, entries, files, imports, texts, specifiers };
+  return { root, scan, entries, locals, files, imports, texts, specifiers };
 }
 
 export async function listInsertable(project: Project, workTree: string): Promise<InsertableList> {

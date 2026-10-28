@@ -12,6 +12,7 @@ interface Ranked {
   entry: LibraryEntry;
   source: ComponentSource;
   tier: number;
+  local: boolean;
 }
 
 const DEFAULT_LIMIT = 40;
@@ -54,13 +55,14 @@ function rank(library: Library, request: ComponentListQuery): Ranked[] {
   const fileText = textIndex(library);
   const wanted = request.source ?? 'all';
   const out: Ranked[] = [];
-  for (const entry of library.entries) {
+  const locals = new Set(library.locals);
+  for (const entry of [...library.entries, ...library.locals]) {
     const source = sourceOf(library, entry);
     if (wanted !== 'all' && source !== wanted) continue;
     const tier = tierOf(entry, query, fileText);
-    if (tier >= 0) out.push({ entry, source, tier });
+    if (tier >= 0) out.push({ entry, source, tier, local: locals.has(entry) });
   }
-  return out.sort((a, b) => Number(a.source === 'app') - Number(b.source === 'app') || a.tier - b.tier || b.entry.uses - a.entry.uses || a.entry.name.localeCompare(b.entry.name) || a.entry.file.localeCompare(b.entry.file));
+  return out.sort((a, b) => Number(a.source === 'app') - Number(b.source === 'app') || a.tier - b.tier || Number(a.local) - Number(b.local) || b.entry.uses - a.entry.uses || a.entry.name.localeCompare(b.entry.name) || a.entry.file.localeCompare(b.entry.file));
 }
 
 function offsetOf(cursor: string | undefined): number {
@@ -115,11 +117,12 @@ export async function searchComponents(project: Project, workTree: string, reque
   const limit = Math.min(Math.max(request.limit ?? DEFAULT_LIMIT, 1), COMPONENT_LIST_MAX);
   const page = ranked.slice(offset, offset + limit);
   const [ts, schemas] = await Promise.all([loadTypeScript(), componentSchemas(workTree, page.map(({ entry }) => ({ file: entry.absolute, name: entry.local })))]);
-  const components: ComponentListItem[] = page.map(({ entry, source }, index) => {
+  const components: ComponentListItem[] = page.map(({ entry, source, local }, index) => {
     const schema = schemas[index] ?? null;
     const base = schema ?? { name: entry.name, file: entry.file, line: entry.line, props: [], cva: null, asChild: false, note: null };
     const example = jsxFor(entry, schema, { component: { name: entry.name }, target: { source: null }, position: 'inside' });
-    return { ...base, name: entry.name, file: entry.file, line: entry.line, uses: entry.uses, source, folder: entry.folder, parts: partsOf(library, entry), import: importLine(ts, project, library, entry), example };
+    const importText = local ? `not exported: use it inside ${entry.file}` : importLine(ts, project, library, entry);
+    return { ...base, name: entry.name, file: entry.file, line: entry.line, uses: entry.uses, source, folder: entry.folder, parts: partsOf(library, entry), import: importText, example };
   });
   const next = offset + page.length;
   return { components, total: ranked.length, truncated: next < ranked.length, nextCursor: next < ranked.length ? String(next) : null };

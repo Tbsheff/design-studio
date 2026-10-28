@@ -300,7 +300,7 @@ async function planFlow(deps: FlowDeps, project: Project, scanner: RouteScanner,
   const nodes = input.from ? walked.nodes : walked.nodes.map((node, index) => ({ ...node, level: index }));
   const missing = new Set<string>();
   const paths = new Map(nodes.map((node) => [node.route, concretePath(node.route, params, missing)]));
-  const anchorPath = input.from ? (paths.get(start.routes[0] as string) ?? null) : null;
+  const anchorPath = paths.get(start.routes[0] as string) ?? null;
   return { nodes, cut: walked.cut, paths, params, missing, sourceFrame: start.sourceFrame, anchorPath };
 }
 

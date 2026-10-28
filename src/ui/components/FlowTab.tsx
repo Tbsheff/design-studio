@@ -48,8 +48,10 @@ export default function FlowTab({ projectId }: { projectId: string }) {
   const [result, setResult] = useState<FlowResult | null>(null);
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase();
-    return (routes ?? []).filter((route) => needle === '' || route.route.toLowerCase().includes(needle) || route.file.toLowerCase().includes(needle)).slice(0, 200);
-  }, [routes, filter]);
+    const found = (routes ?? []).filter((route) => needle === '' || route.route.toLowerCase().includes(needle) || route.file.toLowerCase().includes(needle));
+    const picked = (route: AppRoute) => (chosen.includes(route.route) ? chosen.indexOf(route.route) : chosen.length);
+    return [...found].sort((a, b) => picked(a) - picked(b)).slice(0, 200);
+  }, [routes, filter, chosen]);
   const names = [...new Set(chosen.flatMap(dynamicNames))];
   const toggle = (route: string) => setChosen((list) => (list.includes(route) ? list.filter((item) => item !== route) : [...list, route]));
   const build = () => {

@@ -101,28 +101,26 @@ const CONTEXT_RULES = `## Canvas context
 When the message has a <canvas-context> block, it names the frame the user had open. Put the change in that page: its page file and the components it imports, unless the user names another page. Do not search the project for the page. Check the result on that frame; pass \`frame\` or \`path\` to the check tools only to look at another page.`;
 
 const DIRECT_EDIT_RULES = `## Direct edits
-These tools change the design with the same code as the studio inspector and Tokens panel. Each patches only what it names and leaves the rest of the file as it was.
-- \`mcp__studio__edit_element\`: one element by CSS selector on the live page: inline \`style\`, the \`text\` of a leaf element, \`classes\` {add, remove}, \`variant\` ("md:", "hover:", "md:hover:", "dark:") to set the style for one breakpoint or state, or \`op\` delete, duplicate, wrap, unwrap, move (into \`targetSelector\`). Use it for a small exact change to an element you can select, such as "make the heading teal" or "remove this button". Use Edit or Write for new markup, stylesheet rules, a change across many elements, or elements made by \`.map()\` or a condition (the tool refuses those).
-- \`mcp__studio__set_props\`: the props of one React component instance (\`selector\`, or \`source\` file:line:col of the JSX tag), for example \`variant\` or \`size\` of a \`<Button>\`. Use it, not Edit, to switch a component variant.
-- \`mcp__studio__find_styles\` and \`mcp__studio__replace_style\`: list the colors, font sizes, radii and spacing on the page, and replace one raw value (such as \`#1c1f23\` or \`p-[13px]\`) with a token on every element that uses it. Use them to move a page to tokens.
-- \`mcp__studio__arrange\` and \`mcp__studio__measure\`: align, distribute or tidy up sibling elements (\`targets\` with one of \`align\`, \`distribute\` or \`tidy\`) by writing the parent auto layout (or left/top for absolute children), and measure the distance between two elements (read only). Use arrange, not hand edits, for "align these cards" or "make the gaps equal".
-- \`mcp__studio__insert_component\`: add one instance of a library component (\`name\`, such as \`Button\`) inside or after an element (\`targetSelector\`, or \`targetSource\` file:line:col), with \`props\` and child \`text\`. It fills required props and adds the import line with the path the project uses. Use it when the user asks to add a library component, such as "add a Button after the title".
-- \`mcp__studio__insert_jsx\`: add a group of elements in one step: a JSX snippet (\`jsx\`) with library components and token classes, \`position\` inside, before, after or replace, at \`targetSelector\` or \`targetSource\`. It adds the import lines and matches the file indent. Markup only: no functions, hooks, conditions or \`.map()\`. Use it for a new card, row or section built from library components; \`mcp__studio__clear_text\` removes stray text next to child elements.
-- \`mcp__studio__set_token\`: one token value (\`--primary\` or \`color.primary\`, theme light or dark). Use it, not a hand edit of tokens.json or the token CSS, when the request is to change a token value. Add new tokens with Edit.
-- All of them count as edits: run the checks the <run-level> block asks for after them.
-
-Kit and layer tools (read only):
-- \`mcp__studio__list_components\`: the project's React components, the shared kit (such as \`packages/ui\`) first, each with its import line, a JSX example, its parts (CardHeader for Card) and its variants. Call it with a \`query\` ("card", "badge", "table") before you build UI in an app or a React project with a kit. Do not grep or cat the kit files to find components.
-- \`mcp__studio__get_layers\`: the rendered page or a \`frame\` as a tree of layer ids with tag, component and source line. Use it to find where new UI goes and which element to change. A layer id (such as "e0k3pz") works as \`selector\` or \`targetSelector\` in edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame.
-- \`mcp__studio__review_frame\`: the Review panel checks on one frame (contrast, tap targets, alt text and other axe rules, off-token values, clipped content). Call it on each frame you changed before you finish an app run or a flow, and on frames that screenshots do not show. Apply each \`directFix\` with edit_element; fix the others with judgment.
+The \`mcp__studio__\` edit tools use the same code as the studio inspector and patch only what they name. Tool descriptions are short: call \`mcp__studio__studio_help\` with a tool name for its full rules before the first use of a tool you have not used in this run.
+- \`get_layers\`: the page as a tree of layer ids with source lines. A layer id works as \`selector\` or \`targetSelector\` in the edit tools and review_frame. Use it to find where new UI goes.
+- \`review_frame\`: Review panel checks on one frame. Call it on each frame you changed before you finish an app run or a flow. Apply each \`directFix\` with edit_element.
 
 Which tool to use:
+- One small style or text change, or a delete, duplicate, wrap or move of one element: \`edit_element\`.
+- A group of new elements: \`insert_jsx\` (markup only); \`clear_text\` removes stray text next to child elements.
+- Raw colors or sizes on the page: \`find_styles\`, then \`replace_style\` with a token. One token value: \`set_token\`, not a hand edit of tokens.json or the token CSS.
+- Align, space evenly or tidy up siblings: \`arrange\`; distances: \`measure\`.
+- Logic, data wiring, new files, elements made by \`.map()\` or a condition, or many changes at once: Edit or Write.
+- All of them count as edits: run the checks the <run-level> block asks for after them.`;
+
+const KIT_EDIT_RULES = `Kit components (React):
+- \`list_components\` with a \`query\` ("card", "badge", "table") before you build UI: kit first, with import line, JSX example, parts and variants. Do not grep or cat the kit files to find components.
 - A new card, row or section from kit components: \`insert_jsx\`, not Edit. One kit component: \`insert_component\`.
-- A variant or size of a component: \`set_props\`.
-- One small style or text change to one element: \`edit_element\`.
-- Raw colors or sizes on the page: \`find_styles\`, then \`replace_style\` with a token.
-- Align, space evenly or tidy up siblings: \`arrange\`.
-- Logic, data wiring, new files or many changes at once: Edit or Write.`;
+- A variant or size of a component: \`set_props\`, not Edit.`;
+
+function directEditRules(project: Pick<Project, 'kind' | 'app'>): string {
+  return project.kind === 'react' || project.app ? `${DIRECT_EDIT_RULES}\n\n${KIT_EDIT_RULES}` : DIRECT_EDIT_RULES;
+}
 
 const EDIT_REPLY_RULES = `## Replies
 Keep chat replies short: one to three sentences on what you changed, then one line on the checks you ran and what you left unfixed, as the <run-level> block asks. Never paste source code into chat.`;
@@ -154,19 +152,44 @@ function fontsRule(url: string | null): string[] {
   return [`- Fonts: link this stylesheet in HTML \`<head>\` (React projects already load it from index.html): \`<link rel="stylesheet" href="${url}">\``];
 }
 
+const RAMP_STEP = /^(--.+)-(\d{2,3})$/;
+const SKIPPED_TOKEN = /^--animate-/;
+
+interface TokenLine {
+  key: string;
+  text: string;
+}
+
+function tokenLine(entry: DesignSystemPromptContext['entries'][number]): TokenLine {
+  const raw = (entry.source?.value ?? entry.value).trim();
+  const ramp = RAMP_STEP.exec(entry.cssVar);
+  if (ramp?.[1]) return { key: ramp[1], text: ramp[2] ?? '' };
+  return { key: entry.cssVar, text: raw.startsWith('var(') ? entry.cssVar : `${entry.cssVar}: ${raw}` };
+}
+
 function appTokenLines(entries: DesignSystemPromptContext['entries']): string {
-  return entries
-    .map((entry) => {
-      const raw = entry.source?.value ?? entry.value;
-      const dark = entry.source?.darkValue;
-      return `${entry.cssVar}: ${raw}${dark ? ` | dark: ${dark}` : ''}`;
-    })
-    .join('\n');
+  const ramps = new Map<string, string[]>();
+  const lines: string[] = [];
+  for (const entry of entries) {
+    if (SKIPPED_TOKEN.test(entry.cssVar)) continue;
+    const line = tokenLine(entry);
+    if (line.key === entry.cssVar) {
+      lines.push(line.text);
+      continue;
+    }
+    const steps = ramps.get(line.key);
+    if (steps) steps.push(line.text);
+    else {
+      ramps.set(line.key, [line.text]);
+      lines.push(`\u0000${line.key}`);
+    }
+  }
+  return lines.map((line) => (line.startsWith('\u0000') ? `${line.slice(1)}-{${ramps.get(line.slice(1))?.join(',')}}` : line)).join('\n');
 }
 
 function buildAppTokensBlock(mode: RunMode, designSystem: DesignSystemPromptContext, file: string): string {
   const rules = `## App tokens
-This folder is the user's app. Its design tokens are the CSS custom properties in \`${file}\` (Tailwind \`@theme\`, \`:root\` and \`.dark\` blocks). The list below has every token with its declared value and its \`.dark\` value.
+This folder is the user's app. Its design tokens are the CSS custom properties in \`${file}\` (Tailwind \`@theme\`, \`:root\` and \`.dark\` blocks). The list below names every token. It shows a value only when the token is not a reference to another token; scales such as \`--color-x-{50,100}\` are one line. Read the file for references and \`.dark\` values. Prefer the semantic tokens (text, surface, border, action) over raw scale steps.
 - Use these tokens (Tailwind utilities such as \`bg-primary\`, or \`var(--token)\`) for colors, fonts, sizes, spacing, radii and shadows. Do not hard-code a value that a token covers.
 ${mode === 'critique' ? '- In a critique, flag hard-coded values that a token covers, and name the token.' : `- Change a token only when the user asks for it. Then edit only that declaration in \`${file}\` and keep the rest of the file as it is.`}`;
   return `${rules}\n\n<app_tokens file="${file}">\n${appTokenLines(designSystem.entries)}\n</app_tokens>`;
@@ -203,10 +226,10 @@ export function buildDesignSystemDraftBlock(project: Pick<Project, 'designSystem
   return project.designSystemFor ? DESIGN_SYSTEM_DRAFT_RULES : null;
 }
 
-function skillsRule(count: number, allowBash: boolean): string {
+function skillsRule(allowBash: boolean): string {
   const shell = allowBash ? '' : ' Shell commands are off in this project. Load a skill that uses a shell anyway for its guidance: follow its design rules and skip only its shell or script steps.';
   return `## Skills
-${count} of the user's Claude skills are available through the Skill tool. Each skill you load costs time and context, so load only these:
+Some of the user's Claude skills are available through the Skill tool. Each skill you load costs time and context, so load only these:
 - The skills in the <recommended-skills> block, when the message has one, unless one clearly does not fit the request.
 - A skill the user names in the message (for example "Use the X skill." or [skill:X]). Always load it.
 Do not load other skills, even when their descriptions match. With no block and no named skill, load none.${shell} These instructions and the project rules above take priority over a skill.`;
@@ -248,8 +271,8 @@ export function buildSystemPrompt(
   const sections =
     mode === 'critique'
       ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES, CANVAS_RULES]
-      : [ROLE, kindRules, policy, EDITING_RULES, ...shellEditRules(project), SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, CONTEXT_RULES, DIRECT_EDIT_RULES, EDIT_REPLY_RULES];
-  if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
+      : [ROLE, kindRules, policy, EDITING_RULES, ...shellEditRules(project), SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, CONTEXT_RULES, directEditRules(project), EDIT_REPLY_RULES];
+  if (skillCount > 0) sections.push(skillsRule(shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));
   if (designRules.length > 0) sections.push(buildDesignRulesBlock(designRules, mode));

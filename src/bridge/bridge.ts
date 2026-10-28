@@ -9,6 +9,7 @@ import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
+import { createForceState, type ForcedState } from './force-state.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
@@ -935,6 +936,21 @@ function startBridge(session: BridgeSession): void {
   });
   const previewStyles = createPreviewStyles();
   const themeControl = createThemeControl();
+  let forcedDark = false;
+  const repostSelected = (): void => {
+    if (selected?.isConnected) postSelect(selected, false);
+  };
+  const forceState = createForceState(repostSelected);
+  const onForceState = (message: Extract<ParentToBridge, { type: 'force-state' }>): void => {
+    const states = (Array.isArray(message.states) ? message.states : []).filter((state): state is ForcedState => state === 'hover' || state === 'focus' || state === 'active');
+    const selector = typeof message.selector === 'string' && message.selector.length <= 2000 ? message.selector : null;
+    const dark = message.dark === true && selector !== null;
+    if (dark !== forcedDark) themeControl.set(dark ? 'dark' : null);
+    forcedDark = dark;
+    forceState.set(selector, states, dark, message.track === true);
+    if (selector && !selected?.isConnected) selected = queryElement(selector);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(repostSelected));
+  };
   const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
     'set-mode': (message) => {
       mode = message.mode === 'select' ? 'select' : 'none';
@@ -959,6 +975,7 @@ function startBridge(session: BridgeSession): void {
     'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
     'lofi-preview': (message) => previewStyles.apply('lofi', message.css),
     'set-theme': (message) => themeControl.set(message.theme),
+    'force-state': onForceState,
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
     'track-links': (message) => links.track(message.links),
     'play-links': (message) => links.play(message.links),
@@ -1040,6 +1057,7 @@ function startBridge(session: BridgeSession): void {
 
   let paintScheduled = false;
   const schedulePainted = (): void => {
+    forceState.schedule();
     rects.schedule();
     anchors.schedule();
     links.schedule();

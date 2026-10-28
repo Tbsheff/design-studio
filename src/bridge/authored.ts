@@ -89,6 +89,36 @@ function walk(element: Element, list: CSSRuleList, source: string | null, collec
   }
 }
 
+type SizeProp = 'width' | 'height';
+const SIZE_PROPS: SizeProp[] = ['width', 'height'];
+
+function sizeVisit(element: Element, rule: CSSRule, found: Partial<Record<SizeProp, string>>, depth: number): void {
+  if (rule instanceof CSSStyleRule) {
+    const own = SIZE_PROPS.filter((prop) => rule.style.getPropertyValue(prop) !== '');
+    if (own.length === 0 || !matches(element, rule.selectorText)) return;
+    for (const prop of own) found[prop] = rule.style.getPropertyValue(prop).trim();
+    return;
+  }
+  if (depth > MAX_DEPTH) return;
+  if (rule instanceof CSSImportRule) {
+    for (const child of Array.from((rule.styleSheet && rulesOf(rule.styleSheet)) ?? [])) sizeVisit(element, child, found, depth + 1);
+    return;
+  }
+  if (rule instanceof CSSGroupingRule && groupApplies(rule)) for (const child of Array.from(rule.cssRules)) sizeVisit(element, child, found, depth + 1);
+}
+
+export function authoredSizes(element: Element): Partial<Record<SizeProp, string>> {
+  const found: Partial<Record<SizeProp, string>> = {};
+  for (const sheet of Array.from(document.styleSheets)) {
+    if (sheet.disabled || isStudioSheet(sheet)) continue;
+    const media = sheet.media.mediaText;
+    if (media && !window.matchMedia(media).matches) continue;
+    for (const rule of Array.from(rulesOf(sheet) ?? [])) sizeVisit(element, rule, found, 0);
+  }
+  if (element instanceof HTMLElement) for (const prop of SIZE_PROPS) if (element.style.getPropertyValue(prop) !== '') found[prop] = element.style.getPropertyValue(prop).trim();
+  return found;
+}
+
 export function authoredRules(element: Element): AuthoredRule[] {
   const collector: Collector = { rules: [], bytes: 0, full: false };
   for (const sheet of Array.from(document.styleSheets)) {

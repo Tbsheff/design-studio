@@ -32,6 +32,7 @@ export const editElementShape = {
   style: z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict().optional().describe('CSS properties to set inline. null removes the property.'),
   text: z.string().max(5000).optional().describe('New text of a leaf element.'),
   classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge().'),
+  variant: z.string().trim().max(60).optional().describe('Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'),
   op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), unwrap or move (into targetSelector, as its last child).'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
 };
@@ -105,7 +106,7 @@ async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElemen
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
   const workTree = deps.ctx.direction.workTree;
   const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
-  const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(input.classes ? { classes: input.classes } : {}) });
+  const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
   const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree), { projectKind: deps.ctx.project.kind });
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
@@ -125,7 +126,7 @@ export async function runEditElement(deps: DirectToolDeps, args: EditElementArgs
   const input = parsed.data;
   const hasChange = input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
   if (input.op === undefined && !hasChange) return failure('edit_element needs style, text or classes, or op.');
-  if (input.op !== undefined && hasChange) return failure('Pass op alone, or style/text/classes without op.');
+  if (input.op !== undefined && (hasChange || input.variant !== undefined)) return failure('Pass op alone, or style/text/classes without op.');
   if ((input.op === 'move') !== (input.targetSelector !== undefined)) return failure('op move needs targetSelector; other ops take none.');
   try {
     return input.op ? await structureEdit(deps, input, input.op) : await styleEdit(deps, input);

@@ -3,7 +3,7 @@ import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import type * as TS from 'typescript';
-import { compilerOptionsFor, nodeModulesFile } from '../components/props-program.js';
+import { compilerConfigFor, nodeModulesFile } from '../components/props-program.js';
 
 type Ts = typeof TS;
 
@@ -20,6 +20,7 @@ interface FileDeps {
 
 interface WalkScope {
   workTree: string;
+  graph: WorkTreeGraph;
   options: Map<string, TS.CompilerOptions>;
   caches: Map<string, TS.ModuleResolutionCache>;
 }
@@ -30,13 +31,14 @@ interface SavedGraph {
   version: number;
   ts: string;
   config: string;
+  configs: string[];
   files: SavedEntry[];
 }
 
 const STYLE_FILE = /\.(css|scss|sass|less)$/;
 const CODE_FILE = /\.(tsx?|jsx?|mjs|cjs)$/;
 const GRAPH_CAP = 40000;
-const SAVED_VERSION = 1;
+const SAVED_VERSION = 2;
 const SAVE_DELAY_MS = 2000;
 const CONFIG_FILES = ['package.json', 'tsconfig.json', 'tsconfig.base.json', 'tsconfig.app.json', 'pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock', 'pnpm-workspace.yaml'];
 
@@ -67,14 +69,17 @@ function optionsFor(ts: Ts, scope: WalkScope, file: string): TS.CompilerOptions 
   const dir = path.dirname(file);
   let options = scope.options.get(dir);
   if (!options) {
-    options = compilerOptionsFor(ts, file, scope.workTree);
+    const picked = compilerConfigFor(ts, file, scope.workTree);
+    options = picked.options;
+    if (picked.configFile) scope.graph.usedConfig(picked.configFile);
     scope.options.set(dir, options);
   }
   return options;
 }
 
-async function configStamp(workTree: string): Promise<string> {
-  const parts = await Promise.all(CONFIG_FILES.map(async (name) => `${name}:${(await stat(path.join(workTree, name)).catch(() => null))?.mtimeMs ?? -1}`));
+async function configStamp(workTree: string, configs: Iterable<string>): Promise<string> {
+  const names = [...new Set([...CONFIG_FILES, ...configs])].sort();
+  const parts = await Promise.all(names.map(async (name) => `${name}:${(await stat(path.join(workTree, name)).catch(() => null))?.mtimeMs ?? -1}`));
   return parts.join('|');
 }
 
@@ -87,6 +92,7 @@ function stampOf(seen: Map<string, FileDeps>): ContentStamp {
 
 class WorkTreeGraph {
   readonly files = new Map<string, FileDeps>();
+  private readonly configs = new Set<string>();
   private loaded: Promise<void> | null = null;
   private saveTimer: NodeJS.Timeout | null = null;
   private dirty = false;
@@ -104,9 +110,17 @@ class WorkTreeGraph {
   private async load(): Promise<void> {
     if (!this.cacheFile) return;
     const saved = JSON.parse(await readFile(this.cacheFile, 'utf8')) as SavedGraph;
-    if (saved.version !== SAVED_VERSION || saved.ts !== typescriptVersion() || saved.config !== (await configStamp(this.workTree))) return;
+    if (saved.version !== SAVED_VERSION || saved.ts !== typescriptVersion() || saved.config !== (await configStamp(this.workTree, saved.configs))) return;
+    for (const config of saved.configs) this.configs.add(config);
     const absolute = (file: string): string => path.resolve(this.workTree, file);
     for (const [file, mtimeMs, size, deps] of saved.files) if (!this.files.has(absolute(file))) this.files.set(absolute(file), { mtimeMs, size, deps: deps.map(absolute) });
+  }
+
+  usedConfig(file: string): void {
+    const relative = path.relative(this.workTree, file);
+    if (this.configs.has(relative)) return;
+    this.configs.add(relative);
+    this.dirty = true;
   }
 
   remember(file: string, entry: FileDeps): void {
@@ -129,7 +143,7 @@ class WorkTreeGraph {
     this.dirty = false;
     const relative = (file: string): string => path.relative(this.workTree, file);
     const files: SavedEntry[] = [...this.files.entries()].map(([file, deps]) => [relative(file), deps.mtimeMs, deps.size, deps.deps.map(relative)]);
-    const saved: SavedGraph = { version: SAVED_VERSION, ts: typescriptVersion(), config: await configStamp(this.workTree), files };
+    const saved: SavedGraph = { version: SAVED_VERSION, ts: typescriptVersion(), config: await configStamp(this.workTree, this.configs), configs: [...this.configs], files };
     await mkdir(path.dirname(this.cacheFile), { recursive: true });
     const temp = `${this.cacheFile}.${process.pid}.tmp`;
     await writeFile(temp, JSON.stringify(saved));
@@ -165,7 +179,7 @@ export class RouteGraph {
   async stamp(workTree: string, roots: string[]): Promise<ContentStamp | null> {
     const graph = this.graphFor(workTree);
     await graph.ready();
-    const scope: WalkScope = { workTree, options: new Map(), caches: new Map() };
+    const scope: WalkScope = { workTree, graph, options: new Map(), caches: new Map() };
     const seen = new Map<string, FileDeps>();
     let frontier = roots;
     while (frontier.length) {

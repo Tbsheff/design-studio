@@ -31,14 +31,20 @@ export function pngDimensions(bytes: Buffer): { width: number; height: number } 
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }
 
-function selectorClipExpression(selector: string): string {
+function selectorClipExpression(selector: string, padding: number): string {
   return `(() => {
     let element = null;
     try { element = document.querySelector(${JSON.stringify(selector)}); } catch (error) { return null; }
     if (!element) return null;
     const box = element.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) return null;
-    return { x: Math.max(0, box.left + window.scrollX), y: Math.max(0, box.top + window.scrollY), width: box.width, height: box.height };
+    const pad = ${JSON.stringify(padding)};
+    const root = document.documentElement;
+    const right = Math.max(root.scrollWidth, window.innerWidth);
+    const bottom = Math.max(root.scrollHeight, window.innerHeight);
+    const x = Math.max(0, box.left + window.scrollX - pad);
+    const y = Math.max(0, box.top + window.scrollY - pad);
+    return { x, y, width: Math.min(right, box.right + window.scrollX + pad) - x, height: Math.min(bottom, box.bottom + window.scrollY + pad) - y };
   })()`;
 }
 
@@ -46,7 +52,7 @@ export async function waitForPage(page: { evaluate<T>(expression: string): Promi
   await Promise.race([page.evaluate(READY_EXPRESSION).catch(() => undefined), new Promise((done) => setTimeout(done, 8000).unref())]);
 }
 
-export async function captureFrame(preview: PreviewService, url: string, frame: ExportFrame, scale: ExportScale, scope: ExportScope, selector?: string, maxCssHeight?: number): Promise<Shot> {
+export async function captureFrame(preview: PreviewService, url: string, frame: ExportFrame, scale: ExportScale, scope: ExportScope, selector?: string, maxCssHeight?: number, padding = 0): Promise<Shot> {
   if (!preview.withPage) throw new Error('this preview backend cannot export images');
   const dir = await mkdtemp(path.join(os.tmpdir(), 'studio-export-'));
   const out = path.join(dir, 'shot.png');
@@ -55,7 +61,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
       await waitForPage(page);
       let clip: RenderClip;
       if (selector) {
-        const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector));
+        const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector, padding));
         if (!found) throw new BadRequestError('The selected element is not on this page');
         clip = found;
       } else if (scope === 'frame') {

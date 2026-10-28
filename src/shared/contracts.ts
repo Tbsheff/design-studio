@@ -887,6 +887,7 @@ export interface LayerNode {
   childCount: number;
   hidden: boolean;
   loc?: string;
+  ref?: string;
 }
 
 export const LAYER_TREE_MAX = 5000;

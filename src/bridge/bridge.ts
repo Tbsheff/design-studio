@@ -7,6 +7,7 @@ import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
+import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import {
@@ -167,6 +168,8 @@ function nthOfType(element: Element): string {
   }
   return count > 1 ? `${tag}:nth-of-type(${index})` : tag;
 }
+
+const IS_MAC = /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
 
 function selectorFor(element: Element): string {
   const own = uniqueId(element);
@@ -835,6 +838,15 @@ function startBridge(session: BridgeSession): void {
     textEditor.start(target, { x: event.clientX, y: event.clientY });
   };
 
+  const forwardStructureKey = (event: KeyboardEvent): boolean => {
+    const key = event.repeat ? null : structureKeyOf(event, IS_MAC);
+    if (!key || !selected?.isConnected || isTypingElement(eventElement(event))) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    post({ type: 'structure-key', selector: selectorFor(selected), key });
+    return true;
+  };
+
   const onKeyDown = (event: KeyboardEvent): void => {
     if (textEditor.onKeyDown(event)) return;
     onAltChange(event);
@@ -845,7 +857,7 @@ function startBridge(session: BridgeSession): void {
       post({ type: 'reorder-key', selector: selectorFor(selected), move: reorder });
       return;
     }
-    if (mode !== 'select') return;
+    if (mode !== 'select' || forwardStructureKey(event)) return;
     if (isEditKey(event) && textEditor.canEdit(selected) && !isTypingElement(eventElement(event))) {
       event.preventDefault();
       event.stopImmediatePropagation();

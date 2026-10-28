@@ -11,6 +11,8 @@ import {
   type DesignSystemState,
   type DirectEditBatch,
   type DirectEditBatchResult,
+  type StructureEditRequest,
+  type StructureEditResult,
   type DirectEditResult,
   type EditHistoryState,
   type EditSessionEnd,
@@ -224,6 +226,8 @@ export const api = {
     timedEdit(pid, did, editKind(req), 1, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage)).json()) as DirectEditResult),
   directEditBatch: (pid: string, did: string, batch: DirectEditBatch) =>
     timedEdit(pid, did, 'batch', batch.edits.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, batch, pickMessage)).json()) as DirectEditBatchResult),
+  structureEdit: (pid: string, did: string, req: StructureEditRequest) =>
+    timedEdit(pid, did, req.op, req.targets.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage)).json()) as StructureEditResult),
   workTreeFiles: (pid: string, did: string) => json<{ files: string[] }>('GET', `${d(pid, did)}/tree`),
   renderCheck: (pid: string, did: string) => json<RenderCheckResult[]>('POST', `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>

@@ -51,6 +51,12 @@ export const KEYMAP = [
   { id: 'move-up', label: 'Move up', keys: ['Alt+↑'], group: 'Selection' },
   { id: 'move-down', label: 'Move down', keys: ['Alt+↓'], group: 'Selection' },
   { id: 'auto-layout', label: 'Add auto layout', keys: ['Shift+A'], group: 'Selection' },
+  { id: 'layer-delete', label: 'Delete', keys: ['Backspace', 'Delete'], group: 'Selection' },
+  { id: 'layer-duplicate', label: 'Duplicate', keys: ['Mod+D'], group: 'Selection' },
+  { id: 'layer-wrap', label: 'Wrap in auto layout frame', keys: ['Mod+Alt+G'], group: 'Selection' },
+  { id: 'layer-unwrap', label: 'Unwrap', keys: ['Mod+Shift+G'], group: 'Selection' },
+  { id: 'layer-cut', label: 'Cut to move', keys: ['Mod+X'], group: 'Selection' },
+  { id: 'layer-paste', label: 'Paste into selection', keys: ['Mod+V'], group: 'Selection' },
   { id: 'deselect', label: 'Clear selection', keys: ['Esc'], group: 'Selection' },
 
   { id: 'undo', label: 'Undo', keys: ['Mod+Z'], group: 'Edit' },

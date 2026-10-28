@@ -1,7 +1,7 @@
 import type { Context, Hono } from 'hono';
 import { z } from 'zod';
 import type { Direction, Project } from '../../shared/contracts.js';
-import { OWNERS_MAX, OWNER_STACK_MAX, type InstanceQuery } from '../../shared/props.js';
+import { COMPONENT_LIST_MAX, COMPONENT_SOURCES, OWNERS_MAX, OWNER_STACK_MAX, type InstanceQuery } from '../../shared/props.js';
 import { instanceFor, listComponentSchemas } from '../components/props-service.js';
 import { DirectEditError, type DirectEditDeps } from '../direct-edit/index.js';
 import { applySetProps, applyVariantClasses } from '../direct-edit/props.js';
@@ -17,6 +17,12 @@ interface PropsRouteDeps {
 }
 
 const loc = z.object({ file: z.string().min(1).max(1000), line: z.number().int().min(1), col: z.number().int().min(1) });
+const listQuery = z.object({
+  query: z.string().trim().max(100).optional(),
+  source: z.enum(COMPONENT_SOURCES).optional(),
+  limit: z.coerce.number().int().min(1).max(COMPONENT_LIST_MAX).optional(),
+  cursor: z.string().regex(/^\d{1,6}$/).optional(),
+});
 const instanceSchema = z.object({
   owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional(),
   usedAt: loc.nullable().optional(),
@@ -30,8 +36,10 @@ function editError(c: Context, error: unknown): Response {
 
 export function registerPropsRoutes(app: Hono, deps: PropsRouteDeps): void {
   app.get('/api/projects/:pid/d/:did/props/components', async (c) => {
-    const { direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json(await listComponentSchemas(direction.workTree));
+    const parsed = listQuery.safeParse(c.req.query());
+    if (!parsed.success) throw new BadRequestError('query, source, limit or cursor is not valid');
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    return c.json(await listComponentSchemas(project, direction.workTree, parsed.data));
   });
 
   app.post('/api/projects/:pid/d/:did/props/instance', async (c) => {

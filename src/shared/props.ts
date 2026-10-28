@@ -93,9 +93,31 @@ export interface VariantClassResult {
   note: string | null;
 }
 
+export type ComponentSource = 'package' | 'app';
+export const COMPONENT_SOURCES = ['package', 'app', 'all'] as const;
+export const COMPONENT_LIST_MAX = 100;
+
+export interface ComponentListItem extends ComponentSchema {
+  uses: number;
+  source: ComponentSource;
+  folder: string;
+  parts: string[];
+  import: string;
+  example: string;
+}
+
+export interface ComponentListQuery {
+  query?: string;
+  source?: (typeof COMPONENT_SOURCES)[number];
+  limit?: number;
+  cursor?: string;
+}
+
 export interface ComponentSchemaList {
-  components: (ComponentSchema & { uses: number })[];
+  components: ComponentListItem[];
+  total: number;
   truncated: boolean;
+  nextCursor: string | null;
 }
 
 export const PROP_NAME = /^[A-Za-z_$][A-Za-z0-9_$]{0,63}$/;

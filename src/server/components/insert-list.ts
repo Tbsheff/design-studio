@@ -16,9 +16,16 @@ export interface LibraryEntry extends InsertableComponent {
 
 export interface Library {
   root: string;
+  scan: string[];
   entries: LibraryEntry[];
   files: string[];
-  truncated: boolean;
+  imports: Map<string, Map<string, string>>;
+  texts: Map<string, string>;
+}
+
+export interface NamedImport {
+  name: string;
+  specifier: string;
 }
 
 interface FileInfo {
@@ -26,6 +33,7 @@ interface FileInfo {
   text: string;
   entries: Omit<LibraryEntry, 'uses' | 'file' | 'folder' | 'absolute' | 'id'>[];
   specifiers: string[];
+  named: NamedImport[];
 }
 
 const LIST_MAX = 300;
@@ -64,6 +72,18 @@ function exportNames(ast: t.File): Map<string, string> {
   return out;
 }
 
+function namedImports(ast: t.File): NamedImport[] {
+  const out: NamedImport[] = [];
+  for (const statement of ast.program.body) {
+    if (statement.type !== 'ImportDeclaration' || statement.source.value.startsWith('.')) continue;
+    for (const specifier of statement.specifiers) {
+      if (specifier.type === 'ImportSpecifier') out.push({ name: specifier.imported.type === 'Identifier' ? specifier.imported.name : specifier.imported.value, specifier: statement.source.value });
+      else if (specifier.type === 'ImportDefaultSpecifier') out.push({ name: `default:${specifier.local.name}`, specifier: statement.source.value });
+    }
+  }
+  return out;
+}
+
 function takesChildren(body: string): boolean {
   if (/\bchildren\b/.test(body)) return true;
   return SPREAD.test(body) && !VOID_ROOT.test(body);
@@ -86,7 +106,7 @@ async function fileInfo(file: string): Promise<FileInfo | null> {
     return [{ name: kind === 'default' ? item.name : name, local: item.name, kind, line: item.line, children: takesChildren(text.slice(item.start, item.end)) }];
   });
   const specifiers = [...text.matchAll(IMPORT_FROM)].map((match) => match[1] as string).filter((spec) => !spec.startsWith('.'));
-  const next = { stamp, text, entries, specifiers };
+  const next = { stamp, text, entries, specifiers, named: ast ? namedImports(ast) : [] };
   if (cache.size > 2000) cache.clear();
   cache.set(file, next);
   return next;
@@ -160,21 +180,29 @@ export async function loadLibrary(project: Project, workTree: string): Promise<L
   const rank = rankFiles(scan);
   const entries: LibraryEntry[] = [];
   const specifiers = new Map<string, string[]>();
+  const imports = new Map<string, Map<string, string>>();
+  const texts = new Map<string, string>();
   for (const { file, info } of infos) {
     if (!info) continue;
     specifiers.set(file, info.specifiers);
+    texts.set(file, info.text);
+    for (const item of info.named) {
+      const byFile = imports.get(item.name) ?? new Map<string, string>();
+      byFile.set(file, item.specifier);
+      imports.set(item.name, byFile);
+    }
     const relative = path.relative(root, file).split(path.sep).join('/');
     for (const entry of info.entries) entries.push({ ...entry, id: `${relative}#${entry.name}`, file: relative, folder: path.posix.dirname(relative), absolute: file, uses: 0 });
   }
   const counts = countTags(infos.map((item) => item.info?.text ?? ''), new Set(entries.map((entry) => entry.local)));
   for (const entry of entries) entry.uses = counts.get(entry.local) ?? 0;
   entries.sort((a, b) => Number(a.uses === 0) - Number(b.uses === 0) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
-  return { root, entries: entries.slice(0, LIST_MAX), files, truncated: entries.length > LIST_MAX, specifiers };
+  return { root, scan, entries, files, imports, texts, specifiers };
 }
 
 export async function listInsertable(project: Project, workTree: string): Promise<InsertableList> {
   if (project.kind !== 'react') return { components: [], truncated: false, note: 'This is an HTML project. It has no component kit to insert from.' };
   const library = await loadLibrary(project, workTree);
-  const components = library.entries.map(({ id, name, file, folder, line, uses, children }) => ({ id, name, file, folder, line, uses, children }));
-  return { components, truncated: library.truncated, note: null };
+  const components = library.entries.slice(0, LIST_MAX).map(({ id, name, file, folder, line, uses, children }) => ({ id, name, file, folder, line, uses, children }));
+  return { components, truncated: library.entries.length > LIST_MAX, note: null };
 }

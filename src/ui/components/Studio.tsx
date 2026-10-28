@@ -1,7 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
-import type { CompiledTokenEntry, Project, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { CompiledTokenEntry, Project, RunCanvasRef, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import { useRunCanvas } from '../useRunCanvas';
 import { statesPrompt } from '../../shared/states';
 import { activeFrame, canvasStore, defaultLayout, type CanvasFrame } from '../canvasFrames';
 import type { ComposerMode } from './RunSettings';
@@ -91,6 +92,7 @@ interface ComposeInput {
   effort: RunEffort | null;
   mentions: RunMention[];
   selection: SelectionContext[];
+  canvas?: RunCanvasRef;
 }
 
 function composeRequest(input: ComposeInput): RunRequest {
@@ -102,6 +104,7 @@ function composeRequest(input: ComposeInput): RunRequest {
     ...(input.mentions.length > 0 ? { mentions: input.mentions } : {}),
     selection: input.selection.length > 0 ? input.selection : undefined,
     attachmentIds: input.attachmentIds.length > 0 ? input.attachmentIds : undefined,
+    ...(input.canvas ? { canvas: input.canvas } : {}),
   };
 }
 
@@ -179,6 +182,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const data = useStudioData(projectId);
   const { project, directionId, versions, runs, status } = data;
   const [selection, setSelection] = useState<SelectionContext[]>([]);
+  const runCanvas = useRunCanvas(projectId, project, selection);
   const [draft] = useState(createDraftStore);
   const composerActive = useDraftActive(draft);
   const [source, setSource] = useState<CanvasSource>({ kind: 'live' });
@@ -341,10 +345,14 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   };
 
   const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) =>
-    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection }), true);
+    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection, canvas: runCanvas.current() }), true);
 
-  const polish = () => void act(() => startRun(POLISH_REQUEST));
-  const tweak = (prompt: string) => void act(() => startRun(composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection }), true));
+  const withCanvas = (request: RunRequest): RunRequest => {
+    const canvas = runCanvas.current();
+    return canvas ? { ...request, canvas } : request;
+  };
+  const polish = () => void act(() => startRun(withCanvas(POLISH_REQUEST)));
+  const tweak = (prompt: string) => void act(() => startRun(composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection, canvas: runCanvas.current() }), true));
   const suggestTweaks = (prompt?: string) =>
     void act(() => startRun(prompt ? { ...TWEAKS_REQUEST, prompt: `${TWEAKS_REQUEST.prompt}\n\nThe user asked for: ${prompt}` } : TWEAKS_REQUEST));
   const showPane = async (tab: Parameters<typeof panel.choose>[0]): Promise<boolean> => {
@@ -359,7 +367,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     const path = f.path ?? '';
     void act(() => startRun({ prompt: statesPrompt(path || project.entry), mode: 'edit', level: project.settings.defaultLevel, states: { path, frame: f.id, width: f.width, height: f.height } }, true));
   };
-  const approvePlan = (run: RunView) => void act(() => startRun(buildPlanRequest(run)));
+  const approvePlan = (run: RunView) => void act(() => startRun(withCanvas(buildPlanRequest(run))));
   const retryRun = (run: RunView) => {
     const request = run.request;
     if (request) void act(() => startRun({ ...request, retryOf: run.runId }));
@@ -441,6 +449,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             queued: comments.queued.length > 0,
             selection,
             onRemoveSelection: (sel) => setSelection((prev) => prev.filter((s) => s.selector !== sel)),
+            canvasChip: runCanvas.chip,
             running: activeRun !== null,
             disabled: !did,
             onSend: send,

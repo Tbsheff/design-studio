@@ -56,16 +56,16 @@ export function parseVariantClassEdit(raw: unknown): VariantClassEdit {
   return parsed.data;
 }
 
-function rangeOf(node: t.Node): { start: number; end: number } {
+export function rangeOf(node: t.Node): { start: number; end: number } {
   if (typeof node.start !== 'number' || typeof node.end !== 'number') throw new DirectEditError('parse_failed', 'Missing source position');
   return { start: node.start, end: node.end };
 }
 
-function attrName(attribute: t.JSXAttribute): string {
+export function attrName(attribute: t.JSXAttribute): string {
   return attribute.name.type === 'JSXIdentifier' ? attribute.name.name : `${attribute.name.namespace.name}:${attribute.name.name.name}`;
 }
 
-function isLiteral(attribute: t.JSXAttribute): boolean {
+export function isLiteral(attribute: t.JSXAttribute): boolean {
   const value = attribute.value;
   if (!value || value.type === 'StringLiteral') return true;
   if (value.type !== 'JSXExpressionContainer') return false;
@@ -73,14 +73,14 @@ function isLiteral(attribute: t.JSXAttribute): boolean {
   return expression.type === 'StringLiteral' || expression.type === 'NumericLiteral' || expression.type === 'BooleanLiteral' || (expression.type === 'TemplateLiteral' && expression.expressions.length === 0) || (expression.type === 'UnaryExpression' && expression.argument.type === 'NumericLiteral');
 }
 
-function quoteOf(source: string, element: t.JSXElement): string {
+export function quoteOf(source: string, element: t.JSXElement): string {
   for (const attribute of element.openingElement.attributes) {
     if (attribute.type === 'JSXAttribute' && attribute.value?.type === 'StringLiteral') return source[rangeOf(attribute.value).start] === "'" ? "'" : '"';
   }
   return /=\s*'/.test(source) && !/=\s*"/.test(source) ? "'" : '"';
 }
 
-function attributeText(name: string, value: PropValue, quote: string): string {
+export function attributeText(name: string, value: PropValue, quote: string): string {
   if (value === true) return name;
   if (typeof value === 'number' || typeof value === 'boolean') return `${name}={${String(value)}}`;
   if (!value.includes(quote) && !/[\n\r\\]/.test(value) && !/[{}<>]/.test(value)) return `${name}=${quote}${value}${quote}`;
@@ -91,7 +91,7 @@ function lineStart(source: string, offset: number): number {
   return source.lastIndexOf('\n', offset - 1) + 1;
 }
 
-function removalRange(source: string, attribute: t.JSXAttribute): { start: number; end: number } {
+export function removalRange(source: string, attribute: t.JSXAttribute): { start: number; end: number } {
   const { start, end } = rangeOf(attribute);
   const before = lineStart(source, start);
   const newline = source.indexOf('\n', end);
@@ -102,7 +102,7 @@ function removalRange(source: string, attribute: t.JSXAttribute): { start: numbe
   return { start: from, end };
 }
 
-function insertion(source: string, element: t.JSXElement, text: string): { at: number; text: string } {
+export function insertion(source: string, element: t.JSXElement, text: string): { at: number; text: string } {
   const opening = element.openingElement;
   const attributes = opening.attributes;
   const last = attributes.at(-1);

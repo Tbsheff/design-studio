@@ -887,6 +887,7 @@ export const API_ROUTES = {
   getTelemetry: 'GET /api/telemetry?projectId= -> TelemetrySample[]',
   appDoctor: 'GET /api/projects/:pid/app/doctor?fresh=1 -> {status, doctor: AppDoctorResult} (classifies the dev log of the current start and one request to the app root; fresh=1 requests the root again)',
   appFix: 'POST /api/projects/:pid/app/doctor/fix {kind} -> AppFixResult (runs the doctor again and applies only the fix it computed, then restarts the dev server; 409 when the doctor no longer sees that problem)',
+  setImage: 'POST /api/projects/:pid/d/:did/image SetImageRequest {target, mode? (auto|img|background|insert), image? {name, data base64} | url? (https, 10 MB, image types), fit? (cover|contain|fill), focal? ("x% y%"), alt?, position? (inside|after)} -> SetImageResult (copies the file into the assets folder with a content-hashed name: the app public/ for Next and Vite, assets/ for HTML; writes src, alt, object-fit/position or background-* as one version)',
 } as const;
 
 export const STUDIO_TOKEN_HEADER = 'x-studio-token';

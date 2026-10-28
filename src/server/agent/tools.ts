@@ -9,7 +9,7 @@ import type { AgentRunContext, PreviewService } from '../types.js';
 import { budgetLine, buildCheckReport, runScreens, saveCheck, type RunToolState } from './check-tool.js';
 import { recordShot } from './polish-loop.js';
 import { beforeImages, changedSourceFor, criticImages, criticOutPrefix, describeCriticResult, runCritic, type CriticImage } from './critic.js';
-import { describeScreens, warmScreens, type RunScreen } from './screens.js';
+import { describeScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import type { TasteRule } from './taste.js';
 import { tweakControlSchema } from '../tweaks/schema.js';
 import { defineTweaks } from '../tweaks/store.js';
@@ -278,8 +278,8 @@ function explicitTarget(args: ShotArgs): boolean {
 async function reviewScreens(deps: StudioToolDeps, run: RunToolState, target: ShotTarget, args: ShotArgs): Promise<RunScreen[]> {
   const own: RunScreen = { key: target.url, label: target.label, url: target.url, pagePath: target.path };
   const screens = explicitTarget(args) ? [] : await runScreens(deps.preview, deps.ctx, run.config, run).catch(() => []);
-  const rest = screens.filter((screen) => screen.prepare || screen.url !== target.url);
-  const first = screens.find((screen) => !screen.prepare && screen.url === target.url) ?? own;
+  const rest = screens.filter((screen) => screen.prepare || !samePage(screen.url, target.url));
+  const first = screens.find((screen) => !screen.prepare && samePage(screen.url, target.url)) ?? own;
   const all = [first, ...rest];
   await warmScreens(deps.preview, deps.ctx.project, all);
   return all;

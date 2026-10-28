@@ -10,7 +10,7 @@ import { diffFinding, diffImages, readPng } from '../preview/visual-diff.js';
 import type { CanvasService } from '../canvas/service.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 import type { CriticImage } from './critic.js';
-import { describeScreens, planScreens, warmScreens, type RunScreen } from './screens.js';
+import { describeScreens, planScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
 import { defaultShotTarget, type ShotTarget } from './run-target.js';
 
@@ -182,7 +182,7 @@ export async function runScreens(preview: PreviewService, ctx: AgentRunContext, 
 }
 
 function isMain(screen: RunScreen, mainUrl: string | null): boolean {
-  return !screen.prepare && screen.url === mainUrl;
+  return !screen.prepare && samePage(screen.url, mainUrl);
 }
 
 function tagScreen(result: RenderCheckResult, screen: string): RenderCheckResult {

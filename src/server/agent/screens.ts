@@ -50,6 +50,12 @@ const EXPLORE_CLICKS = 40;
 const WARM_TIMEOUT_MS = 120_000;
 const DESKTOP = { width: 1440, height: 900 };
 
+export function samePage(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a || !b) return false;
+  const strip = (url: string) => url.replace(/\/(index\.html?)?(?=[?#]|$)/, '/').replace(/\/(?=[?#]|$)/, '');
+  return strip(a) === strip(b);
+}
+
 export const DEFAULT_SCREEN_PLAN: ScreenPlan = { maxScreens: 1, maxImages: 5, checkScreens: 0 };
 
 async function walk(root: string, dir: string, visit: (file: string, size: number, mtimeMs: number) => void, budget: { left: number }): Promise<void> {
@@ -126,9 +132,9 @@ async function canvasPages(deps: ScreenDeps): Promise<{ pages: PageRef[]; hash: 
   const pages: PageRef[] = [];
   for (const frame of frames) {
     const page = framePage(base, frame, view);
-    if (!pages.some((known) => known.url === page.url)) pages.push(page);
+    if (!pages.some((known) => samePage(known.url, page.url))) pages.push(page);
   }
-  if (!project.app && !pages.some((page) => page.pagePath === '')) pages.unshift({ label: 'Entry', url: base, pagePath: '' });
+  if (!project.app && !pages.some((page) => samePage(page.url, base))) pages.unshift({ label: 'Entry', url: base, pagePath: '' });
   if (pages.length === 0) pages.push({ label: 'Entry', url: base, pagePath: '' });
   if (!project.app) return { pages, hash: snapshot?.hash ?? '' };
   const presence = deps.canvas?.presence(project.id);

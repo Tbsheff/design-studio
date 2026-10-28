@@ -84,6 +84,7 @@ import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 import { registerMcpRoutes } from './mcp-routes.js';
+import { registerShipRoutes } from './ship-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -1091,7 +1092,8 @@ export function createApp(deps: AppDeps): Hono {
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
-  registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
+  const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
+  registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

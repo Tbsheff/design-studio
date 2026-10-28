@@ -4,7 +4,7 @@ import type { McpActivityList, McpApprovalPoll } from '../../shared/export.js';
 import type { CanvasService } from '../canvas/service.js';
 import type { EditRecorder } from '../direct-edit/index.js';
 import type { ExportDeps } from '../export/source.js';
-import { createActivityLog } from '../mcp/activity.js';
+import { createActivityLog, type ActivityLog } from '../mcp/activity.js';
 import { createApprovalQueue } from '../mcp/approvals.js';
 import { createMcpService } from '../mcp/server.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
@@ -29,7 +29,7 @@ async function body(c: Context): Promise<Record<string, unknown>> {
   return parsed as Record<string, unknown>;
 }
 
-export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
+export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: ActivityLog } {
   const approvals = createApprovalQueue({
     appOpen: deps.appOpen,
     events: {
@@ -89,4 +89,5 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): void {
     if (!approvals.answer(c.req.param('id'), input.allow)) throw new NotFoundError('approval request is not open');
     return c.json({ ok: true });
   });
+  return { activity };
 }

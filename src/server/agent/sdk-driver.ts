@@ -43,6 +43,7 @@ interface SdkDriverOptions {
   onStderr?: (data: string) => void;
   onSkills?: (skills: PreparedSkills) => void;
   skillsRoot?: string;
+  exportsRoot?: string;
   claudeHome?: string;
   tasteHome?: string;
   claudeExecutable?: string;
@@ -503,6 +504,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     tasteRules: setup.tasteRules,
     env,
     ...(options.queryFn ? { queryFn: options.queryFn } : {}),
+    ...(options.exportsRoot ? { exportsDir: options.exportsRoot } : {}),
   });
   return {
     cwd: ctx.direction.workTree,

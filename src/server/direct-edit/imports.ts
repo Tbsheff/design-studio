@@ -15,6 +15,7 @@ export interface ImportNeed {
   root: string;
   seen: SeenImport[];
   allowPaths: boolean;
+  planned?: boolean;
 }
 
 export interface SeenImport {
@@ -41,19 +42,36 @@ function realOrNull(file: string): string | null {
   }
 }
 
-export function importResolver(ts: Ts | null, need: Pick<ImportNeed, 'componentFile' | 'targetFile' | 'root'>): Resolver {
-  const want = realOrNull(need.componentFile);
+function plannedReal(file: string): string {
+  const dir = path.dirname(file);
+  const real = realOrNull(dir);
+  return real ? path.join(real, path.basename(file)) : path.resolve(file);
+}
+
+function realOf(file: string, planned: boolean): string | null {
+  return realOrNull(file) ?? (planned ? plannedReal(file) : null);
+}
+
+function hostFor(ts: Ts, want: string, planned: boolean): TS.ModuleResolutionHost {
+  if (!planned) return ts.sys;
+  return { ...ts.sys, fileExists: (file) => ts.sys.fileExists(file) || plannedReal(file) === want, directoryExists: (dir) => ts.sys.directoryExists(dir) || want.startsWith(path.resolve(dir) + path.sep) };
+}
+
+export function importResolver(ts: Ts | null, need: Pick<ImportNeed, 'componentFile' | 'targetFile' | 'root' | 'planned'>): Resolver {
+  const planned = need.planned === true;
+  const want = realOf(need.componentFile, planned);
   const options = ts ? compilerOptionsFor(ts, need.targetFile, need.root) : null;
+  const host = ts && want ? hostFor(ts, want, planned) : null;
   return (specifier) => {
     if (!want) return false;
-    if (ts && options) {
-      const resolved = ts.resolveModuleName(specifier, need.targetFile, options, ts.sys).resolvedModule?.resolvedFileName;
-      if (resolved && realOrNull(resolved) === want) return true;
+    if (ts && options && host) {
+      const resolved = ts.resolveModuleName(specifier, need.targetFile, options, host).resolvedModule?.resolvedFileName;
+      if (resolved && realOf(resolved, planned) === want) return true;
     }
     if (!specifier.startsWith('.')) return false;
     const base = path.resolve(path.dirname(need.targetFile), specifier);
     const candidates = [base, ...['.tsx', '.ts', '.jsx', '.js'].map((ext) => base + ext), ...['index.tsx', 'index.ts', 'index.jsx'].map((name) => path.join(base, name))];
-    return candidates.some((candidate) => SOURCE_EXT.test(candidate) && existsSync(candidate) && realOrNull(candidate) === want);
+    return candidates.some((candidate) => SOURCE_EXT.test(candidate) && (existsSync(candidate) || planned) && realOf(candidate, planned) === want);
   };
 }
 

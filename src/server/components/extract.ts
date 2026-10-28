@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { readdir, rm } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 import type * as t from '@babel/types';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { OWNERS_MAX, OWNER_STACK_MAX } from '../../shared/props.js';
 import { writeAndCommitAll, type WrittenFile } from '../direct-edit/batch.js';
 import { DirectEditError } from '../direct-edit/errors.js';
 import { planImport } from '../direct-edit/imports.js';
-import { assertCanEdit, publishVersion, writeNewFile, type DirectEditDeps, type ResolvedSource } from '../direct-edit/index.js';
+import { assertCanEdit, publishVersion, type DirectEditDeps, type ResolvedSource } from '../direct-edit/index.js';
 import { findJsxElement } from '../direct-edit/jsx.js';
 import { structureDoc } from '../direct-edit/structure-docs.js';
 import { indentUnit, positionAt, refuse } from '../direct-edit/structure-ops.js';
@@ -262,7 +262,7 @@ function useEdits(context: Context, uses: Use[], slots: Slot[], variants: Varian
   for (const group of byFile.values()) {
     const first = group[0] as Use;
     const unit = indentUnit(first.code);
-    const need = { name: context.name, kind: 'named' as const, componentFile: context.component, targetFile: first.target.file, root: context.library.root, seen: seenImports(context.library.specifiers), allowPaths: context.scope.project.app?.framework === 'next' };
+    const need = { name: context.name, kind: 'named' as const, componentFile: context.component, targetFile: first.target.file, root: context.library.root, seen: seenImports(context.library.specifiers), allowPaths: context.scope.project.app?.framework === 'next', planned: true };
     const imported = planImport(context.ts, first.code, first.ast, need);
     importFrom.push(imported.specifier);
     const splices: FileEdit['splices'] = group.map((use) => ({ start: use.start, end: use.end, text: useSite(context.name, slots, variants, uses.indexOf(use), lineIndent(use.code, use.start), unit), tag: context.name }));
@@ -281,15 +281,6 @@ function useEdits(context: Context, uses: Use[], slots: Slot[], variants: Varian
 function assertFreeName(library: Library, name: string): void {
   const clash = [...library.entries, ...library.locals].find((entry) => entry.name === name);
   if (clash) throw refuse(`The project already has a component named ${name} (${clash.file}). Pick another name`);
-}
-
-async function withTempFile<T>(file: string, code: string, task: () => T | Promise<T>): Promise<T> {
-  await writeNewFile(file, code);
-  try {
-    return await task();
-  } finally {
-    await rm(file, { force: true });
-  }
 }
 
 function kitDirs(library: Library): string[] {
@@ -317,7 +308,7 @@ export async function planCreateComponent(scope: InsertScope, raw: unknown): Pro
   const built = componentFile({ name: request.name, imports, body: bodyOf(first, shape.slots, variants, style), slots: shape.slots, variants, style });
   if (!parseModuleFile(built.code, component)) throw new DirectEditError('parse_failed', 'The new component file could not be parsed, so nothing was written');
   const context: Context = { ts, library, scope, name: request.name, component, moved: shape.imports };
-  const edits = await withTempFile(component, built.code, () => useEdits(context, uses, shape.slots, variants));
+  const edits = useEdits(context, uses, shape.slots, variants);
   const relative = path.relative(library.root, component).split(path.sep).join('/');
   const created: WrittenFile = { target: { file: component, relative }, original: '', code: built.code, created: true };
   const title = `Create component ${request.name} from ${uses.length === 1 ? `<${tagText(first.element.openingElement.name)}>` : `${uses.length} elements`}`;

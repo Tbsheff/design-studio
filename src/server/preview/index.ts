@@ -221,11 +221,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return { url, release: async () => (owned ? vite.loaded()?.then((manager) => manager.stopOne(key)) : undefined) };
   };
 
-  const renderCheck = async (project: Project, direction: Direction, options?: RenderCheckOptions & { url?: string }): Promise<RenderCheckResult[]> => {
-    const { url: pageUrl, ...checks } = options ?? {};
+  const renderCheck = async (project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]> => {
+    const { url: pageUrl, filePrefix, ...checks } = options ?? {};
     const url = pageUrl ?? (await directionUrl(project, direction));
     if (project.app) await apps.ensure(project);
-    const results = await (await browsers.get()).renderCheck(url, path.join(projects.projectDir(project.id), 'checks'), direction.id, checks);
+    const results = await (await browsers.get()).renderCheck(url, path.join(projects.projectDir(project.id), 'checks'), filePrefix ?? direction.id, checks);
     const problem = project.kind === 'html' ? await designSystemLinkProblem(direction.workTree, project.entry || 'index.html') : null;
     return withDesignSystemWarning(results, problem);
   };

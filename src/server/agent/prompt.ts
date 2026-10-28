@@ -81,7 +81,7 @@ const NAV_RULE = `- Never remove navigation to fix a cut-off or clipped nav. Kee
 
 const VERIFY_RULES = `## Verify: look, then fix
 Every message has a <run-level> block. It sets which checks to run, how many fix loops to do and when to stop. Follow it.
-- Checks are tools, not guesses: \`mcp__studio__render_check\` (errors, layout and quality findings), \`mcp__studio__screenshot\` (images) and, in polish runs, \`mcp__studio__design_review\` (a separate critic).
+- Checks are tools, not guesses: \`mcp__studio__render_check\` (errors, layout and quality findings), \`mcp__studio__screenshot\` (images) and, in prototype and polish runs, \`mcp__studio__design_review\` (a separate critic that sees every screen).
 - Treat each \`layout\` finding (clipped, scrolls-sideways, past-viewport) and each high \`quality\` finding as a defect unless the design needs it.
 - When the level asks for screenshots: take mobile first, from the top (\`from\` 0), then the other sizes. If the text says more of the page is below, call again with \`from\` to see it.
 - ${LOOK_CHECKLIST}

@@ -741,6 +741,7 @@ export interface QualityFinding {
   source: string | null;
   message: string;
   fix?: string;
+  screen?: string;
 }
 
 export interface NavSummary {
@@ -766,6 +767,7 @@ export interface RenderCheckResult {
   selectionRects?: { x: number; y: number; width: number; height: number }[];
   timingsMs?: Record<string, number>;
   backend?: 'playwright' | 'electron';
+  screen?: string;
 }
 
 export const API_ROUTES = {

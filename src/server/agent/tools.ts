@@ -6,9 +6,10 @@ import { z } from 'zod';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import type { TileResult } from '../preview/browser.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
-import { budgetLine, buildCheckReport, saveCheck, type RunToolState } from './check-tool.js';
+import { budgetLine, buildCheckReport, runScreens, saveCheck, type RunToolState } from './check-tool.js';
 import { recordShot } from './polish-loop.js';
-import { criticImages, criticOutPrefix, describeCriticResult, runCritic } from './critic.js';
+import { beforeImages, changedSourceFor, criticImages, criticOutPrefix, describeCriticResult, runCritic, type CriticImage } from './critic.js';
+import { describeScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import type { TasteRule } from './taste.js';
 import { tweakControlSchema } from '../tweaks/schema.js';
 import { defineTweaks } from '../tweaks/store.js';
@@ -160,6 +161,15 @@ function firstMobileFrom(counters: StudioToolCounters, viewport: ViewportName, f
   return { from: 0, note: ' The first mobile screenshot of a run always starts at the top, so from was set to 0.' };
 }
 
+async function screenTarget(deps: StudioToolDeps, screen: number | undefined): Promise<RunScreen | string | null> {
+  if (screen === undefined || !deps.run) return null;
+  const screens = deps.run.lastScreens?.length ? deps.run.lastScreens : await runScreens(deps.preview, deps.ctx, deps.run.config, deps.run).catch(() => []);
+  const picked = screens[screen - 1];
+  if (!picked) return `There is no screen ${screen}. Screens:\n${describeScreens(screens) || '1. Entry'}`;
+  await warmScreens(deps.preview, deps.ctx.project, [picked]);
+  return picked;
+}
+
 function targetDeps(deps: Pick<StudioToolDeps, 'canvas'>): TargetDeps | null {
   const states = configuredFrameStates();
   const canvas = deps.canvas ?? states?.canvas;
@@ -185,11 +195,32 @@ function shotBox(target: ShotTarget, viewport: ViewportName | undefined): { name
   return { name: 'desktop', box: VIEWPORTS.desktop };
 }
 
-export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs & { viewport?: ViewportName; from: number; theme?: 'light' | 'dark' }) {
-  if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
+interface PickedShot {
+  url: string;
+  label: string;
+  prepare?: string;
+  viewport: ViewportName;
+  box: { width: number; height: number };
+}
+
+async function pickShot(deps: StudioToolDeps, args: ShotArgs & { viewport?: ViewportName; screen?: number }): Promise<PickedShot | string> {
+  const screen = await screenTarget(deps, args.screen);
+  if (typeof screen === 'string') return screen;
+  if (screen) {
+    const viewport = args.viewport ?? 'desktop';
+    return { url: screen.url, label: `screen ${args.screen}: ${screen.label}`, ...(screen.prepare ? { prepare: screen.prepare } : {}), viewport, box: VIEWPORTS[viewport] };
+  }
   const target = await pickTarget(deps, args);
-  if (typeof target === 'string') return errorText(`Screenshot failed: ${target}`);
-  const { name: viewport, box } = shotBox(target, args.viewport);
+  if (typeof target === 'string') return `Screenshot failed: ${target}`;
+  const { name, box } = shotBox(target, args.viewport);
+  return { url: target.url, label: target.label, viewport: name, box };
+}
+
+export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs & { viewport?: ViewportName; from: number; theme?: 'light' | 'dark'; screen?: number }) {
+  if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
+  const target = await pickShot(deps, args);
+  if (typeof target === 'string') return errorText(target);
+  const { viewport, box } = target;
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
   if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
@@ -198,7 +229,7 @@ export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolC
   const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {
     await mkdir(deps.runsDir, { recursive: true });
-    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}) });
+    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}), ...(target.prepare ? { prepare: target.prepare } : {}) });
     return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `Page ${target.label}. ${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles, box)}${start.note}` }] };
   } catch (error) {
     return errorText(`Screenshot failed: ${describeError(error)}`);
@@ -234,10 +265,41 @@ async function loadQuery(deps: StudioToolDeps): Promise<QueryFn> {
 
 function criticBlocked(deps: StudioToolDeps): string | null {
   const run = deps.run;
-  if (!run || !run.config.preset.checks.critic || !run.config.criticModel) return 'design_review is only available in polish runs. Use render_check and screenshots instead.';
+  if (!run || !run.config.criticModel || run.config.preset.criticMaxCalls === 0) return 'design_review is only available in prototype and polish runs. Use render_check and screenshots instead.';
   if (run.criticCalls >= run.config.preset.criticMaxCalls) return `design_review was already called ${run.criticCalls} times in this run, the limit. Use render_check and screenshots for the final check.`;
   if (!deps.ctx.previewUrl) return 'Preview is not running for this direction, so design_review cannot run.';
   return null;
+}
+
+function explicitTarget(args: ShotArgs): boolean {
+  return Boolean(args.frame || args.path || args.state);
+}
+
+async function reviewScreens(deps: StudioToolDeps, run: RunToolState, target: ShotTarget, args: ShotArgs): Promise<RunScreen[]> {
+  const own: RunScreen = { key: target.url, label: target.label, url: target.url, pagePath: target.path };
+  const screens = explicitTarget(args) ? [] : await runScreens(deps.preview, deps.ctx, run.config, run).catch(() => []);
+  const rest = screens.filter((screen) => screen.prepare || !samePage(screen.url, target.url));
+  const first = screens.find((screen) => !screen.prepare && samePage(screen.url, target.url)) ?? own;
+  const all = [first, ...rest];
+  await warmScreens(deps.preview, deps.ctx.project, all);
+  return all;
+}
+
+async function reviewInput(deps: StudioToolDeps, run: RunToolState, screens: RunScreen[], images: CriticImage[]) {
+  const app = deps.ctx.project.app;
+  const changedSource = app ? await changedSourceFor(deps.ctx.direction.workTree, app.appDir, run.startedAt).catch(() => []) : [];
+  const before = !run.config.preset.quickCritic && run.reviewShots?.length ? beforeImages(run.reviewShots) : [];
+  return {
+    request: deps.ctx.request.prompt,
+    findings: run.lastFindings,
+    tasteRules: deps.tasteRules ?? [],
+    images,
+    kind: run.config.preset.quickCritic ? ('quick' as const) : ('full' as const),
+    ...(screens.length > 1 ? { screens: describeScreens(screens) } : {}),
+    ...(app ? { app: true } : {}),
+    ...(changedSource.length ? { changedSource } : {}),
+    ...(before.length ? { before } : {}),
+  };
 }
 
 export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {}) {
@@ -248,11 +310,14 @@ export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {})
   const run = deps.run as RunToolState;
   run.criticCalls += 1;
   try {
-    const images = await criticImages(deps.preview, target.url, criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls));
-    const input = { request: deps.ctx.request.prompt, findings: run.lastFindings, tasteRules: deps.tasteRules ?? [], images };
+    const screens = await reviewScreens(deps, run, target, args);
+    const prefix = criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls);
+    const images = await criticImages(deps.preview, screens, prefix, run.config.preset.screens?.maxImages);
+    const input = await reviewInput(deps, run, screens, images);
     const result = await runCritic(await loadQuery(deps), input, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, deps.env);
     run.criticCostUsd += result.costUsd;
-    await writeFile(`${criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls)}.json`, `${JSON.stringify({ model: run.config.criticModel, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`);
+    run.reviewShots = images;
+    await writeFile(`${prefix}.json`, `${JSON.stringify({ model: run.config.criticModel, kind: input.kind, screens: screens.map((screen) => screen.label), images: images.map((image) => image.label), before: input.before?.length ?? 0, costUsd: result.costUsd, error: result.error, issues: result.issues, raw: result.raw }, null, 2)}\n`);
     return { content: [{ type: 'text' as const, text: [describeCriticResult(result, run), budgetLine(run)].filter(Boolean).join('\n') }] };
   } catch (error) {
     return errorText(`design_review failed: ${describeError(error)}`);
@@ -303,6 +368,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
       viewport: z.enum(['desktop', 'mobile', 'tablet']).optional().describe('Render size. Leave out for the frame size (desktop when there is no frame).'),
       from: z.number().int().min(0).default(0).describe('Page y offset in px where the first image starts.'),
       theme: z.enum(['light', 'dark']).default('light').describe('dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'),
+      screen: z.number().int().min(1).max(12).optional().describe('Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path.'),
     },
     (args) => takeScreenshot(deps, counters, args),
     { annotations: { readOnlyHint: true } },
@@ -318,7 +384,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const designReview = tool(
     'design_review',
-    'Polish runs only. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of one page (the frame from <canvas-context> unless you pass frame or path), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, where, problem, fix}]. At most 2 calls per run.',
+    'Prototype and polish runs. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of every screen (the frame from <canvas-context> first, then each view of a multi-view page, each canvas frame, each changed app route; pass frame or path to review only that page), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, screen, where, problem, fix}]. Prototype: one quick call. Polish: at most 2 calls; the second also compares desktop with the first call and files regressions.',
     TARGET_SHAPE,
     (args) => runDesignReview(deps, args),
     { annotations: { readOnlyHint: true } },

@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from '../../shared/props.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame, frameRef } from '../canvas/tools.js';
 import { listComponentSchemas } from '../components/props-service.js';
 import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, scopeOf, type Viewport } from '../mcp/layer-ref.js';
 import { layerTreeText } from '../mcp/layer-tools.js';
-import type { DirectToolDeps } from './direct-tools.js';
-import { editPage, editPageUrl, pageUrl } from './run-target.js';
+import { canvasFrames, type DirectToolDeps } from './direct-tools.js';
+import { editPage, editPageUrl, isContextFrame, pageUrl } from './run-target.js';
 import { DEFAULT_FRAME_STATE } from '../../shared/frame-state.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
@@ -59,8 +58,8 @@ export async function runListComponents(deps: DirectToolDeps, args: z.input<type
 
 async function framePage(deps: DirectToolDeps, ref: string | undefined): Promise<{ path?: string; viewport: Viewport; state: string }> {
   const target = deps.ctx.target;
-  if (!ref) return target ? { viewport: { width: target.width, height: target.height }, state: target.state, ...(target.path ? { path: target.path } : {}) } : { viewport: EDIT_VIEWPORT, state: DEFAULT_FRAME_STATE };
-  const frames = (await readCanvasAt(canvasOwner(deps.ctx.project).workTree)).canvas?.frames ?? [];
+  if (!ref || isContextFrame(deps.ctx, ref)) return target ? { viewport: { width: target.width, height: target.height }, state: target.state, ...(target.path ? { path: target.path } : {}) } : { viewport: EDIT_VIEWPORT, state: DEFAULT_FRAME_STATE };
+  const frames = await canvasFrames(deps);
   const frame = findFrame(frames, ref);
   if (!frame) throw new LayerRefError(`No frame ${ref} on the canvas. Call canvas_list for the frame ids.`);
   const state = frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;

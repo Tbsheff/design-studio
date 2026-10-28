@@ -15,10 +15,17 @@ import { editPageUrl } from './run-target.js';
 import { describeElements, textHintsOf } from '../mcp/element.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 import { evaluateToolUse } from './permissions.js';
+import { canvasOwner, readCanvasAt, type CanvasService } from '../canvas/service.js';
 
 export interface DirectToolDeps {
   preview: PreviewService;
   ctx: AgentRunContext;
+  canvas?: CanvasService | undefined;
+}
+
+export async function canvasFrames(deps: DirectToolDeps) {
+  const snapshot = deps.canvas ? await deps.canvas.read(deps.ctx.project) : await readCanvasAt(canvasOwner(deps.ctx.project).workTree);
+  return snapshot.canvas?.frames ?? [];
 }
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };

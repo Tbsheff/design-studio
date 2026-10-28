@@ -30,8 +30,9 @@ function classify(content: string): Classified {
   const files = [...text.matchAll(FILE_TOKEN)].map((match) => match[0].replace(/^[([]+/, ''));
   const plain = text.replace(FILE_TOKEN, ' ');
   const words = [...new Set(plain.split(/[^a-z0-9-]+/).filter((word) => word.length >= 3 && !STOP_WORDS.has(word)))];
-  const kind = kindOf(text, files.length > 0);
-  return { kind, files, words, needsReview: REVIEW_ONLY.test(text) };
+  const spaced = plain.replace(/_/g, ' ');
+  const kind = kindOf(spaced, files.length > 0);
+  return { kind, files, words, needsReview: REVIEW_ONLY.test(spaced) };
 }
 
 function kindOf(text: string, namesFile: boolean): TodoKind {

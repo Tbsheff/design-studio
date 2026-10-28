@@ -156,6 +156,13 @@ function pathArg(raw: string): string {
   return clean;
 }
 
+export function isContextFrame(ctx: Pick<AgentRunContext, 'target'>, ref: string): boolean {
+  const target = ctx.target;
+  if (!target) return false;
+  const key = ref.trim();
+  return key === target.id || key.replace(/^@/, '').toLowerCase() === target.label?.toLowerCase();
+}
+
 export interface EditPage {
   url: string;
   path: string | undefined;

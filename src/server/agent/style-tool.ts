@@ -1,13 +1,12 @@
 import { z } from 'zod';
 import { SEARCH_PROPERTIES, STYLE_KINDS, STYLE_REPLACE_MAX, STYLE_TOKEN_MAX, matchesOf, replaceSummary, type StyleQuery } from '../../shared/style-search.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { writeAtomic } from '../direct-edit/index.js';
 import { planStyleReplace } from '../direct-edit/replace.js';
 import { scanPageStyles, styleReport, tokenEntriesFor, tokenLookupFor } from '../direct-edit/style-scan.js';
 import { DEFAULT_FRAME_STATE } from '../../shared/frame-state.js';
-import { pageUrl } from './run-target.js';
-import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
+import { isContextFrame, pageUrl } from './run-target.js';
+import { canvasFrames, refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
@@ -36,8 +35,8 @@ function issues(error: z.ZodError): string {
 async function pageOf(deps: DirectToolDeps, ref: string | undefined): Promise<{ url: string; viewport: { width: number; height: number } }> {
   if (!deps.ctx.previewUrl) throw new Error('Preview is not running for this direction, so styles cannot be scanned.');
   const target = deps.ctx.target;
-  if (!ref && target) return { url: pageUrl(deps.ctx.previewUrl, target.path, target.state), viewport: { width: target.width, height: target.height } };
-  const frames = ref ? ((await readCanvasAt(canvasOwner(deps.ctx.project).workTree)).canvas?.frames ?? []) : [];
+  if (target && (!ref || isContextFrame(deps.ctx, ref))) return { url: pageUrl(deps.ctx.previewUrl, target.path, target.state), viewport: { width: target.width, height: target.height } };
+  const frames = ref ? await canvasFrames(deps) : [];
   const frame = ref ? findFrame(frames, ref) : null;
   if (ref && !frame && ref !== 'f1') throw new Error(`No frame ${ref} on the canvas.`);
   const state = frame && frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;

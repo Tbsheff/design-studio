@@ -13,6 +13,7 @@ import { assertCanEdit, publishVersion, writeNewFile, type DirectEditDeps, type 
 import { findJsxElement } from '../direct-edit/jsx.js';
 import { structureDoc } from '../direct-edit/structure-docs.js';
 import { indentUnit, positionAt, refuse } from '../direct-edit/structure-ops.js';
+import { removeImport } from './import-cleanup.js';
 import { compareUses, importMap, tagText, type ShapeUse, type Slot } from './extract-shape.js';
 import { classExpression, componentFile, nameSlots, planVariants, reindent, useSite, type FileStyle, type VariantPlan } from './extract-file.js';
 import { resolveTarget, seenImports, type InsertScope } from './insert.js';
@@ -249,6 +250,7 @@ interface Context {
   scope: InsertScope;
   name: string;
   component: string;
+  moved: Set<string>;
 }
 
 function useEdits(context: Context, uses: Use[], slots: Slot[], variants: VariantPlan | null): { files: WrittenFile[]; select: CreatePlan['select']; importFrom: string[] } {
@@ -266,6 +268,9 @@ function useEdits(context: Context, uses: Use[], slots: Slot[], variants: Varian
     const splices: FileEdit['splices'] = group.map((use) => ({ start: use.start, end: use.end, text: useSite(context.name, slots, variants, uses.indexOf(use), lineIndent(use.code, use.start), unit), tag: context.name }));
     if (imported.splice) splices.push(imported.splice);
     const done = applySplices(first.code, splices);
+    const shift = done.code.length;
+    for (const name of context.moved) done.code = removeImport(done.code, name, first.target.file);
+    done.starts = done.starts.map((start) => start - (shift - done.code.length));
     if (!parseModuleFile(done.code, first.target.file)) throw new DirectEditError('parse_failed', `The new ${first.target.relative} could not be parsed, so nothing was written`);
     files.push({ target: first.target, original: first.code, code: done.code });
     for (const start of done.starts) select.push({ file: first.target.relative, ...positionAt(done.code, start), tag: context.name });
@@ -311,7 +316,7 @@ export async function planCreateComponent(scope: InsertScope, raw: unknown): Pro
   const variants = planVariants(shape.slots, uses.length, request.name);
   const built = componentFile({ name: request.name, imports, body: bodyOf(first, shape.slots, variants, style), slots: shape.slots, variants, style });
   if (!parseModuleFile(built.code, component)) throw new DirectEditError('parse_failed', 'The new component file could not be parsed, so nothing was written');
-  const context: Context = { ts, library, scope, name: request.name, component };
+  const context: Context = { ts, library, scope, name: request.name, component, moved: shape.imports };
   const edits = await withTempFile(component, built.code, () => useEdits(context, uses, shape.slots, variants));
   const relative = path.relative(library.root, component).split(path.sep).join('/');
   const created: WrittenFile = { target: { file: component, relative }, original: '', code: built.code, created: true };

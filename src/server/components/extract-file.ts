@@ -139,8 +139,8 @@ export function classExpression(part: VariantPlan['parts'][number], plan: Varian
 
 function typeOf(slot: Slot): string {
   if (slot.kind === 'node' || slot.name === 'children') return 'ReactNode';
-  if (slot.typed === 'string') return 'string';
   const component = /^[A-Z]/.test(slot.tag) || slot.tag.includes('.');
+  if (slot.typed === 'string' && (!component || slot.kind === 'text')) return 'string';
   return `ComponentProps<${component ? `typeof ${slot.tag}` : `'${slot.tag}'`}>['${slot.attr ?? ''}']`;
 }
 

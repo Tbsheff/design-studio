@@ -19,13 +19,23 @@ const createSchema = z
     projectId,
     directionId,
     path: pagePath,
-    targetSelectors: z.array(selector).min(1).max(CREATE_TARGETS_MAX).optional().describe('CSS selectors or get_layers ids of the elements on the page, one per element, for example ["e0k3pz", "e0k4a1", "e0k4b7"].'),
-    targetSources: z.array(z.string().trim().max(1100)).min(1).max(CREATE_TARGETS_MAX).optional().describe('Or the elements as file:line:col of their JSX tags, for example ["src/App.tsx:14:9", "src/App.tsx:18:9"]. Use this or targetSelectors.'),
+    targets: z
+      .array(
+        z
+          .object({
+            targetSelector: selector.optional().describe('CSS selector or get_layers id of the element, for example "e0k3pz".'),
+            targetSource: z.string().trim().max(1100).optional().describe('Or file:line:col of its JSX tag, for example "src/App.tsx:14:9".'),
+          })
+          .strict()
+          .refine((item) => (item.targetSelector === undefined) !== (item.targetSource === undefined), 'pass targetSelector or targetSource, not both'),
+      )
+      .min(1)
+      .max(CREATE_TARGETS_MAX)
+      .describe('The elements, one item per element: [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}, {"targetSelector": "e0k4b7"}].'),
     name: z.string().regex(COMPONENT_NAME).describe('PascalCase component name, for example "StatRow". The file name follows the folder (stat-row.tsx in a kit of kebab-case files, StatRow.tsx in a folder of PascalCase files).'),
     folder: z.string().trim().min(1).max(500).optional().describe('Folder for the new file, relative to the project, for example "packages/ui/src/components" or "src/components". Leave out for the app components folder.'),
   })
-  .strict()
-  .refine((input) => (input.targetSelectors === undefined) !== (input.targetSources === undefined), 'pass targetSelectors or targetSources, not both');
+  .strict();
 
 const swapSchema = z
   .object({
@@ -43,10 +53,8 @@ const swapSchema = z
 type Loaded = Awaited<ReturnType<typeof loadTarget>>;
 
 async function targetsOf(deps: Parameters<typeof targetOf>[0], loaded: Loaded, input: z.output<typeof createSchema>): Promise<InsertTarget[]> {
-  const { project, direction } = loaded;
-  if (input.targetSources) return Promise.all(input.targetSources.map((targetSource) => targetOf(deps, project, direction, { targetSource })));
   const out: InsertTarget[] = [];
-  for (const targetSelector of input.targetSelectors ?? []) out.push(await targetOf(deps, project, direction, { targetSelector, path: input.path }));
+  for (const item of input.targets) out.push(await targetOf(deps, loaded.project, loaded.direction, { ...item, path: input.path }));
   return out;
 }
 

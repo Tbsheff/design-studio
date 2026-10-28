@@ -14,6 +14,7 @@ import { propsFor, seenImports, type InsertScope } from './insert.js';
 import { loadLibrary, type LibraryEntry } from './insert-list.js';
 import { componentSchemas, loadTypeScript, parseModuleFile } from './props-schema.js';
 import { elementAt } from './use-site.js';
+import { removeImport } from './import-cleanup.js';
 
 type Library = Awaited<ReturnType<typeof loadLibrary>>;
 type Splice = { start: number; end: number; text: string };
@@ -138,36 +139,6 @@ function applyAll(code: string, splices: Splice[]): string {
 
 function shift(offset: number, splices: Splice[]): number {
   return offset + splices.filter((splice) => splice.end <= offset && splice.start < offset).reduce((sum, splice) => sum + splice.text.length - (splice.end - splice.start), 0);
-}
-
-function stillUsed(code: string, ast: t.File, name: string): boolean {
-  let text = code;
-  for (const statement of [...ast.program.body].reverse()) if (statement.type === 'ImportDeclaration') text = text.slice(0, statement.start ?? 0) + text.slice(statement.end ?? 0);
-  return new RegExp(`(^|[^\\w$.])${name.replace(/\$/g, '\\$')}(?![\\w$])`).test(text);
-}
-
-function specifierRange(code: string, statement: t.ImportDeclaration, index: number): { start: number; end: number } {
-  if (statement.specifiers.length === 1) {
-    const end = statement.end ?? 0;
-    return { start: statement.start ?? 0, end: code[end] === '\n' ? end + 1 : end };
-  }
-  const item = statement.specifiers[index] as t.Node;
-  const next = statement.specifiers[index + 1];
-  if (next) return { start: item.start ?? 0, end: next.start ?? 0 };
-  return { start: statement.specifiers[index - 1]?.end ?? 0, end: item.end ?? 0 };
-}
-
-function removeImport(code: string, name: string, file: string): string {
-  const ast = parseModuleFile(code, file);
-  if (!ast || stillUsed(code, ast, name)) return code;
-  for (const statement of ast.program.body) {
-    if (statement.type !== 'ImportDeclaration') continue;
-    const index = statement.specifiers.findIndex((item) => item.local.name === name);
-    if (index < 0) continue;
-    const range = specifierRange(code, statement, index);
-    return code.slice(0, range.start) + code.slice(range.end);
-  }
-  return code;
 }
 
 function pickEntry(library: Library, component: SwapRequest['component']): LibraryEntry {

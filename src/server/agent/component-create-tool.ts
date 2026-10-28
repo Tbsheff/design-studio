@@ -8,6 +8,7 @@ import { resolveInstance } from '../components/use-site.js';
 import { writeAtomic, writeNewFile } from '../direct-edit/index.js';
 import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 import { targetOf } from './insert-tool.js';
+import { resolveSelectors } from './kit-tools.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
@@ -20,8 +21,11 @@ export const SWAP_INSTANCE_AGENT_DESCRIPTION =
   'Replace one component use with another library component, with the same server code as the MCP swap_instance tool and the inspector Swap button: shared props stay, props the new component lacks are dropped, required props get defaults, imports are fixed. Leave out name to list the components that fit.';
 
 export const createComponentShape = {
-  targetSelectors: z.array(z.string().trim().min(1).max(2000)).min(1).max(CREATE_TARGETS_MAX).optional().describe('CSS selectors or layer ids on the live page, one per element.'),
-  targetSources: z.array(z.string().trim().max(1100)).min(1).max(CREATE_TARGETS_MAX).optional().describe('Or file:line:col of each JSX tag, for example ["src/App.tsx:14:9", "src/App.tsx:18:9"].'),
+  targets: z
+    .array(z.object({ targetSelector: z.string().trim().min(1).max(2000).optional().describe('CSS selector or layer id on the live page.'), targetSource: z.string().trim().max(1100).optional().describe('Or file:line:col of the JSX tag.') }).strict())
+    .min(1)
+    .max(CREATE_TARGETS_MAX)
+    .describe('The elements, one item per element, for example [{"targetSelector": "e0k3pz"}, {"targetSelector": "e0k4a1"}].'),
   name: z.string().regex(COMPONENT_NAME).describe('PascalCase component name, for example "StatRow".'),
   folder: z.string().trim().min(1).max(500).optional().describe('Folder for the file, relative to the project. Leave out for the app components folder.'),
   path: z.string().trim().max(300).optional().describe('Page path. Leave out for the page of the frame in <canvas-context> (or the entry page).'),
@@ -52,10 +56,10 @@ function scopeOf(deps: DirectToolDeps) {
 }
 
 async function targetsOf(deps: DirectToolDeps, input: z.output<typeof createSchema>): Promise<InsertTarget[] | string> {
-  const list = input.targetSources ? input.targetSources.map((targetSource) => ({ targetSource })) : (input.targetSelectors ?? []).map((targetSelector) => ({ targetSelector, path: input.path }));
   const out: InsertTarget[] = [];
-  for (const item of list) {
-    const target = await targetOf(deps, item);
+  for (const item of input.targets) {
+    if ((item.targetSelector === undefined) === (item.targetSource === undefined)) return 'Pass targetSelector or targetSource in each item, not both.';
+    const target = await targetOf(deps, await resolveSelectors(deps, { ...item, path: input.path }));
     if (typeof target === 'string') return target;
     out.push(target);
   }
@@ -68,7 +72,6 @@ export async function runCreateComponent(deps: DirectToolDeps, args: z.input<typ
   const parsed = createSchema.safeParse(args);
   if (!parsed.success) return issues('create_component', parsed.error);
   const input = parsed.data;
-  if ((input.targetSelectors === undefined) === (input.targetSources === undefined)) return text('Pass targetSelectors or targetSources, not both.', true);
   try {
     const targets = await targetsOf(deps, input);
     if (typeof targets === 'string') return text(targets, true);

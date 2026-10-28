@@ -84,7 +84,7 @@ export async function runGetLayers(deps: DirectToolDeps, args: z.input<typeof la
 
 type LayerArgs = { path?: string | undefined } & Partial<Record<(typeof SELECTOR_KEYS)[number], string | undefined>>;
 
-async function resolveSelectors<A extends LayerArgs>(deps: DirectToolDeps, args: A): Promise<A> {
+export async function resolveSelectors<A extends LayerArgs>(deps: DirectToolDeps, args: A): Promise<A> {
   const keys = SELECTOR_KEYS.filter((key) => isLayerRef(args[key]));
   if (keys.length === 0 || !deps.ctx.previewUrl) return args;
   const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);

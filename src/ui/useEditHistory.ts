@@ -86,14 +86,20 @@ export function useEditHistory(o: Options) {
   const runStep = useCallback(
     async (kind: HistoryKind, fallback?: () => unknown) => {
       const cur = opts.current;
-      const known = stateRef.current;
-      if (!cur.directionId || !(kind === 'undo' ? known.canUndo : known.canRedo)) {
+      if (!cur.directionId) {
         await fallback?.();
         return;
       }
       generation.current += 1;
+      let known = stateRef.current;
       try {
         await cur.before();
+        known = await api.editHistory(cur.projectId, cur.directionId);
+        apply(known);
+        if (!(kind === 'undo' ? known.canUndo : known.canRedo)) {
+          await fallback?.();
+          return;
+        }
         const result = await api.editHistoryStep(cur.projectId, cur.directionId, kind);
         apply(result.state);
         showToast(stepToast(kind, kind === 'undo' ? known.undoLabel : known.redoLabel));

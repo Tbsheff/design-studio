@@ -10,6 +10,7 @@ import { readDesignSystemFiles } from '../design-system/sync.js';
 import { findTokenFile } from '../design-system/app-tokens/detect.js';
 import { readAppTokensAt, usesAppTokens } from '../design-system/app-tokens/source.js';
 import { captureFrame, waitForPage } from '../export/capture.js';
+import { noteRenderedPage } from '../preview/render-wait.js';
 import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
 import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
@@ -277,11 +278,16 @@ async function elementSelector(deps: ExportDeps, src: ExportSource, url: string,
 
 const WARM_TIMEOUT_MS = 120_000;
 
+export async function warmUpstream(upstream: string, page: string | undefined): Promise<void> {
+  const answer = await fetch(new URL(`/${page ?? ''}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+  await answer?.body?.cancel().catch(() => undefined);
+}
+
 async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {
   const upstream = project.app ? await deps.preview.apps?.ensure(project).catch(() => null) : null;
   if (!upstream) return;
-  const answer = await fetch(new URL(`/${page ?? ''}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
-  await answer?.body?.cancel().catch(() => undefined);
+  noteRenderedPage(project.id, page);
+  await warmUpstream(upstream, page);
 }
 
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {

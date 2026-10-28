@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { DEV_CHROME_SELECTOR } from '../../shared/app.js';
 import type { ExportFrame, ExportScale, ExportScope } from '../../shared/export.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
 import { BadRequestError } from '../store/errors.js';
@@ -8,6 +9,7 @@ import type { PreviewService } from '../types.js';
 import { withPagePath } from './source.js';
 
 const MAX_OUTPUT_PIXELS = 80_000_000;
+const HIDE_DEV_CHROME = `(() => { const style = document.createElement('style'); style.textContent = ${JSON.stringify(`${DEV_CHROME_SELECTOR} { display: none !important; }`)}; document.head.append(style); return true; })()`;
 const READY_EXPRESSION = `(async () => {
   try { await document.fonts.ready; } catch (error) {}
   await Promise.all([...document.images].filter((img) => !img.complete).map((img) => new Promise((done) => { img.addEventListener('load', done, { once: true }); img.addEventListener('error', done, { once: true }); setTimeout(done, 3000); })));
@@ -59,6 +61,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
   try {
     return await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height, scale }, async (page) => {
       await waitForPage(page);
+      await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
       let clip: RenderClip;
       if (selector) {
         const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector, padding));
@@ -73,6 +76,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
       const maxHeight = Math.min(maxCssHeight ?? Infinity, Math.floor(MAX_OUTPUT_PIXELS / (clip.width * scale * scale)));
       const cropped = clip.height > maxHeight;
       if (cropped) clip = { ...clip, height: maxHeight };
+      if (selector && (clip.width < 1 || clip.height < 1)) throw new BadRequestError(`The selected element has no visible area on the page at ${frame.width} px wide (it is off the page or has no size there).`);
       clip = { x: Math.round(clip.x), y: Math.round(clip.y), width: Math.max(1, Math.round(clip.width)), height: Math.max(1, Math.round(clip.height)) };
       await page.screenshot(out, clip);
       const png = await readFile(out);

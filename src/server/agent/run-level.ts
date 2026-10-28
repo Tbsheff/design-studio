@@ -37,10 +37,11 @@ REQUIRED steps, in this order. Do not skip one:
 1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before you write any file.
 2. Write the design.
 3. Call \`mcp__studio__render_check\`. It returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity.
-4. Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. Look at every image against the checklist.
-5. Fix all errors and every HIGH finding from the check and from what you saw, with Edit. Do 1 fix loop.
-6. ${TWEAKS_STEP}
-7. After your LAST edit, run render_check once more. This final check is mandatory.`;
+4. Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. When render_check lists more than one screen, also take a desktop and a mobile screenshot of each screen with screen=<number>. Look at every image against the checklist.
+5. Call \`mcp__studio__design_review\` once: a quick critic that has not seen your work reviews every screen.
+6. Fix all errors and every HIGH finding from the check, the critic and what you saw, with Edit. Do 1 fix loop.
+7. ${TWEAKS_STEP}
+8. After your LAST edit, run render_check once more. This final check is mandatory.`;
 
 const POLISH_BUDGET_STOP = ', or when less than 20% of the budget is left';
 
@@ -51,8 +52,8 @@ const POLISH_EDIT = `Level: POLISH. Goal: a finished, distinctive design. Be tho
 REQUIRED steps, in this order. Do not skip one:
 1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before your first edit.
 2. Call \`mcp__studio__render_check\`. It runs at 390, 768 and 1440 px and returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff, generic-layout) with severities.
-3. Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. Look at every image.
-4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work). Call it at most twice per run.
+3. Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. When render_check lists more than one screen, also take desktop and mobile screenshots of each screen with screen=<number>. Look at every image.
+4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.
 5. Fix round: fix every HIGH and MEDIUM finding from the checks and the critic with Edit (a \`duplicate-content\` finding means a fact shows twice: merge it), plus the one layout change if the layout is generic.
 6. After each fix round: run render_check AND take screenshots from=0 at mobile, tablet and desktop again. Then start the next fix round.
 7. Stop only when render_check has no high and no medium findings, or after 3 fix rounds${POLISH_BUDGET_STOP}. If you stop early, the studio continues the run and lists what is left.
@@ -61,7 +62,7 @@ REQUIRED steps, in this order. Do not skip one:
 
 const CRITIQUE_SCOPE: Record<RunLevel, string> = {
   wireframe: 'Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.',
-  prototype: 'Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0. Report the three to six most important issues.',
+  prototype: 'Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.',
   polish: 'Level: POLISH critique. Call render_check (390, 768, 1440 px), screenshot mobile, tablet and desktop from=0, and design_review. Report every high and medium issue with a concrete fix.',
 };
 

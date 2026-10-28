@@ -14,7 +14,7 @@ export const CANVAS_POINT_TOOL = 'mcp__studio__canvas_point';
 export const EDIT_ELEMENT_TOOL = 'mcp__studio__edit_element';
 export const SET_TOKEN_TOOL = 'mcp__studio__set_token';
 const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL]);
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL] as const;
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, 'mcp__studio__prepare_ship'] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);

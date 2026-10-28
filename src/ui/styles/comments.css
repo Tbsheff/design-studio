@@ -1088,3 +1088,156 @@
   font: 500 var(--t-2xs)/1 var(--font);
   box-shadow: none;
 }
+
+button.comment-num.pick {
+  border: 0;
+  cursor: pointer;
+}
+
+button.comment-num.pick:hover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+button.comment-num.pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.comment-num.picked,
+.comment-pin.picked {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.comments-pick-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 28px;
+  margin-bottom: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: var(--t-xs);
+}
+
+.comments-pick-bar .label {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.comments-pick-bar .spacer {
+  flex: 1;
+}
+
+.comments-pick-bar.floating {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  z-index: 30;
+  min-width: 280px;
+  margin: 0;
+  transform: translateX(-50%);
+  box-shadow: var(--shadow-md);
+}
+
+.run-comments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: var(--t-xs);
+}
+
+.run-comments-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 28px;
+  color: var(--text-2);
+}
+
+.run-comments-head .spacer {
+  flex: 1;
+}
+
+.run-comments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.run-comment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.run-comment-link:hover {
+  background: var(--surface-hover);
+}
+
+.run-comment-link .text {
+  overflow: hidden;
+  max-width: 180px;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.run-comment-link[data-state='done'] .num {
+  color: var(--ok);
+}
+
+.run-comment-link[data-state='resolved'] {
+  opacity: 0.6;
+}
+
+.composer-comments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-2) 0;
+  font-size: var(--t-xs);
+}
+
+.composer-comments .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 4px 0 var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  color: var(--text-2);
+}
+
+.run-comment-link .num {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-comments-head > span {
+  white-space: nowrap;
+}

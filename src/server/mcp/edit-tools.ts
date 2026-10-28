@@ -1,4 +1,5 @@
 import { FRAME_STATE_TOOLS } from './frame-state-tools.js';
+import { COMMENT_TOOLS } from './comment-tools.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
@@ -170,7 +171,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
@@ -334,7 +335,7 @@ async function addComment(deps: EditDeps, input: Input<'add_comment'>, client: s
   const context = input.selector ? await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector) : null;
   if (input.selector && !context) throw new EditError(`No element matches ${input.selector} on the page.`);
   const target = context ? targetFromSelection(context) : frameTarget();
-  const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments`, { text: input.text, target, ...(context ? { context } : {}), status: 'draft', author: client });
+  const comment = await studioCall<DesignComment>(deps, 'POST', `${base(project, direction.id)}/comments`, { text: input.text, target, ...(context ? { context } : {}), status: 'draft', author: client, frame: { path: input.path ?? '' } });
   const summary = `Added comment #${comment.n}${context ? ` on ${context.tag}` : ''}`;
   return { result: ok({ commentId: comment.id, number: comment.n, frameLevel: !context, author: comment.author ?? client }), activity: { projectId: project.id, directionId: direction.id, summary } };
 }

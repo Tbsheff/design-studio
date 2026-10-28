@@ -9,6 +9,7 @@ import type { CommentStore } from '../store/comments.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../store/errors.js';
 import type { AgentRunner, RunHandle } from '../types.js';
 import { MENTION_MAX, parseMentions } from './mentions.js';
+import { buildPrefill, pickComments, type PrefillDeps } from '../comments/prefill.js';
 
 const rectSchema = z.object({
   x: z.number().finite(),
@@ -31,6 +32,10 @@ const selectionSchema = z.object({
   styles: z.record(z.string().max(100), z.string().max(500)),
   rect: rectSchema,
   source: sourceLocSchema.nullable(),
+  usedAt: sourceLocSchema.nullable().optional(),
+  usedBy: z.object({ name: z.string().max(100), root: z.boolean() }).nullable().optional(),
+  component: z.string().max(100).optional(),
+  owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(4000) })).max(12).optional(),
   ancestors: z.array(z.string().max(200)).max(20),
 });
 
@@ -65,6 +70,14 @@ const drawingSchema = z
   })
   .refine((drawing) => drawing.strokes.reduce((sum, stroke) => sum + stroke.points.length, 0) <= DRAW_POINTS_MAX, 'drawing has too many points');
 
+const frameSchema = z
+  .object({
+    id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).optional(),
+    label: z.string().trim().max(80).optional(),
+    path: z.string().max(300),
+  })
+  .strict();
+
 const attachmentIdsSchema = z.array(z.string().regex(/^[A-Za-z0-9_-]{1,64}$/)).min(1).max(4);
 
 const createSchema = z
@@ -77,6 +90,7 @@ const createSchema = z
     mentions: z.array(z.unknown()).max(MENTION_MAX).optional(),
     drawing: drawingSchema.optional(),
     author: authorSchema.optional(),
+    frame: frameSchema.optional(),
   })
   .refine((input) => !input.drawing || (input.attachmentIds?.length ?? 0) > 0, 'a drawing needs its image in attachmentIds');
 
@@ -90,6 +104,8 @@ const updateSchema = z
     context: selectionSchema.optional(),
   })
   .strict();
+
+const prefillSchema = z.object({ ids: z.array(z.string().min(1).max(64)).min(1).max(20) }).strict();
 
 const reorderSchema = z.object({ ids: z.array(z.string().min(1).max(64)).min(1).max(500) });
 
@@ -107,6 +123,7 @@ interface CommentRouteDeps {
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   startRun: (project: Project, direction: Direction, request: RunRequest) => Promise<string>;
   hasAttachment?: (projectId: string, attachmentId: string) => Promise<boolean>;
+  prefill?: PrefillDeps;
 }
 
 async function parseBody<T>(c: Context, schema: z.ZodType<T>): Promise<T> {
@@ -147,7 +164,7 @@ function mergedMentions(chosen: DesignComment[]): RunMention[] {
   return [...seen.values()].slice(0, MENTION_MAX);
 }
 
-function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionContext> | undefined): Pick<RunRequest, 'comments' | 'attachmentIds' | 'mentions'> {
+export function runPayload(chosen: DesignComment[], contexts: Record<string, SelectionContext> | undefined): Pick<RunRequest, 'comments' | 'attachmentIds' | 'mentions'> {
   const attachmentIds: string[] = [];
   const mentions = mergedMentions(chosen);
   const comments = chosen.map((comment): RunComment => {
@@ -224,6 +241,14 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
     return c.json(await comments.create(project.id, direction.id, { ...input, ...(mentions?.length ? { mentions } : {}) }));
   });
 
+  app.post(`${base}/prefill`, async (c) => {
+    const { ids } = await parseBody(c, prefillSchema);
+    if (!deps.prefill) throw new BadRequestError('prefill is not available');
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    const chosen = pickComments(await comments.list(project.id, direction.id), ids);
+    return c.json(await buildPrefill(deps.prefill, project, direction, chosen));
+  });
+
   app.post(`${base}/:cid/replies`, async (c) => {
     const { text, author } = await parseBody(c, replySchema);
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
@@ -277,4 +302,13 @@ export function registerCommentRoutes(app: Hono, deps: CommentRouteDeps): void {
     await comments.remove(project.id, direction.id, c.req.param('cid'));
     return c.json({ ok: true });
   });
+}
+
+export async function withCommentInputs(store: CommentStore, project: Project, direction: Direction, request: RunRequest): Promise<RunRequest> {
+  const { commentIds, ...rest } = request;
+  if (!commentIds?.length) return rest;
+  const chosen = pickComments(await store.list(project.id, direction.id), commentIds);
+  const payload = runPayload(chosen, undefined);
+  const attachmentIds = [...new Set([...(payload.attachmentIds ?? []), ...(rest.attachmentIds ?? [])])];
+  return { ...rest, comments: payload.comments, ...(attachmentIds.length ? { attachmentIds } : {}) };
 }

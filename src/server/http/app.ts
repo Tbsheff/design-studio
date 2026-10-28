@@ -54,7 +54,7 @@ import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafe
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { createCommandRuleStore } from '../store/command-rules.js';
-import { registerCommentRoutes } from './comments-routes.js';
+import { registerCommentRoutes, withCommentInputs } from './comments-routes.js';
 import { registerExportRoutes } from './export-routes.js';
 import { registerRunControlRoutes } from './run-control-routes.js';
 import { registerRunTitleRoutes } from './run-title-routes.js';
@@ -201,9 +201,17 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
     request.attachmentIds = body.attachmentIds as string[];
   }
   parseRunTask(body, request);
+  const commentIds = parseCommentIds(body.commentIds);
+  if (commentIds) request.commentIds = commentIds;
   const canvas = parseRunCanvas(body.canvas);
   if (canvas) request.canvas = canvas;
   return request;
+}
+
+function parseCommentIds(raw: unknown): string[] | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (!Array.isArray(raw) || raw.length > 20 || !raw.every((id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(id))) throw new BadRequestError('commentIds must be up to 20 comment ids');
+  return raw.length ? [...new Set(raw as string[])] : undefined;
 }
 
 const MAX_CANVAS_SIDE = 8000;
@@ -804,7 +812,7 @@ export function createApp(deps: AppDeps): Hono {
     const runId = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       if (runner.isRunning(project.id, direction.id)) throw new ConflictError('run_in_progress');
       if (liveDrafts.isReading(project.id)) throw new ConflictError('The studio is still reading the sources. Wait until they finish.');
-      return startRun(project, direction, await withTaskInputs(project, direction, request));
+      return startRun(project, direction, await withCommentInputs(comments, project, direction, await withTaskInputs(project, direction, request)));
     });
     return c.json({ runId });
   });
@@ -1049,6 +1057,7 @@ export function createApp(deps: AppDeps): Hono {
     withDirection,
     startRun,
     hasAttachment: (pid, id) => projects.getAttachment(pid, id).then(() => true, () => false),
+    prefill: { preview, projectDir: (id) => projects.projectDir(id), getAttachment: (pid, id) => projects.getAttachment(pid, id), saveAttachment: (pid, file) => projects.saveAttachment(pid, file) },
   });
 
   registerComponentRoutes(app, {

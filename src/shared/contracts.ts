@@ -902,7 +902,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
   | { ns: 'studio'; token: string; type: 'structure-key'; selector: string; key: StructureKey }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string }
-  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string };
+  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
+  | { ns: 'studio'; token: string; type: 'arrange-key'; key: string };
 
 export interface LayerNode {
   id: number;

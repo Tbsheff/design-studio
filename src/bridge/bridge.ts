@@ -10,7 +10,7 @@ import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { createForceState, type ForcedState } from './force-state.js';
-import { isLayoutKey, layoutStyles } from './inlineStyle.js';
+import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
@@ -350,6 +350,12 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
     if (isLayoutKey(event) && !isTypingElement(eventElement(event))) {
       event.preventDefault();
       post({ type: 'layout-key' });
+      return;
+    }
+    const chord = arrangeChordOf(event);
+    if (chord && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      post({ type: 'arrange-key', key: chord });
       return;
     }
     const key = zoomKeyOf(event);

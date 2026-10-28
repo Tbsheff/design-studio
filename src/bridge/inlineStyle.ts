@@ -1,4 +1,7 @@
 import { authoredSizes } from './authored.js';
+import { ARRANGE_SHORTCUTS } from '../shared/arrange.js';
+
+export const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
 
 const AUTHORED_KEYS = ['box-shadow', 'filter', 'flex', 'align-self'];
 const AUTHORED_SIZE_KEYS = ['width', 'height'];
@@ -63,7 +66,21 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
     'used-height': computed.height,
     'parent-display': parent?.display ?? '',
     'parent-flex-direction': parent?.flexDirection ?? '',
+    ...offsetStyles(element, computed),
   };
+}
+
+function offsetStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {
+  if (!(element instanceof HTMLElement)) return {};
+  const left = element.offsetLeft - (parseFloat(computed.marginLeft) || 0);
+  const top = element.offsetTop - (parseFloat(computed.marginTop) || 0);
+  return { 'offset-left': `${Math.round(left)}px`, 'offset-top': `${Math.round(top)}px` };
+}
+
+export function arrangeChordOf(event: KeyboardEvent): string | null {
+  if (event.metaKey || event.repeat || !event.altKey) return null;
+  const chord = `${event.ctrlKey ? 'Ctrl+' : ''}Alt+${event.shiftKey ? 'Shift+' : ''}${event.code}`;
+  return chord in ARRANGE_SHORTCUTS || chord === REMOVE_LAYOUT_CHORD ? chord : null;
 }
 
 export function isLayoutKey(event: KeyboardEvent): boolean {

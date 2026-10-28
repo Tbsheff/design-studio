@@ -21,6 +21,7 @@ interface LabelProps {
   title?: string;
   extras?: ReactNode;
   onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
+  onBodyPointerDown?: (e: ReactPointerEvent, frame: CanvasFrame, body: boolean) => void;
   onActivate: (frame: CanvasFrame) => void;
   onRemove: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
@@ -40,7 +41,7 @@ export function FrameLabel({ frame, active, removable, directionId, badge, numbe
         className="frame-name"
         aria-pressed={active}
         aria-label={`${name} frame`}
-        data-tip={active ? `${badge ? `${size} · ` : ''}Drag or use arrow keys to move` : `${badge ? `${size} · ` : ''}Click to edit, drag to move`}
+        data-tip={active ? `${badge ? `${size} · ` : ''}Drag to move, double-click to zoom` : `${badge ? `${size} · ` : ''}Click to edit, double-click to zoom`}
         onPointerDown={(e) => onPointerDown(e, frame)}
         onKeyDown={(e) => {
           const step = NUDGE[e.key];
@@ -108,7 +109,7 @@ export function PassiveFrame({ frame, src, nextSrc, sandbox, offset, label, regi
           />
         ) : null,
       )}
-      <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => label.onPointerDown(e, frame)} />
+      <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => (label.onBodyPointerDown ? label.onBodyPointerDown(e, frame, true) : label.onPointerDown(e, frame))} />
       <FrameLabel {...label} />
       <FrameResizeHandles onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)} />
     </div>

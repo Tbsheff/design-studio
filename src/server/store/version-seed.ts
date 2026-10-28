@@ -56,8 +56,15 @@ async function clonePacks(from: string, to: string): Promise<void> {
   await Promise.all(files.map((name) => copyFile(path.join(packDir, name), path.join(to, 'pack', name), constants.COPYFILE_FICLONE)));
 }
 
+async function looseObjectsOf(from: string): Promise<Set<string>> {
+  const fanout = (await readdir(from)).filter((name) => /^[0-9a-f]{2}$/.test(name));
+  const names = await Promise.all(fanout.map(async (dir) => (await readdir(path.join(from, dir))).map((rest) => `${dir}${rest}`)));
+  return new Set(names.flat());
+}
+
 async function cloneLooseObjects(from: string, to: string, shas: string[]): Promise<void> {
-  const loose = [...new Set(shas)].filter((sha) => existsSync(path.join(from, sha.slice(0, 2), sha.slice(2))));
+  const present = await looseObjectsOf(from);
+  const loose = [...new Set(shas)].filter((sha) => present.has(sha));
   for (let start = 0; start < loose.length; start += STAT_BATCH) {
     await Promise.all(
       loose.slice(start, start + STAT_BATCH).map(async (sha) => {
@@ -93,13 +100,17 @@ async function fileSizes(workTree: string, entries: IndexEntry[]): Promise<(numb
   return sizes;
 }
 
-async function entriesToRehash(scope: GitScope, workTree: string, entries: IndexEntry[], options: SeedOptions): Promise<string[]> {
-  const drop = new Set(splitNul((await runGit(scope, ['ls-files', '-ci', '--exclude-standard', '-z'])).stdout));
+async function entriesToRehash(scope: GitScope, workTree: string, entries: IndexEntry[], options: SeedOptions, objectsReady: Promise<void>): Promise<string[]> {
+  const files = entries.filter((entry) => REGULAR_MODES.has(entry.mode));
+  const [ignored, blobs, sizes] = await Promise.all([
+    runGit(scope, ['ls-files', '-ci', '--exclude-standard', '-z']).then(({ stdout }) => splitNul(stdout)),
+    objectsReady.then(() => blobSizes(scope, files)),
+    fileSizes(workTree, files),
+  ]);
+  const drop = new Set(ignored);
   for (const entry of entries) {
     if (options.neverTracked.includes(entry.path.split('/')[0] ?? '')) drop.add(entry.path);
   }
-  const files = entries.filter((entry) => REGULAR_MODES.has(entry.mode) && !drop.has(entry.path));
-  const [blobs, sizes] = await Promise.all([blobSizes(scope, files), fileSizes(workTree, files)]);
   files.forEach((entry, index) => {
     const size = sizes[index];
     if (size === null || size === undefined) return;
@@ -127,6 +138,7 @@ async function addTreeMarkers(scope: GitScope, entries: IndexEntry[]): Promise<s
 export async function seedFromUserRepo(scope: GitScope, workTree: string, options: SeedOptions): Promise<boolean> {
   const indexFile = scope.indexFile;
   if (!indexFile || existsSync(indexFile)) return false;
+  const startedAt = performance.now();
   try {
     const user = await userRepoOf(workTree);
     if (!user || !(await sameDevice(user.objectsDir, scope.gitDir))) return false;
@@ -134,11 +146,11 @@ export async function seedFromUserRepo(scope: GitScope, workTree: string, option
     await copyFile(path.join(user.gitDir, 'index'), indexFile, constants.COPYFILE_FICLONE);
     const entries = parseEntries((await runGit(scope, ['ls-files', '-v', '-s', '-z'])).stdout);
     if (entries === null) throw new Error('index has entries the studio cannot reuse');
-    await clonePacks(user.objectsDir, objectsDir);
-    await cloneLooseObjects(user.objectsDir, objectsDir, entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.sha));
-    const rehash = await entriesToRehash(scope, workTree, entries, options);
+    const objectsReady = Promise.all([clonePacks(user.objectsDir, objectsDir), cloneLooseObjects(user.objectsDir, objectsDir, entries.filter((entry) => entry.mode !== '160000').map((entry) => entry.sha))]).then(() => undefined);
+    const rehash = await entriesToRehash(scope, workTree, entries, options, objectsReady);
     const markers = await addTreeMarkers(scope, entries);
     await runGit(scope, ['update-index', '-z', '--force-remove', '--stdin'], { input: `${[...rehash, ...markers].join('\0')}\0` });
+    console.log(`[versions] reused the folder's git index: ${entries.length} files, ${rehash.length} to read again, ${Math.round(performance.now() - startedAt)} ms`);
     return true;
   } catch (error) {
     console.error('[versions] could not reuse the folder\'s git index; reading every file', error instanceof Error ? error.message : error);

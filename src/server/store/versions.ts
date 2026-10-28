@@ -22,6 +22,7 @@ const NEVER_TRACKED = ['node_modules'];
 const APP_NEVER_TRACKED = [...NEVER_TRACKED, '.studio'];
 const MAX_SCOPED_PATHS = 500;
 const MAX_CACHED_TREES = 4096;
+const LOOSE_OBJECTS_TO_PACK = 1000;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
 const APP_ATTRIBUTES = '* -text -filter -ident\n';
 const STAT_BATCH = 256;
@@ -368,9 +369,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
   const fullStage = async (project: Project, direction: Direction, firstOfApp = false): Promise<void> => {
     const key = lockKey(project, direction);
-    tracker.beginFullScan(key, rootOf(direction));
+    if (project.app) tracker.beginFullScan(key, rootOf(direction));
     await stageAll(directionScope(project, direction), firstOfApp);
-    tracker.endFullScan(key);
+    if (project.app) tracker.endFullScan(key);
   };
 
   const scopedPaths = (scope: GitScope, paths: string[]): string[] => {
@@ -398,7 +399,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   };
 
   const stageChanged = async (project: Project, direction: Direction): Promise<void> => {
-    const changed = tracker.changedSinceScan(lockKey(project, direction), rootOf(direction));
+    const changed = project.app ? await tracker.changedSinceScan(lockKey(project, direction), rootOf(direction)) : null;
     if (changed === null) return fullStage(project, direction);
     const scope = directionScope(project, direction);
     const scoped = scopedPaths(scope, changed);
@@ -600,13 +601,20 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
   const seedIndex = async (project: Project): Promise<void> => {
     const main = project.directions[0];
-    if (!main || (await headOf(project, main)) !== null) return;
-    await writeBaseExclude(project);
-    await seedFromUserRepo(directionScope(project, main), main.workTree, { maxBytes: APP_MAX_TRACKED_BYTES, neverTracked: APP_NEVER_TRACKED });
+    if (!main) return;
+    await locked(project, main, async () => {
+      if ((await headOf(project, main)) !== null) return;
+      await writeBaseExclude(project);
+      await seedFromUserRepo(directionScope(project, main), main.workTree, { maxBytes: APP_MAX_TRACKED_BYTES, neverTracked: APP_NEVER_TRACKED });
+    });
   };
 
   const packLooseObjects = (project: Project): void => {
-    runGit(repoScope(project), ['repack', '-d', '-q']).catch((error: unknown) => console.error('[versions] could not pack the first version', error instanceof Error ? error.message : error));
+    const pack = async (): Promise<void> => {
+      const { stdout } = await runGit(repoScope(project), ['count-objects']);
+      if (Number(stdout.split(' ')[0]) > LOOSE_OBJECTS_TO_PACK) await runGit(repoScope(project), ['repack', '-d', '-q']);
+    };
+    pack().catch((error: unknown) => console.error('[versions] could not pack the first version', error instanceof Error ? error.message : error));
   };
 
   const headIndexOf = (project: Project, direction: Direction): string => path.join(gitDirOf(project), `index-head-${assertSafeId(direction.id, 'directionId')}`);

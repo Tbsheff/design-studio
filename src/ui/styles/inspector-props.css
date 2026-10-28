@@ -1,6 +1,8 @@
 .prp {
   flex: none;
+  min-width: 0;
   max-height: 50%;
+  overflow-x: hidden;
   overflow-y: auto;
   border-bottom: 1px solid var(--line);
 }
@@ -119,6 +121,7 @@
 
 .prp-variant {
   display: grid;
+  min-width: 0;
   gap: var(--s-2);
   padding: var(--s-2);
   border: 1px solid var(--line);
@@ -165,4 +168,9 @@
 .prp-class-x:hover {
   background: var(--line);
   color: var(--text);
+}
+
+.prp-variant .ins-field,
+.prp-variant .ins-input {
+  min-width: 0;
 }

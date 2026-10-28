@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { DIRECT_STYLE_PROPERTIES, type Direction, type Project, type Version } from '../../shared/contracts.js';
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX, type ComponentInstance, type ComponentSchema, type PropValue, type SetPropsResult, type VariantClassResult } from '../../shared/props.js';
 import { cvaCalls, parseModuleFile } from '../components/props-schema.js';
+import { sourceFiles, usesIn } from '../components/props-service.js';
 import { elementAt, readInstance } from '../components/use-site.js';
 import { DirectEditError } from './errors.js';
 import { assertCanEdit, publishVersion, resolveSource, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
@@ -237,7 +238,7 @@ export async function applySetProps(deps: DirectEditDeps, project: Project, dire
   if (plan.code === original) return { file: target.relative, version: await deps.versions.get(project, head), changed: [], removed: [], instance };
   const summary = Object.entries(request.props).map(([name, value]) => (value === null ? `remove ${name}` : `${name}=${JSON.stringify(value)}`)).join('; ');
   const version = await commitChange(deps, project, direction, target, original, plan.code, propsTitle(instance.tag, plan, request.props), `Props of <${instance.tag}> at ${target.relative}:${instance.use.line}: ${summary}`);
-  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use) };
+  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use, usesIn(await sourceFiles(direction.workTree))) };
 }
 
 function variantLiteral(ast: t.File, edit: VariantClassEdit): t.StringLiteral {

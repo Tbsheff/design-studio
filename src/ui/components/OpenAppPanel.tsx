@@ -7,6 +7,7 @@ import { api, errorText } from '../api';
 import { hasNativePicker, pickFolder } from '../folderPicker';
 import { CopyButton } from './CopyButton';
 import { Icon } from './Icon';
+import '../styles/attach-app.css';
 import '../styles/open-app.css';
 
 const INSPECT_DELAY_MS = 250;

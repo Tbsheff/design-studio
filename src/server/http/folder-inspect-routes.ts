@@ -11,6 +11,7 @@ import { BadRequestError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 
 const MAX_PATH = 4096;
+const PREFERRED_APP = /(^|\/)(web|dashboard|app|site|frontend)$/;
 
 interface InspectDeps {
   projects: StudioProjectStore;
@@ -52,7 +53,8 @@ export async function inspectFolder(projects: StudioProjectStore, raw: string, w
   const detected = await detectApp(folder);
   const kind = detected.framework === 'next' ? 'next' : await plainKind(folder);
   const chosen = wanted && detected.candidates.some((candidate) => candidate.appDir === wanted) ? wanted : null;
-  const appDir = kind === 'next' ? (chosen ?? detected.appDir ?? detected.candidates[0]?.appDir ?? null) : null;
+  const preferred = detected.candidates.find((candidate) => PREFERRED_APP.test(candidate.appDir)) ?? detected.candidates[0];
+  const appDir = kind === 'next' ? (chosen ?? detected.appDir ?? preferred?.appDir ?? null) : null;
   const hint = appDir ? installHint(folder, appDir) : null;
   const existing = (await projects.list()).find((project) => project.imported?.sourcePath === folder && (kind !== 'next' || project.app?.appDir === appDir));
   const problem = kind === null ? 'This folder has no Next.js app, no Vite app and no index.html.' : null;

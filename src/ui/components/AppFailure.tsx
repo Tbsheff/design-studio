@@ -47,8 +47,8 @@ function InstallFix({ hint }: { hint: FolderInspection | null }) {
   );
 }
 
-function UrlForm({ projectId, app, onSaved }: { projectId: string; app: AttachedApp; onSaved: () => void }) {
-  const [url, setUrl] = useState(app.mode === 'url' ? (app.url ?? '') : '');
+function UrlForm({ projectId, app, suggested, onSaved }: { projectId: string; app: AttachedApp; suggested: string; onSaved: () => void }) {
+  const [url, setUrl] = useState(app.mode === 'url' ? (app.url ?? '') : suggested);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const save = (event: FormEvent) => {
@@ -97,7 +97,7 @@ export function AppFailure({ projectId, app, status, onRetry, onLog, onClose, on
       </div>
       {status.message && <p className="app-fail-message">{status.message}</p>}
       {managed && <InstallFix hint={hint} />}
-      <UrlForm projectId={projectId} app={app} onSaved={onSaved} />
+      <UrlForm projectId={projectId} app={app} suggested={/runs for this app at (\S+?)\.(?:\s|$)/.exec(status.message ?? '')?.[1] ?? ''} onSaved={onSaved} />
       <div className="app-fail-foot">
         <button type="button" className="btn small ghost" onClick={onLog}>
           {managed ? 'Show the log' : 'Show details'}

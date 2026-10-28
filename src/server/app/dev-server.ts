@@ -71,6 +71,14 @@ export function missingNextMessage(workTree: string, appDir: string): string {
   return `next is not installed in ${appRoot}. Run ${hint.command} in ${hint.dir}, then start the app again. Or start the dev server yourself and use its URL.`;
 }
 
+function exitMessage(logs: AppLogLine[], base: string): string {
+  const recent = logs.slice(-30).map((line) => line.text);
+  if (!recent.some((text) => text.includes('Another next dev server is already running'))) return base;
+  const url = recent.map((text) => /Local:\s+(https?:\/\/\S+)/.exec(text)?.[1]).filter(Boolean).pop();
+  const pid = recent.map((text) => /PID:\s+(\d+)/.exec(text)?.[1]).filter(Boolean).pop();
+  return `${base}. Another next dev already runs for this app${url ? ` at ${url}` : ''}. Use that URL, or stop it${pid ? ` (PID ${pid})` : ''} and start again.`;
+}
+
 function childEnv(extra: Record<string, string> | undefined, port: number): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(process.env)) if (!BLOCKED_ENV.test(key) && value !== undefined) env[key] = value;
@@ -200,9 +208,9 @@ export class AppServers {
       child.once('exit', (code, signal) => {
         const current = server.child === child;
         if (current) server.child = null;
-        const message = `next dev exited (${signal ?? `code ${code ?? 0}`})`;
+        const message = exitMessage(server.logs, `next dev exited (${signal ?? `code ${code ?? 0}`})`);
         this.log(server, 'studio', message);
-        if (current && server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' ? 'stopped' : 'failed', message, upstream: null });
+        if (current && server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' && (code === 0 || signal !== null) ? 'stopped' : 'failed', message, upstream: null });
         reject(new Error(message));
       });
     });

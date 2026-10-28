@@ -108,7 +108,33 @@ async function request(method: string, path: string, body?: unknown, pick: Error
   return res;
 }
 
+const WARM_MS = 4000;
+const warm = new Map<string, { at: number; value: Promise<unknown> }>();
+
+function takeWarm(path: string): Promise<unknown> | null {
+  const hit = warm.get(path);
+  if (!hit) return null;
+  warm.delete(path);
+  return Date.now() - hit.at < WARM_MS ? hit.value : null;
+}
+
+export function warmGet(path: string): void {
+  const hit = warm.get(path);
+  if (hit && Date.now() - hit.at < WARM_MS) return;
+  const value = request('GET', path).then((res) => res.json() as Promise<unknown>);
+  value.catch(() => warm.delete(path));
+  warm.set(path, { at: Date.now(), value });
+}
+
 export async function json<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const early = method === 'GET' ? takeWarm(path) : null;
+  if (early) {
+    try {
+      return (await early) as T;
+    } catch {
+      return json<T>(method, path, body);
+    }
+  }
   const res = await request(method, path, body);
   return (await res.json()) as T;
 }
@@ -116,6 +142,13 @@ export async function json<T>(method: string, path: string, body?: unknown): Pro
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const d = (pid: string, did: string) => `${p(pid)}/d/${encodeURIComponent(did)}`;
 const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
+
+export function warmProject(pid: string, directionId: string | null): void {
+  warmGet(p(pid));
+  warmGet(`${p(pid)}/runs`);
+  warmGet(`${p(pid)}/canvas`);
+  if (directionId) warmGet(`${d(pid, directionId)}/preview`);
+}
 
 export const api = {
   listProjects: () => json<Project[]>('GET', '/api/projects'),

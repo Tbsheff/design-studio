@@ -105,11 +105,11 @@ function proseLines(doc: Doc): string[] {
 
 export function deriveRules(docs: Doc[]): string {
   const blocks: string[] = [];
+  const seen = new Set<string>();
+  const fresh = (line: string) => !seen.has(line) && Boolean(seen.add(line));
   for (const doc of docs) {
-    const checked = [...rawHexLines(doc.text), ...fontLines(doc.text), ...classLines(doc.text), ...componentLines(doc.text)];
-    const prose = proseLines(doc).slice(0, 14);
-    if (checked.length === 0 && prose.length === 0) continue;
-    blocks.push([`# From ${doc.file}`, ...checked, ...prose].join('\n'));
+    const lines = [...rawHexLines(doc.text), ...fontLines(doc.text), ...classLines(doc.text), ...componentLines(doc.text), ...proseLines(doc).slice(0, 14)].filter(fresh);
+    if (lines.length > 0) blocks.push([`# From ${doc.file}`, ...lines].join('\n'));
   }
   return blocks.join('\n\n');
 }

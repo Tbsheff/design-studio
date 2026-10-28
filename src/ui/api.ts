@@ -296,5 +296,5 @@ export function replaceStyle(pid: string, did: string, req: StyleReplaceRequest)
 export const rulesApi = {
   get: (pid: string, did: string) => json<DesignRulesState>('GET', `${d(pid, did)}/rules`),
   save: (pid: string, did: string, text: string) => json<{ state: DesignRulesState; versionId: string | null }>('PUT', `${d(pid, did)}/rules`, { text }),
-  test: (pid: string, did: string, text: string) => json<DesignRulesTestResult>('POST', `${d(pid, did)}/rules/test`, { text }),
+  test: (pid: string, did: string, text: string, frame?: { frame: string; path?: string; width: number; height: number }) => json<DesignRulesTestResult>('POST', `${d(pid, did)}/rules/test`, { text, ...frame }),
 };

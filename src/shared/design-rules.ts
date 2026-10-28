@@ -37,10 +37,10 @@ export type DesignRule = ClassRule | TokenRule | FontRule | ComponentRule | Text
 
 export const DESIGN_RULE_KIND_LABEL: Record<DesignRuleKind, string> = {
   class: 'Classes',
-  token: 'Tokens only',
-  font: 'Fonts',
-  component: 'Component use',
-  text: 'Agent and critic only',
+  token: 'Tokens',
+  font: 'Font',
+  component: 'Component',
+  text: 'Agent only',
 };
 
 export type DesignRulesOrigin = 'design-md' | 'studio' | 'app-docs' | 'none';

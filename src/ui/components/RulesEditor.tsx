@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DESIGN_RULE_KIND_LABEL, type DesignRule, type DesignRuleHit, type DesignRulesState, type DesignRulesTestResult } from '../../shared/design-rules';
 import { errorText, rulesApi } from '../api';
+import { activeFrame, canvasStore } from '../canvasFrames';
 import '../styles/rules.css';
 
 interface Props {
@@ -18,23 +19,37 @@ function originText(state: DesignRulesState): string {
 }
 
 function hitText(rule: DesignRule, hit: DesignRuleHit | undefined): string {
-  if (rule.kind === 'text') return 'Agent and critic only';
-  if (!hit) return 'Not tested';
-  return hit.count === 0 ? 'No breaks' : `${hit.count} ${hit.count === 1 ? 'break' : 'breaks'}`;
+  if (rule.kind === 'text' || !hit) return '';
+  return hit.count === 0 ? 'Pass' : `${hit.count} ${hit.count === 1 ? 'break' : 'breaks'}`;
+}
+
+function hitTip(rule: DesignRule, hit: DesignRuleHit | undefined): string {
+  if (rule.kind === 'text') return `${rule.text}. The agent and the critic get this rule. Review cannot check it.`;
+  const sample = hit?.samples[0];
+  return sample ? `${rule.text}. First break: ${sample.element}${sample.source ? ` at ${sample.source}` : ''}` : rule.text;
 }
 
 function RuleRow({ rule, hit }: { rule: DesignRule; hit: DesignRuleHit | undefined }) {
   const tone = rule.kind === 'text' || !hit ? 'idle' : hit.count === 0 ? 'ok' : 'bad';
-  const sample = hit?.samples[0];
   return (
-    <li className="rules-row" data-tone={tone}>
+    <li className="rules-row" data-tone={tone} data-tip={hitTip(rule, hit)}>
       <span className="ui-chip rules-kind">{DESIGN_RULE_KIND_LABEL[rule.kind]}</span>
       <span className="rules-text">{rule.text}</span>
-      <span className="rules-hits" data-tip={sample ? `${sample.element}${sample.source ? ` at ${sample.source}` : ''}` : undefined} data-tip-align="end">
-        {hitText(rule, hit)}
-      </span>
+      <span className="rules-hits">{hitText(rule, hit)}</span>
     </li>
   );
+}
+
+function liveFrame(projectId: string) {
+  const layout = canvasStore.get(projectId);
+  if (!layout) return undefined;
+  const frame = activeFrame(layout);
+  const side = (value: number) => Math.min(4000, Math.max(200, Math.round(value)));
+  return { frame: frame.id, ...(frame.path ? { path: frame.path } : {}), width: side(frame.width), height: side(frame.height) };
+}
+
+function frameText(result: DesignRulesTestResult): string {
+  return `Tested on ${result.frame.path ?? 'the entry page'} at ${result.frame.width} px.`;
 }
 
 function withImport(text: string, imported: string): string {
@@ -70,7 +85,7 @@ export default function RulesEditor({ projectId, directionId }: Props) {
     setNote(null);
     try {
       if (kind === 'test') {
-        setResult(await rulesApi.test(projectId, directionId, text));
+        setResult(await rulesApi.test(projectId, directionId, text, liveFrame(projectId)));
       } else {
         const saved = await rulesApi.save(projectId, directionId, text);
         setState(saved.state);
@@ -111,7 +126,7 @@ export default function RulesEditor({ projectId, directionId }: Props) {
         {note && <span className="pane-system-text">{note}</span>}
       </div>
       {error && <p className="rules-error">{error}</p>}
-      {result && result.notes.map((line) => <p key={line} className="pane-system-text">{line}</p>)}
+      {result && [frameText(result), ...result.notes].map((line) => <p key={line} className="pane-system-text">{line}</p>)}
       {rules.length > 0 && (
         <ul className="rules-list" aria-label="Parsed rules">
           {rules.map((rule) => (

@@ -47,6 +47,14 @@ function missText(miss: RuleMiss): string {
   return `${miss.prop} is ${miss.actual}, ${miss.cls} gives ${miss.expected}`;
 }
 
+function compact(misses: RuleMiss[]): RuleMiss[] {
+  const corners = misses.filter((miss) => miss.prop && RADIUS.includes(miss.prop));
+  const first = corners[0];
+  const even = first && corners.length === RADIUS.length && corners.every((miss) => miss.actual === first.actual && miss.expected === first.expected);
+  if (!even) return misses;
+  return [...misses.filter((miss) => !corners.includes(miss)), { ...first, prop: 'border-radius' }];
+}
+
 function radiusStyle(misses: RuleMiss[]): Partial<Record<DirectStyleProperty, string>> {
   const corners = misses.filter((miss) => miss.prop && RADIUS.includes(miss.prop));
   const value = corners[0]?.expected;
@@ -88,7 +96,7 @@ function classDraft(rule: ClassRule, hit: RuleHitElement): Draft {
     ...head(rule, hit),
     key: `${rule.id}|${hit.selector}`,
     severity: 'medium',
-    message: `Breaks the rule "${rule.text}": ${hit.misses.map(missText).join('; ')}.`,
+    message: `Breaks the rule "${rule.text}": ${compact(hit.misses).map(missText).join('; ')}.`,
     fix,
     ...(fix ? { guard: { noArbitrary: true, classes: hit.classes } } : {}),
     hint: `Follow the design rule "${rule.text}" for this ${rule.target.replace(/s$/, '')}. Use the classes the rule names and keep the rest of the look.`,

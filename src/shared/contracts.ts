@@ -719,6 +719,7 @@ export const API_ROUTES = {
   attachApp: 'POST /api/projects/attach AttachAppRequest -> {project} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied)',
   appStatus: 'GET /api/projects/:pid/app -> {app, status, logs} (404 when the project is not an attached app)',
   appControl: 'POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus',
+  appConfig: 'POST /api/projects/:pid/app/config {url?, env?} -> {app} (empty url = the studio starts next dev; then the dev server restarts)',
   appRoutes: 'GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)',
   openSource: 'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
   createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself. 400 no source, blocked URL, unknown base pack',

@@ -173,6 +173,7 @@ export const api = {
   attachApp: (input: AttachAppRequest) => json<{ project: Project }>('POST', '/api/projects/attach', input),
   appState: (pid: string) => json<{ app: AttachedApp; status: AppServerStatus | null; logs: AppLogLine[] }>('GET', `${p(pid)}/app`),
   appControl: (pid: string, action: 'start' | 'stop' | 'restart') => json<AppServerStatus>('POST', `${p(pid)}/app/${action}`),
+  appConfig: (pid: string, input: { url?: string; env?: Record<string, string> }) => json<{ app: AttachedApp }>('POST', `${p(pid)}/app/config`, input),
   appRoutes: (pid: string) => json<{ routes: AppRoute[] }>('GET', `${p(pid)}/app/routes`),
   openSource: (pid: string, did: string, source: string) => json<{ opened: boolean; path: string }>('POST', `${d(pid, did)}/open-source`, { source }),
   listWorkspaces: () => json<WorkspaceList>('GET', '/api/workspaces'),

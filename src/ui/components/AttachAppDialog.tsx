@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { AppCandidate, Project } from '../../shared/contracts';
+import { parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
 import { useModalDialog } from '../usePopover';
 import '../styles/attach-app.css';
@@ -18,6 +19,7 @@ function preferred(candidates: AppCandidate[]): string {
 export default function AttachAppDialog({ folder, candidates, onAttached, onClose }: AttachAppDialogProps) {
   const [appDir, setAppDir] = useState(() => preferred(candidates));
   const [url, setUrl] = useState('');
+  const [envDraft, setEnvDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => {
@@ -39,7 +41,12 @@ export default function AttachAppDialog({ folder, candidates, onAttached, onClos
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (!appDir || busy) return;
-    void run(() => api.attachApp({ folder, appDir, ...(url.trim() ? { url: url.trim() } : {}) }));
+    const parsed = parseEnvText(envDraft);
+    if (parsed.bad.length > 0) {
+      setError(`Use KEY=value lines. Not valid: ${parsed.bad[0] ?? ''}`);
+      return;
+    }
+    void run(() => api.attachApp({ folder, appDir, ...(url.trim() ? { url: url.trim() } : {}), env: parsed.env }));
   };
 
   return (
@@ -66,6 +73,11 @@ export default function AttachAppDialog({ folder, candidates, onAttached, onClos
             <span>Dev server URL (optional)</span>
             <input className="mono" value={url} placeholder="http://localhost:3000" spellCheck={false} autoComplete="off" onChange={(e) => setUrl(e.target.value)} />
             <small className="field-help">Leave it empty and the studio starts next dev on a free port.</small>
+          </label>
+          <label className="field">
+            <span>Environment for next dev (optional)</span>
+            <textarea className="mono" rows={3} value={envDraft} placeholder="SKIP_ENV_VALIDATION=true" spellCheck={false} onChange={(e) => setEnvDraft(e.target.value)} />
+            <small className="field-help">One KEY=value per line, for apps that check their env at start. Kept in the project file, so do not paste secrets.</small>
           </label>
           {error && (
             <div className="alert error small" role="alert">

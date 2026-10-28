@@ -231,3 +231,21 @@
   flex: 1;
   min-width: 0;
 }
+
+.app-settings {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.app-settings textarea {
+  resize: vertical;
+}
+
+.app-settings-foot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}

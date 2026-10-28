@@ -389,7 +389,7 @@ export function createProjectStore(
       const appDir = await pickAppDir(folder, input.appDir);
       const app: AttachedApp = { framework: 'next', appDir, mode: url ? 'url' : 'managed', ...(url ? { url } : {}), ...(env ? { env } : {}) };
       const existing = (await this.list()).find((project) => project.app && project.imported?.sourcePath === folder && project.app.appDir === appDir);
-      if (existing) return updateApp(existing.id, app, env === undefined);
+      if (existing) return updateApp(existing.id, app, input.env === undefined);
       const fallbackName = appDir === '.' ? path.basename(folder) : `${path.basename(folder)} ${path.basename(appDir)}`;
       const name = (typeof input.name === 'string' && input.name.trim() !== '' ? input.name.trim() : fallbackName).slice(0, 120);
       const project = await registerFolder(folder, { name, kind: 'react', created: false });

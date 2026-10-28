@@ -99,6 +99,20 @@ export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
     return c.json({ app: project.app, status: preview.apps?.status(project) ?? null, logs: preview.apps?.logs(project.id) ?? [] });
   });
 
+  app.post('/api/projects/:pid/app/config', async (c) => {
+    const project = await appProject(projects, c.req.param('pid'));
+    const body = await deps.readBody(c);
+    const current = project.app;
+    const folder = project.imported?.sourcePath;
+    if (!current || !folder) throw new BadRequestError('project is not an attached app');
+    const url = body.url === undefined ? current.url : body.url;
+    const env = body.env === undefined ? current.env : body.env;
+    const updated = await projects.attachApp({ folder, appDir: current.appDir, ...(typeof url === 'string' && url.trim() !== '' ? { url } : {}), env: (env ?? {}) as Record<string, string> });
+    preview.apps?.forget(updated.id);
+    void preview.apps?.restart(updated).catch(() => undefined);
+    return c.json({ app: updated.app });
+  });
+
   app.post('/api/projects/:pid/app/:action', async (c) => {
     const project = await appProject(projects, c.req.param('pid'));
     const control = preview.apps;

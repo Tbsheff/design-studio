@@ -19,3 +19,22 @@ export function routeLabel(route: string): string {
   const last = route.split('?')[0]?.split('/').filter(Boolean).pop() ?? route;
   return last.replace(/[-_]+/g, ' ').replace(/^\w/, (char) => char.toUpperCase()).slice(0, 40);
 }
+
+export function parseEnvText(text: string): { env: Record<string, string>; bad: string[] } {
+  const env: Record<string, string> = {};
+  const bad: string[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line === '' || line.startsWith('#')) continue;
+    const match = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
+    if (match?.[1]) env[match[1]] = (match[2] ?? '').replace(/^(['"])(.*)\1$/, '$2');
+    else bad.push(line);
+  }
+  return { env, bad };
+}
+
+export function envText(env: Record<string, string> | undefined): string {
+  return Object.entries(env ?? {})
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+}

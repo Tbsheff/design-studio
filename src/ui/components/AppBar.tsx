@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
-import { cleanRoute } from '../../shared/app';
+import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
@@ -118,13 +118,121 @@ function LogsTab({ logs }: { logs: AppLogLine[] }) {
   );
 }
 
+function SettingsTab({ projectId, app, onSaved }: { projectId: string; app: AttachedApp; onSaved: () => void }) {
+  const [url, setUrl] = useState(app.url ?? '');
+  const [env, setEnv] = useState(() => envText(app.env));
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const save = (event: FormEvent) => {
+    event.preventDefault();
+    const parsed = parseEnvText(env);
+    if (parsed.bad.length > 0) {
+      setNote(`Use KEY=value lines. Not valid: ${parsed.bad[0] ?? ''}`);
+      return;
+    }
+    setBusy(true);
+    setNote(null);
+    api
+      .appConfig(projectId, { url: url.trim(), env: parsed.env })
+      .then(() => {
+        setNote('Saved. The dev server restarts.');
+        onSaved();
+      })
+      .catch((err: unknown) => setNote(errorText(err)))
+      .finally(() => setBusy(false));
+  };
+  return (
+    <form className="app-settings" onSubmit={save}>
+      <label className="field">
+        <span>Dev server URL</span>
+        <input className="mono" value={url} placeholder="Empty: the studio starts next dev" spellCheck={false} onChange={(e) => setUrl(e.target.value)} />
+      </label>
+      <label className="field">
+        <span>Environment for next dev</span>
+        <textarea className="mono" rows={5} value={env} placeholder="SKIP_ENV_VALIDATION=true" spellCheck={false} onChange={(e) => setEnv(e.target.value)} />
+        <small className="field-help">One KEY=value per line. The studio keeps these in the project file, so do not paste secrets.</small>
+      </label>
+      <div className="app-settings-foot">
+        {note && <span className="app-panel-sub" role="status">{note}</span>}
+        <button type="submit" className="btn small primary" disabled={busy}>
+          Save and restart
+        </button>
+      </div>
+    </form>
+  );
+}
+
+type Tab = 'routes' | 'logs' | 'settings';
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'routes', label: 'Routes' },
+  { id: 'logs', label: 'Log' },
+  { id: 'settings', label: 'Settings' },
+];
+
+function statusLine(status: AppServerStatus | null, managed: boolean): string {
+  const parts = [STATE_TEXT[status?.state ?? 'idle']];
+  if (status?.upstream) parts.push(status.upstream);
+  parts.push(managed ? 'started by the studio' : 'your dev server');
+  if (status?.message) parts.push(status.message);
+  return parts.join(' · ');
+}
+
+function ServerButtons({ state, managed, control }: { state: AppServerStatus['state']; managed: boolean; control: (action: 'start' | 'stop' | 'restart') => void }) {
+  if (!managed) return null;
+  const running = state === 'ready';
+  return (
+    <>
+      {state !== 'starting' && (
+        <button type="button" className="btn small" onClick={() => control(running ? 'restart' : 'start')}>
+          {running ? 'Restart' : 'Start'}
+        </button>
+      )}
+      {(running || state === 'starting') && (
+        <button type="button" className="btn small ghost" onClick={() => control('stop')}>
+          Stop
+        </button>
+      )}
+    </>
+  );
+}
+
+function AppPanel({ projectId, app, onAddRoute, onClose }: AppBarProps & { onClose: () => void }) {
+  const [tab, setTab] = useState<Tab>('routes');
+  const { status, logs, refresh } = useAppState(projectId, true);
+  const state = status?.state ?? 'idle';
+  const managed = app.mode === 'managed';
+  const control = (action: 'start' | 'stop' | 'restart') => void api.appControl(projectId, action).then(refresh).catch(() => undefined);
+  return (
+    <div className="app-panel" role="dialog" aria-label="App">
+      <div className="app-panel-head">
+        <span className="app-status-dot" data-state={state} />
+        <div className="grow">
+          <div className="mono">{app.appDir === '.' ? 'App folder' : app.appDir}</div>
+          <div className="app-panel-sub">{statusLine(status, managed)}</div>
+        </div>
+        <ServerButtons state={state} managed={managed} control={control} />
+        <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+          <Icon name="close" size={14} />
+        </button>
+      </div>
+      <div className="app-panel-tabs segmented" role="tablist">
+        {TABS.map((item) => (
+          <button key={item.id} type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? 'on' : ''} onClick={() => setTab(item.id)}>
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {tab === 'routes' && <RoutesTab projectId={projectId} onAddRoute={onAddRoute} />}
+      {tab === 'logs' && <LogsTab logs={logs} />}
+      {tab === 'settings' && <SettingsTab projectId={projectId} app={app} onSaved={refresh} />}
+    </div>
+  );
+}
+
 export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<'routes' | 'logs'>('routes');
-  const { status, logs, refresh } = useAppState(projectId, open);
+  const { status } = useAppState(projectId, false);
   const state = status?.state ?? 'idle';
-  const control = (action: 'start' | 'stop' | 'restart') => void api.appControl(projectId, action).then(refresh).catch(() => undefined);
-  const managed = app.mode === 'managed';
   return (
     <div className="app-bar-root">
       <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((v) => !v)} data-tip="Routes and dev server">
@@ -132,44 +240,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
         <span>{app.framework === 'next' ? 'Next.js' : 'App'}</span>
         <span className="app-panel-sub">{STATE_TEXT[state]}</span>
       </button>
-      {open && (
-        <div className="app-panel" role="dialog" aria-label="App">
-          <div className="app-panel-head">
-            <span className="app-status-dot" data-state={state} />
-            <div className="grow">
-              <div className="mono">{app.appDir === '.' ? 'App folder' : app.appDir}</div>
-              <div className="app-panel-sub">
-                {STATE_TEXT[state]}
-                {status?.upstream ? ` · ${status.upstream}` : ''}
-                {managed ? ' · started by the studio' : ' · your dev server'}
-                {status?.message ? ` · ${status.message}` : ''}
-              </div>
-            </div>
-            {managed && state !== 'starting' && (
-              <button type="button" className="btn small" onClick={() => control(state === 'ready' ? 'restart' : 'start')}>
-                {state === 'ready' ? 'Restart' : 'Start'}
-              </button>
-            )}
-            {managed && (state === 'ready' || state === 'starting') && (
-              <button type="button" className="btn small ghost" onClick={() => control('stop')}>
-                Stop
-              </button>
-            )}
-            <button type="button" className="icon-btn" aria-label="Close" onClick={() => setOpen(false)}>
-              <Icon name="close" size={14} />
-            </button>
-          </div>
-          <div className="app-panel-tabs segmented" role="tablist">
-            <button type="button" role="tab" aria-selected={tab === 'routes'} className={tab === 'routes' ? 'on' : ''} onClick={() => setTab('routes')}>
-              Routes
-            </button>
-            <button type="button" role="tab" aria-selected={tab === 'logs'} className={tab === 'logs' ? 'on' : ''} onClick={() => setTab('logs')}>
-              Log
-            </button>
-          </div>
-          {tab === 'routes' ? <RoutesTab projectId={projectId} onAddRoute={onAddRoute} /> : <LogsTab logs={logs} />}
-        </div>
-      )}
+      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} />}
     </div>
   );
 }

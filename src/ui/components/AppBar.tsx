@@ -57,10 +57,11 @@ function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (
       .then((result) => setRoutes(result.routes))
       .catch((err: unknown) => setError(errorText(err)));
   }, [projectId]);
-  const shown = useMemo(() => {
+  const matches = useMemo(() => {
     const needle = filter.trim().toLowerCase();
-    return (routes ?? []).filter((route) => needle === '' || route.route.toLowerCase().includes(needle) || route.file.toLowerCase().includes(needle)).slice(0, 200);
+    return (routes ?? []).filter((route) => needle === '' || route.route.toLowerCase().includes(needle) || route.file.toLowerCase().includes(needle));
   }, [routes, filter]);
+  const shown = matches.slice(0, 200);
   const addCustom = (event: FormEvent) => {
     event.preventDefault();
     const route = cleanRoute(custom);
@@ -89,6 +90,7 @@ function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (
             {route.dynamic ? <span className="tag">dynamic</span> : <Icon name="plus" size={12} />}
           </button>
         ))}
+        {matches.length > shown.length && <div className="app-routes-more">Showing {shown.length} of {matches.length}. Type in the filter to find the rest.</div>}
       </div>
       <form className="app-route-custom" onSubmit={addCustom}>
         <input className="mono" value={custom} placeholder="/patients/123" aria-label="Route to add" onChange={(e) => setCustom(e.target.value)} />

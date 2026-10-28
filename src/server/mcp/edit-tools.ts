@@ -157,7 +157,7 @@ const META: Record<Name, Meta> = {
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
   create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
-  attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder.' },
+  attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. A folder that is not attached yet waits for the user to approve it in Design Studio. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder.' },
   add_route_frame: { title: 'Add route frame', description: 'Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it.' },
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
@@ -354,8 +354,10 @@ async function createProject(deps: EditDeps, input: Input<'create_project'>): Pr
   return { result, activity: { projectId: created.project.id, directionId: main?.id ?? null, summary: `Created project ${oneLine(created.project.name, 60)}` } };
 }
 
-async function attachApp(deps: EditDeps, input: Input<'attach_app'>): Promise<Done> {
+async function attachApp(deps: EditDeps, input: Input<'attach_app'>, client: string): Promise<Done> {
   const folder = await safeFolder(input.folder, deps.dataDir);
+  const known = (await deps.projects.list()).some((project) => project.app && project.imported?.sourcePath === folder);
+  if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: 'The studio agent and write_file can then change the real files in this folder.' });
   const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
   const main = project.directions[0];
   const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, next: 'Call list_routes, then add_route_frame.' });
@@ -460,7 +462,7 @@ async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, cl
     case 'create_project':
       return createProject(deps, parse('create_project', args));
     case 'attach_app':
-      return attachApp(deps, parse('attach_app', args));
+      return attachApp(deps, parse('attach_app', args), client);
     case 'add_route_frame':
       return addRouteFrame(deps, parse('add_route_frame', args));
     case 'restore_version':

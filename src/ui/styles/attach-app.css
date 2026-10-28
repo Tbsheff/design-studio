@@ -219,6 +219,12 @@
   box-shadow: 0 1px 3px oklch(0.2 0.01 var(--hue) / 0.1);
 }
 
+.app-routes-more {
+  padding: 6px 8px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
 .app-route-custom {
   display: flex;
   gap: 6px;

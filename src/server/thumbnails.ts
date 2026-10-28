@@ -7,11 +7,16 @@ import type { EventBus, PreviewService, VersionStore } from './types.js';
 import type { StudioProjectStore } from './store/projects.js';
 import { NotFoundError, assertSafeId } from './store/errors.js';
 import { diffMask } from './preview/visual-diff.js';
+import { halfSize } from './half-size.js';
+import { siblingWorkerFile, WorkerClient } from './worker-client.js';
+
+export { halfSize } from './half-size.js';
 
 export const THUMB_VIEWPORT = { width: 1280, height: 800 };
 export const THUMB_KEEP = 200;
 const THUMB_KINDS = new Set<VersionKind>(['init', 'run', 'undo', 'restore', 'keep']);
 const SETTLE_MS = 150;
+const THUMB_WORKER_IDLE_MS = 30_000;
 const DIFF_LIMITS = { minWidth: 320, maxWidth: 2560, minHeight: 320, maxHeight: 1600 };
 
 export interface DiffResult {
@@ -27,25 +32,12 @@ export interface ThumbnailService {
   idle(): Promise<void>;
 }
 
-export function halfSize(source: Buffer): Buffer {
-  const png = PNG.sync.read(source);
-  const width = Math.max(1, Math.floor(png.width / 2));
-  const height = Math.max(1, Math.floor(png.height / 2));
-  const out = new PNG({ width, height });
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      for (let channel = 0; channel < 4; channel += 1) {
-        let sum = 0;
-        for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
-          const sx = Math.min(png.width - 1, x * 2 + dx);
-          const sy = Math.min(png.height - 1, y * 2 + dy);
-          sum += png.data[(sy * png.width + sx) * 4 + channel] ?? 0;
-        }
-        out.data[(y * width + x) * 4 + channel] = Math.round(sum / 4);
-      }
-    }
-  }
-  return PNG.sync.write(out);
+const halfSizer = new WorkerClient<Uint8Array, Uint8Array>({ file: siblingWorkerFile(import.meta.url, 'thumbnail-worker'), label: 'thumbnails', idleMs: THUMB_WORKER_IDLE_MS, inProcess: async (png) => halfSize(Buffer.from(png)) });
+
+async function halfSizeOffThread(source: Buffer): Promise<Buffer> {
+  const copy = new Uint8Array(source);
+  const out = await halfSizer.run(copy, [copy.buffer]);
+  return Buffer.from(out.buffer, out.byteOffset, out.byteLength);
 }
 
 export function observeBus(bus: EventBus): { bus: EventBus; observe: (listener: (event: StudioEvent) => void) => void } {
@@ -215,7 +207,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
     const raw = await shootFirstViewport(url, THUMB_VIEWPORT, path.join(thumbsDir(projectId), `.raw-${versionId}`));
     if (!raw || !alive(projectId)) return;
     await mkdir(thumbsDir(projectId), { recursive: true });
-    await writeFile(path.join(thumbsDir(projectId), `${assertSafeId(versionId, 'versionId')}.png`), halfSize(raw));
+    await writeFile(path.join(thumbsDir(projectId), `${assertSafeId(versionId, 'versionId')}.png`), await halfSizeOffThread(raw));
     await projects.setThumbnail(projectId, { versionId, at: Date.now() });
     await prune(thumbsDir(projectId), `${versionId}.png`);
   };
@@ -243,7 +235,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
         if (again) return again;
         const raw = await shootVersion(project, versionId, THUMB_VIEWPORT);
         if (!raw) throw new NotFoundError('thumbnail not found');
-        const bytes = halfSize(raw);
+        const bytes = await halfSizeOffThread(raw);
         await store(projectId, name, bytes);
         return bytes;
       }, signal ? { signal } : {});

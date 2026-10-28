@@ -37,12 +37,28 @@ export function bundledGit(gitDir: string): GitChoice {
   };
 }
 
-function systemGit(): GitChoice {
-  return { kind: 'system', binary: SYSTEM_GIT, env: { STUDIO_GIT: SYSTEM_GIT } };
+function xcrunGit(): Promise<string | null> {
+  return new Promise((resolve) => {
+    execFile('/usr/bin/xcrun', ['--find', 'git'], { timeout: XCODE_SELECT_TIMEOUT_MS }, (error, stdout) => {
+      const found = error ? '' : String(stdout).trim();
+      resolve(found !== '' && found !== SYSTEM_GIT && existsSync(found) ? found : null);
+    });
+  });
+}
+
+async function gitBehindXcrunShim(devDir: string | null): Promise<string> {
+  const direct = devDir ? path.join(devDir, 'usr', 'bin', 'git') : null;
+  if (direct && existsSync(direct)) return direct;
+  return (await xcrunGit()) ?? SYSTEM_GIT;
+}
+
+function systemGit(binary: string): GitChoice {
+  return { kind: 'system', binary, env: { STUDIO_GIT: binary } };
 }
 
 export async function chooseGit(gitDir: string, forced: string | undefined): Promise<GitChoice> {
   if (forced === 'bundled' || forced === 'dugite') return bundledGit(gitDir);
-  if (forced !== 'system' && !(await developerDir())) return bundledGit(gitDir);
-  return systemGit();
+  const devDir = await developerDir();
+  if (forced !== 'system' && !devDir) return bundledGit(gitDir);
+  return systemGit(await gitBehindXcrunShim(devDir));
 }

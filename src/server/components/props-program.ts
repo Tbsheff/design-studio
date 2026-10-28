@@ -54,7 +54,8 @@ function configOptions(ts: Ts, candidate: string, base: TS.CompilerOptions): TS.
   const read = ts.readConfigFile(candidate, (target) => ts.sys.readFile(target));
   let options: TS.CompilerOptions | null = null;
   if (!read.error && read.config) {
-    const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(candidate), undefined, candidate);
+    const optionsOnlyHost: TS.ParseConfigHost = { ...ts.sys, readDirectory: () => [] };
+    const parsed = ts.parseJsonConfigFileContent(read.config, optionsOnlyHost, path.dirname(candidate), undefined, candidate);
     const skip = path.basename(candidate) === 'tsconfig.json' && !parsed.options.paths && Array.isArray(read.config.references) && existsSync(path.join(path.dirname(candidate), 'tsconfig.app.json'));
     if (!skip) options = { ...parsed.options, ...base, jsx: ts.JsxEmit.Preserve, paths: parsed.options.paths, baseUrl: parsed.options.baseUrl, moduleResolution: parsed.options.moduleResolution ?? base.moduleResolution };
   }
@@ -63,7 +64,7 @@ function configOptions(ts: Ts, candidate: string, base: TS.CompilerOptions): TS.
   return options;
 }
 
-export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
+export function compilerConfigFor(ts: Ts, file: string, root: string): { options: TS.CompilerOptions; configFile: string | null } {
   const base: TS.CompilerOptions = { jsx: ts.JsxEmit.Preserve, allowJs: true, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [] };
   let dir = path.dirname(file);
   while (dir.startsWith(root)) {
@@ -71,13 +72,17 @@ export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.Compi
       const candidate = path.join(dir, name);
       if (!existsSync(candidate)) continue;
       const options = configOptions(ts, candidate, base);
-      if (options) return options;
+      if (options) return { options, configFile: candidate };
     }
     const parent = path.dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
-  return base;
+  return { options: base, configFile: null };
+}
+
+export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
+  return compilerConfigFor(ts, file, root).options;
 }
 
 function directImports(ts: Ts, file: string, specifiers: string[], options: TS.CompilerOptions, root: string): Set<string> {

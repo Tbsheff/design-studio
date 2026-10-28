@@ -11,6 +11,7 @@ import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from 
 import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { listAppRoutes } from '../app/routes.js';
+import { listElementVariants } from '../variations/routes.js';
 
 export interface ToolContent {
   type: 'text' | 'image';
@@ -62,6 +63,7 @@ export const TOOLS: ToolDef[] = [
     height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900.' },
     fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
   }, ['projectId']),
+  def('list_variants', 'List element variants', 'List the element variants of a project ("Try variants" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.', { projectId: PROJECT }, ['projectId']),
   def('list_routes', 'List app routes', 'List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group.', { projectId: PROJECT }, ['projectId']),
   def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
@@ -264,6 +266,10 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
     }
     case 'get_screenshot':
       return screenshot(deps, args);
+    case 'list_variants': {
+      const project = await deps.projects.get(str(args, 'projectId', true) as string);
+      return json(await listElementVariants(project, deps.runner ?? { isRunning: () => false }));
+    }
     case 'list_routes': {
       const project = await deps.projects.get(str(args, 'projectId', true) as string);
       if (!project.app) throw new ToolError('this project is not an attached app');

@@ -162,7 +162,9 @@ export function CanvasChrome(p: ChromeProps) {
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === 'version';
   const onTool = (next: Exclude<CanvasTool, null>) => {
     if (next === 'prototype') return p.proto.set(!p.proto.on);
+    const leavingProto = p.proto.on;
     p.proto.set(false);
+    if (next === 'edit' && leavingProto && shell?.pane === 'design') return;
     if (next === 'comment') return p.comment.toggle();
     if (next === 'edit') return p.toggleEdit();
     const editing = shell?.pane === 'design';

@@ -338,7 +338,7 @@ function stageCursor(pz: { panning: boolean; spaceHeld: boolean; zoomHeld: boole
   return pz.zoomHeld ? 'zoom-in' : '';
 }
 
-function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void) {
+function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, onEscape: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -347,6 +347,7 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void) 
         setSelectMode((m) => !m);
       } else if (e.key === 'Escape') {
         setSelectMode(() => false);
+        onEscape();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -460,7 +461,10 @@ export function Canvas(props: Props) {
 
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
-  useSelectKey(setSelectMode);
+  useSelectKey(setSelectMode, () => setProtoOn(false));
+  useEffect(() => {
+    if (selectMode || comment.on) setProtoOn(false);
+  }, [selectMode, comment.on]);
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
   useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;

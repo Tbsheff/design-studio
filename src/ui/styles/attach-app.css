@@ -234,6 +234,23 @@
   box-shadow: 0 1px 3px oklch(0.2 0.01 var(--hue) / 0.1);
 }
 
+.app-prep-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--surface-inset);
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.app-prep-chip.failed {
+  color: var(--danger);
+}
+
 .app-routes-more {
   padding: 6px 8px;
   font-size: var(--t-2xs);

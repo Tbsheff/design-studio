@@ -28,6 +28,8 @@ export interface ServerConfig {
   studioPort: number;
   previewPort: number;
   vitePortBase: number;
+  appPortBase?: number;
+  appPortCount?: number;
   studioToken: string;
   agentMode: 'sdk' | 'mock';
   studioOrigin: string;
@@ -61,6 +63,7 @@ export interface VersionStore {
   commit(project: Project, direction: Direction, title: string, meta: VersionMeta): Promise<Version | null>;
   list(project: Project, direction: Direction): Promise<Version[]>;
   get(project: Project, versionId: string): Promise<Version>;
+  untrackedCount?(project: Project): number | null;
   commitFile(project: Project, direction: Direction, relativePath: string | string[], title: string, meta: VersionMeta): Promise<Version | null>;
   status(project: Project, direction: Direction, paths?: string[]): Promise<WorkTreeStatus>;
   discard(project: Project, direction: Direction): Promise<WorkTreeStatus>;

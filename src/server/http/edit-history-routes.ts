@@ -6,6 +6,7 @@ import { elementClassInfo } from '../direct-edit/class-info.js';
 import { htmlElementSpan } from '../direct-edit/html.js';
 import { DirectEditError, assertCanEdit, parseDirectEditRequest, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
 import { findTextSource } from '../direct-edit/text-source.js';
+import { firstVersionWaitText } from '../app/first-version.js';
 import { jsxElementSpan } from '../direct-edit/jsx.js';
 import type { EditHistory, HistoryStep } from '../direct-edit/history.js';
 import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
@@ -89,7 +90,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
     const state = await (async (): Promise<EditSessionState> => {
       const base = raw === undefined ? direction.headVersionId : baseOf(raw);
-      if (base === null) return { baseVersionId: '', count: 0, dirty: false, blocked: 'This direction has no saved version yet.' };
+      if (base === null) return { baseVersionId: '', count: 0, dirty: false, blocked: project.app ? firstVersionWaitText(project.id) : 'This direction has no saved version yet.' };
       const span = editDeps.versions.sessionSince ? await editDeps.versions.sessionSince(project, direction, base) : null;
       return { baseVersionId: base, count: span?.count ?? 0, dirty: span?.dirty ?? false, blocked: span?.foreign ?? null, outside: span?.outside ?? 0 };
     })();

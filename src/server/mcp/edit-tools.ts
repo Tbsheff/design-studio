@@ -26,6 +26,7 @@ import { JSX_INSERT_TOOLS } from './jsx-insert-tools.js';
 import { LAYER_TOOLS } from './layer-tools.js';
 import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
+import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
 
 const FILE_MAX = 512 * 1024;
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
@@ -246,6 +247,8 @@ async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promis
   return { result: ok({ removed, note: 'The page file stays in the project.' }), activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Removed ${name}`, frameId: removed } };
 }
 
+const FIRST_VERSION_WAIT_MS = 20_000;
+
 async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
@@ -253,6 +256,8 @@ async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, clie
   const file = path.join(direction.workTree, ...relative.split('/'));
   const before = await readFile(file, 'utf8').catch(() => null);
   if (before === input.content) return plain(ok({ path: relative, changed: false, versionId: direction.headVersionId }));
+  const blocked = await firstVersionBlock(project, FIRST_VERSION_WAIT_MS);
+  if (blocked) throw new EditError(blocked);
   await writeText(file, input.content);
   const version = await deps.versions.commitFile(project, direction, relative, `Edit by ${client}`, { kind: 'manual', prompt: `Edit by ${client}: ${relative}` });
   if (version && before !== null) deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file, relative, before, after: input.content }] });
@@ -356,11 +361,11 @@ async function attachApp(deps: EditDeps, input: Input<'attach_app'>, client: str
   const folder = await safeFolder(input.folder, deps.dataDir);
   const known = (await deps.projects.list()).some((project) => project.app && project.imported?.sourcePath === folder);
   if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: 'The studio agent and write_file can then change the real files in this folder.' });
-  const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
+  const { project, firstVersion, legacyCanvas } = await studioCall<AttachResponse>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
   const main = project.directions[0];
   const state = await studioCall<{ status: AppServerStatus | null }>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/app`).catch(() => ({ status: null }));
   const server = state.status ? { state: state.status.state, upstream: state.status.upstream, message: state.status.message } : null;
-  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, server, next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
+  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, server, ...attachReadiness(firstVersion, legacyCanvas), next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
   return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Attached ${oneLine(project.name, 60)}` } };
 }
 

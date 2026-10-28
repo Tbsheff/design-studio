@@ -169,6 +169,21 @@ export interface AttachedApp {
 
 export type AppServerState = 'idle' | 'starting' | 'ready' | 'failed' | 'stopped';
 
+export interface FirstVersionState {
+  pending: boolean;
+  startedAt: number | null;
+  elapsedMs: number;
+  etaSeconds: number;
+  files: number | null;
+  error: string | null;
+}
+
+export interface LegacyCanvasNotice {
+  file: string;
+  movedTo: string | null;
+  frames: number;
+}
+
 export interface AppServerStatus {
   state: AppServerState;
   mode: 'managed' | 'url';
@@ -764,8 +779,8 @@ export const API_ROUTES = {
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
   importProject: 'POST /api/projects/import {path, appDir?, skipApp?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches; skipApp imports the folder without the app, for example only its tokens)',
-  attachApp: 'POST /api/projects/attach AttachAppRequest -> {project} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied)',
-  appStatus: 'GET /api/projects/:pid/app -> {app, status, logs} (404 when the project is not an attached app)',
+  attachApp: 'POST /api/projects/attach AttachAppRequest -> {project, firstVersion, legacyCanvas} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied; a new attach saves the first version in the background and moves an old .studio/canvas.json aside)',
+  appStatus: 'GET /api/projects/:pid/app -> {app, status, logs, firstVersion} (404 when the project is not an attached app; firstVersion is null once the first version is saved)',
   appControl: 'POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus',
   appConfig: 'POST /api/projects/:pid/app/config {url?, env?} -> {app} (empty url = the studio starts next dev; then the dev server restarts)',
   appRoutes: 'GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)',

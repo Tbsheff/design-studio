@@ -529,7 +529,7 @@ export function createApp(deps: AppDeps): Hono {
     const body = await readBody(c);
     const appDir = optionalString(body, 'appDir');
     const imported = await projects.importFolder(requireString(body, 'path'), { ...(appDir ? { appDir } : {}), skipApp: body.skipApp === true });
-    if (imported.app) return c.json({ project: await finishAttach(appRouteDeps, imported) });
+    if (imported.app) return c.json(await finishAttach(appRouteDeps, imported));
     await versions.ensureRepo(imported);
     const project = await commitInit(imported);
     watchDirection(project, projects.mainDirection(project));

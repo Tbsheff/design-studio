@@ -23,7 +23,7 @@ export interface InsertableList {
 }
 
 export interface InsertTarget {
-  source: SourceLoc;
+  source: SourceLoc | null;
   tag?: string;
   selector?: string;
   owners?: ComponentOwner[];

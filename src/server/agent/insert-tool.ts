@@ -38,8 +38,9 @@ async function targetOf(deps: DirectToolDeps, input: z.output<typeof schema>): P
   if (!deps.ctx.previewUrl) return 'Preview is not running for this direction. Pass targetSource instead.';
   const url = withPagePath(deps.ctx.previewUrl, input.path || undefined);
   const [element] = await describeElements(deps.preview, url, [input.targetSelector]);
-  if (!element?.source) return `${input.targetSelector} has no source location on the page. Pass targetSource instead.`;
+  if (!element) return `No element matches ${input.targetSelector} on the page.`;
   const probed = await probeOwners(deps.preview, url, input.targetSelector).catch(() => null);
+  if (!element.source && !probed?.owners.length) return `${input.targetSelector} has no source location on the page. Pass targetSource instead.`;
   return { source: element.source, tag: element.tag, ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }
 

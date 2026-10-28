@@ -836,7 +836,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'context-menu'; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
   | { ns: 'studio'; token: string; type: 'structure-key'; selector: string; key: StructureKey }
-  | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string };
+  | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string }
+  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string };
 
 export interface LayerNode {
   id: number;
@@ -920,6 +921,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'text-edit-allowed'; allowed: boolean }
   | { ns: 'studio'; token: string; type: 'text-edit-stop' }
   | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
+  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
   | { ns: 'studio'; token: string; type: 'select-selector'; selector: string };
 

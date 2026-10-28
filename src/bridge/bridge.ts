@@ -13,6 +13,7 @@ import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appSourceFor, appSourceMode } from './app-source.js';
 import { componentOwners } from './component-owner.js';
+import { dropElement, insideTarget } from './insert-target.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
@@ -999,6 +1000,12 @@ function startBridge(session: BridgeSession): void {
     },
     'text-edit-allowed': (message) => textEditor.allow(message.allowed === true),
     'text-edit-stop': () => textEditor.cancel(),
+    'element-at': (message) => {
+      if (typeof message.requestId !== 'string' || typeof message.x !== 'number' || typeof message.y !== 'number') return;
+      const element = dropElement(message.x, message.y);
+      if (element) postHover(element);
+      post({ type: 'element-at', requestId: message.requestId, selection: element ? selectionFor(element) : null, inside: element ? insideTarget(element) : false, label: element ? shortLabel(element) : '' });
+    },
     'describe-anchors': (message) => {
       if (typeof message.requestId !== 'string') return;
       const contexts = anchorQueries(message.anchors).map((query) => {

@@ -412,3 +412,79 @@
   line-height: 16px;
   color: var(--text-3);
 }
+
+.cmp-group + .cmp-group {
+  margin-top: var(--s-4);
+}
+
+.cmp-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 28px;
+  margin: 0;
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
+  color: var(--text-2);
+}
+
+.cmp-group-head .cmp-count {
+  margin-left: auto;
+}
+
+.cmp-item {
+  position: relative;
+}
+
+.cmp-card {
+  touch-action: none;
+}
+
+.cmp-insert {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.cmp-item:hover .cmp-insert,
+.cmp-insert:focus-visible,
+.cmp-insert[aria-expanded='true'] {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .cmp-insert {
+    opacity: 1;
+  }
+}
+
+.cmp-ghost {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+.cmp-ghost-name {
+  font: var(--w-medium) var(--t-sm) / 18px var(--font);
+}
+
+.cmp-ghost-hint {
+  font-size: var(--t-xs);
+  line-height: 16px;
+  color: var(--text-3);
+}
+
+.cmp-ghost-hint.bad {
+  color: var(--danger);
+}

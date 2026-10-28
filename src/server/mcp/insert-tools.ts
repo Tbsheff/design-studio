@@ -4,7 +4,8 @@ import { INSERT_TEXT_MAX, type InsertComponentResult, type InsertTarget, type In
 import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from '../../shared/props.js';
 import { probeOwners } from '../components/owner-probe.js';
 import { EditError, loadTarget, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
-import { base, defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, sourceElement, versionActivity, type Done } from './edit-kit.js';
+import { base, defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, versionActivity, type Done } from './edit-kit.js';
+import { describeElement } from './element.js';
 
 type Direction = Project['directions'][number];
 
@@ -42,8 +43,10 @@ async function targetOf(deps: EditDeps, project: Project, direction: Direction, 
   if (input.targetSource) return { source: parseLoc(input.targetSource) };
   const sel = input.targetSelector ?? '';
   const url = await pageUrl(deps, project, direction, input.path);
-  const element = await sourceElement(deps, url, sel);
+  const element = await describeElement(deps.preview, url, sel);
+  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
   const probed = await probeOwners(deps.preview, url, sel).catch(() => null);
+  if (!element.source && !probed?.owners.length) throw new EditError(`${sel} has no source location. Pass targetSource with the file:line:col of the JSX tag.`);
   return { source: element.source, tag: element.tag, selector: sel, ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }
 

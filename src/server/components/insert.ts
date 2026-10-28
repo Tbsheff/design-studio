@@ -38,7 +38,7 @@ const propValue = z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean(
 const requestSchema = z
   .object({
     component: z.object({ name: z.string().regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/, 'must be a component name such as Button'), file: z.string().min(1).max(1000).optional() }).strict(),
-    target: z.object({ source: loc, tag: z.string().max(100).optional(), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional() }).strict(),
+    target: z.object({ source: loc.nullable(), tag: z.string().max(100).optional(), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional() }).strict(),
     position: z.enum(INSERT_POSITIONS as [string, ...string[]]),
     props: z.record(z.string().regex(PROP_NAME), propValue).refine((value) => Object.keys(value).length <= PROPS_MAX, `at most ${PROPS_MAX} props`).optional(),
     text: z.string().max(INSERT_TEXT_MAX).optional(),
@@ -135,13 +135,18 @@ function rootJsx(ast: t.File, start: number, end: number): t.JSXElement | null {
   return found;
 }
 
-function rootOwner(code: string, file: string, at: SourceLoc, entries: LibraryEntry[]): LibraryEntry | null {
+function sameStart(root: t.JSXElement | null, at: SourceLoc, tag: string | undefined): boolean {
+  const start = root?.openingElement.loc?.start;
+  if (!root || !start || start.line !== at.line) return false;
+  const name = root.openingElement.name;
+  return start.column + 1 === at.col || (name.type === 'JSXIdentifier' && name.name === tag);
+}
+
+function rootOwner(code: string, file: string, at: SourceLoc, tag: string | undefined, entries: LibraryEntry[]): LibraryEntry | null {
   const ast = parseModuleFile(code, file);
   if (!ast) return null;
   for (const declared of declaredComponents(ast)) {
-    const root = rootJsx(ast, declared.start, declared.end);
-    const start = root?.openingElement.loc?.start;
-    if (!start || start.line !== at.line || start.column + 1 !== at.col) continue;
+    if (!sameStart(rootJsx(ast, declared.start, declared.end), at, tag)) continue;
     const entry = entries.find((item) => item.absolute === file && item.local === declared.name);
     return entry?.children ? entry : null;
   }
@@ -163,14 +168,40 @@ interface ResolvedTarget {
   usedAt: SourceLoc | null;
 }
 
-async function resolveTarget(scope: InsertScope, root: string, request: InsertComponentRequest, entries: LibraryEntry[]): Promise<ResolvedTarget> {
-  const first = await resolveSource(scope.workTree, request.target.source.file);
-  const code = await readFile(first.file, 'utf8');
-  const owner = rootOwner(code, first.file, request.target.source, entries);
-  if (!owner) return { target: first, code, at: request.target.source, tag: request.target.tag, usedAt: null };
-  const use = await useSiteTarget(scope, root, request, owner);
+function tagMatches(relative: string, code: string, at: SourceLoc, tag: string | undefined): boolean {
+  try {
+    structureDoc(relative, code).node(at, 'into', tag);
+    return true;
+  } catch (error) {
+    return !(error instanceof DirectEditError && error.code === 'stale_selection');
+  }
+}
+
+async function nearestUseSite(scope: InsertScope, root: string, request: InsertComponentRequest): Promise<SourceLoc | null> {
+  const owner = request.target.owners?.find((item) => /^[A-Z]/.test(item.name));
+  return owner ? ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, owner).catch(() => null) : null;
+}
+
+async function retargeted(scope: InsertScope, use: SourceLoc): Promise<ResolvedTarget> {
   const target = await resolveSource(scope.workTree, use.file);
   return { target, code: await readFile(target.file, 'utf8'), at: use, tag: undefined, usedAt: use };
+}
+
+async function resolveTarget(scope: InsertScope, root: string, request: InsertComponentRequest, entries: LibraryEntry[]): Promise<ResolvedTarget> {
+  const source = request.target.source;
+  if (!source) {
+    const use = await nearestUseSite(scope, root, request);
+    if (!use) throw refuse('This element has no source location and no component use site the studio can find; pass targetSource');
+    return retargeted(scope, use);
+  }
+  const first = await resolveSource(scope.workTree, source.file);
+  const code = await readFile(first.file, 'utf8');
+  const plain = { target: first, code, at: source, tag: request.target.tag, usedAt: null };
+  const owner = rootOwner(code, first.file, source, request.target.tag, entries);
+  if (owner) return retargeted(scope, await useSiteTarget(scope, root, request, owner));
+  if (tagMatches(first.relative, code, source, request.target.tag)) return plain;
+  const use = await nearestUseSite(scope, root, request);
+  return use ? retargeted(scope, use) : plain;
 }
 
 const ALIAS_LIKE = /^(@\/|~\/|#|@[\w.-]+\/[\w.-]+\/)/;
@@ -222,7 +253,8 @@ export async function applyInsertComponent(deps: DirectEditDeps, scope: InsertSc
   parseInsertRequest(raw);
   assertCanEdit(deps, project, direction);
   const plan = await planInsertComponent(scope, raw);
-  const where = `${plan.target.relative}:${plan.request.target.source.line}:${plan.request.target.source.col}`;
+  const at = plan.select[0];
+  const where = at ? `${at.file}:${at.line}:${at.col}` : plan.target.relative;
   const meta: VersionMeta = { kind: 'manual', prompt: `Insert component: ${plan.request.component.name} ${plan.request.position} ${where}` };
   const version = await writeAndCommitAll(deps, project, direction, [plan], plan.title, meta);
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.code }] });

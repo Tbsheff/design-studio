@@ -75,7 +75,7 @@ function useNow(stepMs: number, active: boolean): number {
   return now;
 }
 
-function ActivityRow({ entry, locked, onUndo }: { entry: McpActivity; locked: boolean; onUndo: (versionId: string) => void }) {
+function ActivityRow({ entry, locked, onUndo, readOnly = false }: { entry: McpActivity; locked: boolean; onUndo: (versionId: string) => void; readOnly?: boolean }) {
   const [undone, setUndone] = useState(false);
   const before = entry.versionId ? entry.beforeVersionId : null;
   return (
@@ -87,6 +87,7 @@ function ActivityRow({ entry, locked, onUndo }: { entry: McpActivity; locked: bo
         {entry.summary}
       </span>
       {before &&
+        !readOnly &&
         (undone ? (
           <span className="mcp-row-undone">Undone</span>
         ) : (
@@ -262,11 +263,11 @@ export function McpEditStrip({ mcp }: { mcp: McpFeedControl | null }) {
       {open && (
         <ul className="mcp-rows">
           {entries.map((entry) => (
-            <ActivityRow key={entry.id} entry={entry} locked={mcp.locked} onUndo={mcp.onUndo} />
+            <ActivityRow key={entry.id} entry={entry} locked={mcp.locked} onUndo={mcp.onUndo} readOnly />
           ))}
         </ul>
       )}
-      <button type="button" className="mcp-edit-head" aria-expanded={open} data-tip={open ? 'Hide the outside edits' : 'Show the recent outside edits'} data-tip-side="top" onClick={() => setOpen((v) => !v)}>
+      <button type="button" className="mcp-edit-head" aria-expanded={open} data-tip={open ? 'Hide the outside edits' : 'Show the recent outside edits. Undo them from the chat after you save or discard.'} data-tip-side="top" onClick={() => setOpen((v) => !v)}>
         <span className="mcp-block-dot" data-active={now - last.at < MCP_ACTIVE_MS || undefined} aria-hidden="true" />
         <strong className="mcp-edit-client">{last.client}</strong>
         <span className="mcp-edit-summary truncate">{last.summary}</span>

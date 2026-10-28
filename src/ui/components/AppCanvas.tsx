@@ -3,7 +3,7 @@ import type { AppServerStatus, AttachedApp, BridgeToParent } from '../../shared/
 import { routeLabel } from '../../shared/app';
 import { cleanFrameLabel } from '../../shared/canvas-file';
 import { api } from '../api';
-import { useAppStatus } from '../appStatus';
+import { openAppPanel, useAppStatus } from '../appStatus';
 import { addFrame, canAddFrame, setFramePath, type CanvasLayout } from '../canvasFrames';
 import { Icon } from './Icon';
 
@@ -88,6 +88,8 @@ export function RedirectNote({ note, onClose }: { note: { from: string; to: stri
   );
 }
 
+const LOAD_HINT_MS = 30_000;
+
 function reloadAppFrames(): void {
   document.querySelectorAll<HTMLIFrameElement>('.stage iframe.frame').forEach((el) => {
     const src = el.src;
@@ -115,6 +117,11 @@ function useServerFrames(status: AppServerStatus | null, listen: Listen, enabled
     if (!ready) setLoaded(false);
   }, [ready]);
   useEffect(() => {
+    if (!ready || loaded) return undefined;
+    const timer = window.setTimeout(() => setLoaded(true), LOAD_HINT_MS);
+    return () => window.clearTimeout(timer);
+  }, [ready, loaded]);
+  useEffect(() => {
     if (!enabled) return undefined;
     return listen((message) => {
       if (message.type === 'ready') setLoaded(true);
@@ -123,21 +130,47 @@ function useServerFrames(status: AppServerStatus | null, listen: Listen, enabled
   return loaded;
 }
 
-function serverHint(app: AttachedApp, status: AppServerStatus | null, loaded: boolean): { text: string; busy: boolean } | null {
+interface Hint {
+  text: string;
+  busy: boolean;
+  kind: 'failed' | 'starting' | 'loading' | 'route';
+}
+
+function serverHint(app: AttachedApp, status: AppServerStatus | null, loaded: boolean): Hint | null {
   const name = app.framework === 'next' ? 'Next.js' : 'App';
   const managed = (status?.mode ?? app.mode) === 'managed';
   const state = status?.state ?? 'idle';
-  if (state === 'failed' || state === 'stopped') return { text: `${managed ? 'The dev server is not running' : 'Your dev server does not answer'}. Press ${name} at the bottom left for the fix.`, busy: false };
-  if (state !== 'ready') return { text: managed ? `Starting ${app.framework === 'next' ? 'next dev' : 'the dev server'}…` : 'Checking your dev server…', busy: true };
-  if (!loaded) return { text: 'Loading the page. The first visit to a route can take a while.', busy: true };
+  if (state === 'failed' || state === 'stopped') return { text: `${managed ? 'The dev server is not running' : 'Your dev server does not answer'}. Press ${name} at the bottom left for the fix.`, busy: false, kind: 'failed' };
+  if (state !== 'ready') return { text: managed ? `Starting ${app.framework === 'next' ? 'next dev' : 'the dev server'}…` : 'Checking your dev server…', busy: true, kind: 'starting' };
+  if (!loaded) return { text: 'Loading the page. The first visit to a route can take a while.', busy: true, kind: 'loading' };
   return null;
 }
 
-function AppStageHint({ hint }: { hint: { text: string; busy: boolean } }) {
+function routeHint(layout: CanvasLayout): Hint | null {
+  if (layout.frames.some((frame) => frame.path !== undefined)) return null;
+  return { text: 'This frame shows the home route. Pick the page you want to design.', busy: false, kind: 'route' };
+}
+
+function HintIcon({ hint }: { hint: Hint }) {
+  if (hint.busy) return <span className="spinner" aria-hidden="true" />;
+  return <Icon name={hint.kind === 'route' ? 'file' : 'alert'} size={14} />;
+}
+
+function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
   return (
-    <div className="stage-message app-stage-note" role="status">
-      {hint.busy ? <span className="spinner" aria-hidden="true" /> : <Icon name="alert" size={14} />}
+    <div className="stage-message app-stage-note" role="status" data-kind={hint.kind}>
+      <HintIcon hint={hint} />
       {hint.text}
+      {hint.kind === 'route' && (
+        <>
+          <button type="button" className="btn small" onClick={() => openAppPanel('routes')}>
+            Pick a route
+          </button>
+          <button type="button" className="icon-btn small" aria-label="Dismiss" data-tip="Dismiss" onClick={onClose}>
+            <Icon name="close" size={12} />
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -169,12 +202,13 @@ export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNo
   const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);
   const status = useAppStatus(o.projectId);
   const loaded = useServerFrames(status, o.listen, Boolean(o.app));
-  const hint = o.app ? serverHint(o.app, status, loaded) : null;
+  const [routeDismissed, setRouteDismissed] = useState(false);
+  const hint = o.app ? (serverHint(o.app, status, loaded) ?? (routeDismissed ? null : routeHint(o.frames.layout))) : null;
   const [hidden, setHidden] = useState<string | null>(null);
   const key = redirect ? `${redirect.from}>${redirect.to}` : null;
   return {
     bar: o.app ? <AppCanvasBar projectId={o.projectId} app={o.app} onAddRoute={addRoute} /> : null,
     note: redirect && key !== hidden ? <RedirectNote note={redirect} onClose={() => setHidden(key)} /> : null,
-    stage: hint ? <AppStageHint hint={hint} /> : null,
+    stage: hint ? <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} /> : null,
   };
 }

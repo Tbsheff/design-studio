@@ -382,6 +382,7 @@ body:has(.frame-menu) .app-fail {
   gap: 6px;
 }
 
+.canvas:has(.app-fail) .app-stage-note[data-kind='failed'],
 .stage:has(.edit-notice) .app-stage-note {
   visibility: hidden;
 }
@@ -389,4 +390,8 @@ body:has(.frame-menu) .app-fail {
 .app-stage-note > .icon {
   flex: none;
   color: var(--warn);
+}
+
+.app-stage-note[data-kind='route'] {
+  padding: 4px 4px 4px 14px;
 }

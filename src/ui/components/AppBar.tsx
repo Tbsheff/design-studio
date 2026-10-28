@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
-import { publishAppStatus } from '../appStatus';
+import { APP_PANEL_EVENT, publishAppStatus } from '../appStatus';
 import { AppFailure } from './AppFailure';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
@@ -246,8 +246,6 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
     </div>
   );
 }
-
-export const APP_PANEL_EVENT = 'studio:app-panel';
 
 function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void): void {
   useEffect(() => {

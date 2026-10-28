@@ -5,7 +5,7 @@ import { createBashGate, type ToolGate } from './ask-gate.js';
 import type { RunUsage } from '../../shared/contracts.js';
 import type { PreviewService } from '../types.js';
 import { EMPTY_USAGE, deliveredContext, type DriverInput, type DriverOutcome, type DriverSink, type PriorSession, type RunDriver } from './lifecycle.js';
-import { builtinToolNames, createCanUseTool, createPreToolUseGuard, type ToolPolicy } from './permissions.js';
+import { BASH_EDIT_TOOL, bashWriteProblem, builtinToolNames, createCanUseTool, createPreToolUseGuard, type ToolPolicy } from './permissions.js';
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import { captureBaseline, type RunToolState } from './check-tool.js';
@@ -439,7 +439,19 @@ export function createInboxHook(input: Pick<DriverInput, 'inbox'>): HookCallback
   };
 }
 
+export function createBashEditHook(input: Pick<DriverInput, 'sink'>, policy: ToolPolicy, toolOrder: string[] | undefined): HookCallback {
+  return async (hookInput) => {
+    if ((hookInput.hook_event_name !== 'PostToolUse' && hookInput.hook_event_name !== 'PostToolUseFailure') || hookInput.tool_name !== 'Bash') return {};
+    const result = await input.sink.bashFinished?.(hookInput.tool_use_id, (relative) => bashWriteProblem(policy, relative));
+    if (!result) return {};
+    if (result.diffs.length > 0) toolOrder?.push(BASH_EDIT_TOOL);
+    if (!result.message) return {};
+    return { hookSpecificOutput: { hookEventName: hookInput.hook_event_name, additionalContext: result.message } };
+  };
+}
+
 const BASELINE_GATE_TIMEOUT_S = 300;
+const BASH_EDIT_HOOK_TIMEOUT_S = 60;
 
 function whenAborted(signal: AbortSignal): Promise<void> {
   if (signal.aborted) return Promise.resolve();
@@ -486,7 +498,8 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     canUseTool: createCanUseTool(policy, options.onPermission, setup.bashGate),
     hooks: {
       PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal), (toolUseId, name, toolInput) => input.sink.beforeWrite(toolUseId, name, toolInput), setup.bashGate)], timeout: BASELINE_GATE_TIMEOUT_S }],
-      PostToolUse: [{ hooks: [createInboxHook(input)] }],
+      PostToolUse: [{ hooks: [createInboxHook(input)] }, { hooks: [createBashEditHook(input, policy, setup.run.log?.toolOrder)], timeout: BASH_EDIT_HOOK_TIMEOUT_S }],
+      PostToolUseFailure: [{ hooks: [createBashEditHook(input, policy, setup.run.log?.toolOrder)], timeout: BASH_EDIT_HOOK_TIMEOUT_S }],
     },
     permissionMode: 'default',
     ...(config.agentBudgetUsd !== null ? { maxBudgetUsd: config.agentBudgetUsd + (priorFor(input, resume)?.costUsd ?? 0) } : {}),

@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { RunComment, RunLevel, RunRequest, SelectionContext } from '../../shared/contracts.js';
 import { levelOf } from '../../shared/run-levels.js';
 import type { DriverInput, DriverOutcome, DriverSink, RunDriver } from './lifecycle.js';
-import { checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions.js';
+import { bashWriteProblem, checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions.js';
 import { createBashGate } from './ask-gate.js';
 import { queuedText } from './lifecycle.js';
 import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
@@ -248,6 +248,24 @@ class MockSession {
     await writeFile(path.join(this.workTree, MOCK_BASH_OUTPUT), `ran: ${command}\n`);
     this.sink.toolFinished(toolUseId, false, `Bash ${command}`);
     await this.deliverQueued();
+  }
+
+  async bashWrite(relativePath: string): Promise<string | null> {
+    this.toolCounter += 1;
+    const toolUseId = `mock_tool_${this.toolCounter}`;
+    const input = { command: `python3 scripts/patch.py ${path.basename(relativePath)}` };
+    const settings = this.input.ctx.project.settings;
+    const policy: ToolPolicy = { workTree: this.workTree, mode: 'edit', allowBash: settings.allowBash, allowInstall: settings.allowInstall };
+    this.sink.toolStarted(toolUseId, 'Bash', input);
+    await this.sink.beforeWrite(toolUseId, 'Bash', input);
+    const absolute = path.resolve(this.workTree, relativePath);
+    const current = await readFile(absolute, 'utf8').catch(() => null);
+    const next = current === null ? 'MOCK_VALUE=1\n' : current.includes('<h1') ? current.replace(/(<h1[^>]*>)[^<]*/, '$1Edited by a shell command') : `${current.trimEnd()}\n// edited by a shell command\n`;
+    await mkdir(path.dirname(absolute), { recursive: true });
+    await writeFile(absolute, next);
+    const result = await this.sink.bashFinished?.(toolUseId, (relative) => bashWriteProblem(policy, relative));
+    this.sink.toolFinished(toolUseId, false, `Bash ${input.command}`);
+    return result?.message ?? null;
   }
 
   async useSkill(skill: string): Promise<void> {
@@ -653,6 +671,12 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined, pr
     await session.fakeTool('Glob', { pattern: '*.css' }, 'Glob *.css', STEP_TOOL_MS);
   }
   if (prompt.includes('[bash]')) await session.bash('npm test');
+  const shellWrites = [...prompt.matchAll(/\[bash-write:([^\]\s]+)\]/g)].map((match) => match[1] ?? '');
+  const shellNotes: string[] = [];
+  for (const target of shellWrites) {
+    const note = await session.bashWrite(target);
+    if (note) shellNotes.push(note);
+  }
   if (prompt.includes('[retry]')) {
     input.sink.retry(1, 5, 2000, 'Overloaded (529)');
     await sleep(2000, input.signal);
@@ -669,7 +693,8 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined, pr
     await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');
     await session.think('Thinking B: keep the cards, then write the change.');
   }
-  const finalText = await runMockScenario(input, session, canvas, preview);
+  const finalText = shellWrites.length > 0 ? shellNotes.join('\n\n') || 'Edited the files with a shell command.' : await runMockScenario(input, session, canvas, preview);
+  if (shellWrites.length > 0) await session.say(finalText);
   const outcome: DriverOutcome = {
     status: prompt.includes('[budget]') ? 'budget_exceeded' : 'completed',
     usage: { ...MOCK_USAGE },

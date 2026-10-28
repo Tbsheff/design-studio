@@ -1,4 +1,4 @@
-import { authoredSizes } from './authored.js';
+import { authoredBox } from './authored.js';
 import { ARRANGE_SHORTCUTS } from '../shared/arrange.js';
 
 export const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
@@ -54,7 +54,8 @@ function authoredStyles(element: Element): Record<string, string> {
 
 export function layoutStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {
   const parent = element.parentElement ? window.getComputedStyle(element.parentElement) : null;
-  const sizes = authoredSizes(element);
+  const positioned = computed.position === 'absolute' || computed.position === 'fixed';
+  const sizes = authoredBox(element, positioned);
   return {
     ...authoredStyles(element),
     'authored-width': sizes.width ?? '',
@@ -67,6 +68,28 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
     'parent-display': parent?.display ?? '',
     'parent-flex-direction': parent?.flexDirection ?? '',
     ...offsetStyles(element, computed),
+    ...(positioned ? constraintStyles(element, computed, sizes) : {}),
+  };
+}
+
+function containerSize(element: HTMLElement, fixed: boolean): { width: number; height: number } {
+  const parent = fixed ? null : element.offsetParent;
+  if (parent instanceof HTMLElement && parent !== document.body) return { width: parent.clientWidth, height: parent.clientHeight };
+  return { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
+}
+
+function constraintStyles(element: Element, computed: CSSStyleDeclaration, box: Partial<Record<string, string>>): Record<string, string> {
+  if (!(element instanceof HTMLElement)) return {};
+  const parent = containerSize(element, computed.position === 'fixed');
+  return {
+    'authored-left': box.left ?? '',
+    'authored-right': box.right ?? '',
+    'authored-top': box.top ?? '',
+    'authored-bottom': box.bottom ?? '',
+    'container-width': `${Math.round(parent.width)}px`,
+    'container-height': `${Math.round(parent.height)}px`,
+    'box-width': `${Math.round(element.offsetWidth)}px`,
+    'box-height': `${Math.round(element.offsetHeight)}px`,
   };
 }
 

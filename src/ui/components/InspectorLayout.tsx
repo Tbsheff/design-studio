@@ -3,6 +3,7 @@ import type { SelectionContext } from '../../shared/contracts';
 import { PREVIEW_ARRANGE_KEY_EVENT, PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
 import { isTypingTarget } from '../typingTarget';
 import type { DirectEdit } from '../useDirectEdit';
+import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch, type InsetProp, type PinAxis, type PinMode } from '../constraints';
 import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, isGridDisplay, parentLayout, sizeFacts, sizeModeOf, sizePatch, type Axis, type SizeFacts, type SizeMode } from '../sizing';
 import { Icon, type IconName } from './Icon';
 import { InspectorSection, SelectField } from './InspectorFields';
@@ -351,12 +352,48 @@ function PositionRows({ edit, selection }: { edit: DirectEdit; selection: Select
           Absolute position
         </button>
       </div>
-      {on && (
+      {on && <ConstraintRows edit={edit} selection={selection} />}
+    </>
+  );
+}
+
+const INSET_FIELDS: Record<InsetProp, { short: string; label: string }> = {
+  left: { short: 'X', label: 'Left (X)' },
+  right: { short: 'R', label: 'Right' },
+  top: { short: 'Y', label: 'Top (Y)' },
+  bottom: { short: 'B', label: 'Bottom' },
+};
+
+const PIN_TIPS: Record<PinAxis, string> = {
+  x: 'How the element follows when its container gets wider or narrower',
+  y: 'How the element follows when its container gets taller or shorter',
+};
+
+function PinSelect({ axis, edit, selection }: { axis: PinAxis; edit: DirectEdit; selection: SelectionContext }) {
+  const mode = pinModeOf(axis, selection.styles);
+  return (
+    <div className="ins-field select ins-pin" data-tip={PIN_TIPS[axis]} data-tip-align="end">
+      <span className="ins-scrub static">{axis === 'x' ? 'H' : 'V'}</span>
+      <UiSelect className="ins-select" aria-label={axis === 'x' ? 'Horizontal constraint' : 'Vertical constraint'} value={mode} options={PIN_OPTIONS[axis]} onChange={(next: PinMode) => next !== mode && write(edit, pinPatch(axis, next, selection.styles))} />
+    </div>
+  );
+}
+
+function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+  const fields = [...pinFields('x', pinModeOf('x', selection.styles)), ...pinFields('y', pinModeOf('y', selection.styles))];
+  return (
+    <>
+      {fields.length > 0 && (
         <div className="ins-grid">
-          <NumberField short="X" spec={{ prop: 'left', label: 'Left (X)', edit }} />
-          <NumberField short="Y" spec={{ prop: 'top', label: 'Top (Y)', edit }} />
+          {fields.map((prop) => (
+            <NumberField key={prop} short={INSET_FIELDS[prop].short} spec={{ prop, label: INSET_FIELDS[prop].label, edit }} />
+          ))}
         </div>
       )}
+      <div className="ins-grid ins-constraints" role="group" aria-label="Constraints">
+        <PinSelect axis="x" edit={edit} selection={selection} />
+        <PinSelect axis="y" edit={edit} selection={selection} />
+      </div>
     </>
   );
 }

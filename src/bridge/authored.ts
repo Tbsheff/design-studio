@@ -89,14 +89,42 @@ function walk(element: Element, list: CSSRuleList, source: string | null, collec
   }
 }
 
-type SizeProp = 'width' | 'height';
-const SIZE_PROPS: SizeProp[] = ['width', 'height'];
+export type BoxProp = 'width' | 'height' | 'left' | 'right' | 'top' | 'bottom';
+const SIZE_PROPS: BoxProp[] = ['width', 'height'];
+const INSET_PROPS: BoxProp[] = ['left', 'right', 'top', 'bottom'];
+const LOGICAL: [string, BoxProp][] = [
+  ['inset-inline-start', 'left'],
+  ['inset-inline-end', 'right'],
+  ['inset-block-start', 'top'],
+  ['inset-block-end', 'bottom'],
+];
 
-function sizeVisit(element: Element, rule: CSSRule, found: Partial<Record<SizeProp, string>>, depth: number): void {
+interface BoxFound {
+  props: BoxProp[];
+  logical: boolean;
+  values: Partial<Record<BoxProp, string>>;
+}
+
+function readDeclarations(style: CSSStyleDeclaration, found: BoxFound): void {
+  for (const prop of found.props) {
+    const value = style.getPropertyValue(prop);
+    if (value !== '') found.values[prop] = value.trim();
+  }
+  if (!found.logical) return;
+  for (const [logical, prop] of LOGICAL) {
+    const value = style.getPropertyValue(logical);
+    if (value !== '') found.values[prop] = value.trim();
+  }
+}
+
+function hasDeclaration(style: CSSStyleDeclaration, found: BoxFound): boolean {
+  return found.props.some((prop) => style.getPropertyValue(prop) !== '') || (found.logical && LOGICAL.some(([logical]) => style.getPropertyValue(logical) !== ''));
+}
+
+function sizeVisit(element: Element, rule: CSSRule, found: BoxFound, depth: number): void {
   if (rule instanceof CSSStyleRule) {
-    const own = SIZE_PROPS.filter((prop) => rule.style.getPropertyValue(prop) !== '');
-    if (own.length === 0 || !matches(element, rule.selectorText)) return;
-    for (const prop of own) found[prop] = rule.style.getPropertyValue(prop).trim();
+    if (!hasDeclaration(rule.style, found) || !matches(element, rule.selectorText)) return;
+    readDeclarations(rule.style, found);
     return;
   }
   if (depth > MAX_DEPTH) return;
@@ -107,16 +135,16 @@ function sizeVisit(element: Element, rule: CSSRule, found: Partial<Record<SizePr
   if (rule instanceof CSSGroupingRule && groupApplies(rule)) for (const child of Array.from(rule.cssRules)) sizeVisit(element, child, found, depth + 1);
 }
 
-export function authoredSizes(element: Element): Partial<Record<SizeProp, string>> {
-  const found: Partial<Record<SizeProp, string>> = {};
+export function authoredBox(element: Element, insets: boolean): Partial<Record<BoxProp, string>> {
+  const found: BoxFound = { props: insets ? [...SIZE_PROPS, ...INSET_PROPS] : SIZE_PROPS, logical: insets, values: {} };
   for (const sheet of Array.from(document.styleSheets)) {
     if (sheet.disabled || isStudioSheet(sheet)) continue;
     const media = sheet.media.mediaText;
     if (media && !window.matchMedia(media).matches) continue;
     for (const rule of Array.from(rulesOf(sheet) ?? [])) sizeVisit(element, rule, found, 0);
   }
-  if (element instanceof HTMLElement) for (const prop of SIZE_PROPS) if (element.style.getPropertyValue(prop) !== '') found[prop] = element.style.getPropertyValue(prop).trim();
-  return found;
+  if (element instanceof HTMLElement) readDeclarations(element.style, found);
+  return found.values;
 }
 
 export function authoredRules(element: Element): AuthoredRule[] {

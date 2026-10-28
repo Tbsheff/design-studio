@@ -108,7 +108,7 @@ async function postComment(deps: ViewerAppDeps, record: ShareRecord, input: z.in
   const spot = input.x !== null && input.y !== null ? { x: input.x, y: input.y, width: 1, height: 1 } : { x: 0, y: 0, width: 0, height: 0 };
   const comment = await deps.comments.create(record.projectId, record.directionId, {
     text: input.text,
-    target: { selector: 'body', tag: 'body', textSnippet: '', rectHint: spot },
+    target: { selector: 'body', tag: 'body', textSnippet: input.x !== null && input.y !== null ? `${frame?.name ?? 'Frame'} at ${input.x}, ${input.y}`.slice(0, 200) : '', rectHint: spot },
     status: 'draft',
     author: input.name,
     from: 'viewer',

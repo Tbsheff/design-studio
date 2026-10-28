@@ -83,7 +83,7 @@ function LanSwitch({ server, hasLive, busy, onChange }: { server: ShareServerSta
       <div className="share-lan-row">
         <div className="share-lan-text">
           <span className="share-lan-title">Allow on local network</span>
-          <span className="share-lan-help">Off: only this computer can open links (127.0.0.1).</span>
+          <span className="share-lan-help">{server.lan && server.lanUrl ? `On: devices on this network can open links at ${server.lanUrl}.` : 'Off: only this computer can open links (127.0.0.1).'}</span>
         </div>
         <button
           type="button"
@@ -99,7 +99,7 @@ function LanSwitch({ server, hasLive, busy, onChange }: { server: ShareServerSta
         </button>
       </div>
       {server.lan && (
-        <div className="alert warn small" role="alert">
+        <div className="alert share-lan-warn" role="alert">
           Anyone on this network who has a link can open it and comment. Use this only on networks you trust, and turn it off when the review ends.
         </div>
       )}

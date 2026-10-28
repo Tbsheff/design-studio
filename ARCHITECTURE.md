@@ -230,6 +230,20 @@ UI inspector → preview-style / preview-text to the bridge (live, not saved)
 - Keys (`shared/structure-keys.ts`): ⌫/Delete, ⌘D, ⌥⌘G, ⇧⌘G, ⌘X then ⌘V (cut marks the selection; paste moves it into the selected element as one move, and refuses when the head version changed after the cut). They work with focus on the studio, in the layers tree, and in the preview (bridge `structure-key`). The canvas right-click menu and the layers row menu list the same actions; the layers header has Duplicate, Wrap, Unwrap and Delete buttons. Layers drag: the middle half of a container row (it has child elements, or it is an empty div, section, list and so on) moves into it; the top and bottom quarters move before or after it (`layerDrop`, rows carry `loc` from `data-studio-loc`). A drop next to the adjacent sibling stays the old up/down swap.
 - Explicit commits (Enter, blur, clicks, pointerup) write at once; only arrow steps and the color drag keep the 250 ms debounce.
 
+### Attached app edits
+
+```
+click in a Next.js frame → bridge reads the host fiber's _debugStack and its owner's
+  → POST /__studio/source (proxy) → source-map.ts: client chunk maps / __nextjs_original-stack-frames
+  → data-studio-loc = file:line:col of the opening <, data-studio-used-at = the owner's JSX use, usedBy {name, root}
+  → the inspector and MCP send that source to the same direct-edit route
+```
+
+- MCP and the agent tools (`mcp/element.ts`) run the same lookup in the headless page when the element has no `data-studio-loc`, so `edit_element`, `batch_edit` and the agent `edit_element` work on app frames.
+- Shared component: a source file outside `app.appDir` (for example `packages/ui/.../button.tsx`). The inspector says "Changes every Button". When the selected host is the outer element of that instance (`usedBy.root`: its nearest host parent has another owner) and the component's className reads the `className` prop (`ElementSourceInfo.forwardsClassName` from the classes route), it offers "Edit this use instead". Then the request carries `component: 'Button'` and the use site as `source`: the JSX element there must be that component; only Tailwind classes (style mapped to classes, or `classes`) and text are written, into its `className` (made when missing). An inline-style fallback is refused (`classes_not_editable`). MCP: `edit_element {target: 'use'}`; without it the result has a `shared` note.
+- `<Comp>` (a tag chosen at run time) answers `not_host_element` with the file; text whose child is an expression (`{doc.title}`) answers `text_from_data` with the expression, file and line. The classes route returns the same `textFromData`, so the Content row shows it before the user types, with "Ask the agent to change it" (fills the chat composer, does not send).
+- Stale lines: React keeps a fiber's first `_debugStack`, so after hot reload a stack can point at code from before the change. `source-map.ts` remembers the line count of every file it resolved; when the watcher sees one of them change length, it clears the stack cache, `files.changed` carries `reload: true`, the UI loads a fresh frame instead of waiting for HMR, and it selects the element again.
+
 ### Tailwind edits
 
 ```
@@ -675,6 +689,7 @@ restore / undo / edit-session discard ──► CanvasService.announce ┤
              <main work tree>/.studio/canvas.json (temp file + rename, one mutex per project) ──► canvas.changed {canvas, hash, source, writer} on SSE
 ```
 
+- Attached apps keep the file in the studio data dir (`projects/<pid>/canvas.json`, `canvasFileOf`), never in the user's repo. It is not in versions, so undo and restore leave the layout alone. A `.studio/canvas.json` that an older build wrote into the repo is read once as the start layout and left as is; `.studio/` is in the app excludes.
 - One file per project, in the **main** direction's work tree. The layout spans directions (variation frames carry `directionId`), so a file per direction would make the canvas jump when a click on a variation frame changes the current direction. Forked directions get a copy of the file in their first tree; nothing reads those copies.
 - Format (`src/shared/canvas-file.ts`, `serializeCanvasFile`): `{version: 1, frames: [{id, width, height, x, y, order, directionId?, path?, label?, hidden?}], lofi?: [directionId]}`. Keys sorted at every depth, integers only, 2-space JSON, trailing newline; frames sorted by `order` and renumbered 0..n-1; `lofi` sorted and left out when empty. Same input, same bytes, so diffs stay small. `parseCanvasFile` drops bad frames (id `f<digits>`, sides 200..4000, coordinates within 100 000, path rules of `cleanFramePath`, label at most 40 chars with no `<`, `>` or control chars) and keeps at most 24 frames.
 - Not in the file: `activeId` (localStorage `design-studio.canvas.active.v1`, per project), the selection and the frame in view (presence, see Agent canvas tools).
@@ -851,7 +866,7 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 | `add_frame {projectId, directionId?, path?, viewport?, width?, height?, label?, rightOf?, below?}` | `canvasPlace` with one new frame | yes |
 | `remove_frame {projectId, frame}` | `canvas.update` without the frame (the last frame stays) | yes |
 | `write_file {projectId, directionId?, path, content ≤ 512 KB}` | atomic write, `versions.commitFile` "Edit by <client>", `publishVersion` | yes |
-| `edit_element {projectId, directionId?, path?, selector, style?, text?, op?, targetSelector?}` | headless render finds the element and its source location, then `POST /d/:did/direct-edit` (the inspector path); `op` delete, duplicate, wrap, unwrap or move (into `targetSelector`) sends a `StructureEditRequest` | yes |
+| `edit_element {projectId, directionId?, path?, selector, style?, text?, target?, op?, targetSelector?}` | headless render finds the element and its source location (in an attached app from the React debug stack), then `POST /d/:did/direct-edit` (the inspector path); `target: 'use'` edits the className at the use site of a shared component; `op` delete, duplicate, wrap, unwrap or move (into `targetSelector`) sends a `StructureEditRequest` | yes |
 | `add_comment {projectId, directionId?, path?, selector?, text}` | `POST /d/:did/comments` as `draft` with `author`; no selector = frame comment on `body` | no |
 | `reply_comment`, `resolve_comment` | `POST .../replies` with `author`, `PATCH {status:'resolved'}` | no |
 | `create_project {name, kind, designSystemId?}` | `POST /api/projects` with `startRun: false`, default projects folder only | n/a |

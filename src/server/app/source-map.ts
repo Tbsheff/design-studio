@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SourceMapConsumer, type RawSourceMap } from 'source-map-js';
@@ -32,8 +32,10 @@ const CACHE_LIMIT = 5000;
 const SOURCE_EXT = /\.(tsx|ts|jsx|js|mjs|cjs|mdx)$/;
 const cache = new Map<string, string | null>();
 const MAP_TTL_MS = 30_000;
+const STALE_MAP_RETRY_MS = 1500;
 const MAX_MAPS = 200;
 const chunkMaps = new Map<string, { consumer: Promise<SourceMapConsumer | null>; at: number }>();
+const lineCounts = new Map<string, number>();
 
 export function parseStack(stack: string): StackFrame[] {
   const frames: StackFrame[] = [];
@@ -143,7 +145,39 @@ function remember(key: string, value: string | null): void {
   cache.set(key, value);
 }
 
-export async function resolveStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
+function countLines(file: string): number | null {
+  try {
+    return readFileSync(file, 'utf8').split('\n').length;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLines(target: SourceTarget, relative: string): void {
+  const key = path.join(target.workTree, relative);
+  if (lineCounts.has(key)) return;
+  const count = countLines(key);
+  if (count !== null) lineCounts.set(key, count);
+}
+
+export function sourcesShifted(upstream: string, root: string, paths: string[]): boolean {
+  let shifted = false;
+  for (const relative of paths) {
+    const key = path.join(root, relative);
+    const before = lineCounts.get(key);
+    if (before === undefined) continue;
+    const after = countLines(key);
+    if (after === before) continue;
+    if (after === null) lineCounts.delete(key);
+    else lineCounts.set(key, after);
+    shifted = true;
+  }
+  if (!shifted) return false;
+  forgetUpstream(upstream);
+  return true;
+}
+
+async function lookUpStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
   const parsed = stacks.map((stack) => parseStack(stack).map((frame) => ({ ...frame, file: toUpstream(frame.file, previewOrigin, target.upstream) })));
   const unknown = new Map<string, StackFrame>();
   for (const frames of parsed) for (const frame of frames) if (!cache.has(`${target.upstream}|${keyOf(frame)}`)) unknown.set(keyOf(frame), frame);
@@ -158,6 +192,7 @@ export async function resolveStackSources(target: SourceTarget, stacks: string[]
         const file = original && !original.ignored && original.file ? workTreeRelative(target, original.file) : null;
         const line = original?.line1 ?? null;
         const col = original?.column1 ?? null;
+        if (file) rememberLines(target, file);
         remember(`${target.upstream}|${keyOf(frame)}`, file && line ? `${file}:${line}:${col ?? 1}` : null);
       });
     }),
@@ -169,4 +204,29 @@ export async function resolveStackSources(target: SourceTarget, stacks: string[]
     }
     return null;
   });
+}
+
+function opensElement(target: SourceTarget, source: string): boolean {
+  const match = /^(.*):(\d+):(\d+)$/.exec(source);
+  if (!match) return false;
+  try {
+    const line = readFileSync(path.join(target.workTree, match[1] ?? ''), 'utf8').split('\n')[Number(match[2]) - 1];
+    return line?.[Number(match[3]) - 1] === '<';
+  } catch {
+    return false;
+  }
+}
+
+function forgetUpstream(upstream: string): void {
+  for (const key of cache.keys()) if (key.startsWith(`${upstream}|`)) cache.delete(key);
+  for (const url of chunkMaps.keys()) if (url.startsWith(upstream)) chunkMaps.delete(url);
+}
+
+export async function resolveStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
+  const first = await lookUpStackSources(target, stacks, previewOrigin);
+  if (first.every((source) => source === null || opensElement(target, source))) return first;
+  forgetUpstream(target.upstream);
+  await new Promise((resolve) => setTimeout(resolve, STALE_MAP_RETRY_MS));
+  const second = await lookUpStackSources(target, stacks, previewOrigin);
+  return second.map((source) => (source && opensElement(target, source) ? source : null));
 }

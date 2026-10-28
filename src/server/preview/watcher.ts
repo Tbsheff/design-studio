@@ -15,6 +15,7 @@ interface WatcherDeps {
   projects: ProjectStore;
   versions: VersionStore;
   onChanged?: (change: { projectId: string; directionId: string; root: string; paths: string[] }) => void;
+  needsReload?: (change: { projectId: string; root: string; paths: string[] }) => boolean;
 }
 
 interface DirectionWatch {
@@ -172,12 +173,14 @@ export class WatcherManager {
     if (entry.closed || entry.pending.size === 0) return;
     const paths = [...entry.pending].sort();
     entry.pending.clear();
+    const reload = this.deps.needsReload?.({ projectId: entry.projectId, root: entry.root, paths }) ?? false;
     this.deps.bus.emit({
       type: 'files.changed',
       projectId: entry.projectId,
       directionId: entry.directionId,
       paths,
       changedAt: Date.now(),
+      ...(reload ? { reload } : {}),
     });
     this.deps.onChanged?.({ projectId: entry.projectId, directionId: entry.directionId, root: entry.root, paths });
     for (const changed of paths) entry.statusPaths.add(changed);

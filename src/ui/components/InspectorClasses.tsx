@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
-import type { SourceLoc, TailwindOutcome } from '../../shared/contracts';
+import type { ElementSourceInfo, SourceLoc, TailwindOutcome } from '../../shared/contracts';
 import type { VariantSupport } from '../../shared/variants';
 import { api } from '../api';
 
 export interface ElementClasses {
   tailwind: TailwindOutcome | null;
+  element: ElementSourceInfo | null;
   variants: VariantSupport | null;
 }
 
-const NO_CLASSES: ElementClasses = { tailwind: null, variants: null };
+const NO_CLASSES: ElementClasses = { tailwind: null, element: null, variants: null };
 
 export function useElementClasses(projectId: string, directionId: string | null, source: SourceLoc | null, savedAt: number, variant = ''): ElementClasses {
   const [info, setInfo] = useState<ElementClasses>(NO_CLASSES);
@@ -24,7 +25,7 @@ export function useElementClasses(projectId: string, directionId: string | null,
     api
       .elementClasses(projectId, directionId, { file, line, col }, variant)
       .then((result) => {
-        if (live) setInfo({ tailwind: result.tailwind, variants: result.variants ?? null });
+        if (live) setInfo({ tailwind: result.tailwind, element: result.element ?? null, variants: result.variants ?? null });
       })
       .catch(() => {
         if (live) setInfo(NO_CLASSES);

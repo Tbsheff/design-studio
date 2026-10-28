@@ -14,15 +14,21 @@ export function routeFrameId(layout: CanvasLayout, route: string): string | null
 }
 
 export function addRouteFrame(layout: CanvasLayout, route: string, size: { width: number; height: number }): CanvasLayout {
+  const path = route.replace(/^\/+/, '');
   const existing = routeFrameId(layout, route);
-  if (existing) return { ...layout, activeId: existing };
+  if (existing) return { ...layout, activeId: existing, frames: layout.frames.map((f) => (f.id === existing && f.hidden ? withoutHidden(f) : f)) };
   if (!canAddFrame(layout)) return layout;
   const added = addFrame(layout, size);
   const frame = added.frames[added.frames.length - 1];
   if (!frame) return layout;
-  const withPath = setFramePath(added, frame.id, route.replace(/^\/+/, ''));
+  const withPath = setFramePath(added, frame.id, path);
   const label = cleanFrameLabel(routeLabel(route));
   return { ...withPath, activeId: frame.id, frames: withPath.frames.map((f) => (f.id === frame.id && label ? { ...f, label } : f)) };
+}
+
+function withoutHidden(frame: CanvasLayout['frames'][number]): CanvasLayout['frames'][number] {
+  const { hidden: _hidden, ...rest } = frame;
+  return rest;
 }
 
 export function appRoutePages(projectId: string, app: AttachedApp | null | undefined): (() => Promise<string[]>) | null {

@@ -1,16 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { Project, SourceLoc, TailwindOutcome } from '../../shared/contracts.js';
+import type { ElementSourceInfo, Project, SourceLoc, TailwindOutcome } from '../../shared/contracts.js';
 import { DEFAULT_BREAKPOINTS, normalizeVariant, type Breakpoint, type VariantSupport } from '../../shared/variants.js';
 import { htmlClassInfo, htmlVariantProps } from './html.js';
 import { resolveSource, themeForFile } from './index.js';
-import { jsxClassInfo } from './jsx.js';
+import { jsxClassInfo, jsxElementInfo } from './jsx.js';
 import { classify, parseClass } from './tailwind/classes.js';
 import { classProps } from './tailwind/map.js';
 import type { TailwindTheme } from './tailwind/theme.js';
 
 export interface ElementClassInfo {
   tailwind: TailwindOutcome | null;
+  element: ElementSourceInfo | null;
   variants: VariantSupport;
 }
 
@@ -46,12 +47,14 @@ export async function elementClassInfo(workTree: string, projectKind: Project['k
   const extension = path.extname(target.relative).toLowerCase();
   const position = { line: loc.line, col: loc.col };
   const html = extension === '.html' || extension === '.htm';
+  const typescript = extension === '.tsx';
   const variant = normalizeVariant(rawVariant) ?? '';
-  const tailwind = html ? htmlClassInfo(code, position, theme) : jsxClassInfo(code, position, extension === '.tsx', theme);
-  if (theme) return { tailwind, variants: classSupport(tailwind, theme, variant) };
+  const tailwind = html ? htmlClassInfo(code, position, theme) : jsxClassInfo(code, position, typescript, theme);
+  const element = html ? null : jsxElementInfo(code, position, typescript, target.relative);
+  if (theme) return { tailwind, element, variants: classSupport(tailwind, theme, variant) };
   if (html) {
     const decls = variant ? htmlVariantProps(code, position, variant) : [];
-    return { tailwind, variants: { mode: 'css', reason: null, breakpoints: [...DEFAULT_BREAKPOINTS], props: decls.map((entry) => entry.prop), set: decls.map((entry) => `${entry.prop}: ${entry.value}`) } };
+    return { tailwind, element, variants: { mode: 'css', reason: null, breakpoints: [...DEFAULT_BREAKPOINTS], props: decls.map((entry) => entry.prop), set: decls.map((entry) => `${entry.prop}: ${entry.value}`) } };
   }
-  return { tailwind, variants: { mode: 'none', reason: NO_TAILWIND, breakpoints: [...DEFAULT_BREAKPOINTS], props: [], set: [] } };
+  return { tailwind, element, variants: { mode: 'none', reason: NO_TAILWIND, breakpoints: [...DEFAULT_BREAKPOINTS], props: [], set: [] } };
 }

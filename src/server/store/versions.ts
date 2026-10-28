@@ -14,10 +14,12 @@ import { createKeyedMutex } from './mutex.js';
 
 export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.next/', '.turbo/', '.studio/*', `!${CANVAS_FILE}`, `!${LINKS_FILE}`, '.DS_Store'];
 const LAYOUT_FILES = [CANVAS_FILE, LINKS_FILE];
+const layoutFilesOf = (project: Project): string[] => (project.app ? [] : LAYOUT_FILES);
 const NEVER_TRACKED = ['node_modules'];
+const APP_NEVER_TRACKED = [...NEVER_TRACKED, '.studio'];
 const MAX_SCOPED_PATHS = 500;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
-const APP_EXCLUDES = ['*.onnx', '*.mlmodelc/', '*.mlpackage/', '*.sqlite', '*.db', '*.m4a', '*.mp3', '*.wav', '*.mp4', '*.mov', '*.zip', '*.tar', '*.tgz', '*.gz', '.env', '.env.*', '!.env.example', '*.pem', '*.key'];
+const APP_EXCLUDES = ['.studio/', '*.onnx', '*.mlmodelc/', '*.mlpackage/', '*.sqlite', '*.db', '*.m4a', '*.mp3', '*.wav', '*.mp4', '*.mov', '*.zip', '*.tar', '*.tgz', '*.gz', '.env', '.env.*', '!.env.example', '*.pem', '*.key'];
 
 const META_PREFIX = 'studio-meta: ';
 const MAX_ORIGIN_DEPTH = 64;
@@ -36,6 +38,7 @@ export interface GitScope {
   gitDir: string;
   workTree?: string;
   indexFile?: string;
+  untracked?: string[];
 }
 
 interface GitResult {
@@ -221,6 +224,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     gitDir: gitDirOf(project),
     workTree: direction.workTree,
     indexFile: path.join(gitDirOf(project), `index-${assertSafeId(direction.id, 'directionId')}`),
+    ...(project.app ? { untracked: APP_NEVER_TRACKED } : {}),
   });
   const refOf = (direction: Direction): string => `refs/heads/${direction.branch}`;
   const lockKey = (project: Project, direction: Direction): string => `${project.id}/${direction.id}`;
@@ -293,7 +297,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   };
 
   const untrackNeverTracked = async (scope: GitScope): Promise<void> => {
-    await runGit(scope, ['rm', '-r', '-q', '--cached', '--ignore-unmatch', '--', ...NEVER_TRACKED]);
+    await runGit(scope, ['rm', '-r', '-q', '--cached', '--ignore-unmatch', '--', ...(scope.untracked ?? NEVER_TRACKED)]);
   };
 
   const stageAll = async (scope: GitScope): Promise<void> => {
@@ -302,7 +306,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   };
 
   const stagePaths = async (scope: GitScope, paths: string[] | undefined): Promise<void> => {
-    const scoped = (paths ?? []).filter((entry) => entry !== '' && !NEVER_TRACKED.includes(entry.split('/')[0] ?? ''));
+    const never = scope.untracked ?? NEVER_TRACKED;
+    const scoped = (paths ?? []).filter((entry) => entry !== '' && !never.includes(entry.split('/')[0] ?? ''));
     if (paths === undefined || scoped.length > MAX_SCOPED_PATHS) {
       await stageAll(scope);
       return;
@@ -459,7 +464,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
     commitFile(project: Project, direction: Direction, relative: string | string[], title: string, meta: VersionMeta): Promise<Version | null> {
       const listed = Array.isArray(relative) ? relative : [relative];
-      const paths = [...listed, ...LAYOUT_FILES.filter((file) => !listed.includes(file) && existsSync(layoutOf(direction, file)))];
+      const paths = [...listed, ...layoutFilesOf(project).filter((file) => !listed.includes(file) && existsSync(layoutOf(direction, file)))];
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tempIndex = path.join(gitDirOf(project), `index-file-${randomBytes(6).toString('hex')}`);
@@ -467,6 +472,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         try {
           await runGit(tempScope, head === null ? ['read-tree', '--empty'] : ['read-tree', head]);
           await runGit(tempScope, ['--literal-pathspecs', 'add', '-A', '--', ...paths]);
+          if (tempScope.untracked) await untrackNeverTracked(tempScope);
           const tree = (await runGit(tempScope, ['write-tree'])).stdout.trim();
           if (head !== null && (await treeOf(project, head)) === tree) return null;
           const version = await commitTree(project, direction, tree, head, head, title, meta);
@@ -509,7 +515,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);
         const tree = head === null ? null : await treeOf(project, head);
-        const kept = await Promise.all(LAYOUT_FILES.map(async (file) => ({ target: layoutOf(direction, file), bytes: await readFile(layoutOf(direction, file)).catch(() => null) })));
+        const kept = await Promise.all(layoutFilesOf(project).map(async (file) => ({ target: layoutOf(direction, file), bytes: await readFile(layoutOf(direction, file)).catch(() => null) })));
         await resetWorkTree(project, direction, tree, tree, 'trash');
         for (const { target, bytes } of kept) {
           if (!bytes) continue;

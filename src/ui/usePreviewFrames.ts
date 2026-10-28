@@ -130,6 +130,7 @@ export function usePreviewFrames(o: Options) {
   const treeTimer = useRef<number | null>(null);
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const pendingSwap = useRef<PendingSwap | null>(null);
+  const reselectOnSwap = useRef(false);
   const pendingReact = useRef<{ changedAt: number; receivedAt: number } | null>(null);
   const pendingSelectAt = useRef<number | null>(null);
   const handledChange = useRef<FilesChange | null>(null);
@@ -193,7 +194,11 @@ export function usePreviewFrames(o: Options) {
       const slot = slotsRef.current.find((s) => s.token === token);
       if (slot)
         window.setTimeout(() => {
-          syncFrame(frameFor(slot));
+          const frame = frameFor(slot);
+          syncFrame(frame);
+          const [only, ...rest] = opts.current.selection;
+          if (reselectOnSwap.current && only && rest.length === 0) postToFrame(frame, { type: 'select-selector', selector: only.selector });
+          reselectOnSwap.current = false;
           window.dispatchEvent(new Event(PREVIEW_PAINTED_EVENT));
         }, 0);
     },
@@ -264,12 +269,13 @@ export function usePreviewFrames(o: Options) {
     if (change === handledChange.current) return;
     handledChange.current = change;
     if (!change || !o.live || !o.baseUrl || change.directionId !== o.directionId) return;
-    if (o.kind === 'react') {
+    if (o.kind === 'react' && !change.reload) {
       pendingReact.current = { changedAt: change.changedAt, receivedAt: change.receivedAt };
       watchHmr(change.receivedAt);
       return;
     }
     if (pendingSwap.current) window.clearTimeout(pendingSwap.current.timer);
+    reselectOnSwap.current = change.reload === true;
     const token = randomToken();
     const src = frameSrc(o.baseUrl, token, { v: String(change.changedAt) });
     setSlots((prev) => [...prev.filter((s) => s.token === frontRef.current), { token, src }]);

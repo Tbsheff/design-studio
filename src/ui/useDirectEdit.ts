@@ -9,7 +9,7 @@ export type SaveStatus =
   | { kind: 'idle' }
   | { kind: 'saving' }
   | { kind: 'saved'; at: number }
-  | { kind: 'error'; message: string };
+  | { kind: 'error'; message: string; code?: string };
 
 export interface DirectEditControl {
   cancel: () => void;
@@ -65,9 +65,9 @@ export function buildEditRequest(selection: SelectionContext, style: Partial<Sty
   const hasStyle = Object.keys(style).length > 0;
   if (!hasStyle && text === undefined) return null;
   const wire = Object.fromEntries(Object.entries(style).map(([prop, value]) => [prop, value.trim() === '' ? null : value.trim()]));
-  const tag = selection.tag.toLowerCase();
+  const target = selection.component ? { component: selection.component } : { tag: selection.tag.toLowerCase() };
   const variant = hasStyle ? editVariant : '';
-  return { source, selector: selection.selector, tag, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text } : {}), ...(variant ? { variant } : {}) };
+  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text } : {}), ...(variant ? { variant } : {}) };
 }
 
 export function useDirectEdit(o: Options) {
@@ -126,7 +126,7 @@ export function useDirectEdit(o: Options) {
       resetPreview();
       setDraft({});
       setTextDraft(null);
-      setStatus({ kind: 'error', message: failureText(err) });
+      setStatus({ kind: 'error', message: failureText(err), ...(err instanceof ApiError && err.code ? { code: err.code } : {}) });
     },
     [cancel, post, resetPreview, setDraft, setTextDraft],
   );

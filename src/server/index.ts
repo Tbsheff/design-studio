@@ -59,7 +59,7 @@ async function main(): Promise<void> {
   const observed = observeBus(desktop ? linkDesktop(baseBus, desktop, { token: config.studioToken, dataDir: config.dataDir }) : baseBus);
   const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
-  const canvas = createCanvasService(bus);
+  const canvas = createCanvasService(bus, (projectId) => projects.projectDir(projectId));
   const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas });
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {

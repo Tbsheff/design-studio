@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from 'react';
 import type { DirectStyleProperty, SelectionContext } from '../../shared/contracts';
 import { textEditability } from '../cssValues';
 import type { DirectEdit } from '../useDirectEdit';
+import { DataTextNote, useInspectorApp } from './InspectorShared';
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
   return (event: KeyboardEvent<HTMLInputElement>) => {
@@ -19,6 +20,8 @@ function useRowKeys(onCommit: () => void, onRevert: () => void) {
 export function ContentRow({ selection, edit }: { selection: SelectionContext; edit: DirectEdit }) {
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
+  const data = useInspectorApp().element?.textFromData;
+  if (data) return <DataTextNote data={data} text={selection.text} />;
   if (state !== 'ok') {
     return (
       <div className="ins-field wide readonly">

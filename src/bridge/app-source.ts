@@ -1,5 +1,12 @@
-import { SOURCE_LOC_ATTR } from '../shared/contracts.js';
+import { SOURCE_LOC_ATTR, type ComponentUse } from '../shared/contracts.js';
 import { APP_SOURCE_PATH } from '../shared/app.js';
+
+interface DebugType {
+  displayName?: unknown;
+  name?: unknown;
+  render?: DebugType;
+  type?: DebugType;
+}
 
 interface DebugFiber {
   _debugStack?: { stack?: unknown } | null;
@@ -8,9 +15,13 @@ interface DebugFiber {
   _debugOwner?: DebugFiber | null;
   return?: DebugFiber | null;
   tag?: number;
+  name?: unknown;
+  type?: DebugType | string | null;
 }
 
 const HOST_COMPONENT = 5;
+const MAX_SOURCE_CANDIDATES = 150;
+const SOURCE_BATCH = 10;
 const pending = new WeakMap<Element, Promise<string | null>>();
 
 export function appSourceMode(): string | null {
@@ -26,6 +37,26 @@ function fiberOf(element: Element): DebugFiber | null {
 }
 
 export const USED_AT_ATTR = 'data-studio-used-at';
+
+function textName(...values: unknown[]): string | null {
+  const found = values.find((value): value is string => typeof value === 'string' && value.length > 0);
+  return found ?? null;
+}
+
+function ownerName(owner: DebugFiber): string | null {
+  const type = typeof owner.type === 'object' ? owner.type : null;
+  return textName(owner.name, type?.displayName, type?.render?.displayName, type?.render?.name, type?.type?.displayName, type?.type?.name, type?.name);
+}
+
+export function componentUseOf(element: Element): ComponentUse | null {
+  const host = hostElementOf(element);
+  const owner = host?.fiber._debugOwner ?? null;
+  if (!host || !owner) return null;
+  const name = ownerName(owner);
+  if (!name) return null;
+  const parent = host.element.parentElement ? hostElementOf(host.element.parentElement) : null;
+  return { name, root: !parent || (parent.fiber._debugOwner ?? null) !== owner };
+}
 
 function stackOf(fiber: DebugFiber | null): string | null {
   const candidates = [fiber?._debugStack?.stack, fiber?.debugStack?.stack, fiber?.stack];
@@ -54,6 +85,10 @@ async function resolveStacks(stacks: string[]): Promise<(string | null)[]> {
   return Array.isArray(body.sources) ? body.sources.map((source) => (typeof source === 'string' ? source : null)) : stacks.map(() => null);
 }
 
+export function appHydrated(element: Element): boolean {
+  return hostElementOf(element) !== null;
+}
+
 export function appSourceFor(element: Element): Promise<string | null> {
   const host = hostElementOf(element);
   if (!host) return Promise.resolve(null);
@@ -75,4 +110,23 @@ export function appSourceFor(element: Element): Promise<string | null> {
     .finally(() => pending.delete(host.element));
   pending.set(host.element, lookup);
   return lookup;
+}
+
+let finding: string | null = null;
+
+export async function appElementBySource(loc: string, tag: string): Promise<Element | null> {
+  if (finding === loc || !/^[a-z][a-z0-9-]*$/.test(tag)) return null;
+  finding = loc;
+  try {
+    const candidates = Array.from(document.querySelectorAll(tag)).slice(0, MAX_SOURCE_CANDIDATES);
+    for (let start = 0; start < candidates.length; start += SOURCE_BATCH) {
+      const batch = candidates.slice(start, start + SOURCE_BATCH);
+      const sources = await Promise.all(batch.map(appSourceFor));
+      const index = sources.indexOf(loc);
+      if (index >= 0) return batch[index] ?? null;
+    }
+    return null;
+  } finally {
+    finding = null;
+  }
 }

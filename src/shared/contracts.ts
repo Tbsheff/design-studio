@@ -499,12 +499,20 @@ export interface LoopSummary {
   steps: LoopStep[];
 }
 
+export interface AppReviewRecord {
+  mobileShot: 'agent' | 'studio' | 'failed';
+  review: 'agent' | 'studio';
+  findings: number;
+  fixLoop: boolean;
+}
+
 export interface FinalCheck {
   ranBy: 'agent' | 'studio';
   errors: number;
   high: number;
   medium: number;
   low: number;
+  appReview?: AppReviewRecord;
 }
 
 export type RunStatus = 'running' | 'completed' | 'canceled' | 'failed' | 'budget_exceeded';

@@ -44,6 +44,7 @@ export interface RunToolState {
   regressionDone?: boolean;
   regressionNote?: string;
   captureMark?: number;
+  reviews?: { at: number; frame: string | null }[];
 }
 
 export function freshCapture(ctx: AgentRunContext, state: RunToolState | undefined): boolean {

@@ -20,6 +20,7 @@ import { loadTasteRules, type TasteRule } from './taste.js';
 import { recommendedSkillsBlock, recommendSkills } from './skill-match.js';
 import { prepareSkills, type PreparedSkills } from './skills.js';
 import { createStudioMcpServer } from './tools.js';
+import { desktopRegression, regressionPrompt, wantsRegressionCheck } from './regression.js';
 import type { CanvasService } from '../canvas/service.js';
 import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './user-message.js';
 
@@ -627,6 +628,9 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       lastFindings: [],
       lastChecks: [],
       log: newLoopLog(),
+      startedAt: Date.now(),
+      screenCache: { stamp: '', screens: [] },
+      ...(options.canvas ? { canvas: options.canvas } : {}),
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
     return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
@@ -650,6 +654,17 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     return { state, outcome };
   }
 
+  async function regressionText(input: DriverInput, run: RunToolState, reason: StopReason): Promise<string | null> {
+    if ((reason !== 'clean' && reason !== 'loops') || !wantsRegressionCheck(run) || input.signal.aborted) return null;
+    try {
+      const issues = await desktopRegression({ preview: options.preview, ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId, queryFn: options.queryFn ?? (await loadSdkQuery()), env: buildEnv(process.env, false) });
+      return issues.length ? regressionPrompt(issues) : null;
+    } catch (error) {
+      console.warn(`[agent] desktop regression check failed: ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  }
+
   async function continueLoop(input: DriverInput, segment: AttemptSegment, first: { state: StreamState; outcome: DriverOutcome }): Promise<{ outcome: DriverOutcome; reason: StopReason | null; continuations: number }> {
     let current = first;
     let total = first.outcome;
@@ -658,10 +673,10 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     for (;;) {
       if (current.outcome.status !== 'completed' || input.signal.aborted || !current.state.sessionId || !run.log) return { outcome: total, reason: null, continuations };
       const decision: LoopDecision = decideLoop(run.log, segment.setup.config, { spentUsd: segment.spentUsd + run.criticCostUsd, capUsd: segment.setup.config.maxBudgetUsd, continuations });
-      if (decision.stop) return { outcome: total, reason: decision.reason, continuations };
+      const text = decision.stop ? await regressionText(input, run, decision.reason) : continuationPrompt(decision, run.log);
+      if (!text) return { outcome: total, reason: decision.stop ? decision.reason : null, continuations };
       continuations += 1;
       const sessionId = current.state.sessionId;
-      const text = continuationPrompt(decision, run.log);
       input.sink.sent({ text, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: continuations });
       segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
       const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };

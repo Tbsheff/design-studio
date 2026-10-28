@@ -6,7 +6,7 @@ import { publishVersion } from '../direct-edit/index.js';
 import { listWords } from './activity-text.js';
 import { EditError, loadTarget, oneLine, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, checkWritePath, classes, variant, defineTool, directionId, hasClasses, ok, pagePath, pageUrl, projectId, selector, style, versionActivity, writeText, type Done } from './edit-kit.js';
-import { describeElements } from './element.js';
+import { describeElements, textHintsOf } from './element.js';
 
 const BATCH_MAX = 50;
 const FILES_MAX = 20;
@@ -87,7 +87,7 @@ async function batchElements(deps: EditDeps, project: Project, direction: Direct
     const element = found.get(page)?.[at] ?? null;
     if (!element) throw new EditError(`Edit ${index + 1}: no element matches ${edit.selector} on the page.`);
     if (!element.source) throw new EditError(`Edit ${index + 1}: ${edit.selector} has no source location, so it cannot be edited directly.`);
-    return { source: element.source, selector: edit.selector, tag: element.tag, ...(edit.style && Object.keys(edit.style).length > 0 ? { style: edit.style } : {}), ...(edit.text !== undefined ? { text: edit.text } : {}), ...(hasClasses(edit) ? { classes: edit.classes } : {}), ...(edit.variant ? { variant: edit.variant } : {}) };
+    return { source: element.source, selector: edit.selector, tag: element.tag, ...(edit.style && Object.keys(edit.style).length > 0 ? { style: edit.style } : {}), ...(edit.text !== undefined ? { text: edit.text, hints: textHintsOf(element) } : {}), ...(hasClasses(edit) ? { classes: edit.classes } : {}), ...(edit.variant ? { variant: edit.variant } : {}) };
   });
   const result = await studioCall<DirectEditBatchResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, { edits: requests });
   if (result.files.length === 0) return { result: ok({ changed: false, versionId: result.version.id, note: 'Every value was already set.' }) };

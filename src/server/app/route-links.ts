@@ -54,11 +54,17 @@ function attrsOf(node: t.JSXOpeningElement): Map<string, t.Node | null> {
   return out;
 }
 
+function literalText(node: t.Node): string {
+  if (node.type === 'StringLiteral') return node.value;
+  if (node.type === 'ConditionalExpression') return literalText(node.alternate);
+  return '';
+}
+
 export function staticText(node: t.Node): string {
   const parts: string[] = [];
   const visit = (item: t.Node): void => {
     if (item.type === 'JSXText') parts.push(item.value);
-    else if (item.type === 'JSXExpressionContainer' && item.expression.type === 'StringLiteral') parts.push(item.expression.value);
+    else if (item.type === 'JSXExpressionContainer') parts.push(literalText(item.expression));
     else if (item.type === 'JSXElement' || item.type === 'JSXFragment') item.children.forEach(visit);
   };
   if (node.type === 'JSXElement' || node.type === 'JSXFragment') node.children.forEach(visit);
@@ -71,12 +77,12 @@ function tagFor(name: string, kind: RouteLinkKind): string {
   return COMPONENT_TAGS.find(([pattern]) => pattern.test(name))?.[1] ?? 'button';
 }
 
-function classSelector(tag: string, node: t.Node): string | null {
+function classSelector(tag: string, node: t.Node, least: number): string | null {
   if (node.type !== 'JSXElement') return null;
   const value = attrsOf(node.openingElement).get('className');
   const raw = value?.type === 'StringLiteral' ? value.value : value?.type === 'TemplateLiteral' ? (value.quasis[0]?.value.cooked ?? '') : '';
-  const classes = raw.split(/\s+/).filter((name) => /^[A-Za-z_-][\w-]*$/.test(name)).slice(0, 2);
-  return classes.length > 0 ? `${tag}.${classes.join('.')}` : null;
+  const classes = raw.split(/\s+/).filter((name) => /^[A-Za-z_-][\w-]*$/.test(name)).slice(0, 12);
+  return classes.length >= least ? `${tag}.${classes.join('.')}` : null;
 }
 
 export function originless(raw: string): string {
@@ -104,7 +110,7 @@ function linkSelector(href: string): string | null {
 function elementOf(kind: RouteLinkKind, name: string, href: string, textNode: t.Node, repeated: boolean): RouteLinkElement | null {
   const tag = tagFor(name, kind);
   const text = repeated ? '' : staticText(textNode);
-  const selector = kind === 'link' && tag === 'a' ? linkSelector(href) : text ? tag : classSelector(tag, textNode);
+  const selector = kind === 'link' && tag === 'a' ? linkSelector(href) : text ? tag : classSelector(tag, textNode, repeated ? 1 : 2);
   if (!selector) return null;
   return { tag, selector, ...(text ? { text } : {}) };
 }

@@ -217,7 +217,7 @@ function sourceOf(link: RouteLink): string {
 
 function skipReason(link: RouteLink): string {
   if (link.kind === 'redirect') return 'A redirect in code, not a click, so there is no element to link. The frame is on the canvas.';
-  return 'The element has no static text or class to find it on the page. Link it with the Prototype tool.';
+  return 'The element has no static text and too few classes to find it on the page. Link it with the Prototype tool.';
 }
 
 interface Planned {

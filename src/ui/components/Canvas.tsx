@@ -320,12 +320,27 @@ function frameLabelSig(o: LabelInput, frame: CanvasFrame, did: string | null): s
   return JSON.stringify([index, frame.id === o.activeId, o.frames.layout.frames.length > 1, did, did === o.directionId, named, o.directionName, o.kind, Boolean(o.appPages), v, items]);
 }
 
+function liveVariation(variation: FrameVariation, did: string, live: MutableRefObject<LabelInput>): FrameVariation {
+  const now = () => live.current.directions?.variationOf(did) ?? variation;
+  return { ...variation, onKeep: () => now().onKeep(), onMix: (to, element) => now().onMix(to, element) };
+}
+
+function liveMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null, live: MutableRefObject<LabelInput>): FrameMenuItem[] {
+  return frameMenuItems(o, frame, did).map((item) => ({ ...item, run: () => frameMenuItems(live.current, frame, did).find((cur) => cur.id === item.id)?.run() }));
+}
+
 function useFrameLabels(o: LabelInput) {
   const { projectId } = o;
+  const live = useRef(o);
+  live.current = o;
   const listPages = useCallback(
     (did: string) => () => api.workTreeFiles(projectId, did).then(({ files }) => files.filter((f) => f.endsWith('.html')).sort()),
     [projectId],
   );
+  const pagesFor = (did: string | null): (() => Promise<string[]>) | null => {
+    if (!o.appPages && !(o.kind === 'html' && did)) return null;
+    return () => (live.current.appPages ?? listPages(did as string))();
+  };
   const label = (frame: CanvasFrame, did: string | null) => {
     const variation = did ? o.directions?.variationOf(did) : undefined;
     const isActive = frame.id === o.activeId;
@@ -339,9 +354,9 @@ function useFrameLabels(o: LabelInput) {
       badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
       extras: (
         <>
-          {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
-          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={o.appPages ?? (o.kind === 'html' && did ? listPages(did) : null)} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
-          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
+          {variation && did && <VariationControls variation={liveVariation(variation, did, live)} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => live.current.setSelection(() => [])} />}
+          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={pagesFor(did)} onPath={(path) => live.current.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={liveMenuItems(o, frame, did, live)} />
         </>
       ),
     };

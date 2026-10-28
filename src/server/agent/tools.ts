@@ -16,6 +16,8 @@ import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
+import { buildFlow, configuredFlowDeps, describeFlow, describeRouteLinks, FLOW_NOTE, listRouteLinks } from '../app/route-flow.js';
+import { FLOW_MAX_DEPTH, type FlowInput } from '../../shared/route-flow.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
@@ -124,6 +126,24 @@ export function runSetFrameState(deps: Pick<StudioToolDeps, 'ctx'>, args: FrameS
 
 export function runSetFrameSession(deps: Pick<StudioToolDeps, 'ctx'>, args: { user?: { name: string; email: string }; forgetCookies?: boolean }) {
   return withFrameStates(deps, 'set_frame_session', async (stateDeps) => describeFrameStates(deps.ctx.project, await applyFrameSession(stateDeps, deps.ctx.project, { ...(args.user ? { user: args.user } : {}), ...(args.forgetCookies ? { forget: true } : {}) })));
+}
+
+export async function runListRouteLinks(deps: Pick<StudioToolDeps, 'ctx'>, route: string) {
+  try {
+    return { content: [{ type: 'text' as const, text: describeRouteLinks(await listRouteLinks(deps.ctx.project, route)) }] };
+  } catch (error) {
+    return errorText(`list_route_links failed: ${describeError(error)}`);
+  }
+}
+
+export function runAddFlow(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: FlowInput) {
+  return withCanvas(deps, 'add_flow', async (ctx) => {
+    if (ctx.plan) return errorText('Plan mode is on, so the canvas stays as it is. Describe the flow in the plan.');
+    if (ctx.mode === 'critique') return errorText('add_flow is not available in critique runs.');
+    const flowDeps = configuredFlowDeps(ctx.canvas);
+    if (!flowDeps) return errorText('Flow is not available in this run.');
+    return { content: [{ type: 'text' as const, text: describeFlow(await buildFlow(flowDeps, ctx.project, ctx.direction, args, 'agent')) }] };
+  });
 }
 
 function errorText(message: string) {
@@ -403,6 +423,26 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetFrameSession(deps, args),
   );
 
+  const listRouteLinksTool = tool(
+    'list_route_links',
+    `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
+    { route: z.string().min(1).max(300) },
+    (args) => runListRouteLinks(deps, args.route),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const addFlowTool = tool(
+    'add_flow',
+    `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
+    {
+      routes: z.array(z.string().min(1).max(300)).max(12).optional(),
+      from: z.string().min(1).max(300).optional(),
+      depth: z.number().int().min(0).max(FLOW_MAX_DEPTH).optional(),
+      params: z.record(z.string(), z.string().max(80)).optional(),
+    },
+    (args) => runAddFlow(deps, args),
+  );
+
   const editElementTool = tool(
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
@@ -492,5 +532,5 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool] });
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, listRouteLinksTool, addFlowTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool] });
 }

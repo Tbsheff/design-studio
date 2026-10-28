@@ -101,6 +101,10 @@ export function parseLink(raw: unknown): PrototypeLink | null {
   return { id: l.id, from, to, transition: isLinkTransition(l.transition) ? l.transition : 'instant' };
 }
 
+export function sourceKey(from: Pick<LinkSource, 'frame' | 'selector' | 'text'>): string {
+  return `${from.frame}\u0000${from.selector}\u0000${from.text ?? ''}`;
+}
+
 function idNumber(id: string): number {
   return Number(id.slice(1));
 }
@@ -111,7 +115,7 @@ export function normalizeLinksFile(file: LinksFile): LinksFile {
   const links = [...file.links]
     .sort((a, b) => idNumber(a.id) - idNumber(b.id))
     .filter((link) => {
-      const key = `${link.from.frame}\u0000${link.from.selector}`;
+      const key = sourceKey(link.from);
       if (seen.has(link.id) || sources.has(key)) return false;
       seen.add(link.id);
       sources.add(key);
@@ -160,7 +164,8 @@ export function nextLinkId(links: readonly { id: string }[]): string {
 }
 
 export function upsertLink(file: LinksFile, link: Omit<PrototypeLink, 'id'>): { file: LinksFile; link: PrototypeLink } {
-  const same = file.links.find((item) => item.from.frame === link.from.frame && item.from.selector === link.from.selector);
+  const key = sourceKey(link.from);
+  const same = file.links.find((item) => sourceKey(item.from) === key);
   const saved: PrototypeLink = { ...link, id: same?.id ?? nextLinkId(file.links) };
   const links = same ? file.links.map((item) => (item.id === same.id ? saved : item)) : [...file.links, saved];
   return { file: { ...file, links }, link: saved };

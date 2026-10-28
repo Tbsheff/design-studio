@@ -18,6 +18,9 @@ import {
   type PrototypeLink,
 } from '../../shared/links.js';
 import type { Direction, Project } from '../../shared/contracts.js';
+import { configuredFrameStates } from '../app/frame-state-service.js';
+import { frameStatesView } from '../app/frame-state.js';
+import { withFrameStateHost } from '../../shared/frame-state.js';
 import { waitForPage } from '../export/capture.js';
 import { withPagePath } from '../export/source.js';
 import type { PreviewService } from '../types.js';
@@ -92,12 +95,19 @@ export function linkTitle(link: PrototypeLink, frames: readonly CanvasFileFrame[
   return `${what} in ${frameTitle(frames, link.from.frame)} → ${target}`;
 }
 
+async function withStateHost(project: Project, frameId: string, url: string): Promise<string> {
+  const states = project.app ? configuredFrameStates() : null;
+  if (!states) return url;
+  const view = await frameStatesView(states.projectDir(project.id)).catch(() => null);
+  return withFrameStateHost(url, view?.frames[frameId] ?? null);
+}
+
 export function probeWithPreview(preview: Pick<PreviewService, 'directionUrl' | 'withPage'>, project: Project, fallback: Direction): LinkProbe | undefined {
   const withPage = preview.withPage?.bind(preview);
   if (!withPage) return undefined;
   return async (frame, queries) => {
     const direction = project.directions.find((item) => item.id === frame.directionId) ?? fallback;
-    const url = withPagePath(await preview.directionUrl(project, direction), frame.path || undefined);
+    const url = await withStateHost(project, frame.id, withPagePath(await preview.directionUrl(project, direction), frame.path || undefined));
     return withPage(url, { width: frame.width, height: frame.height }, async (page) => {
       await waitForPage(page);
       return page.evaluate<(ProbedElement | null)[]>(resolveScript(queries));

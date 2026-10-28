@@ -1,3 +1,4 @@
+import { memo } from 'react';
 const PATHS = {
   desktop: 'M2.5 3.5h11v7.5h-11zM6 13.5h4M8 11v2.5',
   tablet: 'M4 1.75h8a.75.75 0 0 1 .75.75v11a.75.75 0 0 1-.75.75H4a.75.75 0 0 1-.75-.75v-11A.75.75 0 0 1 4 1.75zM7 12h2',
@@ -78,7 +79,7 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
-export function Icon({ name, size = 16, className }: { name: IconName; size?: number; className?: string }) {
+export const Icon = memo(function Icon({ name, size = 16, className }: { name: IconName; size?: number; className?: string }) {
   return (
     <svg
       className={`icon ${className ?? ''}`}
@@ -96,4 +97,4 @@ export function Icon({ name, size = 16, className }: { name: IconName; size?: nu
       <path d={PATHS[name]} />
     </svg>
   );
-}
+});

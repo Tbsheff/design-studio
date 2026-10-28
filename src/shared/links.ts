@@ -23,6 +23,7 @@ export interface LinkSource {
   selector: string;
   tag?: string;
   text?: string;
+  label?: string;
 }
 
 export type LinkTarget = { frame: string } | { back: true };
@@ -156,6 +157,8 @@ function parseSource(raw: unknown): LinkSource | null {
   if (typeof s.tag === 'string' && TAG_RE.test(s.tag)) source.tag = s.tag;
   const text = cleanLinkText(s.text);
   if (text) source.text = text;
+  const label = text ? null : cleanLinkText(s.label);
+  if (label) source.label = label;
   return source;
 }
 
@@ -356,4 +359,9 @@ export function textAgrees(actual: string, stored: string | undefined): boolean 
 
 export function isIdSelector(selector: string): boolean {
   return /^#[A-Za-z_][\w-]*$/.test(selector);
+}
+
+export function sourceName(from: Pick<LinkSource, 'selector' | 'text' | 'label'>): string {
+  const name = from.text ?? from.label;
+  return name ? `“${name}”` : from.selector;
 }

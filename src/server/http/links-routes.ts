@@ -1,7 +1,10 @@
 import type { Context, Hono } from 'hono';
 import { isFrameId } from '../../shared/canvas-file.js';
 import { isImplicitId, isLinkAction, isLinkEasing, isLinkId, isLinkTransition, motionOf, parseLink, upsertLink, withMotion, type LinkTarget, type PrototypeLink } from '../../shared/links.js';
-import { implicitLinks, keepImplicit } from '../canvas/implicit-links.js';
+import { implicitLinks, keepImplicit, type AnchorReader } from '../canvas/implicit-links.js';
+import { probeWithPreview } from '../canvas/link-tools.js';
+import type { Project } from '../../shared/contracts.js';
+import type { PreviewService } from '../types.js';
 import type { CanvasService } from '../canvas/service.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -10,6 +13,12 @@ interface LinksRouteDeps {
   projects: StudioProjectStore;
   canvas: CanvasService;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
+  preview?: Pick<PreviewService, 'directionUrl' | 'withPage'>;
+}
+
+function renderOf(deps: LinksRouteDeps, project: Project): AnchorReader | undefined {
+  const main = project.directions[0];
+  return deps.preview && main ? probeWithPreview(deps.preview, project, main)?.anchors : undefined;
 }
 
 function targetOf(raw: unknown): LinkTarget | null {
@@ -54,7 +63,8 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
 
   app.get('/api/projects/:pid/links/implicit', async (c) => {
     const project = await projects.get(c.req.param('pid'));
-    return c.json({ implicit: await implicitLinks({ canvas, project }) });
+    const render = renderOf(deps, project);
+    return c.json({ implicit: await implicitLinks({ canvas, project, ...(render ? { render } : {}) }) });
   });
 
   app.post('/api/projects/:pid/links/keep', async (c) => {
@@ -62,7 +72,8 @@ export function registerLinksRoutes(app: Hono, deps: LinksRouteDeps): void {
     const project = await projects.get(c.req.param('pid'));
     const ids = body.ids === 'all' ? 'all' : Array.isArray(body.ids) ? body.ids.filter(isImplicitId) : [];
     if (ids !== 'all' && ids.length === 0) throw new BadRequestError('ids must be implicit link ids or "all"');
-    const done = await keepImplicit({ canvas, project }, ids, 'user', motionOf(body));
+    const render = renderOf(deps, project);
+    const done = await keepImplicit({ canvas, project, ...(render ? { render } : {}) }, ids, 'user', motionOf(body));
     if (done.kept.length === 0) throw new NotFoundError('implicit link not found');
     return c.json({ links: done.file, kept: done.kept });
   });

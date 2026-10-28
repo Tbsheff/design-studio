@@ -14,6 +14,7 @@ import {
   LINK_TEXT_MAX,
   LINK_TRANSITIONS,
   linkAction,
+  sourceName,
   linkDuration,
   withMotion,
   startFrameOf,
@@ -77,7 +78,7 @@ const ANCHOR_SCRIPT = `(() => {
   }
   const counts = {};
   for (const a of out) counts[a.selector] = (counts[a.selector] || 0) + 1;
-  return out.map((a) => (counts[a.selector] > 1 && a.text ? a : { href: a.href, selector: a.selector, tag: a.tag }));
+  return out.map((a) => (counts[a.selector] > 1 && a.text ? a : { href: a.href, selector: a.selector, tag: a.tag, ...(a.text ? { label: a.text } : {}) }));
 })()`;
 
 function resolveScript(queries: LinkQuery[]): string {
@@ -125,7 +126,7 @@ function frameTitle(frames: readonly CanvasFileFrame[], id: string): string {
 
 export function linkTitle(link: PrototypeLink, frames: readonly CanvasFileFrame[]): string {
   const target = isBackTarget(link.to) ? 'Back' : frameTitle(frames, link.to.frame);
-  const what = link.from.text ? `“${link.from.text}”` : link.from.selector;
+  const what = sourceName(link.from);
   return `${what} in ${frameTitle(frames, link.from.frame)} → ${target}`;
 }
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { isDirectionRef, isFrameId, parseCanvasFile } from '../../shared/canvas-file.js';
 import type { CanvasPresence } from '../../shared/contracts.js';
 import type { CanvasService } from '../canvas/service.js';
+import type { PreviewService } from '../types.js';
 import { BadRequestError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import { registerLinksRoutes } from './links-routes.js';
@@ -11,6 +12,7 @@ interface CanvasRouteDeps {
   projects: StudioProjectStore;
   canvas: CanvasService;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
+  preview?: Pick<PreviewService, 'directionUrl' | 'withPage'>;
 }
 
 const writerSchema = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);

@@ -1172,7 +1172,7 @@ export function createApp(deps: AppDeps): Hono {
     invalidateTokenSource(workTree);
     if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
   }, onRemapped: (projectId, remapped) => void mcpRoutes.activity.remap(projectId, remapped) });
-  registerCanvasRoutes(app, { projects, canvas, readBody });
+  registerCanvasRoutes(app, { projects, canvas, readBody, preview });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
   registerFlowRoutes(app, { projects, canvas, readBody });
 

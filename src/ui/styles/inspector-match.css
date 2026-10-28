@@ -132,6 +132,7 @@
 
 .sm-picker-input {
   width: 100%;
+  text-align: left;
   font-family: var(--mono);
 }
 

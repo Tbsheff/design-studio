@@ -139,7 +139,10 @@ function Swatch({ kind, value }: { kind: StyleKind; value: string }) {
 function TokenPicker(props: { row: StyleValueRow; candidates: Candidate[]; target: string; onPick: (token: string) => void; onClose: () => void }) {
   const [text, setText] = useState('');
   const input = useRef<HTMLInputElement>(null);
-  useEffect(() => input.current?.focus(), []);
+  useEffect(() => {
+    input.current?.focus();
+    input.current?.closest('.sm-picker')?.scrollIntoView({ block: 'nearest' });
+  }, []);
   const filter = text.trim().toLowerCase();
   const shown = props.candidates.filter((c) => !filter || c.token.toLowerCase().includes(filter) || c.hint.toLowerCase().includes(filter)).slice(0, PICK_SHOWN);
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

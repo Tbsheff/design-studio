@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import type * as t from '@babel/types';
 import { z } from 'zod';
 import type { Direction, DirectEditRequest, Project, SourceLoc, VersionMeta } from '../../shared/contracts.js';
 import {
@@ -176,9 +177,34 @@ async function loadFile(files: Map<string, FileState>, workTree: string, kind: P
   return state;
 }
 
+function isAstNode(value: unknown): value is t.Node {
+  return typeof value === 'object' && value !== null && typeof (value as { type?: unknown }).type === 'string';
+}
+
+function childrenOf(node: t.Node): t.Node[] {
+  const out: t.Node[] = [];
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'loc' || key.endsWith('Comments')) continue;
+    const items: unknown[] = Array.isArray(value) ? value : [value];
+    out.push(...items.filter(isAstNode));
+  }
+  return out;
+}
+
+function onlyElementOnLine(root: t.Node, line: number): t.JSXElement | null {
+  const found: t.JSXElement[] = [];
+  const stack: t.Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as t.Node;
+    if (node.type === 'JSXElement' && node.openingElement.loc?.start.line === line) found.push(node);
+    stack.push(...childrenOf(node));
+  }
+  return found.length === 1 ? (found[0] ?? null) : null;
+}
+
 function isMapped(state: FileState, source: SourceLoc): boolean {
   if (!state.jsx) return false;
-  const element = findJsxElement(state.jsx.program, source);
+  const element = findJsxElement(state.jsx.program, source) ?? onlyElementOnLine(state.jsx.program, source.line);
   if (!element) return false;
   try {
     assertNotMapped(element, jsxAncestors(state.jsx.program, element));
@@ -245,6 +271,14 @@ function wroteOf(set: Set<'classes' | 'inline'>): StyleReplaceResult['wrote'] {
   return set.has('classes') ? 'classes' : 'inline';
 }
 
+function assertThemeVars(style: DirectEditRequest['style'], known: Set<string> | null, theme: TailwindTheme | null): void {
+  if (known !== null || !theme) return;
+  for (const value of Object.values(style ?? {})) {
+    const name = value ? /var\(\s*(--[A-Za-z0-9_-]+)/.exec(value)?.[1] : undefined;
+    if (name && !theme.vars.has(name)) throw new DirectEditError('unknown_token', `${name} is not a token in the Tailwind theme of this project`);
+  }
+}
+
 async function planSite(ctx: { files: Map<string, FileState>; workTree: string; kind: Project['kind']; token: string; known: Set<string> | null }, site: Site, skips: Skips) {
   if (site.selectors.size < site.repeats) {
     skips.add('partial', site, `${site.selectors.size} of ${site.repeats}`);
@@ -257,6 +291,7 @@ async function planSite(ctx: { files: Map<string, FileState>; workTree: string; 
   }
   const request = siteRequest(site, (property) => tokenValue(ctx.token, property, state.theme));
   assertKnownTokens(request.style, ctx.known);
+  assertThemeVars(request.style, ctx.known, state.theme);
   return { state, request };
 }
 

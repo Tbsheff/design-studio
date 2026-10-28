@@ -14,11 +14,12 @@ import {
   type StyleQuery,
   type StyleScanResult,
 } from '../shared/style-search.js';
-import { appSourceFor } from './app-source.js';
+import { appSourceFor, appSourceMode } from './app-source.js';
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'NOSCRIPT', 'LINK', 'META', 'BASE', 'TITLE', 'HEAD', 'HTML', 'BR']);
 const MAX_ELEMENTS = 6000;
 const MAX_APP_LOOKUPS = 400;
+const APP_LOOKUPS = appSourceMode() === 'next';
 const LOC = /^(.+):(\d+):(\d+)$/;
 
 export type SelectorOf = (element: Element) => string;
@@ -78,6 +79,7 @@ function ownValue(element: Element, property: SearchProperty, style: CSSStyleDec
   const value = style.getPropertyValue(property).trim();
   if (isUnsetComputed(property, value)) return null;
   const cls = classForProperty(classes, property);
+  if (cls && /-auto!?$/.test(cls)) return null;
   const inline = element instanceof HTMLElement || element instanceof SVGElement ? element.style.getPropertyValue(property) || null : null;
   if (INHERITED_PROPERTIES.has(property) && !cls && !inline && parentStyle && sameValue(parentStyle.getPropertyValue(property), value)) return null;
   return { element, property, value, cls, inline };
@@ -130,7 +132,7 @@ async function sourcesOf(elements: Element[]): Promise<Map<Element, SourceLoc | 
   for (const element of elements) {
     const own = element.getAttribute(SOURCE_LOC_ATTR);
     out.set(element, parseLoc(own));
-    if (!own && pending.length < MAX_APP_LOOKUPS) pending.push(element);
+    if (!own && APP_LOOKUPS && pending.length < MAX_APP_LOOKUPS) pending.push(element);
   }
   await Promise.all(
     pending.map(async (element) => {

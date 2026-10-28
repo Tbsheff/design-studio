@@ -22,8 +22,8 @@ const STATE_TEXT: Record<AppServerStatus['state'], string> = {
   stopped: 'Stopped',
 };
 
-function useAppState(projectId: string, open: boolean) {
-  const [status, setStatus] = useState<AppServerStatus | null>(null);
+function useAppState(projectId: string, open: boolean, initial: AppServerStatus | null = null) {
+  const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -211,8 +211,8 @@ function ServerButtons({ state, managed, control }: { state: AppServerStatus['st
   );
 }
 
-function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab }: AppBarProps & { onClose: () => void; tab: Tab; setTab: (tab: Tab) => void }) {
-  const { status, logs, refresh } = useAppState(projectId, true);
+function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }: AppBarProps & { onClose: () => void; tab: Tab; setTab: (tab: Tab) => void; initial: AppServerStatus | null }) {
+  const { status, logs, refresh } = useAppState(projectId, true, initial);
   const state = status?.state ?? 'idle';
   const managed = (status?.mode ?? app.mode) === 'managed';
   const control = (action: 'start' | 'stop' | 'restart') => void api.appControl(projectId, action).then(refresh).catch(() => undefined);
@@ -281,7 +281,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
         <span>{app.framework === 'next' ? 'Next.js' : 'App'}</span>
         <span className="app-panel-sub">{stateText(status, managed)}</span>
       </button>
-      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} tab={tab} setTab={setTab} />}
+      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} tab={tab} setTab={setTab} initial={status} />}
     </div>
   );
 }

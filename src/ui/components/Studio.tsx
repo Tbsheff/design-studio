@@ -50,10 +50,12 @@ import { setTelemetryScope } from '../perfTelemetry';
 import { renameVersion } from '../versionsApi';
 import { useExportTarget } from '../useExportTarget';
 import type { ExportTarget } from '../exportApi';
+import type { ShareTarget } from './ShareDialog';
 
 const ExportDialog = lazy(() => import('./ExportDialog').then((m) => ({ default: m.ExportDialog })));
 const ShipDialog = lazy(() => import('./ShipDialog'));
 const RulesEditor = lazy(() => import('./RulesEditor'));
+const ShareDialog = lazy(() => import('./ShareDialog'));
 
 function RulesSlot({ projectId, directionId }: { projectId: string; directionId: string | null }) {
   if (!directionId) return null;
@@ -69,6 +71,15 @@ function ShipLayer({ projectId, open, onClose }: { projectId: string; open: bool
   return (
     <Suspense fallback={null}>
       <ShipDialog projectId={projectId} onClose={onClose} />
+    </Suspense>
+  );
+}
+
+function ShareLayer({ target, onClose }: { target: ShareTarget | null; onClose: () => void }) {
+  if (!target) return null;
+  return (
+    <Suspense fallback={null}>
+      <ShareDialog target={target} onClose={onClose} />
     </Suspense>
   );
 }
@@ -208,6 +219,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const [designOpen, setDesignOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shipOpen, setShipOpen] = useState(false);
+  const [shareTarget, setShareTarget] = useState<ShareTarget | null>(null);
   const [busy, setBusy] = useState(false);
   const [staleNotice, setStaleNotice] = useState<string | null>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
@@ -641,6 +653,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                 onExport: exporter.openHead,
                 onTweak: whenDirection(did, tweak),
                 onShip: openShip,
+                onShareLink: () => setShareTarget({ projectId, directionId: direction?.id ?? null, versionId: direction?.headVersionId ?? null }),
                 onAskAgent: (text) => {
                   draft.set(text);
                   void showPane('chat');
@@ -665,6 +678,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       />
       <ExportLayer target={exporter.target} onClose={exporter.close} />
       <ShipLayer projectId={projectId} open={shipOpen} onClose={() => setShipOpen(false)} />
+      <ShareLayer target={shareTarget} onClose={() => setShareTarget(null)} />
       <StudioToast text={firstText(editHistory.toast, packActions.toast?.text)} />
     </div>
   );

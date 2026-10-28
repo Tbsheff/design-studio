@@ -22,7 +22,7 @@ export function AvatarFace({ initial, flip = false, tone = 'queued', count = 0, 
   );
 }
 
-export function CommentAuthor({ author }: { author: string | undefined }) {
+export function CommentAuthor({ author, viewer = false }: { author: string | undefined; viewer?: boolean }) {
   if (!author) return null;
   return (
     <span className="comment-author" data-testid="comment-author">
@@ -30,6 +30,7 @@ export function CommentAuthor({ author }: { author: string | undefined }) {
         {authorInitial(author)}
       </span>
       {author}
+      {viewer && <span className="comment-viewer-tag" data-tip="Sent from a share link">Viewer</span>}
     </span>
   );
 }

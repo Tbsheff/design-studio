@@ -21,6 +21,7 @@ export interface CanvasShell {
   onExport: () => void;
   onTweak: ((prompt: string) => void) | null;
   onShip?: (() => void) | null;
+  onShareLink?: (() => void) | null;
   onAskAgent?: (text: string) => void;
 }
 
@@ -166,7 +167,7 @@ function useRulersKey() {
 }
 
 function barShell(shell: CanvasShell | undefined) {
-  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null, onShip: null };
+  if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null, onShip: null, onShareLink: null };
   return shell;
 }
 
@@ -226,6 +227,7 @@ export function CanvasChrome(p: ChromeProps) {
         canExport={bar.canExport}
         onExport={bar.onExport}
         onShip={bar.onShip ?? null}
+        onShareLink={bar.onShareLink ?? null}
       />
       {tweakOpen && onTweak && <TweakPrompt scope={scopeOf(p.selection)} onSend={onTweak} onClose={closeTweak} />}
       {viewOpen && <CanvasViewRow viewport={p.ui.viewport} {...p.view} rulers={{ on: p.ui.rulers, onToggle: toggleRulers }} />}

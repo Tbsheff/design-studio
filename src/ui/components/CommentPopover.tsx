@@ -206,7 +206,7 @@ export function OpenCommentPopover(props: OpenProps) {
       >
         <div className="thread-head">
           <span className="thread-num">#{comment.n}</span>
-          <CommentAuthor author={comment.author} />
+          <CommentAuthor author={comment.author} viewer={comment.from === 'viewer'} />
           <span className={`thread-status ${comment.status}`}>{STATUS_LABEL[comment.status]}</span>
           <span className="spacer" />
           {props.onFix && (

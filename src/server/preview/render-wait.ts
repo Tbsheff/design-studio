@@ -3,6 +3,7 @@ const SETTLE_MAX_MS = 60000;
 const PAGES_MAX = 6;
 
 const pending = new Map<string, Promise<void>>();
+const lastDone = new Map<string, number>();
 const pages = new Map<string, string[]>();
 
 export function noteRenderedPage(projectId: string, page: string | undefined): void {
@@ -24,6 +25,7 @@ export function startRender(projectId: string, render: () => Promise<void>): voi
   })()
     .catch((error: unknown) => console.error('[render-wait] warm failed', error))
     .finally(() => {
+      lastDone.set(projectId, Date.now());
       if (pending.get(projectId) === job) pending.delete(projectId);
     });
   pending.set(projectId, job);
@@ -31,6 +33,10 @@ export function startRender(projectId: string, render: () => Promise<void>): voi
 
 export function renderPending(projectId?: string): boolean {
   return projectId ? pending.has(projectId) : pending.size > 0;
+}
+
+export function renderedSince(projectId: string, since: number): boolean {
+  return (lastDone.get(projectId) ?? 0) >= since;
 }
 
 export async function renderSettled(projectId?: string): Promise<boolean> {

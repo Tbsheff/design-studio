@@ -7,7 +7,7 @@ import type { McpStatus } from '../../shared/export.js';
 import type { ExportDeps } from '../export/source.js';
 import { callTool, ToolError, TOOLS } from './tools.js';
 import { firstVersionBlock } from '../app/first-version.js';
-import { renderPending, renderSettled } from '../preview/render-wait.js';
+import { renderedSince, renderPending, renderSettled } from '../preview/render-wait.js';
 import { callEditTool, EDIT_NAMES, EDIT_TOOLS, RENDER_WAIT_TOOLS } from './edit-tools.js';
 import { EditError, type EditDeps } from './edit-deps.js';
 import { withLayerSelectors } from './layer-tools.js';
@@ -93,7 +93,7 @@ function splitWait(name: string, raw: unknown): { args: Record<string, unknown>;
 
 async function withRender(result: unknown, projectId: unknown, started: number): Promise<unknown> {
   const id = typeof projectId === 'string' ? projectId : undefined;
-  const waited = renderPending(id);
+  const waited = id !== undefined && (renderPending(id) || renderedSince(id, started));
   const settled = await renderSettled(id);
   const content = (result as { content?: unknown[] }).content;
   if (!Array.isArray(content)) return result;

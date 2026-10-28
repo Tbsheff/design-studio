@@ -278,9 +278,24 @@ async function elementSelector(deps: ExportDeps, src: ExportSource, url: string,
 
 const WARM_TIMEOUT_MS = 120_000;
 
+const SCRIPT_SRC = /<script[^>]+src="(\/_next\/[^"]+)"/g;
+const WARM_SCRIPTS_MAX = 60;
+
+async function touch(url: URL): Promise<string | null> {
+  const answer = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+  if (!answer) return null;
+  if (!(answer.headers.get('content-type') ?? '').includes('text/html')) {
+    await answer.body?.cancel().catch(() => undefined);
+    return null;
+  }
+  return answer.text().catch(() => null);
+}
+
 export async function warmUpstream(upstream: string, page: string | undefined): Promise<void> {
-  const answer = await fetch(new URL(`/${page ?? ''}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
-  await answer?.body?.cancel().catch(() => undefined);
+  const html = await touch(new URL(`/${page ?? ''}`, upstream));
+  if (!html) return;
+  const scripts = [...new Set([...html.matchAll(SCRIPT_SRC)].map((match) => (match[1] as string).replace(/&amp;/g, '&')))].slice(0, WARM_SCRIPTS_MAX);
+  await Promise.all(scripts.map((src) => touch(new URL(src, upstream))));
 }
 
 async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {

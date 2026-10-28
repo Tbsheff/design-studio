@@ -34,6 +34,7 @@ import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, w
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
 import { APP_DOCTOR_DESCRIPTION, runAppDoctor } from './doctor-tool.js';
+import { CREATE_COMPONENT_AGENT_DESCRIPTION, SWAP_INSTANCE_AGENT_DESCRIPTION, createComponentShape, runCreateComponent, runSwapInstance, swapInstanceShape } from './component-create-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -661,5 +662,9 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool] });
+  const createComponentTool = tool('create_component', CREATE_COMPONENT_AGENT_DESCRIPTION, createComponentShape, (args) => runCreateComponent(deps, args));
+
+  const swapInstanceTool = tool('swap_instance', SWAP_INSTANCE_AGENT_DESCRIPTION, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool] });
 }

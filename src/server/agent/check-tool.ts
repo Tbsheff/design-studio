@@ -14,6 +14,7 @@ import { describeScreens, planScreens, samePage, warmScreens, type RunScreen } f
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
 import { EDIT_TOOL_NAMES } from './permissions.js';
 import { defaultShotTarget, type ShotTarget } from './run-target.js';
+import { outsideFindings, probeLayout } from './layout-region.js';
 
 const DIFF_VIEWPORTS: CheckViewport[] = ['desktop', 'mobile'];
 
@@ -171,11 +172,12 @@ export async function buildCheckReport(preview: PreviewService, ctx: AgentRunCon
   mainRender.catch(() => undefined);
   const screens = state ? await timedStep(timings, 'screens', () => runScreens(preview, ctx, config, state).catch(() => [])) : [];
   const mainUrl = target?.url ?? ctx.previewUrl;
+  const outside = timedStep(timings, 'layout', () => layoutFindings(preview, ctx, mainUrl).catch(() => []));
   const [raw, extra] = await Promise.all([mainRender, timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens, mainUrl, fresh))]);
   const tokens = await timedStep(timings, 'tokens', () => tokenFindings(ctx, config).catch(() => []));
   const targeted = (ctx.request.selection ?? []).length > 0;
   const diff = config.preset.checks.quality ? await timedStep(timings, 'diff', () => diffFindings(state, raw, targeted, target?.url ?? null)) : [];
-  const global = [...(config.preset.checks.navCheck ? navFindings(raw) : []), ...tokens, ...diff];
+  const global = [...(config.preset.checks.navCheck ? navFindings(raw) : []), ...tokens, ...diff, ...(await outside)];
   const main = attachGlobal(raw, global);
   const entry = screens.find((screen) => isMain(screen, mainUrl))?.label ?? null;
   const results = [...(entry ? main.map((result) => tagScreen(result, entry)) : main), ...extra];
@@ -184,6 +186,12 @@ export async function buildCheckReport(preview: PreviewService, ctx: AgentRunCon
   if (state?.log) recordCheck(state.log, findings);
   const tail = state ? [budgetLine(state), nextStepLine(state, findings.filter(isBlocking).length)].filter(Boolean).join('\n') : null;
   return { results, findings, text: reportText(results, findings, timings, tail, target?.label ?? null, screens) };
+}
+
+async function layoutFindings(preview: PreviewService, ctx: AgentRunContext, url: string | null): Promise<QualityFinding[]> {
+  const target = ctx.target;
+  if (!target?.layout || !url || !samePage(url, defaultShotTarget(ctx)?.url)) return [];
+  return outsideFindings(target.layout, await probeLayout(preview, url), target.owner);
 }
 
 export async function runScreens(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state: RunToolState, maxScreens?: number): Promise<RunScreen[]> {

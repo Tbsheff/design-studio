@@ -24,6 +24,7 @@ import { desktopRegression, regressionPrompt, wantsRegressionCheck } from './reg
 import type { CommentStore } from '../store/comments.js';
 import type { CanvasService } from '../canvas/service.js';
 import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './user-message.js';
+import { describeTargetLayout } from './run-target.js';
 
 type QueryFn = typeof query;
 type StreamEventMessage = Extract<SDKMessage, { type: 'stream_event' }>;
@@ -752,6 +753,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   };
 
   async function runAttempts(input: DriverInput): Promise<DriverOutcome> {
+    await describeTargetLayout(options.preview, input.ctx).catch(() => undefined);
     const parts = await buildUserMessageParts(input.ctx);
     const resume = input.ctx.direction.sessionId;
     if (!resume) return (await attempt(input, parts, null)).outcome;

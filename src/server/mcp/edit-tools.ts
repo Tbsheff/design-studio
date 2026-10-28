@@ -25,6 +25,7 @@ import { REVIEW_TOOLS } from './review-tools.js';
 import { INSERT_TOOLS } from './insert-tools.js';
 import { JSX_INSERT_TOOLS } from './jsx-insert-tools.js';
 import { LAYER_TOOLS } from './layer-tools.js';
+import { ARRANGE_TOOLS } from './arrange-tools.js';
 import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import { chooseEditSite, EDIT_TARGETS, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import type { ToolDef, ToolResult } from './tools.js';
@@ -170,7 +171,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...ARRANGE_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {

@@ -42,10 +42,12 @@ export function elementVariantsBlocker(project: Pick<Project, 'app'> | null, sel
 const NUMBER_WORDS: Record<string, number> = { two: 2, three: 3, four: 4, a: 3, some: 3, few: 3, couple: 2 };
 
 export function elementVariantsIntent(prompt: string): number | null {
-  const match = /\b(?:try|make|show|give me|generate|create|explore)\s+(?:a\s+)?(\d|two|three|four|some|few|couple)?\s*(?:of\s+)?(?:different\s+|other\s+|more\s+|new\s+)?(versions?|variants?|variations?|options?|takes)\b(?:\s+(?:of|for)\s+(?:this|that|the|it)\b)?/i.exec(prompt);
+  const match = /\b(?:try|make|show|give me|generate|create|explore)\s+(?:a\s+)?(\d|two|three|four|some|few|couple)?\s*(?:of\s+)?(?:different\s+|other\s+|more\s+|new\s+)?(versions?|variants?|variations?|options|takes)\b(\s+(?:of|for)\s+(?:this|that|the|it)\b)?/i.exec(prompt);
   if (!match) return null;
   const word = (match[1] ?? '').toLowerCase();
-  if (!word && !/s$/i.test(match[2] ?? '')) return null;
+  const noun = (match[2] ?? '').toLowerCase();
+  if ((noun === 'options' || noun === 'takes') && !match[3]) return null;
+  if (!word && !noun.endsWith('s')) return null;
   const count = /^\d$/.test(word) ? Number(word) : (NUMBER_WORDS[word] ?? 3);
   return Math.max(2, Math.min(4, count));
 }

@@ -178,6 +178,7 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
     const target = variant.variation?.scope?.sourceDirectionId;
     if (!target) throw new BadRequestError('This is not an element variant');
     const result = await deps.withDirection(pid, target, async (latest) => keepElementVariant(deps.edit, latest, variant.id));
+    for (const runId of groups.runIds(groupId)) runner.get(runId)?.cancel();
     return c.json(result);
   });
 

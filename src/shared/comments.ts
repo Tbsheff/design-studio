@@ -220,7 +220,7 @@ function drawingWhere(drawing: NonNullable<DesignComment['drawing']>): string[] 
 }
 
 export function describeComment(comment: DesignComment): string {
-  const head = `#${comment.n}${comment.author ? ` (from ${comment.author})` : ''}: ${normalizeText(comment.text)}`;
+  const head = `#${comment.n}${comment.author ? ` (from ${comment.from === 'viewer' ? 'share link viewer ' : ''}${comment.author})` : ''}: ${normalizeText(comment.text)}`;
   const where = comment.drawing ? drawingWhere(comment.drawing) : elementWhere(comment);
   const snippet = comment.target.textSnippet ? ` "${comment.target.textSnippet}"` : '';
   const lines = [head, `   ${comment.target.tag}${snippet} · ${where.join(' · ')}`, `   frame ${frameText(comment.frame)}`];

@@ -8,6 +8,7 @@ import { PreviewMenu, type PreviewMenuItem } from './components/PreviewMenu';
 import { uiStore } from './storage';
 import { selectionTargets, structureMenuItems } from './structureEdits';
 import { requestAuthoredCss } from './useAuthoredCss';
+import { pasteJsx } from './pasteJsx';
 import type { LayerEdits } from './useLayerEdits';
 
 interface Options {
@@ -15,7 +16,8 @@ interface Options {
   port: MutableRefObject<PreviewPort | null> | undefined;
   selectRelative: (selector: string, move: SelectMove) => void;
   zoom: (key: ZoomKey) => void;
-  edits: Pick<LayerEdits, 'enabled' | 'structureKey' | 'canPaste' | 'busy'>;
+  edits: Pick<LayerEdits, 'enabled' | 'structureKey' | 'canPaste' | 'busy' | 'notify'>;
+  ids: { projectId: string; directionId: string | null };
 }
 
 async function copyCss(port: PreviewPort | null, selector: string): Promise<void> {
@@ -28,6 +30,13 @@ function structureItems(o: Options): PreviewMenuItem[] {
   if (!edits.enabled) return [];
   const state = { count: o.selection.length, hasSource: selectionTargets(o.selection) !== null, canPaste: edits.canPaste, busy: edits.busy };
   return structureMenuItems(state, edits.structureKey, true);
+}
+
+function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
+  if (!o.edits.enabled || !o.ids.directionId) return [];
+  const blocked = !target.source && !target.owners?.length ? 'This element has no source location' : o.edits.busy ? 'Wait for the last edit to finish' : null;
+  const ids = { projectId: o.ids.projectId, directionId: o.ids.directionId };
+  return [{ id: 'paste-jsx', label: 'Paste JSX', icon: 'code', divider: true, run: () => pasteJsx(ids, target, o.edits.notify), ...disabledBy(blocked) }];
 }
 
 function disabledBy(reason: string | null): { disabled?: string } {
@@ -44,6 +53,7 @@ function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
     { id: 'zoom', label: 'Zoom to selection', icon: 'search', keyId: 'zoom-selection', run: () => o.zoom('selection') },
     { id: 'layers', label: 'Show in layers', icon: 'layers', keyId: 'layers', run: () => uiStore.set({ layersOpen: true }) },
     ...structureItems(o),
+    ...pasteItem(o, target),
   ];
 }
 

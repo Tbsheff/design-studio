@@ -34,6 +34,9 @@ export interface RenderCheckOptions {
   quality?: boolean;
   placeholder?: PlaceholderMode;
   selectionLocs?: string[];
+  url?: string;
+  filePrefix?: string;
+  prepare?: string;
 }
 
 interface PageInspection {
@@ -92,6 +95,7 @@ export interface TileRequest {
   outPrefix: string;
   theme?: 'light' | 'dark';
   still?: boolean;
+  prepare?: string;
 }
 
 export interface TileResult {
@@ -231,6 +235,7 @@ export class BrowserPool {
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
     return this.withPage(url, request.viewport, async (page) => {
+      if (request.prepare) await page.evaluate(request.prepare).catch(() => undefined);
       if (request.theme === 'dark') {
         await page.evaluate(DARK_THEME_EXPRESSION);
         await settle(page);
@@ -256,6 +261,7 @@ export class BrowserPool {
   private async probeViewport(page: RenderPage, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, state: ViewportState): Promise<void> {
     await page.goto(withServerBridgeParams(state.url, this.parentOrigin));
     await settle(page);
+    if (options.prepare) await page.evaluate(options.prepare);
     state.horizontalOverflow = await page.evaluate<boolean>(OVERFLOW_EXPRESSION);
     state.probe = await page.evaluate<LayoutProbeResult>(layoutProbeExpression()).catch((error: unknown) => {
       state.pageErrors.push(`layout probe failed: ${errorText(error)}`);

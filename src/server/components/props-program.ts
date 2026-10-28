@@ -111,17 +111,20 @@ function boundedHost(ts: Ts, options: TS.CompilerOptions, allowed: Set<string>, 
   const libDir = path.dirname(ts.getDefaultLibFilePath(options));
   let files = 0;
   let bytes = 0;
+  let libraryMs = 0;
   host.getSourceFile = (name, language) => {
     const file = path.resolve(name);
     const library = file.startsWith(libDir + path.sep) || REACT_TYPES.test(file);
     if (!library && !allowed.has(file)) return undefined;
     const limit = library ? Number.POSITIVE_INFINITY : nodeModulesFile(file) ? LIBRARY_DTS_BYTES_MAX : SOURCE_BYTES_MAX;
+    const started = Date.now();
     const source = cachedSource(ts, file, language, limit);
+    if (library) libraryMs += Date.now() - started;
     if (!source) return undefined;
     files += 1;
     bytes += source.text.length;
     if (files > PROGRAM_FILES_MAX || bytes > PROGRAM_BYTES_MAX) throw new ProgramBudgetError(`it pulls in more than ${PROGRAM_FILES_MAX} files`, false);
-    if (!library && Date.now() > deadline) throw new ProgramBudgetError('it took too long', true);
+    if (!library && Date.now() - libraryMs > deadline) throw new ProgramBudgetError('it took too long', true);
     return source;
   };
   return host;
@@ -203,4 +206,16 @@ export function typedProps(scope: ProgramScope, file: string, name: string, defa
     result.specs.push({ name: prop.name, ...control, optional: (prop.flags & ts.SymbolFlags.Optional) !== 0, from: 'type', ...(fallback !== undefined ? { default: fallback } : {}) });
   }
   return result;
+}
+
+const warmed = new Set<string>();
+
+export function warmProgram(ts: Ts, root: string): void {
+  if (warmed.has(root)) return;
+  warmed.add(root);
+  try {
+    createProgram(ts, path.join(root, 'src', '__studio_warm__.tsx'), [], root);
+  } catch {
+    warmed.delete(root);
+  }
 }

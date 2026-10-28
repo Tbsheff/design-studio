@@ -5,9 +5,17 @@ export const LINKS_FILE_VERSION = 1;
 export const LINKS_MAX = 200;
 export const LINK_SELECTOR_MAX = 400;
 export const LINK_TEXT_MAX = 80;
-export const LINK_TRANSITIONS = ['instant', 'dissolve', 'slide-left', 'slide-right'] as const;
+export const LINK_TRANSITIONS = ['instant', 'dissolve', 'slide-left', 'slide-right', 'push-up', 'push-down', 'move-in', 'move-out', 'smart-animate'] as const;
+export const LINK_ACTIONS = ['navigate', 'modal', 'drawer'] as const;
+export const LINK_EASINGS = ['ease-out', 'ease-in', 'ease-in-out', 'linear', 'spring'] as const;
+export const LINK_DURATION_DEFAULT = 320;
+export const LINK_DURATION_MIN = 50;
+export const LINK_DURATION_MAX = 3000;
+export const LINK_EASING_DEFAULT = 'ease-out';
 
 export type LinkTransition = (typeof LINK_TRANSITIONS)[number];
+export type LinkAction = (typeof LINK_ACTIONS)[number];
+export type LinkEasing = (typeof LINK_EASINGS)[number];
 
 export interface LinkSource {
   frame: string;
@@ -24,6 +32,10 @@ export interface PrototypeLink {
   from: LinkSource;
   to: LinkTarget;
   transition: LinkTransition;
+  action?: Exclude<LinkAction, 'navigate'>;
+  duration?: number;
+  easing?: LinkEasing;
+  implicit?: true;
 }
 
 export interface LinksFile {
@@ -54,6 +66,68 @@ export function isLinkId(value: unknown): value is string {
 
 export function isLinkTransition(value: unknown): value is LinkTransition {
   return typeof value === 'string' && (LINK_TRANSITIONS as readonly string[]).includes(value);
+}
+
+export function isLinkAction(value: unknown): value is LinkAction {
+  return typeof value === 'string' && (LINK_ACTIONS as readonly string[]).includes(value);
+}
+
+export function isLinkEasing(value: unknown): value is LinkEasing {
+  return typeof value === 'string' && (LINK_EASINGS as readonly string[]).includes(value);
+}
+
+export function cleanDuration(value: unknown): number | null {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return Math.round(Math.max(LINK_DURATION_MIN, Math.min(LINK_DURATION_MAX, value)));
+}
+
+export interface LinkMotion {
+  action?: LinkAction;
+  transition?: LinkTransition;
+  duration?: number;
+  easing?: LinkEasing;
+}
+
+export function withMotion<T extends Omit<PrototypeLink, 'id'>>(link: T, motion: LinkMotion): T {
+  const out: T = { ...link };
+  if (motion.transition) out.transition = motion.transition;
+  if (motion.action) {
+    if (motion.action === 'navigate') delete out.action;
+    else out.action = motion.action;
+  }
+  if (isBackTarget(out.to)) delete out.action;
+  if (motion.duration !== undefined) {
+    if (motion.duration === LINK_DURATION_DEFAULT) delete out.duration;
+    else out.duration = motion.duration;
+  }
+  if (motion.easing) {
+    if (motion.easing === LINK_EASING_DEFAULT) delete out.easing;
+    else out.easing = motion.easing;
+  }
+  return out;
+}
+
+export function motionOf(raw: Record<string, unknown>): LinkMotion {
+  const duration = cleanDuration(raw.duration);
+  return {
+    ...(isLinkAction(raw.action) ? { action: raw.action } : {}),
+    ...(isLinkTransition(raw.transition) ? { transition: raw.transition } : {}),
+    ...(duration !== null ? { duration } : {}),
+    ...(isLinkEasing(raw.easing) ? { easing: raw.easing } : {}),
+  };
+}
+
+export function linkAction(link: Pick<PrototypeLink, 'action'>): LinkAction {
+  return link.action ?? 'navigate';
+}
+
+export function linkDuration(link: Pick<PrototypeLink, 'duration'>): number {
+  return link.duration ?? LINK_DURATION_DEFAULT;
+}
+
+export function easingCss(easing: LinkEasing | undefined): string {
+  if (easing === 'spring') return 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+  return easing ?? LINK_EASING_DEFAULT;
 }
 
 export function isBackTarget(target: LinkTarget): target is { back: true } {
@@ -98,7 +172,8 @@ export function parseLink(raw: unknown): PrototypeLink | null {
   const from = parseSource(l.from);
   const to = parseTarget(l.to);
   if (!isLinkId(l.id) || !from || !to) return null;
-  return { id: l.id, from, to, transition: isLinkTransition(l.transition) ? l.transition : 'instant' };
+  const base: PrototypeLink = { id: l.id, from, to, transition: isLinkTransition(l.transition) ? l.transition : 'instant' };
+  return withMotion(base, motionOf({ ...l, transition: undefined }));
 }
 
 export function sourceKey(from: Pick<LinkSource, 'frame' | 'selector' | 'text'>): string {
@@ -166,7 +241,8 @@ export function nextLinkId(links: readonly { id: string }[]): string {
 export function upsertLink(file: LinksFile, link: Omit<PrototypeLink, 'id'>): { file: LinksFile; link: PrototypeLink } {
   const key = sourceKey(link.from);
   const same = file.links.find((item) => sourceKey(item.from) === key);
-  const saved: PrototypeLink = { ...link, id: same?.id ?? nextLinkId(file.links) };
+  const { implicit: _implicit, ...rest } = link;
+  const saved: PrototypeLink = { ...rest, id: same?.id ?? nextLinkId(file.links) };
   const links = same ? file.links.map((item) => (item.id === same.id ? saved : item)) : [...file.links, saved];
   return { file: { ...file, links }, link: saved };
 }
@@ -197,13 +273,62 @@ export function startFrameOf(file: LinksFile | null, frames: readonly FrameLike[
 }
 
 export function transitionLabel(transition: LinkTransition): string {
-  return { instant: 'Instant', dissolve: 'Dissolve', 'slide-left': 'Slide left', 'slide-right': 'Slide right' }[transition];
+  return TRANSITION_LABELS[transition];
 }
 
+const TRANSITION_LABELS: Record<LinkTransition, string> = {
+  instant: 'Instant',
+  dissolve: 'Dissolve',
+  'slide-left': 'Slide left',
+  'slide-right': 'Slide right',
+  'push-up': 'Push up',
+  'push-down': 'Push down',
+  'move-in': 'Move in',
+  'move-out': 'Move out',
+  'smart-animate': 'Smart animate',
+};
+
+const REVERSE: Partial<Record<LinkTransition, LinkTransition>> = {
+  'slide-left': 'slide-right',
+  'slide-right': 'slide-left',
+  'push-up': 'push-down',
+  'push-down': 'push-up',
+  'move-in': 'move-out',
+  'move-out': 'move-in',
+};
+
 export function reverseTransition(transition: LinkTransition): LinkTransition {
-  if (transition === 'slide-left') return 'slide-right';
-  if (transition === 'slide-right') return 'slide-left';
-  return transition;
+  return REVERSE[transition] ?? transition;
+}
+
+export const ACTION_LABELS: Record<LinkAction, string> = { navigate: 'Navigate', modal: 'Open as modal', drawer: 'Open as drawer' };
+
+export const EASING_LABELS: Record<LinkEasing, string> = { 'ease-out': 'Ease out', 'ease-in': 'Ease in', 'ease-in-out': 'Ease in and out', linear: 'Linear', spring: 'Spring' };
+
+export const IMPLICIT_ID_RE = /^i[0-9a-z]{1,12}$/;
+
+export function isImplicitId(value: unknown): value is string {
+  return typeof value === 'string' && IMPLICIT_ID_RE.test(value);
+}
+
+export function implicitId(from: Pick<LinkSource, 'frame' | 'selector' | 'text'>): string {
+  let hash = 5381;
+  for (const ch of sourceKey(from)) hash = ((hash * 33) ^ ch.charCodeAt(0)) >>> 0;
+  return `i${hash.toString(36)}`;
+}
+
+export function coveredBy(stored: readonly PrototypeLink[], link: PrototypeLink): boolean {
+  return stored.some((item) => {
+    if (item.from.frame !== link.from.frame) return false;
+    if (item.from.selector === link.from.selector && (item.from.text ?? '') === (link.from.text ?? '')) return true;
+    const sameTarget = isBackTarget(item.to) ? isBackTarget(link.to) : !isBackTarget(link.to) && item.to.frame === link.to.frame;
+    return sameTarget && (item.from.selector === link.from.selector || (!!item.from.text && !!link.from.text && normalizedText(item.from.text) === normalizedText(link.from.text)));
+  });
+}
+
+export function withImplicit(file: LinksFile, implicit: readonly PrototypeLink[]): LinksFile {
+  const extra = implicit.filter((link) => !coveredBy(file.links, link));
+  return extra.length === 0 ? file : { ...file, links: [...file.links, ...extra] };
 }
 
 export interface LinkQuery {

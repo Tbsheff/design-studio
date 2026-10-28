@@ -14,6 +14,7 @@ import {
   type StyleQuery,
   type StyleScanResult,
 } from '../shared/style-search.js';
+import { nearColor } from '../shared/color-near.js';
 import { appSourceFor, appSourceMode } from './app-source.js';
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'NOSCRIPT', 'LINK', 'META', 'BASE', 'TITLE', 'HEAD', 'HTML', 'BR']);
@@ -85,8 +86,13 @@ function ownValue(element: Element, property: SearchProperty, style: CSSStyleDec
   return { element, property, value, cls, inline };
 }
 
+function valueMatches(candidate: Candidate, value: string): boolean {
+  if (sameValue(candidate.value, value)) return true;
+  return kindOf(candidate.property) === 'color' && nearColor(candidate.value, value);
+}
+
 function wanted(candidate: Candidate, query: StyleQuery, value: string | null): boolean {
-  if (value !== null && !sameValue(candidate.value, value)) return false;
+  if (value !== null && !valueMatches(candidate, value)) return false;
   if (query.className && candidate.cls !== query.className) return false;
   return true;
 }

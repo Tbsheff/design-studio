@@ -14,7 +14,8 @@ import type { ActivityDraft } from './activity.js';
 import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
 import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
 import { describeElement } from './element.js';
-import { FolderError } from './folders.js';
+import { FolderError, safeFolder } from './folders.js';
+import { cleanRoute, routeLabel } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
 const SELECTOR_MAX = 2000;
@@ -87,6 +88,24 @@ const schemas = {
     })
     .strict(),
   restore_version: z.object({ projectId, directionId, versionId: id('Version id from list_versions.') }).strict(),
+  attach_app: z
+    .object({
+      folder: z.string().trim().min(1).max(4096).describe('Absolute path of the app folder or the monorepo root, for example "~/code/my-app".'),
+      url: z.string().trim().max(300).optional().describe('URL of a dev server you already run, for example "http://localhost:3000". Leave out and the studio starts next dev itself.'),
+      appDir: z.string().trim().max(300).optional().describe('App folder inside a monorepo, for example "apps/dashboard". Needed when the folder has more than one Next.js app.'),
+      name: z.string().trim().min(1).max(120).optional(),
+    })
+    .strict(),
+  add_route_frame: z
+    .object({
+      projectId,
+      route: z.string().trim().min(1).max(PATH_MAX).describe('App route from list_routes with the dynamic segments filled in, for example "/design-system" or "/patients/123".'),
+      viewport: viewport.optional().describe('desktop 1440x900, tablet 768x1024 or mobile 390x844. Default desktop.'),
+      label: z.string().max(40).optional(),
+      rightOf: frameRef.optional(),
+      below: frameRef.optional(),
+    })
+    .strict(),
   apply_design_system: z.object({ projectId, directionId, packId: packId.describe('Design system (pack) id.') }).strict(),
   set_token: z
     .object({
@@ -138,6 +157,8 @@ const META: Record<Name, Meta> = {
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
   create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
+  attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder.' },
+  add_route_frame: { title: 'Add route frame', description: 'Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it.' },
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
   set_token: { title: 'Set token', description: 'Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.' },
@@ -333,6 +354,24 @@ async function createProject(deps: EditDeps, input: Input<'create_project'>): Pr
   return { result, activity: { projectId: created.project.id, directionId: main?.id ?? null, summary: `Created project ${oneLine(created.project.name, 60)}` } };
 }
 
+async function attachApp(deps: EditDeps, input: Input<'attach_app'>): Promise<Done> {
+  const folder = await safeFolder(input.folder, deps.dataDir);
+  const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
+  const main = project.directions[0];
+  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, next: 'Call list_routes, then add_route_frame.' });
+  return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Attached ${oneLine(project.name, 60)}` } };
+}
+
+async function addRouteFrame(deps: EditDeps, input: Input<'add_route_frame'>): Promise<Done> {
+  const ctx = await busyCanvas(deps, input);
+  if (!ctx.project.app) throw new EditError('This project is not an attached app. Use add_frame.');
+  const route = cleanRoute(input.route);
+  if (route === null || /\[|\]/.test(route)) throw new EditError(`Route ${input.route} is not a page path. Fill in dynamic segments like [id] first.`);
+  const spec = { path: route.replace(/^\/+/, ''), viewport: input.viewport ?? 'desktop', label: input.label ?? routeLabel(route), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
+  void deps.preview.apps?.ensure(ctx.project).then((upstream) => fetch(new URL(route, upstream), { redirect: 'manual', signal: AbortSignal.timeout(180_000) })).catch(() => undefined);
+  return placeWithActivity(ctx, [spec], 'Added');
+}
+
 async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const version = await deps.versions.get(project, input.versionId);
@@ -420,6 +459,10 @@ async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, cl
       return resolveComment(deps, parse('resolve_comment', args));
     case 'create_project':
       return createProject(deps, parse('create_project', args));
+    case 'attach_app':
+      return attachApp(deps, parse('attach_app', args));
+    case 'add_route_frame':
+      return addRouteFrame(deps, parse('add_route_frame', args));
     case 'restore_version':
       return restoreVersion(deps, parse('restore_version', args));
     case 'apply_design_system':

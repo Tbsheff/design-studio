@@ -40,6 +40,8 @@ const TOOL_ICONS: Record<string, IconName> = {
   edit_element: 'pencil',
   canvas_place: 'frame',
   add_frame: 'frame',
+  add_route_frame: 'frame',
+  attach_app: 'plus',
   remove_frame: 'trash',
   restore_version: 'restore',
   apply_design_system: 'palette',

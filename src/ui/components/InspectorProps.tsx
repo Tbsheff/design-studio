@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
-import type { ComponentInstance, PropSpec, PropValue, VariantGroup } from '../../shared/props';
+import type { ComponentInstance, ComponentSchema, PropSpec, PropValue, VariantGroup } from '../../shared/props';
 import { ApiError } from '../api';
 import { useProjectEvents } from '../events';
 import { propsApi } from '../propsApi';
@@ -8,6 +8,8 @@ import { ComponentPreviewThumb } from './ComponentPreviewThumb';
 import { InspectorSection } from './InspectorFields';
 import { UiSelect } from './UiSelect';
 import '../styles/inspector-props.css';
+
+const SwapInstanceMenu = lazy(() => import('./SwapInstanceMenu'));
 
 interface InspectorPropsProps {
   projectId: string;
@@ -263,6 +265,49 @@ function PxField({ label, onCommit }: { label: string; onCommit: (px: number | n
   );
 }
 
+function PropRows({ instance, component, disabled, onChange }: { instance: ComponentInstance; component: ComponentSchema; disabled: boolean; onChange: (name: string, value: PropValue | null) => void }) {
+  const variants = component.props.filter((spec) => spec.from === 'variant');
+  const others = component.props.filter((spec) => spec.from !== 'variant');
+  return (
+    <>
+      {variants.length > 0 && (
+        <div className="prp-variant-group" role="group" aria-label="Variants">
+          <span className="prp-group-label">Variant</span>
+          <div className="prp-rows">
+            {variants.map((spec) => (
+              <PropRow key={spec.name} instance={instance} spec={spec} disabled={disabled} onChange={onChange} />
+            ))}
+          </div>
+        </div>
+      )}
+      {others.length > 0 && (
+        <div className="prp-rows">
+          {others.map((spec) => (
+            <PropRow key={spec.name} instance={instance} spec={spec} disabled={disabled} onChange={onChange} />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function SwapButton({ projectId, directionId, instance, onStatus }: { projectId: string; directionId: string; instance: ComponentInstance; onStatus: (status: Status) => void }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  return (
+    <div className="prp-swap">
+      <button type="button" className="btn small" aria-haspopup="menu" aria-expanded={open} data-tip="Change this use to another component with props that fit" onClick={() => setOpen((value) => !value)}>
+        Swap instance
+      </button>
+      {open && (
+        <Suspense fallback={null}>
+          <SwapInstanceMenu projectId={projectId} directionId={directionId} use={instance.use} onDone={(result) => onStatus(result.ok ? { kind: 'saved', text: result.text } : { kind: 'error', text: result.text })} onClose={close} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+
 function StatusLine({ status }: { status: Status }) {
   if (status.kind === 'idle') return null;
   if (status.kind === 'saving') return <p className="ins-note prp-status">Saving…</p>;
@@ -310,18 +355,19 @@ export default function InspectorProps({ projectId, directionId, selection, edit
         </div>
       )}
       {component.props.length === 0 && <p className="ins-note">No props to edit here.</p>}
-      <div className="prp-rows">
-        {component.props.map((spec) => (
-          <PropRow key={spec.name} instance={instance} spec={spec} disabled={disabled} onChange={onChange} />
-        ))}
-      </div>
+      <PropRows instance={instance} component={component} disabled={disabled} onChange={onChange} />
       {instance.spread && <p className="ins-note">This element also spreads props, so a value there can win.</p>}
       {component.note && <p className="ins-note">{component.note}</p>}
       <StatusLine status={status} />
-      {component.cva && editable && (
-        <button type="button" className="btn small prp-styles-btn" aria-expanded={styles} onClick={() => setStyles((open) => !open)}>
-          {styles ? 'Hide variant styles' : 'Edit variant styles'}
-        </button>
+      {editable && (
+        <div className="prp-actions">
+          <SwapButton projectId={projectId} directionId={directionId} instance={instance} onStatus={setStatus} />
+          {component.cva && (
+            <button type="button" className="btn small prp-styles-btn" aria-expanded={styles} onClick={() => setStyles((open) => !open)}>
+              {styles ? 'Hide variant styles' : 'Edit variant styles'}
+            </button>
+          )}
+        </div>
       )}
       {styles && <VariantStyles projectId={projectId} directionId={directionId} instance={instance} onStatus={setStatus} />}
     </InspectorSection>

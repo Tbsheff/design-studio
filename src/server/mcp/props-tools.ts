@@ -38,7 +38,7 @@ const setSchema = z
   .refine((input) => (input.selector === undefined) !== (input.source === undefined), 'pass selector or source, not both');
 
 
-async function useSiteOf(deps: EditDeps, project: Project, direction: Direction, page: string | undefined, sel: string): Promise<ComponentInstance> {
+export async function useSiteOf(deps: EditDeps, project: Project, direction: Direction, page: string | undefined, sel: string): Promise<ComponentInstance> {
   const probed = await probeOwners(deps.preview, await pageUrl(deps, project, direction, page), sel);
   if (!probed) throw new EditError(`No element matches ${sel} on the page.`);
   const { instance } = await studioCall<{ instance: ComponentInstance | null }>(deps, 'POST', `${base(project, direction.id)}/props/instance`, { owners: probed.owners, usedAt: probed.usedAt });

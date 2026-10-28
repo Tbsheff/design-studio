@@ -39,6 +39,7 @@ import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteNote, siteReq
 import type { ToolDef, ToolResult } from './tools.js';
 import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
 import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
+import { COMPONENT_CREATE_TOOLS } from './component-create-tools.js';
 
 const FILE_MAX = 512 * 1024;
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
@@ -180,10 +181,10 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
-export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token']);
+export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token', 'create_component', 'swap_instance']);
 const WAIT_PROPERTY = { type: 'string', enum: ['render'], description: 'Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. "render": also wait until the dev server has rebuilt the page.' };
 
 function withWait(name: string, schema: Record<string, unknown>): Record<string, unknown> {

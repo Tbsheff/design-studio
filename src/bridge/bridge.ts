@@ -832,6 +832,7 @@ function startBridge(session: BridgeSession): void {
   const layers = createLayerIndex();
   let selected: Element | null = null;
   let selectedAt = -Infinity;
+  let tracked: string[] = [];
   let altHeld = false;
   let lastAlt = false;
 
@@ -907,7 +908,8 @@ function startBridge(session: BridgeSession): void {
     block(event);
     const element = eventElement(event);
     if (mode !== 'select' || !element || textEditor.owns(element)) return;
-    if (element !== selected) postSelect(element, false);
+    const inSelection = element === selected || tracked.some((selector) => queryElement(selector) === element);
+    if (!inSelection) postSelect(element, false);
     post({ type: 'context-menu', x: event.clientX, y: event.clientY });
   };
 
@@ -1029,6 +1031,7 @@ function startBridge(session: BridgeSession): void {
     'request-rects': (message) => {
       const selectors = (Array.isArray(message.selectors) ? message.selectors : []).filter((selector): selector is string => typeof selector === 'string');
       const last = selectors.at(-1);
+      tracked = selectors;
       if (!last) selected = null;
       else if (performance.now() - selectedAt > SELECT_SETTLE_MS) selected = queryElement(last);
       rects.track(selectors);

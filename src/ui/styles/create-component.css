@@ -1,0 +1,63 @@
+.cc-dialog {
+  width: min(460px, 100%);
+}
+
+.cc-form {
+  gap: var(--s-3);
+}
+
+.cc-form input {
+  width: 100%;
+}
+
+.cc-form input[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px var(--danger-tint);
+}
+
+.field > .cc-help {
+  color: var(--text-3);
+  font-weight: 400;
+  text-wrap: pretty;
+}
+
+.field > .cc-help.error {
+  color: var(--danger);
+}
+
+.cc-help code {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+}
+
+.cc-folder {
+  width: 100%;
+}
+
+.prp-swap-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 220px;
+  max-width: 300px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.prp-swap-menu .ui-menu-item {
+  height: 28px;
+}
+
+.prp-swap-hint {
+  margin-left: auto;
+  padding-left: var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+}
+
+.prp-swap-empty {
+  padding: var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}

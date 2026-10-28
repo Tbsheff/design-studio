@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type MutableRefObject } from 'react';
+import { lazy, Suspense, useCallback, useRef, useState, type MutableRefObject } from 'react';
 import type { SelectionContext, SelectMove, ZoomKey } from '../shared/contracts';
 import { formatCopyCss } from './authoredCss';
 import type { PreviewPort } from './bridge';
@@ -10,6 +10,8 @@ import { selectionTargets, structureMenuItems } from './structureEdits';
 import { requestAuthoredCss } from './useAuthoredCss';
 import { pasteJsx } from './pasteJsx';
 import type { LayerEdits } from './useLayerEdits';
+
+const CreateComponentDialog = lazy(() => import('./components/CreateComponentDialog'));
 
 interface Options {
   selection: SelectionContext[];
@@ -39,11 +41,19 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
   return [{ id: 'paste-jsx', label: 'Paste JSX', icon: 'code', divider: true, run: () => pasteJsx(ids, target, o.edits.notify), ...disabledBy(blocked) }];
 }
 
+function createItem(o: Options, open: () => void): PreviewMenuItem[] {
+  if (!o.edits.enabled || !o.ids.directionId) return [];
+  const missing = o.selection.some((item) => !item.source && !item.owners?.length);
+  const blocked = missing ? 'An element has no source location' : o.edits.busy ? 'Wait for the last edit to finish' : null;
+  const label = o.selection.length > 1 ? `Create component from ${o.selection.length}…` : 'Create component…';
+  return [{ id: 'create-component', label, icon: 'component', run: open, ...disabledBy(blocked) }];
+}
+
 function disabledBy(reason: string | null): { disabled?: string } {
   return reason ? { disabled: reason } : {};
 }
 
-function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
+function menuItems(o: Options, target: SelectionContext, openCreate: () => void): PreviewMenuItem[] {
   return [
     { id: 'ask', label: 'Ask the agent about this', icon: 'chat', run: () => void runCommand('panel.focus-composer') },
     { id: 'variants', label: 'Try variants…', icon: 'compare', run: () => void runCommand(TRY_VARIANTS_COMMAND), ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)) },
@@ -54,6 +64,7 @@ function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
     { id: 'layers', label: 'Show in layers', icon: 'layers', keyId: 'layers', run: () => uiStore.set({ layersOpen: true }) },
     ...structureItems(o),
     ...pasteItem(o, target),
+    ...createItem(o, openCreate),
   ];
 }
 
@@ -63,7 +74,22 @@ export function usePreviewMenu(o: Options) {
   latest.current = o;
   const onContextMenu = useCallback((point: { x: number; y: number }) => setAt(point), []);
   const close = useCallback(() => setAt(null), []);
+  const [creating, setCreating] = useState<SelectionContext[] | null>(null);
   const target = o.selection.at(-1);
-  const menu = at && target ? <PreviewMenu at={at} label={`Actions for ${target.tag}`} items={menuItems(latest.current, target)} onClose={close} /> : null;
+  const openCreate = () => setCreating(latest.current.selection);
+  const directionId = o.ids.directionId;
+  const dialog =
+    creating && directionId ? (
+      <Suspense fallback={null}>
+        <CreateComponentDialog ids={{ projectId: o.ids.projectId, directionId }} selection={creating} onDone={o.edits.notify} onClose={() => setCreating(null)} />
+      </Suspense>
+    ) : null;
+  const items = at && target ? menuItems(latest.current, target, openCreate) : [];
+  const menu = (
+    <>
+      {at && target ? <PreviewMenu at={at} label={`Actions for ${target.tag}`} items={items} onClose={close} /> : null}
+      {dialog}
+    </>
+  );
   return { onContextMenu, menu };
 }

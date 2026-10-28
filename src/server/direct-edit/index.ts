@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, DirectEditRequest, DirectEditResult, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { variantLabel } from '../../shared/variants.js';
@@ -26,6 +26,7 @@ export interface EditFileChange {
   relative: string;
   before: string;
   after: string;
+  created?: boolean;
 }
 
 export interface EditRecord {
@@ -137,6 +138,11 @@ export async function writeAtomic(file: string, content: string): Promise<void> 
     await rm(temp, { force: true });
     throw error;
   }
+}
+
+export async function writeNewFile(file: string, content: string): Promise<void> {
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, content, { flag: 'wx' });
 }
 
 function visibilityTitle(tag: string, style: DirectEditRequest['style']): string | null {

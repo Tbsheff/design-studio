@@ -106,6 +106,7 @@ import { registerCanvasRoutes } from './canvas-routes.js';
 import { registerMcpRoutes } from './mcp-routes.js';
 import { registerShipRoutes } from './ship-routes.js';
 import { registerShareRoutes } from './share-routes.js';
+import { registerComponentCreateRoutes } from './component-create-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -1182,6 +1183,7 @@ export function createApp(deps: AppDeps): Hono {
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
   registerDoctorRoutes(app, { projects, preview, readBody });
   registerShareRoutes(app, { projects, versions, preview, comments, dataDir: config.dataDir, studioPort: config.studioPort, readBody });
+  registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

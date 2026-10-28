@@ -197,7 +197,7 @@ function variantCssPatch(source: string, document: DefaultTreeAdapterMap['docume
   return { splices: Object.keys(style).length > 0 && edit.variant ? variantCssSplices(source, document, element, style, edit.variant) : [] };
 }
 
-export function htmlVariantProps(source: string, loc: SourcePosition, variant: string): string[] {
+export function htmlVariantProps(source: string, loc: SourcePosition, variant: string): { prop: string; value: string }[] {
   const document = parse(source, { sourceCodeLocationInfo: true });
   const element = findElementAt(document, loc);
   return element ? variantCssProps(document, element, variant) : [];

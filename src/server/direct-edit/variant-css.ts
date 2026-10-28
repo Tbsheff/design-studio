@@ -127,7 +127,7 @@ export function variantCssSplices(source: string, document: Document, element: E
   return splices;
 }
 
-export function variantCssProps(document: Document, element: Element, raw: string): string[] {
+export function variantCssProps(document: Document, element: Element, raw: string): { prop: string; value: string }[] {
   const variant = parseVariant(raw);
   const key = keyOf(element);
   if (!variant || !key) return [];
@@ -139,5 +139,5 @@ export function variantCssProps(document: Document, element: Element, raw: strin
   }
   const selector = selectorOf(key, variant);
   const rule = currentRules(document).find((entry) => entry.selector === selector && entry.media === media);
-  return rule ? parseDeclarations(rule.body).map((entry) => entry.prop) : [];
+  return rule ? parseDeclarations(rule.body).filter((entry) => entry.prop !== '').map((entry) => ({ prop: entry.prop, value: entry.value })) : [];
 }

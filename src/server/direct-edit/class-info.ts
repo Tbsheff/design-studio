@@ -20,21 +20,23 @@ function breakpointsOf(theme: TailwindTheme): Breakpoint[] {
   return [...theme.breakpoints.entries()].map(([name, px]) => ({ name, px })).sort((a, b) => a.px - b.px);
 }
 
-function variantClassProps(classes: string[], variant: string, theme: TailwindTheme): string[] {
+function variantClasses(classes: string[], variant: string, theme: TailwindTheme): Pick<VariantSupport, 'props' | 'set'> {
   const props = new Set<string>();
+  const set: string[] = [];
   for (const token of classes) {
     const parsed = parseClass(token);
     if (parsed.variants !== variant) continue;
+    set.push(token);
     const cls = classify(parsed, theme);
     if (cls) for (const prop of classProps(cls)) props.add(prop);
   }
-  return [...props];
+  return { props: [...props], set };
 }
 
 function classSupport(tailwind: TailwindOutcome | null, theme: TailwindTheme, variant: string): VariantSupport {
   const breakpoints = breakpointsOf(theme);
-  if (!tailwind || tailwind.mode !== 'classes') return { mode: 'none', reason: tailwind?.note ?? 'The class list of this element cannot be edited.', breakpoints, props: [] };
-  return { mode: 'classes', reason: null, breakpoints, props: variant ? variantClassProps(tailwind.classes, variant, theme) : [] };
+  if (!tailwind || tailwind.mode !== 'classes') return { mode: 'none', reason: tailwind?.note ?? 'The class list of this element cannot be edited.', breakpoints, props: [], set: [] };
+  return { mode: 'classes', reason: null, breakpoints, ...(variant ? variantClasses(tailwind.classes, variant, theme) : { props: [], set: [] }) };
 }
 
 export async function elementClassInfo(workTree: string, projectKind: Project['kind'], loc: SourceLoc, rawVariant = ''): Promise<ElementClassInfo> {
@@ -47,6 +49,9 @@ export async function elementClassInfo(workTree: string, projectKind: Project['k
   const variant = normalizeVariant(rawVariant) ?? '';
   const tailwind = html ? htmlClassInfo(code, position, theme) : jsxClassInfo(code, position, extension === '.tsx', theme);
   if (theme) return { tailwind, variants: classSupport(tailwind, theme, variant) };
-  if (html) return { tailwind, variants: { mode: 'css', reason: null, breakpoints: [...DEFAULT_BREAKPOINTS], props: variant ? htmlVariantProps(code, position, variant) : [] } };
-  return { tailwind, variants: { mode: 'none', reason: NO_TAILWIND, breakpoints: [...DEFAULT_BREAKPOINTS], props: [] } };
+  if (html) {
+    const decls = variant ? htmlVariantProps(code, position, variant) : [];
+    return { tailwind, variants: { mode: 'css', reason: null, breakpoints: [...DEFAULT_BREAKPOINTS], props: decls.map((entry) => entry.prop), set: decls.map((entry) => `${entry.prop}: ${entry.value}`) } };
+  }
+  return { tailwind, variants: { mode: 'none', reason: NO_TAILWIND, breakpoints: [...DEFAULT_BREAKPOINTS], props: [], set: [] } };
 }

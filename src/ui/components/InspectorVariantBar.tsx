@@ -32,11 +32,12 @@ function Chip({ label, pressed, disabled, tip, onClick }: { label: string; press
 }
 
 function summary(prefix: string, support: VariantSupport | null): string {
-  if (prefix === '') return 'Edits change the base style';
-  if (support?.mode === 'none') return support.reason ?? 'This element cannot take variant styles';
-  const count = support?.props.length ?? 0;
+  if (support?.mode === 'none') return support.reason ?? 'This element cannot take variant styles.';
+  if (prefix === '') return 'Edits change the base style.';
+  const set = support?.set ?? [];
   const where = support?.mode === 'css' ? 'a CSS rule' : 'classes';
-  return count === 0 ? `Edits write ${where} for this variant. Dim values come from the base` : `${count} ${count === 1 ? 'value is' : 'values are'} set here. Dim values come from the base`;
+  if (set.length === 0) return `Nothing set yet. Edits write ${where}; dim values come from the base.`;
+  return `Set here: ${set.join(support?.mode === 'css' ? '; ' : ' ')}. Dim values come from the base.`;
 }
 
 export function InspectorVariantBar({ selector, port, support }: Props) {
@@ -67,7 +68,8 @@ export function InspectorVariantBar({ selector, port, support }: Props) {
         {breakpoints.map((entry) => (
           <Chip key={entry.name} label={entry.name} pressed={current.breakpoint === entry.name} disabled={off} tip={off ? (support?.reason ?? '') : `${entry.name}: ${entry.px} px and wider. The frame resizes to ${entry.px}`} onClick={() => toggleBreakpoint(entry.name)} />
         ))}
-        <span className="ins-variant-sep" aria-hidden="true" />
+      </div>
+      <div className="ins-variant-row">
         {STATES.map((state) => (
           <Chip key={state.id} label={state.label} pressed={current.states.includes(state.id)} disabled={off} tip={off ? (support?.reason ?? '') : `${state.label} state. The frame shows the element as if ${state.id === 'hover' ? 'hovered' : state.id === 'focus' ? 'focused' : 'pressed'}`} onClick={() => toggleState(state.id)} />
         ))}

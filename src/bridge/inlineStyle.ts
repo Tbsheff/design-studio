@@ -57,6 +57,8 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
     'authored-width': sizes.width ?? '',
     'authored-height': sizes.height ?? '',
     'parent-align-items': parent?.alignItems ?? '',
+    'parent-justify-items': parent?.justifyItems ?? '',
+    'own-justify-self': computed.justifySelf,
     'used-width': computed.width,
     'used-height': computed.height,
     'parent-display': parent?.display ?? '',

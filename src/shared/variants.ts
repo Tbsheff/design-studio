@@ -25,6 +25,7 @@ export interface VariantSupport {
   reason: string | null;
   breakpoints: Breakpoint[];
   props: string[];
+  set: string[];
 }
 
 const PART = /^[a-z0-9][a-z0-9-]*$/;

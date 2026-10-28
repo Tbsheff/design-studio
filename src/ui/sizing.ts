@@ -50,6 +50,8 @@ export interface SizeFacts {
   authored: Record<Axis, string>;
   display: string;
   parentAlignItems: string;
+  parentJustifyItems: string;
+  justifySelf: string;
 }
 
 const BLOCK_DISPLAYS = new Set(['block', 'flex', 'grid', 'table', 'list-item', 'flow-root']);
@@ -59,6 +61,8 @@ export function sizeFacts(styles: Record<string, string>): SizeFacts {
     authored: { width: (styles['authored-width'] ?? '').trim(), height: (styles['authored-height'] ?? '').trim() },
     display: (styles.display ?? '').trim(),
     parentAlignItems: (styles['parent-align-items'] ?? '').trim(),
+    parentJustifyItems: (styles['parent-justify-items'] ?? '').trim(),
+    justifySelf: (styles['own-justify-self'] ?? '').trim(),
   };
 }
 
@@ -69,11 +73,20 @@ function stretchesByDefault(values: Values, facts: SizeFacts): boolean {
   return inherits && (facts.parentAlignItems === '' || facts.parentAlignItems === 'normal' || facts.parentAlignItems === 'stretch');
 }
 
+const STRETCHY = new Set(['', 'auto', 'normal', 'stretch', 'legacy']);
+
+function gridStretches(axis: Axis, values: Values, facts: SizeFacts): boolean {
+  const self = axis === 'width' ? facts.justifySelf : values['align-self'].trim();
+  if (self === 'stretch') return true;
+  if (!STRETCHY.has(self)) return false;
+  return STRETCHY.has(axis === 'width' ? facts.parentJustifyItems : facts.parentAlignItems);
+}
+
 function naturalMode(axis: Axis, values: Values, parent: ParentLayout, facts: SizeFacts): SizeMode {
   const role = axisRole(axis, parent);
   if (role === 'main') return flexGrow(values.flex) > 0 ? 'fill' : 'hug';
   if (role === 'cross') return stretchesByDefault(values, facts) ? 'fill' : 'hug';
-  if (parent.grid) return 'fill';
+  if (parent.grid) return gridStretches(axis, values, facts) ? 'fill' : 'hug';
   return axis === 'width' && BLOCK_DISPLAYS.has(facts.display) ? 'fill' : 'hug';
 }
 

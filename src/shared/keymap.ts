@@ -42,6 +42,7 @@ export const KEYMAP = [
   { id: 'zoom-fit', label: 'Zoom to fit', keys: ['Shift+1', 'Mod+1'], group: 'Canvas' },
   { id: 'zoom-selection', label: 'Zoom to selection', keys: ['Shift+2', 'Mod+2'], group: 'Canvas' },
   { id: 'measure', label: 'Measure distance', keys: ['Alt'], group: 'Canvas', hold: true },
+  { id: 'rulers', label: 'Show or hide rulers', keys: ['Shift+R'], group: 'Canvas' },
 
   { id: 'select-child', label: 'Select child', keys: ['Enter'], group: 'Selection' },
   { id: 'select-parent', label: 'Select parent', keys: ['Shift+Enter'], group: 'Selection' },

@@ -102,6 +102,7 @@ export interface PanZoom {
   zoomTo: (z: number) => void;
   zoomStep: (direction: 1 | -1) => void;
   fit: () => void;
+  zoomToActive: () => void;
   freeze: () => void;
   applyZoomKey: (key: ZoomKey) => void;
   frameWheel: (frame: HTMLIFrameElement | null, e: FrameWheel) => void;
@@ -245,6 +246,18 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     [commit],
   );
 
+  const pendingFocus = useRef(false);
+  const zoomToActive = useCallback(() => {
+    pendingFocus.current = true;
+    rerender();
+  }, []);
+  useLayoutEffect(() => {
+    if (!pendingFocus.current) return;
+    pendingFocus.current = false;
+    const { active } = live.current.layout;
+    zoomToBox({ x: 0, y: 0, width: active.width, height: active.height });
+  });
+
   const freeze = useCallback(() => {
     const cur = live.current;
     if (zoomOverride.current !== null || cur.setting !== 'fit') return;
@@ -375,6 +388,7 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     zoomTo,
     zoomStep,
     fit,
+    zoomToActive,
     freeze,
     applyZoomKey,
     frameWheel,

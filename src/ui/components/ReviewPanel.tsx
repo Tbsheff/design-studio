@@ -41,12 +41,13 @@ function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
         <span className={`review-sev ${finding.severity}`} aria-label={SEVERITY_WORD[finding.severity]} />
         <span className="truncate">{finding.element}</span>
         {finding.copies && finding.copies > 1 && <span className="review-copies">{finding.copies} copies</span>}
+        {finding.shared && <span className="review-copies">shared</span>}
       </button>
       <p className="review-msg">{finding.message}</p>
       <div className="review-actions">
         {finding.source && <code className="review-src truncate">{finding.source}</code>}
         {finding.fix ? (
-          <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? 'Apply this fix as one version you can undo'} data-tip-align="end" onClick={() => a.onFix([finding])}>
+          <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? (finding.shared ? `Changes the shared file ${finding.shared}, so other pages change too. One version you can undo` : 'Apply this fix as one version you can undo')} data-tip-align="end" onClick={() => a.onFix([finding])}>
             {busy ? <span className="spinner" /> : <Icon name="check" size={12} />}
             <span>{finding.fix.label}</span>
           </button>

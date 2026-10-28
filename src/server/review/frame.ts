@@ -20,10 +20,10 @@ function checkSaved(saved: SavedFrame, direction: Direction, input: ReviewReques
   if (saved?.directionId && saved.directionId !== direction.id) throw new BadRequestError(`Frame ${saved.id} shows direction ${saved.directionId}. Pass that directionId.`);
 }
 
-function frameNames(saved: SavedFrame, input: ReviewRequest): Pick<ReviewFrame, 'id' | 'label' | 'path'> {
+function frameNames(saved: SavedFrame, input: ReviewRequest): Pick<ReviewFrame, 'id' | 'label' | 'path' | 'selector'> {
   const id = saved?.id ?? input.frame;
   const path = input.path ?? saved?.path;
-  return { ...(id ? { id } : {}), ...(saved?.label ? { label: saved.label } : {}), ...(path ? { path } : {}) };
+  return { ...(id ? { id } : {}), ...(saved?.label ? { label: saved.label } : {}), ...(path ? { path } : {}), ...(input.selector ? { selector: input.selector } : {}) };
 }
 
 export async function resolveReviewFrame(canvas: CanvasService, project: Project, direction: Direction, input: ReviewRequest): Promise<ReviewFrame> {

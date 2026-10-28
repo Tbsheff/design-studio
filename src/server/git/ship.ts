@@ -1,10 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import { chmod, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { SHIP_TEXT_MAX, cleanBranchName, type ShipPrepare, type ShipRepoInfo, type ShipRequest, type ShipResult } from '../../shared/ship.js';
+import { SHIP_TEXT_MAX, cleanBranchName, type ShipFormatResult, type ShipPrepare, type ShipRepoInfo, type ShipRequest, type ShipResult } from '../../shared/ship.js';
 import { BadRequestError, ConflictError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { literal, mainOf, prepareShip, repoInfo, shadowBlob, shadowTree, type ShipContext, type TreeEntry } from './ship-prepare.js';
+import { detectShipFormat, emptyFormatResult, formatText, type ShipFormatter } from './ship-format.js';
 import { addShipRecord } from './ship-store.js';
 import { NETWORK_TIMEOUT_MS, WRITE_TIMEOUT_MS, execTool, findOnPath, userGit } from './user-git.js';
 
@@ -65,6 +66,22 @@ interface Commit {
   message: string;
   scratch: string;
   hooksOff: string[];
+  formatter: ShipFormatter;
+  format: ShipFormatResult;
+}
+
+const FORMAT_DIFF_MAX = 6000;
+
+async function formatStaged(commit: Commit, dir: string, repoPath: string, bytes: Uint8Array): Promise<void> {
+  const text = Buffer.from(bytes).toString('utf8');
+  const formatted = await formatText(commit.formatter, commit.repo.root, repoPath, text).catch((error: unknown) => {
+    commit.format.errors.push({ path: repoPath, message: error instanceof Error ? error.message : String(error) });
+    return null;
+  });
+  if (formatted === null || formatted === text) return;
+  await writeFile(path.join(dir, repoPath), formatted);
+  const diff = (await userGit(dir, ['diff', '--no-color', '--no-ext-diff', '--', literal(repoPath)], { allowFail: true })).stdout;
+  commit.format.formatted.push({ path: repoPath, diff: diff.length > FORMAT_DIFF_MAX ? `${diff.slice(0, FORMAT_DIFF_MAX)}\n[diff cut]` : diff });
 }
 
 async function stageFiles(deps: ShipDeps, commit: Commit, dir: string): Promise<void> {
@@ -80,6 +97,12 @@ async function stageFiles(deps: ShipDeps, commit: Commit, dir: string): Promise<
     } else removed.push(repoPath);
   }
   if (added.length > 0) await userGit(dir, ['add', '--', ...added.map(literal)], { timeoutMs: WRITE_TIMEOUT_MS });
+  for (const repoPath of added) {
+    const entry = headTree.get(repoPath.slice(repo.prefix.length));
+    if (entry && entry.mode !== '120000') await formatStaged(commit, dir, repoPath, await shadowBlob(deps, entry.sha));
+  }
+  const reformatted = commit.format.formatted.map((item) => item.path);
+  if (reformatted.length > 0) await userGit(dir, ['add', '--', ...reformatted.map(literal)], { timeoutMs: WRITE_TIMEOUT_MS });
   if (removed.length > 0) await userGit(dir, ['rm', '--cached', '--quiet', '--', ...removed.map(literal)], { timeoutMs: WRITE_TIMEOUT_MS });
 }
 
@@ -157,10 +180,11 @@ export async function ship(deps: ShipDeps, request: ShipRequest): Promise<ShipRe
     const scratch = path.join(deps.dataDir, 'ship-worktrees');
     const noHooks = path.join(scratch, 'no-hooks');
     await mkdir(noHooks, { recursive: true });
-    const commit: Commit = { repo, branch, files, headTree: await shadowTree(deps, request.headVersionId, files), message, scratch, hooksOff: ['-c', `core.hooksPath=${noHooks}`] };
+    const formatter = await detectShipFormat(repo.root, repo.prefix);
+    const commit: Commit = { repo, branch, files, headTree: await shadowTree(deps, request.headVersionId, files), message, scratch, hooksOff: ['-c', `core.hooksPath=${noHooks}`], formatter, format: emptyFormatResult(formatter) };
     const sha = await commitOnBranch(deps, commit);
     const { pushed, prUrl, prError } = await publish(request, commit, sha);
     await addShipRecord(deps.projectDir, { versionId: request.headVersionId, baseVersionId: request.baseVersionId, branch, sha, mode: request.mode, pushed, prUrl, files: picked.length, at: Date.now() });
-    return { branch, sha, mode: request.mode, pushed, remote: pushed ? repo.remote : null, prUrl, prError, files: picked };
+    return { branch, sha, mode: request.mode, pushed, remote: pushed ? repo.remote : null, prUrl, prError, files: picked, format: commit.format };
   });
 }

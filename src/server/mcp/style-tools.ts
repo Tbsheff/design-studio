@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import type { Project } from '../../shared/contracts.js';
 import { SEARCH_PROPERTIES, STYLE_KINDS, STYLE_REPLACE_MAX, STYLE_TOKEN_MAX, matchesOf, replaceSummary, type StyleQuery, type StyleReplaceResult } from '../../shared/style-search.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame, frameRef } from '../canvas/tools.js';
 import { scanPageStyles, styleReport, tokenEntriesFor, tokenLookupFor } from '../direct-edit/style-scan.js';
 import { EditError, loadTarget, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
@@ -9,7 +8,7 @@ import { base, defineTool, directionId, ok, pageUrl, projectId, versionActivity,
 
 const DEFAULT_VIEWPORT = { width: 1440, height: 900 };
 const property = z.enum([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [string, ...string[]]).describe('A kind (color, font-size, radius, spacing) or one CSS property (color, background-color, border-color, font-size, border-radius, padding-top … margin-left, gap). Leave out for all of them.');
-const value = z.string().trim().min(1).max(200).describe('Value to match, for example "#1c1f23", "14px" or "0.75rem". It is compared with the computed value, so #1c1f23 also finds rgb(28, 31, 35) and 1rem finds 16px.');
+const value = z.string().trim().min(1).max(200).describe('Value to match, for example "#1c1f23", "14px" or "0.75rem". It is compared with the computed value, so 1rem finds 16px, and colors compare in one color space with a small delta: #009966 also finds rgb(0, 153, 102) and the lab()/oklch() colors of Tailwind v4.');
 const frame = frameRef.optional().describe('Canvas frame id or @label from canvas_list. Its page, size and direction are used. Default f1, the entry page.');
 const source = z.object({ file: z.string().min(1).max(1000), line: z.number().int().min(1), col: z.number().int().min(1) }).strict();
 const match = z.object({ source, selector: z.string().min(1).max(2000), tag: z.string().max(60).optional(), property: z.enum(SEARCH_PROPERTIES as [string, ...string[]]), repeats: z.number().int().min(1).optional() }).strict();
@@ -40,7 +39,7 @@ interface FrameTarget {
 async function frameTarget(deps: EditDeps, input: { projectId: string; directionId?: string; frame?: string }): Promise<FrameTarget> {
   const ref = input.frame ?? 'f1';
   const loaded = await loadTarget(deps, input.projectId, input.directionId);
-  const frames = (await readCanvasAt(canvasOwner(loaded.project).workTree)).canvas?.frames ?? [];
+  const frames = (await deps.canvas.read(loaded.project)).canvas?.frames ?? [];
   const found = findFrame(frames, ref);
   if (!found && !(frames.length === 0 && ref === 'f1')) throw new EditError(`No frame ${ref} on the canvas. Use canvas_list for the frame ids.`);
   const { project, direction } = found?.directionId && input.directionId === undefined ? await loadTarget(deps, input.projectId, found.directionId) : loaded;
@@ -61,7 +60,7 @@ const findStyles = defineTool(
   findSchema,
   {
     title: 'Find styles',
-    description: 'List the colors, font sizes, radii and spacing used in one canvas frame, like the Selection colors panel of the studio inspector: each distinct value with its element count, the token or class it comes from, and state token, raw or mixed. With value (and property) it lists the matching elements as matches with their source file:line:col, the same as "Select all with this value" in the inspector; pass them to replace_style. Inherited values count only on the element that sets them. Read only.',
+    description: 'List the colors, font sizes, radii and spacing used in one canvas frame, like the Selection colors panel of the studio inspector: each distinct value with its element count, the token or class it comes from, and state token, palette (a Tailwind palette class such as text-slate-500, not a project token), raw or mixed; color rows also give hex. With value (and property) it lists the matching elements as matches with their source file:line:col, the same as "Select all with this value" in the inspector; pass them to replace_style. Inherited values count only on the element that sets them. Read only.',
     readOnly: true,
     idempotent: true,
   },

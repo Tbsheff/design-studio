@@ -1,5 +1,6 @@
 import type { CompiledTokenEntry, Direction, Project } from '../../shared/contracts.js';
 import { locKey, matchesOf, summarizeHits, unlocatedCount, type StyleHit, type StyleMatch, type StyleQuery, type StyleScanResult, type StyleValueRow, type TokenLookup } from '../../shared/style-search.js';
+import { hexOf } from '../../shared/color-near.js';
 import { tokenFieldState } from '../../shared/token-match.js';
 import { readDesignSystemState } from '../design-system/state.js';
 import { waitForPage } from '../export/capture.js';
@@ -52,8 +53,13 @@ function siteCount(hits: StyleHit[]): number {
   return new Set(hits.flatMap((hit) => (hit.source ? [locKey(hit.source)] : []))).size;
 }
 
+function withHex(row: StyleValueRow): StyleValueRow {
+  const hex = row.kind === 'color' ? hexOf(row.value) : null;
+  return hex && hex !== row.value ? { ...row, hex } : row;
+}
+
 export function styleReport(result: StyleScanResult, lookup: TokenLookup | null): StyleReport {
-  const values = summarizeHits(result.hits, lookup);
+  const values = summarizeHits(result.hits, lookup).map(withHex);
   return {
     value: result.value,
     elements: result.elements,

@@ -20,6 +20,7 @@ export interface ReviewFrame {
   id?: string;
   label?: string;
   path?: string;
+  selector?: string;
   width: number;
   height: number;
 }
@@ -40,6 +41,7 @@ export interface ReviewFinding {
   fix: ReviewFix | null;
   ask: string;
   copies?: number;
+  shared?: string;
 }
 
 export interface ReviewResult {
@@ -56,12 +58,14 @@ export interface ReviewResult {
 export interface ReviewRequest {
   frame?: string;
   path?: string;
+  selector?: string;
   width?: number;
   height?: number;
 }
 
 export interface ReviewFixRequest {
   findingIds: string[];
+  allowShared?: boolean;
 }
 
 export interface ReviewFixResult {
@@ -69,4 +73,5 @@ export interface ReviewFixResult {
   skipped: { id: string; reason: string }[];
   files: string[];
   version: Version | null;
+  shared?: string[];
 }

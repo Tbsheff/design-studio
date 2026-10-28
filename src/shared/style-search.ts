@@ -44,7 +44,7 @@ export interface StyleScanResult {
   value: string | null;
 }
 
-export type ValueState = 'token' | 'raw' | 'mixed';
+export type ValueState = 'token' | 'palette' | 'raw' | 'mixed';
 
 export interface StyleValueRow {
   kind: StyleKind;
@@ -54,6 +54,7 @@ export interface StyleValueRow {
   tokens: string[];
   state: ValueState;
   classes: string[];
+  hex?: string;
 }
 
 export interface StyleMatch {
@@ -153,6 +154,12 @@ export function classForProperty(classes: readonly string[], property: SearchPro
   return null;
 }
 
+const PALETTE_CLASS = /-(?:(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|[1-9]00|950)|black|white)(?:\/[\d.]+)?!?$/;
+
+export function isPaletteClass(cls: string): boolean {
+  return PALETTE_CLASS.test(cls);
+}
+
 export function isRawClass(cls: string): boolean {
   return cls.includes('[') && !cls.includes('var(');
 }
@@ -193,11 +200,13 @@ interface RowDraft {
   tokens: Set<string>;
   classes: Set<string>;
   raw: number;
+  palette: number;
   total: number;
 }
 
 function stateOf(draft: RowDraft): ValueState {
-  if (draft.raw === 0) return 'token';
+  if (draft.raw === 0 && draft.palette === 0) return 'token';
+  if (draft.palette === draft.total) return 'palette';
   return draft.raw === draft.total ? 'raw' : 'mixed';
 }
 
@@ -208,7 +217,7 @@ export function summarizeHits(hits: readonly StyleHit[], lookup: TokenLookup | n
     const key = `${kind}|${hit.value}`;
     let draft = rows.get(key);
     if (!draft) {
-      draft = { kind, value: hit.value, selectors: new Set(), properties: new Set(), tokens: new Set(), classes: new Set(), raw: 0, total: 0 };
+      draft = { kind, value: hit.value, selectors: new Set(), properties: new Set(), tokens: new Set(), classes: new Set(), raw: 0, palette: 0, total: 0 };
       rows.set(key, draft);
     }
     draft.selectors.add(hit.selector);
@@ -217,6 +226,7 @@ export function summarizeHits(hits: readonly StyleHit[], lookup: TokenLookup | n
     const token = tokenOfHit(hit, lookup);
     if (token) draft.tokens.add(token);
     else draft.raw += 1;
+    if (token && hit.cls === token && isPaletteClass(token)) draft.palette += 1;
     draft.total += 1;
   }
   const order = (kind: StyleKind) => STYLE_KINDS.indexOf(kind);

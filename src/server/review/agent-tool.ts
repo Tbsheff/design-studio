@@ -11,6 +11,7 @@ export const reviewFrameShape = {
   frame: frameRef.optional().describe('Frame id or @label from canvas_list. Leave out for the live frame or the first frame.'),
   path: z.string().trim().max(300).optional().describe('Page path instead of the frame page.'),
   viewport: z.enum(['desktop', 'tablet', 'mobile']).optional().describe('Render size instead of the frame size.'),
+  selector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of one element. Only findings inside its subtree are returned.'),
 };
 
 const schema = z.object(reviewFrameShape).strict();
@@ -30,8 +31,8 @@ export async function runReviewFrameTool(deps: ReviewToolDeps, args: z.input<typ
   if (!previewUrl) return { content: [{ type: 'text', text: 'Preview is not running for this direction.' }], isError: true };
   try {
     const size = parsed.data.viewport ? VIEWPORTS[parsed.data.viewport] : null;
-    const input = { ...(parsed.data.frame ? { frame: parsed.data.frame } : {}), ...(parsed.data.path ? { path: parsed.data.path } : {}), ...(size ?? {}) };
-    const frame = deps.canvas ? await resolveReviewFrame(deps.canvas, project, direction, input) : { ...(input.path ? { path: input.path } : {}), width: size?.width ?? 1440, height: size?.height ?? 900 };
+    const input = { ...(parsed.data.frame ? { frame: parsed.data.frame } : {}), ...(parsed.data.path ? { path: parsed.data.path } : {}), ...(parsed.data.selector ? { selector: parsed.data.selector } : {}), ...(size ?? {}) };
+    const frame = deps.canvas ? await resolveReviewFrame(deps.canvas, project, direction, input) : { ...(input.path ? { path: input.path } : {}), ...(input.selector ? { selector: input.selector } : {}), width: size?.width ?? 1440, height: size?.height ?? 900 };
     const review = await runReview(deps.preview, { project, direction, frame, baseUrl: previewUrl });
     const findings = review.findings.map((f) => ({ kind: f.kind, severity: f.severity, element: f.element, selector: f.selector, source: f.source, message: f.message, ...(f.copies ? { copies: f.copies } : {}), directFix: f.fix ? { label: f.fix.label, style: f.fix.edit.style } : null }));
     const text = JSON.stringify({ frame: review.frame, counts: review.counts, findings, notes: [...review.notes, 'Fix findings with edit_element (directFix.style is the exact style) or with Edit for the ones that need judgment.'] }, null, 2);

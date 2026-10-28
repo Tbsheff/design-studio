@@ -72,6 +72,23 @@ export interface ShipDefaults {
   body: string;
 }
 
+export type ShipFormatTool = 'biome' | 'prettier';
+
+export interface ShipFormat {
+  tool: ShipFormatTool | null;
+  command: string | null;
+  skipped: string[];
+  note: string;
+}
+
+export interface ShipFormatResult {
+  tool: ShipFormatTool | null;
+  formatted: { path: string; diff: string }[];
+  errors: { path: string; message: string }[];
+  skipped: string[];
+  note: string;
+}
+
 export interface ShipPrepare {
   projectId: string;
   repo: ShipRepoInfo | null;
@@ -86,6 +103,7 @@ export interface ShipPrepare {
   defaults: ShipDefaults;
   vars: ShipTemplateVars;
   history: ShipRecord[];
+  format?: ShipFormat;
 }
 
 export interface ShipRequest {
@@ -109,6 +127,7 @@ export interface ShipResult {
   prUrl: string | null;
   prError: string | null;
   files: string[];
+  format?: ShipFormatResult;
 }
 
 export interface ShipTemplateVars {

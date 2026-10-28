@@ -100,6 +100,7 @@ function shownValue(row: Pick<StyleValueRow, 'kind' | 'value'>): string {
 
 function StateTag({ row }: { row: StyleValueRow }) {
   if (row.state === 'raw') return <span className="sm-tag raw" data-tip="Not a token. Replace it with one">raw</span>;
+  if (row.state === 'palette') return <span className="sm-tag mixed" data-tip={`Tailwind palette class ${row.tokens.join(', ')}, not a project token`}>{row.tokens[0] ?? 'palette'}</span>;
   const token = row.tokens[0] ?? '';
   const more = row.tokens.length > 1 ? ` +${row.tokens.length - 1}` : '';
   return (

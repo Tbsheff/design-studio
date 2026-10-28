@@ -4,6 +4,7 @@ import type { ProjectKind } from '../../shared/contracts.js';
 import { EXPORT_NOTE_HEADER, exportFileStem, type CopyCodeFormat, type CopyCodeResult, type ExportFormat, type ExportFrame, type ExportScale, type ExportScope } from '../../shared/export.js';
 import { zipFiles, type ZipEntry } from '../design-system/zip.js';
 import { captureFrame, type Shot } from '../export/capture.js';
+import { projectTailwindTheme, type TailwindTheme } from '../direct-edit/tailwind/theme.js';
 import { copyAsCode } from '../export/copy-code.js';
 import { listEditors, openInEditor, revealInFinder } from '../export/editors.js';
 import { buildHandoff, handoffRoot, zipHandoff } from '../export/handoff.js';
@@ -100,6 +101,12 @@ async function openForCopy(deps: ExportRouteDeps, pid: string, input: Record<str
   return (await resolveSource(deps, pid, text(input, 'versionId'))).open();
 }
 
+async function copyTheme(deps: ExportRouteDeps, pid: string, input: Record<string, unknown>): Promise<TailwindTheme | null> {
+  const project = await deps.projects.get(assertSafeId(pid, 'projectId'));
+  const direction = project.directions.find((d) => d.id === input.directionId) ?? project.directions[0];
+  return direction ? projectTailwindTheme(direction.workTree) : null;
+}
+
 export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
   const secrets = [deps.studioToken];
 
@@ -153,7 +160,8 @@ export function registerExportRoutes(app: Hono, deps: ExportRouteDeps): void {
     const frame = parseFrame(input.frame);
     const opened = await openForCopy(deps, c.req.param('pid'), input);
     try {
-      const result: CopyCodeResult = { code: await copyAsCode(deps.preview, opened.url, frame, selector, format), format };
+      const theme = format === 'tailwind' ? await copyTheme(deps, c.req.param('pid'), input) : null;
+      const result: CopyCodeResult = { code: await copyAsCode(deps.preview, opened.url, frame, selector, format, theme), format };
       return c.json(result);
     } finally {
       await opened.release().catch(() => undefined);

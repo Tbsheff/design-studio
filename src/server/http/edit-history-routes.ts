@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import type { Direction, EditSessionEnd, EditSessionState, Project, VersionMeta } from '../../shared/contracts.js';
+import { elementClassInfo } from '../direct-edit/class-info.js';
 import { htmlElementSpan } from '../direct-edit/html.js';
 import { DirectEditError, assertCanEdit, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
 import { jsxElementSpan } from '../direct-edit/jsx.js';
@@ -142,6 +143,20 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     });
     try {
       return c.json(await read);
+    } catch (error) {
+      if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
+  });
+
+  app.get('/api/projects/:pid/d/:did/classes', async (c) => {
+    const file = c.req.query('file') ?? '';
+    const line = Number(c.req.query('line'));
+    const col = Number(c.req.query('col'));
+    if (!Number.isInteger(line) || line < 1 || !Number.isInteger(col) || col < 1) throw new BadRequestError('line and col must be positive whole numbers');
+    try {
+      const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+      return c.json({ tailwind: await elementClassInfo(direction.workTree, project.kind, { file, line, col }) });
     } catch (error) {
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;

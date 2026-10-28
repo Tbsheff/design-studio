@@ -30,6 +30,13 @@ const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const styleValue = z.string().max(200).nullable();
 const style = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
+const classToken = z.string().min(1).max(160);
+const classes = z
+  .object({
+    add: z.array(classToken).max(40).optional().describe('Classes to add, with any variant prefix, for example ["p-6", "md:gap-8", "hover:bg-primary"]. A class replaces the class of the same utility and variant (p-6 replaces p-4; md:p-8 replaces md:p-6).'),
+    remove: z.array(classToken).max(40).optional().describe('Classes to remove, written exactly as in the source, for example ["shadow-sm"].'),
+  })
+  .strict();
 
 const schemas = {
   canvas_list: z.object({ projectId, directionId }).strict(),
@@ -63,13 +70,14 @@ const schemas = {
       directionId,
       path: pagePath,
       selector: selector.describe('CSS selector of one element on the page.'),
-      style: style.optional().describe('CSS properties to set. null removes the property.'),
+      style: style.optional().describe('CSS properties to set. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.'),
+      classes: classes.optional().describe('Tailwind classes to add or remove on the element, with the same code path as style edits.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
-    .refine((input) => (input.op === undefined ? input.text !== undefined || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined), 'pass style or text, or op alone')
+    .refine((input) => (input.op === undefined ? input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0 : input.text === undefined && input.style === undefined && input.classes === undefined), 'pass style, text or classes, or op alone')
     .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none'),
   add_comment: z
     .object({
@@ -136,7 +144,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
+  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -317,9 +325,11 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
-  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}) };
+  const classOps = input.classes && (input.classes.add?.length ?? 0) + (input.classes.remove?.length ?? 0) > 0 ? input.classes : undefined;
+  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(classOps ? { classes: classOps } : {}) };
   const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text), result.version) };
+  const tailwind = result.tailwind ? { classes: result.tailwind.classes, wrote: result.tailwind.mode, ...(result.tailwind.note ? { note: result.tailwind.note } : {}) } : {};
+  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied, ...tailwind }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, classOps), result.version) };
 }
 
 function frameTarget(): DesignComment['target'] {

@@ -1,5 +1,7 @@
 import { SOURCE_LOC_ATTR } from '../../shared/contracts.js';
 import type { CopyCodeFormat, ExportFrame } from '../../shared/export.js';
+import { tailwindClassesFor } from '../direct-edit/tailwind/copy.js';
+import { defaultTailwindTheme, type TailwindTheme } from '../direct-edit/tailwind/theme.js';
 import { BadRequestError } from '../store/errors.js';
 import type { PreviewService } from '../types.js';
 import { waitForPage } from './capture.js';
@@ -199,49 +201,11 @@ function renderHtml(root: StyledNode): string {
   return `<style>\n${rules.join('\n')}\n</style>\n${markup}\n`;
 }
 
-const TW_KEYWORDS: Record<string, Record<string, string>> = {
-  display: { flex: 'flex', block: 'block', 'inline-block': 'inline-block', inline: 'inline', grid: 'grid', 'inline-flex': 'inline-flex', none: 'hidden', contents: 'contents' },
-  position: { relative: 'relative', absolute: 'absolute', fixed: 'fixed', sticky: 'sticky' },
-  'flex-direction': { column: 'flex-col', row: 'flex-row', 'column-reverse': 'flex-col-reverse', 'row-reverse': 'flex-row-reverse' },
-  'flex-wrap': { wrap: 'flex-wrap', nowrap: 'flex-nowrap' },
-  'align-items': { center: 'items-center', 'flex-start': 'items-start', start: 'items-start', 'flex-end': 'items-end', end: 'items-end', baseline: 'items-baseline', stretch: 'items-stretch' },
-  'justify-content': { center: 'justify-center', 'flex-start': 'justify-start', start: 'justify-start', 'flex-end': 'justify-end', end: 'justify-end', 'space-between': 'justify-between', 'space-around': 'justify-around', 'space-evenly': 'justify-evenly' },
-  'text-align': { left: 'text-left', center: 'text-center', right: 'text-right', justify: 'text-justify', start: 'text-start', end: 'text-end' },
-  'font-style': { italic: 'italic', normal: 'not-italic' },
-  'text-transform': { uppercase: 'uppercase', lowercase: 'lowercase', capitalize: 'capitalize', none: 'normal-case' },
-  'box-sizing': { 'border-box': 'box-border', 'content-box': 'box-content' },
-  overflow: { hidden: 'overflow-hidden', auto: 'overflow-auto', scroll: 'overflow-scroll', visible: 'overflow-visible', clip: 'overflow-clip' },
-  'white-space': { nowrap: 'whitespace-nowrap', pre: 'whitespace-pre', 'pre-wrap': 'whitespace-pre-wrap', normal: 'whitespace-normal' },
-  'text-decoration-line': { underline: 'underline', 'line-through': 'line-through', none: 'no-underline' },
-  border: { none: 'border-0' },
-};
-
-const TW_PREFIX: Record<string, string> = {
-  padding: 'p', margin: 'm', 'padding-top': 'pt', 'padding-right': 'pr', 'padding-bottom': 'pb', 'padding-left': 'pl', 'margin-top': 'mt', 'margin-right': 'mr', 'margin-bottom': 'mb', 'margin-left': 'ml', gap: 'gap', 'row-gap': 'gap-y', 'column-gap': 'gap-x', width: 'w', height: 'h', 'min-width': 'min-w', 'max-width': 'max-w', 'min-height': 'min-h', 'max-height': 'max-h',
-  color: 'text', 'background-color': 'bg', 'font-size': 'text', 'font-weight': 'font', 'line-height': 'leading', 'letter-spacing': 'tracking', 'border-radius': 'rounded', opacity: 'opacity',
-  top: 'top', right: 'right', bottom: 'bottom', left: 'left', 'z-index': 'z', 'box-shadow': 'shadow', 'flex-grow': 'grow', 'flex-shrink': 'shrink', 'flex-basis': 'basis', order: 'order',
-  'grid-template-columns': 'grid-cols', 'grid-template-rows': 'grid-rows', 'font-family': 'font', 'aspect-ratio': 'aspect',
-};
-
-const TW_TYPE_HINT: Record<string, string> = { color: 'color:', 'background-color': 'color:', 'font-size': 'length:', 'font-family': 'family-name:' };
-
-function twValue(value: string): string {
-  return value.trim().replace(/_/g, '\\_').replace(/"/g, "'").replace(/\s+/g, '_');
-}
-
-function tailwindClass(prop: string, value: string): string {
-  const keyword = TW_KEYWORDS[prop]?.[value];
-  if (keyword) return keyword;
-  const prefix = TW_PREFIX[prop];
-  if (prefix) return `${prefix}-[${TW_TYPE_HINT[prop] ?? ''}${twValue(value)}]`;
-  return `[${prop}:${twValue(value)}]`;
-}
-
-function renderTailwind(root: StyledNode): string {
+function renderTailwind(root: StyledNode, theme: TailwindTheme): string {
   const open = (node: StyledNode, depth: number): string => {
     const pad = '  '.repeat(depth);
     if (node.raw) return `${pad}${node.raw}`;
-    const classes = compact(node.styles).filter(([prop, value]) => !(prop === 'box-sizing' && value === 'border-box')).map(([prop, value]) => tailwindClass(prop, value));
+    const classes = tailwindClassesFor(compact(node.styles).filter(([prop, value]) => !(prop === 'box-sizing' && value === 'border-box')), theme);
     const attrs = node.attrs.map(([name, value]) => ` ${name}="${escapeAttr(value)}"`).join('');
     const head = `<${node.tag}${classes.length > 0 ? ` class="${escapeAttr(classes.join(' '))}"` : ''}${attrs}>`;
     if (VOID.has(node.tag)) return `${pad}${head}`;
@@ -253,12 +217,12 @@ function renderTailwind(root: StyledNode): string {
   return `${open(root, 0)}\n`;
 }
 
-export async function copyAsCode(preview: PreviewService, url: string, frame: ExportFrame, selector: string, format: CopyCodeFormat): Promise<string> {
+export async function copyAsCode(preview: PreviewService, url: string, frame: ExportFrame, selector: string, format: CopyCodeFormat, theme: TailwindTheme | null = null): Promise<string> {
   if (!preview.withPage) throw new Error('this preview backend cannot read the page');
   const tree = await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height }, async (page) => {
     await waitForPage(page);
     return page.evaluate<StyledNode | null>(collectExpression(selector));
   });
   if (!tree) throw new BadRequestError('The selected element is not on this page');
-  return format === 'tailwind' ? renderTailwind(tree) : renderHtml(tree);
+  return format === 'tailwind' ? renderTailwind(tree, theme ?? (await defaultTailwindTheme())) : renderHtml(tree);
 }

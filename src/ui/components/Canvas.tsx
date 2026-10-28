@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
@@ -9,7 +9,7 @@ import { useLofiFrames } from '../lofiFrames';
 import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
 import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
 import { FrameMoreMenu, FramePageMenu, FrameResizeHandles, VariationControls, type FrameMenuItem, type FrameVariation } from './FrameControls';
-import { FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
+import { FrameLabel, FrameUndoBar, StablePassiveFrame, useResetPassiveGateInFirstRender, type PassiveEntry } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
@@ -239,29 +239,32 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
   active: CanvasFrame;
   passive: DirectionFrames;
   sandbox?: string;
-  labelProps: (frame: CanvasFrame, directionId: string | null) => ComponentProps<typeof FrameLabel>;
+  labelProps: ReturnType<typeof useFrameLabels>;
   register: (id: string, el: HTMLDivElement | null) => void;
 }) {
+  const entries = useRef(new Map<string, PassiveEntry>());
+  const live = entries.current;
+  live.clear();
   return frames
     .filter((f) => f.id !== active.id)
     .map((f) => {
       const slot = passive.slots.find((item) => item.id === f.id);
-      return (
-        <PassiveFrame
-          key={f.id}
-          frame={f}
-          src={slot?.src ?? null}
-          nextSrc={slot?.nextSrc ?? null}
-          sandbox={sandbox}
-          offset={active}
-          label={labelProps(f, slot?.directionId ?? null)}
-          register={register}
-          frameRef={(el) => {
-            if (slot) passive.elements.current[slot.token] = el;
-          }}
-          onNextLoad={passive.onSwapDone}
-        />
-      );
+      const did = slot?.directionId ?? null;
+      live.set(f.id, {
+        frame: f,
+        src: slot?.src ?? null,
+        nextSrc: slot?.nextSrc ?? null,
+        sandbox,
+        offset: active,
+        label: labelProps(f, did),
+        register,
+        frameRef: (el) => {
+          if (slot) passive.elements.current[slot.token] = el;
+        },
+        onNextLoad: passive.onSwapDone,
+      });
+      const sig = JSON.stringify([f, slot?.src ?? null, slot?.nextSrc ?? null, slot?.token ?? null, sandbox ?? null, active.x, active.y, labelProps.sig(f, did)]);
+      return <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />;
     });
 }
 
@@ -308,13 +311,37 @@ function frameMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null): 
   return [...extra, hide];
 }
 
+function frameLabelSig(o: LabelInput, frame: CanvasFrame, did: string | null): string {
+  const variation = did ? o.directions?.variationOf(did) : undefined;
+  const items = frameMenuItems(o, frame, did).map((item) => [item.id, item.label, item.icon, item.disabled ?? '']);
+  const v = variation ? [variation.label, variation.title, variation.status, variation.costText, variation.scoped, variation.error, variation.keepBlocked, variation.siblings] : null;
+  const named = did ? o.directions?.list.find((d) => d.id === did)?.name : undefined;
+  const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
+  return JSON.stringify([index, frame.id === o.activeId, o.frames.layout.frames.length > 1, did, did === o.directionId, named, o.directionName, o.kind, Boolean(o.appPages), v, items]);
+}
+
+function liveVariation(variation: FrameVariation, did: string, live: MutableRefObject<LabelInput>): FrameVariation {
+  const now = () => live.current.directions?.variationOf(did) ?? variation;
+  return { ...variation, onKeep: () => now().onKeep(), onMix: (to, element) => now().onMix(to, element) };
+}
+
+function liveMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null, live: MutableRefObject<LabelInput>): FrameMenuItem[] {
+  return frameMenuItems(o, frame, did).map((item) => ({ ...item, run: () => frameMenuItems(live.current, frame, did).find((cur) => cur.id === item.id)?.run() }));
+}
+
 function useFrameLabels(o: LabelInput) {
   const { projectId } = o;
+  const live = useRef(o);
+  live.current = o;
   const listPages = useCallback(
     (did: string) => () => api.workTreeFiles(projectId, did).then(({ files }) => files.filter((f) => f.endsWith('.html')).sort()),
     [projectId],
   );
-  return (frame: CanvasFrame, did: string | null) => {
+  const pagesFor = (did: string | null): (() => Promise<string[]>) | null => {
+    if (!o.appPages && !(o.kind === 'html' && did)) return null;
+    return () => (live.current.appPages ?? listPages(did as string))();
+  };
+  const label = (frame: CanvasFrame, did: string | null) => {
     const variation = did ? o.directions?.variationOf(did) : undefined;
     const isActive = frame.id === o.activeId;
     const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
@@ -327,13 +354,14 @@ function useFrameLabels(o: LabelInput) {
       badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
       extras: (
         <>
-          {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
-          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={o.appPages ?? (o.kind === 'html' && did ? listPages(did) : null)} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
-          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
+          {variation && did && <VariationControls variation={liveVariation(variation, did, live)} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => live.current.setSelection(() => [])} />}
+          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={pagesFor(did)} onPath={(path) => live.current.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={liveMenuItems(o, frame, did, live)} />
         </>
       ),
     };
   };
+  return Object.assign(label, { sig: (frame: CanvasFrame, did: string | null) => frameLabelSig(o, frame, did) });
 }
 
 function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking: boolean): T | null {
@@ -400,6 +428,7 @@ function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control
 export function Canvas(props: Props) {
   const { projectId, directionId, kind, source, headVersionId } = props;
   const ui = useUi();
+  useResetPassiveGateInFirstRender();
   const stageRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
   const canvasFrames = useCanvasFrames(projectId, directionId, activateOf(props.directions), knownIds(props.directions));

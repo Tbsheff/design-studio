@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
 import type { PackSummary, Project } from '../../shared/contracts';
-import { api } from '../api';
+import { api, warmProject } from '../api';
 import { findPack, keySwatches } from '../packs';
 import { filterProjects, gridColumns, nextGridIndex, sortProjects } from '../projectList';
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from '../storage';
@@ -15,6 +15,13 @@ const SORT_LABELS: Record<HomeSort, string> = { recent: 'Recent', name: 'Name', 
 const SORT_OPTIONS = HOME_SORTS.map((sort) => ({ value: sort, label: SORT_LABELS[sort] }));
 
 const thumbCache = new Map<string, Promise<string>>();
+
+
+function warmOpen(project: Project, withPreview: boolean): void {
+  void prefetchStudio();
+  const did = uiStore.get().directionByProject[project.id] ?? project.directions[0]?.id ?? null;
+  warmProject(project.id, withPreview ? did : null);
+}
 
 function useThumbnail(project: Project): string | null {
   const thumb = project.thumbnail ?? null;
@@ -171,7 +178,7 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
           </span>
         </div>
       ) : (
-        <button ref={openRef} type="button" className="project-open" tabIndex={active ? 0 : -1} onClick={() => actions.onOpen(project)} onPointerEnter={() => void prefetchStudio()} onFocus={() => { void prefetchStudio(); onFocusCard(); }} onKeyDown={onKeyDown}>
+        <button ref={openRef} type="button" className="project-open" tabIndex={active ? 0 : -1} onClick={() => actions.onOpen(project)} onPointerEnter={() => warmOpen(project, false)} onPointerDown={() => warmOpen(project, true)} onFocus={() => { warmOpen(project, false); onFocusCard(); }} onKeyDown={onKeyDown}>
           {preview}
           <span className="project-body">
             <span className="project-name" data-tip={project.name}>

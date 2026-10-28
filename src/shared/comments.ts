@@ -263,8 +263,10 @@ export function filterComments(comments: DesignComment[], status: CommentFilter 
   });
 }
 
-export function commentsDone(text: string): number[] {
-  const match = /Done:\s*((?:#\d+(?:\s*,\s*|\s+and\s+|\s*))+)/i.exec(text);
+export function commentsDone(text: string): number[] | null {
+  const line = /Done:([^\n]*)/i.exec(text);
+  if (!line) return null;
+  const match = /^\s*((?:#\d+(?:\s*,\s*|\s+and\s+|\s*))+)/.exec(line[1] ?? '');
   if (!match?.[1]) return [];
   return [...new Set([...match[1].matchAll(/#(\d+)/g)].map((m) => Number(m[1])))];
 }

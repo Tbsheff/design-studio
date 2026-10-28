@@ -383,6 +383,11 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
           <QueuedRow key={comment.id} comment={comment} index={index} total={queued.length} control={control} />
         ))}
       </Section>
+      <Section title="In chat" count={control.inChat.length}>
+        {control.inChat.map((comment, index) => (
+          <QueuedRow key={comment.id} comment={comment} index={index} total={control.inChat.length} control={control} />
+        ))}
+      </Section>
       {running && queued.length > 0 && <p className="comments-empty">The agent is running. Queued comments wait until it finishes.</p>}
       <Section title="Sent" count={sent.length}>
         {sent.map((comment) => (

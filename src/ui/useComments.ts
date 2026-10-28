@@ -24,6 +24,7 @@ export interface CommentsControl {
   running: boolean;
   comments: DesignComment[];
   queued: DesignComment[];
+  inChat: DesignComment[];
   notice: string | null;
   sending: boolean;
   openId: string | null;
@@ -122,6 +123,9 @@ export function useComments(projectId: string, directionId: string | null, compo
   const runningRef = useRef(running);
   runningRef.current = running;
   const afterRun = useRef(new Set<string>());
+  const [chatIds, setChatIds] = useState<string[]>([]);
+  const chatRef = useRef(chatIds);
+  chatRef.current = chatIds;
 
   useEffect(() => {
     setComments([]);
@@ -154,7 +158,7 @@ export function useComments(projectId: string, directionId: string | null, compo
 
   const send = useCallback(
     async (ids?: string[]) => {
-      const chosen = ids ? listRef.current.filter((comment) => ids.includes(comment.id)) : queuedOf(listRef.current);
+      const chosen = ids ? listRef.current.filter((comment) => ids.includes(comment.id)) : queuedOf(listRef.current).filter((comment) => !chatRef.current.includes(comment.id));
       if (chosen.length === 0) return;
       setSending(true);
       try {
@@ -348,7 +352,8 @@ export function useComments(projectId: string, directionId: string | null, compo
     }
   }, []);
 
-  const queued = useMemo(() => queuedOf(comments), [comments]);
+  const queued = useMemo(() => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)), [comments, chatIds]);
+  const inChat = useMemo(() => comments.filter((comment) => chatIds.includes(comment.id) && comment.status === 'queued'), [comments, chatIds]);
   const picks = usePicks(comments);
   const clearPicks = picks.clearPicked;
 
@@ -358,7 +363,10 @@ export function useComments(projectId: string, directionId: string | null, compo
       setPreparing(true);
       try {
         const prefill = await call<CommentPrefill>('POST', '/prefill', { ids });
-        if (prefill) prefillRef.current?.(prefill);
+        if (prefill) {
+          prefillRef.current?.(prefill);
+          setChatIds((prev) => [...new Set([...prev, ...prefill.commentIds])]);
+        }
         clearPicks();
         setNotice(null);
       } catch (err) {
@@ -376,6 +384,7 @@ export function useComments(projectId: string, directionId: string | null, compo
     running,
     comments,
     queued,
+    inChat,
     notice,
     sending,
     openId,

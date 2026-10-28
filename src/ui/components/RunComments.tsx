@@ -19,9 +19,9 @@ function replyText(run: RunView): string {
 
 type LinkState = 'done' | 'resolved' | 'open';
 
-function stateOf(comment: DesignComment, done: number[]): LinkState {
+function stateOf(comment: DesignComment, done: number[] | null): LinkState {
   if (comment.status === 'resolved') return 'resolved';
-  return done.includes(comment.n) ? 'done' : 'open';
+  return done?.includes(comment.n) ? 'done' : 'open';
 }
 
 const STATE_TIP: Record<LinkState, string> = { done: 'The agent says it did this', resolved: 'Resolved', open: 'Still open' };
@@ -37,9 +37,9 @@ function CommentLink({ comment, state, control }: { comment: DesignComment; stat
   );
 }
 
-function resolvable(linked: DesignComment[], done: number[]): DesignComment[] {
+function resolvable(linked: DesignComment[], done: number[] | null): DesignComment[] {
   const open = linked.filter((comment) => comment.status !== 'resolved' && comment.status !== 'sent');
-  return done.length > 0 ? open.filter((comment) => done.includes(comment.n)) : open;
+  return done === null ? open : open.filter((comment) => done.includes(comment.n));
 }
 
 export function RunCommentsCard({ run }: { run: RunView }) {

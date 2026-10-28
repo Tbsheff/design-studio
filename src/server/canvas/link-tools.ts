@@ -162,7 +162,9 @@ export async function addLink(ctx: CanvasToolContext, spec: LinkSpec, probe?: Li
     if (!selector) throw new LinkError('selector is empty or too long.');
     let hint: { tag?: string; text?: string } = {};
     if (probe) {
-      const [found] = await probe(from, [{ id: 'new', selector }]);
+      const [found] = await probe(from, [{ id: 'new', selector }]).catch((error: unknown) => {
+        throw new LinkError(`Could not render ${from.path || 'the entry page'} to check the selector: ${error instanceof Error ? error.message : String(error)}`);
+      });
       if (!found) throw new LinkError(`No element matches ${selector} on ${from.path || 'the entry page'} of ${from.id}. Check the selector with get_frame_html.`);
       const label = cleanLinkText(found.text);
       hint = { tag: found.tag, ...(label ? { text: label } : {}) };

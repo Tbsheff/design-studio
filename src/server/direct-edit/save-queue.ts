@@ -56,8 +56,12 @@ export async function savesSettled(projectId?: string): Promise<void> {
   await Promise.all(tails);
 }
 
+const FAIL_TEXT_MAX = 200;
+
 function failText(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+  const text = error instanceof Error ? error.message : String(error);
+  const line = text.split('\n').find((part) => part.trim().length > 0) ?? text;
+  return line.length > FAIL_TEXT_MAX ? `${line.slice(0, FAIL_TEXT_MAX - 1)}…` : line;
 }
 
 export function saveLater(deps: SaveDeps, project: Project, direction: Direction, relatives: string[], title: string, meta: VersionMeta): Version {

@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { elementVariantsIntent } from '../../shared/element-variants';
 import { MentionChips, MentionList } from './MentionPicker';
@@ -32,6 +32,8 @@ import { IS_MAC } from '../commands/keys';
 import { shortcutLabel } from '../../shared/keymap';
 import { useCommentPrefill, type PrefillRequest } from '../useCommentPrefill';
 import { ComposerComments } from './ComposerComments';
+
+const RepoContextChip = lazy(() => import('./RepoContextChip'));
 
 interface Props {
   projectId: string;
@@ -425,6 +427,9 @@ export function PromptBox(props: Props) {
         onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
       >
         <RunContextChip chip={props.canvasChip} />
+        <Suspense fallback={null}>
+          <RepoContextChip projectId={props.projectId} directionId={props.directionId} />
+        </Suspense>
         <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
         <ComposerComments count={prefill.linked.length} onClear={prefill.clear} />
         <AttachmentThumbs files={files} onRemove={removeFile} />

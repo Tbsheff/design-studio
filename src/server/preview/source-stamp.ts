@@ -56,6 +56,17 @@ export class SourceStamps {
     this.owners.sort((a, b) => b.prefix.length - a.prefix.length);
   }
 
+  forget(url: string): void {
+    for (let index = this.owners.length - 1; index >= 0; index -= 1) {
+      const owner = this.owners[index];
+      if (owner && !owner.app && url.startsWith(owner.prefix)) this.owners.splice(index, 1);
+    }
+  }
+
+  forgetKey(key: string): void {
+    for (let index = this.owners.length - 1; index >= 0; index -= 1) if (this.owners[index]?.key === key) this.owners.splice(index, 1);
+  }
+
   bump(key: string): void {
     this.generations.set(key, (this.generations.get(key) ?? 0) + 1);
   }

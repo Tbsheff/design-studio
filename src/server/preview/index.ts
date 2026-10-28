@@ -219,12 +219,14 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       return `${projectPreviewOrigin(project.id, config.previewPort)}/s/${encodeURIComponent(project.id)}/${encodeURIComponent(versionId)}/${encodeEntry(project.entry || 'index.html')}`;
     }
     await linkNodeModules(project, snapshotDir);
-    return viteUrl({
+    const url = await viteUrl({
       key: `s:${project.id}:${versionId}`,
       root: snapshotDir,
       cacheDir: path.join(projects.projectDir(project.id), 'vite-cache', `snapshot-${versionId}`),
       projectId: project.id,
     });
+    stamps.forget(url);
+    return url;
   };
 
   const snapshotShot = async (project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }> => {
@@ -266,6 +268,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     unwatch: (directionId) => watchers.unwatch(directionId),
     release: async (project, direction) => {
       watchers.unwatchOf(project.id, direction.id);
+      stamps.forgetKey(`${project.id}:${direction.id}`);
       appCache.delete(project.id);
       if (project.app) await apps.stop(project.id);
       await vite.loaded()?.then((manager) => manager.stopOne(`d:${project.id}:${direction.id}`));

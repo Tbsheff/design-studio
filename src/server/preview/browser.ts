@@ -285,6 +285,7 @@ export class BrowserPool {
   }
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
+    await renderSettled();
     const key = tileKey(url, request);
     const ext = request.format === 'jpeg' ? '.jpg' : '.png';
     const stamp = request.fresh ? null : await this.stampFor(url);
@@ -340,6 +341,7 @@ export class BrowserPool {
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
+    await renderSettled();
     const started = Date.now();
     const key = checkKey(url, spec, options);
     const stamp = options.fresh ? null : await this.stampFor(url);

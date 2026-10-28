@@ -12,6 +12,7 @@ interface IdlePage {
 }
 
 const MAX_IDLE = 12;
+const MAX_ACTIVE = { playwright: 6, electron: 3 } as const;
 const IDLE_CLOSE_MS = 10 * 60_000;
 
 function sizeKey(size: PageSize): string {
@@ -22,11 +23,28 @@ export class WarmPages {
   private readonly idle = new Map<string, IdlePage[]>();
   private count = 0;
   private closed = false;
+  private active = 0;
+  private readonly queue: (() => void)[] = [];
 
   constructor(private readonly backend: () => Promise<RenderBackend>) {}
 
   async lease<T>(size: PageSize, task: (page: RenderPage) => Promise<T>): Promise<T> {
     const backend = await this.backend();
+    await this.slot(MAX_ACTIVE[backend.name]);
+    try {
+      return await this.run(backend, size, task);
+    } finally {
+      this.active -= 1;
+      this.queue.shift()?.();
+    }
+  }
+
+  private async slot(limit: number): Promise<void> {
+    while (this.active >= limit) await new Promise<void>((resolve) => this.queue.push(resolve));
+    this.active += 1;
+  }
+
+  private async run<T>(backend: RenderBackend, size: PageSize, task: (page: RenderPage) => Promise<T>): Promise<T> {
     const key = sizeKey(size);
     const page = this.take(key) ?? (await backend.open(size));
     let healthy = false;

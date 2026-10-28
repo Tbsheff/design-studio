@@ -119,6 +119,7 @@ function viewportView(result: RenderCheckResult) {
     layout: result.layout,
     layoutTotal: result.layoutTotal,
     timingsMs: result.timingsMs,
+    ...(result.cached ? { cached: true } : {}),
   };
 }
 

@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { DIRECT_STYLE_PROPERTIES, type DesignComment, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type Version } from '../../shared/contracts.js';
+import { DIRECT_STYLE_PROPERTIES, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { evaluateToolUse } from '../agent/permissions.js';
@@ -88,6 +88,15 @@ const schemas = {
     .strict(),
   restore_version: z.object({ projectId, directionId, versionId: id('Version id from list_versions.') }).strict(),
   apply_design_system: z.object({ projectId, directionId, packId: packId.describe('Design system (pack) id.') }).strict(),
+  set_token: z
+    .object({
+      projectId,
+      directionId,
+      name: z.string().trim().min(3).max(120).describe('Token CSS variable from get_tokens, for example "--primary", or its path, for example "color.primary".'),
+      value: z.string().trim().min(1).max(400).describe('New value, for example "#015A5D" or "var(--color-brand-teal-500)".'),
+      theme: z.enum(['light', 'dark']).default('light').describe('light changes the main declaration. dark changes (or adds) the dark declaration. Default light.'),
+    })
+    .strict(),
   export: z
     .object({
       projectId,
@@ -131,6 +140,7 @@ const META: Record<Name, Meta> = {
   create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
+  set_token: { title: 'Set token', description: 'Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.' },
   export: { title: 'Export', description: 'Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder ~/Downloads. A folder outside Downloads and the projects folder waits for the user to approve it in Design Studio.' },
 };
 
@@ -340,6 +350,26 @@ async function applyDesignSystem(deps: EditDeps, input: Input<'apply_design_syst
   return { result: output, activity: versionActivity(project, direction, `Applied ${oneLine(pack.name, 60)}`, result.version) };
 }
 
+function tokenReadback(entry: CompiledTokenEntry, theme: 'light' | 'dark') {
+  const source = entry.source;
+  if (theme === 'dark') return { value: source ? source.darkValue : entry.darkValue, resolved: entry.darkValue, file: source?.file ?? TOKENS_FILE, line: source?.darkLine ?? null };
+  return { value: source ? source.value : entry.value, resolved: entry.value, file: source?.file ?? TOKENS_FILE, line: source?.line ?? null };
+}
+
+async function setToken(deps: EditDeps, input: Input<'set_token'>): Promise<Done> {
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  refuseWhileRunning(deps, project, direction);
+  const url = `${base(project, direction.id)}/design-system`;
+  const state = await studioCall<DesignSystemState>(deps, 'GET', url);
+  const entry = state.entries.find((item) => item.cssVar === input.name || item.path === input.name);
+  if (!entry) throw new EditError(state.entries.length === 0 ? 'This direction has no tokens. Use get_tokens to check.' : `No token ${input.name}. Use get_tokens for the names.`);
+  const change = input.theme === 'dark' ? { path: entry.path, darkValue: input.value } : { path: entry.path, value: input.value };
+  const result = await studioCall<UpdateTokensResult>(deps, 'POST', `${url}/tokens/update`, { changes: [change] });
+  const after = result.state.entries.find((item) => item.path === entry.path) ?? entry;
+  const output = ok({ token: entry.cssVar, theme: input.theme, ...tokenReadback(after, input.theme), versionId: result.version.id, changedFiles: result.version.changedFiles });
+  return { result: output, activity: versionActivity(project, direction, `Set ${entry.cssVar}${input.theme === 'dark' ? ' (dark)' : ''} to ${oneLine(input.value, 60)}`, result.version) };
+}
+
 async function exportFiles(deps: EditDeps, input: Input<'export'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   const versionId = input.versionId ?? direction.headVersionId;
@@ -394,6 +424,8 @@ async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, cl
       return restoreVersion(deps, parse('restore_version', args));
     case 'apply_design_system':
       return applyDesignSystem(deps, parse('apply_design_system', args));
+    case 'set_token':
+      return setToken(deps, parse('set_token', args));
     case 'export':
       return exportFiles(deps, parse('export', args), client);
   }

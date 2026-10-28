@@ -4,6 +4,8 @@ import { SOURCE_LOC_ATTR, type Project } from '../../shared/contracts.js';
 import { cleanExportPath, type ExportFrame } from '../../shared/export.js';
 import { DESIGN_MD_FILE } from '../design-system/packs.js';
 import { readDesignSystemFiles } from '../design-system/sync.js';
+import { findTokenFile } from '../design-system/app-tokens/detect.js';
+import { readAppTokensAt, usesAppTokens } from '../design-system/app-tokens/source.js';
 import { captureFrame, waitForPage } from '../export/capture.js';
 import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
 import { canvasOwner, readCanvasAt } from '../canvas/service.js';
@@ -50,7 +52,7 @@ export const TOOLS: ToolDef[] = [
   def('list_projects', 'List projects', 'List the design projects in Design Studio with their directions and newest version ids.', {}),
   def('list_versions', 'List versions', 'List the saved versions of one direction, newest first.', { projectId: PROJECT, directionId: DIRECTION }, ['projectId']),
   def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
-  def('get_tokens', 'Get design tokens', 'Get the design tokens of the active design system: tokens.css and a list of tokens with their CSS variables and values.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
+  def('get_tokens', 'Get design tokens', 'Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('get_design_md', 'Get DESIGN.md', 'Get the DESIGN.md rules of the project.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the size and the direction).', {
     projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE,
@@ -166,10 +168,33 @@ async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
   }
 }
 
+async function appTokens(src: ExportSource): Promise<ToolResult | null> {
+  if (!usesAppTokens(src.project)) return null;
+  const file = await findTokenFile(src.direction.workTree);
+  const loaded = file ? await readAppTokensAt(src.root, file) : null;
+  if (!loaded) return null;
+  return json({
+    source: { ...loaded.summary, versionId: src.version.id },
+    tokens: loaded.entries.map((e) => ({
+      token: e.cssVar,
+      path: e.path,
+      group: e.path.split('.')[0],
+      type: e.type,
+      value: e.source?.value ?? e.value,
+      resolved: e.value,
+      dark: e.source?.darkValue ?? null,
+      darkResolved: e.darkValue,
+      file: e.source?.file,
+      line: e.source?.line,
+      darkLine: e.source?.darkLine ?? null,
+    })),
+  });
+}
+
 async function tokens(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
-  const files = await readDesignSystemFiles(await src.files());
-  if (!files) return text('This version has no design system.');
+  const files = await readDesignSystemFiles(src.root);
+  if (!files) return (await appTokens(src)) ?? text('This version has no design system and no app token file.');
   return json({
     pack: files.manifest ? { id: files.manifest.id, name: files.manifest.name, mode: files.manifest.mode, fonts: files.manifest.fonts } : null,
     tokens: files.entries.map((e) => ({ token: e.path, cssVar: e.cssVar, type: e.type, value: e.value, dark: e.darkValue, ...(e.description ? { description: e.description } : {}) })),

@@ -22,7 +22,7 @@ function entryFor(entries: CompiledTokenEntry[], cssVar: string | undefined): Co
   return entries.find((entry) => entry.cssVar === cssVar);
 }
 
-function RawMenu({ state, onSnap, onCreate }: { state: Extract<TokenFieldState, { kind: 'raw' }>; onSnap: () => void; onCreate: () => void }) {
+function RawMenu({ state, onSnap, onCreate }: { state: Extract<TokenFieldState, { kind: 'raw' }>; onSnap: () => void; onCreate: (() => void) | null }) {
   const list = useRef<HTMLDivElement>(null);
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
@@ -44,10 +44,12 @@ function RawMenu({ state, onSnap, onCreate }: { state: Extract<TokenFieldState, 
           </span>
         </button>
       )}
-      <button type="button" role="menuitem" className="tk-item" onClick={onCreate}>
-        <Icon name="plus" size={16} />
-        <span>Create token…</span>
-      </button>
+      {onCreate && (
+        <button type="button" role="menuitem" className="tk-item" onClick={onCreate}>
+          <Icon name="plus" size={16} />
+          <span>Create token…</span>
+        </button>
+      )}
     </div>
   );
 }
@@ -109,10 +111,13 @@ function Control({ prop, label, edit, targets, variant = 'field', ui }: ControlP
   const current = state.kind === 'token' ? state.match.cssVar : null;
   const nearest = state.kind === 'raw' ? (state.nearest?.cssVar ?? null) : null;
   const near = state.kind === 'raw' && state.snap ? 'near' : '';
-  const create = () => {
-    pop.close(false);
-    ui.requestCreate({ prop, value, targets: props });
-  };
+  const request = ui.requestCreate;
+  const create = request
+    ? () => {
+        pop.close(false);
+        request({ prop, value, targets: props });
+      }
+    : null;
 
   return (
     <span className={`tk-control ${variant} ${state.kind} ${near}`} ref={pop.trigger}>

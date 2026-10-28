@@ -126,6 +126,26 @@ function saveReason(check: DesignSystemCheckResult | null, reading: boolean, run
   return `Save is off: the check found ${count} problem${count === 1 ? '' : 's'}. Improve with AI fixes them.`;
 }
 
+const KEY_TOKENS = ['color.bg', 'color.fg', 'color.primary', 'font.body'];
+
+function guessedKeys(coverage: DesignSystemCoverage): string[] | null {
+  if (!coverage.tokens.some((entry) => entry.source === 'folder' || entry.source === 'tokens-file')) return null;
+  return KEY_TOKENS.filter((token) => coverage.tokens.find((entry) => entry.token === token)?.verified !== true);
+}
+
+function Guessed({ coverage }: { coverage: DesignSystemCoverage }) {
+  const keys = guessedKeys(coverage);
+  if (keys === null) return null;
+  if (keys.length === 0) return <span className="draft-fallbacks">Key tokens checked</span>;
+  const names = keys.map(cssVarOf).join(', ');
+  return (
+    <span className="draft-fallbacks" data-tip={`Not found under their usual names in the source, so these are guesses: ${names}`} data-tip-align="start">
+      {keys.length} guessed
+      <span className="sr-only">: {names}</span>
+    </span>
+  );
+}
+
 function DraftSummary({ name, coverage, check, run, error }: { name: string; coverage: DesignSystemCoverage | null; check: DesignSystemCheckResult | null; run: RunView | null; error: string | null }) {
   return (
     <div className="draft-main">
@@ -136,6 +156,7 @@ function DraftSummary({ name, coverage, check, run, error }: { name: string; cov
         </span>
       )}
       {coverage && <Fallbacks tokens={coverage.fallbacks} />}
+      {coverage && <Guessed coverage={coverage} />}
       <CheckStatus check={check} run={run} />
       {error && <span className="draft-fallbacks">Could not load coverage. {error}</span>}
     </div>

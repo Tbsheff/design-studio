@@ -64,7 +64,7 @@ export function updateCoverage(coverage: DesignSystemCoverage, tokens: unknown, 
     return { token: entry.token, source: 'agent', confidence: 'medium', evidence: AGENT_EVIDENCE };
   });
   const score = scoreOf(entries);
-  return { ...coverage, score, grade: gradeOf(score), tokens: entries, fallbacks: entries.filter((entry) => entry.confidence === 'fallback').map((entry) => entry.token) };
+  return { ...coverage, score, grade: gradeOf(score, entries), tokens: entries, fallbacks: entries.filter((entry) => entry.confidence === 'fallback').map((entry) => entry.token) };
 }
 
 export async function refreshDraftCoverage(workTree: string, registry: PackRegistry): Promise<DesignSystemCoverage | null> {

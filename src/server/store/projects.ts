@@ -13,6 +13,7 @@ import { MAX_SLUG_SUFFIX, slugCandidate, slugify } from '../../shared/folders.js
 import { createKeyedMutex } from './mutex.js';
 import { packagedResource, resourcePath } from '../resources.js';
 import { DESIGN_MD_FILE, writeFileAtomic } from '../design-system/packs.js';
+import { findTokenFile } from '../design-system/app-tokens/detect.js';
 
 const MAIN_DIRECTION_ID = 'main';
 const DEFAULT_TEMPLATE_DIR = resourcePath(
@@ -400,7 +401,8 @@ export function createProjectStore(
       const packageFile = path.join(folder, 'package.json');
       const hasPackage = existsSync(packageFile);
       const isVite = hasPackage && hasViteDependency(await readJson(packageFile).catch(() => null));
-      if (!isVite && !existsSync(path.join(folder, 'index.html'))) {
+      const appWithTokens = hasPackage && !isVite && (await findTokenFile(folder)) !== null;
+      if (!isVite && !appWithTokens && !existsSync(path.join(folder, 'index.html'))) {
         throw new BadRequestError('folder needs a package.json with a vite dependency or an index.html');
       }
       return registerFolder(folder, { name: path.basename(folder), kind: isVite ? 'react' : 'html', created: false });

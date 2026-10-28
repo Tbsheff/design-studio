@@ -19,7 +19,10 @@ import { invalidateTokenSource } from './token-preview.js';
 const TITLE_NAMES = 4;
 
 export function updateTitle(changes: TokenChange[]): string {
-  const names = changeVarNames(changes);
+  return tokensTitle(changeVarNames(changes));
+}
+
+export function tokensTitle(names: string[]): string {
   const shown = names.slice(0, TITLE_NAMES).join(', ');
   const more = names.length > TITLE_NAMES ? ` +${names.length - TITLE_NAMES} more` : '';
   return `Update tokens: ${shown}${more}`;

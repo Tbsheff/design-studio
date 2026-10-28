@@ -16,6 +16,7 @@ import { seedFromUserRepo } from './version-seed.js';
 import { createChangeTracker } from './version-tracker.js';
 import { ObjectStore, gitIdent, type CommitInfo } from './git-objects.js';
 import { createDirectStore } from './version-direct.js';
+import { createWarmQueue } from './version-warm.js';
 import { FastPathUnavailable, diffTrees } from './version-fast.js';
 
 export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.next/', '.turbo/', '.studio/*', `!${CANVAS_FILE}`, `!${LINKS_FILE}`, '.DS_Store'];
@@ -375,9 +376,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
   const fullStage = async (project: Project, direction: Direction, firstOfApp = false): Promise<void> => {
     const key = lockKey(project, direction);
-    if (project.app) tracker.beginFullScan(key, rootOf(direction));
+    const scan = project.app ? tracker.beginFullScan(key, rootOf(direction)) : null;
     await stageAll(directionScope(project, direction), firstOfApp);
-    if (project.app) tracker.endFullScan(key);
+    if (project.app) tracker.endFullScan(key, scan);
   };
 
   const scopedPaths = (scope: GitScope, paths: string[]): string[] => {
@@ -599,13 +600,15 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     });
   };
 
+  const staleMarkerOf = (project: Project, direction: Direction): string => path.join(gitDirOf(project), `index-${assertSafeId(direction.id, 'directionId')}.stale`);
+
   const direct = createDirectStore({
     objects: objectsOf,
     headOf,
     treeOf,
     keyOf: lockKey,
     neverTracked: (project) => (project.app ? APP_NEVER_TRACKED : NEVER_TRACKED),
-    staleMarkerOf: (project, direction) => path.join(gitDirOf(project), `index-${assertSafeId(direction.id, 'directionId')}.stale`),
+    staleMarkerOf,
     changedSinceScan: (project, direction) => tracker.changedSinceScan(lockKey(project, direction), rootOf(direction)),
     ignored: async (project, direction, paths) => {
       const { stdout } = await runGit(directionScope(project, direction), ['check-ignore', '--no-index', '-z', '--stdin'], { input: `${paths.join('\0')}\0`, okCodes: [1] });
@@ -705,22 +708,71 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
   };
 
+  const startScanAside = (project: Project, direction: Direction, indexFile: string): Promise<{ head: string; scan: number; base: string } | null> =>
+    locked(project, direction, async () => {
+      const head = await headOf(project, direction);
+      if (head === null || direct.has(project, direction)) return null;
+      const scan = tracker.beginFullScan(lockKey(project, direction), rootOf(direction));
+      if (scan === null) return null;
+      const live = directionScope(project, direction).indexFile as string;
+      const stale = (await readFile(staleMarkerOf(project, direction), 'utf8').catch(() => '')).trim();
+      const copied = existsSync(live) && (await copyFile(live, indexFile, fsConstants.COPYFILE_FICLONE).then(() => true));
+      return { head, scan, base: copied ? stale : head };
+    });
+
+  const scanAside = async (project: Project, direction: Direction): Promise<void> => {
+    const indexFile = path.join(gitDirOf(project), `index-scan-${randomBytes(6).toString('hex')}`);
+    try {
+      const start = await startScanAside(project, direction, indexFile);
+      if (!start) return;
+      const scope: GitScope = { ...directionScope(project, direction), indexFile };
+      if (start.base !== '') await runGit(scope, ['read-tree', '--reset', start.base]);
+      await stageAll(scope);
+      const changed = splitNul((await runGit(scope, ['diff-index', '--cached', '--name-only', '-z', start.head])).stdout);
+      await locked(project, direction, async () => {
+        const head = await headOf(project, direction);
+        if (head === null || direct.has(project, direction) || !tracker.endFullScan(lockKey(project, direction), start.scan)) return;
+        await direct.adopt(project, direction, start.head, head, changed);
+      });
+    } finally {
+      await rm(indexFile, { force: true });
+    }
+  };
+
+  const warm = createWarmQueue(lockKey, scanAside);
+
+  const prepareRepo = async (project: Project): Promise<void> => {
+    const gitDir = gitDirOf(project);
+    if (!existsSync(path.join(gitDir, 'HEAD'))) {
+      await mkdir(gitDir, { recursive: true });
+      await runGit(repoScope(project), ['init', '-q', '--bare', gitDir], { cwd: gitDir });
+      const scope = repoScope(project);
+      await runGit(scope, ['config', 'core.bare', 'false']);
+      await runGit(scope, ['config', 'core.autocrlf', 'false']);
+      await runGit(scope, ['config', 'core.quotepath', 'false']);
+      await runGit(scope, ['config', 'gc.auto', '0']);
+    }
+    await runGit(repoScope(project), ['config', 'core.untrackedCache', 'true']);
+    await sweepLocks(project);
+    if (project.app) await seedIndex(project);
+    await writeExclude(project);
+  };
+
+  const isEnvFile = (relative: string): boolean => {
+    const name = path.posix.basename(relative);
+    return (name === '.env' || name.startsWith('.env.')) && name !== '.env.example';
+  };
+
+  const discardDirect = (project: Project, direction: Direction, tree: string | null): Promise<WorkTreeStatus | null> => {
+    if (!project.app || tree === null) return Promise.resolve(null);
+    return direct.discard(project, direction, tree, (paths) => moveToTrash(project, direction.workTree, paths.filter((relative) => !isEnvFile(relative))));
+  };
+
   return {
     async ensureRepo(project: Project): Promise<void> {
-      const gitDir = gitDirOf(project);
-      if (!existsSync(path.join(gitDir, 'HEAD'))) {
-        await mkdir(gitDir, { recursive: true });
-        await runGit(repoScope(project), ['init', '-q', '--bare', gitDir], { cwd: gitDir });
-        const scope = repoScope(project);
-        await runGit(scope, ['config', 'core.bare', 'false']);
-        await runGit(scope, ['config', 'core.autocrlf', 'false']);
-        await runGit(scope, ['config', 'core.quotepath', 'false']);
-        await runGit(scope, ['config', 'gc.auto', '0']);
-      }
-      await runGit(repoScope(project), ['config', 'core.untrackedCache', 'true']);
-      await sweepLocks(project);
-      if (project.app) await seedIndex(project);
-      await writeExclude(project);
+      const prepared = prepareRepo(project);
+      if (project.app) for (const direction of project.directions) warm.add(project, direction, prepared);
+      await prepared;
     },
 
     commitFile(project: Project, direction: Direction, relative: string | string[], title: string, meta: VersionMeta): Promise<Version | null> {
@@ -766,7 +818,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return untrackedCounts.get(project.id) ?? null;
     },
 
-    status(project: Project, direction: Direction, paths?: string[]): Promise<WorkTreeStatus> {
+    async status(project: Project, direction: Direction, paths?: string[]): Promise<WorkTreeStatus> {
+      await warm.settled(project, direction);
       return locked(project, direction, () => statusOf(project, direction, paths));
     },
 
@@ -780,10 +833,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       }
     },
 
-    discard(project: Project, direction: Direction): Promise<WorkTreeStatus> {
+    async discard(project: Project, direction: Direction): Promise<WorkTreeStatus> {
+      await warm.settled(project, direction);
       return locked(project, direction, async () => {
         const head = await headOf(project, direction);
         const tree = head === null ? null : await treeOf(project, head);
+        const fast = await discardDirect(project, direction, tree);
+        if (fast) return fast;
         const kept = await Promise.all(layoutFilesOf(project).map(async (file) => ({ target: layoutOf(direction, file), bytes: await readFile(layoutOf(direction, file)).catch(() => null) })));
         await resetWorkTree(project, direction, tree, tree, 'trash');
         for (const { target, bytes } of kept) {
@@ -795,7 +851,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       });
     },
 
-    restore(project: Project, direction: Direction, versionId: string, kind: 'undo' | 'restore'): Promise<Version> {
+    async restore(project: Project, direction: Direction, versionId: string, kind: 'undo' | 'restore'): Promise<Version> {
+      await warm.settled(project, direction);
       return locked(project, direction, async () => {
         const head = await headOf(project, direction);
         if (head === null) throw new BadRequestError(kind === 'undo' ? 'nothing to undo' : 'direction has no versions');

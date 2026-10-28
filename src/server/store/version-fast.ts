@@ -163,3 +163,19 @@ export async function writeWorkFile(store: ObjectStore, workTree: string, change
   if (change.entry.mode === SYMLINK_MODE) await symlink(body.toString('utf8'), absolute);
   else await writeFile(absolute, body, { mode: change.entry.mode === '100755' ? 0o755 : 0o644 });
 }
+
+export async function filesUnder(workTree: string, relative: string, limit: number): Promise<string[] | null> {
+  const files: string[] = [];
+  const folders = [relative];
+  while (folders.length > 0) {
+    const folder = folders.pop() as string;
+    const entries = await readdir(path.join(workTree, folder), { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const child = `${folder}/${entry.name}`;
+      if (entry.isDirectory()) folders.push(child);
+      else files.push(child);
+      if (files.length + folders.length > limit) return null;
+    }
+  }
+  return files;
+}

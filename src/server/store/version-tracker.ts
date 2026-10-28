@@ -14,12 +14,13 @@ interface Tracked {
   paths: Set<string>;
   synced: boolean;
   overflow: boolean;
+  generation: number;
   cookies: Map<string, () => void>;
 }
 
 export interface ChangeTracker {
-  beginFullScan(key: string, root: string): void;
-  endFullScan(key: string): void;
+  beginFullScan(key: string, root: string): number | null;
+  endFullScan(key: string, generation: number | null): boolean;
   changedSinceScan(key: string, root: string): Promise<string[] | null>;
   note(key: string, paths: string[]): void;
   forget(key: string): void;
@@ -61,6 +62,7 @@ async function flush(entry: Tracked): Promise<boolean> {
 
 export function createChangeTracker(maxPaths: number): ChangeTracker {
   const tracked = new Map<string, Tracked>();
+  let scans = 0;
 
   const forget = (key: string): void => {
     const entry = tracked.get(key);
@@ -92,7 +94,7 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
     if (!RECURSIVE_WATCH) return null;
     try {
       const watcher = watch(root, { recursive: true, persistent: false });
-      const entry: Tracked = { root, watcher, paths: new Set(), synced: false, overflow: false, cookies: new Map() };
+      const entry: Tracked = { root, watcher, paths: new Set(), synced: false, overflow: false, generation: 0, cookies: new Map() };
       watcher.on('change', (_event, filename) => onEvent(entry, filename));
       watcher.on('error', () => {
         if (tracked.get(key) === entry) forget(key);
@@ -107,15 +109,20 @@ export function createChangeTracker(maxPaths: number): ChangeTracker {
   return {
     beginFullScan(key, root) {
       const entry = start(key, root);
-      if (!entry) return;
+      if (!entry) return null;
       entry.paths.clear();
       entry.overflow = false;
       entry.synced = false;
+      scans += 1;
+      entry.generation = scans;
+      return scans;
     },
 
-    endFullScan(key) {
+    endFullScan(key, generation) {
       const entry = tracked.get(key);
-      if (entry) entry.synced = true;
+      if (!entry || generation === null || entry.generation !== generation) return false;
+      entry.synced = true;
+      return true;
     },
 
     async changedSinceScan(key, root) {

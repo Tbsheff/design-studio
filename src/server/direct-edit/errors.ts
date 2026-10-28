@@ -61,12 +61,13 @@ export interface SourceEdit {
   name?: string | null;
   move?: 'up' | 'down';
   insert?: 'text' | 'frame' | 'rect' | 'ellipse';
+  classes?: { add?: string[]; remove?: string[] };
 }
 
 export interface PatchResult {
   code: string;
   tag: string;
-  applied: { style: string[]; text: boolean };
+  applied: { style: string[]; text: boolean; classes?: boolean };
   title?: string;
   moved?: SourcePosition;
 }

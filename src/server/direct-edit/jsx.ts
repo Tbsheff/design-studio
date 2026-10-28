@@ -4,6 +4,7 @@ import type * as t from '@babel/types';
 import MagicString from 'magic-string';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
+import { hasClassChange, nextClassList } from './classes.js';
 import { leadingWhitespaceStart } from './splice.js';
 import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
 
@@ -281,6 +282,34 @@ function patchName(magic: MagicString, source: string, element: t.JSXElement, na
   magic.overwrite(startOf(literal), endOf(literal), `${quote}${name}${quote}`);
 }
 
+const CLASS_ATTRS = new Set(['className', 'class']);
+
+function classAttribute(element: t.JSXElement): t.JSXAttribute | null {
+  for (const attribute of element.openingElement.attributes) {
+    if (attribute.type === 'JSXAttribute' && attribute.name.type === 'JSXIdentifier' && CLASS_ATTRS.has(attribute.name.name)) return attribute;
+  }
+  return null;
+}
+
+function patchClasses(magic: MagicString, source: string, element: t.JSXElement, change: NonNullable<SourceEdit['classes']>): void {
+  const attribute = classAttribute(element);
+  if (!attribute) {
+    const next = nextClassList('', change);
+    if (next !== '') magic.appendLeft(endOf(element.openingElement.name), ` className="${next}"`);
+    return;
+  }
+  const value = attribute.value;
+  const literal = value?.type === 'StringLiteral' ? value : value?.type === 'JSXExpressionContainer' && value.expression.type === 'StringLiteral' ? value.expression : null;
+  if (!literal) throw new DirectEditError('attribute_not_literal', 'The className is not a plain string (a template, cn() or a variable), so its classes cannot be edited directly; edit the file instead');
+  const next = nextClassList(literal.value, change);
+  if (next === '') {
+    magic.remove(leadingWhitespaceStart(source, startOf(attribute)), endOf(attribute));
+    return;
+  }
+  const quote = source[startOf(literal)] === "'" ? "'" : '"';
+  magic.overwrite(startOf(literal), endOf(literal), stringLiteral(next, quote));
+}
+
 function movedPosition(code: string, offset: number, typescript: boolean): SourcePosition {
   const moved = jsxElementAt(parseSource(code, typescript).program, offset);
   const start = moved?.openingElement.loc?.start;
@@ -311,6 +340,8 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
   if (styleKeys.length > 0) patchStyle(magic, source, element, style);
+  const classes = hasClassChange(edit.classes);
+  if (hasClassChange(edit.classes)) patchClasses(magic, source, element, edit.classes);
   if (edit.text !== undefined) patchText(magic, source, element, edit.text);
-  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined } };
+  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) } };
 }

@@ -43,8 +43,9 @@ export function placeSummary(verb: string, specs: readonly PlaceSpec[], placed: 
   return `${verb} ${listWords(placed.map((frame) => frameName(frame, frame.id)))}`;
 }
 
-export function editSummary(tag: string, style: Record<string, unknown> | undefined, text: string | undefined): string {
+export function editSummary(tag: string, style: Record<string, unknown> | undefined, text: string | undefined, classes = false): string {
   const parts = Object.keys(style ?? {}).map((prop) => STYLE_WORDS[prop] ?? prop.replace(/-/g, ' '));
+  if (classes) parts.push('classes');
   if (text !== undefined) parts.push('text');
   return `Edited ${tag} ${listWords(parts)}`;
 }

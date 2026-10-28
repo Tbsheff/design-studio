@@ -900,6 +900,12 @@ export interface DirectEditRequest {
   name?: string | null;
   move?: ReorderMove;
   insert?: InsertKind;
+  classes?: ClassChange;
+}
+
+export interface ClassChange {
+  add?: string[];
+  remove?: string[];
 }
 
 export type ReorderMove = 'up' | 'down';
@@ -964,14 +970,14 @@ export interface AuthoredRule {
 export interface DirectEditResult {
   file: string;
   version: Version;
-  applied: { style: string[]; text: boolean };
+  applied: { style: string[]; text: boolean; classes?: boolean };
   moved?: SourceLoc;
 }
 
 export interface DirectEditBatchResult {
   files: string[];
   version: Version;
-  applied: { file: string; style: string[]; text: boolean }[];
+  applied: { file: string; style: string[]; text: boolean; classes?: boolean }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

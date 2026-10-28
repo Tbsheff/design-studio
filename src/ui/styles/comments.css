@@ -235,7 +235,7 @@
   margin: 0;
   overflow: hidden;
   color: var(--float-fg-muted);
-  font-size: 13px;
+  font-size: var(--t-sm);
   line-height: 20px;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -429,7 +429,7 @@
   min-height: 28px;
   margin-right: auto;
   color: var(--float-fg);
-  font-size: 14px;
+  font-size: var(--t-md);
   line-height: 20px;
   cursor: pointer;
   user-select: none;
@@ -506,7 +506,7 @@
   gap: 4px;
   margin: 0;
   color: var(--float-fg-muted);
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 18px;
   text-wrap: pretty;
 }
@@ -538,13 +538,13 @@
 
 .comment-card-note {
   color: var(--float-fg-faint);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .comment-card-text {
   margin: 0;
   color: var(--float-fg);
-  font-size: 14px;
+  font-size: var(--t-md);
   line-height: 22px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -694,7 +694,7 @@
 
 .comment-card .comment-reply {
   color: var(--float-fg);
-  font-size: 14px;
+  font-size: var(--t-md);
 }
 
 .comment-reply .avatar-pin {
@@ -832,7 +832,7 @@
   gap: 4px;
   padding: 0 var(--s-3);
   border-radius: var(--r-md);
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 16px;
 }
 

@@ -908,7 +908,7 @@
 }
 
 .run-body > .assistant-text [data-slot='markdown'] :not(pre) > code {
-  font-size: 12px;
+  font-size: var(--t-xs);
   font-weight: var(--w-regular);
 }
 

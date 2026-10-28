@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
-import type { CompiledTokenEntry, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { CompiledTokenEntry, Project, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import { statesPrompt } from '../../shared/states';
 import { activeFrame, canvasStore, defaultLayout, type CanvasFrame } from '../canvasFrames';
 import type { ComposerMode } from './RunSettings';
@@ -146,8 +146,11 @@ function nameOf(direction: { name: string } | null): string | null {
   return direction?.name ?? null;
 }
 
-function kindLabel(kind: string): string {
-  return kind === 'html' ? 'HTML project' : 'React + Vite project';
+const FRAMEWORK_LABEL = { next: 'Next.js app', vite: 'Vite app' } as const;
+
+function kindLabel(project: Project): string {
+  if (project.app) return FRAMEWORK_LABEL[project.app.framework];
+  return project.kind === 'html' ? 'HTML project' : 'React + Vite project';
 }
 
 function whenDirection<T>(did: string | null, value: T): T | null {
@@ -398,7 +401,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
           header={
             <StudioPaneHeader
               name={project.name}
-              kindLabel={kindLabel(project.kind)}
+              kindLabel={kindLabel(project)}
               directionName={nameOf(direction)}
               connection={data.connection}
               actionError={actionError}

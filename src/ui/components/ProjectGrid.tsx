@@ -8,9 +8,11 @@ import { homePrefs, useHomePrefs } from '../homePrefs';
 import { Swatches } from './Swatches';
 import { formatRelative, formatTime } from '../format';
 import { Icon } from './Icon';
+import { LazySelect } from './LazySelect';
 import { prefetchStudio } from '../screens';
 
 const SORT_LABELS: Record<HomeSort, string> = { recent: 'Recent', name: 'Name', created: 'Created' };
+const SORT_OPTIONS = HOME_SORTS.map((sort) => ({ value: sort, label: SORT_LABELS[sort] }));
 
 const thumbCache = new Map<string, Promise<string>>();
 
@@ -69,6 +71,13 @@ interface CardProps {
   onFocusCard: () => void;
 }
 
+const FRAMEWORK_BADGE = { next: 'Next.js', vite: 'Vite' } as const;
+
+function kindBadge(project: Project): string {
+  if (project.app) return FRAMEWORK_BADGE[project.app.framework];
+  return project.kind === 'html' ? 'HTML' : 'React + Vite';
+}
+
 function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: CardProps) {
   const html = project.kind === 'html';
   const count = project.directions.length;
@@ -123,7 +132,7 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
 
   const meta = (
     <span className="project-meta">
-      <span className="badge">{html ? 'HTML' : 'React + Vite'}</span>
+      <span className="badge">{kindBadge(project)}</span>
       <time className="project-time" dateTime={new Date(project.updatedAt).toISOString()} data-tip={formatTime(project.updatedAt)}>
         {formatRelative(project.updatedAt)}
       </time>
@@ -247,16 +256,7 @@ function ProjectListTools({ query, onQuery, searchRef, onFirst, onOpenFirst, can
         )}
       </label>
       <ViewTools />
-      <label className="home-sort">
-        <span className="sr-only">Sort projects</span>
-        <select className="select small" value={homeSort} onChange={(event) => uiStore.set({ homeSort: event.target.value as HomeSort })}>
-          {HOME_SORTS.map((sort) => (
-            <option key={sort} value={sort}>
-              {SORT_LABELS[sort]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <LazySelect className="home-sort" aria-label="Sort projects" value={homeSort} options={SORT_OPTIONS} onChange={(sort) => uiStore.set({ homeSort: sort })} />
     </div>
   );
 }

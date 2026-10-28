@@ -3,6 +3,8 @@ import type { Project } from '../../shared/contracts';
 import { nameFromPrompt, projectsInFolder, shortenHome, slugify, type WorkspaceFolder, type WorkspaceList } from '../../shared/folders';
 import type { FolderChooser } from '../useFolderChooser';
 import { Icon } from './Icon';
+import { LazySelect } from './LazySelect';
+import type { UiSelectOption } from './UiSelect';
 
 function FolderPath({ path, homeDir }: { path: string; homeDir: string | null }) {
   const short = shortenHome(path, homeDir);
@@ -37,6 +39,16 @@ function PastePath({ label, action, onSubmit }: { label: string; action: string;
 
 const DEFAULT = 'default';
 const CHOOSE = 'choose';
+
+function locationOptions(usable: WorkspaceFolder[], value: string | null, fallback: string, homeDir: string | null, unsupported: boolean): UiSelectOption[] {
+  const custom = value && !usable.some((folder) => folder.path === value) ? [{ value, label: shortenHome(value, homeDir) }] : [];
+  return [
+    { value: DEFAULT, label: fallback },
+    ...usable.map((folder) => ({ value: folder.path, label: folder.label })),
+    ...custom,
+    { value: CHOOSE, label: unsupported ? 'Paste a folder path…' : 'Choose folder…' },
+  ];
+}
 
 interface LocationProps {
   folders: WorkspaceFolder[];
@@ -73,29 +85,19 @@ export function LocationField({ folders, value, homeDir, prompt, chooser, onChan
   return (
     <div className="home-location">
       <label htmlFor="new-project-location">Location</label>
-      <select
+      <LazySelect
         id="new-project-location"
-        className="select"
         value={value ?? DEFAULT}
         disabled={chooser.picking}
-        onChange={(e) => {
-          const next = e.target.value;
+        options={locationOptions(usable, value, fallback?.label ?? 'Design Studio', homeDir, chooser.unsupported)}
+        onChange={(next) => {
           if (next === CHOOSE) void pick();
           else {
             setPasting(false);
             onChange(next === DEFAULT ? null : next);
           }
         }}
-      >
-        <option value={DEFAULT}>{fallback?.label ?? 'Design Studio'}</option>
-        {usable.map((folder) => (
-          <option key={folder.id} value={folder.path}>
-            {folder.label}
-          </option>
-        ))}
-        {value && !usable.some((folder) => folder.path === value) && <option value={value}>{shortenHome(value, homeDir)}</option>}
-        <option value={CHOOSE}>{chooser.unsupported ? 'Paste a folder path…' : 'Choose folder…'}</option>
-      </select>
+      />
       {pasting ? (
         <PastePath label="Folder for the new project" action="Use folder" onSubmit={(path) => void useFolder(path)} />
       ) : (

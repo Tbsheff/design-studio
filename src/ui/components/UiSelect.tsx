@@ -267,3 +267,5 @@ export function UiSelect<V extends string>(p: Props<V>) {
     </span>
   );
 }
+
+export type UiSelectProps<V extends string> = Props<V>;

@@ -16,7 +16,7 @@
 }
 
 .attach-app-list legend {
-  font-size: 12px;
+  font-size: var(--t-xs);
   color: var(--text-2);
   margin-bottom: 6px;
 }
@@ -29,7 +29,11 @@
   padding: 7px 8px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--t-sm);
+}
+
+.attach-app-option input {
+  accent-color: var(--text);
 }
 
 .attach-app-option:hover {
@@ -38,7 +42,7 @@
 
 .attach-app-name {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .attach-app-spacer {
@@ -47,7 +51,7 @@
 
 .field-help {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .app-bar-root {
@@ -96,7 +100,7 @@
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  font-size: 13px;
+  font-size: var(--t-sm);
 }
 
 .app-panel-head .grow {
@@ -106,7 +110,7 @@
 
 .app-panel-sub {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .app-panel-tabs {
@@ -193,7 +197,7 @@
   background: var(--warn-soft);
   border: 1px solid var(--warn-line);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 1.4;
   pointer-events: auto;
 }

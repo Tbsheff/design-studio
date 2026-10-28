@@ -1,8 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
-import type { LayerNode, ReorderMove } from '../../shared/contracts';
+import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contracts';
 import { reorderMoveOf } from '../../shared/reorder';
-import { ancestorsOf, cleanName, dropTarget, editableName, treeKeyAction, visibleRows, type DropTarget, type LayerTree } from '../layersTree';
+import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
+import { IS_MAC, tipWithKey } from '../commands/keys';
+import { ancestorsOf, cleanName, dropTarget, editableName, layerDrop, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
+import type { LayerDrop } from '../structureEdits';
 import { Icon } from './Icon';
+import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
 
 const ROW = 28;
 const OVERSCAN = 8;
@@ -14,6 +18,9 @@ export interface LayerEditActions {
   onToggleHidden: (id: number, hidden: boolean) => void;
   onMove: (id: number, move: ReorderMove) => void;
   onMoveSelected: (move: ReorderMove) => void;
+  onStructureKey?: (key: StructureKey) => void;
+  onDrop?: (id: number, drop: LayerDrop) => void;
+  menuItems?: () => PreviewMenuItem[];
 }
 
 interface Props {
@@ -101,6 +108,8 @@ interface RowProps {
   onSelect: (id: number, additive: boolean) => void;
   onPress: (id: number, e: ReactPointerEvent<HTMLDivElement>) => void;
   onStartRename: (id: number) => void;
+  onMenu: (node: LayerNode, at: { x: number; y: number }) => void;
+  dropInto: boolean;
   onRenameDone: (node: LayerNode, value: string | null) => void;
   onToggleHidden: (node: LayerNode) => void;
 }
@@ -137,7 +146,7 @@ function LayerRow(p: RowProps) {
       aria-level={node.depth + 1}
       aria-selected={p.selected}
       aria-expanded={node.childCount > 0 ? !p.collapsed : undefined}
-      className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}`}
+      className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}${p.dropInto ? ' drop-into' : ''}`}
       style={{ top: p.top, paddingLeft: 4 + node.depth * 12 }}
       title={full}
       onPointerEnter={() => p.onHover(node.id)}
@@ -150,6 +159,10 @@ function LayerRow(p: RowProps) {
         p.onPress(node.id, e);
       }}
       onDoubleClick={() => p.editable && p.onStartRename(node.id)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        p.onMenu(node, { x: e.clientX, y: e.clientY });
+      }}
     >
       {node.childCount > 0 ? (
         <span
@@ -180,9 +193,30 @@ function LayerRow(p: RowProps) {
   );
 }
 
-function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>, onMove: ((id: number, move: ReorderMove) => void) | null) {
+interface RowDrop {
+  line: number | null;
+  into: number | null;
+  commit: () => void;
+}
+
+interface DragHandlers {
+  onMove: ((id: number, move: ReorderMove) => void) | null;
+  onDrop: ((id: number, drop: LayerDrop) => void) | null;
+}
+
+function rowDrop(rows: LayerNode[], id: number, y: number, handlers: DragHandlers): RowDrop | null {
+  const { onDrop, onMove } = handlers;
+  if (onDrop) {
+    const target = layerDrop(rows, id, y, ROW);
+    return target ? { line: target.line, into: target.into, commit: () => onDrop(id, target.drop) } : null;
+  }
+  const target = dropTarget(rows, id, y, ROW);
+  return target && onMove ? { line: target.line, into: null, commit: () => onMove(id, target.move) } : null;
+}
+
+function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>, handlers: DragHandlers) {
   const drag = useRef<{ id: number; startY: number; active: boolean } | null>(null);
-  const [drop, setDrop] = useState<DropTarget | null>(null);
+  const [drop, setDrop] = useState<RowDrop | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
   const reset = () => {
     drag.current = null;
@@ -190,7 +224,7 @@ function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>
     setDragging(null);
   };
   const onPress = (id: number, e: ReactPointerEvent<HTMLDivElement>) => {
-    drag.current = onMove ? { id, startY: e.clientY, active: false } : null;
+    drag.current = handlers.onMove || handlers.onDrop ? { id, startY: e.clientY, active: false } : null;
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const cur = drag.current;
@@ -202,14 +236,44 @@ function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>
       e.currentTarget.setPointerCapture(e.pointerId);
     }
     const top = rowsRef.current?.getBoundingClientRect().top ?? 0;
-    setDrop(dropTarget(rows, cur.id, e.clientY - top, ROW));
+    setDrop(rowDrop(rows, cur.id, e.clientY - top, handlers));
   };
   const onPointerUp = () => {
-    const cur = drag.current;
-    if (cur?.active && drop && onMove) onMove(cur.id, drop.move);
+    if (drag.current?.active && drop) drop.commit();
     reset();
   };
   return { drop, dragging, onPress, onPointerMove, onPointerUp, onPointerCancel: reset };
+}
+
+const TOOLS: { key: StructureKey; label: string; icon: 'copy' | 'frame' | 'expand' | 'trash' }[] = [
+  { key: 'duplicate', label: 'Duplicate', icon: 'copy' },
+  { key: 'wrap', label: 'Wrap in auto layout', icon: 'frame' },
+  { key: 'unwrap', label: 'Unwrap', icon: 'expand' },
+  { key: 'delete', label: 'Delete', icon: 'trash' },
+];
+
+function LayerTools({ run, busy }: { run: (key: StructureKey) => void; busy: boolean }) {
+  return (
+    <div className="layers-tools" role="toolbar" aria-label="Layer actions">
+      {TOOLS.map((tool) => (
+        <button key={tool.key} type="button" className="icon-btn small" aria-label={tool.label} aria-disabled={busy || undefined} data-tip={tipWithKey(tool.label, STRUCTURE_KEY_IDS[tool.key])} data-tip-align="end" onClick={() => !busy && run(tool.key)}>
+          <Icon name={tool.icon} size={14} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function useRowMenu(edits: LayerEditActions | null | undefined, selectedNode: number | null, onSelect: (id: number, additive: boolean) => void) {
+  const [at, setAt] = useState<{ x: number; y: number } | null>(null);
+  const open = (node: LayerNode, point: { x: number; y: number }) => {
+    if (!edits?.menuItems) return;
+    if (node.id !== selectedNode) onSelect(node.id, false);
+    setAt(point);
+  };
+  const close = () => setAt(null);
+  const menu = at && edits?.menuItems ? <PreviewMenu at={at} label="Layer actions" items={edits.menuItems()} onClose={close} /> : null;
+  return { open, menu };
 }
 
 export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, onClose, edits, busy = false }: Props) {
@@ -220,7 +284,8 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
   const rowsRef = useRef<HTMLDivElement>(null);
   const [scroll, setScroll] = useState({ top: 0, height: 600 });
   const [editing, setEditing] = useState<number | null>(null);
-  const drag = useRowDrag(rows, rowsRef, edits?.onMove ?? null);
+  const drag = useRowDrag(rows, rowsRef, { onMove: edits?.onMove ?? null, onDrop: edits?.onDrop ?? null });
+  const rowMenu = useRowMenu(edits, selectedNode, onSelect);
 
   useLayoutEffect(() => {
     const el = listRef.current;
@@ -248,6 +313,11 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
     const move = reorderMoveOf(e);
     if (move) {
       edits.onMoveSelected(move);
+      return true;
+    }
+    const structure = edits.onStructureKey && !e.repeat ? structureKeyOf(e, IS_MAC) : null;
+    if (structure) {
+      edits.onStructureKey?.(structure);
       return true;
     }
     if (e.key === 'F2' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
@@ -287,6 +357,7 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
         <span className="layers-frame" title={frameName}>
           {frameName}
         </span>
+        {edits?.onStructureKey && selectedNode !== null && <LayerTools run={edits.onStructureKey} busy={busy} />}
         {onClose && (
           <button type="button" className="icon-btn small" aria-label="Close layers" data-tip="Close  ⌥1" data-tip-align="end" onClick={onClose}>
             <Icon name="close" size={14} />
@@ -330,15 +401,18 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
                 onSelect={onSelect}
                 onPress={drag.onPress}
                 onStartRename={setEditing}
+                onMenu={rowMenu.open}
+                dropInto={drag.drop?.into === node.id}
                 onRenameDone={finishRename}
                 onToggleHidden={(n) => edits?.onToggleHidden(n.id, !n.hidden)}
               />
             ))}
-            {drag.drop && <div className="layers-drop" data-testid="layers-drop" style={{ top: drag.drop.line }} />}
+            {drag.drop && drag.drop.line !== null && <div className="layers-drop" data-testid="layers-drop" style={{ top: drag.drop.line }} />}
           </div>
         )}
         {tree?.truncated && <div className="layers-note">Showing the first {tree.nodes.length} layers.</div>}
       </div>
+      {rowMenu.menu}
     </aside>
   );
 }

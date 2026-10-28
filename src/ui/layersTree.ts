@@ -1,5 +1,7 @@
 import { LAYER_LABEL_MAX, LAYER_TREE_MAX, type LayerNode, type ReorderMove } from '../shared/contracts';
 
+const LOC_MAX = 1100;
+
 export interface LayerTree {
   nodes: LayerNode[];
   truncated: boolean;
@@ -29,6 +31,7 @@ export function parseLayerTree(raw: { nodes?: unknown; truncated?: unknown }): L
       text: text(n.text, LAYER_LABEL_MAX),
       childCount: count(n.childCount),
       hidden: n.hidden === true,
+      ...(typeof n.loc === 'string' && n.loc.length <= LOC_MAX ? { loc: n.loc } : {}),
     });
   }
   return { nodes, truncated: raw.truncated === true };
@@ -150,4 +153,32 @@ export function editableName(name: string): string {
 
 export function cleanName(value: string): string {
   return value.replace(UNSAFE_NAME_CHARS, '').slice(0, LAYER_LABEL_MAX);
+}
+
+const NO_CHILD_TAGS = new Set(['img', 'input', 'br', 'hr', 'textarea', 'select', 'video', 'audio', 'iframe', 'canvas', 'meta', 'link', 'source', 'track', 'wbr', 'area', 'col', 'embed']);
+const EDGE_ZONE = 0.25;
+
+export interface LayerDropTarget {
+  drop: { into: number } | { before: number } | { after: number };
+  line: number | null;
+  into: number | null;
+}
+
+function edgeDrop(rows: LayerNode[], index: number, after: boolean, rowHeight: number): LayerDropTarget {
+  const row = rows[index] as LayerNode;
+  const next = rows[index + 1];
+  if (!after) return { drop: { before: row.id }, line: index * rowHeight, into: null };
+  if (next && next.depth > row.depth) return { drop: { before: next.id }, line: (index + 1) * rowHeight, into: null };
+  return { drop: { after: row.id }, line: (index + 1) * rowHeight, into: null };
+}
+
+export function layerDrop(rows: LayerNode[], id: number, y: number, rowHeight: number): LayerDropTarget | null {
+  const from = rows.findIndex((r) => r.id === id);
+  const index = Math.floor(y / rowHeight);
+  const row = rows[index];
+  if (from < 0 || !row || (index >= from && index < subtreeEnd(rows, from))) return null;
+  const frac = y / rowHeight - index;
+  const canHold = !NO_CHILD_TAGS.has(row.tag);
+  if (canHold && frac > EDGE_ZONE && frac < 1 - EDGE_ZONE) return { drop: { into: row.id }, line: null, into: row.id };
+  return edgeDrop(rows, index, frac >= 0.5, rowHeight);
 }

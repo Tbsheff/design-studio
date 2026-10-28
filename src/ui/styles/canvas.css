@@ -572,6 +572,16 @@ body.element-resizing .frame {
   font-variant-numeric: tabular-nums;
 }
 
+.layers-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.layers-tools [aria-disabled='true'] {
+  opacity: 0.5;
+}
+
 .layers-list {
   position: relative;
   flex: 1;
@@ -836,6 +846,17 @@ body.element-resizing .frame {
   border-radius: var(--r-full);
   background: var(--accent);
   pointer-events: none;
+}
+
+.layers-row.drop-into {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+  border-radius: var(--r-md);
+}
+
+.preview-menu-divider {
+  height: 1px;
+  margin: 4px var(--s-1);
+  background: var(--line);
 }
 
 .resize-frame {

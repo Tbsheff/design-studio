@@ -421,8 +421,6 @@ export function Canvas(props: Props) {
     onTextEdit: inline.onMessage,
     onContextMenu: (at) => openMenu.current(at),
   });
-  const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu') });
-  openMenu.current = previewMenu.onContextMenu;
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind);
@@ -449,6 +447,8 @@ export function Canvas(props: Props) {
   useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
   const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode: picking, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
+  const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits });
+  openMenu.current = previewMenu.onContextMenu;
   const resize = useResizeHandles({
     projectId,
     directionId,
@@ -514,7 +514,7 @@ export function Canvas(props: Props) {
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
       <div className="canvas-body">
-      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} hasSelection={props.selection.length > 0} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
+      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
         <StageMessage note={note} urlError={urlError} />
         <div

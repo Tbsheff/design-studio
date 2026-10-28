@@ -6,6 +6,9 @@ import { exportFileStem, type ExportFrame, type HandoffResult } from '../../shar
 import { listComponents } from '../components/inventory.js';
 import { DESIGN_MD_FILE } from '../design-system/packs.js';
 import { readDesignSystemFiles } from '../design-system/sync.js';
+import { findTokenFile } from '../design-system/app-tokens/detect.js';
+import { readAppTokensAt, usesAppTokens, type LoadedAppTokens } from '../design-system/app-tokens/source.js';
+import { APP_VAR_EXTENSION } from '../design-system/extract/map.js';
 import { zipFiles, type ZipEntry } from '../design-system/zip.js';
 import type { CommentStore } from '../store/comments.js';
 import { CANVAS_FILE, parseCanvasText, type CanvasFile } from '../../shared/canvas-file.js';
@@ -63,14 +66,55 @@ function size(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function tokenTable(entries: CompiledTokenEntry[]): string {
+interface TokenNames {
+  appVars: Map<string, string>;
+  appFile: string | null;
+}
+
+function appVarsOf(tokensJson: string | null): Map<string, string> {
+  const out = new Map<string, string>();
+  let parsed: unknown;
+  try {
+    parsed = tokensJson ? JSON.parse(tokensJson) : null;
+  } catch {
+    return out;
+  }
+  const visit = (node: unknown, trail: string[]) => {
+    if (typeof node !== 'object' || node === null) return;
+    const record = node as Record<string, unknown>;
+    const ext = record.$extensions as Record<string, { cssVar?: unknown }> | undefined;
+    const cssVar = ext?.[APP_VAR_EXTENSION]?.cssVar;
+    if (typeof cssVar === 'string' && /^--[A-Za-z0-9_-]+$/.test(cssVar)) out.set(trail.join('.'), cssVar);
+    for (const [key, child] of Object.entries(record)) if (!key.startsWith('$')) visit(child, [...trail, key]);
+  };
+  visit(parsed, []);
+  return out;
+}
+
+function tokenIntro(names: TokenNames): string {
+  if (names.appFile) return `These are the app's own tokens, read from \`${names.appFile}\`. Use these exact names (as Tailwind utilities, for example \`bg-primary\`, or as \`var(--name)\`). Do not rename them and do not add a parallel token set. "Value" is the declared value; "Dark" is the \`.dark\` value.\n`;
+  if (names.appVars.size > 0) return 'Use these tokens. Do not copy raw values. The "App token" column names the variable in the target app that each token was read from: in that codebase, use the app token, not the studio name. `tokens.css` defines the studio names; `tokens.json` is the source.\n';
+  return 'Use these CSS variables. Do not copy raw values. `tokens.css` defines them; `tokens.json` is the source.\n';
+}
+
+function tokenRow(entry: CompiledTokenEntry, appVar: string | null | undefined): string {
+  const app = appVar === undefined ? '' : ` ${appVar ? `\`${appVar}\`` : ''} |`;
+  const value = entry.source?.value ?? entry.value;
+  const dark = entry.source ? entry.source.darkValue : entry.darkValue;
+  const where = entry.source ? ` (line ${entry.source.line})` : '';
+  return `| ${cell(entry.path)}${where} | \`${entry.cssVar}\` |${app} \`${cell(value)}\` | ${dark ? `\`${cell(dark)}\`` : ''} |`;
+}
+
+function tokenTable(entries: CompiledTokenEntry[], names: TokenNames): string {
   if (entries.length === 0) return 'This version has no design tokens. Read the styles in `source/` for the values.\n';
   const groups = new Map<string, CompiledTokenEntry[]>();
   for (const entry of entries) groups.set(entry.type, [...(groups.get(entry.type) ?? []), entry]);
-  const out: string[] = ['Use these CSS variables. Do not copy raw values. `tokens.css` defines them; `tokens.json` is the source.\n'];
+  const withApp = !names.appFile && names.appVars.size > 0;
+  const head = withApp ? ['| Token | CSS variable | App token | Value | Dark |', '| --- | --- | --- | --- | --- |'] : ['| Token | CSS variable | Value | Dark |', '| --- | --- | --- | --- |'];
+  const out: string[] = [tokenIntro(names)];
   for (const [type, list] of groups) {
-    out.push(`### ${type}\n`, '| Token | CSS variable | Value | Dark |', '| --- | --- | --- | --- |');
-    for (const entry of list) out.push(`| ${cell(entry.path)} | \`${entry.cssVar}\` | \`${cell(entry.value)}\` | ${entry.darkValue ? `\`${cell(entry.darkValue)}\`` : ''} |`);
+    out.push(`### ${type}\n`, ...head);
+    for (const entry of list) out.push(tokenRow(entry, withApp ? (names.appVars.get(entry.path) ?? null) : undefined));
     out.push('');
   }
   return out.join('\n');
@@ -179,6 +223,7 @@ interface MarkdownInput {
   sourceMap: { name: string; bytes: number }[];
   fonts: { display: string; body: string; mono: string; googleFontsUrl?: string } | undefined;
   entries: CompiledTokenEntry[];
+  names: TokenNames;
   filesRoot: string;
   canvas: CanvasFile | null;
 }
@@ -227,7 +272,7 @@ async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise
     '## Design tokens',
     '',
     ...(fonts ? [`Fonts: display ${fonts.display}, body ${fonts.body}, mono ${fonts.mono}.${fonts.googleFontsUrl ? ` Google Fonts: ${fonts.googleFontsUrl}` : ''}`, ''] : []),
-    tokenTable(input.entries),
+    tokenTable(input.entries, input.names),
     '## Components',
     '',
     componentList(components),
@@ -262,6 +307,18 @@ async function handoffMarkdown(deps: HandoffDeps, input: MarkdownInput): Promise
     '- Resolve the open comments, or say why not.',
     '',
   ].join('\n');
+}
+
+async function appTokensForHandoff(source: ExportSource, root: string): Promise<LoadedAppTokens | null> {
+  if (!usesAppTokens(source.project)) return null;
+  const file = await findTokenFile(source.direction.workTree).catch(() => null);
+  return file ? readAppTokensAt(root, file).catch(() => null) : null;
+}
+
+async function handoffTokens(source: ExportSource, root: string, ds: Awaited<ReturnType<typeof readDesignSystemFiles>> | null, tokensJson: ZipEntry | undefined): Promise<{ entries: CompiledTokenEntry[]; names: TokenNames }> {
+  const app = ds ? null : await appTokensForHandoff(source, root);
+  const names: TokenNames = { appVars: appVarsOf(tokensJson ? tokensJson.data.toString('utf8') : null), appFile: app?.file ?? null };
+  return { entries: ds?.entries ?? app?.entries ?? [], names };
 }
 
 export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Promise<HandoffResult> {
@@ -300,7 +357,8 @@ export async function buildHandoff(deps: HandoffDeps, input: HandoffInput): Prom
 
   const { shots, designHtml } = await captureScreens(deps, source, frames, put);
 
-  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, entries: ds?.entries ?? [], filesRoot: root, canvas });
+  const tokens = await handoffTokens(source, root, ds, tokensJson);
+  const md = await handoffMarkdown(deps, { source, history: input.history, shots, designHtml, sourceMap, fonts: ds?.manifest?.fonts, ...tokens, filesRoot: root, canvas });
   await put('HANDOFF.md', md);
 
   const prompt = `Read ${path.join(outDir, 'HANDOFF.md')} and build this design in this codebase. The source is in ${path.join(outDir, 'source')}, the target screens are in ${path.join(outDir, 'screens')}, and tokens.css has the design tokens. Match the screens and use the tokens.`;

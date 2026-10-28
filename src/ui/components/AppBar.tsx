@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
+import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp, FirstVersionState } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
 import { APP_PANEL_EVENT, publishAppStatus } from '../appStatus';
@@ -26,8 +26,9 @@ const STATE_TEXT: Record<AppServerStatus['state'], string> = {
 function useAppState(projectId: string, open: boolean, initial: AppServerStatus | null = null) {
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
+  const [firstVersion, setFirstVersion] = useState<FirstVersionState | null>(null);
   const [tick, setTick] = useState(0);
-  const settled = status?.state === 'ready';
+  const settled = status?.state === 'ready' && !firstVersion?.pending;
   useEffect(() => {
     let alive = true;
     const load = () =>
@@ -37,6 +38,7 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
           if (!alive) return;
           setStatus(state.status);
           setLogs(state.logs);
+          setFirstVersion(state.firstVersion ?? null);
           publishAppStatus(projectId, state.status);
         })
         .catch(() => undefined);
@@ -47,7 +49,33 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
       window.clearInterval(timer);
     };
   }, [projectId, open, tick, settled]);
-  return { status, logs, refresh: () => setTick((n) => n + 1) };
+  return { status, logs, firstVersion, refresh: () => setTick((n) => n + 1) };
+}
+
+function useSecondsSince(startedAt: number | null): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (startedAt === null) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [startedAt]);
+  return startedAt === null ? 0 : Math.max(0, Math.round((now - startedAt) / 1000));
+}
+
+function prepTip(firstVersion: FirstVersionState): string {
+  const files = firstVersion.files ? ` of ${firstVersion.files.toLocaleString('en-US')} files` : '';
+  return `Saving the first version${files} so edits can be undone. Screenshots work now; edits wait for it. About ${firstVersion.etaSeconds} s left.`;
+}
+
+function PrepChip({ firstVersion }: { firstVersion: FirstVersionState | null }) {
+  const seconds = useSecondsSince(firstVersion?.pending ? firstVersion.startedAt : null);
+  if (firstVersion?.error) return <span className="app-prep-chip failed" data-tip={`The first version was not saved: ${firstVersion.error}`}>Not saved</span>;
+  if (!firstVersion?.pending) return null;
+  return (
+    <span className="app-prep-chip" role="status" data-tip={prepTip(firstVersion)}>
+      Preparing… {seconds} s
+    </span>
+  );
 }
 
 function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (route: string) => void }) {
@@ -263,7 +291,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('routes');
   const [hidden, setHidden] = useState<string | null>(null);
-  const { status, refresh } = useAppState(projectId, false);
+  const { status, firstVersion, refresh } = useAppState(projectId, false);
   const state = status?.state ?? 'idle';
   const managed = (status?.mode ?? app.mode) === 'managed';
   useOpenRequests(setTab, setOpen);
@@ -281,6 +309,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
         <span className="app-status-dot" data-state={state} />
         <span>{app.framework === 'next' ? 'Next.js' : 'App'}</span>
         <span className="app-panel-sub">{stateText(status, managed)}</span>
+        <PrepChip firstVersion={firstVersion} />
       </button>
       {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} tab={tab} setTab={setTab} initial={status} />}
     </div>

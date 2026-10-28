@@ -1,5 +1,5 @@
 import type { StyleReplaceRequest, StyleReplaceResult } from '../shared/style-search';
-import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage, SourceLoc, TextSourceAnswer, TextSourceHints } from '../shared/contracts';
+import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, FirstVersionState, PermissionDecision, QueuedMessage, SourceLoc, TextSourceAnswer, TextSourceHints } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
@@ -179,7 +179,7 @@ export const api = {
   },
   importProject: (path: string, options: { appDir?: string; skipApp?: boolean } = {}) => json<{ project: Project }>('POST', '/api/projects/import', { path, ...options }),
   attachApp: (input: AttachAppRequest) => json<{ project: Project }>('POST', '/api/projects/attach', input),
-  appState: (pid: string) => json<{ app: AttachedApp; status: AppServerStatus | null; logs: AppLogLine[] }>('GET', `${p(pid)}/app`),
+  appState: (pid: string) => json<{ app: AttachedApp; status: AppServerStatus | null; logs: AppLogLine[]; firstVersion: FirstVersionState | null }>('GET', `${p(pid)}/app`),
   appControl: (pid: string, action: 'start' | 'stop' | 'restart') => json<AppServerStatus>('POST', `${p(pid)}/app/${action}`),
   appConfig: (pid: string, input: { url?: string; env?: Record<string, string> }) => json<{ app: AttachedApp }>('POST', `${p(pid)}/app/config`, input),
   appRoutes: (pid: string) => json<{ routes: AppRoute[] }>('GET', `${p(pid)}/app/routes`),

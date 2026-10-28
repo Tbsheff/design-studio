@@ -643,6 +643,26 @@
   box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
+.todo-item.by-run .todo-mark {
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.todo-item.skipped {
+  color: var(--text-3);
+}
+
+.todo-item.skipped .todo-mark {
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.todo-tag {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
 .todo-mark .spinner {
   width: 10px;
   height: 10px;

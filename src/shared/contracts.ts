@@ -562,6 +562,9 @@ export interface TodoItem {
   content: string;
   activeForm?: string;
   status: TodoStatus;
+  by?: 'studio' | 'run';
+  note?: string;
+  skipped?: boolean;
 }
 
 export interface RunSummary {

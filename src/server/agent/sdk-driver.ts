@@ -51,6 +51,7 @@ interface AttemptResult {
 const AGENT_ENV_KEYS = ['HOME', 'USER', 'LOGNAME', 'PATH', 'SHELL', 'TMPDIR', 'LANG', 'ANTHROPIC_API_KEY', 'HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY', 'NODE_EXTRA_CA_CERTS'];
 export const LOGIN_SHELL_PATH_ENV = 'STUDIO_LOGIN_SHELL_PATH';
 const TODO_TOOL_ENV = 'CLAUDE_CODE_ENABLE_TASKS';
+const CHECK_TOOL_NAME = 'mcp__studio__render_check';
 
 function joinPath(base: string | undefined, extra: string | undefined): string | undefined {
   if (!extra) return base;
@@ -561,7 +562,7 @@ function handleUser(message: UserMessage, state: StreamState, sink: DriverSink):
     if (!pending) continue;
     state.pendingTools.delete(block.tool_use_id);
     const isError = block.is_error === true;
-    sink.toolFinished(block.tool_use_id, isError, summarizeToolResult(pending, isError, block.content));
+    sink.toolFinished(block.tool_use_id, isError, summarizeToolResult(pending, isError, block.content), pending.name === CHECK_TOOL_NAME ? toolResultText(block.content) : undefined);
   }
 }
 

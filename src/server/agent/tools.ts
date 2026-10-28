@@ -18,6 +18,8 @@ import { editElementShape, runEditElement, runSetToken, setTokenShape } from './
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
+import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
+import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
 
 const VIEWPORTS = {
@@ -337,6 +339,29 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetProps(deps, args),
   );
 
+  const findStylesTool = tool(
+    'find_styles',
+    'Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.',
+    findStylesShape,
+    (args) => runFindStyles(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const replaceStyleTool = tool(
+    'replace_style',
+    'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
+    replaceStyleShape,
+    (args) => runReplaceStyle(deps, args),
+  );
+
+  const reviewFrameTool = tool(
+    'review_frame',
+    'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
+    reviewFrameShape,
+    (args) => runReviewFrameTool(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
   const insertComponentTool = tool(
     'insert_component',
     'Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.',
@@ -344,5 +369,5 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runInsertComponent(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, insertComponentTool] });
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool] });
 }

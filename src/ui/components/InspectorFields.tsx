@@ -5,6 +5,7 @@ import type { DirectEdit } from '../useDirectEdit';
 import { Icon, type IconName } from './Icon';
 import { TokenControl } from './TokenControl';
 import { useTokenUi } from '../useTokenSnap';
+import { useInherited } from '../editVariant';
 import { colorHex, resolveTokenValue } from '../../shared/token-match';
 
 interface FieldProps {
@@ -23,6 +24,7 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
   const resolved = ui ? resolveTokenValue(value, ui.entries, ui.mode) : value;
   const hex = colorToHex(resolved) ?? (ui ? colorHex(resolved) : null);
   const shown = text ?? displayColor(value);
+  const inherited = useInherited(prop);
 
   const settle = () => {
     if (text !== null && !isValidColor(text)) edit.revert([prop]);
@@ -44,7 +46,7 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
 
   const id = `ins-${prop}-${label.replace(/\W+/g, '-').toLowerCase()}`;
   return (
-    <div className="ins-field color">
+    <div className={`ins-field color ${inherited ? 'inherited' : ''}`}>
       <label htmlFor={id} className="ins-scrub static">
         {short}
       </label>
@@ -86,8 +88,9 @@ export function SelectField({ prop, label, short, edit, options }: FieldProps & 
   const value = edit.values[prop];
   const list = value && !options.includes(value) ? [value, ...options] : options;
   const id = `ins-${prop}`;
+  const inherited = useInherited(prop);
   return (
-    <div className="ins-field select">
+    <div className={`ins-field select ${inherited ? 'inherited' : ''}`}>
       <label htmlFor={id} className="ins-scrub static">
         {short}
       </label>

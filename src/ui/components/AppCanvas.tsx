@@ -8,7 +8,14 @@ import { Icon } from './Icon';
 
 const AppBar = lazy(() => import('./AppBar'));
 
+export function routeFrameId(layout: CanvasLayout, route: string): string | null {
+  const path = route.replace(/^\/+/, '').replace(/\/+$/, '');
+  return layout.frames.find((frame) => (frame.path ?? '').replace(/\/+$/, '') === path)?.id ?? null;
+}
+
 export function addRouteFrame(layout: CanvasLayout, route: string, size: { width: number; height: number }): CanvasLayout {
+  const existing = routeFrameId(layout, route);
+  if (existing) return { ...layout, activeId: existing };
   if (!canAddFrame(layout)) return layout;
   const added = addFrame(layout, size);
   const frame = added.frames[added.frames.length - 1];
@@ -79,15 +86,24 @@ interface AppCanvasInput {
   app: AttachedApp | null | undefined;
   listen: Listen;
   resetKey: string;
-  frames: { update: (fn: (layout: CanvasLayout) => CanvasLayout) => void };
+  frames: { layout: CanvasLayout; update: (fn: (layout: CanvasLayout) => CanvasLayout) => void };
   freeze: () => void;
+  focus: () => void;
+  notify: (message: string) => void;
   size: { width: number; height: number };
 }
 
 export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNode } {
   const addRoute = (route: string) => {
+    const shown = routeFrameId(o.frames.layout, route) !== null;
+    if (!shown && !canAddFrame(o.frames.layout)) {
+      o.notify('The canvas has the most frames it can hold. Remove one to add this route.');
+      return;
+    }
     o.freeze();
     o.frames.update((layout) => addRouteFrame(layout, route, o.size));
+    o.focus();
+    o.notify(shown ? `${route} is already on the canvas. Showing it.` : `Added a frame for ${route}`);
   };
   const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);
   const [hidden, setHidden] = useState<string | null>(null);

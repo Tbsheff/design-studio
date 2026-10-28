@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type DragEvent, type FormEvent, type Keybo
 import type { PackSummary } from '../../shared/contracts';
 import { Markdown } from '../ai/components/ai/markdown';
 import { api, errorText } from '../api';
-import { pickFolder } from '../folderPicker';
+import { hasNativePicker, pickFolder } from '../folderPicker';
 import { pickable, refreshPacks, usePacks } from '../packs';
 import { Icon } from './Icon';
 
@@ -277,7 +277,7 @@ function TokensField({ file, onChange }: { file: File | null; onChange: (file: F
 }
 
 function FolderField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const [manual, setManual] = useState(false);
+  const [manual, setManual] = useState(() => !hasNativePicker());
   const [error, setError] = useState<string | null>(null);
   const choose = async () => {
     setError(null);
@@ -297,9 +297,11 @@ function FolderField({ value, onChange }: { value: string; onChange: (value: str
         ) : (
           <span className={`nds-file truncate ${value ? '' : 'muted'}`}>{value || 'No folder chosen'}</span>
         )}
-        <button type="button" className="btn small" onClick={() => void choose()}>
-          Choose folder…
-        </button>
+        {hasNativePicker() && (
+          <button type="button" className="btn small" onClick={() => void choose()}>
+            Choose folder…
+          </button>
+        )}
         {value && (
           <button type="button" className="btn ghost small" onClick={() => onChange('')}>
             Clear

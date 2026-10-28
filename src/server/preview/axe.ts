@@ -41,7 +41,7 @@ interface AxeViolation {
 
 let axeSource: Promise<string> | null = null;
 
-function loadAxeSource(): Promise<string> {
+export function loadAxeSource(): Promise<string> {
   if (!axeSource) {
     const file = packagedResource('axe.min.js') ?? createRequire(import.meta.url).resolve('axe-core/axe.min.js');
     axeSource = readFile(file, 'utf8');

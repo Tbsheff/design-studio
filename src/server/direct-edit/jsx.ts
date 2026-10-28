@@ -330,12 +330,13 @@ function inlineKeys(element: t.JSXElement): Set<string> | null {
 }
 
 function patchClassesOrStyle(magic: MagicString, source: string, element: t.JSXElement, style: Record<string, string | null>, edit: SourceEdit, theme: TailwindTheme | null): TailwindOutcome | undefined {
-  const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, theme);
+  const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, theme, edit.variant ?? '');
   if (decision.kind !== 'classes') {
     if (Object.keys(style).length > 0) patchStyle(magic, source, element, style);
     return decision.kind === 'inline' ? decision.fallback.outcome : undefined;
   }
   for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
+  if (decision.patch.variant) return decision.patch.outcome;
   const mapped = new Set(decision.patch.inlineProps);
   const present = inlineKeys(element);
   const inline: Record<string, string | null> = {};

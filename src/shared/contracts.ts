@@ -2,6 +2,7 @@ import type { CanvasFile } from './canvas-file';
 import type { LinkQuery, LinkRectReport, LinksFile } from './links';
 import type { StatesRequest } from './states';
 import type { ElementScope } from './element-variants';
+import type { StyleQuery, StyleScanResult } from './style-search';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -775,8 +776,8 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
-  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null} (the class list of the element and whether style edits write classes or inline style)',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version',
+  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, variants: VariantSupport} (the class list of the element and whether style edits write classes or inline style)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -806,6 +807,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }
   | { ns: 'studio'; token: string; type: 'tree'; nodes: LayerNode[]; truncated: boolean }
   | { ns: 'studio'; token: string; type: 'rects'; selectors: string[]; rects: (SelectionContext['rect'] | null)[] }
+  | { ns: 'studio'; token: string; type: 'styles-found'; requestId: string; result: StyleScanResult; selected: number }
   | { ns: 'studio'; token: string; type: 'error'; kind: 'console' | 'runtime' | 'unhandledrejection'; message: string; stack?: string; source?: string; line?: number }
   | { ns: 'studio'; token: string; type: 'scroll' }
   | { ns: 'studio'; token: string; type: 'mode-exited' }
@@ -910,6 +912,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
+  | { ns: 'studio'; token: string; type: 'force-state'; selector: string | null; states: ('hover' | 'focus' | 'active')[]; dark: boolean; track: boolean }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'track-links'; links: LinkQuery[] }
   | { ns: 'studio'; token: string; type: 'play-links'; links: LinkQuery[] | null }
@@ -923,7 +926,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'request-authored'; requestId: string; selector: string }
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
-  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string };
+  | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
+  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -979,6 +983,7 @@ export interface DirectEditRequest {
   move?: ReorderMove;
   insert?: InsertKind;
   classes?: ClassChange;
+  variant?: string;
 }
 
 export interface ClassChange {

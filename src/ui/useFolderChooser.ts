@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { errorText } from './api';
-import { pickFolder } from './folderPicker';
+import { hasNativePicker, pickFolder } from './folderPicker';
 
 type ChooseResult = { path: string; unsupported: false } | { path: null; unsupported: boolean };
 
@@ -11,7 +11,7 @@ export interface FolderChooser {
 }
 
 export function useFolderChooser(onError: (message: string) => void): FolderChooser {
-  const [unsupported, setUnsupported] = useState(false);
+  const [unsupported, setUnsupported] = useState(() => !hasNativePicker());
   const [picking, setPicking] = useState(false);
   const choose = async (title: string, defaultPath?: string): Promise<ChooseResult> => {
     setPicking(true);

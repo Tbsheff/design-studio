@@ -24,6 +24,7 @@ import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
 import { RenderCheckPanel } from './RenderCheckPanel';
+import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
@@ -509,7 +510,7 @@ export function Canvas(props: Props) {
   };
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
   const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
-  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, size: viewport });
+  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
@@ -543,6 +544,7 @@ export function Canvas(props: Props) {
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
+      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} />
       {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DIRECT_STYLE_PROPERTIES, INSERT_KINDS, STRUCTURE_OPS } from '../../shared/contracts.js';
 import type { DirectEditBatch, DirectEditRequest, StructureEditRequest } from '../../shared/contracts.js';
+import { normalizeVariant } from '../../shared/variants.js';
 import { CLASS_NAME, MAX_CLASS_NAME, MAX_CLASS_NAMES } from './classes.js';
 import { DirectEditError } from './errors.js';
 
@@ -53,6 +54,7 @@ const requestSchema = z
     move: z.enum(['up', 'down']).optional(),
     insert: z.enum(INSERT_KINDS).optional(),
     classes: classesSchema.optional(),
+    variant: z.string().max(60).refine((value) => normalizeVariant(value) !== null, 'variant must be a breakpoint, dark and hover, focus or active, for example "md:hover:"').optional(),
   })
   .strict()
   .refine(
@@ -66,7 +68,8 @@ const requestSchema = z
   .refine(
     (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined && request.classes === undefined),
     'move must be the only change',
-  );
+  )
+  .refine((request) => !normalizeVariant(request.variant) || (request.name === undefined && request.move === undefined && request.insert === undefined), 'variant works with style, classes and text only (text has no variant)');
 
 export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   const parsed = requestSchema.safeParse(raw);
@@ -86,6 +89,8 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.move !== undefined) request.move = parsed.data.move;
   if (parsed.data.insert !== undefined) request.insert = parsed.data.insert;
   if (hasClasses(parsed.data.classes)) request.classes = parsed.data.classes;
+  const variant = normalizeVariant(parsed.data.variant);
+  if (variant) request.variant = variant;
   return request;
 }
 

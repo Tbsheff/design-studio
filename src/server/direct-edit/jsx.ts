@@ -385,25 +385,27 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) }, ...(tailwind ? { tailwind } : {}) };
 }
 
-function patchComponentUse(source: string, element: t.JSXElement, edit: SourceEdit, options: JsxPatchOptions): PatchResult {
-  const component = edit.component ?? '';
-  const tag = componentTagName(element, component);
+function useClassPatch(magic: MagicString, source: string, element: t.JSXElement, tag: string, edit: SourceEdit, theme: TailwindTheme | null): TailwindOutcome | undefined {
   const style = edit.style ?? {};
-  const magic = new MagicString(source);
-  let tailwind: TailwindOutcome | undefined;
-  if (Object.keys(style).length > 0 || hasClassChange(edit.classes)) {
-    const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, options.tailwind ?? null);
-    if (decision.kind !== 'classes') {
-      const reason = decision.kind === 'inline' ? (decision.fallback.outcome.note ?? '').replace(/, so this edit went to inline style\.$/, '.') : 'This change has no Tailwind class in this project.';
-      throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only. ${reason}`.trim());
-    }
-    const unmapped = Object.keys(style).filter((prop) => !decision.patch.inlineProps.includes(prop));
-    if (unmapped.length > 0) throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only, and ${unmapped.join(', ')} has no class.`);
-    for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
-    tailwind = decision.patch.outcome;
+  if (Object.keys(style).length === 0 && !hasClassChange(edit.classes)) return undefined;
+  const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, theme, edit.variant ?? '');
+  if (decision.kind !== 'classes') {
+    const reason = decision.kind === 'inline' ? (decision.fallback.outcome.note ?? '').replace(/, so this edit went to inline style\.$/, '.') : 'This change has no Tailwind class in this project.';
+    throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only. ${reason}`.trim());
   }
+  const unmapped = decision.patch.variant ? [] : Object.keys(style).filter((prop) => !decision.patch.inlineProps.includes(prop));
+  if (unmapped.length > 0) throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only, and ${unmapped.join(', ')} has no class.`);
+  for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
+  return decision.patch.outcome;
+}
+
+function patchComponentUse(source: string, element: t.JSXElement, edit: SourceEdit, options: JsxPatchOptions): PatchResult {
+  const tag = componentTagName(element, edit.component ?? '');
+  const magic = new MagicString(source);
+  const tailwind = useClassPatch(magic, source, element, tag, edit, options.tailwind ?? null);
+  if (edit.text !== undefined && (element.openingElement.selfClosing || !element.closingElement)) throw new DirectEditError('text_not_editable', `This use of <${tag}> is self-closing, so it has no text to edit here.`);
   if (edit.text !== undefined) patchText(magic, source, element, edit.text, options.file);
-  return { code: magic.toString(), tag, applied: { style: Object.keys(style), text: edit.text !== undefined, ...(hasClassChange(edit.classes) ? { classes: true } : {}) }, ...(tailwind ? { tailwind } : {}) };
+  return { code: magic.toString(), tag, applied: { style: Object.keys(edit.style ?? {}), text: edit.text !== undefined, ...(hasClassChange(edit.classes) ? { classes: true } : {}) }, ...(tailwind ? { tailwind } : {}) };
 }
 
 function forwardsClassName(element: t.JSXElement): boolean {

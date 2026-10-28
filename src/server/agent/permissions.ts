@@ -302,23 +302,21 @@ function checkSkill(policy: ToolPolicy, input: Record<string, unknown>): string 
 const READ_ONLY_COMMANDS = new Set(['cat', 'ls', 'head', 'tail', 'grep', 'rg', 'wc', 'file', 'stat', 'du', 'tree', 'find', 'cd', 'pwd', 'echo', 'sort', 'uniq', 'jq']);
 const FIND_WRITES = /\s-(delete|exec|execdir|ok|okdir|fprint\w*|fls)\b/;
 
-function touchesReadOnlyDir(policy: ToolPolicy, command: string): string | null {
-  const dirs = policy.readOnlyDirs ?? [];
-  for (const dir of dirs) {
-    const pattern = new RegExp(`(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|[\\s'")]|$)`);
-    if (!pattern.test(command)) continue;
-    if (/[>]|\btee\b/.test(command)) return dir;
-    const segments = command.split(/&&|\|\||;|\||\n/).map((part) => part.trim()).filter(Boolean);
-    const writes = segments.some((segment) => {
-      const word = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/)[0] ?? '';
-      return !READ_ONLY_COMMANDS.has(word) || (word === 'find' && FIND_WRITES.test(segment));
-    });
-    if (writes) return dir;
-  }
-  return null;
+function writesInsideDir(dir: string, command: string): boolean {
+  const pattern = new RegExp(`(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|[\\s'")]|$)`);
+  if (!pattern.test(command)) return false;
+  if (/[>]|\btee\b/.test(command)) return true;
+  const segments = command.split(/&&|\|\||;|\||\n/).map((part) => part.trim()).filter(Boolean);
+  return segments.some((segment) => {
+    const word = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/)[0] ?? '';
+    return !READ_ONLY_COMMANDS.has(word) || (word === 'find' && FIND_WRITES.test(segment));
+  });
 }
 
-const GIT_DIR_IN_COMMAND = /(^|[\s'"=:(/])\.git(?=$|[\s'"/;|&)])/;
+function touchesReadOnlyDir(policy: ToolPolicy, command: string): string | null {
+  return (policy.readOnlyDirs ?? []).find((dir) => writesInsideDir(dir, command)) ?? null;
+}
+
 const GIT_READ_VERBS = new Set(['status', 'diff', 'log', 'show', 'ls-files', 'rev-parse', 'blame', 'grep', 'cat-file', 'ls-tree', 'describe', 'shortlog', '--version', 'version', 'help']);
 const GIT_MESSAGE = 'Design Studio keeps its own versions, so the agent may only read git (status, diff, log, show). Ask the user to run other git commands by hand.';
 
@@ -332,7 +330,7 @@ function gitVerb(segment: string): string | null {
 }
 
 function writesGit(command: string): boolean {
-  if (GIT_DIR_IN_COMMAND.test(command)) return true;
+  if (writesInsideDir('.git', command)) return true;
   return command.split(/&&|\|\||;|\||\n|\$\(|`/).some((segment) => {
     const verb = gitVerb(segment.trim());
     return verb !== null && !GIT_READ_VERBS.has(verb);
@@ -356,7 +354,7 @@ export function bashWriteProblem(policy: Pick<ToolPolicy, 'workTree' | 'allowIns
   const input = { file_path: relative };
   if (relative.split('/').some((segment) => BLOCKED_SEGMENTS.has(segment))) return `${relative} is inside .git or node_modules, which is off limits.`;
   if (isSecretFile(relative)) return SECRET_MESSAGE;
-  const problem = checkReadOnlyDirs({ ...policy, mode: 'edit', allowBash: true }, input) ?? checkGeneratedFile(policy.workTree, input);
+  const problem = checkReadOnlyDirs({ ...policy, mode: 'edit', allowBash: true }, input);
   if (problem) return problem;
   if (policy.allowInstall) return null;
   return isExecutedConfigFile(relative) ? `Package installs are off in this project, so the agent may not change ${path.basename(relative)}: build tools run this file as code. Ask the user to change it by hand.` : null;

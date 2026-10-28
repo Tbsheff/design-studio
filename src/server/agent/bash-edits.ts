@@ -75,14 +75,15 @@ function isGuardedName(file: string): boolean {
 
 async function scanGuarded(root: string, dir: string, depth: number, found: Map<string, Uint8Array>): Promise<void> {
   const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
-  for (const item of items) {
-    const target = path.join(dir, item.name);
-    if (item.isDirectory() && depth < GUARD_SCAN_DEPTH && !SKIP_DIRS.has(item.name)) await scanGuarded(root, target, depth + 1, found);
-    else if (item.isFile() && isGuardedName(item.name)) {
+  await Promise.all(
+    items.map(async (item) => {
+      const target = path.join(dir, item.name);
+      if (item.isDirectory() && depth < GUARD_SCAN_DEPTH && !SKIP_DIRS.has(item.name)) return scanGuarded(root, target, depth + 1, found);
+      if (!item.isFile() || !isGuardedName(item.name)) return;
       const bytes = await readFile(target).catch(() => null);
       if (bytes) found.set(path.relative(root, target).split(path.sep).join('/'), bytes);
-    }
-  }
+    }),
+  );
 }
 
 function sameBytes(a: Uint8Array | null, b: Uint8Array | null): boolean {

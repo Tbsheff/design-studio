@@ -38,7 +38,7 @@ const EDITING_RULES = `## How to edit
 - Stay inside the working directory. Do not touch \`.git\` or \`node_modules\`.`;
 
 const SHELL_EDIT_RULES = `## Shell and file changes
-Make design changes with Edit, Write or mcp__studio__insert_jsx: the studio tracks them, shows each diff to the user and checks the result. Use Bash to read, search, build and run scripts, not to rewrite files with sed, python or \`cat > file\`. If a shell command changes files, the studio records those changes as edits and puts back any change to \`.env*\`, keys, \`.git\` or read-only files.`;
+Make design changes with Edit, Write or mcp__studio__insert_jsx: the studio tracks them, shows each diff to the user and checks the result. Use Bash to read, search, build and run scripts, not to rewrite files with sed, python or \`cat > file\`. If a shell command changes files, the studio records those changes as edits. It refuses git writes and puts back changes to \`.env*\`, keys and read-only files.`;
 
 function shellEditRules(project: Project): string[] {
   return project.settings.allowBash ? [SHELL_EDIT_RULES] : [];

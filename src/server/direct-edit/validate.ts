@@ -31,6 +31,18 @@ const nameSchema = z
   .refine((value) => !UNSAFE_NAME.test(value), 'name has a character that is not allowed')
   .nullable();
 
+const MAX_CLASSES = 40;
+const UNSAFE_CLASS = /[\s"'`\\{}<>;]/;
+const classToken = z
+  .string()
+  .min(1)
+  .max(160)
+  .refine((value) => !UNSAFE_CLASS.test(value) && !value.includes('$'), 'class has a character that is not allowed');
+const classesSchema = z
+  .object({ add: z.array(classToken).max(MAX_CLASSES).optional(), remove: z.array(classToken).max(MAX_CLASSES).optional() })
+  .strict()
+  .refine((value) => (value.add?.length ?? 0) + (value.remove?.length ?? 0) > 0, 'classes needs add or remove');
+
 const requestSchema = z
   .object({
     source: z
@@ -47,18 +59,19 @@ const requestSchema = z
     name: nameSchema.optional(),
     move: z.enum(['up', 'down']).optional(),
     insert: z.enum(INSERT_KINDS).optional(),
+    classes: classesSchema.optional(),
   })
   .strict()
   .refine(
-    (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || request.insert !== undefined || Object.keys(request.style ?? {}).length > 0,
-    'style, text, name, move or insert is required',
+    (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || request.insert !== undefined || request.classes !== undefined || Object.keys(request.style ?? {}).length > 0,
+    'style, text, name, move, insert or classes is required',
   )
   .refine(
-    (request) => request.insert === undefined || (request.move === undefined && request.text === undefined && request.name === undefined && request.style === undefined),
+    (request) => request.insert === undefined || (request.move === undefined && request.text === undefined && request.name === undefined && request.style === undefined && request.classes === undefined),
     'insert must be the only change',
   )
   .refine(
-    (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined),
+    (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined && request.classes === undefined),
     'move must be the only change',
   );
 
@@ -79,6 +92,11 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.name !== undefined) request.name = parsed.data.name;
   if (parsed.data.move !== undefined) request.move = parsed.data.move;
   if (parsed.data.insert !== undefined) request.insert = parsed.data.insert;
+  if (parsed.data.classes !== undefined) {
+    request.classes = {};
+    if (parsed.data.classes.add) request.classes.add = parsed.data.classes.add;
+    if (parsed.data.classes.remove) request.classes.remove = parsed.data.classes.remove;
+  }
   return request;
 }
 
@@ -102,7 +120,7 @@ export function parseDirectEditBatch(raw: unknown): DirectEditBatch {
       if (error instanceof DirectEditError) throw new DirectEditError('invalid_request', `Edit ${index + 1}: ${error.message}`);
       throw error;
     }
-    if (request.name !== undefined || request.move !== undefined || request.insert !== undefined) {
+    if (request.name !== undefined || request.move !== undefined || request.insert !== undefined || request.classes !== undefined) {
       throw new DirectEditError('invalid_request', `Edit ${index + 1}: a batch can only change style and text`);
     }
     return request;

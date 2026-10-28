@@ -6,9 +6,13 @@ import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './err
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
 import { leadingWhitespaceStart } from './splice.js';
 import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
+import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
+import { jsxClassSite } from './tailwind/jsx-site.js';
+import type { TailwindOutcome } from '../../shared/contracts.js';
 
 interface JsxPatchOptions {
   typescript?: boolean;
+  tailwind?: TailwindTheme | null;
 }
 
 interface StyleEntry {
@@ -310,7 +314,38 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   if (edit.name !== undefined) patchName(magic, source, element, edit.name);
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
-  if (styleKeys.length > 0) patchStyle(magic, source, element, style);
+  const tailwind = patchClassesOrStyle(magic, source, element, style, edit, options.tailwind ?? null);
   if (edit.text !== undefined) patchText(magic, source, element, edit.text);
-  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined } };
+  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined }, ...(tailwind ? { tailwind } : {}) };
+}
+
+function inlineKeys(element: t.JSXElement): Set<string> | null {
+  const attribute = styleAttribute(element);
+  if (!attribute) return new Set();
+  const value = attribute.value;
+  if (value?.type !== 'JSXExpressionContainer' || value.expression.type !== 'ObjectExpression') return null;
+  return new Set(value.expression.properties.map(keyOf).filter((key): key is string => key !== null));
+}
+
+function patchClassesOrStyle(magic: MagicString, source: string, element: t.JSXElement, style: Record<string, string | null>, edit: SourceEdit, theme: TailwindTheme | null): TailwindOutcome | undefined {
+  const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, theme);
+  if (decision.kind !== 'classes') {
+    if (Object.keys(style).length > 0) patchStyle(magic, source, element, style);
+    return decision.kind === 'inline' ? decision.fallback.outcome : undefined;
+  }
+  for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
+  const mapped = new Set(decision.patch.inlineProps);
+  const present = inlineKeys(element);
+  const inline: Record<string, string | null> = {};
+  for (const [prop, value] of Object.entries(style)) {
+    if (!mapped.has(prop)) inline[prop] = value;
+    else if (present?.has(camelCaseProp(prop))) inline[prop] = null;
+  }
+  if (Object.keys(inline).length > 0) patchStyle(magic, source, element, inline);
+  return decision.patch.outcome;
+}
+
+export function jsxClassInfo(source: string, loc: SourcePosition, typescript: boolean, theme: TailwindTheme | null): TailwindOutcome | null {
+  const element = findJsxElement(parseSource(source, typescript).program, loc);
+  return element ? describeSite(jsxClassSite(source, element), theme) : null;
 }

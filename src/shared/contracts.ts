@@ -900,6 +900,19 @@ export interface DirectEditRequest {
   name?: string | null;
   move?: ReorderMove;
   insert?: InsertKind;
+  classes?: ClassEditRequest;
+}
+
+export interface ClassEditRequest {
+  add?: string[];
+  remove?: string[];
+}
+
+export interface TailwindOutcome {
+  mode: 'classes' | 'inline' | 'none';
+  classes: string[];
+  dynamic: boolean;
+  note: string | null;
 }
 
 export type ReorderMove = 'up' | 'down';
@@ -966,12 +979,13 @@ export interface DirectEditResult {
   version: Version;
   applied: { style: string[]; text: boolean };
   moved?: SourceLoc;
+  tailwind?: TailwindOutcome;
 }
 
 export interface DirectEditBatchResult {
   files: string[];
   version: Version;
-  applied: { file: string; style: string[]; text: boolean }[];
+  applied: { file: string; style: string[]; text: boolean; tailwind?: TailwindOutcome }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

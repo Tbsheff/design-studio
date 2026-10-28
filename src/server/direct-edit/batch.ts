@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import type { Direction, DirectEditBatchResult, DirectEditRequest, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
-import { assertCanEdit, editSummary, patchSource, publishVersion, resolveSource, writeAtomic } from './index.js';
-import type { DirectEditDeps, ResolvedSource } from './index.js';
+import { assertCanEdit, editSummary, patchSource, publishVersion, resolveSource, themeForFile, writeAtomic } from './index.js';
+import type { DirectEditDeps, EditScope, ResolvedSource } from './index.js';
+import type { TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditBatch } from './validate.js';
 
@@ -10,6 +11,7 @@ interface FileGroup {
   target: ResolvedSource;
   original: string;
   code: string;
+  theme: TailwindTheme | null;
   edits: { index: number; request: DirectEditRequest }[];
 }
 
@@ -21,7 +23,7 @@ function byPositionFromEnd(a: { request: DirectEditRequest }, b: { request: Dire
   return b.request.source.line - a.request.source.line || b.request.source.col - a.request.source.col;
 }
 
-async function groupByFile(workTree: string, edits: DirectEditRequest[], known: Set<string> | null): Promise<FileGroup[]> {
+async function groupByFile(workTree: string, edits: DirectEditRequest[], known: Set<string> | null, scope: EditScope): Promise<FileGroup[]> {
   const groups = new Map<string, FileGroup>();
   for (const [index, request] of edits.entries()) {
     assertKnownTokens(request.style, known);
@@ -29,7 +31,7 @@ async function groupByFile(workTree: string, edits: DirectEditRequest[], known: 
     let group = groups.get(target.file);
     if (!group) {
       const original = await readFile(target.file, 'utf8');
-      group = { target, original, code: original, edits: [] };
+      group = { target, original, code: original, theme: await themeForFile(workTree, target.relative, original, scope), edits: [] };
       groups.set(target.file, group);
     }
     group.edits.push({ index, request });
@@ -40,9 +42,9 @@ async function groupByFile(workTree: string, edits: DirectEditRequest[], known: 
 function patchGroups(groups: FileGroup[], applied: AppliedEdit[], tags: string[]): void {
   for (const group of groups) {
     for (const { index, request } of [...group.edits].sort(byPositionFromEnd)) {
-      const patch = patchSource(group.target.relative, group.code, request);
+      const patch = patchSource(group.target.relative, group.code, request, group.theme);
       group.code = patch.code;
-      applied[index] = { file: group.target.relative, ...patch.applied };
+      applied[index] = { file: group.target.relative, ...patch.applied, ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
       tags[index] = patch.tag;
     }
   }
@@ -95,7 +97,7 @@ export async function writeAndCommitAll(
 export async function applyDirectEditBatch(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<DirectEditBatchResult> {
   const { edits } = parseDirectEditBatch(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
-  const groups = await groupByFile(direction.workTree, edits, await knownTokenVars(direction.workTree));
+  const groups = await groupByFile(direction.workTree, edits, await knownTokenVars(direction.workTree), { projectKind: project.kind });
   const applied: AppliedEdit[] = new Array<AppliedEdit>(edits.length);
   const tags: string[] = new Array<string>(edits.length);
   patchGroups(groups, applied, tags);

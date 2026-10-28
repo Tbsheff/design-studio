@@ -1,3 +1,5 @@
+import type { ClassEditRequest, TailwindOutcome } from '../../shared/contracts.js';
+
 type DirectEditErrorCode =
   | 'invalid_request'
   | 'invalid_source'
@@ -10,6 +12,7 @@ type DirectEditErrorCode =
   | 'cannot_move'
   | 'cannot_restructure'
   | 'attribute_not_literal'
+  | 'classes_not_editable'
   | 'no_change'
   | 'stale_selection'
   | 'no_base_version'
@@ -61,6 +64,7 @@ export interface SourceEdit {
   name?: string | null;
   move?: 'up' | 'down';
   insert?: 'text' | 'frame' | 'rect' | 'ellipse';
+  classes?: ClassEditRequest;
 }
 
 export interface PatchResult {
@@ -69,6 +73,7 @@ export interface PatchResult {
   applied: { style: string[]; text: boolean };
   title?: string;
   moved?: SourcePosition;
+  tailwind?: TailwindOutcome;
 }
 
 const STALE_SELECTION_MESSAGE = 'The page changed since you selected this element. Select it again.';

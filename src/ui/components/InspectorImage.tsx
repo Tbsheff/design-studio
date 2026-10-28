@@ -38,7 +38,9 @@ function currentFit(selection: SelectionContext, background: boolean): ImageFit 
 
 function sourceName(selection: SelectionContext, background: boolean): string {
   const raw = background ? (/url\(["']?([^"')]+)/.exec(selection.styles['background-image'] ?? '')?.[1] ?? '') : (attrOf(selection.outerHTML, 'src') ?? '');
-  const last = raw.split(/[?#]/)[0]?.split('/').pop() ?? '';
+  const nextUrl = /\/_next\/image\?(?:.*&)?url=([^&]+)/.exec(raw)?.[1];
+  const path = nextUrl ? decodeURIComponent(nextUrl) : raw;
+  const last = path.split(/[?#]/)[0]?.split('/').pop() ?? '';
   return last.startsWith('data:') || last === '' ? 'Inline image' : decodeURIComponent(last).slice(0, 60);
 }
 
@@ -49,10 +51,9 @@ function useImageSet(props: Props) {
   const reselect = () => {
     for (const wait of RESELECT_AFTER_MS) window.setTimeout(() => props.port?.current?.post({ type: 'select-selector', selector: props.selection.selector }), wait);
   };
-  const run = async (change: Omit<SetImageRequest, 'target'>, file?: Blob | null) => {
-    if (!props.editable || busy) return;
-    setBusy(true);
-    setError(null);
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const pending = useRef(0);
+  const send = async (change: Omit<SetImageRequest, 'target'>, file?: Blob | null) => {
     try {
       const image = file ? await fileData(file) : undefined;
       const result = await imageApi.set(props.projectId, props.directionId, { target: imageTargetOf(props.selection), ...change, ...(image ? { image } : {}) });
@@ -60,9 +61,18 @@ function useImageSet(props: Props) {
       if (result.changed) reselect();
     } catch (failure) {
       setError(imageError(failure));
-    } finally {
-      setBusy(false);
     }
+  };
+  const run = (change: Omit<SetImageRequest, 'target'>, file?: Blob | null): Promise<void> => {
+    if (!props.editable) return Promise.resolve();
+    setError(null);
+    pending.current += 1;
+    setBusy(true);
+    queue.current = queue.current.then(() => send(change, file)).finally(() => {
+      pending.current -= 1;
+      if (pending.current === 0) setBusy(false);
+    });
+    return queue.current;
   };
   return { busy, error, run, setError, placed };
 }
@@ -165,7 +175,7 @@ export default function InspectorImage(props: Props) {
   const [focal, setFocal] = useState(() => (background ? props.selection.styles['background-position'] : props.selection.styles['object-position']) ?? '50% 50%');
   usePasteImage(props.editable && kind !== null, (file) => void run({}, file));
   if (!kind) return null;
-  const disabled = !props.editable || busy;
+  const disabled = !props.editable;
   const paste = async () => {
     try {
       const blob = await clipboardImage();

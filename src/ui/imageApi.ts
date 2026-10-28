@@ -10,6 +10,7 @@ export function imageTargetOf(selection: SelectionContext): SetImageRequest['tar
     tag: selection.tag.toLowerCase(),
     selector: selection.selector,
     background: imageKindOf(selection) === 'background',
+    ...(selection.source ? {} : { html: selection.outerHTML.slice(0, 4000) }),
     ...(selection.owners?.length ? { owners: selection.owners } : {}),
   };
 }
@@ -43,7 +44,8 @@ export async function clipboardImage(): Promise<Blob | null> {
 }
 
 export function imageError(error: unknown): string {
-  if (error instanceof ApiError || error instanceof Error) return error.message;
+  if (error instanceof ApiError && typeof (error.data as { message?: unknown } | undefined)?.message === 'string') return (error.data as { message: string }).message;
+  if (error instanceof Error) return error.message;
   return 'The image could not be placed.';
 }
 

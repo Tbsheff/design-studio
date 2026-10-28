@@ -62,7 +62,7 @@ async function targetFor(deps: EditDeps, project: Project, direction: Direction,
   if (!element) throw new EditError(`No element matches ${sel} on the page.`);
   const probed = await probeOwners(deps.preview, url, sel).catch(() => null);
   if (!element.source && !probed?.owners.length) throw new EditError(`${sel} has no source location. Pass source with the file:line:col of its tag.`);
-  return { source: element.source, tag: element.tag, selector: sel, background: imageKindOf(element) === 'background', ...(probed?.owners.length ? { owners: probed.owners } : {}) };
+  return { source: element.source, tag: element.tag, selector: sel, background: imageKindOf(element) === 'background', ...(element.source ? {} : { html: element.outerHTML.slice(0, 4000) }), ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }
 
 function options(input: Input): Omit<SetImageRequest, 'target' | 'image' | 'url'> {

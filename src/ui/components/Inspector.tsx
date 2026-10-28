@@ -217,6 +217,16 @@ function SimpleTab(props: InspectorProps) {
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
+  if (reason && target && props.editable && props.selection.length === 1 && imageKindOf(target)) {
+    return (
+      <div className="inspector ins-simple">
+        <div className="ins-scroll">
+          <ImageSection {...props} />
+          <EmptyState reason="The other styles of this image come from a component outside the project. Ask the agent to change them in Chat." notice={props.notice} />
+        </div>
+      </div>
+    );
+  }
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
   return (

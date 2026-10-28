@@ -15,6 +15,7 @@ export interface ImageTarget {
   selector?: string;
   owners?: ComponentOwner[];
   background?: boolean;
+  html?: string;
 }
 
 export interface SetImageRequest {

@@ -9,6 +9,7 @@ import type { InsertScope } from '../components/insert.js';
 import { loadLibrary } from '../components/insert-list.js';
 import { ownerUseSite } from '../components/use-site.js';
 import { DirectEditError } from './errors.js';
+import { findImageSource } from './image-find.js';
 import { jsxElementAt, jsxTagName, setHtmlAttrs, setJsxAttrs, type AttrChanges } from './image-attrs.js';
 import { imageFromBase64, imageFromUrl, type ImageBytes } from './image-source.js';
 import { assertCanEdit, patchSource, publishVersion, resolveSource, saveDeferred, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
@@ -19,7 +20,7 @@ const loc = z.object({ file: z.string().min(1).max(1000), line: z.number().int()
 const focal = z.string().trim().regex(/^(\d{1,3}(\.\d+)?%|left|right|center|top|bottom)(\s+(\d{1,3}(\.\d+)?%|left|right|center|top|bottom))?$/, 'focal must be "x% y%", for example "50% 30%"');
 const requestSchema = z
   .object({
-    target: z.object({ source: loc.nullable(), tag: z.string().min(1).max(100), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional(), background: z.boolean().optional() }).strict(),
+    target: z.object({ source: loc.nullable(), tag: z.string().min(1).max(100), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional(), background: z.boolean().optional(), html: z.string().max(4000).optional() }).strict(),
     mode: z.enum(IMAGE_MODES).optional(),
     image: z.object({ name: z.string().max(300), data: z.string().min(1) }).strict().optional(),
     url: z.string().trim().min(1).max(2000).optional(),
@@ -129,16 +130,20 @@ function titleOf(mode: ImagePlan['mode'], tag: string, request: ParsedImageReque
 const NO_SOURCE = 'This element has no source location. Ask the agent to change the image in Chat.';
 
 async function useSiteOf(scope: InsertScope, owners: ParsedImageRequest['target']['owners']): Promise<SourceLoc | null> {
-  const owner = owners?.find((item) => /^[A-Z]/.test(item.name));
-  if (!owner) return null;
+  const named = (owners ?? []).filter((item) => /^[A-Z]/.test(item.name));
+  if (named.length === 0) return null;
   const { root } = await loadLibrary(scope.project, scope.workTree);
-  return ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, owner).catch(() => null);
+  for (const owner of named) {
+    const use = await ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, owner).catch(() => null);
+    if (use) return use;
+  }
+  return null;
 }
 
 async function sourceFor(scope: InsertScope, target: ParsedImageRequest['target']): Promise<{ source: SourceLoc; target: ResolvedSource }> {
   const own = target.source ? await resolveSource(scope.workTree, target.source.file).catch((error: unknown) => (target.owners?.length ? null : Promise.reject(error))) : null;
   if (own && target.source) return { source: target.source, target: own };
-  const use = await useSiteOf(scope, target.owners);
+  const use = (await useSiteOf(scope, target.owners)) ?? (target.html ? await findImageSource(scope.project, scope.workTree, target.html) : null);
   if (!use) throw new DirectEditError('element_not_found', NO_SOURCE);
   return { source: use, target: await resolveSource(scope.workTree, use.file) };
 }

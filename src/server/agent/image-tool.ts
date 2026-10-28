@@ -68,7 +68,7 @@ async function targetFor(deps: DirectToolDeps, input: Input) {
   if (!element) throw new Error(`No element matches ${input.selector} on the page.`);
   const probed = await probeOwners(deps.preview, url, input.selector).catch(() => null);
   if (!element.source && !probed?.owners.length) throw new Error(`${input.selector} has no source location. Pass source (file:line:col).`);
-  return { source: element.source, tag: element.tag, selector: input.selector, background: imageKindOf(element) === 'background', ...(probed?.owners.length ? { owners: probed.owners } : {}) };
+  return { source: element.source, tag: element.tag, selector: input.selector, background: imageKindOf(element) === 'background', ...(element.source ? {} : { html: element.outerHTML.slice(0, 4000) }), ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }
 
 async function resolved(deps: DirectToolDeps, input: Input): Promise<Input> {

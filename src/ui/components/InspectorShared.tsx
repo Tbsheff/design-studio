@@ -45,7 +45,7 @@ function useTextSource(edit: TextEditScope, selection: SelectionContext): TextSo
     api
       .textSource(projectId, directionId, source, hints)
       .then((next) => live && setAnswer(next))
-      .catch(() => live && setAnswer(null));
+      .catch(() => live && setAnswer({ reason: '' }));
     return () => {
       live = false;
     };

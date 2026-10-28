@@ -23,6 +23,7 @@ export interface Draft {
   fix: ReviewFix | null;
   guard?: FixGuard;
   hint: string;
+  shared?: string;
 }
 
 export interface AxeCheck {

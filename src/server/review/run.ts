@@ -8,8 +8,10 @@ import { loadAxeSource } from '../preview/axe.js';
 import { layoutProbeExpression, type LayoutProbeResult } from '../preview/layout-probe.js';
 import type { RenderPage } from '../preview/render-backend.js';
 import type { PreviewService } from '../types.js';
+import { BadRequestError } from '../store/errors.js';
 import { axeDrafts, axeSelector, layoutDrafts, REVIEW_AXE_RULES, tapDrafts, tokenDrafts, type AxeViolation, type Draft } from './checks.js';
 import { verifyFixes } from './fixes.js';
+import { markShared, pageOwnDir } from './shared-files.js';
 import { reviewProbeExpression, type ProbeResult } from './probe.js';
 
 const LAYOUT_CAP = 12;
@@ -24,14 +26,24 @@ interface PageFacts {
   probe: ProbeResult;
 }
 
-async function readPage(page: RenderPage, app: boolean): Promise<PageFacts> {
+async function readPage(page: RenderPage, app: boolean, within: string | undefined): Promise<PageFacts> {
   await waitForPage(page);
+  const context = within ? `document.querySelector(${JSON.stringify(within)})` : 'document';
+  if (within && !(await page.evaluate<boolean>(`(() => { try { return ${context} !== null; } catch { return false; } })()`))) throw new BadRequestError(`No element matches selector ${within} on this page. Check it with get_screenshot or the canvas selection.`);
   await page.evaluate(`${await loadAxeSource()}\n;0`);
-  const violations = await page.evaluate<AxeViolation[]>(`window.axe.run(document, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`);
+  const violations = await page.evaluate<AxeViolation[]>(`window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`);
   const layout = await page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP));
   const selectors = [...new Set(violations.flatMap((violation) => violation.nodes.map(axeSelector)).filter((selector): selector is string => selector !== null))];
   const probe = await page.evaluate<ProbeResult>(reviewProbeExpression({ selectors, app, scanRules: true, cap: TOKEN_CAP }));
   return { violations, layout: layout.findings, probe };
+}
+
+async function insideRoot(page: RenderPage, root: string, drafts: Draft[]): Promise<Draft[]> {
+  const selectors = drafts.map((draft) => draft.selector);
+  const inside = await page.evaluate<boolean[]>(
+    `(() => { const root = document.querySelector(${JSON.stringify(root)}); return ${JSON.stringify(selectors)}.map((s) => { if (!root || !s) return false; try { const el = document.querySelector(s); return Boolean(el && root.contains(el)); } catch { return false; } }); })()`,
+  );
+  return drafts.filter((_draft, index) => inside[index] === true);
 }
 
 function findingId(draft: Draft): string {
@@ -49,7 +61,7 @@ function askText(draft: Draft, frame: ReviewFrame): string {
 }
 
 function toFinding(draft: Draft, frame: ReviewFrame): ReviewFinding {
-  return { id: findingId(draft), kind: draft.kind, severity: draft.severity, selector: draft.selector, source: draft.source, element: draft.element, message: draft.message, fix: draft.fix, ask: askText(draft, frame) };
+  return { id: findingId(draft), kind: draft.kind, severity: draft.severity, selector: draft.selector, source: draft.source, element: draft.element, message: draft.message, fix: draft.fix, ask: askText(draft, frame), ...(draft.shared ? { shared: draft.shared } : {}) };
 }
 
 function ordered(findings: ReviewFinding[]): ReviewFinding[] {
@@ -120,13 +132,18 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   if (!preview.withPage) throw new Error('rendering is not available');
   const url = withPagePath(target.baseUrl ?? (await preview.directionUrl(project, direction)), frame.path || undefined);
   const entries = (await readDesignSystemState(project, direction)).entries;
-  const facts = await preview.withPage(url, { width: frame.width, height: frame.height }, (page) => readPage(page, Boolean(project.app)));
-  const all = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tapDrafts(facts.probe.taps, entries), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(facts.layout)];
+  const { facts, all } = await preview.withPage(url, { width: frame.width, height: frame.height }, async (page) => {
+    const read = await readPage(page, Boolean(project.app), frame.selector);
+    const found = [...axeDrafts(read.violations, read.probe.elements, entries), ...tapDrafts(read.probe.taps, entries), ...tokenDrafts(read.probe.tokens, read.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(read.layout)];
+    return { facts: read, all: frame.selector ? await insideRoot(page, frame.selector, found) : found };
+  });
   const drafts = project.app ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir) : all;
   await verifyFixes(project, direction, drafts);
+  markShared(drafts, await pageOwnDir(project, direction, frame.path));
   const findings = ordered(grouped(unique(drafts.map((draft) => toFinding(draft, frame)))));
   const notes = [
     ...(entries.length === 0 ? [noTokensNote(facts.probe)] : []),
+    ...(frame.selector ? [`Only findings inside ${frame.selector} are shown.`] : []),
     ...(all.length > drafts.length ? [`${all.length - drafts.length} findings on elements outside the app source (for example dev tool overlays) are not shown.`] : []),
   ];
   return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes };

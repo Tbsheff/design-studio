@@ -20,8 +20,8 @@ interface ReviewRouteDeps {
 }
 
 const side = z.number().int().min(200).max(4000);
-const reviewSchema = z.object({ frame: z.string().trim().min(1).max(60).optional(), path: z.string().trim().max(300).optional(), width: side.optional(), height: side.optional() }).strict();
-const fixSchema = z.object({ findingIds: z.array(z.string().min(1).max(80)).min(1).max(REVIEW_FIX_MAX) }).strict();
+const reviewSchema = z.object({ frame: z.string().trim().min(1).max(60).optional(), path: z.string().trim().max(300).optional(), selector: z.string().trim().min(1).max(2000).optional(), width: side.optional(), height: side.optional() }).strict();
+const fixSchema = z.object({ findingIds: z.array(z.string().min(1).max(80)).min(1).max(REVIEW_FIX_MAX), allowShared: z.boolean().optional() }).strict();
 
 function parse<S extends z.ZodType>(schema: S, body: unknown): z.output<S> {
   const parsed = schema.safeParse(body ?? {});
@@ -41,7 +41,7 @@ async function currentReview(deps: ReviewRouteDeps, project: Project, direction:
   return fresh;
 }
 
-export async function fixFindings(deps: ReviewRouteDeps, project: Project, direction: Direction, ids: string[]): Promise<ReviewFixResult> {
+export async function fixFindings(deps: ReviewRouteDeps, project: Project, direction: Direction, ids: string[], allowShared = false): Promise<ReviewFixResult> {
   const review = await currentReview(deps, project, direction);
   const byId = new Map(review.findings.map((finding) => [finding.id, finding]));
   const chosen: ReviewFinding[] = [];
@@ -50,11 +50,13 @@ export async function fixFindings(deps: ReviewRouteDeps, project: Project, direc
     const finding = byId.get(id);
     if (!finding) skipped.push({ id, reason: 'This finding is gone from the latest review. Run the review again.' });
     else if (!finding.fix) skipped.push({ id, reason: 'This finding needs judgment, so it has no direct fix. Ask the agent or edit it yourself.' });
+    else if (finding.shared && !allowShared) skipped.push({ id, reason: `The fix edits the shared file ${finding.shared}, outside the page's own route folder, so it changes every page that uses it. Pass allowShared: true to apply it.` });
     else chosen.push(finding);
   }
   if (chosen.length === 0) return { applied: [], skipped, files: [], version: null };
   const done = await applyFindingFixes(deps.editDeps, project, direction, chosen);
-  return { applied: chosen.map((finding) => finding.id), skipped, ...done };
+  const shared = [...new Set(chosen.flatMap((finding) => (finding.shared ? [finding.shared] : [])))];
+  return { applied: chosen.map((finding) => finding.id), skipped, ...done, ...(shared.length > 0 ? { shared } : {}) };
 }
 
 function editError(c: Context, error: unknown): Response {
@@ -80,7 +82,7 @@ export function registerReviewRoutes(app: Hono, deps: ReviewRouteDeps): void {
   app.post('/api/projects/:pid/d/:did/review/fix', async (c) => {
     const input = parse(fixSchema, await deps.readBody(c));
     try {
-      return c.json(await deps.withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => fixFindings(deps, project, direction, input.findingIds)));
+      return c.json(await deps.withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => fixFindings(deps, project, direction, input.findingIds, input.allowShared === true)));
     } catch (error) {
       return editError(c, error);
     }

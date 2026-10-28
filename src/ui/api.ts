@@ -257,7 +257,7 @@ export const api = {
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
   review: (pid: string, did: string, body: ReviewRequest) => json<ReviewResult>('POST', `${d(pid, did)}/review`, body),
-  reviewFix: (pid: string, did: string, findingIds: string[]) => json<ReviewFixResult>('POST', `${d(pid, did)}/review/fix`, { findingIds }),
+  reviewFix: (pid: string, did: string, findingIds: string[]) => json<ReviewFixResult>('POST', `${d(pid, did)}/review/fix`, { findingIds, allowShared: true }),
 };
 
 function editKind(req: DirectEditRequest): string {

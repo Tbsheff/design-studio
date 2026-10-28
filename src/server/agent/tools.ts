@@ -23,6 +23,7 @@ import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } fr
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
+import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -367,7 +368,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
     editElementShape,
-    (args) => runEditElement(deps, args),
+    withLayerIds(deps, (args) => runEditElement(deps, args)),
   );
 
   const setTokenTool = tool(
@@ -389,7 +390,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'set_props',
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
     setPropsShape,
-    (args) => runSetProps(deps, args),
+    withLayerIds(deps, (args) => runSetProps(deps, args)),
   );
 
   const findStylesTool = tool(
@@ -411,7 +412,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'review_frame',
     'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
     reviewFrameShape,
-    (args) => runReviewFrameTool(deps, args),
+    withLayerIds(deps, (args) => runReviewFrameTool(deps, args)),
     { annotations: { readOnlyHint: true } },
   );
 
@@ -419,22 +420,38 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'insert_component',
     'Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.',
     insertComponentShape,
-    (args) => runInsertComponent(deps, args),
+    withLayerIds(deps, (args) => runInsertComponent(deps, args)),
   );
 
   const insertJsxTool = tool(
     'insert_jsx',
     'Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() or a condition are refused. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.',
     insertJsxShape,
-    (args) => runInsertJsx(deps, args),
+    withLayerIds(deps, (args) => runInsertJsx(deps, args)),
   );
 
   const clearTextTool = tool(
     'clear_text',
     'Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.',
     clearTextShape,
-    (args) => runClearText(deps, args),
+    withLayerIds(deps, (args) => runClearText(deps, args)),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool] });
+  const listComponentsTool = tool(
+    'list_components',
+    'Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.',
+    listComponentsShape,
+    (args) => runListComponents(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const getLayersTool = tool(
+    'get_layers',
+    'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
+    getLayersShape,
+    (args) => runGetLayers(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool] });
 }

@@ -165,7 +165,7 @@ interface PreparedMessage {
 
 function prepareMessage(parts: UserMessageParts, skills: PreparedSkills, input: DriverInput, prompt: { text: string; hash: string }, resume: string | null, config: ResolvedRunConfig): PreparedMessage {
   const recommendedSkills = config.preset.skills ? recommendSkills(skills.catalog.skills, skills.enabled, input.ctx.request) : [];
-  const withSkills = withRunLevel(withRecommendedSkills(parts, recommendedSkills), config, input.ctx.request.mode);
+  const withSkills = withRunLevel(withRecommendedSkills(parts, recommendedSkills), config, input.ctx.request.mode, { app: Boolean(input.ctx.project.app), appTokens: input.ctx.project.kind === 'react' && Boolean(input.ctx.designSystem?.source) });
   const sent = resume ? withUpdatedInstructions(withSkills, prompt.text, prompt.hash, priorFor(input, resume)) : withSkills;
   return { sent, updatedInstructions: sent !== withSkills, recommendedSkills };
 }

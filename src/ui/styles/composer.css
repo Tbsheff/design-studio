@@ -861,7 +861,7 @@
 .composer-pill .ui-pill-select-value {
   grid-column: 1;
   grid-row: 1;
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 16px;
   font-weight: var(--w-medium);
   color: var(--home-pill-value);
@@ -1155,7 +1155,7 @@
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--t-md);
   line-height: 20px;
 }
 
@@ -1179,7 +1179,7 @@
 .slash-note {
   padding: 6px 8px 4px;
   color: var(--text-2);
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 16px;
 }
 

@@ -143,20 +143,49 @@
   min-width: 0;
 }
 
-.open-app-env summary {
-  color: var(--text-2);
-  font-size: var(--t-xs);
-  cursor: pointer;
+.open-app-env {
+  display: grid;
+  gap: 6px;
 }
 
-.open-app-env[open] {
+.open-app-disclosure {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: var(--s-1);
+  height: 28px;
+  padding: 0 var(--s-2) 0 var(--s-1);
+  margin-left: calc(-1 * var(--s-1));
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.open-app-disclosure:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.open-app-disclosure .icon {
+  transition: rotate var(--dur) var(--ease);
+}
+
+.open-app-disclosure[aria-expanded='true'] .icon {
+  rotate: 90deg;
+}
+
+.open-app-env-body {
   display: grid;
   gap: 6px;
 }
 
 .open-app-env textarea {
   width: 100%;
-  margin-top: 6px;
 }
 
 .open-app-foot {

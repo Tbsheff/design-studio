@@ -16,7 +16,7 @@
 }
 
 .attach-app-list legend {
-  font-size: 12px;
+  font-size: var(--t-xs);
   color: var(--text-2);
   margin-bottom: 6px;
 }
@@ -29,7 +29,11 @@
   padding: 7px 8px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--t-sm);
+}
+
+.attach-app-option input {
+  accent-color: var(--text);
 }
 
 .attach-app-option:hover {
@@ -38,7 +42,7 @@
 
 .attach-app-name {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .attach-app-spacer {
@@ -47,7 +51,7 @@
 
 .field-help {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .app-bar-root {
@@ -96,7 +100,7 @@
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  font-size: 13px;
+  font-size: var(--t-sm);
 }
 
 .app-panel-head .grow {
@@ -104,9 +108,13 @@
   min-width: 0;
 }
 
+.app-panel-title {
+  font-weight: var(--w-medium);
+}
+
 .app-panel-sub {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
 
 .app-panel-tabs {
@@ -132,14 +140,21 @@
   gap: 8px;
   align-items: center;
   width: 100%;
+  height: 28px;
   text-align: left;
-  padding: 6px 8px;
+  padding: 0 8px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--text);
   font-size: var(--t-xs);
   cursor: pointer;
+}
+
+.app-route > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-route:hover,
@@ -193,7 +208,7 @@
   background: var(--warn-soft);
   border: 1px solid var(--warn-line);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--t-xs);
   line-height: 1.4;
   pointer-events: auto;
 }
@@ -259,6 +274,10 @@
 .app-panel-message {
   margin-top: 2px;
   white-space: normal;
+}
+
+body:has(.frame-menu) .app-fail {
+  display: none;
 }
 
 .app-fail {
@@ -361,4 +380,18 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.canvas:has(.app-fail) .app-stage-note[data-kind='failed'],
+.stage:has(.edit-notice) .app-stage-note {
+  visibility: hidden;
+}
+
+.app-stage-note > .icon {
+  flex: none;
+  color: var(--warn);
+}
+
+.app-stage-note[data-kind='route'] {
+  padding: 4px 4px 4px 14px;
 }

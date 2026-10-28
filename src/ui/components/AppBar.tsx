@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
+import { APP_PANEL_EVENT, publishAppStatus } from '../appStatus';
 import { AppFailure } from './AppFailure';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
@@ -26,6 +27,7 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
   const [tick, setTick] = useState(0);
+  const settled = status?.state === 'ready';
   useEffect(() => {
     let alive = true;
     const load = () =>
@@ -35,15 +37,16 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
           if (!alive) return;
           setStatus(state.status);
           setLogs(state.logs);
+          publishAppStatus(projectId, state.status);
         })
         .catch(() => undefined);
     void load();
-    const timer = window.setInterval(load, open ? POLL_OPEN_MS : POLL_CLOSED_MS);
+    const timer = window.setInterval(load, open || !settled ? POLL_OPEN_MS : POLL_CLOSED_MS);
     return () => {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [projectId, open, tick]);
+  }, [projectId, open, tick, settled]);
   return { status, logs, refresh: () => setTick((n) => n + 1) };
 }
 
@@ -221,7 +224,7 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
       <div className="app-panel-head">
         <span className="app-status-dot" data-state={state} />
         <div className="grow">
-          <div className="mono">{app.appDir === '.' ? 'App folder' : app.appDir}</div>
+          <div className="app-panel-title">{app.appDir === '.' ? 'App folder' : <span className="mono">{app.appDir}</span>}</div>
           <div className="app-panel-sub">{statusLine(status, managed)}</div>
           {status?.message && <div className="app-panel-sub app-panel-message">{status.message}</div>}
         </div>
@@ -243,8 +246,6 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
     </div>
   );
 }
-
-export const APP_PANEL_EVENT = 'studio:app-panel';
 
 function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void): void {
   useEffect(() => {

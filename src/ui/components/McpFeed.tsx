@@ -8,6 +8,7 @@ import type { McpApprovalCard, McpFeedState } from '../useMcpFeed';
 import { Icon, type IconName } from './Icon';
 
 export const MCP_ACTIVE_MS = 60_000;
+const RECENT_MS = 10 * 60_000;
 const FOLD_AT = 5;
 
 export interface McpFeedControl extends McpFeedState {
@@ -74,7 +75,7 @@ function useNow(stepMs: number, active: boolean): number {
   return now;
 }
 
-function ActivityRow({ entry, locked, onUndo }: { entry: McpActivity; locked: boolean; onUndo: (versionId: string) => void }) {
+function ActivityRow({ entry, locked, onUndo, readOnly = false }: { entry: McpActivity; locked: boolean; onUndo: (versionId: string) => void; readOnly?: boolean }) {
   const [undone, setUndone] = useState(false);
   const before = entry.versionId ? entry.beforeVersionId : null;
   return (
@@ -82,10 +83,11 @@ function ActivityRow({ entry, locked, onUndo }: { entry: McpActivity; locked: bo
       <span className="mcp-row-icon" aria-hidden="true">
         <Icon name={TOOL_ICONS[entry.tool] ?? 'sparkle'} size={14} />
       </span>
-      <span className="mcp-row-text" title={entry.summary}>
+      <span className="mcp-row-text" data-tip={entry.summary}>
         {entry.summary}
       </span>
       {before &&
+        !readOnly &&
         (undone ? (
           <span className="mcp-row-undone">Undone</span>
         ) : (
@@ -198,7 +200,7 @@ export function McpApproval({ card, compact = false, onAnswer }: { card: McpAppr
       <div className="mcp-approval-done" data-testid="mcp-approval" data-outcome={outcome}>
         <Icon name={outcome === 'allow' ? 'check' : outcome === 'deny' ? 'close' : 'alert'} size={14} />
         <strong>{OUTCOME_TEXT[outcome]}</strong>
-        <span className="mcp-approval-done-text" title={approval.title}>
+        <span className="mcp-approval-done-text" data-tip={approval.title}>
           {approval.title}
         </span>
       </div>
@@ -248,4 +250,32 @@ export function feedShown(mcp: McpFeedControl | null): boolean {
 export function McpItem({ item, mcp }: { item: Exclude<TimelineItem, { kind: 'run' }>; mcp: McpFeedControl | null }) {
   if (item.kind === 'approval') return <McpApproval card={item.card} />;
   return <McpBlock client={item.client} entries={item.entries} locked={mcp?.locked ?? true} onUndo={(versionId) => mcp?.onUndo(versionId)} />;
+}
+
+export function McpEditStrip({ mcp }: { mcp: McpFeedControl | null }) {
+  const last = mcp?.activity.at(-1) ?? null;
+  const now = useNow(10_000, last !== null);
+  const [open, setOpen] = useState(false);
+  if (!mcp || !last || now - last.at > RECENT_MS) return null;
+  const entries = mcp.activity.filter((entry) => entry.client === last.client).slice(-FOLD_AT);
+  return (
+    <section className="mcp-edit-strip" aria-label={`Edits by ${last.client}`} data-testid="mcp-edit-strip">
+      {open && (
+        <ul className="mcp-rows">
+          {entries.map((entry) => (
+            <ActivityRow key={entry.id} entry={entry} locked={mcp.locked} onUndo={mcp.onUndo} readOnly />
+          ))}
+        </ul>
+      )}
+      <button type="button" className="mcp-edit-head" aria-expanded={open} data-tip={open ? 'Hide the outside edits' : 'Show the recent outside edits. Undo them from the chat after you save or discard.'} data-tip-side="top" onClick={() => setOpen((v) => !v)}>
+        <span className="mcp-block-dot" data-active={now - last.at < MCP_ACTIVE_MS || undefined} aria-hidden="true" />
+        <strong className="mcp-edit-client">{last.client}</strong>
+        <span className="mcp-edit-summary truncate">{last.summary}</span>
+        <time className="mcp-row-time" dateTime={new Date(last.at).toISOString()}>
+          {formatTime(last.at)}
+        </time>
+        <Icon name="chevronDown" size={12} className="mcp-edit-caret" />
+      </button>
+    </section>
+  );
 }

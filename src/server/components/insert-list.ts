@@ -142,11 +142,22 @@ function countTags(texts: string[], names: Set<string>): Map<string, number> {
   return counts;
 }
 
+const ROUTE_LOCAL = /^(?:src\/)?(?:app|pages)\//;
+
+function rankFiles(scan: string[]): (file: string) => number {
+  const appRoot = scan.at(-1) ?? '';
+  return (file: string) => {
+    const index = scan.findIndex((dir) => file.startsWith(dir + path.sep));
+    if (index === scan.length - 1) return (ROUTE_LOCAL.test(path.relative(appRoot, file).split(path.sep).join('/')) ? 2 : 1) * scan.length + index;
+    return (path.basename(scan[index] ?? '') === 'components' ? 0 : 3) * scan.length + index;
+  };
+}
+
 export async function loadLibrary(project: Project, workTree: string): Promise<Library & { specifiers: Map<string, string[]> }> {
   const { root, scan } = await libraryRoots(project, workTree);
   const files = [...new Set((await Promise.all(scan.map((dir) => listFiles(dir, acceptFile)))).flat())];
   const infos = await Promise.all(files.map(async (file) => ({ file, info: await fileInfo(file) })));
-  const rank = (file: string) => scan.findIndex((dir) => file.startsWith(dir + path.sep));
+  const rank = rankFiles(scan);
   const entries: LibraryEntry[] = [];
   const specifiers = new Map<string, string[]>();
   for (const { file, info } of infos) {
@@ -157,7 +168,7 @@ export async function loadLibrary(project: Project, workTree: string): Promise<L
   }
   const counts = countTags(infos.map((item) => item.info?.text ?? ''), new Set(entries.map((entry) => entry.local)));
   for (const entry of entries) entry.uses = counts.get(entry.local) ?? 0;
-  entries.sort((a, b) => rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
+  entries.sort((a, b) => Number(a.uses === 0) - Number(b.uses === 0) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
   return { root, entries: entries.slice(0, LIST_MAX), files, truncated: entries.length > LIST_MAX, specifiers };
 }
 

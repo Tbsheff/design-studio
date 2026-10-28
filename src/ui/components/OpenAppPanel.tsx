@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { Project } from '../../shared/contracts';
 import { parseEnvText } from '../../shared/app';
 import { shortenHome, type WorkspaceList } from '../../shared/folders';
@@ -78,7 +78,7 @@ function useInspection(path: string, appDir: string | null, nonce: number) {
 }
 
 function StatusLine({ path, checking, error, result }: { path: string; checking: boolean; error: string | null; result: FolderInspection | null }) {
-  if (!path.trim()) return <p className="open-app-status">A Next.js app, a Vite app, or a folder with an index.html. The studio edits the files in place.</p>;
+  if (!path.trim()) return <p className="open-app-status">A Next.js app, a Vite app, or a folder with an index.html.</p>;
   if (checking && !result) return <p className="open-app-status">Checking the folder…</p>;
   const problem = error ?? result?.problem ?? null;
   if (problem) return <p className="open-app-status" data-tone="error" role="alert">{problem}</p>;
@@ -180,11 +180,26 @@ function NextOptions(p: NextOptionsProps) {
       ) : (
         <InstallNote result={p.result} onRecheck={p.onRecheck} />
       )}
-      <details className="open-app-env">
-        <summary>Environment for next dev (optional)</summary>
-        <textarea className="mono" rows={3} value={p.env} placeholder="SKIP_ENV_VALIDATION=true" spellCheck={false} aria-label="Environment for next dev" onChange={(e) => p.onEnv(e.target.value)} />
-        <small className="field-help">One KEY=value per line. The studio keeps these in the project file, so do not paste secrets.</small>
-      </details>
+      <EnvField env={p.env} onEnv={p.onEnv} />
+    </div>
+  );
+}
+
+function EnvField({ env, onEnv }: { env: string; onEnv: (env: string) => void }) {
+  const [open, setOpen] = useState(() => env.trim() !== '');
+  const id = useId();
+  return (
+    <div className="open-app-env">
+      <button type="button" className="open-app-disclosure" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)}>
+        <Icon name="chevronRight" size={14} />
+        Environment for next dev (optional)
+      </button>
+      {open && (
+        <div id={id} className="open-app-env-body">
+          <textarea className="mono" rows={3} value={env} placeholder="SKIP_ENV_VALIDATION=true" spellCheck={false} aria-label="Environment for next dev" autoFocus onChange={(e) => onEnv(e.target.value)} />
+          <small className="field-help">One KEY=value per line. The studio keeps these in the project file, so do not paste secrets.</small>
+        </div>
+      )}
     </div>
   );
 }

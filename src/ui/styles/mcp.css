@@ -369,3 +369,57 @@
 .comment-card .comment-reply-author {
   color: var(--float-fg-muted);
 }
+
+.mcp-edit-strip {
+  flex: none;
+  display: grid;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.mcp-edit-strip > .mcp-rows {
+  max-height: 168px;
+  overflow-y: auto;
+  padding: var(--s-1) var(--s-2) 0;
+}
+
+.mcp-edit-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  height: 28px;
+  padding: 0 var(--s-3);
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.mcp-edit-head:hover {
+  background: var(--surface-hover);
+}
+
+.mcp-edit-client {
+  flex: none;
+  color: var(--text);
+  font-weight: var(--w-medium);
+}
+
+.mcp-edit-summary {
+  flex: 1;
+  min-width: 0;
+}
+
+.mcp-edit-caret {
+  flex: none;
+  color: var(--text-3);
+  transition: rotate var(--dur) var(--ease);
+}
+
+.mcp-edit-head[aria-expanded='false'] .mcp-edit-caret {
+  rotate: 180deg;
+}

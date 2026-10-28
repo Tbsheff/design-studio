@@ -70,8 +70,12 @@ function minCount(action: ArrangeAction, selection: SelectionContext[]): number 
 }
 
 function successText(result: ArrangeResult): string {
-  const classes = result.classes.length > 0 ? result.classes.join(' ') : result.writes.flatMap((w) => Object.entries(w.style).map(([prop, value]) => `${prop}: ${value ?? 'unset'}`)).join('; ');
-  return [classes ? `Wrote ${classes}` : 'Arranged', result.note].filter(Boolean).join('. ');
+  const styles = result.writes.flatMap((w) => Object.entries(w.style));
+  const set = styles.filter(([, value]) => value !== null).map(([prop, value]) => `${prop}: ${value}`);
+  const removed = [...new Set(styles.filter(([, value]) => value === null).map(([prop]) => prop))];
+  const wrote = result.classes.length > 0 ? `Wrote ${result.classes.join(' ')}` : set.length > 0 ? `Wrote ${set.join('; ')}` : '';
+  const parts = [wrote, removed.length > 0 ? `Removed ${removed.join(', ')}` : '', result.note];
+  return parts.filter(Boolean).join('. ') || 'Arranged';
 }
 
 function frameRequest(projectId: string): { path?: string; viewport: { width: number; height: number } } {

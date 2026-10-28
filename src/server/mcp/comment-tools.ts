@@ -3,6 +3,7 @@ import type { DesignComment } from '../../shared/contracts.js';
 import { filterComments } from '../../shared/comments.js';
 import { COMMENT_STATUSES, describeCommentList } from '../agent/comment-tools.js';
 import { loadTarget, studioCall } from './edit-deps.js';
+import { canvasFrameOf } from '../comments/frame.js';
 import { defineTool, directionId, projectId } from './edit-kit.js';
 
 const listTool = defineTool(
@@ -20,7 +21,8 @@ const listTool = defineTool(
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
     const all = await studioCall<DesignComment[]>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/d/${encodeURIComponent(direction.id)}/comments`);
     const status = input.status ?? 'open';
-    const text = describeCommentList(filterComments(all, status, input.frame), status, input.frame);
+    const canvasFrame = await canvasFrameOf(project, (id) => deps.projects.projectDir(id), input.frame);
+    const text = describeCommentList(filterComments(all, status, input.frame, canvasFrame), status, input.frame);
     return { result: { content: [{ type: 'text', text }] } };
   },
 );

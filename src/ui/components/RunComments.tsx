@@ -65,7 +65,7 @@ export function RunCommentsCard({ run }: { run: RunView }) {
       <div className="run-comments-head">
         <Icon name="comment" size={14} />
         <span>
-          {linked.length} {linked.length === 1 ? 'comment' : 'comments'} in this run
+          {linked.length} {linked.length === 1 ? 'comment' : 'comments'}
         </span>
         <span className="spacer" />
         {toResolve.length > 0 && (

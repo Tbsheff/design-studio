@@ -1229,3 +1229,15 @@ button.comment-num.pick:focus-visible {
   border-radius: var(--r-full);
   color: var(--text-2);
 }
+
+.run-comment-link .num {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-comments-head > span {
+  white-space: nowrap;
+}

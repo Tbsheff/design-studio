@@ -208,8 +208,8 @@ function elementWhere(comment: Pick<DesignComment, 'target' | 'context'>): strin
   const loc = context?.source ?? comment.target.sourceLoc ?? null;
   const parts = [`selector ${context?.selector ?? comment.target.selector}`];
   if (loc) parts.push(`source ${loc.file}:${loc.line}`);
-  const component = context?.usedBy?.name ?? context?.component;
-  if (component) parts.push(`component <${component}>`);
+  const component = context?.usedBy?.name ?? context?.component ?? context?.owners?.[0]?.name;
+  if (component) parts.push(`in <${component}>`);
   if (context?.usedAt) parts.push(`used at ${context.usedAt.file}:${context.usedAt.line}`);
   return parts;
 }
@@ -229,8 +229,8 @@ export function describeComment(comment: DesignComment): string {
 }
 
 export function chatPrompt(comments: DesignComment[], notes: string[] = []): string {
-  const noun = comments.length === 1 ? 'this comment' : `these ${comments.length} comments`;
-  return [`Fix ${noun}. Change only what each one asks for.`, ...comments.map(describeComment), ...notes].join('\n');
+  const head = comments.length === 1 ? 'Fix this comment. Change only what it asks for.' : `Fix these ${comments.length} comments. Change only what each one asks for.`;
+  return [head, ...comments.map(describeComment), ...notes].join('\n');
 }
 
 function normPath(value: string): string {
@@ -242,20 +242,24 @@ function isEntry(ref: string): boolean {
   return path === '' || /^index\.html?$/i.test(path);
 }
 
-export function matchesFrame(comment: Pick<DesignComment, 'frame'>, ref: string): boolean {
+function samePage(a: string, b: string): boolean {
+  return normPath(a) === normPath(b) || (isEntry(a) && isEntry(b));
+}
+
+export function matchesFrame(comment: Pick<DesignComment, 'frame'>, ref: string, canvasFrame?: CommentFrame | null): boolean {
+  const frame = comment.frame ?? { path: '' };
+  if (canvasFrame) return frame.id ? frame.id === canvasFrame.id : samePage(frame.path, canvasFrame.path);
   const want = ref.trim();
-  const frame = comment.frame;
-  if (want.startsWith('@')) return frame?.label?.toLowerCase() === want.slice(1).toLowerCase();
-  if (!frame) return isEntry(want);
-  return frame.id === want || normPath(frame.path) === normPath(want) || (isEntry(want) && isEntry(frame.path));
+  if (want.startsWith('@')) return frame.label?.toLowerCase() === want.slice(1).toLowerCase();
+  return frame.id === want || samePage(frame.path, want);
 }
 
 export type CommentFilter = 'open' | 'all' | CommentStatus;
 
-export function filterComments(comments: DesignComment[], status: CommentFilter = 'open', frame?: string): DesignComment[] {
+export function filterComments(comments: DesignComment[], status: CommentFilter = 'open', frame?: string, canvasFrame?: CommentFrame | null): DesignComment[] {
   return comments.filter((comment) => {
     const statusOk = status === 'all' || (status === 'open' ? comment.status !== 'resolved' : comment.status === status);
-    return statusOk && (!frame || matchesFrame(comment, frame));
+    return statusOk && (!frame || matchesFrame(comment, frame, canvasFrame));
   });
 }
 

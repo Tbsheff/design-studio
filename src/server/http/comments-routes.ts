@@ -32,6 +32,10 @@ const selectionSchema = z.object({
   styles: z.record(z.string().max(100), z.string().max(500)),
   rect: rectSchema,
   source: sourceLocSchema.nullable(),
+  usedAt: sourceLocSchema.nullable().optional(),
+  usedBy: z.object({ name: z.string().max(100), root: z.boolean() }).nullable().optional(),
+  component: z.string().max(100).optional(),
+  owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(4000) })).max(12).optional(),
   ancestors: z.array(z.string().max(200)).max(20),
 });
 

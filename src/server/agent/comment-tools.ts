@@ -1,6 +1,8 @@
+import path from 'node:path';
 import { z } from 'zod';
+import { canvasFrameOf } from '../comments/frame.js';
 import type { CommentStatus, DesignComment } from '../../shared/contracts.js';
-import { describeComment, filterComments, frameText, type CommentFilter } from '../../shared/comments.js';
+import { describeComment, filterComments, type CommentFilter } from '../../shared/comments.js';
 import type { CommentStore } from '../store/comments.js';
 import type { AgentRunContext } from '../types.js';
 
@@ -17,6 +19,7 @@ export const resolveCommentShape = {
 
 interface CommentToolDeps {
   ctx: AgentRunContext;
+  runsDir: string;
   comments?: CommentStore;
 }
 
@@ -27,17 +30,19 @@ function text(value: string, isError = false): Text {
 }
 
 export function describeCommentList(list: DesignComment[], status: string, frame: string | undefined): string {
-  const scope = `${status}${frame ? ` on ${frame}` : ''}`;
-  if (list.length === 0) return `No ${scope} comments.`;
-  const rows = list.map((comment) => `${describeComment(comment)}\n   id ${comment.id} · status ${comment.status}${comment.frame ? '' : ` · ${frameText(undefined)}`}`);
-  return [`${list.length} ${scope} comment${list.length === 1 ? '' : 's'}:`, ...rows].join('\n');
+  const where = frame ? ` on ${frame}` : '';
+  if (list.length === 0) return `No ${status} comments${where}.`;
+  const rows = list.map((comment) => `${describeComment(comment)}\n   id ${comment.id} · status ${comment.status}`);
+  return [`${list.length} ${status} comment${list.length === 1 ? '' : 's'}${where}:`, ...rows].join('\n');
 }
 
 export async function runListComments(deps: CommentToolDeps, args: { status?: CommentFilter; frame?: string }): Promise<Text> {
   if (!deps.comments) return text('Comments are not available in this run.', true);
   const { project, direction } = deps.ctx;
   const status = args.status ?? 'open';
-  const list = filterComments(await deps.comments.list(project.id, direction.id), status, args.frame);
+  const projectDir = path.dirname(deps.runsDir);
+  const canvasFrame = await canvasFrameOf(project, () => projectDir, args.frame);
+  const list = filterComments(await deps.comments.list(project.id, direction.id), status, args.frame, canvasFrame);
   return text(describeCommentList(list, status, args.frame));
 }
 

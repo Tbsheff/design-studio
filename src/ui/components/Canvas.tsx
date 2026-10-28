@@ -526,7 +526,10 @@ export function Canvas(props: Props) {
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const clickThrough = useClickThrough(frames, picking);
-  useFrameChange(`${active.id}|${String(liveUrl)}`, props.onFrameChange);
+  useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
+    props.setSelection((prev) => (prev.length > 0 ? [] : prev));
+    props.onFrameChange?.();
+  });
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
   const frameActions = (frame: CanvasFrame, did: string | null): FrameMenuItem[] => {
     const make = props.onMakeStates;

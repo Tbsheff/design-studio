@@ -619,7 +619,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               selection,
               setSelection,
               onError: data.addError,
-              onFrameChange: data.clearErrors,
+              onFrameChange: data.clearFrameErrors,
               port,
               comments,
               commentTools: { tokens: tokenEntries(tokens), components: componentList.components, onSteer: runControls.onSteer },

@@ -40,6 +40,7 @@ interface StudioData {
   errors: BuildError[];
   addError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
   clearErrors: () => void;
+  clearFrameErrors: () => void;
   lastChange: FilesChange | null;
   connection: ConnectionState;
   refreshVersions: () => void;
@@ -239,6 +240,7 @@ export function useStudioData(projectId: string): StudioData {
     errors,
     addError,
     clearErrors: () => setErrors([]),
+    clearFrameErrors: () => setErrors((prev) => (prev.some((e) => e.source !== 'build') ? prev.filter((e) => e.source === 'build') : prev)),
     lastChange,
     connection,
     refreshVersions,

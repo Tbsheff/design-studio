@@ -3,6 +3,7 @@ import type { SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { Attachment, ProjectKind, RunComment, RunMention, SelectionContext } from '../../shared/contracts.js';
 import { statesTaskBlock } from '../../shared/states.js';
 import type { AgentRunContext, MentionFile } from '../types.js';
+import type { RunTarget, TargetFrame } from './run-target.js';
 import { referenceBlock, variationBlock } from '../variations/message.js';
 import { referencePagesBlock } from '../reference-page.js';
 
@@ -96,6 +97,34 @@ function mentionsBlock(mentions: readonly RunMention[], files: readonly MentionF
   return parts.length ? parts.join('\n') : null;
 }
 
+function frameLine(frame: TargetFrame): string {
+  const name = frame.label ? ` "${frame.label}"` : '';
+  return `${frame.id}${name}, page ${frame.path ? `/${frame.path}` : '(entry page)'}, ${frame.width}x${frame.height}`;
+}
+
+function elementLine(selection: readonly SelectionContext[] | undefined): string | null {
+  const element = selection?.[0];
+  if (!element) return null;
+  const name = element.component ?? element.usedBy?.name ?? element.tag;
+  const loc = element.source ? ` at ${element.source.file}:${element.source.line}:${element.source.col}` : '';
+  return `selected element: ${name}${loc} (selector ${trim(element.selector, 200)}); details are in <selected-elements>`;
+}
+
+export function canvasContextBlock(target: RunTarget | null | undefined, selection?: readonly SelectionContext[]): string | null {
+  if (!target) return null;
+  const state = target.state === 'default' ? '' : `, frame state ${target.stateName ?? target.state} (${target.state})`;
+  const lines = [
+    '<canvas-context>',
+    'The user had this canvas frame open when they sent the message. Unless the message names another page, the request is about this page. screenshot, render_check and design_review render this frame by default.',
+    `frame: ${frameLine(target)}${state}`,
+    target.routeFile ? `page file: ${target.routeFile}` : null,
+    elementLine(selection),
+    target.inView.length ? `other frames in view: ${target.inView.map(frameLine).join('; ')}` : null,
+    '</canvas-context>',
+  ];
+  return lines.filter((line): line is string => line !== null).join('\n');
+}
+
 function taskBlocks(ctx: Pick<AgentRunContext, 'request'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string[] {
   const blocks: string[] = [];
   if (ctx.request.plan) blocks.push(PLAN_MODE_BLOCK);
@@ -105,8 +134,10 @@ function taskBlocks(ctx: Pick<AgentRunContext, 'request'> & { attachments?: read
   return blocks;
 }
 
-export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
+export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles' | 'target'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
   const blocks = [ctx.request.prompt.trim(), ...taskBlocks(ctx)];
+  const canvas = canvasContextBlock(ctx.target, ctx.request.selection);
+  if (canvas) blocks.push(canvas);
   const variation = variationBlock(ctx.request.variation, ctx.request.scope);
   if (variation) blocks.push(variation);
   const reference = referenceBlock(ctx.request.reference);

@@ -12,11 +12,13 @@ import type { AgentRunContext, PreviewService } from '../types.js';
 import type { CriticImage } from './critic.js';
 import { describeScreens, planScreens, warmScreens, type RunScreen } from './screens.js';
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
+import { defaultShotTarget, type ShotTarget } from './run-target.js';
 
 const DIFF_VIEWPORTS: CheckViewport[] = ['desktop', 'mobile'];
 
 export interface BaselineShot {
   viewport: CheckViewport;
+  url?: string;
   path: string;
   selectionRects: ProbeRect[];
 }
@@ -71,8 +73,8 @@ async function diffOne(shot: BaselineShot, result: RenderCheckResult, targeted: 
   return diffFinding(diffImages(before, after, masks), shot.viewport, targeted);
 }
 
-async function diffFindings(state: RunToolState | undefined, results: RenderCheckResult[], targeted: boolean): Promise<QualityFinding[]> {
-  const shots = (await state?.baseline?.catch(() => [])) ?? [];
+async function diffFindings(state: RunToolState | undefined, results: RenderCheckResult[], targeted: boolean, url: string | null): Promise<QualityFinding[]> {
+  const shots = ((await state?.baseline?.catch(() => [])) ?? []).filter((shot) => !shot.url || !url || shot.url === url);
   const found = await Promise.all(
     shots.map((shot) => {
       const result = results.find((candidate) => candidate.viewport === shot.viewport);
@@ -110,9 +112,10 @@ function viewportView(result: RenderCheckResult) {
   };
 }
 
-function reportText(results: RenderCheckResult[], findings: QualityFinding[], timingsMs: Record<string, number>, budget: string | null, screens: RunScreen[]): string {
+function reportText(results: RenderCheckResult[], findings: QualityFinding[], timingsMs: Record<string, number>, budget: string | null, page: string | null, screens: RunScreen[]): string {
   const capped = capFindings(findings);
   const body = {
+    ...(page ? { page } : {}),
     ...(screens.length > 1 ? { screens: `Checked ${screens.length} screens (findings name their screen; screenshot takes screen=<number>):\n${describeScreens(screens)}` } : {}),
     viewports: results.map(viewportView),
     quality: capped.findings,
@@ -148,24 +151,26 @@ function nextStepLine(state: Pick<RunToolState, 'config' | 'criticCalls' | 'shot
   return loopLine(state, blocking);
 }
 
-export async function buildCheckReport(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state?: RunToolState): Promise<CheckReport> {
+export async function buildCheckReport(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state?: RunToolState, picked?: ShotTarget | null): Promise<CheckReport> {
   const timings: Record<string, number> = {};
   const started = Date.now();
-  const raw = await timedStep(timings, 'render', () => preview.renderCheck(ctx.project, ctx.direction, checkOptions(ctx, config)));
+  const target = picked ?? defaultShotTarget(ctx);
+  const raw = await timedStep(timings, 'render', () => preview.renderCheck(ctx.project, ctx.direction, { ...checkOptions(ctx, config), ...(target ? { url: target.url } : {}) }));
   const screens = state ? await timedStep(timings, 'screens', () => runScreens(preview, ctx, config, state).catch(() => [])) : [];
-  const extra = await timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens));
+  const mainUrl = target?.url ?? ctx.previewUrl;
+  const extra = await timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens, mainUrl));
   const tokens = await timedStep(timings, 'tokens', () => tokenFindings(ctx, config).catch(() => []));
   const targeted = (ctx.request.selection ?? []).length > 0;
-  const diff = config.preset.checks.quality ? await timedStep(timings, 'diff', () => diffFindings(state, raw, targeted)) : [];
+  const diff = config.preset.checks.quality ? await timedStep(timings, 'diff', () => diffFindings(state, raw, targeted, target?.url ?? null)) : [];
   const global = [...(config.preset.checks.navCheck ? navFindings(raw) : []), ...tokens, ...diff];
   const main = attachGlobal(raw, global);
-  const entry = screens.length > 1 && screens[0] && isEntry(ctx, screens[0]) ? screens[0].label : null;
+  const entry = screens.find((screen) => isMain(screen, mainUrl))?.label ?? null;
   const results = [...(entry ? main.map((result) => tagScreen(result, entry)) : main), ...extra];
   const findings = sortFindings(results.flatMap((result) => result.quality ?? []));
   timings['total'] = Date.now() - started;
   if (state?.log) recordCheck(state.log, findings);
   const tail = state ? [budgetLine(state), nextStepLine(state, findings.filter(isBlocking).length)].filter(Boolean).join('\n') : null;
-  return { results, findings, text: reportText(results, findings, timings, tail, screens) };
+  return { results, findings, text: reportText(results, findings, timings, tail, target?.label ?? null, screens) };
 }
 
 export async function runScreens(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state: RunToolState, maxScreens?: number): Promise<RunScreen[]> {
@@ -176,16 +181,16 @@ export async function runScreens(preview: PreviewService, ctx: AgentRunContext, 
   return screens;
 }
 
-function isEntry(ctx: AgentRunContext, screen: RunScreen): boolean {
-  return !screen.prepare && screen.url === ctx.previewUrl;
+function isMain(screen: RunScreen, mainUrl: string | null): boolean {
+  return !screen.prepare && screen.url === mainUrl;
 }
 
 function tagScreen(result: RenderCheckResult, screen: string): RenderCheckResult {
   return { ...result, screen, quality: (result.quality ?? []).map((finding) => ({ ...finding, screen })) };
 }
 
-async function screenChecks(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, screens: RunScreen[]): Promise<RenderCheckResult[]> {
-  const extra = screens.filter((screen) => !isEntry(ctx, screen)).slice(0, config.preset.screens?.checkScreens ?? 0);
+async function screenChecks(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, screens: RunScreen[], mainUrl: string | null): Promise<RenderCheckResult[]> {
+  const extra = screens.filter((screen) => !isMain(screen, mainUrl)).slice(0, config.preset.screens?.checkScreens ?? 0);
   if (extra.length === 0) return [];
   await warmScreens(preview, ctx.project, extra);
   const viewports = config.preset.checks.viewports.filter((viewport) => viewport !== 'tablet');
@@ -208,13 +213,13 @@ export async function saveCheck(runsDir: string, runId: string, index: number | 
 }
 
 export async function captureBaseline(preview: PreviewService, ctx: AgentRunContext, runsDir: string, runId: string): Promise<BaselineShot[]> {
-  const url = ctx.previewUrl;
+  const url = defaultShotTarget(ctx)?.url;
   if (!url || !ctx.direction.headVersionId || ctx.request.mode !== 'edit') return [];
   const locs = selectionLocs(ctx.request.selection);
   return Promise.all(
     DIFF_VIEWPORTS.map(async (viewport) => {
       const shot = await preview.inspect(url, viewport, path.join(runsDir, `${runId}-baseline-${viewport}.png`), locs);
-      return { viewport, path: shot.path, selectionRects: shot.selectionRects };
+      return { viewport, url, path: shot.path, selectionRects: shot.selectionRects };
     }),
   );
 }

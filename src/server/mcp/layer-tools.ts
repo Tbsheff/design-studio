@@ -3,6 +3,7 @@ import type { Project } from '../../shared/contracts.js';
 import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame, frameRef } from '../canvas/tools.js';
 import { EditError, loadTarget, type EditDeps } from './edit-deps.js';
+import type { PreviewService } from '../types.js';
 import { defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, type Done } from './edit-kit.js';
 import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, scanLayers, scopeOf, type Layer, type Viewport } from './layer-ref.js';
 
@@ -75,9 +76,22 @@ function outline(layers: Layer[], maxDepth: number): string[] {
   return shown.map((layer) => line(layer, layer.depth, maxDepth, nameOf));
 }
 
-async function rootSelector(deps: EditDeps, url: string, viewport: Viewport, scope: string, root: string | undefined): Promise<string | null> {
-  if (!root) return null;
-  return isLayerRef(root) ? resolveForEdit(deps, url, viewport, scope, root.trim()) : root;
+export interface LayerTreeInput {
+  url: string;
+  viewport: Viewport;
+  scope: string;
+  page: string | undefined;
+  root: string | undefined;
+  depth: number;
+}
+
+export async function layerTreeText(preview: PreviewService, input: LayerTreeInput): Promise<string | null> {
+  const root = input.root ? (isLayerRef(input.root) ? await resolveLayerRef(preview, input.url, input.viewport, input.scope, input.root.trim()) : input.root) : null;
+  const tree = await scanLayers(preview, input.url, input.viewport, input.scope, input.page, { root, depth: input.depth, max: LAYERS_MAX });
+  if (!tree) return null;
+  const shown = tree.layers.filter((layer) => layer.depth >= 0).length;
+  const head = `${input.page || '(entry page)'} ${input.viewport.width}×${input.viewport.height} · ${shown} layers${tree.truncated ? ` (cut at ${LAYERS_MAX}; pass root or a lower depth)` : ''}`;
+  return [head, ...outline(tree.layers, input.depth)].join('\n');
 }
 
 const getLayers = defineTool(
@@ -96,13 +110,12 @@ const getLayers = defineTool(
     const { project, direction } = frame.directionId && !input.directionId ? await loadTarget(deps, input.projectId, frame.directionId) : loaded;
     const page = input.path ?? frame.path;
     const url = await pageUrl(deps, project, direction, page);
-    const scope = scopeOf(project.id, direction.id);
-    const root = await rootSelector(deps, url, frame.viewport, scope, input.root);
-    const tree = await scanLayers(deps.preview, url, frame.viewport, scope, page, { root, depth: input.depth, max: LAYERS_MAX });
-    if (!tree) throw new EditError(`No element matches ${input.root} on the page.`);
-    const shown = tree.layers.filter((layer) => layer.depth >= 0).length;
-    const head = `${page || '(entry page)'} ${frame.viewport.width}×${frame.viewport.height} · ${shown} layers${tree.truncated ? ` (cut at ${LAYERS_MAX}; pass root or a lower depth)` : ''}`;
-    return { result: ok([head, ...outline(tree.layers, input.depth)].join('\n')) };
+    const text = await layerTreeText(deps.preview, { url, viewport: frame.viewport, scope: scopeOf(project.id, direction.id), page, root: input.root, depth: input.depth }).catch((error: unknown) => {
+      if (error instanceof LayerRefError) throw new EditError(error.message);
+      throw error;
+    });
+    if (text === null) throw new EditError(`No element matches ${input.root} on the page.`);
+    return { result: ok(text) };
   },
 );
 

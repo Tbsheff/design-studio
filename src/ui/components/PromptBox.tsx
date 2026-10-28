@@ -5,11 +5,14 @@ import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions, type MentionRequest } from '../useMentions';
 import { HistorySearch, useHistorySearch } from './HistorySearch';
 import { ContextMeter } from './ContextMeter';
+import { BudgetIndicator } from './BudgetIndicator';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
 import { api, errorText } from '../api';
 import { AttachmentThumbs, SelectionChips, type PendingAttachment } from './ComposerParts';
+import { RunContextChip } from './RunContextChip';
+import type { RunCanvasChip } from '../useRunCanvas';
 import { ComposerAlert, MAX_IMAGES, imageProblem } from './HomeComposerParts';
 import { LevelPill, MODE_SHORT_HINT, ModelPill, PlusMenu } from './ComposerMenu';
 import { Disclosure } from './Disclosure';
@@ -36,6 +39,7 @@ interface Props {
   draft: DraftStore;
   selection: SelectionContext[];
   onRemoveSelection: (selector: string) => void;
+  canvasChip?: RunCanvasChip | null;
   running: boolean;
   disabled: boolean;
   onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) => Promise<void>;
@@ -415,6 +419,7 @@ export function PromptBox(props: Props) {
         className={`composer ui-composer cursor-text ${dragging ? 'dragging' : ''}`}
         onClick={(e) => e.target === e.currentTarget && e.currentTarget.querySelector('textarea')?.focus()}
       >
+        <RunContextChip chip={props.canvasChip} />
         <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
         <AttachmentThumbs files={files} onRemove={removeFile} />
         <MentionChips mentions={mentions.mentions} onRemove={mentions.remove} />
@@ -485,7 +490,12 @@ export function PromptBox(props: Props) {
       <Disclosure
         className="prompt-foot"
         lead={<SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />}
-        trail={<ContextMeter tokens={props.contextTokens ?? null} model={props.model} />}
+        trail={
+          <span className="prompt-foot-trail">
+            <BudgetIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />
+            <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
+          </span>
+        }
       />
     </div>
   );

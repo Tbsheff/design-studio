@@ -23,7 +23,9 @@ import { runSetProps, setPropsShape } from './props-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
+import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } from './run-target.js';
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
+import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -40,6 +42,12 @@ const TILE_PLAN: Record<ViewportName, { tileHeight: number; maxTiles: number }> 
 };
 
 type QueryFn = typeof query;
+
+const TARGET_SHAPE = {
+  frame: frameRef.optional().describe('Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>.'),
+  path: z.string().trim().max(300).optional().describe('Page path instead of the frame page, such as /settings or about.html.'),
+  state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/).optional().describe('Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state.'),
+};
 
 export interface StudioToolDeps {
   preview: PreviewService;
@@ -127,8 +135,8 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function describeTiles(viewport: ViewportName, tiles: TileResult): string {
-  const size = `${viewport} ${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}`;
+export function describeTiles(viewport: ViewportName, tiles: TileResult, box: { width: number; height: number } = VIEWPORTS[viewport]): string {
+  const size = `${viewport} ${box.width}x${box.height}`;
   const span = `${tiles.paths.length} image(s) cover y=${tiles.from}-${tiles.to}px of a ${tiles.pageHeight}px page`;
   const more = tiles.to < tiles.pageHeight ? ` More of the page is below: call screenshot again with from=${tiles.to}.` : ' This is the end of the page.';
   return `${size}: ${span}.${more}`;
@@ -162,11 +170,57 @@ async function screenTarget(deps: StudioToolDeps, screen: number | undefined): P
   return picked;
 }
 
-export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: { viewport: ViewportName; from: number; theme?: 'light' | 'dark'; screen?: number }) {
-  const { viewport } = args;
+function targetDeps(deps: Pick<StudioToolDeps, 'canvas'>): TargetDeps | null {
+  const states = configuredFrameStates();
+  const canvas = deps.canvas ?? states?.canvas;
+  return canvas && states ? { canvas, projectDir: states.projectDir } : null;
+}
+
+async function pickTarget(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: ShotArgs): Promise<ShotTarget | string> {
+  try {
+    return (await resolveShotTarget(targetDeps(deps), deps.ctx, args)) ?? 'Preview is not running for this direction.';
+  } catch (error) {
+    return describeError(error);
+  }
+}
+
+function viewportName(width: number): ViewportName {
+  if (width <= 500) return 'mobile';
+  return width <= 1024 ? 'tablet' : 'desktop';
+}
+
+function shotBox(target: ShotTarget, viewport: ViewportName | undefined): { name: ViewportName; box: { width: number; height: number } } {
+  if (viewport) return { name: viewport, box: VIEWPORTS[viewport] };
+  if (target.size) return { name: viewportName(target.size.width), box: target.size };
+  return { name: 'desktop', box: VIEWPORTS.desktop };
+}
+
+interface PickedShot {
+  url: string;
+  label: string;
+  prepare?: string;
+  viewport: ViewportName;
+  box: { width: number; height: number };
+}
+
+async function pickShot(deps: StudioToolDeps, args: ShotArgs & { viewport?: ViewportName; screen?: number }): Promise<PickedShot | string> {
+  const screen = await screenTarget(deps, args.screen);
+  if (typeof screen === 'string') return screen;
+  if (screen) {
+    const viewport = args.viewport ?? 'desktop';
+    return { url: screen.url, label: `screen ${args.screen}: ${screen.label}`, ...(screen.prepare ? { prepare: screen.prepare } : {}), viewport, box: VIEWPORTS[viewport] };
+  }
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return `Screenshot failed: ${target}`;
+  const { name, box } = shotBox(target, args.viewport);
+  return { url: target.url, label: target.label, viewport: name, box };
+}
+
+export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs & { viewport?: ViewportName; from: number; theme?: 'light' | 'dark'; screen?: number }) {
   if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
-  const target = await screenTarget(deps, args.screen);
+  const target = await pickShot(deps, args);
   if (typeof target === 'string') return errorText(target);
+  const { viewport, box } = target;
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
   if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
@@ -175,9 +229,8 @@ export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolC
   const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {
     await mkdir(deps.runsDir, { recursive: true });
-    const tiles = await deps.preview.screenshotTiles(target?.url ?? deps.ctx.previewUrl, { viewport: VIEWPORTS[viewport], ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}), ...(target?.prepare ? { prepare: target.prepare } : {}) });
-    const named = target ? `Screen ${args.screen}: ${target.label}. ` : '';
-    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `${named}${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles)}${start.note}` }] };
+    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}), ...(target.prepare ? { prepare: target.prepare } : {}) });
+    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `Page ${target.label}. ${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles, box)}${start.note}` }] };
   } catch (error) {
     return errorText(`Screenshot failed: ${describeError(error)}`);
   }
@@ -187,10 +240,12 @@ function configOf(deps: StudioToolDeps): ResolvedRunConfig {
   return deps.run?.config ?? withRunTask(resolveRunConfig(deps.ctx.project.settings, levelOf(deps.ctx.request, deps.ctx.project.settings)), deps.ctx.request.task);
 }
 
-export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolCounters) {
+export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs = {}) {
   if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so render_check cannot run.');
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return errorText(`render_check failed: ${target}`);
   try {
-    const report = await buildCheckReport(deps.preview, deps.ctx, configOf(deps), deps.run);
+    const report = await buildCheckReport(deps.preview, deps.ctx, configOf(deps), deps.run, target);
     counters.checks += 1;
     if (deps.run) {
       deps.run.lastFindings = report.findings;
@@ -216,10 +271,18 @@ function criticBlocked(deps: StudioToolDeps): string | null {
   return null;
 }
 
-async function reviewScreens(deps: StudioToolDeps, run: RunToolState): Promise<RunScreen[]> {
-  const screens = await runScreens(deps.preview, deps.ctx, run.config, run).catch(() => []);
-  if (screens.length) await warmScreens(deps.preview, deps.ctx.project, screens);
-  return screens.length ? screens : [{ label: 'Entry', url: deps.ctx.previewUrl as string, pagePath: '' }];
+function explicitTarget(args: ShotArgs): boolean {
+  return Boolean(args.frame || args.path || args.state);
+}
+
+async function reviewScreens(deps: StudioToolDeps, run: RunToolState, target: ShotTarget, args: ShotArgs): Promise<RunScreen[]> {
+  const own: RunScreen = { key: target.url, label: target.label, url: target.url, pagePath: target.path };
+  const screens = explicitTarget(args) ? [] : await runScreens(deps.preview, deps.ctx, run.config, run).catch(() => []);
+  const rest = screens.filter((screen) => screen.prepare || screen.url !== target.url);
+  const first = screens.find((screen) => !screen.prepare && screen.url === target.url) ?? own;
+  const all = [first, ...rest];
+  await warmScreens(deps.preview, deps.ctx.project, all);
+  return all;
 }
 
 async function reviewInput(deps: StudioToolDeps, run: RunToolState, screens: RunScreen[], images: CriticImage[]) {
@@ -239,13 +302,15 @@ async function reviewInput(deps: StudioToolDeps, run: RunToolState, screens: Run
   };
 }
 
-export async function runDesignReview(deps: StudioToolDeps) {
+export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {}) {
   const blocked = criticBlocked(deps);
   if (blocked) return errorText(blocked);
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return errorText(`design_review failed: ${target}`);
   const run = deps.run as RunToolState;
   run.criticCalls += 1;
   try {
-    const screens = await reviewScreens(deps, run);
+    const screens = await reviewScreens(deps, run, target, args);
     const prefix = criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls);
     const images = await criticImages(deps.preview, screens, prefix, run.config.preset.screens?.maxImages);
     const input = await reviewInput(deps, run, screens, images);
@@ -297,12 +362,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const screenshot = tool(
     'screenshot',
-    'Take PNG screenshots of the live preview at a viewport size. Returns up to four images, top to bottom, starting at the y offset `from`. The text says whether more of the page is below.',
+    'Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.',
     {
-      viewport: z.enum(['desktop', 'mobile', 'tablet']).default('desktop'),
+      ...TARGET_SHAPE,
+      viewport: z.enum(['desktop', 'mobile', 'tablet']).optional().describe('Render size. Leave out for the frame size (desktop when there is no frame).'),
       from: z.number().int().min(0).default(0).describe('Page y offset in px where the first image starts.'),
       theme: z.enum(['light', 'dark']).default('light').describe('dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'),
-      screen: z.number().int().min(1).max(12).optional().describe('Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Leave out for the entry page.'),
+      screen: z.number().int().min(1).max(12).optional().describe('Screen number from the render_check screens list: a view inside a multi-view page, a canvas frame or an app route frame. Overrides frame and path.'),
     },
     (args) => takeScreenshot(deps, counters, args),
     { annotations: { readOnlyHint: true } },
@@ -310,17 +376,17 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const renderCheck = tool(
     'render_check',
-    'Render the current design at the sizes this run level uses. Returns JSON: per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
-    {},
-    () => runRenderCheck(deps, counters),
+    'Render one page of the current design at the sizes this run level uses. With no frame or path it checks the frame from <canvas-context> (its page and frame state), or the entry page. Returns JSON: `page`, then per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
+    TARGET_SHAPE,
+    (args) => runRenderCheck(deps, counters, args),
     { annotations: { readOnlyHint: true } },
   );
 
   const designReview = tool(
     'design_review',
-    'Prototype and polish runs. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of every screen (each view of a multi-view page, each canvas frame, each changed app route), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, screen, where, problem, fix}]. Prototype: one quick call. Polish: at most 2 calls; the second also compares desktop with the first call and files regressions.',
-    {},
-    () => runDesignReview(deps),
+    'Prototype and polish runs. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of every screen (the frame from <canvas-context> first, then each view of a multi-view page, each canvas frame, each changed app route; pass frame or path to review only that page), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, screen, where, problem, fix}]. Prototype: one quick call. Polish: at most 2 calls; the second also compares desktop with the first call and files regressions.',
+    TARGET_SHAPE,
+    (args) => runDesignReview(deps, args),
     { annotations: { readOnlyHint: true } },
   );
 
@@ -407,7 +473,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
     editElementShape,
-    (args) => runEditElement(deps, args),
+    withLayerIds(deps, (args) => runEditElement(deps, args)),
   );
 
   const setTokenTool = tool(
@@ -429,7 +495,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'set_props',
     'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
     setPropsShape,
-    (args) => runSetProps(deps, args),
+    withLayerIds(deps, (args) => runSetProps(deps, args)),
   );
 
   const findStylesTool = tool(
@@ -451,7 +517,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'review_frame',
     'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
     reviewFrameShape,
-    (args) => runReviewFrameTool(deps, args),
+    withLayerIds(deps, (args) => runReviewFrameTool(deps, args)),
     { annotations: { readOnlyHint: true } },
   );
 
@@ -459,22 +525,38 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     'insert_component',
     'Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.',
     insertComponentShape,
-    (args) => runInsertComponent(deps, args),
+    withLayerIds(deps, (args) => runInsertComponent(deps, args)),
   );
 
   const insertJsxTool = tool(
     'insert_jsx',
     'Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() or a condition are refused. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.',
     insertJsxShape,
-    (args) => runInsertJsx(deps, args),
+    withLayerIds(deps, (args) => runInsertJsx(deps, args)),
   );
 
   const clearTextTool = tool(
     'clear_text',
     'Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.',
     clearTextShape,
-    (args) => runClearText(deps, args),
+    withLayerIds(deps, (args) => runClearText(deps, args)),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool] });
+  const listComponentsTool = tool(
+    'list_components',
+    'Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.',
+    listComponentsShape,
+    (args) => runListComponents(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const getLayersTool = tool(
+    'get_layers',
+    'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
+    getLayersShape,
+    (args) => runGetLayers(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool] });
 }

@@ -1,4 +1,3 @@
-import { readFileSync, statSync } from 'node:fs';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
@@ -6,7 +5,7 @@ import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project,
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
 import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
-import { diffLines } from '../../shared/line-diff.js';
+import { createBashEditTracker, fileDiff, readFileText, type BashEditResult, type BashWriteCheck, type FileText } from './bash-edits.js';
 import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js';
 import { createCommandRuleStore } from '../store/command-rules.js';
 import { BadRequestError } from '../store/errors.js';
@@ -20,7 +19,8 @@ export interface DriverSink {
   thinking(text: string): void;
   toolStarted(toolUseId: string, name: string, input: unknown): void;
   toolFinished(toolUseId: string, isError: boolean, summary: string): void;
-  beforeWrite(toolUseId: string, name: string, input: unknown): void;
+  beforeWrite(toolUseId: string, name: string, input: unknown): void | Promise<void>;
+  bashFinished?(toolUseId: string, check: BashWriteCheck): Promise<BashEditResult>;
   usage(contextTokens: number): void;
   retry(attempt: number, max: number, delayMs: number, error: string): void;
   sessionStarted(sessionId: string): Promise<void>;
@@ -137,7 +137,6 @@ function toolFilePath(input: unknown, workTree: string): string | null {
   return relative.split(path.sep).join('/');
 }
 
-const DIFF_MAX_BYTES = 1_000_000;
 export const TODO_TOOL = 'TodoWrite';
 const TODO_STATUSES = new Set(['pending', 'in_progress', 'completed']);
 
@@ -156,18 +155,6 @@ export function parseTodos(input: unknown): TodoItem[] | null {
   return todos;
 }
 
-type FileText = { kind: 'missing' } | { kind: 'text'; text: string } | { kind: 'skip' };
-
-function readFileText(file: string): FileText {
-  try {
-    if (statSync(file).size > DIFF_MAX_BYTES) return { kind: 'skip' };
-    const text = readFileSync(file, 'utf8');
-    return text.includes('\u0000') ? { kind: 'skip' } : { kind: 'text', text };
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? { kind: 'missing' } : { kind: 'skip' };
-  }
-}
-
 interface Before {
   relative: string;
   absolute: string;
@@ -181,11 +168,7 @@ function writeTarget(input: unknown, workTree: string): { relative: string; abso
 }
 
 export function toolDiff(before: Before): ToolDiff | null {
-  const after = readFileText(before.absolute);
-  if (before.content.kind === 'skip' || after.kind === 'skip') return null;
-  const old = before.content.kind === 'text' ? before.content.text : '';
-  const next = after.kind === 'text' ? after.text : '';
-  return { path: before.relative, created: before.content.kind === 'missing', ...diffLines(old, next) };
+  return fileDiff(before.relative, before.content, readFileText(before.absolute));
 }
 
 function sessionNoteOf(direction: Direction): { sessionNote?: string } {
@@ -309,17 +292,21 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     }
 
     function recordFileWrite(record: ToolCallRecord, durationMs: number, finishedAt: number): void {
-      if (!FILE_WRITE_TOOLS.has(record.name)) return;
-      const sample: TelemetrySample = {
-        kind: 'file.write',
-        projectId,
-        directionId,
-        ms: durationMs,
-        ts: finishedAt,
-        detail: { path: toolFilePath(record.input, ctx.direction.workTree), tool: record.name, runId },
-      };
-      const line = `${JSON.stringify(sample)}\n`;
-      enqueue(() => appendFile(telemetryPath, line));
+      const paths = FILE_WRITE_TOOLS.has(record.name) ? [toolFilePath(record.input, ctx.direction.workTree)] : (record.diffs ?? []).map((diff) => diff.path);
+      for (const file of paths) {
+        const sample: TelemetrySample = { kind: 'file.write', projectId, directionId, ms: durationMs, ts: finishedAt, detail: { path: file, tool: record.name, runId } };
+        const line = `${JSON.stringify(sample)}\n`;
+        enqueue(() => appendFile(telemetryPath, line));
+      }
+    }
+
+    function attachBashDiffs(toolUseId: string, diffs: ToolDiff[]): void {
+      bashDiffs.set(toolUseId, diffs);
+      const record = toolIndex.get(toolUseId);
+      if (!record || record.finishedAt === null) return;
+      record.diffs = diffs;
+      recordFileWrite(record, record.finishedAt - record.startedAt, record.finishedAt);
+      emitRun({ type: 'run.tool.finished', toolUseId, isError: record.isError, summary: record.summary ?? '', durationMs: record.finishedAt - record.startedAt, diffs, ...(record.denied ? { denied: true } : {}) });
     }
 
     let firstTokenSeen = false;
@@ -347,6 +334,16 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     let lastText = '';
     let sessionId: string | null = ctx.direction.sessionId;
     let direction: Direction = ctx.direction;
+    const bashEdits = createBashEditTracker({
+      workTree: ctx.direction.workTree,
+      subscribe: (listener) =>
+        deps.bus.subscribe(projectId, (event) => {
+          if (event.type === 'files.changed' && event.directionId === directionId) listener(event.paths);
+        }),
+      headFile: async (relative) => (await deps.versions.headFile?.(ctx.project, direction, relative)) ?? null,
+    });
+    const bashDiffs = new Map<string, ToolDiff[]>();
+    if (ctx.request.mode === 'edit') bashEdits.prepare();
 
     const summary: RunSummary = {
       id: runId,
@@ -408,17 +405,20 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         const before = befores.get(toolUseId);
         befores.delete(toolUseId);
         const diff = before && !isError ? toolDiff(before) : null;
+        if (before && !isError) bashEdits.remember(before.relative);
+        const diffs = bashDiffs.get(toolUseId);
         const denied = isError && deniedTools.has(toolUseId);
         if (record) {
           record.finishedAt = finishedAt;
           record.isError = isError;
           record.summary = resultSummary;
           if (diff) record.diff = diff;
+          if (diffs) record.diffs = diffs;
           if (denied) record.denied = true;
           if (!isError) recordFileWrite(record, durationMs, finishedAt);
         }
         toolMs += durationMs;
-        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}), ...(denied ? { denied: true } : {}) });
+        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}), ...(diffs ? { diffs } : {}), ...(denied ? { denied: true } : {}) });
       },
       usage(contextTokens) {
         if (!Number.isFinite(contextTokens) || contextTokens <= 0 || contextTokens === summary.contextTokens) return;
@@ -429,9 +429,15 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         emitRun({ type: 'run.retry', attempt, max, delayMs, error });
       },
       beforeWrite(toolUseId, name, input) {
+        if (name === 'Bash') return ctx.request.mode === 'edit' ? bashEdits.start(toolUseId) : undefined;
         if (!FILE_WRITE_TOOLS.has(name) || befores.has(toolUseId)) return;
         const target = writeTarget(input, ctx.direction.workTree);
         if (target) befores.set(toolUseId, { ...target, content: readFileText(target.absolute) });
+      },
+      async bashFinished(toolUseId, check) {
+        const result = await bashEdits.finish(toolUseId, check);
+        if (result.diffs.length > 0) attachBashDiffs(toolUseId, result.diffs);
+        return result;
       },
       sent(message) {
         flushDelta();
@@ -561,6 +567,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         failure = describeError(error);
       }
       driverSettled = true;
+      bashEdits.close();
       flushDelta();
 
       let status: RunStatus = canceled ? 'canceled' : outcome ? outcome.status : 'failed';

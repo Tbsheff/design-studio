@@ -61,6 +61,18 @@ function shortName(target: string): string {
   return parts[parts.length - 1] || target;
 }
 
+export function toolDiffs(tool: Pick<ToolRow, 'diff' | 'diffs'>): ToolDiff[] {
+  return tool.diffs ?? (tool.diff ? [tool.diff] : []);
+}
+
+function shellEdits(tool: ToolRow): ToolDiff[] {
+  return tool.diff ? [] : (tool.diffs ?? []);
+}
+
+function diffTotals(diffs: ToolDiff[]): { added: number; removed: number } {
+  return diffs.reduce((sum, diff) => ({ added: sum.added + diff.added, removed: sum.removed + diff.removed }), { added: 0, removed: 0 });
+}
+
 interface RowGroup {
   tool: ToolRow;
   count: number;
@@ -73,8 +85,8 @@ export function groupRepeats(tools: ToolRow[], workTree: string | null): RowGrou
     const last = groups.at(-1);
     const same =
       last &&
-      !last.tool.diff &&
-      !tool.diff &&
+      toolDiffs(last.tool).length === 0 &&
+      toolDiffs(tool).length === 0 &&
       toolState(last.tool) === 'done' &&
       toolState(tool) === 'done' &&
       last.tool.name === tool.name &&
@@ -135,8 +147,27 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
   );
 }
 
+function ShellEditDetail({ tool, diffs }: { tool: ToolRow; diffs: ToolDiff[] }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2 text-xs">
+      {tool.summary && <span className="font-mono break-all text-muted-foreground">{tool.summary}</span>}
+      {diffs.map((diff) => (
+        <div key={diff.path} className="flex min-w-0 flex-col gap-1">
+          <span className="flex items-center gap-2 font-mono break-all text-foreground">
+            {diff.path}
+            <DiffBadge added={diff.added} removed={diff.removed} />
+          </span>
+          <DiffView diff={diff} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; state: ToolState }) {
   if (tool.diff) return <DiffView diff={tool.diff} />;
+  const edits = shellEdits(tool);
+  if (edits.length > 0) return <ShellEditDetail tool={tool} diffs={edits} />;
   const detail = tool.summary || (state === 'pending' ? 'Running' : '');
   return (
     <div className="flex flex-col gap-1 text-xs">
@@ -146,32 +177,39 @@ function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; st
   );
 }
 
+function rowView(tool: ToolRow, workTree: string | null) {
+  const edits = shellEdits(tool);
+  if (edits.length === 0) return { edits, target: toolSubject(tool.name, tool.input, workTree), totals: tool.diff ?? null, verb: toolVerb(tool.name) };
+  return { edits, target: edits.length === 1 ? (edits[0]?.path ?? '') : `${edits.length} files`, totals: diffTotals(edits), verb: 'Edited' };
+}
+
 function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: string | null; running: boolean }) {
   const { tool, count } = group;
   const state = toolState(tool, running);
   const [open, setOpen] = useState<boolean | null>(null);
   const isSkill = tool.name === SKILL_TOOL;
-  const target = toolSubject(tool.name, tool.input, workTree);
+  const { edits, target, totals, verb } = rowView(tool, workTree);
   return (
     <Action
       className={`tool-row ${state} ${isSkill ? 'skill-tool' : ''}`}
       data-state={state}
       data-tool={tool.name}
+      data-shell-edits={edits.length || undefined}
       open={open ?? state === 'error'}
       onOpenChange={(next) => setOpen(next)}
     >
       <ActionTrigger className="tool-trigger max-w-full min-w-0 py-0.5 text-xs" data-tip={tool.summary || target || tool.name}>
         <ActionIcon className={STATE_TONE[state]}>
-          <ToolStateIcon tool={tool} state={state} />
+          <ToolStateIcon tool={edits.length > 0 ? { ...tool, name: 'Edit' } : tool} state={state} />
         </ActionIcon>
-        <ActionLabel className={`tool-verb font-medium ${state === 'error' ? 'text-destructive' : isSkill ? 'text-primary' : ''}`}>{toolVerb(tool.name)}</ActionLabel>
+        <ActionLabel className={`tool-verb font-medium ${state === 'error' ? 'text-destructive' : isSkill ? 'text-primary' : ''}`}>{verb}</ActionLabel>
         {target && (
           <Chip size="sm" className="tool-target min-w-0 truncate font-mono">
             {isSkill ? target : shortName(target)}
           </Chip>
         )}
         {count > 1 && <span className="tool-count tabular-nums">×{count}</span>}
-        {tool.diff && <DiffBadge added={tool.diff.added} removed={tool.diff.removed} />}
+        {totals && <DiffBadge added={totals.added} removed={totals.removed} />}
         {state !== 'pending' && state !== 'stopped' && <span className="tool-ms shrink-0 tabular-nums">{formatMs(group.durationMs)}</span>}
         {state === 'denied' && <span className="tool-denied">Denied</span>}
         {STATE_WORD[state] && state !== 'denied' && <span className="sr-only">{STATE_WORD[state]}</span>}
@@ -236,12 +274,14 @@ export interface FileChange {
 export function fileChanges(tools: ToolRow[]): FileChange[] {
   const byPath = new Map<string, FileChange>();
   for (const tool of tools) {
-    if (!tool.diff || tool.isError) continue;
-    const entry = byPath.get(tool.diff.path) ?? { path: tool.diff.path, added: 0, removed: 0, created: false };
-    entry.added += tool.diff.added;
-    entry.removed += tool.diff.removed;
-    entry.created ||= tool.diff.created;
-    byPath.set(tool.diff.path, entry);
+    const diffs = tool.diff ? (tool.isError ? [] : [tool.diff]) : (tool.diffs ?? []);
+    for (const diff of diffs) {
+      const entry = byPath.get(diff.path) ?? { path: diff.path, added: 0, removed: 0, created: false };
+      entry.added += diff.added;
+      entry.removed += diff.removed;
+      entry.created ||= diff.created;
+      byPath.set(diff.path, entry);
+    }
   }
   return [...byPath.values()];
 }
@@ -250,7 +290,7 @@ const SUMMARY_GROUPS = 3;
 
 export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const parts = useMemo(() => toolTally(tools.map((tool) => tool.name)).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)), [tools]);
+  const parts = useMemo(() => toolTally(tools.map((tool) => (shellEdits(tool).length > 0 ? 'Edit' : tool.name))).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)), [tools]);
   const full = parts.join(', ');
   const label = parts.length > SUMMARY_GROUPS ? `${parts.slice(0, SUMMARY_GROUPS - 1).join(', ')} +${parts.length - SUMMARY_GROUPS + 1} more` : full;
   const failed = useMemo(() => tools.filter((tool) => tool.isError && !tool.denied).length, [tools]);

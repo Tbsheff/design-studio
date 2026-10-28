@@ -14,7 +14,7 @@ interface PresenceInput {
   stage: () => HTMLElement | null;
 }
 
-function inViewIds(stage: HTMLElement | null): string[] {
+export function inViewIds(stage: HTMLElement | null): string[] {
   if (!stage) return [];
   const box = stage.getBoundingClientRect();
   const ids: string[] = [];

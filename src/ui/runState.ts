@@ -10,6 +10,7 @@ export interface ToolRow {
   isError: boolean;
   summary: string;
   diff?: ToolDiff;
+  diffs?: ToolDiff[];
   denied?: boolean;
 }
 
@@ -48,6 +49,7 @@ function toolRows(summary: RunSummary): ToolRow[] {
     isError: t.isError,
     summary: t.summary ?? '',
     ...(t.diff ? { diff: t.diff } : {}),
+    ...(t.diffs ? { diffs: t.diffs } : {}),
     ...(t.denied ? { denied: true } : {}),
   }));
 }
@@ -114,7 +116,7 @@ function applyToolEvent(run: RunView, event: StudioEvent): void {
     ];
   } else if (event.type === 'run.tool.finished') {
     run.tools = run.tools.map((t) =>
-      t.toolUseId === event.toolUseId ? { ...t, durationMs: event.durationMs, isError: event.isError, summary: event.summary, ...(event.diff ? { diff: event.diff } : {}), ...(event.denied ? { denied: true } : {}) } : t,
+      t.toolUseId === event.toolUseId ? { ...t, durationMs: event.durationMs, isError: event.isError, summary: event.summary, ...(event.diff ? { diff: event.diff } : {}), ...(event.diffs ? { diffs: event.diffs } : {}), ...(event.denied ? { denied: true } : {}) } : t,
     );
   }
 }
@@ -174,7 +176,8 @@ function mergeTools(live: ToolRow[], final: ToolRow[]): ToolRow[] {
     const f = byId.get(t.toolUseId);
     if (!f) return t;
     const diff = f.diff ?? t.diff;
-    return { ...t, durationMs: f.durationMs ?? t.durationMs, isError: f.isError, summary: f.summary || t.summary, ...(diff ? { diff } : {}), ...(f.denied || t.denied ? { denied: true } : {}) };
+    const diffs = f.diffs ?? t.diffs;
+    return { ...t, durationMs: f.durationMs ?? t.durationMs, isError: f.isError, summary: f.summary || t.summary, ...(diff ? { diff } : {}), ...(diffs ? { diffs } : {}), ...(f.denied || t.denied ? { denied: true } : {}) };
   });
 }
 

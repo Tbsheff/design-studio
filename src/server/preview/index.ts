@@ -222,9 +222,10 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   };
 
   const renderCheck = async (project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]> => {
-    const url = options?.url ?? (await directionUrl(project, direction));
+    const { url: pageUrl, filePrefix, ...checks } = options ?? {};
+    const url = pageUrl ?? (await directionUrl(project, direction));
     if (project.app) await apps.ensure(project);
-    const results = await (await browsers.get()).renderCheck(url, path.join(projects.projectDir(project.id), 'checks'), options?.filePrefix ?? direction.id, options);
+    const results = await (await browsers.get()).renderCheck(url, path.join(projects.projectDir(project.id), 'checks'), filePrefix ?? direction.id, checks);
     const problem = project.kind === 'html' ? await designSystemLinkProblem(direction.workTree, project.entry || 'index.html') : null;
     return withDesignSystemWarning(results, problem);
   };

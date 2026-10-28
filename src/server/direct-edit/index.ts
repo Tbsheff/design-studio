@@ -14,7 +14,7 @@ import { findTextSource } from './text-source.js';
 import { tailwindThemeFor, type TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
-import { isPendingVersion, saveLater } from './save-queue.js';
+import { isPendingVersion, saveLater, savesSettled } from './save-queue.js';
 
 export { DirectEditError } from './errors.js';
 export { parseDirectEditRequest } from './validate.js';
@@ -213,6 +213,7 @@ export function saveDeferred(deps: DirectEditDeps, project: Project, direction: 
 }
 
 async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, patch: PatchResult, request: DirectEditRequest): Promise<Version> {
+  await savesSettled(project.id);
   await writeAtomic(target.file, patch.code);
   return saveDeferred(deps, project, direction, [target.relative], editTitle(patch.tag, patch.applied, request), { kind: 'manual', prompt: editSummary(request) });
 }

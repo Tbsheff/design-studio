@@ -1,6 +1,7 @@
 import { readFile, realpath } from 'node:fs/promises';
 import type { Direction, DirectEditBatchResult, DirectEditRequest, Project, TextSourceInfo, Version, VersionMeta } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
+import { savesSettled } from './save-queue.js';
 import { assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic } from './index.js';
 import type { DirectEditDeps, EditScope, PlannedEdit, ResolvedSource } from './index.js';
 import type { TailwindTheme } from './tailwind/theme.js';
@@ -169,6 +170,7 @@ export async function writeAndCommitAll(
   meta: VersionMeta,
 ): Promise<Version> {
   const written: WrittenFile[] = [];
+  await savesSettled(project.id);
   try {
     for (const group of changed) {
       written.push(group);

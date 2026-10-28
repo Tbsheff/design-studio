@@ -38,7 +38,7 @@ const NETWORK_TIMEOUT_MS = 5000;
 const DISK_FAIL_BYTES = 1024 ** 3;
 const DISK_WARN_BYTES = 5 * 1024 ** 3;
 const GIT_DETAIL: Record<GitChoice['kind'], string> = {
-  system: 'Command Line Tools git (/usr/bin/git).',
+  system: 'Command Line Tools git.',
   bundled: 'Bundled git. Install Command Line Tools to use the system git instead.',
   missing: 'No git found. Install Command Line Tools.',
 };

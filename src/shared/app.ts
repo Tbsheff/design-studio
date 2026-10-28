@@ -56,3 +56,5 @@ export function envText(env: Record<string, string> | undefined): string {
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
 }
+
+export const DEV_CHROME_SELECTOR = 'nextjs-portal, next-route-announcer, [data-nextjs-toast], [data-nextjs-dev-tools-button], [data-next-badge-root], [data-nextjs-dialog-overlay], #__next-build-watcher, #__next-route-announcer__';

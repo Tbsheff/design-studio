@@ -412,3 +412,27 @@ body:has(.frame-menu) .app-fail {
 .app-stage-note[data-kind='route'] {
   padding: 4px 4px 4px 14px;
 }
+
+.app-doctor-evidence {
+  display: block;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.app-env-suggest {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  box-shadow: inset 0 0 0 1px var(--warn-line);
+}
+
+.app-env-suggest .grow {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+}

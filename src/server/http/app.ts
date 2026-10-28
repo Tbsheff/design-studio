@@ -88,6 +88,7 @@ import { createProjectLibrary } from '../store/project-library.js';
 import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
 import { registerHomeRoutes } from './home-routes.js';
 import { finishAttach, registerAppRoutes } from './app-routes.js';
+import { registerDoctorRoutes } from './doctor-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
@@ -1171,6 +1172,7 @@ export function createApp(deps: AppDeps): Hono {
   registerRunContextRoutes(app, { loadDirection });
   const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
+  registerDoctorRoutes(app, { projects, preview, readBody });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

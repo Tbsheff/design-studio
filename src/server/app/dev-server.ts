@@ -6,6 +6,8 @@ import type { AppLogLine, AppServerStatus, Project } from '../../shared/contract
 import type { EventBus } from '../types.js';
 import { DevServerPids } from './dev-server-pids.js';
 import { installHint } from './install-hint.js';
+import { diagnose, probeRoot, sameDoctor, type DoctorProbe } from './doctor.js';
+import type { AppDoctorResult } from '../../shared/app-doctor.js';
 
 const MAX_LOG_LINES = 400;
 const READY_TIMEOUT_MS = 180_000;
@@ -14,6 +16,7 @@ const MAX_LINE = 2000;
 const BLOCKED_ENV = /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
 const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
 const PROBE_TIMEOUT_MS = 3000;
+const DOCTOR_DELAY_MS = 300;
 
 interface AppServer {
   projectId: string;
@@ -22,6 +25,11 @@ interface AppServer {
   child: ChildProcess | null;
   ready: Promise<string> | null;
   workTree: string;
+  appDir: string;
+  startAt: number;
+  probe: DoctorProbe | null;
+  probing: Promise<void> | null;
+  doctorTimer: NodeJS.Timeout | null;
 }
 
 export interface AppServerDeps {
@@ -54,6 +62,11 @@ function canConnect(port: number): Promise<boolean> {
     });
     socket.once('error', () => resolve(false));
   });
+}
+
+async function portClosed(port: number, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline && (await canConnect(port))) await new Promise((resolve) => setTimeout(resolve, 150));
 }
 
 export function nextBinary(workTree: string, appDir: string): string | null {
@@ -119,6 +132,11 @@ export class AppServers {
         child: null,
         ready: null,
         workTree: project.directions[0]?.workTree ?? '',
+        appDir: project.app?.appDir ?? '.',
+        startAt: 0,
+        probe: null,
+        probing: null,
+        doctorTimer: null,
       };
       this.servers.set(project.id, server);
     }
@@ -134,6 +152,52 @@ export class AppServers {
     const lines = chunk.replace(ANSI, '').split(/\r?\n/).filter((line) => line.trim() !== '');
     for (const line of lines) server.logs.push({ at: Date.now(), stream, text: line.slice(0, MAX_LINE) });
     if (server.logs.length > MAX_LOG_LINES) server.logs.splice(0, server.logs.length - MAX_LOG_LINES);
+    this.scheduleDoctor(server);
+  }
+
+  private diagnosis(server: AppServer): AppDoctorResult {
+    const lines = server.logs.filter((line) => line.at >= server.startAt).map((line) => line.text);
+    return diagnose({ lines, message: server.status.message, probe: server.probe, workTree: server.workTree, appDir: server.appDir, ready: server.status.state === 'ready' });
+  }
+
+  private refreshDoctor(server: AppServer): void {
+    if (server.doctorTimer) clearTimeout(server.doctorTimer);
+    server.doctorTimer = null;
+    const doctor = this.diagnosis(server);
+    if (!sameDoctor(doctor, server.status.doctor)) this.setStatus(server, { doctor });
+  }
+
+  private scheduleDoctor(server: AppServer): void {
+    if (server.doctorTimer) return;
+    server.doctorTimer = setTimeout(() => this.refreshDoctor(server), DOCTOR_DELAY_MS);
+    server.doctorTimer.unref?.();
+  }
+
+  private resetDoctor(server: AppServer, project: Project): void {
+    server.startAt = Date.now();
+    server.appDir = project.app?.appDir ?? server.appDir;
+    server.probe = null;
+    server.probing = null;
+  }
+
+  private probe(server: AppServer, upstream: string): Promise<void> {
+    const started = server.startAt;
+    const run = probeRoot(upstream).then((probe) => {
+      if (server.startAt !== started) return;
+      server.probe = probe;
+      this.refreshDoctor(server);
+    });
+    server.probing = run;
+    return run;
+  }
+
+  async doctor(project: Project, fresh = false): Promise<AppDoctorResult> {
+    const server = this.entry(project);
+    const upstream = server.status.state === 'ready' ? server.status.upstream : null;
+    if (upstream && (fresh || !server.probing)) await this.probe(server, upstream);
+    else if (server.probing) await server.probing;
+    this.refreshDoctor(server);
+    return server.status.doctor ?? this.diagnosis(server);
   }
 
   status(project: Project): AppServerStatus {
@@ -165,6 +229,7 @@ export class AppServers {
       const message = error instanceof Error ? error.message : String(error);
       this.log(server, 'studio', message);
       this.setStatus(server, { state: 'failed', message });
+      this.refreshDoctor(server);
       throw error;
     });
     server.ready = attempt;
@@ -181,11 +246,15 @@ export class AppServers {
   private checkUrl(server: AppServer, upstream: string): Promise<string> {
     if (server.status.upstream === upstream && server.status.state === 'ready') return Promise.resolve(upstream);
     if (server.ready && server.status.state === 'starting' && server.status.upstream === upstream) return server.ready;
-    this.setStatus(server, { state: 'starting', mode: 'url', upstream, command: null, message: null, startedAt: Date.now() });
+    this.setStatus(server, { state: 'starting', mode: 'url', upstream, command: null, message: null, startedAt: Date.now(), doctor: null });
+    server.startAt = Date.now();
+    server.probe = null;
+    server.probing = null;
     const probe: Promise<string> = answers(upstream).then((up) => {
       const current = server.ready === probe;
       if (up) {
         if (current) this.setStatus(server, { state: 'ready', message: null });
+        if (current) void this.probe(server, upstream);
         return upstream;
       }
       const message = `Nothing answers at ${upstream}. Start your dev server there, or change the URL in the app settings.`;
@@ -203,6 +272,8 @@ export class AppServers {
     const app = project.app;
     if (!app) throw new Error('project is not an attached app');
     const appRoot = path.join(server.workTree, app.appDir);
+    this.resetDoctor(server, project);
+    this.setStatus(server, { doctor: null });
     const binary = nextBinary(server.workTree, app.appDir);
     if (!binary) throw new Error(missingNextMessage(server.workTree, app.appDir));
     await this.reaped;
@@ -236,6 +307,7 @@ export class AppServers {
       const up = await Promise.race([canConnect(port), exited]);
       if (up) {
         this.setStatus(server, { state: 'ready', upstream, message: null });
+        void this.probe(server, upstream);
         return upstream;
       }
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -257,6 +329,7 @@ export class AppServers {
     const server = this.servers.get(projectId);
     if (!server) return;
     const child = server.child;
+    const port = server.status.mode === 'managed' && server.status.upstream ? Number(new URL(server.status.upstream).port) : null;
     server.ready = null;
     if (server.status.mode === 'managed') this.setStatus(server, { state: 'stopped', upstream: null, message: null });
     if (!child || child.exitCode !== null) return;
@@ -266,6 +339,7 @@ export class AppServers {
     await done;
     clearTimeout(timer);
     this.killGroup(child, 'SIGKILL');
+    if (port) await portClosed(port, STOP_GRACE_MS);
   }
 
   async restart(project: Project): Promise<string> {

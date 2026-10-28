@@ -62,6 +62,19 @@ These are unmodified npm packages, installed from the registry and not copied in
 
 `axe-core` is MPL-2.0, not MIT. MPL-2.0 is a file-level copyleft license: the studio may use the package unchanged, but if anyone changes an `axe-core` file, they must publish that file's source under MPL-2.0. The studio does not change it.
 
+## npm dependencies added for PPTX export
+
+Unmodified npm packages, installed from the registry. The server loads `pptxgenjs` only when a PPTX export runs.
+
+| Package | Version | License | Use |
+| --- | --- | --- | --- |
+| `pptxgenjs` | 4.x | MIT | Writes the PPTX file: slides, native text boxes and the slide pictures. |
+| `jszip` (dependency of `pptxgenjs`) | 3.x | MIT or GPL-3.0-or-later | Zips the PPTX parts. The studio uses it under the MIT option. |
+| `pako` (dependency of `jszip`) | 1.x | MIT and Zlib | Deflate for the zip. |
+| `image-size` (dependency of `pptxgenjs`) | 1.x | MIT | Reads image sizes. |
+
+The other dependencies of these packages (`lie`, `immediate`, `readable-stream`, `setimmediate`, `https` and small helpers) are MIT or ISC.
+
 ## Bundled fonts
 
 The studio UI ships these font files in `src/ui/assets/fonts/`. They are unmodified WOFF2 subsets (latin and latin-ext) taken from the Fontsource npm packages on 2026-10-26. The app loads them locally; it does not fetch fonts from the network. The full license text is in `src/ui/assets/fonts/OFL.txt`.

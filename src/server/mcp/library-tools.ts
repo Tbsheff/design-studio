@@ -5,6 +5,7 @@ import { IMPROVE_IN_APP } from '../design-system/draft-live.js';
 import { approve, EditError, loadTarget, oneLine, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, defineTool, ok, packId, projectId, versionActivity, type Done } from './edit-kit.js';
 import { isInside, safeFolder } from './folders.js';
+import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
 
 const MAX_URLS = 3;
 
@@ -25,15 +26,17 @@ const openFolder = defineTool(
   z.object({ path: z.string().trim().min(1).max(4096).describe('Absolute path (or ~/...) of a folder with an index.html, a Vite app, or an app with a token CSS file.') }).strict(),
   {
     title: 'Open folder as project',
-    description: 'Open an existing folder as a Design Studio project, the same as Open folder on the studio Home. The studio then edits the files in that folder in place. The same folder rules as the studio apply, and system folders, the home folder itself and the studio data dir are refused. A folder outside the projects folder waits for the user to approve it in Design Studio. A folder that is already a project returns that project.',
+    description: 'Open an existing folder as a Design Studio project, the same as Open folder on the studio Home. The studio then edits the files in that folder in place. The same folder rules as the studio apply, and system folders, the home folder itself and the studio data dir are refused. A folder outside the projects folder waits for the user to approve it in Design Studio. A folder that is already a project returns that project. A Next.js app folder inside a monorepo (pnpm-workspace.yaml, turbo.json or package.json workspaces) opens at the workspace root with that folder as appDir, so the shared kit, Tailwind CSS and root DESIGN.md are found; the result has workspaceRoot and appDir (workspaceRoot is null outside a monorepo).',
   },
   async (deps, input, client): Promise<Done> => {
-    const folder = await trustedFolder(deps, input.path, client, { tool: 'open_folder', action: 'Open a folder as a project', title: `${client} wants to open {folder} as a project`, detail: 'Design Studio and outside agents with Allow edits on can then change the files in this folder.' });
-    const existing = (await deps.projects.list()).find((project) => !project.designSystemDeleted && project.imported?.sourcePath !== undefined && path.resolve(project.imported.sourcePath) === folder);
-    if (existing) return { result: ok({ projectId: existing.id, directionId: mainOf(existing)?.id ?? null, name: existing.name, kind: existing.kind, folder, alreadyOpen: true }) };
+    const workspace = await workspaceOf(await safeFolder(input.path, deps.dataDir));
+    const scope = workspace ? `the ${workspace.name} monorepo at ${workspace.root}` : 'this folder';
+    const folder = await trustedFolder(deps, input.path, client, { tool: 'open_folder', action: 'Open a folder as a project', title: `${client} wants to open {folder} as a project`, detail: `Design Studio and outside agents with Allow edits on can then change the files in ${scope}.` });
+    const existing = (await deps.projects.list()).find((project) => !project.designSystemDeleted && sameFolderOrRoot(project, folder, workspace));
+    if (existing) return { result: ok({ projectId: existing.id, directionId: mainOf(existing)?.id ?? null, name: existing.name, kind: existing.kind, folder, ...workspaceFields(existing, folder), alreadyOpen: true }) };
     const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/import', { path: folder });
     const main = mainOf(project);
-    const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, kind: project.kind, folder, alreadyOpen: false });
+    const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, kind: project.kind, folder, ...workspaceFields(project, folder), alreadyOpen: false });
     return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Opened folder ${oneLine(path.basename(folder), 60)}` } };
   },
 );

@@ -1,3 +1,5 @@
+import { APP_SOURCE_PATH } from '../../shared/app.js';
+import type { SourceLoc } from '../../shared/contracts.js';
 import { OWNERS_MAX, OWNER_STACK_MAX, type ComponentOwner } from '../../shared/props.js';
 import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
@@ -5,6 +7,39 @@ import type { PreviewService } from '../types.js';
 export interface ProbedElement {
   tag: string;
   owners: ComponentOwner[];
+  usedAt: SourceLoc | null;
+}
+
+interface RawProbe {
+  tag: string;
+  owners: ComponentOwner[];
+  usedAt: string | null;
+}
+
+export function appSourceBody(): string {
+  return `async (el) => {
+    const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
+    const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
+    const fiber = fiberOf(el);
+    if (!fiber) return null;
+    const owner = fiber._debugOwner || null;
+    const type = owner?.type;
+    const name = typeof owner?.name === 'string' ? owner.name : type?.displayName || type?.render?.displayName || type?.render?.name || type?.type?.displayName || type?.type?.name || type?.name || null;
+    let parent = el.parentElement;
+    while (parent && !fiberOf(parent)) parent = parent.parentElement;
+    const root = !parent || (fiberOf(parent)._debugOwner || null) !== owner;
+    const stacks = [stackOf(fiber), stackOf(owner)];
+    if (stacks.every((stack) => stack === '')) return null;
+    try {
+      const res = await fetch(${JSON.stringify(APP_SOURCE_PATH)}, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stacks }), cache: 'no-store' });
+      const body = res.ok ? await res.json() : null;
+      const [own, used] = Array.isArray(body?.sources) ? body.sources : [];
+      const loc = own || used || null;
+      const file = (value) => String(value).replace(/:\\d+:\\d+$/, '');
+      const usedAt = own && used && file(own) !== file(used) ? used : null;
+      return loc ? { loc, usedAt, usedBy: usedAt && name ? { name, root } : null } : null;
+    } catch { return null; }
+  }`;
 }
 
 export function ownerWalk(): string {
@@ -37,11 +72,12 @@ export function ownerWalk(): string {
 }
 
 function probe(selector: string): string {
-  return `((selector) => {
+  return `(async (selector) => {
     let el;
     try { el = document.querySelector(selector); } catch { return null; }
     if (!el) return null;
-    return { tag: el.tagName.toLowerCase(), owners: ${ownerWalk()}(el) };
+    const app = await (${appSourceBody()})(el);
+    return { tag: el.tagName.toLowerCase(), owners: ${ownerWalk()}(el), usedAt: app?.usedAt ?? null };
   })(${JSON.stringify(selector)})`;
 }
 
@@ -49,6 +85,12 @@ export async function probeOwners(preview: PreviewService, url: string, selector
   if (!preview.withPage) throw new Error('rendering is not available');
   return preview.withPage(url, { width: 1440, height: 900 }, async (page) => {
     await waitForPage(page);
-    return page.evaluate<ProbedElement | null>(probe(selector));
+    const raw = await page.evaluate<RawProbe | null>(probe(selector));
+    return raw ? { tag: raw.tag, owners: raw.owners, usedAt: parseLoc(raw.usedAt) } : null;
   });
+}
+
+export function parseLoc(raw: string | null): SourceLoc | null {
+  const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
+  return match ? { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) } : null;
 }

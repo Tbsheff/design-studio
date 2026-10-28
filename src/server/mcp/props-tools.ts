@@ -26,7 +26,7 @@ const setSchema = z
     projectId,
     directionId,
     path: pagePath,
-    selector: selector.optional().describe('CSS selector of an element inside the component instance on the page, for example "button" or "main button:nth-of-type(2)". The nearest component (such as <Button>) that has props is changed.'),
+    selector: selector.optional().describe('CSS selector of an element inside the component instance on the page, for example "button" or "main button:nth-of-type(2)". The nearest component (such as <Button> or <Badge> from packages/ui) that has props is changed, and the result names its use site (file:line:col).'),
     source: z.string().trim().max(1100).optional().describe('Use site of the component as file:line:col of its JSX tag, for example "src/App.tsx:14:9". Use this or selector.'),
     props: z
       .record(z.string().regex(PROP_NAME), propValue)
@@ -45,8 +45,8 @@ function parseLoc(raw: string): SourceLoc {
 async function useSiteOf(deps: EditDeps, project: Project, direction: Direction, page: string | undefined, sel: string): Promise<ComponentInstance> {
   const probed = await probeOwners(deps.preview, await pageUrl(deps, project, direction, page), sel);
   if (!probed) throw new EditError(`No element matches ${sel} on the page.`);
-  const { instance } = await studioCall<{ instance: ComponentInstance | null }>(deps, 'POST', `${base(project, direction.id)}/props/instance`, { owners: probed.owners });
-  if (!instance) throw new EditError(`${sel} is not inside a component instance with props that the studio can find. Use source with the file:line:col of the JSX tag, or edit_element.`);
+  const { instance } = await studioCall<{ instance: ComponentInstance | null }>(deps, 'POST', `${base(project, direction.id)}/props/instance`, { owners: probed.owners, usedAt: probed.usedAt });
+  if (!instance) throw new EditError(`${sel} is not inside a component instance with props that the studio can find. Pass source with the file:line:col of the component's JSX tag (read_file shows it), or use edit_element for classes and text.`);
   return instance;
 }
 

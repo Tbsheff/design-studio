@@ -7,6 +7,7 @@ import type { DirectEditCommit, DirectEditControl } from '../useDirectEdit';
 import { unsavedLabel, useEditSession, type EditSession, type EditSessionHandle, type SessionAction } from '../useEditSession';
 import { ComponentsPanel } from './ComponentsPanel';
 import { Icon } from './Icon';
+import { useElementClasses } from './InspectorClasses';
 import { InspectorCode } from './InspectorCode';
 import { InspectorAppContext } from './InspectorShared';
 import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
@@ -186,19 +187,27 @@ function ComponentSection(props: InspectorProps) {
   );
 }
 
+function useUseSite(props: InspectorProps) {
+  const [componentFor, setComponentFor] = useState<string | null>(null);
+  const target = props.selection.length === 1 ? props.selection[0] : undefined;
+  const shared = target && props.appDir ? sharedSourceOf(target, props.appDir) : null;
+  const use = shared?.use && shared.name ? { source: shared.use, component: shared.name } : null;
+  const component = useElementClasses(props.projectId, props.directionId, use ? (target?.source ?? null) : null, 0);
+  const editingUse = Boolean(use) && component.element?.forwardsClassName !== false && componentFor !== target?.selector;
+  const effective = target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
+  const toggle = () => setComponentFor(editingUse ? (target?.selector ?? null) : null);
+  return { editingUse, effective, sharedEditing: shared ? { shared, editingUse, onToggle: toggle } : null };
+}
+
 function SimpleTab(props: InspectorProps) {
-  const [useFor, setUseFor] = useState<string | null>(null);
   const variant = useEditVariant();
+  const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
-  const shared = props.appDir ? sharedSourceOf(target, props.appDir) : null;
-  const editingUse = Boolean(shared?.use && shared.name && useFor === target.selector);
-  const effective = editingUse && shared?.use && shared.name ? { ...target, source: shared.use, component: shared.name, usedAt: null } : target;
-  const sharedEditing = shared ? { shared, editingUse, onToggle: () => setUseFor(editingUse ? null : target.selector) } : null;
   return (
-    <SimpleEditor key={`${target.selector}|${variant}${editingUse ? '|use' : ''}`} {...props} target={effective} sharedEditing={sharedEditing} component={<ComponentSection {...props} />} />
+    <SimpleEditor key={`${target.selector}|${variant}${site.editingUse ? '|use' : ''}`} {...props} target={site.effective ?? target} sharedEditing={site.sharedEditing} component={<ComponentSection {...props} />} />
   );
 }
 

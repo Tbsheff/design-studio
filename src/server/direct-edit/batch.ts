@@ -40,6 +40,27 @@ function spliceOf(plan: PlannedEdit, index: number, textSource: TextSourceInfo):
   return { index, start, end: before.length - tail, text: after.slice(start, after.length - tail), tag: plan.patch.tag, textSource };
 }
 
+function withIndex(index: number, error: unknown): unknown {
+  if (!(error instanceof DirectEditError) || /^Edits? \d/.test(error.message)) return error;
+  return new DirectEditError(error.code, `Edit ${index + 1}: ${error.message}`, error.status);
+}
+
+async function numbered<T>(index: number, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    throw withIndex(index, error);
+  }
+}
+
+function numberedSync<T>(index: number, run: () => T): T {
+  try {
+    return run();
+  } catch (error) {
+    throw withIndex(index, error);
+  }
+}
+
 async function groupFor(groups: Map<string, FileGroup>, workTree: string, target: ResolvedSource, scope: EditScope): Promise<FileGroup> {
   const key = await realpath(target.file).catch(() => target.file);
   let group = groups.get(key);
@@ -54,7 +75,7 @@ async function groupFor(groups: Map<string, FileGroup>, workTree: string, target
 async function groupByFile(workTree: string, edits: DirectEditRequest[], known: Set<string> | null, scope: EditScope): Promise<FileGroup[]> {
   const groups = new Map<string, FileGroup>();
   for (const [index, request] of edits.entries()) {
-    const plan = await planDirectEdit(workTree, request, known, scope);
+    const plan = await numbered(index, () => planDirectEdit(workTree, request, known, scope));
     const group = await groupFor(groups, workTree, plan.target, scope);
     const textSource = plan.patch.textSource;
     if (!textSource) {
@@ -109,7 +130,7 @@ function patchGroups(groups: FileGroup[], applied: AppliedEdit[], tags: string[]
         continue;
       }
       const { index, request } = step.edit;
-      const patch = patchSource(group.target.relative, group.code, request, group.theme);
+      const patch = numberedSync(index, () => patchSource(group.target.relative, group.code, request, group.theme));
       group.code = patch.code;
       applied[index] = { file: group.target.relative, ...patch.applied, ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
       tags[index] = patch.tag;

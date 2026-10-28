@@ -33,8 +33,8 @@ async function useSite(deps: DirectToolDeps, input: z.output<typeof schema>): Pr
   if (!deps.ctx.previewUrl) return 'Preview is not running for this direction. Pass source instead.';
   const probed = await probeOwners(deps.preview, withPagePath(deps.ctx.previewUrl, input.path || undefined), input.selector);
   if (!probed) return `No element matches ${input.selector} on the page.`;
-  const instance = await resolveInstance({ workTree: deps.ctx.direction.workTree, previewOrigin: new URL(deps.ctx.previewUrl).origin }, { owners: probed.owners });
-  return instance ? instance.use : `${input.selector} is not inside a component instance with props. Edit the JSX instead.`;
+  const instance = await resolveInstance({ workTree: deps.ctx.direction.workTree, previewOrigin: new URL(deps.ctx.previewUrl).origin }, { owners: probed.owners, usedAt: probed.usedAt });
+  return instance ? instance.use : `${input.selector} is not inside a component instance with props. Pass source (file:line:col of the JSX tag) or edit the JSX instead.`;
 }
 
 export async function runSetProps(deps: DirectToolDeps, args: z.input<typeof schema>): Promise<ToolText> {

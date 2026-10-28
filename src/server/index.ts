@@ -90,6 +90,7 @@ async function main(): Promise<void> {
   watchParent(() => shutdown('parent exit'));
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGHUP', () => shutdown('SIGHUP'));
 }
 
 main().catch((error: unknown) => {

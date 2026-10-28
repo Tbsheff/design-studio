@@ -144,7 +144,8 @@ function typeOf(slot: Slot, q: string): string {
   if (slot.kind === 'node' || slot.name === 'children') return 'ReactNode';
   const component = /^[A-Z]/.test(slot.tag) || slot.tag.includes('.');
   if (slot.typed === 'string' && (!component || slot.kind === 'text')) return 'string';
-  return `ComponentProps<${component ? `typeof ${slot.tag}` : `${q}${slot.tag}${q}`}>[${q}${slot.attr ?? ''}${q}]`;
+  const type = `ComponentProps<${component ? `typeof ${slot.tag}` : `${q}${slot.tag}${q}`}>[${q}${slot.attr ?? ''}${q}]`;
+  return slot.typed === 'string' ? `NonNullable<${type}>` : type;
 }
 
 export function propList(slots: Slot[], variants: VariantPlan | null, q = "'"): CreatedProp[] {

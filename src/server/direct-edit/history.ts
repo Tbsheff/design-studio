@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile, realpath, rm } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, EditHistoryEntry, EditHistoryList, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
@@ -83,7 +84,9 @@ async function writeText(file: string, text: string | null): Promise<void> {
 }
 
 async function writeInReverse(files: string[], texts: (string | null)[]): Promise<void> {
-  for (let index = files.length - 1; index >= 0; index -= 1) await writeText(files[index] ?? '', texts[index] ?? null);
+  const order = files.map((_, index) => files.length - 1 - index);
+  const created = order.filter((index) => texts[index] !== null && !existsSync(files[index] ?? ''));
+  for (const index of [...created, ...order.filter((item) => !created.includes(item))]) await writeText(files[index] ?? '', texts[index] ?? null);
 }
 
 function textBefore(change: EditFileChange): string | null {

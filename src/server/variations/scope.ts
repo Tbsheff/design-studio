@@ -148,7 +148,7 @@ export async function keepElementVariant(deps: KeepDeps, project: Project, varia
   const original = elementOf(current, scope);
   if (original === null || hash(original) !== scope.elementHash) throw new ConflictError(`${scope.file} changed in the main design since the variants started. Try the variants again.`);
   await writeAtomic(targetFile, code);
-  const version = await deps.versions.commitFile(project, target, scope.file, `Keep variant ${variation.label}: ${variation.title}`, { kind: 'manual', prompt: variation.prompt }).catch(async (error: unknown) => {
+  const version = await deps.versions.commitFile(project, target, scope.file, `Keep variant ${variation.label}: ${variation.title}`, { kind: 'keep', prompt: variation.prompt }).catch(async (error: unknown) => {
     await writeAtomic(targetFile, current);
     throw error;
   });

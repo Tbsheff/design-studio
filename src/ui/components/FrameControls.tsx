@@ -180,6 +180,11 @@ function UseInMenu({ siblings, busy, onPick }: { siblings: Sibling[]; busy: bool
   );
 }
 
+function shortRejection(error: string): string {
+  if (!error.startsWith('Rejected:')) return error.length > 60 ? `${error.slice(0, 60)}…` : error;
+  return /another file|other files/.test(error) ? 'Rejected: changed another file' : 'Rejected: changed code outside the element';
+}
+
 export function VariationControls({ variation, active, element, onMixed }: { variation: FrameVariation; active: boolean; element: SelectionContext | null; onMixed: () => void }) {
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,9 +217,11 @@ export function VariationControls({ variation, active, element, onMixed }: { var
   };
   return (
     <>
-      <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" data-tip={variation.costText}>
-        {status ? STATUS_TEXT[status] : 'No run'}
-      </span>
+      {!variation.error && (
+        <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" data-tip={variation.costText}>
+          {status ? STATUS_TEXT[status] : 'No run'}
+        </span>
+      )}
       {active && element && !variation.scoped && variation.siblings.length > 0 && <UseInMenu siblings={variation.siblings} busy={mixing} onPick={(id) => void mix(id)} />}
       <button
         type="button"
@@ -228,8 +235,8 @@ export function VariationControls({ variation, active, element, onMixed }: { var
         {keeping ? 'Keeping…' : 'Keep this one'}
       </button>
       {variation.error && (
-        <span className="frame-error scope" role="status" data-testid="variation-error">
-          {variation.error}
+        <span className="frame-error scope" role="status" aria-label={variation.error} data-testid="variation-error" data-tip={variation.error}>
+          {shortRejection(variation.error)}
         </span>
       )}
       {error && (

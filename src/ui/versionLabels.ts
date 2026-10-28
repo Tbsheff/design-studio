@@ -17,7 +17,7 @@ const KIND_INFO: Record<Exclude<Version['meta']['kind'], 'manual'>, KindInfo> = 
   run: { label: 'Run', icon: 'sparkle', hint: 'Made by the agent from a prompt' },
   undo: { label: 'Undo', icon: 'undo', hint: 'Undid the version below it' },
   restore: { label: 'Restore', icon: 'restore', hint: 'Brought back an earlier version' },
-  keep: { label: 'Kept', icon: 'check', hint: 'Kept unfinished changes from a stopped run' },
+  keep: { label: 'Kept', icon: 'check', hint: 'Kept changes from a stopped run, or a chosen element variant' },
   fork: { label: 'Branch', icon: 'branch', hint: 'Start of a new direction' },
 };
 

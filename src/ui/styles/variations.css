@@ -300,6 +300,10 @@
 }
 
 .frame-error.scope {
-  max-width: 360px;
-  white-space: normal;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
 }

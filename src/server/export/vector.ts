@@ -30,7 +30,7 @@ const MAX_PAGE_HEIGHT = 16_000;
 const MAX_PIXELS = 60_000_000;
 const SLIDE_SELECTORS = ['[data-slide]', '.slide', '.slides > section', 'section.slide'];
 
-const HIDE_TEXT = `(() => { const style = document.createElement('style'); style.textContent = '*, *::before, *::after { -webkit-text-fill-color: transparent !important; text-shadow: none !important; text-decoration-color: transparent !important; caret-color: transparent !important; }'; document.head.append(style); return true; })()`;
+const HIDE_TEXT = `(() => { const style = document.createElement('style'); style.textContent = '*, *::before, *::after { -webkit-text-fill-color: transparent !important; text-shadow: none !important; text-decoration-color: transparent !important; caret-color: transparent !important; } [data-ds-keep*="b"]::before, [data-ds-keep*="a"]::after { -webkit-text-fill-color: currentcolor !important; }'; document.head.append(style); return true; })()`;
 
 function slidesExpression(width: number, height: number): string {
   return `(() => {

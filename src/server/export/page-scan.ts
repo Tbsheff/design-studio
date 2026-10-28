@@ -375,15 +375,36 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
 
   const unquote = (raw: string): string | null => {
     let out = '';
-    const pattern = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|attr\(\s*([\w-]+)\s*\)|\s+/g;
+    const pattern = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|attr\(\s*([\w-]+)\s*\)|counter\(\s*([\w-]+)\s*(?:,\s*([\w-]+)\s*)?\)|\s+/g;
     let last = 0;
     for (let match = pattern.exec(raw); match; match = pattern.exec(raw)) {
       if (match.index !== last) return null;
       last = match.index + match[0].length;
       if (match[1] !== undefined || match[2] !== undefined) out += (match[1] ?? match[2] ?? '').replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16))).replace(/\\(.)/g, '$1');
       else if (match[3]) out += '\u0000' + match[3] + '\u0000';
+      else if (match[4]) out += '\u0001' + match[4] + ':' + (match[5] ?? 'decimal') + '\u0001';
     }
     return last === raw.length ? out : null;
+  };
+
+  const counterValue = (element: Element, name: string): number => {
+    const step = (node: Element): number => {
+      const raw = getComputedStyle(node).counterIncrement;
+      if (name === 'list-item' && node.tagName === 'LI') return 1;
+      const match = new RegExp(`(?:^|\\s)${name}(?:\\s+(-?\\d+))?(?:\\s|$)`).exec(raw);
+      return match ? Number(match[1] ?? 1) : 0;
+    };
+    let value = step(element);
+    for (let node = element.previousElementSibling; node; node = node.previousElementSibling) value += step(node);
+    const reset = element.parentElement ? new RegExp(`(?:^|\\s)${name}\\s+(-?\\d+)`).exec(getComputedStyle(element.parentElement).counterReset) : null;
+    return value + (reset ? Number(reset[1]) : 0);
+  };
+
+  const counterText = (value: number, kind: string): string => {
+    if (kind === 'decimal-leading-zero') return String(value).padStart(2, '0');
+    if (kind === 'lower-alpha' || kind === 'lower-latin') return String.fromCharCode(96 + value);
+    if (kind === 'upper-alpha' || kind === 'upper-latin') return String.fromCharCode(64 + value);
+    return String(value);
   };
 
   const materialize = (element: Element, which: '::before' | '::after'): boolean => {
@@ -392,10 +413,11 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     if (!content || content === 'none' || content === 'normal' || style.display === 'none') return false;
     const parsed = unquote(content);
     if (parsed === null) {
-      note('CSS generated content (counters, images) left out');
+      note('some CSS-made text is kept only as a picture');
+      element.setAttribute('data-ds-keep', `${element.getAttribute('data-ds-keep') ?? ''}${which === '::before' ? 'b' : 'a'}`);
       return false;
     }
-    const text = parsed.replace(/\u0000([\w-]+)\u0000/g, (_, name: string) => element.getAttribute(name) ?? '');
+    const text = parsed.replace(/\u0000([\w-]+)\u0000/g, (_, name: string) => element.getAttribute(name) ?? '').replace(/\u0001([\w-]+):([\w-]+)\u0001/g, (_, name: string, kind: string) => counterText(counterValue(element, name), kind));
     const span = document.createElement('span');
     const decls: string[] = [];
     for (let index = 0; index < style.length; index += 1) {

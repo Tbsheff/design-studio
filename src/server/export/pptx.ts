@@ -15,6 +15,7 @@ export function fontFace(family: string): string {
   const head = (names[0] ?? 'sans-serif').toLowerCase();
   if (!GENERIC.has(head)) return names[0] ?? 'Helvetica Neue';
   if (head.includes('mono')) return 'Menlo';
+  if (head === 'ui-serif') return 'New York';
   if (head.includes('serif') && !head.includes('sans')) return 'Georgia';
   return 'Helvetica Neue';
 }
@@ -90,7 +91,7 @@ function addBlock(slide: Slide, segments: Segment[], k: number): void {
   const top = first.line.y - Math.max(0, pitch - first.line.height) / 2;
   const align = alignOf(first.text.align);
   const width = right - left;
-  const slack = Math.max(8, width * 0.08);
+  const slack = Math.max(8, width * 0.12);
   const x = align === 'left' ? left : align === 'center' ? left - slack / 2 : left - slack;
   const toIn = (value: number): number => (value * k) / PX_PER_IN;
   slide.addText(runsOf(rows, k), {

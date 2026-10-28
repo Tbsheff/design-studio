@@ -7,7 +7,8 @@ import { buildCheckReport, saveCheck, type RunToolState } from './check-tool.js'
 import { countSeverities } from '../preview/quality.js';
 import { EDIT_TOOL_NAMES as EDIT_TOOLS, REVIEW_FRAME_TOOL } from './permissions.js';
 import { defaultShotTarget, isContextFrame } from './run-target.js';
-import { outsideFindings, probeLayout } from './layout-region.js';
+import { probeLayout } from './layout-region.js';
+import { regionFindings } from './fit-check.js';
 import { changedSince } from './screens.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
 import type { ImagePart } from './user-message.js';
@@ -139,14 +140,14 @@ function reviewLine(item: ReviewItem): string {
 }
 
 function outsideLine(finding: QualityFinding): string {
-  return `- [high] outside-layout: ${finding.message} Fix: ${finding.fix ?? ''}`;
+  return `- [high] ${finding.check}: ${finding.message} Fix: ${finding.fix ?? ''}`;
 }
 
 async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {
   const target = input.ctx.target;
   const url = defaultShotTarget(input.ctx)?.url;
   if (!target?.layout || !url) return [];
-  return outsideFindings(target.layout, await probeLayout(input.preview, url), target.owner);
+  return regionFindings(target.layout, await probeLayout(input.preview, url), target.owner, input.ctx.request.prompt);
 }
 
 export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewGaps): Promise<StudioReview> {

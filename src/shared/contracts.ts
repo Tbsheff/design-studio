@@ -758,7 +758,7 @@ export interface LayoutFinding {
 
 export type CheckViewport = 'desktop' | 'tablet' | 'mobile';
 
-export type QualityCheckName = 'a11y' | 'tap-target' | 'placeholder' | 'tokens' | 'nav-mobile' | 'visual-diff' | 'generic-layout' | 'duplicate-content' | 'outside-layout';
+export type QualityCheckName = 'a11y' | 'tap-target' | 'placeholder' | 'tokens' | 'nav-mobile' | 'visual-diff' | 'generic-layout' | 'duplicate-content' | 'outside-layout' | 'size-request' | 'duplicate-data';
 
 export type QualitySeverity = 'high' | 'medium' | 'low';
 

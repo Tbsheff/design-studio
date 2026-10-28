@@ -155,3 +155,24 @@ function pathArg(raw: string): string {
   if (clean === null) throw new Error(`path ${raw} is not a page path. Pass a path such as /settings or about.html.`);
   return clean;
 }
+
+export interface EditPage {
+  url: string;
+  path: string | undefined;
+  frameId: string | null;
+  size: { width: number; height: number } | null;
+}
+
+export function editPage(ctx: Pick<AgentRunContext, 'previewUrl' | 'target'>, page: string | undefined): EditPage | null {
+  if (!ctx.previewUrl) return null;
+  const target = ctx.target;
+  if (page !== undefined) return { url: pageUrl(ctx.previewUrl, cleanFramePath(page) ?? page,target?.state ?? DEFAULT_FRAME_STATE), path: page, frameId: null, size: null };
+  if (!target) return { url: ctx.previewUrl, path: undefined, frameId: null, size: null };
+  return { url: pageUrl(ctx.previewUrl, target.path, target.state), path: target.path || undefined, frameId: target.id, size: { width: target.width, height: target.height } };
+}
+
+export function editPageUrl(ctx: Pick<AgentRunContext, 'previewUrl' | 'target'>, page: string | undefined): string {
+  const found = editPage(ctx, page);
+  if (!found) throw new Error('Preview is not running for this direction.');
+  return found.url;
+}

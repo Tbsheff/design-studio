@@ -18,7 +18,10 @@ export async function runMockDirect(session: MockToolSession, input: DriverInput
   const edited = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, heading, () => runEditElement(deps, heading));
   const token = { name: '--primary', value: HEADING_COLOR, theme: 'light' as const };
   const set = await mockCanvasTool(session, SET_TOKEN_TOOL, token, () => runSetToken(deps, token));
-  const headingLine = edited.isError ? `The heading edit failed: ${edited.content[0]?.text ?? ''}` : `Made the heading ${HEADING_COLOR}.`;
-  const tokenLine = set.isError ? `The token edit failed: ${set.content[0]?.text ?? ''}` : `Set --primary to ${HEADING_COLOR}.`;
-  return `${headingLine} ${tokenLine}`;
+  const classes = { selector: 'h1', classes: { add: ['mock-direct'] } };
+  const tagged = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, classes, () => runEditElement(deps, classes));
+  const duplicate = { selector: 'section p', op: 'duplicate' as const };
+  const copied = await mockCanvasTool(session, EDIT_ELEMENT_TOOL, duplicate, () => runEditElement(deps, duplicate));
+  const line = (result: { isError?: boolean; content: { text: string }[] }, done: string, what: string) => (result.isError ? `${what} failed: ${result.content[0]?.text ?? ''}` : done);
+  return [line(edited, `Made the heading ${HEADING_COLOR}.`, 'The heading edit'), line(set, `Set --primary to ${HEADING_COLOR}.`, 'The token edit'), line(tagged, 'Added the mock-direct class.', 'The class edit'), line(copied, 'Duplicated the section paragraph.', 'The duplicate')].join(' ');
 }

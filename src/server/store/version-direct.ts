@@ -246,6 +246,25 @@ export function createDirectStore(deps: DirectDeps) {
       return statusOf(model);
     },
 
+    has(project: Project, direction: Direction): boolean {
+      return models.has(deps.keyOf(project, direction));
+    },
+
+    async adopt(project: Project, direction: Direction, scannedHead: string, head: string, changed: string[]): Promise<boolean> {
+      const key = deps.keyOf(project, direction);
+      const model: StatusModel = { head, changed: new Set(scoped(project, changed)) };
+      addUnstaged(key, model.changed);
+      if (scannedHead !== head) {
+        const store = deps.objects(project);
+        const moved = await diffTrees(store, await deps.treeOf(project, scannedHead), await deps.treeOf(project, head));
+        const recheck = [...new Set([...model.changed, ...moved.map((change) => change.path)])];
+        addUnstaged(key, recheck);
+        if (!(await reclassify(project, direction, head, recheck, model))) return false;
+      }
+      models.set(key, model);
+      return true;
+    },
+
     moved(project: Project, direction: Direction, oldHead: string, newHead: string): void {
       const model = models.get(deps.keyOf(project, direction));
       if (model && model.head === oldHead) model.head = newHead;

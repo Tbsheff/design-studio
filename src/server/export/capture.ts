@@ -6,6 +6,7 @@ import type { ExportFrame, ExportScale, ExportScope } from '../../shared/export.
 import type { RenderClip } from '../../shared/render-rpc.js';
 import { BadRequestError } from '../store/errors.js';
 import type { PreviewService } from '../types.js';
+import { expandScrollRoot } from '../preview/scroll-root.js';
 import { withPagePath } from './source.js';
 
 const MAX_OUTPUT_PIXELS = 80_000_000;
@@ -66,6 +67,7 @@ export async function captureFrame(preview: PreviewService, url: string, frame: 
     return await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height, scale }, async (page) => {
       await waitForPage(page);
       await page.evaluate(HIDE_DEV_CHROME).catch(() => undefined);
+      if (selector || scope !== 'frame') await expandScrollRoot(page);
       let clip: RenderClip;
       if (selector) {
         const found = await page.evaluate<RenderClip | null>(selectorClipExpression(selector, padding));

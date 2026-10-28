@@ -42,6 +42,8 @@ import { appRoutePages, useAppCanvas } from './AppCanvas';
 import { usePrototype } from '../usePrototype';
 import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameStates';
 import { useClickThrough } from '../useClickThrough';
+import { useFirstBuildCover, useFirstBuildGate, type PageWait } from '../useFirstBuild';
+import { FirstBuildCover } from './FrameSkeleton';
 
 interface Props {
   projectId: string;
@@ -58,6 +60,7 @@ interface Props {
   comments?: CommentsControl;
   commentTools?: CanvasCommentTools;
   running?: boolean;
+  runStep?: string | null;
   noRuns?: boolean;
   onTextCommit?: TextCommitHandler;
   darkPreview?: boolean;
@@ -121,7 +124,8 @@ function stageNote(p: { running?: boolean; noRuns?: boolean; app?: AttachedApp |
   return p.noRuns && !p.app ? 'empty' : null;
 }
 
-function StageMessage({ note, urlError, app }: { note: StageNote; urlError: string | null; app: ReactNode }) {
+function StageMessage({ note: given, covered, urlError, app }: { note: StageNote; covered: boolean; urlError: string | null; app: ReactNode }) {
+  const note = covered ? null : given;
   if (urlError) return <div className="stage-message">{urlError}</div>;
   if (note === 'building')
     return (
@@ -235,13 +239,15 @@ function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   return { dark, onToggle: () => broadcastTheme(dark ? null : 'dark') };
 }
 
-function OtherFrames({ frames, active, passive, sandbox, labelProps, register }: {
+function OtherFrames({ frames, active, passive, sandbox, labelProps, register, waiting, step }: {
   frames: CanvasFrame[];
   active: CanvasFrame;
   passive: DirectionFrames;
   sandbox?: string;
   labelProps: ReturnType<typeof useFrameLabels>;
   register: (id: string, el: HTMLDivElement | null) => void;
+  waiting: (path: string | undefined, directionId: string | null) => PageWait;
+  step: string | null | undefined;
 }) {
   const entries = useRef(new Map<string, PassiveEntry>());
   const live = entries.current;
@@ -251,10 +257,12 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
     .map((f) => {
       const slot = passive.slots.find((item) => item.id === f.id);
       const did = slot?.directionId ?? null;
+      const wait = waiting(f.path, did);
       live.set(f.id, {
         frame: f,
-        src: slot?.src ?? null,
-        nextSrc: slot?.nextSrc ?? null,
+        src: wait ? null : (slot?.src ?? null),
+        nextSrc: wait ? null : (slot?.nextSrc ?? null),
+        pending: wait ? { step: step ?? null, missing: wait === 'missing' } : undefined,
         sandbox,
         offset: active,
         label: labelProps(f, did),
@@ -264,7 +272,7 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
         },
         onNextLoad: passive.onSwapDone,
       });
-      const sig = JSON.stringify([f, slot?.src ?? null, slot?.nextSrc ?? null, slot?.token ?? null, sandbox ?? null, active.x, active.y, labelProps.sig(f, did)]);
+      const sig = JSON.stringify([f, wait, wait ? step : null, slot?.src ?? null, slot?.nextSrc ?? null, slot?.token ?? null, sandbox ?? null, active.x, active.y, labelProps.sig(f, did)]);
       return <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />;
     });
 }
@@ -475,6 +483,8 @@ export function Canvas(props: Props) {
   const baseUrl = withElementMark(preview.baseUrl, markOf(knownList(props.directions), directionId));
   const frameStates = useFrameStates(projectId, Boolean(props.app));
   const liveUrl = livePageUrl(baseUrl, active, frameStates);
+  const note = stageNote({ running: props.running, noRuns: props.noRuns, app: props.app, live, hasHead: headVersionId !== null, urlError });
+  const firstBuild = useFirstBuildGate({ projectId, directionId, kind, live, running: props.running, hasHead: headVersionId !== null, urlError, lastChange: props.lastChange, path: active.path, emptyStage: note === 'empty', url: liveUrl });
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
   const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
@@ -484,7 +494,7 @@ export function Canvas(props: Props) {
     projectId,
     directionId,
     kind,
-    baseUrl: liveUrl,
+    baseUrl: firstBuild.url,
     live,
     lastChange: props.lastChange,
     selectMode: picking || commentMode,
@@ -503,6 +513,7 @@ export function Canvas(props: Props) {
     onTextEdit: inline.onMessage,
     onContextMenu: (at) => openMenu.current(at),
   });
+  const covered = useFirstBuildCover(firstBuild, frames.slots.length);
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
   useTokenFrames(frames.slots, frames.elements, kind, live);
@@ -581,7 +592,6 @@ export function Canvas(props: Props) {
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
-  const note = stageNote({ running: props.running, noRuns: props.noRuns, app: props.app, live, hasHead: headVersionId !== null, urlError });
   return (
     <div className={canvasClass(inline.editing)}>
       <CanvasChrome
@@ -615,7 +625,7 @@ export function Canvas(props: Props) {
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
-        <StageMessage note={note} urlError={urlError} app={appCanvas.stage} />
+        <StageMessage note={note} covered={covered} urlError={urlError} app={appCanvas.stage} />
         <div
           ref={artboardRef}
           className="artboard"
@@ -628,6 +638,7 @@ export function Canvas(props: Props) {
           }}
         >
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
+          <FirstBuildCover covered={covered} wait={firstBuild.wait} step={props.runStep} path={active.path} />
           {appCanvas.note}
           <ArtboardOverlay
             hover={overlayHover(frames.hover, picking || commentMode)}
@@ -653,7 +664,7 @@ export function Canvas(props: Props) {
           <MarqueeLayer listen={frames.listen} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
-          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} step={props.runStep} />
           <FrameSnapLayer origin={active} />
           {proto.artboard}
         </div>

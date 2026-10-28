@@ -6,6 +6,7 @@ import type { VersionStore } from '../types.js';
 export interface SaveDeps {
   versions: VersionStore;
   publish(project: Project, direction: Direction, version: Version, status: boolean): Promise<void>;
+  failed(project: Project, direction: Direction, message: string): void;
 }
 
 interface Lane {
@@ -77,7 +78,9 @@ export function saveLater(deps: SaveDeps, project: Project, direction: Direction
       } catch (error) {
         lane.waiting = Math.max(0, lane.waiting - 1);
         console.error(`[save-queue] could not save "${title}" as a version`, error);
-        failures.set(project.id, [...(failures.get(project.id) ?? []), `"${title}" is written to the file but was not saved as a version (${failText(error)}).`]);
+        const message = `"${title}" is written to the file but was not saved as a version (${failText(error)}).`;
+        failures.set(project.id, [...(failures.get(project.id) ?? []), message]);
+        deps.failed(project, direction, message);
       }
     }),
   );

@@ -208,7 +208,8 @@ async function unchangedResult(
 }
 
 export function saveDeferred(deps: DirectEditDeps, project: Project, direction: Direction, relatives: string[], title: string, meta: VersionMeta): Version {
-  return saveLater({ versions: deps.versions, publish: (p, d, version, withStatus) => publishVersion(deps, p, d, version, withStatus) }, project, direction, relatives, title, meta);
+  const failed = (p: Project, d: Direction, message: string) => deps.bus.emit({ type: 'preview.build-error', projectId: p.id, directionId: d.id, message: `Version not saved: ${message}` });
+  return saveLater({ versions: deps.versions, publish: (p, d, version, withStatus) => publishVersion(deps, p, d, version, withStatus), failed }, project, direction, relatives, title, meta);
 }
 
 async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, patch: PatchResult, request: DirectEditRequest): Promise<Version> {

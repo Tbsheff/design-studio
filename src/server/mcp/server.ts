@@ -108,7 +108,7 @@ function withSaveFailures(result: unknown, projectId: unknown): unknown {
   const notes = typeof projectId === 'string' ? takeSaveFailures(projectId) : [];
   const content = (result as { content?: unknown[] }).content;
   if (notes.length === 0 || !Array.isArray(content)) return result;
-  return { ...(result as object), content: [...content, { type: 'text', text: `An earlier edit could not be saved as a version: ${notes.join(' ')}` }] };
+  return { ...(result as object), content: [...content, { type: 'text', text: `Error: an earlier edit could not be saved as a version. ${notes.join(' ')}` }] };
 }
 
 async function firstVersionRefusal(edits: EditDeps, name: string, projectId: unknown): Promise<string | null> {

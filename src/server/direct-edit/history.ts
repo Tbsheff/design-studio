@@ -5,7 +5,7 @@ import { isNodeError } from '../store/errors.js';
 import type { EventBus } from '../types.js';
 import { emitSourceChange } from './change-feed.js';
 import { DirectEditError } from './errors.js';
-import { savedVersionId } from './save-queue.js';
+import { savedVersionId, savesSettled } from './save-queue.js';
 import { assertCanEdit, publishVersion, saveDeferred, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
 
 export const HISTORY_LIMIT = 100;
@@ -149,6 +149,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
 
   const step = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult> => {
     assertCanEdit(deps, project, direction);
+    await savesSettled(project.id);
     const stacks = stacksOf(project.id);
     const from = kind === 'undo' ? stacks.undo : stacks.redo;
     const index = lastFor(from, direction.id);

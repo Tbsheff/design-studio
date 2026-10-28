@@ -24,6 +24,7 @@ export interface CreateCommentInput {
   drawing?: CommentDrawing;
   author?: string;
   frame?: CommentFrame;
+  from?: 'viewer';
 }
 
 export interface UpdateCommentInput {
@@ -144,6 +145,7 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
           ...(input.drawing ? { drawing: input.drawing } : {}),
           ...(input.author ? { author: input.author } : {}),
           ...(input.frame ? { frame: input.frame } : {}),
+          ...(input.from ? { from: input.from } : {}),
         };
         data.nextN += 1;
         data.comments.push(comment);

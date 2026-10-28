@@ -8,6 +8,7 @@ export const STRUCTURE_KEY_IDS: Record<StructureKey, KeyId> = {
   unwrap: 'layer-unwrap',
   cut: 'layer-cut',
   paste: 'layer-paste',
+  group: 'layer-group',
 };
 
 const ORDER = Object.keys(STRUCTURE_KEY_IDS) as StructureKey[];

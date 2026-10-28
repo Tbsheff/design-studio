@@ -79,7 +79,7 @@ const schemas = {
       classes: classes.optional(),
       target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: an element that is the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes; other elements are edited in their own file. "component" edits the element in the shared component file, which changes every use ("element" is the same). "use" asks for the use site and fails when there is none.'),
       variant: variant.optional(),
-      op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
+      op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
@@ -285,7 +285,7 @@ async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, clie
   return { result, activity: versionActivity(project, direction, `${before === null ? 'Created' : 'Wrote'} ${relative}`, version) };
 }
 
-const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved', clear: 'Cleared text in' } as const;
+const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved', clear: 'Cleared text in', group: 'Grouped' } as const;
 
 async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op: NonNullable<Input<'edit_element'>['op']>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);

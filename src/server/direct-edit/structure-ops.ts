@@ -349,10 +349,10 @@ export function outermost(nodes: StructNode[]): StructNode[] {
 }
 
 export function planStructure(source: string, input: OpInput): OpPlan {
-  const nodes = input.op === 'wrap' ? [...input.nodes].sort((a, b) => a.start - b.start) : outermost(input.nodes);
+  const nodes = input.op === 'wrap' || input.op === 'group' ? [...input.nodes].sort((a, b) => a.start - b.start) : outermost(input.nodes);
   if (input.op === 'delete') return applyTracked(source, deleteOp(source, nodes));
   if (input.op === 'duplicate') return applyTracked(source, duplicateOp(source, nodes));
-  if (input.op === 'wrap') return applyTracked(source, wrapOp(source, nodes, input.frame));
+  if (input.op === 'wrap' || input.op === 'group') return applyTracked(source, wrapOp(source, nodes, input.frame));
   if (input.op === 'unwrap') return applyTracked(source, unwrapOp(source, nodes));
   if (input.op === 'clear') return applyTracked(source, clearOp(source, nodes));
   return applyTracked(source, moveOp(source, nodes, input.place, input.closeTag));

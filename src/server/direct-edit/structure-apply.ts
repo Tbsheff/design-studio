@@ -20,8 +20,9 @@ interface FileResult extends WrittenFile {
   placeTag: string | null;
 }
 
-const VERB: Record<StructureOp, string> = { delete: 'Delete', duplicate: 'Duplicate', wrap: 'Wrap', unwrap: 'Unwrap', move: 'Move', clear: 'Clear text in' };
-const ONE_FILE_OPS = new Set<StructureOp>(['wrap', 'move']);
+const VERB: Record<StructureOp, string> = { delete: 'Delete', duplicate: 'Duplicate', wrap: 'Wrap', unwrap: 'Unwrap', move: 'Move', clear: 'Clear text in', group: 'Group' };
+const ONE_FILE_OPS = new Set<StructureOp>(['wrap', 'move', 'group']);
+const GROUP_FRAME = { open: '<div data-name="Group">', close: '</div>' };
 const FALLBACK_GAP = '8px';
 const GAP_TOKEN = '--space-2';
 
@@ -63,7 +64,7 @@ async function planFile(work: FileWork, request: StructureEditRequest, gap: stri
   const locate = (target: StructureTarget, role: 'target' | 'into' | 'ref') => doc.node(target.source, role, target.tag);
   const nodes = work.targets.map((target) => locate(target, 'target'));
   const place = placement(request, locate);
-  const plan = planStructure(original, { op: request.op, nodes, place, frame: doc.frame(gap), closeTag: doc.closeTag });
+  const plan = planStructure(original, { op: request.op, nodes, place, frame: request.op === 'group' ? GROUP_FRAME : doc.frame(gap), closeTag: doc.closeTag });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
   const selectTag = (offset: number) => /^<([A-Za-z][\w.-]*)/.exec(plan.code.slice(offset, offset + 80))?.[1]?.toLowerCase() ?? '';

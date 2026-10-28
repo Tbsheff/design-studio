@@ -68,6 +68,7 @@ export const KEYMAP = [
   { id: 'layer-unwrap', label: 'Unwrap', keys: ['Mod+Shift+G'], group: 'Selection' },
   { id: 'layer-cut', label: 'Cut to move', keys: ['Mod+X'], group: 'Selection' },
   { id: 'layer-paste', label: 'Paste into selection', keys: ['Mod+V'], group: 'Selection' },
+  { id: 'layer-group', label: 'Group selection', keys: ['Mod+G'], group: 'Selection' },
   { id: 'deselect', label: 'Clear selection', keys: ['Esc'], group: 'Selection' },
 
   { id: 'undo', label: 'Undo', keys: ['Mod+Z'], group: 'Edit' },

@@ -1,8 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { formatAnswers, needsQuestions } from '../../shared/clarify';
-import { DEFAULT_SETTINGS, type AppCandidate, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
+import { DEFAULT_SETTINGS, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../../shared/folders';
-import { ApiError, api, errorText } from '../api';
+import { api, errorText } from '../api';
+import { onOpenAppRequest, takeOpenAppRequest } from '../openAppRequest';
 import { findPack, pickable, usePacks, type PacksState } from '../packs';
 import { homeVariations, uiStore, useUi } from '../storage';
 import { maxVariationsFor } from '../variationsApi';
@@ -31,7 +32,8 @@ const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyFor
 const loadTrash = () => import('./HomeTrash');
 const loadSlash = () => import('./HomeSlash');
 const HomeTrash = lazy(loadTrash);
-const AttachAppDialog = lazy(() => import('./AttachAppDialog'));
+const loadOpenApp = () => import('./OpenAppPanel');
+const OpenAppPanel = lazy(loadOpenApp);
 const loadPops = () => import('./HomePopovers');
 const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
 const PackPopover = lazy(() => loadPops().then((m) => ({ default: m.PackPopover })));
@@ -42,7 +44,8 @@ const loadTemplates = () => import('./HomeTemplates');
 const loadExtras = () => import('./HomeExtras');
 const FoldersSection = lazy(() => loadExtras().then((m) => ({ default: m.FoldersSection })));
 
-type Busy = 'create' | 'import' | 'ask' | 'starter' | null;
+type Busy = 'create' | 'ask' | 'starter' | null;
+type Entry = 'prompt' | 'app';
 type Pop = 'plus' | 'pack' | 'level' | 'model' | null;
 
 const EXAMPLES = ['Wireframe a settings page', 'Prototype a dashboard for tracking orders', 'A pricing page for a developer tool with three tiers', 'Turn my notes into a one-page brief', 'A mobile onboarding flow for a running app'];
@@ -125,14 +128,6 @@ function focusPrompt(home: HTMLElement | null, atEnd = false): void {
     area?.focus();
     if (atEnd && area) area.setSelectionRange(area.value.length, area.value.length);
   });
-}
-
-function focusOpenFolder(): void {
-  window.setTimeout(() => {
-    const row = document.querySelector<HTMLFormElement>('form.open-folder');
-    row?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    row?.querySelector<HTMLButtonElement>('button[type="submit"], button')?.focus();
-  }, 60);
 }
 
 function focusIn(selector: string): void {
@@ -393,6 +388,40 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
   );
 }
 
+function EntrySwitch({ entry, onEntry }: { entry: Entry; onEntry: (entry: Entry) => void }) {
+  return (
+    <div className="segmented home-entry" role="tablist" aria-label="Start">
+      <button type="button" role="tab" aria-selected={entry === 'prompt'} className={entry === 'prompt' ? 'on' : ''} onClick={() => onEntry('prompt')}>
+        <Icon name="sparkle" size={14} />
+        New prototype
+      </button>
+      <button type="button" role="tab" aria-selected={entry === 'app'} className={entry === 'app' ? 'on' : ''} onPointerEnter={() => void loadOpenApp()} onFocus={() => void loadOpenApp()} onClick={() => onEntry('app')}>
+        <Icon name="folder" size={14} />
+        Open your app
+      </button>
+    </div>
+  );
+}
+
+function useOpenAppEntry(): { entry: Entry; appPath: string; openApp: (path: string) => void; setEntry: (entry: Entry) => void } {
+  const [entry, setEntry] = useState<Entry>('prompt');
+  const [appPath, setAppPath] = useState('');
+  const openApp = useCallback((path: string) => {
+    setAppPath(path);
+    setEntry('app');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+  useEffect(() => {
+    const take = () => {
+      const request = takeOpenAppRequest();
+      if (request) openApp(request.path);
+    };
+    take();
+    return onOpenAppRequest(take);
+  }, [openApp]);
+  return { entry, appPath, openApp, setEntry };
+}
+
 function homeSendBlocker(busy: Busy, prompt: string, asking: boolean): string | null {
   if (busy !== null) return 'Working on it';
   if (asking) return 'Answer or skip the questions below';
@@ -469,8 +498,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   const prefs = useHomePrefs();
   const pack = findPack(packs.packs, lastPackId);
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
-  const [importPath, setImportPath] = useState('');
-  const [showOpenFolder, setShowOpenFolder] = useState(false);
+  const { entry, appPath, openApp, setEntry } = useOpenAppEntry();
   const [advancedOpened, setAdvancedOpened] = useState(0);
   const [template, setTemplate] = useState<{
     id: string;
@@ -515,11 +543,9 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const openFolderHere = async (folder: WorkspaceFolder) => {
+    if (chooser.unsupported) return openApp(`${folder.path}/`);
     const picked = await chooser.choose(`Choose a folder in ${folder.label} to open`, folder.path);
-    if (!picked.path) return;
-    setImportPath(picked.path);
-    setShowOpenFolder(true);
-    focusOpenFolder();
+    if (picked.path) openApp(picked.path);
   };
 
   const { filterFolder, shownProjects } = filterByFolder(projects, workspaces, folderFilter);
@@ -600,31 +626,6 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     showToast,
   });
 
-  const [pickApp, setPickApp] = useState<{ folder: string; candidates: AppCandidate[] } | null>(null);
-
-  const importFolder = async (path: string) => {
-    setBusy('import');
-    setFormError(null);
-    try {
-      const { project } = await api.importProject(path);
-      onOpen(project.id);
-    } catch (err) {
-      const data = err instanceof ApiError ? (err.data as { code?: string; candidates?: AppCandidate[] } | undefined) : undefined;
-      if (data?.code === 'pick_app' && data.candidates) setPickApp({ folder: path, candidates: data.candidates });
-      else setFormError(errorText(err));
-      setBusy(null);
-    }
-  };
-
-  const linkCode = async () => {
-    const picked = await chooser.choose('Choose a folder with an index.html, a Vite app or a Next.js app');
-    if (picked.path) return void importFolder(picked.path);
-    if (picked.unsupported) {
-      setShowOpenFolder(true);
-      focusOpenFolder();
-    }
-  };
-
   const pickTemplate = (picked: HomeTemplate, starter: Starter | null) => {
     if (template?.id === picked.id) {
       setTemplate(null);
@@ -653,11 +654,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
   const plusActions = {
     onAttachFile: () => fileRef.current?.click(),
-    onAttachFolder: () => {
-      setShowOpenFolder(true);
-      focusOpenFolder();
-    },
-    onLinkCode: () => void linkCode(),
+    onLinkCode: () => openApp(''),
     onImportSystem: () => uiStore.set({ screen: 'design-systems', libraryFrom: null }),
     onSkills: openAdvanced,
     onLocation: () => focusIn('#new-project-location'),
@@ -689,7 +686,14 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       <main className="home-main">
         <section className="home-hero">
           <h1 className="ui-display">What should we create?</h1>
+          <EntrySwitch entry={entry} onEntry={setEntry} />
           <div className="home-card">
+            {entry === 'app' ? (
+              <Suspense fallback={<div className="home-tile-placeholder" aria-hidden="true" />}>
+                <OpenAppPanel initialPath={appPath} projects={projects} workspaces={workspaces} onOpen={onOpen} />
+              </Suspense>
+            ) : (
+            <>
             <form className={`ui-composer home-composer${dragging ? ' dragging' : ''}`} onSubmit={create} {...dropHandlers}>
               <ComposerChips images={images} references={references} onRemoveImage={removeImage} onRemoveReference={removeReference} />
               <PromptArea value={prompt} onChange={setPrompt} onSubmit={create} onPaste={onPromptPaste} describedBy={sendBlocker && sendBlocker !== EMPTY_PROMPT ? HOME_REASON_ID : undefined} menuKeys={slashKeys} />
@@ -731,9 +735,11 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 <TemplatesSection open={prefs.templatesOpen} templates={templates} selected={template?.id ?? null} disabled={busy !== null} onPick={pickTemplate} />
               </>
             )}
+            </>
+            )}
           </div>
           {formError && <ComposerAlert onClose={() => setFormError(null)}>{formError}</ComposerAlert>}
-          {extras && (
+          {extras && entry === 'prompt' && (
             <extras.ComposerFoot
               workspaces={workspaces}
               location={location}
@@ -748,13 +754,6 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
                 designMd,
                 onDesignMd: setDesignMd,
                 onError: setFormError,
-              }}
-              openFolder={{
-                shown: showOpenFolder || importPath !== '',
-                busy: busy !== null,
-                path: importPath,
-                onPath: setImportPath,
-                onImport: (p) => void importFolder(p),
               }}
               onHiddenMoved={() => void loadProjects()}
             />
@@ -816,11 +815,6 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       {trashOpen && (
         <Suspense fallback={null}>
           <HomeTrash onClose={() => setTrashOpen(false)} onRestored={() => void loadProjects()} />
-        </Suspense>
-      )}
-      {pickApp && (
-        <Suspense fallback={null}>
-          <AttachAppDialog folder={pickApp.folder} candidates={pickApp.candidates} onClose={() => setPickApp(null)} onAttached={(project) => onOpen(project.id)} />
         </Suspense>
       )}
       <HomeToast toast={toast} onDone={clearToast} />

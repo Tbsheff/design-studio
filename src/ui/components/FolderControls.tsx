@@ -10,7 +10,7 @@ function FolderPath({ path, homeDir }: { path: string; homeDir: string | null })
   const head = cut > 0 ? short.slice(0, cut + 1) : '';
   const tail = cut > 0 ? short.slice(cut + 1) : short;
   return (
-    <span className="folder-path" title={path}>
+    <span className="folder-path" data-tip={path}>
       {head && <span className="folder-path-head">{head}</span>}
       <span className="folder-path-tail">{tail}</span>
     </span>
@@ -32,68 +32,6 @@ function PastePath({ label, action, onSubmit }: { label: string; action: string;
         {action}
       </button>
     </form>
-  );
-}
-
-interface OpenFolderProps {
-  busy: boolean;
-  path: string;
-  homeDir: string | null;
-  chooser: FolderChooser;
-  onPath: (path: string) => void;
-  onImport: (path: string) => void;
-}
-
-export function OpenFolder({ busy, path, homeDir, chooser, onPath, onImport }: OpenFolderProps) {
-  const [paste, setPaste] = useState(false);
-  const pasteMode = paste || chooser.unsupported;
-  const choose = async () => {
-    const picked = await chooser.choose('Choose a folder to open', path || undefined);
-    if (picked.path) onPath(picked.path);
-  };
-  return (
-    <div className="open-folder-block">
-      <form
-        className="open-folder"
-        aria-label="Open a folder"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (path.trim()) onImport(path.trim());
-        }}
-      >
-        <Icon name="folder" />
-        <span className="open-folder-label">Open a folder</span>
-        {pasteMode ? (
-          <>
-            <label className="sr-only" htmlFor="open-folder-path">
-              Absolute path
-            </label>
-            <input id="open-folder-path" value={path} onChange={(e) => onPath(e.target.value)} placeholder="/Users/me/projects/site" spellCheck={false} autoFocus={paste} />
-          </>
-        ) : path ? (
-          <FolderPath path={path} homeDir={homeDir} />
-        ) : (
-          <span className="open-folder-hint">A folder with an index.html or a Vite app</span>
-        )}
-        {!pasteMode && (
-          <button type="button" className="btn small" onClick={() => void choose()} disabled={busy || chooser.picking}>
-            {path ? 'Change…' : 'Choose folder…'}
-          </button>
-        )}
-        {(pasteMode || path.trim() !== '') && (
-          <button className="btn small" type="submit" disabled={busy || !path.trim()}>
-            {busy ? 'Opening…' : 'Open'}
-          </button>
-        )}
-      </form>
-      {chooser.unsupported ? (
-        <p className="open-folder-note">The folder picker needs macOS. Paste the full path.</p>
-      ) : (
-        <button type="button" className="link open-folder-toggle" aria-expanded={paste} aria-controls="open-folder-path" onClick={() => setPaste((open) => !open)}>
-          {paste ? 'Use the folder picker' : 'Or paste a path'}
-        </button>
-      )}
-    </div>
   );
 }
 

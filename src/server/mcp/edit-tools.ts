@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import { STRUCTURE_OPS, TOKENS_FILE, type AppServerStatus, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
@@ -319,7 +319,9 @@ async function attachApp(deps: EditDeps, input: Input<'attach_app'>, client: str
   if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: 'The studio agent and write_file can then change the real files in this folder.' });
   const { project } = await studioCall<{ project: Project }>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
   const main = project.directions[0];
-  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, next: 'Call list_routes, then add_route_frame.' });
+  const state = await studioCall<{ status: AppServerStatus | null }>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/app`).catch(() => ({ status: null }));
+  const server = state.status ? { state: state.status.state, upstream: state.status.upstream, message: state.status.message } : null;
+  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, server, next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
   return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Attached ${oneLine(project.name, 60)}` } };
 }
 

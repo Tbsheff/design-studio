@@ -73,6 +73,7 @@ import { registerVariationRoutes } from '../variations/routes.js';
 import { createWorkspaceStore, type WorkspaceStore } from '../store/workspaces.js';
 import { createDefaultFolderStore, type DefaultFolderStore } from '../store/default-folder.js';
 import { createFolderPicker, type FolderPicker } from './pick-folder.js';
+import { registerFolderInspectRoutes } from './folder-inspect-routes.js';
 import { nameFromPrompt } from '../../shared/folders.js';
 import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
 import { createProjectLibrary } from '../store/project-library.js';
@@ -518,6 +519,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const appRouteDeps = { projects, versions, preview, readBody, commitInit: (project: Project) => commitInit(project), watch: (project: Project, direction: Direction) => watchDirection(project, direction) };
   registerAppRoutes(app, appRouteDeps);
+  registerFolderInspectRoutes(app, { projects, readBody });
 
   app.post('/api/projects/import', async (c) => {
     const body = await readBody(c);

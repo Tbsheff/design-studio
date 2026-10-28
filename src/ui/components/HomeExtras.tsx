@@ -4,7 +4,7 @@ import { api, errorText } from '../api';
 import type { SettingsDraft } from '../settingsDraft';
 import type { FolderChooser } from '../useFolderChooser';
 import { Disclosure } from './Disclosure';
-import { LocationField, OpenFolder } from './FolderControls';
+import { LocationField } from './FolderControls';
 import { NewProjectAdvanced } from './NewProjectAdvanced';
 
 export { FoldersSection } from './FolderControls';
@@ -56,18 +56,16 @@ export interface ComposerFootProps {
   onLocation: (path: string | null) => void;
   onAddFolder: (path: string) => Promise<WorkspaceFolder | null>;
   advanced: { opened: number; draft: SettingsDraft; onDraft: (next: SettingsDraft) => void; designMd: string; onDesignMd: (value: string) => void; onError: (message: string) => void };
-  openFolder: { shown: boolean; busy: boolean; path: string; onPath: (path: string) => void; onImport: (path: string) => void };
   onHiddenMoved: () => void;
 }
 
-export function ComposerFoot({ workspaces, location, prompt, chooser, onLocation, onAddFolder, advanced, openFolder, onHiddenMoved }: ComposerFootProps) {
+export function ComposerFoot({ workspaces, location, prompt, chooser, onLocation, onAddFolder, advanced, onHiddenMoved }: ComposerFootProps) {
   const homeDir = workspaces?.homeDir ?? null;
   return (
     <div className="home-foot">
       <div className="home-foot-row">
         <LocationField folders={workspaces?.folders ?? []} value={location} homeDir={homeDir} prompt={prompt} chooser={chooser} onChange={onLocation} onAddFolder={onAddFolder} />
       </div>
-      {openFolder.shown && <OpenFolder busy={openFolder.busy} path={openFolder.path} homeDir={homeDir} chooser={chooser} onPath={openFolder.onPath} onImport={openFolder.onImport} />}
       <NewProjectAdvanced key={advanced.opened} initiallyOpen={advanced.opened > 0} draft={advanced.draft} onDraft={advanced.onDraft} designMd={advanced.designMd} onDesignMd={advanced.onDesignMd} onError={advanced.onError} />
       <Disclosure className="home-disclosure" />
       <HiddenProjectsNote homeDir={homeDir} onMoved={onHiddenMoved} />

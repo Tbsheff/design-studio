@@ -52,7 +52,6 @@ function Pop({ trigger, onClose, className, label, role = 'dialog', children, on
 
 export interface PlusMenuActions {
   onAttachFile: () => void;
-  onAttachFolder: () => void;
   onLinkCode: () => void;
   onImportSystem: () => void;
   onDesignSystem: () => void;
@@ -80,11 +79,10 @@ export function PlusMenu({ trigger, onClose, actions, locationLabel, closing }: 
       <div className="ui-menu-section">
         <span className="ui-menu-label">Files</span>
         <Item icon="paperclip" label="Attach images" meta="⌘V" onClick={run(actions.onAttachFile)} />
-        <Item icon="folder" label="Open a folder…" onClick={run(actions.onAttachFolder)} />
       </div>
       <div className="ui-menu-section">
         <span className="ui-menu-label">Code</span>
-        <Item icon="terminal" label="Link local code…" onClick={run(actions.onLinkCode)} />
+        <Item icon="folder" label="Open your app or a folder…" onClick={run(actions.onLinkCode)} />
       </div>
       <div className="ui-menu-section">
         <span className="ui-menu-label">Designs</span>

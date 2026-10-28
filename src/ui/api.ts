@@ -50,6 +50,7 @@ import {
 import type { WorkspaceFolder, WorkspaceList } from '../shared/folders';
 import type { VariantSupport } from '../shared/variants';
 import type { CanvasFile } from '../shared/canvas-file';
+import type { FolderInspection } from '../shared/open-app';
 
 export interface CanvasSnapshot {
   directionId: string;
@@ -188,11 +189,7 @@ export const api = {
   setDefaultFolder: (path: string) => json<WorkspaceList>('PUT', '/api/workspaces/default', { path }),
   hiddenProjects: () => json<{ count: number; target: string }>('GET', '/api/hidden-projects'),
   moveHiddenProjects: () => json<{ moved: string[]; failed: { projectId: string; error: string }[] }>('POST', '/api/hidden-projects/move'),
-  pickFolder: async (input: { title: string; defaultPath?: string }): Promise<string | null> => {
-    const res = await request('POST', '/api/pick-folder', input);
-    if (res.status === 204) return null;
-    return ((await res.json()) as { path: string }).path;
-  },
+  inspectFolder: (path: string, appDir?: string) => json<FolderInspection>('POST', '/api/folders/inspect', { path, ...(appDir ? { appDir } : {}) }),
   getProject: (pid: string) => json<Project>('GET', p(pid)),
   updateSettings: (pid: string, settings: Partial<ProjectSettings>) => json<Project>('PATCH', `${p(pid)}/settings`, settings),
   uploadAttachment: (pid: string, file: File) => {

@@ -64,6 +64,11 @@ function canConnect(port: number): Promise<boolean> {
   });
 }
 
+async function portClosed(port: number, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline && (await canConnect(port))) await new Promise((resolve) => setTimeout(resolve, 150));
+}
+
 export function nextBinary(workTree: string, appDir: string): string | null {
   const candidates = [path.join(workTree, appDir, 'node_modules', '.bin', 'next'), path.join(workTree, 'node_modules', '.bin', 'next')];
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
@@ -152,7 +157,7 @@ export class AppServers {
 
   private diagnosis(server: AppServer): AppDoctorResult {
     const lines = server.logs.filter((line) => line.at >= server.startAt).map((line) => line.text);
-    return diagnose({ lines, message: server.status.message, probe: server.probe, workTree: server.workTree, appDir: server.appDir });
+    return diagnose({ lines, message: server.status.message, probe: server.probe, workTree: server.workTree, appDir: server.appDir, ready: server.status.state === 'ready' });
   }
 
   private refreshDoctor(server: AppServer): void {
@@ -324,6 +329,7 @@ export class AppServers {
     const server = this.servers.get(projectId);
     if (!server) return;
     const child = server.child;
+    const port = server.status.mode === 'managed' && server.status.upstream ? Number(new URL(server.status.upstream).port) : null;
     server.ready = null;
     if (server.status.mode === 'managed') this.setStatus(server, { state: 'stopped', upstream: null, message: null });
     if (!child || child.exitCode !== null) return;
@@ -333,6 +339,7 @@ export class AppServers {
     await done;
     clearTimeout(timer);
     this.killGroup(child, 'SIGKILL');
+    if (port) await portClosed(port, STOP_GRACE_MS);
   }
 
   async restart(project: Project): Promise<string> {

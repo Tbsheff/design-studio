@@ -15,6 +15,7 @@ export interface DoctorInput {
   probe: DoctorProbe | null;
   workTree: string;
   appDir: string;
+  ready: boolean;
 }
 
 interface Ctx extends DoctorInput {
@@ -139,7 +140,7 @@ function envValidation(ctx: Ctx): DoctorCause | null {
     severity: 'error',
     title,
     detail: `The app checks its env when it loads, and ${keyList(keys)}.${note}`,
-    evidence: evidence(ctx.all, /Invalid environment variables|^\s*[A-Z][A-Z0-9_]*:\s*\[/),
+    evidence: [...evidence(ctx.all, /^\s*[A-Z][A-Z0-9_]*:\s*\[/), ...evidence(ctx.all, /Error: Invalid environment variables/)].slice(0, MAX_EVIDENCE),
     fix,
     command: null,
   };
@@ -164,7 +165,7 @@ function missingEnvFile(ctx: Ctx): DoctorCause | null {
 
 function portInUse(ctx: Ctx): DoctorCause | null {
   const lines = ctx.message ? [...ctx.all, ctx.message] : ctx.all;
-  if (!lines.some((line) => PORT_BUSY.test(line))) return null;
+  if (ctx.ready || !lines.some((line) => PORT_BUSY.test(line))) return null;
   const other = lines.some((line) => line.includes('Another next dev server is already running'));
   const url = other ? lines.map((line) => /Local:\s+(https?:\/\/\S+)/.exec(line)?.[1]).filter(Boolean).pop() : undefined;
   return {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
+import { publishAppStatus } from '../appStatus';
 import { AppFailure } from './AppFailure';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
@@ -26,6 +27,7 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
   const [tick, setTick] = useState(0);
+  const settled = status?.state === 'ready';
   useEffect(() => {
     let alive = true;
     const load = () =>
@@ -35,15 +37,16 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
           if (!alive) return;
           setStatus(state.status);
           setLogs(state.logs);
+          publishAppStatus(projectId, state.status);
         })
         .catch(() => undefined);
     void load();
-    const timer = window.setInterval(load, open ? POLL_OPEN_MS : POLL_CLOSED_MS);
+    const timer = window.setInterval(load, open || !settled ? POLL_OPEN_MS : POLL_CLOSED_MS);
     return () => {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [projectId, open, tick]);
+  }, [projectId, open, tick, settled]);
   return { status, logs, refresh: () => setTick((n) => n + 1) };
 }
 

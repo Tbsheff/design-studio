@@ -265,6 +265,10 @@
   white-space: normal;
 }
 
+body:has(.frame-menu) .app-fail {
+  display: none;
+}
+
 .app-fail {
   position: absolute;
   left: 0;
@@ -365,4 +369,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.stage:has(.edit-notice) .app-stage-note {
+  visibility: hidden;
+}
+
+.app-stage-note > .icon {
+  flex: none;
+  color: var(--warn);
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
@@ -104,13 +104,13 @@ const NO_VERSION_TEXT = 'No completed version yet. Switch to Live to see the cur
 
 type StageNote = 'building' | 'empty' | null;
 
-function stageNote(p: { running?: boolean; noRuns?: boolean; live: boolean; hasHead: boolean; urlError: string | null }): StageNote {
+function stageNote(p: { running?: boolean; noRuns?: boolean; app?: AttachedApp | null; live: boolean; hasHead: boolean; urlError: string | null }): StageNote {
   if (p.urlError || !p.live || p.hasHead) return null;
   if (p.running) return 'building';
-  return p.noRuns ? 'empty' : null;
+  return p.noRuns && !p.app ? 'empty' : null;
 }
 
-function StageMessage({ note, urlError }: { note: StageNote; urlError: string | null }) {
+function StageMessage({ note, urlError, app }: { note: StageNote; urlError: string | null; app: ReactNode }) {
   if (urlError) return <div className="stage-message">{urlError}</div>;
   if (note === 'building')
     return (
@@ -125,7 +125,7 @@ function StageMessage({ note, urlError }: { note: StageNote; urlError: string | 
         No design yet. Send a prompt, or start the variations.
       </div>
     );
-  return null;
+  return app;
 }
 
 function usePreviewUrl(projectId: string, directionId: string | null, source: CanvasSource, headVersionId: string | null) {
@@ -515,7 +515,7 @@ export function Canvas(props: Props) {
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
-  const note = stageNote({ running: props.running, noRuns: props.noRuns, live, hasHead: headVersionId !== null, urlError });
+  const note = stageNote({ running: props.running, noRuns: props.noRuns, app: props.app, live, hasHead: headVersionId !== null, urlError });
   return (
     <div className={canvasClass(inline.editing)}>
       <CanvasChrome
@@ -549,7 +549,7 @@ export function Canvas(props: Props) {
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
       <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
-        <StageMessage note={note} urlError={urlError} />
+        <StageMessage note={note} urlError={urlError} app={appCanvas.stage} />
         <div
           ref={artboardRef}
           className="artboard"

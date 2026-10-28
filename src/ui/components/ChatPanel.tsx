@@ -188,7 +188,7 @@ function EmptyChat() {
       <span className="chat-empty-icon">
         <Icon name="sparkle" size={18} />
       </span>
-      <strong>No runs in this direction yet</strong>
+      <strong>No runs yet</strong>
       <p>Describe a change below. To target one part, press V, then click an element in the preview.</p>
     </div>
   );

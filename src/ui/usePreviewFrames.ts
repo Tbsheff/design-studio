@@ -98,11 +98,22 @@ function releaseToolbarFocus(): void {
 }
 
 type SelectMessage = Extract<BridgeToParent, { type: 'select' }>;
+type SelectManyMessage = Extract<BridgeToParent, { type: 'select-many' }>;
+
+function isSelectMessage(msg: BridgeToParent): msg is SelectMessage | SelectManyMessage {
+  return msg.type === 'select' || msg.type === 'select-many';
+}
 
 export function nextSelection(prev: SelectionContext[], picked: SelectionContext, additive: boolean): SelectionContext[] {
   if (!additive) return [picked];
   const has = prev.some((s) => s.selector === picked.selector);
   return has ? prev.filter((s) => s.selector !== picked.selector) : [...prev, picked];
+}
+
+export function manySelection(prev: SelectionContext[], picked: SelectionContext[], additive: boolean): SelectionContext[] {
+  if (!additive) return picked;
+  const known = new Set(prev.map((s) => s.selector));
+  return [...prev, ...picked.filter((s) => !known.has(s.selector))];
 }
 
 function nodeAfterSelect(msg: SelectMessage, selection: SelectionContext[]): number | null {
@@ -380,6 +391,23 @@ export function usePreviewFrames(o: Options) {
     [settleSwap],
   );
 
+  const onSelectMessage = useCallback((msg: SelectMessage | SelectManyMessage) => {
+    const cur = opts.current;
+    releaseToolbarFocus();
+    if (msg.type === 'select-many') {
+      setSelectedNode(typeof msg.node === 'number' ? msg.node : null);
+      if (msg.selections.length > 0) pendingSelectAt.current = msg.at;
+      cur.setSelection((prev) => manySelection(prev, msg.selections, msg.additive));
+      return;
+    }
+    setSelectedNode(nodeAfterSelect(msg, cur.selection));
+    cur.setSelection((prev) => {
+      const next = nextSelection(prev, msg.selection, msg.additive);
+      if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
+      return next;
+    });
+  }, []);
+
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
@@ -388,21 +416,16 @@ export function usePreviewFrames(o: Options) {
         forwardKeyMessage(msg);
         return;
       }
+      if (isSelectMessage(msg)) {
+        onSelectMessage(msg);
+        return;
+      }
       switch (msg.type) {
         case 'hover':
           if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
           break;
         case 'tree':
           setTree(parseLayerTree(msg));
-          break;
-        case 'select':
-          releaseToolbarFocus();
-          setSelectedNode(nodeAfterSelect(msg, cur.selection));
-          cur.setSelection((prev) => {
-            const next = nextSelection(prev, msg.selection, msg.additive);
-            if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
-            return next;
-          });
           break;
         case 'rects':
           cur.setSelection((prev) => applyRects(prev, msg.selectors, msg.rects));
@@ -432,7 +455,7 @@ export function usePreviewFrames(o: Options) {
           break;
       }
     },
-    [requestRects, onTextMessage],
+    [requestRects, onTextMessage, onSelectMessage],
   );
 
   const onMessage = useCallback(

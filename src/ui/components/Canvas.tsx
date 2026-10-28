@@ -24,7 +24,7 @@ import { usePlannedEdits } from '../usePlannedEdits';
 import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
-import { FrameSnapLayer } from './CanvasOverlays';
+import { FrameSnapLayer, MarqueeLayer } from './CanvasOverlays';
 
 const CanvasRulers = lazy(() => import('./CanvasRulers'));
 import { RenderCheckPanel } from './RenderCheckPanel';
@@ -645,6 +645,7 @@ export function Canvas(props: Props) {
               />
             }
           />
+          <MarqueeLayer listen={frames.listen} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />

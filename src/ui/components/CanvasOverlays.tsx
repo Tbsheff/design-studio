@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import type { BridgeToParent, SelectionContext } from '../../shared/contracts';
 import { formatMeasure } from '../measure';
 import type { SpacingBadge } from '../snap';
 import { frameSnapStore } from '../useFrameResize';
@@ -108,6 +109,24 @@ export function FrameSnapLayer({ origin }: { origin: { x: number; y: number } })
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function MarqueeLayer({ listen }: { listen: (handler: (message: BridgeToParent) => void) => () => void }) {
+  const [rect, setRect] = useState<SelectionContext['rect'] | null>(null);
+  useEffect(
+    () =>
+      listen((message) => {
+        if (message.type === 'marquee') setRect(message.rect);
+        else if (message.type === 'ready' || message.type === 'mode-exited') setRect(null);
+      }),
+    [listen],
+  );
+  if (!rect) return null;
+  return (
+    <div className="overlay" aria-hidden="true">
+      <div className="box marquee" data-testid="marquee" style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }} />
     </div>
   );
 }

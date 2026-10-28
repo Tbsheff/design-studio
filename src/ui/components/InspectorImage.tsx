@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type PointerEvent } from 'react';
+import type { PreviewPort } from '../bridge';
 import type { SelectionContext } from '../../shared/contracts';
 import { IMAGE_ACCEPT, IMAGE_FITS, focalOf, focalText, imageKindOf, type ImageFit, type SetImageRequest } from '../../shared/image';
 import { clipboardImage, fileData, imageApi, imageError, imageFileOf, imageTargetOf } from '../imageApi';
@@ -12,7 +13,10 @@ interface Props {
   directionId: string;
   selection: SelectionContext;
   editable: boolean;
+  port?: MutableRefObject<PreviewPort | null>;
 }
+
+const RESELECT_AFTER_MS = [700, 1800];
 
 const FIT_LABEL: Record<ImageFit, string> = { cover: 'Cover', contain: 'Contain', fill: 'Fill' };
 const FIT_TIP: Record<ImageFit, string> = { cover: 'Fill the box and crop the edges', contain: 'Show the whole image inside the box', fill: 'Stretch the image to the box' };
@@ -41,20 +45,26 @@ function sourceName(selection: SelectionContext, background: boolean): string {
 function useImageSet(props: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<string | null>(null);
+  const reselect = () => {
+    for (const wait of RESELECT_AFTER_MS) window.setTimeout(() => props.port?.current?.post({ type: 'select-selector', selector: props.selection.selector }), wait);
+  };
   const run = async (change: Omit<SetImageRequest, 'target'>, file?: Blob | null) => {
     if (!props.editable || busy) return;
     setBusy(true);
     setError(null);
     try {
       const image = file ? await fileData(file) : undefined;
-      await imageApi.set(props.projectId, props.directionId, { target: imageTargetOf(props.selection), ...change, ...(image ? { image } : {}) });
+      const result = await imageApi.set(props.projectId, props.directionId, { target: imageTargetOf(props.selection), ...change, ...(image ? { image } : {}) });
+      if (result.src) setPlaced(result.src.split('/').pop() ?? null);
+      if (result.changed) reselect();
     } catch (failure) {
       setError(imageError(failure));
     } finally {
       setBusy(false);
     }
   };
-  return { busy, error, run, setError };
+  return { busy, error, run, setError, placed };
 }
 
 function usePasteImage(enabled: boolean, onImage: (file: File) => void) {
@@ -148,7 +158,8 @@ function AltField({ initial, disabled, onSave }: { initial: string; disabled: bo
 export default function InspectorImage(props: Props) {
   const kind = imageKindOf(props.selection);
   const background = kind === 'background';
-  const { busy, error, run, setError } = useImageSet(props);
+  const { busy, error, run, setError, placed } = useImageSet(props);
+  const [alt, setAlt] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [fit, setFit] = useState<ImageFit | null>(() => currentFit(props.selection, background));
   const [focal, setFocal] = useState(() => (background ? props.selection.styles['background-position'] : props.selection.styles['object-position']) ?? '50% 50%');
@@ -165,7 +176,7 @@ export default function InspectorImage(props: Props) {
     }
   };
   return (
-    <InspectorSection title={background ? 'Background image' : 'Image'} label={<span className="img-name">{sourceName(props.selection, background)}</span>}>
+    <InspectorSection title={background ? 'Background image' : 'Image'} label={<span className="img-name">{placed ?? sourceName(props.selection, background)}</span>}>
       <div className="img-rows">
         <div className="img-actions">
           <button type="button" className="btn small" disabled={disabled} data-tip="Pick an image file. You can also drop one on the canvas." onClick={() => fileInput.current?.click()}>
@@ -217,7 +228,16 @@ export default function InspectorImage(props: Props) {
           />
           <span className="img-focal-text">{focalText(focalOf(focal).x, focalOf(focal).y)}</span>
         </div>
-        {!background && <AltField initial={attrOf(props.selection.outerHTML, 'alt') ?? ''} disabled={disabled} onSave={(alt) => void run({ alt })} />}
+        {!background && (
+          <AltField
+            initial={alt ?? attrOf(props.selection.outerHTML, 'alt') ?? ''}
+            disabled={disabled}
+            onSave={(next) => {
+              setAlt(next);
+              void run({ alt: next });
+            }}
+          />
+        )}
         {error && (
           <p className="ins-error img-error" role="alert">
             {error}

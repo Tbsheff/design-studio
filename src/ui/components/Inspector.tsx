@@ -195,7 +195,7 @@ function ImageSection(props: InspectorProps) {
   if (props.selection.length !== 1 || !target || !props.directionId || !imageKindOf(target)) return null;
   return (
     <Suspense fallback={null}>
-      <InspectorImage key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} />
+      <InspectorImage key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} port={props.port} />
     </Suspense>
   );
 }

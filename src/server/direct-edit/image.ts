@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import type { Direction, Project, VersionMeta } from '../../shared/contracts.js';
@@ -73,10 +73,12 @@ function assetHome(project: Project, page: string | null): { dir: string; rooted
 
 export async function planAsset(project: Project, workTree: string, page: string | null, image: ImageBytes): Promise<AssetPlan> {
   const home = assetHome(project, page);
-  const name = `${image.stem}-${createHash('sha256').update(image.bytes).digest('hex').slice(0, 10)}.${image.ext}`;
+  const suffix = `-${createHash('sha256').update(image.bytes).digest('hex').slice(0, 10)}.${image.ext}`;
+  const root = await realpath(workTree);
+  const same = (await readdir(path.join(root, ...home.dir.split('/'))).catch(() => [] as string[])).find((entry) => entry.endsWith(suffix));
+  const name = same ?? `${image.stem}${suffix}`;
   const relative = path.posix.normalize(path.posix.join(home.dir, name));
   if (relative.startsWith('..') || relative.split('/').some((part) => BLOCKED.has(part))) throw new DirectEditError('invalid_source', `The studio cannot write ${relative}.`);
-  const root = await realpath(workTree);
   const file = path.join(root, ...relative.split('/'));
   const exists = Boolean(await stat(file).catch(() => null));
   const src = home.rooted ? `/${name}` : path.posix.relative(path.posix.dirname(page ?? 'index.html'), relative);

@@ -69,7 +69,7 @@ const requestSchema = z
     (request) => request.move === undefined || (request.text === undefined && request.name === undefined && request.style === undefined && request.classes === undefined),
     'move must be the only change',
   )
-  .refine((request) => !normalizeVariant(request.variant) || (request.text === undefined && request.name === undefined && request.move === undefined && request.insert === undefined), 'variant works with style and classes only');
+  .refine((request) => !normalizeVariant(request.variant) || (request.name === undefined && request.move === undefined && request.insert === undefined), 'variant works with style, classes and text only (text has no variant)');
 
 export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   const parsed = requestSchema.safeParse(raw);

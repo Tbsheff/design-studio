@@ -5,6 +5,7 @@ import { resolveNumberInput } from '../mathInput';
 import { dependsOnCurrent } from '../mixedValues';
 import { lengthToPx, resolveTokenValue, varName } from '../../shared/token-match';
 import type { DirectEdit } from '../useDirectEdit';
+import { useInherited } from '../editVariant';
 import { useTokenUi, type TokenUi } from '../useTokenSnap';
 import { TokenControl } from './TokenControl';
 
@@ -55,6 +56,7 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
   const current = plainLength(edit.values[prop], ui);
   const shown = text ?? current;
   const mixed = edit.mixed.has(prop);
+  const inherited = useInherited(prop);
   const refused = mixed && text !== null && dependsOnCurrent(text, unit);
 
   const apply = (raw: string) => {
@@ -97,7 +99,7 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
   return (
     <input
       id={id}
-      className={`ins-input num ${className ?? ''}`}
+      className={`ins-input num ${className ?? ''} ${inherited ? 'inherited' : ''}`}
       aria-label={spec.label}
       value={shown}
       spellCheck={false}

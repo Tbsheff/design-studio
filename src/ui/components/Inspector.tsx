@@ -9,6 +9,7 @@ import { InspectorCode } from './InspectorCode';
 import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
 import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
+import { resetEditVariant, useEditVariant } from '../editVariant';
 import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
@@ -179,6 +180,7 @@ function ComponentSection(props: InspectorProps) {
 }
 
 function SimpleTab(props: InspectorProps) {
+  const variant = useEditVariant();
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
@@ -186,7 +188,7 @@ function SimpleTab(props: InspectorProps) {
   return (
     <>
       <ComponentSection {...props} />
-      <SimpleEditor key={target.selector} {...props} target={target} />
+      <SimpleEditor key={`${target.selector}|${variant}`} {...props} target={target} />
     </>
   );
 }
@@ -229,6 +231,8 @@ export function Inspector(props: InspectorProps) {
     },
   });
   useSessionHandle(props.session, session);
+  const port = props.port;
+  useEffect(() => () => resetEditVariant(port.current), [port]);
   return (
     <div className="edit-pane" aria-label="Edit">
       <SessionHeader session={session} onDone={() => props.onExit?.()} />

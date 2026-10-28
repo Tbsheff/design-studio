@@ -909,6 +909,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'tweaks-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
+  | { ns: 'studio'; token: string; type: 'force-state'; selector: string | null; states: ('hover' | 'focus' | 'active')[]; dark: boolean; track: boolean }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'track-links'; links: LinkQuery[] }
   | { ns: 'studio'; token: string; type: 'play-links'; links: LinkQuery[] | null }

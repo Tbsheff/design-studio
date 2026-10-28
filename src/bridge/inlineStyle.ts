@@ -1,3 +1,5 @@
+import { authoredSizes } from './authored.js';
+
 const AUTHORED_KEYS = ['box-shadow', 'filter', 'flex', 'align-self'];
 const AUTHORED_SIZE_KEYS = ['width', 'height'];
 const AUTHORED_SIZE_RE = /(content|%)$/;
@@ -49,8 +51,12 @@ function authoredStyles(element: Element): Record<string, string> {
 
 export function layoutStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {
   const parent = element.parentElement ? window.getComputedStyle(element.parentElement) : null;
+  const sizes = authoredSizes(element);
   return {
     ...authoredStyles(element),
+    'authored-width': sizes.width ?? '',
+    'authored-height': sizes.height ?? '',
+    'parent-align-items': parent?.alignItems ?? '',
     'used-width': computed.width,
     'used-height': computed.height,
     'parent-display': parent?.display ?? '',

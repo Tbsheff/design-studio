@@ -192,10 +192,9 @@ export function htmlClassInfo(source: string, loc: SourcePosition, theme: Tailwi
   return element ? describeSite(htmlClassSite(source, element), theme) : null;
 }
 
-function variantCssPatch(source: string, document: DefaultTreeAdapterMap['document'], element: Element, style: Record<string, string | null>, edit: SourceEdit): PatchResult {
+function variantCssPatch(source: string, document: DefaultTreeAdapterMap['document'], element: Element, style: Record<string, string | null>, edit: SourceEdit): { splices: Splice[]; tailwind?: TailwindOutcome } {
   if (hasClassChange(edit.classes)) throw new DirectEditError('variant_not_supported', 'This page does not use Tailwind, so classes cannot take a variant. Send style instead');
-  const splices = Object.keys(style).length > 0 && edit.variant ? variantCssSplices(source, document, element, style, edit.variant) : [];
-  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: Object.keys(style), text: false } };
+  return { splices: Object.keys(style).length > 0 && edit.variant ? variantCssSplices(source, document, element, style, edit.variant) : [] };
 }
 
 export function htmlVariantProps(source: string, loc: SourcePosition, variant: string): string[] {
@@ -224,8 +223,7 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit,
   }
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
-  if (edit.variant && !theme) return variantCssPatch(source, document, element, style, edit);
-  const classed = classOrStyleSplices(source, element, style, edit, theme);
+  const classed = edit.variant && !theme ? variantCssPatch(source, document, element, style, edit) : classOrStyleSplices(source, element, style, edit, theme);
   splices.push(...classed.splices);
   const classes = hasClassChange(edit.classes);
   const hasText = edit.text !== undefined;

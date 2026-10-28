@@ -116,7 +116,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return new Pool(config.previewOrigin);
   });
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
-  const apps = new AppServers({ bus, portBase: config.vitePortBase + 400, dataDir: config.dataDir });
+  const apps = new AppServers({ bus, portBase: config.appPortBase ?? config.vitePortBase + 400, portCount: config.appPortCount ?? 200, dataDir: config.dataDir });
   const appCache = new Map<string, { project: Project | null; at: number }>();
   const appProjectOf = async (projectId: string): Promise<Project | null> => {
     const cached = appCache.get(projectId);

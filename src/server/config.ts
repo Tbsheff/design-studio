@@ -19,6 +19,17 @@ function readPort(name: string, fallback: number): number {
   return value;
 }
 
+const APP_PORT_OFFSET = 400;
+const DEFAULT_APP_PORT_COUNT = 200;
+
+function readPortCount(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > 10_000) throw new Error(`${name} must be a whole number from 1 to 10000, got "${raw}"`);
+  return value;
+}
+
 function readAgentMode(): ServerConfig['agentMode'] {
   const raw = process.env.STUDIO_AGENT ?? 'sdk';
   if (raw === 'sdk' || raw === 'mock') return raw;
@@ -29,6 +40,8 @@ export function loadConfig(): ServerConfig {
   const studioPort = readPort('STUDIO_PORT', DEFAULT_STUDIO_PORT);
   const previewPort = readPort('STUDIO_PREVIEW_PORT', DEFAULT_PREVIEW_PORT);
   const vitePortBase = readPort('STUDIO_VITE_PORT_BASE', DEFAULT_VITE_PORT_BASE);
+  const appPortBase = readPort('STUDIO_APP_PORT_BASE', vitePortBase + APP_PORT_OFFSET);
+  const appPortCount = readPortCount('STUDIO_APP_PORT_COUNT', DEFAULT_APP_PORT_COUNT);
   const dataDir = path.resolve(process.env.STUDIO_DATA_DIR || path.join(REPO_ROOT, 'studio-data'));
   return {
     dataDir,
@@ -36,6 +49,8 @@ export function loadConfig(): ServerConfig {
     studioPort,
     previewPort,
     vitePortBase,
+    appPortBase,
+    appPortCount,
     studioToken: randomBytes(32).toString('hex'),
     agentMode: readAgentMode(),
     studioOrigin: `http://127.0.0.1:${studioPort}`,

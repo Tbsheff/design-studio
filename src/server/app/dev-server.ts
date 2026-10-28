@@ -27,18 +27,22 @@ interface AppServer {
 export interface AppServerDeps {
   bus: EventBus;
   portBase: number;
+  portCount?: number;
   dataDir?: string;
 }
 
-function freePort(start: number): Promise<number> {
-  const tryPort = (port: number, left: number): Promise<number> =>
+const DEFAULT_PORT_COUNT = 200;
+
+function freePort(start: number, count: number): Promise<number> {
+  const last = Math.min(65535, start + count - 1);
+  const tryPort = (port: number): Promise<number> =>
     new Promise((resolve, reject) => {
       const probe = net.createServer();
       probe.unref();
-      probe.once('error', () => (left > 0 ? resolve(tryPort(port + 1, left - 1)) : reject(new Error('no free port for the app dev server'))));
+      probe.once('error', () => (port < last ? resolve(tryPort(port + 1)) : reject(new Error(`No free port from ${start} to ${last} for the app dev server. Set STUDIO_APP_PORT_BASE and STUDIO_APP_PORT_COUNT to pick another range.`))));
       probe.listen(port, '127.0.0.1', () => probe.close(() => resolve(port)));
     });
-  return tryPort(start, 200);
+  return tryPort(start);
 }
 
 function canConnect(port: number): Promise<boolean> {
@@ -203,7 +207,7 @@ export class AppServers {
     if (!binary) throw new Error(missingNextMessage(server.workTree, app.appDir));
     await this.reaped;
     await this.pids?.reap(project.id, (line) => this.log(server, 'studio', line));
-    const port = await freePort(this.deps.portBase);
+    const port = await freePort(this.deps.portBase, this.deps.portCount ?? DEFAULT_PORT_COUNT);
     const args = ['dev', '-p', String(port), '-H', '127.0.0.1'];
     const command = `next ${args.join(' ')}`;
     this.setStatus(server, { state: 'starting', mode: 'managed', upstream: null, command, message: null, startedAt: Date.now() });

@@ -12,13 +12,13 @@ import { componentSchema } from './props-schema.js';
 import { bundlePreview, BundleError, type SampleNode } from './preview-bundle.js';
 
 export const PREVIEW_VIEWPORT = { width: 960, height: 720, scale: 2 };
-const RENDER_VERSION = '2';
+const RENDER_VERSION = '3';
 const JOBS_PER_PAGE = 24;
 const LINGER_MS = 400;
 const LIBRARY_TTL_MS = 4000;
 const HEAD_TTL_MS = 120_000;
 const SETTLE_MS = 120;
-const BLOCK_WIDTH = 360;
+const BLOCK_STYLE = 'width:max-content;min-width:200px;max-width:320px';
 
 export interface PreviewTarget {
   id?: string | undefined;
@@ -121,7 +121,7 @@ function renderExpression(code: string): string {
     const root = document.getElementById('studio-preview');
     const first = root.firstElementChild;
     if (first && !getComputedStyle(first).display.startsWith('inline')) {
-      root.style.width = '${BLOCK_WIDTH}px';
+      root.style.cssText = '${BLOCK_STYLE}';
       await frames();
     }
     const box = root.getBoundingClientRect();

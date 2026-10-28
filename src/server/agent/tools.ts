@@ -22,6 +22,7 @@ import { runSetProps, setPropsShape } from './props-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
+import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } from './run-target.js';
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 
@@ -40,6 +41,12 @@ const TILE_PLAN: Record<ViewportName, { tileHeight: number; maxTiles: number }> 
 };
 
 type QueryFn = typeof query;
+
+const TARGET_SHAPE = {
+  frame: frameRef.optional().describe('Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>.'),
+  path: z.string().trim().max(300).optional().describe('Page path instead of the frame page, such as /settings or about.html.'),
+  state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/).optional().describe('Attached apps: frame state id (default, session, empty, loading, error or a mock id) instead of the frame state.'),
+};
 
 export interface StudioToolDeps {
   preview: PreviewService;
@@ -127,8 +134,8 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-export function describeTiles(viewport: ViewportName, tiles: TileResult): string {
-  const size = `${viewport} ${VIEWPORTS[viewport].width}x${VIEWPORTS[viewport].height}`;
+export function describeTiles(viewport: ViewportName, tiles: TileResult, box: { width: number; height: number } = VIEWPORTS[viewport]): string {
+  const size = `${viewport} ${box.width}x${box.height}`;
   const span = `${tiles.paths.length} image(s) cover y=${tiles.from}-${tiles.to}px of a ${tiles.pageHeight}px page`;
   const more = tiles.to < tiles.pageHeight ? ` More of the page is below: call screenshot again with from=${tiles.to}.` : ' This is the end of the page.';
   return `${size}: ${span}.${more}`;
@@ -153,9 +160,36 @@ function firstMobileFrom(counters: StudioToolCounters, viewport: ViewportName, f
   return { from: 0, note: ' The first mobile screenshot of a run always starts at the top, so from was set to 0.' };
 }
 
-export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: { viewport: ViewportName; from: number; theme?: 'light' | 'dark' }) {
-  const { viewport } = args;
+function targetDeps(deps: Pick<StudioToolDeps, 'canvas'>): TargetDeps | null {
+  const states = configuredFrameStates();
+  const canvas = deps.canvas ?? states?.canvas;
+  return canvas && states ? { canvas, projectDir: states.projectDir } : null;
+}
+
+async function pickTarget(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: ShotArgs): Promise<ShotTarget | string> {
+  try {
+    return (await resolveShotTarget(targetDeps(deps), deps.ctx, args)) ?? 'Preview is not running for this direction.';
+  } catch (error) {
+    return describeError(error);
+  }
+}
+
+function viewportName(width: number): ViewportName {
+  if (width <= 500) return 'mobile';
+  return width <= 1024 ? 'tablet' : 'desktop';
+}
+
+function shotBox(target: ShotTarget, viewport: ViewportName | undefined): { name: ViewportName; box: { width: number; height: number } } {
+  if (viewport) return { name: viewport, box: VIEWPORTS[viewport] };
+  if (target.size) return { name: viewportName(target.size.width), box: target.size };
+  return { name: 'desktop', box: VIEWPORTS.desktop };
+}
+
+export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs & { viewport?: ViewportName; from: number; theme?: 'light' | 'dark' }) {
   if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so no screenshot is available.');
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return errorText(`Screenshot failed: ${target}`);
+  const { name: viewport, box } = shotBox(target, args.viewport);
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
   if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
@@ -164,8 +198,8 @@ export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolC
   const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {
     await mkdir(deps.runsDir, { recursive: true });
-    const tiles = await deps.preview.screenshotTiles(deps.ctx.previewUrl, { viewport: VIEWPORTS[viewport], ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}) });
-    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles)}${start.note}` }] };
+    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}) });
+    return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `Page ${target.label}. ${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles, box)}${start.note}` }] };
   } catch (error) {
     return errorText(`Screenshot failed: ${describeError(error)}`);
   }
@@ -175,10 +209,12 @@ function configOf(deps: StudioToolDeps): ResolvedRunConfig {
   return deps.run?.config ?? withRunTask(resolveRunConfig(deps.ctx.project.settings, levelOf(deps.ctx.request, deps.ctx.project.settings)), deps.ctx.request.task);
 }
 
-export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolCounters) {
+export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolCounters, args: ShotArgs = {}) {
   if (!deps.ctx.previewUrl) return errorText('Preview is not running for this direction, so render_check cannot run.');
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return errorText(`render_check failed: ${target}`);
   try {
-    const report = await buildCheckReport(deps.preview, deps.ctx, configOf(deps), deps.run);
+    const report = await buildCheckReport(deps.preview, deps.ctx, configOf(deps), deps.run, target);
     counters.checks += 1;
     if (deps.run) {
       deps.run.lastFindings = report.findings;
@@ -204,13 +240,15 @@ function criticBlocked(deps: StudioToolDeps): string | null {
   return null;
 }
 
-export async function runDesignReview(deps: StudioToolDeps) {
+export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {}) {
   const blocked = criticBlocked(deps);
   if (blocked) return errorText(blocked);
+  const target = await pickTarget(deps, args);
+  if (typeof target === 'string') return errorText(`design_review failed: ${target}`);
   const run = deps.run as RunToolState;
   run.criticCalls += 1;
   try {
-    const images = await criticImages(deps.preview, deps.ctx.previewUrl as string, criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls));
+    const images = await criticImages(deps.preview, target.url, criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls));
     const input = { request: deps.ctx.request.prompt, findings: run.lastFindings, tasteRules: deps.tasteRules ?? [], images };
     const result = await runCritic(await loadQuery(deps), input, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, deps.env);
     run.criticCostUsd += result.costUsd;
@@ -259,9 +297,10 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const screenshot = tool(
     'screenshot',
-    'Take PNG screenshots of the live preview at a viewport size. Returns up to four images, top to bottom, starting at the y offset `from`. The text says whether more of the page is below.',
+    'Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.',
     {
-      viewport: z.enum(['desktop', 'mobile', 'tablet']).default('desktop'),
+      ...TARGET_SHAPE,
+      viewport: z.enum(['desktop', 'mobile', 'tablet']).optional().describe('Render size. Leave out for the frame size (desktop when there is no frame).'),
       from: z.number().int().min(0).default(0).describe('Page y offset in px where the first image starts.'),
       theme: z.enum(['light', 'dark']).default('light').describe('dark sets data-theme="dark" and the .dark class on <html> before the shot, so tokens.css uses the dark values.'),
     },
@@ -271,17 +310,17 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const renderCheck = tool(
     'render_check',
-    'Render the current design at the sizes this run level uses. Returns JSON: per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
-    {},
-    () => runRenderCheck(deps, counters),
+    'Render one page of the current design at the sizes this run level uses. With no frame or path it checks the frame from <canvas-context> (its page and frame state), or the entry page. Returns JSON: `page`, then per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
+    TARGET_SHAPE,
+    (args) => runRenderCheck(deps, counters, args),
     { annotations: { readOnlyHint: true } },
   );
 
   const designReview = tool(
     'design_review',
-    'Polish runs only. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots, the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, where, problem, fix}]. At most 2 calls per run.',
-    {},
-    () => runDesignReview(deps),
+    'Polish runs only. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of one page (the frame from <canvas-context> unless you pass frame or path), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, where, problem, fix}]. At most 2 calls per run.',
+    TARGET_SHAPE,
+    (args) => runDesignReview(deps, args),
     { annotations: { readOnlyHint: true } },
   );
 

@@ -1,4 +1,5 @@
 import type { InspectResult, RenderCheckOptions, TileRequest, TileResult } from './preview/browser.js';
+import type { RunTarget } from './agent/run-target.js';
 import type { RenderPage } from './preview/render-backend.js';
 import type {
   AppLogLine,
@@ -109,6 +110,7 @@ export interface AgentRunContext {
   designSystem?: DesignSystemPromptContext | null;
   previewUrl: string | null;
   mentionFiles?: MentionFile[];
+  target?: RunTarget | null;
 }
 
 export interface MentionFile {
@@ -142,7 +144,7 @@ export interface PreviewService {
   watch(project: Project, direction: Direction): void;
   unwatch(directionId: string): void;
   release(project: Project, direction: Direction): Promise<void>;
-  renderCheck(project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]>;
+  renderCheck(project: Project, direction: Direction, options?: RenderCheckOptions & { url?: string }): Promise<RenderCheckResult[]>;
   apps?: AppControl;
   inspect(url: string, viewport: CheckViewport, outPath: string, selectionLocs: string[]): Promise<InspectResult>;
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;

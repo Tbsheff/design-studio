@@ -87,6 +87,8 @@ import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import { parseStatesRequest } from '../../shared/states.js';
+import { cleanFramePath, isFrameId } from '../../shared/canvas-file.js';
+import { resolveRunTarget } from '../agent/run-target.js';
 import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerFrameStateRoutes } from './frame-state-routes.js';
@@ -199,7 +201,26 @@ function parseRunRequest(body: Record<string, unknown>): RunRequest {
     request.attachmentIds = body.attachmentIds as string[];
   }
   parseRunTask(body, request);
+  const canvas = parseRunCanvas(body.canvas);
+  if (canvas) request.canvas = canvas;
   return request;
+}
+
+const MAX_CANVAS_SIDE = 8000;
+
+function canvasSide(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 1 || value > MAX_CANVAS_SIDE) throw new BadRequestError('canvas width and height must be numbers from 1 to 8000');
+  return Math.round(value);
+}
+
+function parseRunCanvas(raw: unknown): RunRequest['canvas'] {
+  if (raw === undefined || raw === null) return undefined;
+  if (!isRecord(raw) || !isFrameId(raw.frameId)) throw new BadRequestError('canvas must be {frameId, path, width, height}');
+  const framePath = cleanFramePath(typeof raw.path === 'string' ? raw.path : '');
+  if (framePath === null) throw new BadRequestError('canvas.path is not a page path');
+  const label = typeof raw.label === 'string' && raw.label.trim() ? raw.label.trim().slice(0, 80) : undefined;
+  const inView = Array.isArray(raw.inView) ? raw.inView.filter(isFrameId).slice(0, 20) : [];
+  return { frameId: raw.frameId, path: framePath, width: canvasSide(raw.width), height: canvasSide(raw.height), ...(label ? { label } : {}), ...(inView.length ? { inView } : {}) };
 }
 
 function parseRunTask(body: Record<string, unknown>, request: RunRequest): void {
@@ -400,8 +421,12 @@ export function createApp(deps: AppDeps): Hono {
       return null;
     });
     const mentionFiles = await readMentionFiles(direction.workTree, request.mentions);
+    const target = await resolveRunTarget({ canvas, projectDir: (id) => projects.projectDir(id) }, project, direction, request.canvas).catch((error: unknown) => {
+      console.error('[http] canvas context failed', error);
+      return null;
+    });
     await markLofi(project, direction, request);
-    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles });
+    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles, target });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
@@ -419,7 +444,7 @@ export function createApp(deps: AppDeps): Hono {
       const project = await projects.get(pid);
       const direction = project.directions.find((candidate) => candidate.id === did);
       if (!direction || runner.isRunning(pid, did)) return;
-      await startRun(project, direction, { prompt: next.text, mode: previous.mode, ...(previous.level ? { level: previous.level } : {}), ...(previous.effort ? { effort: previous.effort } : {}) });
+      await startRun(project, direction, { prompt: next.text, mode: previous.mode, ...(previous.level ? { level: previous.level } : {}), ...(previous.effort ? { effort: previous.effort } : {}), ...(previous.canvas ? { canvas: previous.canvas } : {}) });
     } catch (error) {
       console.error(`[http] could not send the ${next.reason} message`, error);
     }

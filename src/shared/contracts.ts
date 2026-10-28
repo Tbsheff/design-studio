@@ -1,4 +1,5 @@
 import type { CanvasFile } from './canvas-file';
+import type { LinksFile } from './links';
 import type { StatesRequest } from './states';
 export type ProjectKind = 'html' | 'react';
 
@@ -557,6 +558,7 @@ export type StudioEventBody =
   | { type: 'versions.changed' }
   | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
   | { type: 'canvas.point'; frameId: string; selector?: string; at: number }
+  | { type: 'links.changed'; links: LinksFile; source: CanvasWriteSource }
   | { type: 'mcp.approval'; approval: McpApprovalRecord }
   | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
   | { type: 'mcp.activity'; activity: McpActivity }

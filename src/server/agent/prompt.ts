@@ -79,7 +79,8 @@ const CANVAS_RULES = `## Canvas
 The studio canvas shows frames. Each frame renders one page of this design at one size. Only the canvas tools change the layout (\`.studio/\` is owned by the studio).
 - \`mcp__studio__canvas_list\`: frames (id, label, page, size, position), the user's selection and the frame in view. Call it before you place frames and when the user says "this frame" or "the one on the right".
 - \`mcp__studio__canvas_place\`: when you add a page or a state the user should compare, give it its own labelled frame beside the others (\`rightOf\`, \`below\`, \`leftOf\`, \`above\` a frame id or \`@label\`, default gap 80). Fix every overlap in its \`warnings\`.
-- \`mcp__studio__canvas_point\`: at the end of a reply about one frame or element, point the user's canvas at it.`;
+- \`mcp__studio__canvas_point\`: at the end of a reply about one frame or element, point the user's canvas at it.
+- \`mcp__studio__list_links\` and \`mcp__studio__edit_links\`: prototype links (on click of an element, go to another frame) for Play mode. When the user asks to link a button or a page to a frame, use these, not \`href\` in the code. Read the page first for a selector that is stable (an id or a distinct class).`;
 
 const DIRECT_EDIT_RULES = `## Direct edits
 Two tools change the design with the same code as the studio inspector and Tokens panel. Each patches only what it names and leaves the rest of the file as it was.

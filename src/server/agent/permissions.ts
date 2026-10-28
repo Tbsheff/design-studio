@@ -11,10 +11,12 @@ export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
 export const CANVAS_LIST_TOOL = 'mcp__studio__canvas_list';
 export const CANVAS_PLACE_TOOL = 'mcp__studio__canvas_place';
 export const CANVAS_POINT_TOOL = 'mcp__studio__canvas_point';
+export const LIST_LINKS_TOOL = 'mcp__studio__list_links';
+export const EDIT_LINKS_TOOL = 'mcp__studio__edit_links';
 export const EDIT_ELEMENT_TOOL = 'mcp__studio__edit_element';
 export const SET_TOKEN_TOOL = 'mcp__studio__set_token';
 const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL]);
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL] as const;
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, LIST_LINKS_TOOL, EDIT_LINKS_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
@@ -316,8 +318,8 @@ function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string |
   return null;
 }
 
-const PLAN_BLOCKED = new Set<string>([...WRITE_PATH_TOOLS, 'Bash', TWEAKS_TOOL, CANVAS_PLACE_TOOL, ...DIRECT_EDIT_TOOLS]);
-const CRITIQUE_BLOCKED = new Set<string>([TWEAKS_TOOL, CANVAS_PLACE_TOOL, ...DIRECT_EDIT_TOOLS]);
+const PLAN_BLOCKED = new Set<string>([...WRITE_PATH_TOOLS, 'Bash', TWEAKS_TOOL, CANVAS_PLACE_TOOL, EDIT_LINKS_TOOL, ...DIRECT_EDIT_TOOLS]);
+const CRITIQUE_BLOCKED = new Set<string>([TWEAKS_TOOL, CANVAS_PLACE_TOOL, EDIT_LINKS_TOOL, ...DIRECT_EDIT_TOOLS]);
 
 function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<string, unknown>): string | null {
   if (!permittedToolNames(policy).includes(toolName)) return `Tool ${toolName} is not available in Design Studio.`;
@@ -351,7 +353,7 @@ export function createCanUseTool(policy: ToolPolicy, onDecision?: (toolName: str
   };
 }
 
-const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, TODO_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL]);
+const NO_CHANGE_TOOLS = new Set([...READ_TOOLS, SKILL_TOOL, TODO_TOOL, 'mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, LIST_LINKS_TOOL, EDIT_LINKS_TOOL]);
 
 export function canChangePreview(toolName: string): boolean {
   return !NO_CHANGE_TOOLS.has(toolName);

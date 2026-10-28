@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ElementSourceInfo, SourceLoc, TailwindOutcome } from '../../shared/contracts';
 import type { VariantSupport } from '../../shared/variants';
 import { api } from '../api';
+import { InspectorSection } from './InspectorFields';
 
 export interface ElementClasses {
   tailwind: TailwindOutcome | null;
@@ -37,17 +38,23 @@ export function useElementClasses(projectId: string, directionId: string | null,
   return info;
 }
 
-export function ClassLine({ info }: { info: TailwindOutcome | null }) {
+export function domClasses(outerHTML: string): string[] {
+  const raw = /^<[^>]*\bclass="([^"]*)"/.exec(outerHTML.slice(0, 4000))?.[1] ?? '';
+  return raw.split(/\s+/).filter(Boolean);
+}
+
+export function ClassLine({ info, resolved }: { info: TailwindOutcome | null; resolved: string[] }) {
   if (!info || info.mode === 'none') return null;
-  const text = info.classes.length > 0 ? info.classes.join(' ') : 'No classes yet';
+  const own = info.classes.length > 0;
+  const list = own ? info.classes : resolved;
+  const text = list.length > 0 ? list.join(' ') : 'No classes yet';
   return (
-    <div className="ins-classes" aria-label="Tailwind classes">
-      <span className="ins-classes-label">Classes</span>
-      <code className="ins-classes-list" title={text}>
+    <InspectorSection title="Classes" className="ins-classes" aside={!own && list.length > 0 ? <span className="ins-classes-tag">Read only</span> : undefined}>
+      <code className={`ins-classes-list${own ? '' : ' resolved'}`} aria-label={own ? 'Tailwind classes' : 'Classes from the component, read only'}>
         {text}
         {info.dynamic && <span className="ins-classes-more"> + dynamic</span>}
       </code>
       {info.note && <p className="ins-note ins-classes-note">{info.note}</p>}
-    </div>
+    </InspectorSection>
   );
 }

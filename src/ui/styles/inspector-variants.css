@@ -1,15 +1,29 @@
 .ins-variants {
   display: grid;
   gap: var(--s-1);
-  flex: none;
-  padding: 0 var(--pane-inset) var(--s-2);
+  padding: var(--s-2) var(--pane-inset);
+  border-top: 1px solid var(--line);
 }
 
 .ins-variant-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
+  min-width: 0;
+}
+
+.ins-variant-width {
+  flex: 0 1 112px;
+}
+
+.ins-variants-off {
+  padding: var(--s-2) var(--pane-inset);
+  border-top: 1px solid var(--line);
+}
+
+.ins-variant-base {
+  flex: none;
+  margin-left: auto;
 }
 
 .ins-variant-chip {

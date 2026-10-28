@@ -4,6 +4,7 @@ import { colorToHex, displayColor, isValidColor } from '../cssValues';
 import type { DirectEdit } from '../useDirectEdit';
 import { Icon, type IconName } from './Icon';
 import { TokenControl } from './TokenControl';
+import { UiSelect } from './UiSelect';
 import { useTokenUi } from '../useTokenSnap';
 import { useInherited } from '../editVariant';
 import { colorHex, resolveTokenValue } from '../../shared/token-match';
@@ -94,28 +95,18 @@ export function SelectField({ prop, label, short, edit, options }: FieldProps & 
       <label htmlFor={id} className="ins-scrub static">
         {short}
       </label>
-      <select
+      <UiSelect
         id={id}
-        className="ins-input"
+        className="ins-select"
         aria-label={label}
         value={value}
-        onChange={(event) => {
-          edit.preview({ [prop]: event.target.value });
+        placeholder={edit.mixed.has(prop) ? 'Mixed' : '—'}
+        options={list.map((option) => ({ value: option, label: option }))}
+        onChange={(next) => {
+          edit.preview({ [prop]: next });
           edit.commit();
         }}
-        onKeyDown={(event) => {
-          if (event.key !== 'Escape') return;
-          event.stopPropagation();
-          edit.revert([prop]);
-        }}
-      >
-        {value === '' && <option value="">{edit.mixed.has(prop) ? 'Mixed' : '—'}</option>}
-        {list.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      />
     </div>
   );
 }
@@ -157,14 +148,59 @@ export function AlignField({ edit }: { edit: DirectEdit }) {
   );
 }
 
-export function InspectorSection({ title, children, aside, className }: { title: string; children: ReactNode; aside?: ReactNode; className?: string }) {
+const OPEN_KEY = 'studio.inspector.sections';
+
+function readOpen(): Record<string, boolean> {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(OPEN_KEY) ?? '{}');
+    return raw && typeof raw === 'object' ? (raw as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+const sectionOpen = readOpen();
+
+export function useSectionOpen(title: string, initial = true): [boolean, () => void] {
+  const [open, setOpen] = useState(() => sectionOpen[title] ?? initial);
+  const toggle = () => {
+    const next = !open;
+    sectionOpen[title] = next;
+    setOpen(next);
+    try {
+      localStorage.setItem(OPEN_KEY, JSON.stringify(sectionOpen));
+    } catch {
+      return;
+    }
+  };
+  return [open, toggle];
+}
+
+interface SectionProps {
+  title: string;
+  children: ReactNode;
+  aside?: ReactNode;
+  className?: string;
+  label?: ReactNode;
+  initialOpen?: boolean;
+}
+
+export function InspectorSection({ title, children, aside, className, label, initialOpen }: SectionProps) {
+  const [open, toggle] = useSectionOpen(title, initialOpen);
+  const hasBody = children !== null && children !== undefined && children !== false;
   return (
-    <section className={`ins-section ${className ?? ''}`} aria-label={title}>
+    <section className={`ins-section ${open ? '' : 'closed'} ${className ?? ''}`} aria-label={title}>
       <div className="ins-section-head">
-        <h3>{title}</h3>
+        <h3>
+          <button type="button" className="ins-section-toggle" aria-expanded={hasBody ? open : undefined} disabled={!hasBody} onClick={toggle}>
+            <Icon name="chevronRight" size={12} />
+            <span>{title}</span>
+          </button>
+        </h3>
+        {label}
         {aside}
       </div>
-      {children}
+      {open && children}
     </section>
   );
 }

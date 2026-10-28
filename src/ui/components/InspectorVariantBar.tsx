@@ -2,12 +2,14 @@ import { useEffect, type MutableRefObject } from 'react';
 import { DEFAULT_BREAKPOINTS, parseVariant, variantPrefix, type ParsedVariant, type VariantState, type VariantSupport } from '../../shared/variants';
 import type { PreviewPort } from '../bridge';
 import { editVariantStore, fitFrameTo, postForceState, useEditVariant } from '../editVariant';
+import { UiSelect } from './UiSelect';
 import '../styles/inspector-variants.css';
 
 interface Props {
   selector: string;
   port: MutableRefObject<PreviewPort | null>;
   support: VariantSupport | null;
+  quietNote?: string | null;
 }
 
 const STATES: { id: VariantState; label: string }[] = [
@@ -23,9 +25,9 @@ function breakpointsOf(support: VariantSupport | null) {
   return list.slice(0, SHOWN_BREAKPOINTS);
 }
 
-function Chip({ label, pressed, disabled, tip, onClick }: { label: string; pressed: boolean; disabled: boolean; tip: string; onClick: () => void }) {
+function Chip({ label, pressed, tip, onClick }: { label: string; pressed: boolean; tip: string; onClick: () => void }) {
   return (
-    <button type="button" className={`ins-variant-chip ${pressed ? 'on' : ''}`} aria-pressed={pressed} disabled={disabled} data-tip={tip} onClick={onClick}>
+    <button type="button" className={`ins-variant-chip ${pressed ? 'on' : ''}`} aria-pressed={pressed} data-tip={tip} onClick={onClick}>
       {label}
     </button>
   );
@@ -40,7 +42,9 @@ function summary(prefix: string, support: VariantSupport | null): string {
   return `Set here: ${set.join(support?.mode === 'css' ? '; ' : ' ')}. Dim values come from the base.`;
 }
 
-export function InspectorVariantBar({ selector, port, support }: Props) {
+const ANY_WIDTH = '';
+
+export function InspectorVariantBar({ selector, port, support, quietNote }: Props) {
   const prefix = useEditVariant();
   const current = parseVariant(prefix) ?? BASE;
   const off = support?.mode === 'none';
@@ -58,27 +62,30 @@ export function InspectorVariantBar({ selector, port, support }: Props) {
     fitFrameTo(width);
     postForceState(port.current, selector, value);
   };
-  const toggleBreakpoint = (name: string) => choose({ ...current, breakpoint: current.breakpoint === name ? null : name });
+  const note = summary(prefix, support);
+  if (off) return note === quietNote ? null : <p className="ins-variant-note ins-variants-off">{note}</p>;
   const toggleState = (state: VariantState) => choose({ ...current, states: current.states.includes(state) ? [] : [state] });
+  const widths = [{ value: ANY_WIDTH, label: 'All widths' }, ...breakpoints.map((entry) => ({ value: entry.name, label: `${entry.name} ${entry.px}+` }))];
 
   return (
     <div className="ins-variants" role="group" aria-label="Breakpoint and state">
       <div className="ins-variant-row">
-        <Chip label="Base" pressed={prefix === ''} disabled={false} tip="Edit the base style, for every width and state" onClick={() => choose(BASE)} />
-        {breakpoints.map((entry) => (
-          <Chip key={entry.name} label={entry.name} pressed={current.breakpoint === entry.name} disabled={off} tip={off ? (support?.reason ?? '') : `${entry.name}: ${entry.px} px and wider. The frame resizes to ${entry.px}`} onClick={() => toggleBreakpoint(entry.name)} />
-        ))}
-      </div>
-      <div className="ins-variant-row">
+        <UiSelect size="sm" className="ins-variant-width" aria-label="Breakpoint" tip="Edit styles from this width up. The frame resizes to it" value={current.breakpoint ?? ANY_WIDTH} options={widths} onChange={(name) => choose({ ...current, breakpoint: name === ANY_WIDTH ? null : name })} />
+        <span className="ins-variant-sep" aria-hidden="true" />
         {STATES.map((state) => (
-          <Chip key={state.id} label={state.label} pressed={current.states.includes(state.id)} disabled={off} tip={off ? (support?.reason ?? '') : `${state.label} state. The frame shows the element as if ${state.id === 'hover' ? 'hovered' : state.id === 'focus' ? 'focused' : 'pressed'}`} onClick={() => toggleState(state.id)} />
+          <Chip key={state.id} label={state.label} pressed={current.states.includes(state.id)} tip={`${state.label} state. The frame shows the element as if ${state.id === 'hover' ? 'hovered' : state.id === 'focus' ? 'focused' : 'pressed'}`} onClick={() => toggleState(state.id)} />
         ))}
-        <Chip label="Dark" pressed={current.dark} disabled={off} tip={off ? (support?.reason ?? '') : 'Dark mode. The frame shows the dark theme'} onClick={() => choose({ ...current, dark: !current.dark })} />
+        <Chip label="Dark" pressed={current.dark} tip="Dark mode. The frame shows the dark theme" onClick={() => choose({ ...current, dark: !current.dark })} />
       </div>
-      <p className="ins-variant-note" role="status">
-        {prefix !== '' && <code className="ins-variant-prefix">{prefix}</code>}
-        <span>{summary(prefix, support)}</span>
-      </p>
+      {prefix !== '' && (
+        <p className="ins-variant-note" role="status">
+          <code className="ins-variant-prefix">{prefix}</code>
+          <span>{note}</span>
+          <button type="button" className="ins-add-link ins-variant-base" onClick={() => choose(BASE)}>
+            Base
+          </button>
+        </p>
+      )}
     </div>
   );
 }

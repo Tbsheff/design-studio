@@ -41,7 +41,7 @@ export function ContentRow({ selection, edit }: { selection: SelectionContext; e
         aria-label="Text content"
         value={edit.text}
         spellCheck={false}
-        title={edit.text}
+        data-tip={edit.text}
         onChange={(event) => edit.previewText(event.target.value)}
         onBlur={edit.commit}
         onKeyDown={onKeyDown}

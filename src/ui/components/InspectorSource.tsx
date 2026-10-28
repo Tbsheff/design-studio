@@ -1,47 +1,42 @@
 import { useState } from 'react';
-import type { SelectionContext, SourceLoc } from '../../shared/contracts';
+import type { SourceLoc } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { Icon } from './Icon';
 
-function locText(source: SourceLoc): string {
+export function locText(source: SourceLoc): string {
   return `${source.file}:${source.line}:${source.col}`;
 }
 
-function SourceLine({ label, source, onOpen }: { label: string; source: SourceLoc; onOpen: (source: SourceLoc) => void }) {
-  const text = locText(source);
-  return (
-    <div className="ins-source-row">
-      <span className="ins-source-label">{label}</span>
-      <code className="ins-source-path" title={text}>
-        {text}
-      </code>
-      <button type="button" className="icon-btn small" aria-label={`Open ${source.file} in the editor`} data-tip="Open in editor" onClick={() => onOpen(source)}>
-        <Icon name="code" size={13} />
-      </button>
-    </div>
-  );
+function shortPath(file: string): string {
+  const parts = file.split('/');
+  return parts.length > 2 ? parts.slice(-2).join('/') : file;
 }
 
-export function InspectorSource({ projectId, directionId, selection }: { projectId: string; directionId: string | null; selection: SelectionContext }) {
+export function SourceLink({ projectId, directionId, source }: { projectId: string; directionId: string | null; source: SourceLoc | null }) {
   const [note, setNote] = useState<string | null>(null);
-  const source = selection.source;
-  if (!source || !directionId) return null;
-  const open = (loc: SourceLoc) => {
+  if (!source) return <span className="ins-source" />;
+  const text = locText(source);
+  const open = () => {
+    if (!directionId) return;
     setNote(null);
     api
-      .openSource(projectId, directionId, locText(loc))
+      .openSource(projectId, directionId, text)
       .then((result) => setNote(`Opened ${result.path}`))
       .catch((err: unknown) => setNote(errorText(err)));
   };
   return (
-    <div className="ins-source-block" aria-label="Source">
-      <SourceLine label="Element" source={source} onOpen={open} />
-      {selection.usedAt && <SourceLine label="Used in" source={selection.usedAt} onOpen={open} />}
+    <>
+      <button type="button" className="ins-source" data-tip={note ?? `${text}. Open in editor`} aria-label={`Open ${text} in the editor`} disabled={!directionId} onClick={open}>
+        <span className="truncate">
+          {shortPath(source.file)}:{source.line}
+        </span>
+        <Icon name="code" size={12} />
+      </button>
       {note && (
-        <div className="ins-source-note" role="status">
+        <span className="sr-only" role="status">
           {note}
-        </div>
+        </span>
       )}
-    </div>
+    </>
   );
 }

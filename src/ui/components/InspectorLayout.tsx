@@ -7,6 +7,7 @@ import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, parentLayout, sizeFac
 import { Icon, type IconName } from './Icon';
 import { InspectorSection, SelectField } from './InspectorFields';
 import { NumberField } from './NumberField';
+import { UiSelect } from './UiSelect';
 
 type Patch = Parameters<DirectEdit['preview']>[0];
 
@@ -120,7 +121,7 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
   );
 }
 
-export function AutoLayoutSection({ edit, title = 'Auto layout', children }: { edit: DirectEdit; title?: string; children?: ReactNode }) {
+export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children }: { edit: DirectEdit; title?: string; lead?: ReactNode; children?: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
   useAddLayoutKey(root, () => {
@@ -133,6 +134,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', children }: { e
   );
   return (
     <InspectorSection title={title} aside={flex ? remove : undefined}>
+      {lead}
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
           <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
@@ -165,19 +167,8 @@ function SizeRow({ axis, edit, selection }: { axis: Axis; edit: DirectEdit; sele
   return (
     <>
       <NumberField short={axis === 'width' ? 'W' : 'H'} spec={{ prop: axis, label: name, edit, min: 0 }} />
-      <div className="ins-field select">
-        <select
-          className="ins-input ins-size-mode"
-          aria-label={`${name} sizing`}
-          value={mode}
-          onChange={(event) => write(edit, sizePatch(axis, event.target.value as SizeMode, edit.values, parent, used, facts))}
-        >
-          {SIZE_MODES.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      <div className="ins-field select ins-size-field">
+        <UiSelect className="ins-select ins-size-mode" aria-label={`${name} sizing`} value={mode} options={SIZE_MODES} onChange={(next: SizeMode) => write(edit, sizePatch(axis, next, edit.values, parent, used, facts))} />
       </div>
     </>
   );

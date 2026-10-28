@@ -1,10 +1,5 @@
 .prp {
-  flex: none;
   min-width: 0;
-  max-height: 50%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border-bottom: 1px solid var(--line);
 }
 
 .prp-chip {
@@ -21,22 +16,13 @@
 }
 
 .prp-where {
-  display: grid;
-  gap: 2px;
   min-width: 0;
-  color: var(--text-2);
-  font-size: var(--t-xs);
-}
-
-.prp-where code,
-.prp-where span {
+  margin: 0;
   overflow: hidden;
+  color: var(--text-3);
+  font-size: var(--t-2xs);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.prp-where code {
-  font-family: var(--mono);
 }
 
 .prp-rows {

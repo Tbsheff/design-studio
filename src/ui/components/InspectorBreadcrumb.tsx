@@ -37,7 +37,7 @@ export function InspectorBreadcrumb({ selection, port }: Props) {
           <Fragment key={crumb.kind === 'node' ? crumb.levels : `gap-${index}`}>
             <li>
               {crumb.kind === 'node' ? (
-                <button type="button" className="ins-crumb" title={`Select ${crumb.label}`} onClick={() => select(crumb.levels)}>
+                <button type="button" className="ins-crumb" data-tip={`Select ${crumb.label}`} onClick={() => select(crumb.levels)}>
                   {crumb.label}
                 </button>
               ) : (
@@ -45,7 +45,7 @@ export function InspectorBreadcrumb({ selection, port }: Props) {
                   type="button"
                   className="ins-crumb gap"
                   aria-label={`Show ${crumb.hidden.length} more`}
-                  title={crumb.hidden.map((entry) => entry.label).join(' › ')}
+                  data-tip={crumb.hidden.map((entry) => entry.label).join(' › ')}
                   onClick={() => setExpanded(true)}
                 >
                   …
@@ -58,7 +58,7 @@ export function InspectorBreadcrumb({ selection, port }: Props) {
           </Fragment>
         ))}
         <li>
-          <span className="ins-crumb current" aria-current="true" title={current}>
+          <span className="ins-crumb current" aria-current="true" data-tip={current}>
             {current}
           </span>
         </li>

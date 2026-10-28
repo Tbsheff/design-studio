@@ -148,7 +148,7 @@ function LayerRow(p: RowProps) {
       aria-expanded={node.childCount > 0 ? !p.collapsed : undefined}
       className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}${p.dropInto ? ' drop-into' : ''}`}
       style={{ top: p.top, paddingLeft: 4 + node.depth * 12 }}
-      title={full}
+      data-tip={full}
       onPointerEnter={() => p.onHover(node.id)}
       onPointerLeave={() => p.onHover(null)}
       onPointerDown={(e) => {
@@ -353,7 +353,7 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
     <aside className="layers" aria-label="Layers">
       <header className="layers-head">
         <span className="layers-title">Layers</span>
-        <span className="layers-frame" title={frameName}>
+        <span className="layers-frame" data-tip={frameName}>
           {frameName}
         </span>
         {edits?.onStructureKey && selectedNode !== null && <LayerTools run={edits.onStructureKey} busy={busy} />}

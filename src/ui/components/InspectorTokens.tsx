@@ -219,7 +219,7 @@ export function FontField({ ui, edit }: { ui: TokenUi | null; edit: DirectEdit }
         className="ins-input"
         aria-label="Font family"
         value={text ?? (ui && varName(value) ? value : value.split(',')[0]?.replace(/^["']|["']$/g, '').trim() ?? '')}
-        title={value}
+        data-tip={value}
         spellCheck={false}
         autoComplete="off"
         placeholder={edit.mixed.has(prop) ? 'Mixed' : '—'}

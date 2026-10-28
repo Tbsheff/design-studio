@@ -4,6 +4,8 @@ import type { ComponentInstance, PropSpec, PropValue, VariantGroup } from '../..
 import { ApiError } from '../api';
 import { useProjectEvents } from '../events';
 import { propsApi } from '../propsApi';
+import { InspectorSection } from './InspectorFields';
+import { UiSelect } from './UiSelect';
 import '../styles/inspector-props.css';
 
 interface InspectorPropsProps {
@@ -66,17 +68,19 @@ function SelectProp({ spec, value, overridden, disabled, onChange }: { spec: Pro
   const list = current && !options.includes(current) ? [current, ...options] : options;
   return (
     <div className={`ins-field select prp-field${overridden ? ' set' : ''}`}>
-      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" title={spec.name}>
+      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" data-tip={spec.name}>
         {spec.name}
       </label>
-      <select id={`prp-${spec.name}`} className="ins-input" aria-label={`${spec.name} prop`} value={current} disabled={disabled} onChange={(event) => onChange(event.target.value === '' ? null : event.target.value)}>
-        {current === '' && <option value="">—</option>}
-        {list.map((option) => (
-          <option key={option} value={option}>
-            {option === spec.default ? `${option} (default)` : option}
-          </option>
-        ))}
-      </select>
+      <UiSelect
+        id={`prp-${spec.name}`}
+        className="ins-select"
+        aria-label={`${spec.name} prop`}
+        value={current}
+        placeholder="—"
+        disabled={disabled}
+        options={list.map((option) => ({ value: option, label: option === spec.default && option !== 'default' ? `${option} (default)` : option }))}
+        onChange={(next) => onChange(next === '' ? null : next)}
+      />
     </div>
   );
 }
@@ -115,7 +119,7 @@ function TextProp({ spec, value, disabled, onChange }: { spec: PropSpec; value: 
   };
   return (
     <div className="ins-field wide prp-field">
-      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" title={spec.name}>
+      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" data-tip={spec.name}>
         {spec.name}
       </label>
       <input id={`prp-${spec.name}`} className="ins-input" aria-label={`${spec.name} prop`} type={spec.control === 'number' ? 'number' : 'text'} value={shown} placeholder={spec.node ? 'Text' : ''} disabled={disabled} spellCheck={false} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={onKeyDown} />
@@ -151,22 +155,10 @@ function VariantPicker({ groups, group, value, onProp, onValue }: { groups: Vari
   return (
     <div className="ins-grid">
       <div className="ins-field select">
-        <select className="ins-input" aria-label="Variant prop" value={group.prop} onChange={(event) => onProp(event.target.value)}>
-          {groups.map((entry) => (
-            <option key={entry.prop} value={entry.prop}>
-              {entry.prop}
-            </option>
-          ))}
-        </select>
+        <UiSelect className="ins-select" aria-label="Variant prop" value={group.prop} options={groups.map((entry) => ({ value: entry.prop, label: entry.prop }))} onChange={onProp} />
       </div>
       <div className="ins-field select">
-        <select className="ins-input" aria-label="Variant value" value={value} onChange={(event) => onValue(event.target.value)}>
-          {group.options.map((entry) => (
-            <option key={entry.value} value={entry.value}>
-              {entry.value}
-            </option>
-          ))}
-        </select>
+        <UiSelect className="ins-select" aria-label="Variant value" value={value} options={group.options.map((entry) => ({ value: entry.value, label: entry.value }))} onChange={onValue} />
       </div>
     </div>
   );
@@ -298,20 +290,16 @@ export default function InspectorProps({ projectId, directionId, selection, edit
       .catch((error: unknown) => setStatus({ kind: 'error', text: messageOf(error) }));
   };
   const disabled = !editable || status.kind === 'saving';
+  const chip = (
+    <span className="prp-chip" data-tip={`${component.file}:${component.line}`} data-tip-align="end">
+      {component.name}
+    </span>
+  );
   return (
-    <section className="ins-section prp" aria-label="Component">
-      <div className="ins-section-head">
-        <h3>Component</h3>
-        <span className="prp-chip" title={`${component.file}:${component.line}`}>
-          {component.name}
-        </span>
-      </div>
-      <div className="prp-where">
-        <code title={`${component.file}:${component.line}`}>{component.file}</code>
-        <span>
-          Used at {instance.use.file}:{instance.use.line}
-        </span>
-      </div>
+    <InspectorSection title="Component" className="prp" aside={chip}>
+      <p className="prp-where">
+        Used at {instance.use.file}:{instance.use.line}
+      </p>
       {component.props.length === 0 && <p className="ins-note">No props to edit here.</p>}
       <div className="prp-rows">
         {component.props.map((spec) => (
@@ -322,11 +310,11 @@ export default function InspectorProps({ projectId, directionId, selection, edit
       {component.note && <p className="ins-note">{component.note}</p>}
       <StatusLine status={status} />
       {component.cva && editable && (
-        <button type="button" className="btn ghost small prp-styles-btn" aria-expanded={styles} onClick={() => setStyles((open) => !open)}>
+        <button type="button" className="btn small prp-styles-btn" aria-expanded={styles} onClick={() => setStyles((open) => !open)}>
           {styles ? 'Hide variant styles' : 'Edit variant styles'}
         </button>
       )}
       {styles && <VariantStyles projectId={projectId} directionId={directionId} instance={instance} onStatus={setStatus} />}
-    </section>
+    </InspectorSection>
   );
 }

@@ -587,6 +587,20 @@ function queryElement(selector: string): Element | null {
   }
 }
 
+const NEIGHBOR_MAX = 200;
+
+function neighborRects(selector: unknown): { parent: Rect | null; siblings: Rect[] } {
+  const element = typeof selector === 'string' && selector.length <= 2000 ? queryElement(selector) : null;
+  const parent = element?.parentElement;
+  if (!element || !parent) return { parent: null, siblings: [] };
+  const siblings = Array.from(parent.children)
+    .filter((child) => child !== element)
+    .slice(0, NEIGHBOR_MAX)
+    .map(rectOf)
+    .filter((rect) => rect.width > 0 || rect.height > 0);
+  return { parent: rectOf(parent), siblings };
+}
+
 function sameElements(a: (Element | null)[], b: (Element | null)[]): boolean {
   return a.length === b.length && a.every((element, index) => element === b[index]);
 }
@@ -1060,6 +1074,9 @@ function startBridge(session: BridgeSession): void {
         return found ? selectionFor(found.element) : null;
       });
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
+    },
+    'request-neighbors': (message) => {
+      if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });
     },
   };
 

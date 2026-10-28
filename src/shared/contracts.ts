@@ -903,6 +903,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'structure-key'; selector: string; key: StructureKey }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string }
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
+  | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
   | { ns: 'studio'; token: string; type: 'arrange-key'; key: string };
 
 export interface LayerNode {
@@ -992,7 +993,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
   | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
-  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean };
+  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
+  | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',

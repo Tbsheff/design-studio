@@ -38,6 +38,7 @@ import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteNote, siteReq
 import type { ToolDef, ToolResult } from './tools.js';
 import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
 import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
+import { SELECT_TOOLS } from './select-tools.js';
 
 const FILE_MAX = 512 * 1024;
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
@@ -179,7 +180,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SELECT_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token']);

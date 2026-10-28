@@ -281,3 +281,23 @@ export async function resolveLayerRefs(preview: PreviewService, url: string, vie
 export async function resolveLayerRef(preview: PreviewService, url: string, viewport: Viewport, scope: string, ref: string): Promise<string> {
   return (await resolveLayerRefs(preview, url, viewport, scope, [ref])).get(ref) as string;
 }
+
+export interface PathMatch<T> {
+  layers: (Layer | null)[];
+  extra: T;
+}
+
+export async function layersAtPaths<T>(preview: PreviewService, url: string, viewport: Viewport, scope: string, page: string | undefined, find: (probe: ScanPage) => Promise<{ paths: string[]; extra: T }>): Promise<PathMatch<T>> {
+  return onPage(preview, url, viewport, async (probe) => {
+    const found = await find(probe);
+    if (found.paths.length === 0) return { layers: [], extra: found.extra };
+    const scan = await scanIn(probe, { root: null, depth: 0, max: 0, paths: found.paths, all: false });
+    const layers = keyed(scan.layers, scope);
+    const picked = found.paths.map((_, index) => {
+      const at = scan.roots?.[index] ?? -1;
+      return at >= 0 ? (layers[at] ?? null) : null;
+    });
+    remember(scope, page, picked.filter((layer): layer is Layer => layer !== null));
+    return { layers: picked, extra: found.extra };
+  });
+}

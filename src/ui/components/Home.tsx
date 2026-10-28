@@ -543,7 +543,7 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
   };
 
   const openFolderHere = async (folder: WorkspaceFolder) => {
-    if (chooser.unsupported) return openApp(`${folder.path}/`);
+    if (chooser.unsupported) return openApp(folder.path);
     const picked = await chooser.choose(`Choose a folder in ${folder.label} to open`, folder.path);
     if (picked.path) openApp(picked.path);
   };

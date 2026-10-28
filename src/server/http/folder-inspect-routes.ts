@@ -57,7 +57,7 @@ export async function inspectFolder(projects: StudioProjectStore, raw: string, w
   const appDir = kind === 'next' ? (chosen ?? detected.appDir ?? preferred?.appDir ?? null) : null;
   const hint = appDir ? installHint(folder, appDir) : null;
   const existing = (await projects.list()).find((project) => project.imported?.sourcePath === folder && (kind !== 'next' || project.app?.appDir === appDir));
-  const problem = kind === null ? 'This folder has no Next.js app, no Vite app and no index.html.' : null;
+  const problem = kind === null ? 'This folder has no Next.js app, no Vite app and no index.html. Add the name of your app folder to the path.' : null;
   return {
     path: folder,
     name: path.basename(folder),

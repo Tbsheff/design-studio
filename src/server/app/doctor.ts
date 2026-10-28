@@ -131,6 +131,11 @@ function envFix(ctx: Ctx, keys: string[]): EnvPlan {
   return { fix: null, title: 'Env validation failed', note: ' Add the values in Settings (Environment for next dev) or in a .env.local file, then restart.' };
 }
 
+function envEvidence(ctx: Ctx): string[] {
+  const found = [...evidence(ctx.lines, /^\s*[A-Z][A-Z0-9_]*:\s*\[/), ...evidence(ctx.lines, /Error: Invalid environment variables/)].slice(0, MAX_EVIDENCE);
+  return found.length > 0 ? found : [`GET / -> ${ctx.probe?.status ?? 500}: Invalid environment variables`];
+}
+
 function envValidation(ctx: Ctx): DoctorCause | null {
   if (!ctx.all.some((line) => ENV_ERROR.test(line))) return null;
   const keys = missingEnvKeys(ctx.all);
@@ -140,7 +145,7 @@ function envValidation(ctx: Ctx): DoctorCause | null {
     severity: 'error',
     title,
     detail: `The app checks its env when it loads, and ${keyList(keys)}.${note}`,
-    evidence: [...evidence(ctx.all, /^\s*[A-Z][A-Z0-9_]*:\s*\[/), ...evidence(ctx.all, /Error: Invalid environment variables/)].slice(0, MAX_EVIDENCE),
+    evidence: envEvidence(ctx),
     fix,
     command: null,
   };

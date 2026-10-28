@@ -5,8 +5,8 @@ import { Icon, type IconName } from './Icon';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { shortcutLabel } from '../../shared/keymap';
 
-export type CanvasTool = 'select' | 'comment' | 'edit' | null;
-export type PresentMode = 'window' | 'fullscreen' | 'new-window';
+export type CanvasTool = 'select' | 'comment' | 'edit' | 'prototype' | null;
+export type PresentMode = 'window' | 'fullscreen' | 'new-window' | 'play';
 
 export interface MenuEntry {
   id: string;
@@ -148,6 +148,7 @@ export function CanvasTopBar(p: Props) {
   const presentGroups = (): MenuGroup[] => [
     {
       items: [
+        { id: 'play', label: 'Play prototype', icon: 'link', run: () => p.onPresent('play') },
         { id: 'window', label: 'In this window', icon: 'play', run: () => p.onPresent('window') },
         { id: 'fullscreen', label: 'Fullscreen', icon: 'expand', run: () => p.onPresent('fullscreen') },
         { id: 'new-window', label: 'New window', icon: 'window', run: () => p.onPresent('new-window') },
@@ -196,6 +197,10 @@ export function CanvasTopBar(p: Props) {
         <button type="button" aria-pressed={p.tool === 'edit'} aria-keyshortcuts="Alt+1" data-tip={tipWithKey('Edit and layers', 'layers')} onClick={() => p.onTool('edit')}>
           <Icon name="edit" size={14} />
           <span>Edit</span>
+        </button>
+        <button type="button" aria-pressed={p.tool === 'prototype'} data-tip="Link elements to frames, then Play" onClick={() => p.onTool('prototype')}>
+          <Icon name="link" size={14} />
+          <span>Prototype</span>
         </button>
       </div>
       <DropMenu label="Present" className="btn ghost topbar-present" groups={presentGroups} align="end">

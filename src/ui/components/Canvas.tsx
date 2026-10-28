@@ -32,6 +32,7 @@ import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
 import { appRoutePages, useAppCanvas } from './AppCanvas';
+import { usePrototype } from '../usePrototype';
 
 interface Props {
   projectId: string;
@@ -397,7 +398,16 @@ export function Canvas(props: Props) {
   const commentMode = comment.on;
   const live = source.kind === 'live';
   const pane = useShellPane(props.shell, comment, selectMode, setSelectMode, live, ui.layersOpen);
-  const { layersOpen, toggleEdit, picking } = pane;
+  const [protoOn, setProtoOn] = useState(false);
+  const { layersOpen, toggleEdit } = pane;
+  const picking = pane.picking || protoOn;
+  const setProto = (next: boolean) => {
+    setProtoOn(next);
+    if (!next) return;
+    comment.setOn(false);
+    setSelectMode(() => false);
+    if (props.shell?.pane === 'design') void props.shell.onPane('chat');
+  };
   const draw = useCanvasDraw(comment, picking, setSelectMode);
 
   const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
@@ -420,6 +430,7 @@ export function Canvas(props: Props) {
     onError: props.onError,
     onModeExited: () => {
       setSelectMode(false);
+      setProtoOn(false);
       comment.setOn(false);
     },
     onFrameWheel: pz.frameWheel,
@@ -488,6 +499,7 @@ export function Canvas(props: Props) {
     return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
   };
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
+  const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
   const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, size: viewport });
 
 
@@ -517,7 +529,8 @@ export function Canvas(props: Props) {
         sandbox={sandbox}
         selection={props.selection}
         stage={() => stageRef.current}
-        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch }}
+        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch, links: proto.viewToggle }}
+        proto={{ on: protoOn, set: setProto, play: proto.play }}
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
@@ -563,7 +576,9 @@ export function Canvas(props: Props) {
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          {proto.artboard}
         </div>
+        {proto.stage}
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />
         {capture && <div className="capture" data-testid="pan-capture" />}

@@ -4,20 +4,21 @@ import {
   cleanLinkSelector,
   cleanLinkText,
   isBackTarget,
-  isIdSelector,
   LINK_ISSUE_TEXT,
   LINK_SELECTOR_MAX,
+  LINK_TEXT_MAX,
   LINK_TRANSITIONS,
   startFrameOf,
   staticLinkIssue,
-  textAgrees,
   upsertLink,
   type LinkIssue,
+  type LinkQuery,
   type LinksFile,
   type LinkTransition,
   type PrototypeLink,
 } from '../../shared/links.js';
 import type { Direction, Project } from '../../shared/contracts.js';
+import { waitForPage } from '../export/capture.js';
 import { withPagePath } from '../export/source.js';
 import type { PreviewService } from '../types.js';
 import { findFrame, frameRef, type CanvasToolContext, type ToolText } from './tools.js';
@@ -40,7 +41,24 @@ export interface ProbedElement {
   text: string;
 }
 
-export type LinkProbe = (frame: CanvasFileFrame, selectors: string[]) => Promise<(ProbedElement | null)[]>;
+export type LinkProbe = (frame: CanvasFileFrame, queries: LinkQuery[]) => Promise<(ProbedElement | null)[]>;
+
+function resolveScript(queries: LinkQuery[]): string {
+  return `(${JSON.stringify(queries)}).map((q) => {
+    const norm = (t) => (t || '').replace(/\\s+/g, ' ').trim().toLowerCase().slice(0, ${LINK_TEXT_MAX});
+    const agrees = (a, b) => { if (!b) return true; const x = norm(a); const y = norm(b); return x === y || (y.length >= 12 && x.startsWith(y)); };
+    const textOf = (el) => (el.innerText ?? el.textContent ?? '');
+    const found = (el) => ({ tag: el.tagName.toLowerCase(), text: textOf(el).trim().slice(0, 200) });
+    let el = null;
+    try { el = document.querySelector(q.selector); } catch { el = null; }
+    const tag = q.tag ? q.tag.toLowerCase() : null;
+    const idSelector = /^#[A-Za-z_][\\w-]*$/.test(q.selector);
+    if (el && (!tag || el.tagName.toLowerCase() === tag) && (idSelector || agrees(textOf(el), q.text))) return found(el);
+    if (!tag || !q.text || !/^[a-z][a-z0-9-]*$/.test(tag)) return null;
+    const hit = Array.from(document.getElementsByTagName(tag)).find((item) => agrees(textOf(item), q.text));
+    return hit ? found(hit) : null;
+  })`;
+}
 
 export class LinkError extends Error {}
 
@@ -74,20 +92,21 @@ export function linkTitle(link: PrototypeLink, frames: readonly CanvasFileFrame[
   return `${what} in ${frameTitle(frames, link.from.frame)} → ${target}`;
 }
 
-export function probeWithPreview(preview: Pick<PreviewService, 'directionUrl' | 'withPage'>, project: Project, fallback: Direction, describe: (url: string, selectors: string[]) => Promise<({ tag: string; text: string } | null)[]>): LinkProbe {
-  return async (frame, selectors) => {
+export function probeWithPreview(preview: Pick<PreviewService, 'directionUrl' | 'withPage'>, project: Project, fallback: Direction): LinkProbe | undefined {
+  const withPage = preview.withPage?.bind(preview);
+  if (!withPage) return undefined;
+  return async (frame, queries) => {
     const direction = project.directions.find((item) => item.id === frame.directionId) ?? fallback;
     const url = withPagePath(await preview.directionUrl(project, direction), frame.path || undefined);
-    const found = await describe(url, selectors);
-    return found.map((element) => (element ? { tag: element.tag, text: element.text } : null));
+    return withPage(url, { width: frame.width, height: frame.height }, async (page) => {
+      await waitForPage(page);
+      return page.evaluate<(ProbedElement | null)[]>(resolveScript(queries));
+    });
   };
 }
 
-function elementIssue(link: PrototypeLink, found: ProbedElement | null): LinkIssue | null {
-  if (!found) return 'element-missing';
-  if (link.from.tag && found.tag !== link.from.tag) return 'element-missing';
-  if (!isIdSelector(link.from.selector) && !textAgrees(found.text, link.from.text)) return 'element-missing';
-  return null;
+function queryOf(link: PrototypeLink): LinkQuery {
+  return { id: link.id, selector: link.from.selector, ...(link.from.tag ? { tag: link.from.tag } : {}), ...(link.from.text ? { text: link.from.text } : {}) };
 }
 
 function describeLink(link: PrototypeLink, frames: readonly CanvasFileFrame[], issue: LinkIssue | null, start: string) {
@@ -116,10 +135,10 @@ export async function listLinks(ctx: CanvasToolContext, probe?: LinkProbe): Prom
     for (const [frameId, links] of byFrame) {
       const frame = frames.find((item) => item.id === frameId);
       if (!frame) continue;
-      const found = await probe(frame, links.map((link) => link.from.selector)).catch(() => null);
+      const found = await probe(frame, links.map(queryOf)).catch(() => null);
       if (!found) continue;
       checked = true;
-      links.forEach((link, index) => issues.set(link.id, elementIssue(link, found[index] ?? null)));
+      links.forEach((link, index) => issues.set(link.id, found[index] ? null : 'element-missing'));
     }
   }
   const start = startFrameOf(file, frames);
@@ -143,7 +162,7 @@ export async function addLink(ctx: CanvasToolContext, spec: LinkSpec, probe?: Li
     if (!selector) throw new LinkError('selector is empty or too long.');
     let hint: { tag?: string; text?: string } = {};
     if (probe) {
-      const [found] = await probe(from, [selector]);
+      const [found] = await probe(from, [{ id: 'new', selector }]);
       if (!found) throw new LinkError(`No element matches ${selector} on ${from.path || 'the entry page'} of ${from.id}. Check the selector with get_frame_html.`);
       const label = cleanLinkText(found.text);
       hint = { tag: found.tag, ...(label ? { text: label } : {}) };

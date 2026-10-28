@@ -16,7 +16,6 @@ import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
-import { describeElements } from '../mcp/element.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -76,8 +75,7 @@ export function runCanvasPoint(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, arg
 }
 
 function agentLinkProbe(deps: Pick<StudioToolDeps, 'ctx' | 'preview'>): LinkProbe | undefined {
-  if (!deps.preview.withPage) return undefined;
-  return probeWithPreview(deps.preview, deps.ctx.project, deps.ctx.direction, (url, selectors) => describeElements(deps.preview, url, selectors));
+  return probeWithPreview(deps.preview, deps.ctx.project, deps.ctx.direction);
 }
 
 export function runListLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>) {

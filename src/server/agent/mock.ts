@@ -14,7 +14,6 @@ import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-syste
 import type { CanvasService } from '../canvas/service.js';
 import { mockCanvasContext, runMockCanvas, runMockLinks, runMockStates, wantsMockCanvas, wantsMockLinks, wantsMockStates } from './mock-canvas.js';
 import { probeWithPreview } from '../canvas/link-tools.js';
-import { describeElements } from '../mcp/element.js';
 import { runMockDirect, wantsMockDirect } from './mock-direct.js';
 import type { PreviewService } from '../types.js';
 
@@ -554,7 +553,7 @@ function wantsTweaks(input: DriverInput): boolean {
 async function runMockScenario(input: DriverInput, session: MockSession, canvas: CanvasService | undefined, preview: PreviewService | undefined): Promise<string> {
   if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt, (await buildUserMessageParts(input.ctx)).images.length);
   if (wantsMockCanvas(input)) return runMockCanvas(session, mockCanvasContext(input, canvas));
-  if (wantsMockLinks(input)) return runMockLinks(session, mockCanvasContext(input, canvas), preview?.withPage ? probeWithPreview(preview, input.ctx.project, input.ctx.direction, (url, selectors) => describeElements(preview, url, selectors)) : undefined, input.ctx.request.prompt);
+  if (wantsMockLinks(input)) return runMockLinks(session, mockCanvasContext(input, canvas), preview ? probeWithPreview(preview, input.ctx.project, input.ctx.direction) : undefined, input.ctx.request.prompt);
   if (wantsMockDirect(input)) return runMockDirect(session, input, preview);
   if (wantsMockStates(input)) return runMockStates(session, input, mockCanvasContext(input, canvas));
   const tweaksOnly = input.ctx.request.task === 'tweaks';

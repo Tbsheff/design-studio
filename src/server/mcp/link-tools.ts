@@ -3,7 +3,6 @@ import { addLink, frameLabel, linkSpecSchema, listLinks, probeWithPreview, remov
 import { frameRef, type CanvasToolContext } from '../canvas/tools.js';
 import { EditError, loadTarget, refuseWhileRunning, type EditDeps } from './edit-deps.js';
 import { defineTool, directionId, projectId, type Done } from './edit-kit.js';
-import { describeElements } from './element.js';
 
 const LINKS_NOTE = 'Links live in the studio (.studio/links.json), not in the page code, so they work for HTML, React and attached app routes. Play in the studio starts at the start frame; a click on a linked element goes to its frame. Links save with the next version, like the canvas layout.';
 
@@ -14,8 +13,7 @@ async function contextOf(deps: EditDeps, input: { projectId: string; directionId
 }
 
 function probeOf(deps: EditDeps, ctx: CanvasToolContext) {
-  if (!deps.preview.withPage) return undefined;
-  return probeWithPreview(deps.preview, ctx.project, ctx.direction, (url, selectors) => describeElements(deps.preview, url, selectors));
+  return probeWithPreview(deps.preview, ctx.project, ctx.direction);
 }
 
 function failed(done: { result: Done['result'] }): Done | null {

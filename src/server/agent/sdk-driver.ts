@@ -1,3 +1,4 @@
+import { appendFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { HookCallback, Options, PermissionResult, SDKMessage, SDKResultMessage, query } from '@anthropic-ai/claude-agent-sdk';
@@ -636,15 +637,30 @@ function noResultOutcome(state: StreamState, signal: AbortSignal, prior: PriorSe
 
 type SdkStream = ReturnType<QueryFn>;
 
-async function consumeStream(stream: SdkStream, state: StreamState, input: DriverInput, options: SdkDriverOptions): Promise<void> {
+const USAGE_LOG_ENV = 'STUDIO_USAGE_LOG';
+
+async function writeUsageLog(runId: string, state: StreamState, context: Promise<unknown> | null, options: Options): Promise<void> {
+  const file = process.env[USAGE_LOG_ENV];
+  if (!file) return;
+  const calls = [...state.calls.values()].map((call) => call.usage);
+  const breakdown = context ? await context.catch((error: unknown) => ({ error: String(error) })) : null;
+  const system = typeof options.systemPrompt === 'string' ? options.systemPrompt : '';
+  await writeFile(`${file}.${runId}.system.txt`, system).catch(() => undefined);
+  await appendFile(file, `${JSON.stringify({ runId, sessionId: state.sessionId, systemChars: system.length, skills: options.skills, calls, context: breakdown })}\n`).catch(() => undefined);
+}
+
+async function consumeStream(stream: SdkStream, state: StreamState, input: DriverInput, options: SdkDriverOptions): Promise<{ context: Promise<unknown> | null }> {
+  let context: Promise<unknown> | null = null;
   try {
     for await (const message of stream) {
       options.onMessage?.(message);
+      if (!context && message.type === 'assistant' && process.env[USAGE_LOG_ENV]) context = stream.getContextUsage();
       if (await handleMessage(message, state, input.sink)) break;
     }
   } catch (error) {
     if (!input.signal.aborted) throw error;
   }
+  return { context };
 }
 
 export function createSdkDriver(options: SdkDriverOptions): RunDriver {
@@ -675,7 +691,8 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     setup.setup.run.spentUsd = () => spentBefore + estimateStateCost(state, setup.setup.config.model);
     const stream = runQuery({ prompt: toSdkPrompt(sent), options: setup.sdkOptions });
     try {
-      await consumeStream(stream, state, input, options);
+      const { context } = await consumeStream(stream, state, input, options);
+      await writeUsageLog(input.runId, state, context, setup.sdkOptions);
     } finally {
       finishPendingTools(state, input.sink);
       stream.close();

@@ -1,34 +1,22 @@
-import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { DIRECT_STYLE_PROPERTIES, STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import { STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
-import { evaluateToolUse } from '../agent/permissions.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
-import { SOURCE_DIR } from '../design-system/extract/draft.js';
 import { publishVersion } from '../direct-edit/index.js';
-import { withPagePath } from '../export/source.js';
 import type { ActivityDraft } from './activity.js';
 import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
 import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
+import { base, checkWritePath, classes, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
 import { describeElement } from './element.js';
 import { FolderError } from './folders.js';
+import { HISTORY_TOOLS } from './history-tools.js';
+import { LIBRARY_TOOLS } from './library-tools.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
-const SELECTOR_MAX = 2000;
 const FILE_MAX = 512 * 1024;
-const PATH_MAX = 300;
-
-const id = (what: string) => z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, 'must be an id of 1 to 64 letters, digits, - or _').describe(what);
-const projectId = id('Project id from list_projects.');
-const directionId = id('Direction id. Leave out for the main direction.').optional();
-const selector = z.string().trim().min(1).max(SELECTOR_MAX);
-const pagePath = z.string().trim().max(PATH_MAX).optional().describe('Page path in the project, for example "about.html". Leave out for the entry page.');
-const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
-const styleValue = z.string().max(200).nullable();
-const style = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
 
 const schemas = {
@@ -65,11 +53,12 @@ const schemas = {
       selector: selector.describe('CSS selector of one element on the page.'),
       style: style.optional().describe('CSS properties to set. null removes the property.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
+      classes: classes.optional(),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
-    .refine((input) => (input.op === undefined ? input.text !== undefined || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined), 'pass style or text, or op alone')
+    .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined), 'pass style, text or classes, or op alone')
     .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none'),
   add_comment: z
     .object({
@@ -121,14 +110,6 @@ const schemas = {
 type Name = keyof typeof schemas;
 type Input<N extends Name> = z.output<(typeof schemas)[N]>;
 
-interface Meta {
-  title: string;
-  description: string;
-  readOnly?: boolean;
-  destructive?: boolean;
-  idempotent?: boolean;
-}
-
 const META: Record<Name, Meta> = {
   canvas_list: { title: 'List canvas frames', description: 'List the frames on the studio canvas of a project: id, label, page, size and position, plus what the user has selected and which frame is live.', readOnly: true, idempotent: true },
   canvas_place: { title: 'Place canvas frames', description: 'Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order. Each item: frame (id or @label to move; leave out to add), label, path, viewport or width/height, and one of below / rightOf / leftOf / above (another frame) with gap, or absolute x/y. Returns the placed frames and overlap warnings.' },
@@ -136,7 +117,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
+  edit_element: { title: 'Edit element', description: 'Change the style, the text or the classes of one element, found by CSS selector on a page, with the same code path as the studio inspector. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -152,46 +133,25 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-export const EDIT_TOOLS: ToolDef[] = (Object.keys(schemas) as Name[]).map((name) => ({
-  name,
-  title: META[name].title,
-  description: META[name].description,
-  inputSchema: jsonSchema(schemas[name]),
-  annotations: { readOnlyHint: META[name].readOnly === true, destructiveHint: META[name].destructive === true, idempotentHint: META[name].idempotent === true, openWorldHint: false },
-}));
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS];
+const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
-export const EDIT_NAMES = new Set<string>(Object.keys(schemas));
-
-function ok(value: unknown): ToolResult {
-  return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value, null, 2) }] };
+function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
+  return { name, title: meta.title, description: meta.description, inputSchema: jsonSchema(schema), annotations: { readOnlyHint: meta.readOnly === true, destructiveHint: meta.destructive === true, idempotentHint: meta.idempotent === true, openWorldHint: false } };
 }
 
-interface Done {
-  result: ToolResult;
-  activity?: ActivityDraft;
-}
+export const EDIT_TOOLS: ToolDef[] = [...(Object.keys(schemas) as Name[]).map((name) => toolDef(name, schemas[name], META[name])), ...EXTRA_TOOLS.map((tool) => toolDef(tool.name, tool.schema, tool.meta))];
 
-const plain = (result: ToolResult): Done => ({ result });
+export const EDIT_NAMES = new Set<string>([...Object.keys(schemas), ...EXTRA_BY_NAME.keys()]);
 
 function parse<N extends Name>(name: N, args: Record<string, unknown>): Input<N> {
-  const result = schemas[name].safeParse(args);
-  if (!result.success) {
-    const issue = result.error.issues[0];
-    throw new EditError(issue ? `${issue.path.join('.') || 'input'}: ${issue.message}` : 'input is not valid');
-  }
-  return result.data as Input<N>;
+  return parseInput(schemas[name], args) as Input<N>;
 }
-
-const base = (project: Project, did: string) => `/api/projects/${encodeURIComponent(project.id)}/d/${encodeURIComponent(did)}`;
 
 async function packOf(deps: EditDeps, id: string): Promise<PackSummary> {
   const pack = (await studioCall<PackSummary[]>(deps, 'GET', '/api/packs')).find((item) => item.id === id);
   if (!pack) throw new EditError(`unknown design system ${id}`);
   return pack;
-}
-
-async function pageUrl(deps: EditDeps, project: Project, direction: Project['directions'][number], page: string | undefined): Promise<string> {
-  return withPagePath(await deps.preview.directionUrl(project, direction), page || undefined);
 }
 
 async function canvasContext(deps: EditDeps, input: { projectId: string; directionId?: string }): Promise<CanvasToolContext> {
@@ -252,31 +212,6 @@ async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promis
   return { result: ok({ removed, note: 'The page file stays in the project.' }), activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Removed ${name}`, frameId: removed } };
 }
 
-async function writeText(file: string, content: string): Promise<void> {
-  await mkdir(path.dirname(file), { recursive: true });
-  const temp = path.join(path.dirname(file), `.${path.basename(file)}.mcp-${randomBytes(4).toString('hex')}.tmp`);
-  await writeFile(temp, content);
-  try {
-    await rename(temp, file);
-  } catch (error) {
-    await rm(temp, { force: true });
-    throw error;
-  }
-}
-
-function checkWritePath(project: Project, workTree: string, raw: string): string {
-  if (path.isAbsolute(raw) || raw.startsWith('~') || raw.includes('\0') || raw.split(/[\\/]/).some((part) => part === '..')) throw new EditError(`Path ${raw} must be relative to the project folder, with no "..".`);
-  const result = evaluateToolUse({ workTree, mode: 'edit', allowBash: false, allowInstall: false, ...(project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}) }, 'Write', { file_path: raw });
-  if (result.behavior === 'deny') throw new EditError(result.message.replace('mcp__studio__canvas_place', 'canvas_place'));
-  const relative = path.relative(workTree, path.resolve(workTree, raw)).split(path.sep).join('/');
-  if (relative === '' || relative.startsWith('..')) throw new EditError(`Path ${raw} is not a file in the project folder.`);
-  return relative;
-}
-
-function versionActivity(project: Project, direction: Project['directions'][number], summary: string, version: Version | null | undefined): ActivityDraft {
-  return { projectId: project.id, directionId: direction.id, summary, versionId: version?.id ?? null, beforeVersionId: version?.parentId ?? null };
-}
-
 async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, client: string): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
@@ -286,16 +221,10 @@ async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, clie
   if (before === input.content) return plain(ok({ path: relative, changed: false, versionId: direction.headVersionId }));
   await writeText(file, input.content);
   const version = await deps.versions.commitFile(project, direction, relative, `Edit by ${client}`, { kind: 'manual', prompt: `Edit by ${client}: ${relative}` });
+  if (version && before !== null) deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file, relative, before, after: input.content }] });
   if (version) await publishVersion({ bus: deps.bus, projects: deps.projects, versions: deps.versions, runner: deps.runner }, project, direction, version);
   const result = ok({ path: relative, changed: true, created: before === null, versionId: version?.id ?? null, title: version?.title ?? null });
   return { result, activity: versionActivity(project, direction, `${before === null ? 'Created' : 'Wrote'} ${relative}`, version) };
-}
-
-async function sourceElement(deps: EditDeps, url: string, sel: string) {
-  const element = await describeElement(deps.preview, url, sel);
-  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
-  if (!element.source) throw new EditError(`${sel} has no source location, so it cannot be edited directly. Use write_file.`);
-  return { ...element, source: element.source };
 }
 
 const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved' } as const;
@@ -317,9 +246,9 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
-  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}) };
+  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}) };
   const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text), result.version) };
+  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
 }
 
 function frameTarget(): DesignComment['target'] {
@@ -415,8 +344,10 @@ async function exportFiles(deps: EditDeps, input: Input<'export'>, client: strin
   return { result: ok({ files: [file], versionId: version.id, bytes: output.bytes.byteLength, ...(output.note ? { note: output.note } : {}) }), activity: exported(file) };
 }
 
-async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, client: string): Promise<Done> {
-  switch (name) {
+async function run(deps: EditDeps, name: string, args: Record<string, unknown>, client: string): Promise<Done> {
+  const extra = EXTRA_BY_NAME.get(name);
+  if (extra) return extra.run(deps, args, client);
+  switch (name as Name) {
     case 'canvas_list':
       return plain(await canvasList(await canvasContext(deps, parse('canvas_list', args))));
     case 'canvas_place': {
@@ -457,7 +388,7 @@ async function run(deps: EditDeps, name: Name, args: Record<string, unknown>, cl
 export async function callEditTool(deps: EditDeps, name: string, args: Record<string, unknown>, client: string): Promise<ToolResult> {
   if (!EDIT_NAMES.has(name)) throw new EditError(`unknown tool ${name}`);
   try {
-    const done = await run(deps, name as Name, args, client);
+    const done = await run(deps, name, args, client);
     if (done.activity && !done.result.isError) await deps.activity.record(name, client, done.activity).catch((error: unknown) => console.error('[mcp] activity not saved', error));
     return done.result;
   } catch (error) {

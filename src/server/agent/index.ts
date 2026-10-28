@@ -26,7 +26,7 @@ function claudeExecutableOption(): { claudeExecutable?: string } {
 
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
-  const driver = deps.config.agentMode === 'mock' ? createMockDriver(canvas) : createSdkDriver({ preview: deps.preview, ...canvas, skillsRoot: path.join(deps.config.dataDir, 'skills-plugins'), ...claudeExecutableOption() });
+  const driver = deps.config.agentMode === 'mock' ? createMockDriver({ ...canvas, preview: deps.preview }) : createSdkDriver({ preview: deps.preview, ...canvas, skillsRoot: path.join(deps.config.dataDir, 'skills-plugins'), ...claudeExecutableOption() });
   const registry = packRegistry(undefined, { userDir: path.join(deps.config.dataDir, 'packs') });
   return createRunLifecycle({ ...deps, beforeCommit: designSystemBeforeCommit(deps.bus, registry) }, driver);
 }

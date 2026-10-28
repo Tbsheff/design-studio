@@ -62,6 +62,12 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     return c.json(history.state(project.id, directionId));
   });
 
+  app.get('/api/projects/:pid/d/:did/edit-history/list', async (c) => {
+    const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+    const limit = Math.min(50, Math.max(1, Number.parseInt(c.req.query('limit') ?? '20', 10) || 20));
+    return c.json({ ...history.state(project.id, direction.id), ...(history.list?.(project.id, direction.id, limit) ?? { undo: [], redo: [] }) });
+  });
+
   const stepRoute = (kind: HistoryStep) => async (c: Context) => {
     try {
       const result = await withDirection(c.req.param('pid') ?? '', c.req.param('did') ?? '', (project, direction) => history.step(kind, editDeps, project, direction));

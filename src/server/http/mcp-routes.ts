@@ -2,6 +2,7 @@ import type { Context, Hono } from 'hono';
 import { STUDIO_TOKEN_HEADER } from '../../shared/contracts.js';
 import type { McpActivityList, McpApprovalPoll } from '../../shared/export.js';
 import type { CanvasService } from '../canvas/service.js';
+import type { EditRecorder } from '../direct-edit/index.js';
 import type { ExportDeps } from '../export/source.js';
 import { createActivityLog } from '../mcp/activity.js';
 import { createApprovalQueue } from '../mcp/approvals.js';
@@ -17,6 +18,7 @@ interface McpRouteDeps extends ExportDeps {
   bus: EventBus;
   projectsFolder: () => Promise<string>;
   appOpen: () => boolean;
+  history?: EditRecorder;
 }
 
 const MAX_WAIT_S = 25;

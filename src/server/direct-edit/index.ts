@@ -100,7 +100,7 @@ export async function resolveSource(workTree: string, file: string): Promise<Res
 
 export function patchSource(relative: string, source: string, request: DirectEditRequest): PatchResult {
   const extension = path.extname(relative).toLowerCase();
-  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert };
+  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes };
   const position = { line: request.source.line, col: request.source.col };
   if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit);
   return patchJsx(source, position, edit, { typescript: extension === '.tsx' });
@@ -131,11 +131,11 @@ function editTitle(tag: string, applied: PatchResult['applied'], request: Direct
   if (request.insert !== undefined) return `Add ${INSERT_LABEL[request.insert].toLowerCase()} to ${tag}`;
   const visibility = visibilityTitle(tag, request.style);
   if (visibility && request.text === undefined && request.name === undefined) return visibility;
-  if (request.name !== undefined && applied.style.length === 0 && !applied.text) {
+  if (request.name !== undefined && applied.style.length === 0 && !applied.text && !applied.classes) {
     return request.name === null ? `Remove name of ${tag}` : `Rename ${tag} to ${request.name}`;
   }
-  if (applied.style.length === 0) return `Edit text of ${tag}`;
-  const parts = applied.text ? [...applied.style, 'text'] : applied.style;
+  if (applied.style.length === 0 && !applied.classes) return `Edit text of ${tag}`;
+  const parts = [...applied.style, ...(applied.classes ? ['classes'] : []), ...(applied.text ? ['text'] : [])];
   return `Edit ${tag}: ${parts.join(', ')}`;
 }
 
@@ -145,6 +145,8 @@ export function editSummary(request: DirectEditRequest): string {
     const text = request.text.length > MAX_SUMMARY_TEXT ? `${request.text.slice(0, MAX_SUMMARY_TEXT - 1)}…` : request.text;
     parts.push(`text: "${text}"`);
   }
+  if (request.classes?.add?.length) parts.push(`add class ${request.classes.add.join(' ')}`);
+  if (request.classes?.remove?.length) parts.push(`remove class ${request.classes.remove.join(' ')}`);
   if (request.name !== undefined) parts.push(request.name === null ? 'remove name' : `name: "${request.name}"`);
   if (request.move !== undefined) parts.push(`move ${request.move}`);
   if (request.insert !== undefined) parts.push(`insert ${request.insert}`);

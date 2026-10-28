@@ -11,7 +11,10 @@ export const DESIGN_SYSTEM_CHECK_TOOL = 'mcp__studio__design_system_check';
 export const CANVAS_LIST_TOOL = 'mcp__studio__canvas_list';
 export const CANVAS_PLACE_TOOL = 'mcp__studio__canvas_place';
 export const CANVAS_POINT_TOOL = 'mcp__studio__canvas_point';
-const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL] as const;
+export const EDIT_ELEMENT_TOOL = 'mcp__studio__edit_element';
+export const SET_TOKEN_TOOL = 'mcp__studio__set_token';
+const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL]);
+const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
@@ -287,9 +290,12 @@ function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string |
   return null;
 }
 
+const PLAN_BLOCKED = new Set<string>([...WRITE_PATH_TOOLS, 'Bash', TWEAKS_TOOL, CANVAS_PLACE_TOOL, ...DIRECT_EDIT_TOOLS]);
+const CRITIQUE_BLOCKED = new Set<string>([TWEAKS_TOOL, CANVAS_PLACE_TOOL, ...DIRECT_EDIT_TOOLS]);
+
 function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<string, unknown>): string | null {
   if (!permittedToolNames(policy).includes(toolName)) return `Tool ${toolName} is not available in Design Studio.`;
-  if (policy.plan && (WRITE_PATH_TOOLS.has(toolName) || toolName === 'Bash' || toolName === TWEAKS_TOOL || toolName === CANVAS_PLACE_TOOL)) return PLAN_MODE_DENY;
+  if (policy.plan && PLAN_BLOCKED.has(toolName)) return PLAN_MODE_DENY;
   if (PATH_TOOLS.has(toolName)) {
     const problem = checkPathTool(policy, toolName, input);
     if (problem) return problem;
@@ -298,8 +304,7 @@ function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<str
     const problem = checkExecutedConfig(policy.workTree, input) ?? checkGeneratedFile(policy.workTree, input) ?? checkReadOnlyDirs(policy, input);
     if (problem) return problem;
   }
-  if (toolName === TWEAKS_TOOL && policy.mode === 'critique') return 'define_tweaks is not available in critique runs.';
-  if (toolName === CANVAS_PLACE_TOOL && policy.mode === 'critique') return 'canvas_place is not available in critique runs.';
+  if (policy.mode === 'critique' && CRITIQUE_BLOCKED.has(toolName)) return `${toolName.replace('mcp__studio__', '')} is not available in critique runs.`;
   if (toolName === 'Bash') return checkBash(policy, input);
   if (toolName === SKILL_TOOL) return checkSkill(policy, input);
   return null;

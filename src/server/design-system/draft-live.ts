@@ -45,7 +45,10 @@ export interface LiveDraftStart {
   request: DraftRequest;
   base: LoadedPack;
   imageCount: number;
+  autoImprove?: boolean;
 }
+
+export const IMPROVE_IN_APP = 'Started from an outside agent, so the AI step did not start. Use Improve with AI in Design Studio.';
 
 export interface LiveDrafts {
   plan(request: DraftRequest, imageCount: number): DraftSourcesState;
@@ -364,7 +367,8 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     },
     start(input) {
       const projectId = input.project.id;
-      const state = this.plan(input.request, input.imageCount);
+      const fresh = this.plan(input.request, input.imageCount);
+      const state: DraftSourcesState = input.autoImprove === false ? { ...fresh, improve: { state: 'skipped', reason: IMPROVE_IN_APP } } : fresh;
       const planned = state.sources.map((source, order) => ({ ...source, order })).filter((source) => source.kind !== 'images');
       const job: Job = { state, planned, results: new Map(), chain: Promise.resolve(), shots: [], logo: null };
       jobs.set(projectId, job);

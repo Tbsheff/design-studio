@@ -774,13 +774,24 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 | `restore_version {projectId, directionId?, versionId}` | `POST /d/:did/restore` (also restores `.studio/canvas.json`) | yes |
 | `apply_design_system {projectId, directionId?, packId}` | `POST /d/:did/design-system/apply` | yes |
 | `export {projectId, directionId?, versionId?, format png/html/pdf/handoff/zip, scale, frames, folder?}` | `POST /export`, or `POST /handoff` then `GET /handoff/:folder/zip`; files written with `wx` and a `-2`, `-3` suffix | no |
+| `batch_edit {projectId, directionId?, edits[1–50] \| files[1–20]}` | edits: one headless render per page finds every selector, then one `DirectEditBatch` on `POST /d/:did/direct-edit` (one version, one history record); files: write_file rules, one `commitFile` for all paths. Edits and files in one call are refused | yes |
+| `undo`, `redo {projectId, directionId?}` | `POST /d/:did/edit-history/undo\|redo` (the UI ⌘Z stack); the result names the label it stepped | yes |
+| `edit_history {projectId, directionId?}` | `GET /d/:did/edit-history/list` → state plus `undo[]` and `redo[]` (label, versionId, files), newest first | no |
+| `open_folder {path}` | `safeFolder`, then an approval when the folder is outside the projects folder, then `POST /api/projects/import`; a folder that is already a project returns it (`alreadyOpen`) | n/a |
+| `create_design_system {name?, mode, basePackId?, urls?, brief?, designMd?, folderPath?}` | `POST /api/design-systems/draft?improve=off`; `folderPath` has the open_folder folder rule | n/a |
+| `design_system_status {projectId}` | `GET /api/projects/:pid/design-system-draft` (sources, coverage, check) | no |
+| `save_design_system {projectId, name?, force, reason?}` | refuses while sources are read or the check fails; `force` needs `reason` (shown in the feed row); then `POST /d/main/design-system/save` | yes |
+| `list_design_systems {drafts}` | `GET /api/packs` plus the backing project id of each draft | no |
 
+- Edit history: `edit_element`, `batch_edit` edits, `set_token` and `write_file` of an existing file record into the same `direct-edit/history.ts` stack as the UI, so `undo` from MCP and ⌘Z in the studio step the same entries. New files and `batch_edit` files with a new file are not recorded; use `restore_version`.
+- Improve with AI is a studio run, so `create_design_system` passes `improve=off`: `LiveDraftStart.autoImprove: false` starts the draft with `improve: skipped` and the reason "Started from an outside agent…". The Improve button in the app still works.
+- `edit_element` and `batch_edit` take `classes {add?, remove?}` (`direct-edit/classes.ts`): HTML `class`, JSX `className` or `class` as a plain string only (also `{"..."}`); a template, `cn()` or a variable answers `attribute_not_literal`. An empty list removes the attribute.
 - Run rule: the tools marked "yes" answer "A studio run is editing this design. Try again when it finishes." while a studio run is going in that direction. The routes check again under the direction lock.
 - write_file paths: relative, no `..`, then the studio agent's Write policy: inside the work tree after realpath (symlinks out are refused), not `.git` or `node_modules`, not `.studio/`, not `design-system/tokens.css`, not the tweaks file, not build config files run as code, and not `source/` in design-system draft projects.
 - Approvals (`mcp/approvals.ts`): a pending record `{id, tool, action, title, detail, projectId, client, createdAt, expiresAt}`. The tool call waits up to 120 s, then refuses. Title and detail are one line with control characters removed (200 and 600 characters). At most 10 open. The app counts as open while a project event stream or an approvals long poll is open (6 s grace). With no app open the tool is refused at once. Only the studio token can answer.
 - Folders (`mcp/folders.ts`): absolute (or `~/`), realpath, an existing folder, not inside the data dir, not `/`, `/Users`, `/Volumes`, `/private` or the home folder itself, and not inside `/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/etc`, `/var`, `/private/etc`, `/private/var`, `/dev`, `/opt`, `/Applications`, `/Network` or `~/Library`.
 - Input rules: zod schemas (`z.toJSONSchema` for `inputSchema`), ids `^[A-Za-z0-9_-]{1,64}$`, comment 2,000 characters, selector 2,000, name 120, style keys from `DIRECT_STYLE_PROPERTIES`.
-- Annotations: `readOnlyHint: true` on the read tools, `canvas_list` and `canvas_point`. `destructiveHint: true` only on `restore_version`, `remove_frame` and `apply_design_system`. `idempotentHint: true` on `canvas_list`, `canvas_point`, `remove_frame` and `resolve_comment`. `openWorldHint: false` on all.
+- Annotations: `readOnlyHint: true` on the read tools, `canvas_list`, `canvas_point`, `edit_history`, `design_system_status` and `list_design_systems`. `destructiveHint: true` only on `restore_version`, `remove_frame` and `apply_design_system`. `idempotentHint: true` on `canvas_list`, `canvas_point`, `remove_frame` and `resolve_comment`. `openWorldHint: false` on all.
 
 ### MCP in the app
 
@@ -801,6 +812,10 @@ UI: useMcpFeed (GET /api/projects/:pid/mcp/activity + events, dedupe by id) ─�
 - Desktop: the server sends `{kind: 'mcp-approval', projectId, approvalId, title}` over the desktop link; `native.mcpApproval` shows a Notification "Approval needed" only when no studio window is focused (and not with `STUDIO_DESKTOP_NOTIFY=off`); a click opens the project.
 - Pointing badge: `mcp.point` events younger than 20 s show a floating card at the top of the canvas: "<client> is pointing at <frame label>", Show and a close button. It hides after 20 s, on Show or on close. Only Show moves the view: unhide the frame, make it live, zoom to it, then `select-selector` if the call sent a selector. The studio agent's `canvas.point` keeps its old behavior.
 - Comments: a comment or reply with `author` shows the author's initial on the pin in `--agent-bg` / `--agent-fg` (a fixed stone color, no dark value, like the pin tokens), the name in the thread card head, on replies and in the pin tip. The Comments pane lists draft comments that have an author under "From outside agents" with Resolve; the author also shows on queued, sent and resolved rows.
+
+### Studio agent direct tools
+
+`mcp__studio__edit_element` and `mcp__studio__set_token` (`agent/direct-tools.ts`) give the in-app agent the inspector and Tokens panel paths. The agent is the run, so they reuse only the plan layer and write the file without a version: `planDirectEdit` / `planStructureEdit` / `plannedTokensText` + `writeTokensText` / `plannedCssText` + atomic write. The run's end commit takes the change with the rest of the run. Each target path goes through `evaluateToolUse('Write')` with the run's mode and read-only dirs. Both tools are refused in plan mode and critique runs, are not in `NO_CHANGE_TOOLS` (the baseline gate runs first), and have no per-tool diff row (that row reads `file_path`). The prompt section "Direct edits" says when to use them over Edit and Write. Mock: `[direct]` sets the h1 color and `--primary`.
 
 ## End-to-end tests
 

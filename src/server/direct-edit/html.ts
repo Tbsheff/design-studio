@@ -3,6 +3,7 @@ import type { DefaultTreeAdapterMap } from 'parse5';
 import { applyDeclarationChanges, parseDeclarations, serializeDeclarations } from './css.js';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
+import { hasClassChange, nextClassList } from './classes.js';
 import { applySplices, leadingWhitespaceStart, type Splice } from './splice.js';
 import { htmlNameSplice, htmlPositionAt, planHtmlMove } from './structure.js';
 
@@ -106,6 +107,19 @@ function styleSplice(source: string, element: Element, style: Record<string, str
   return { start: insertAt, end: insertAt, text: ` style="${escapeAttr(serialized)}"` };
 }
 
+function classSplice(source: string, element: Element, change: NonNullable<SourceEdit['classes']>): Splice | null {
+  const attr = element.attrs.find((entry) => entry.name === 'class');
+  const location = element.sourceCodeLocation?.attrs?.class;
+  const next = nextClassList(attr?.value ?? '', change);
+  if (attr && location) {
+    if (next === '') return { start: leadingWhitespaceStart(source, location.startOffset), end: location.endOffset, text: '' };
+    return { start: location.startOffset, end: location.endOffset, text: `class="${escapeAttr(next)}"` };
+  }
+  if (next === '') return null;
+  const insertAt = startTagOf(element).startOffset + 1 + element.tagName.length;
+  return { start: insertAt, end: insertAt, text: ` class="${escapeAttr(next)}"` };
+}
+
 function assertTextTarget(element: Element): ChildNode[] {
   if (VOID_ELEMENTS.has(element.tagName) || NON_TEXT_ELEMENTS.has(element.tagName)) {
     throw new DirectEditError('text_not_editable', `The text of <${element.tagName}> cannot be edited directly`);
@@ -187,7 +201,12 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit)
     const splice = styleSplice(source, element, style);
     if (splice) splices.push(splice);
   }
+  const classes = hasClassChange(edit.classes);
+  if (hasClassChange(edit.classes)) {
+    const splice = classSplice(source, element, edit.classes);
+    if (splice) splices.push(splice);
+  }
   const hasText = edit.text !== undefined;
   if (edit.text !== undefined) splices.push(textSplice(source, element, edit.text));
-  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText } };
+  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText, ...(classes ? { classes } : {}) } };
 }

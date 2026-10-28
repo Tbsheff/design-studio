@@ -38,6 +38,7 @@ export function timelineOf(runs: readonly RunView[], feed: McpFeedState | null):
 const TOOL_ICONS: Record<string, IconName> = {
   write_file: 'file',
   edit_element: 'pencil',
+  set_props: 'component',
   canvas_place: 'frame',
   add_frame: 'frame',
   add_route_frame: 'frame',

@@ -56,13 +56,13 @@ function failure(message: string): ToolText {
   return { content: [{ type: 'text', text: message }], isError: true };
 }
 
-function refusal(ctx: AgentRunContext, tool: string): string | null {
+export function refusal(ctx: AgentRunContext, tool: string): string | null {
   if (ctx.request.plan) return 'Plan mode is on, so files stay as they are. Reply with the plan; the user approves it before the build.';
   if (ctx.request.mode === 'critique') return `${tool} is not available in critique runs.`;
   return null;
 }
 
-function writeProblem(ctx: AgentRunContext, relative: string): string | null {
+export function writeProblem(ctx: AgentRunContext, relative: string): string | null {
   const policy = { workTree: ctx.direction.workTree, mode: ctx.request.mode, allowBash: false, allowInstall: false, ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}) };
   const result = evaluateToolUse(policy, 'Write', { file_path: relative });
   return result.behavior === 'deny' ? result.message : null;

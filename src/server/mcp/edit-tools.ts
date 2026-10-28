@@ -14,6 +14,7 @@ import { describeElement } from './element.js';
 import { FolderError, safeFolder } from './folders.js';
 import { HISTORY_TOOLS } from './history-tools.js';
 import { LIBRARY_TOOLS } from './library-tools.js';
+import { PROPS_TOOLS } from './props-tools.js';
 import { cleanRoute, routeLabel } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
@@ -154,7 +155,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...PROPS_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {

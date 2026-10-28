@@ -51,6 +51,11 @@ export function repeatedRows(card: LayoutCard, baseline: LayoutRegion, now: Layo
 
 const fmt = (value: number) => value.toLocaleString('en-US');
 
+function cardLabel(card: LayoutCard): string {
+  const first = card.rows[0];
+  return `${first ? `"${first}" ` : ''}(${card.name}, ${fmt(card.box.width)}x${fmt(card.box.height)} at ${card.box.x},${card.box.y})`;
+}
+
 function sizeFinding(card: LayoutCard, now: LayoutRegion, word: string): QualityFinding | null {
   const content = now.contentWidth ?? now.columnBox?.width ?? now.mainBox.width;
   if (content <= 0) return null;
@@ -64,7 +69,7 @@ function sizeFinding(card: LayoutCard, now: LayoutRegion, word: string): Quality
     viewport: 'desktop',
     selector: card.name,
     source: null,
-    message: `The request asks for a ${word}, but the new element ${card.name} is ${fmt(card.box.width)} px wide = ${Math.round(share * 100)}% of the ${fmt(content)} px page content width at 1440 px${tall}. A ${word} must take at most about ${fmt(limit)} px (half the content width).`,
+    message: `The request asks for a ${word}, but the new element ${cardLabel(card)} is ${fmt(card.box.width)} px wide = ${Math.round(share * 100)}% of the ${fmt(content)} px page content width at 1440 px${tall}. A ${word} must take at most about ${fmt(limit)} px (half the content width).`,
     fix: `Make it at most about ${fmt(limit)} px wide: put it in one grid column beside an existing card (for example a md:grid-cols-2 row) or give it a max width such as max-w-md. Keep its content short.`,
   };
 }
@@ -80,7 +85,7 @@ function duplicateFinding(card: LayoutCard, repeated: string[]): QualityFinding 
     viewport: 'desktop',
     selector: card.name,
     source: null,
-    message: `The new element ${card.name} repeats ${repeated.length} item(s) the page already shows elsewhere: ${listed}${more}. The same data shows twice on one screen.`,
+    message: `The new element ${cardLabel(card)} repeats ${repeated.length} item(s) the page already shows elsewhere: ${listed}${more}. The same data shows twice on one screen.`,
     fix: 'Do not list the same items again. Show facts the page does not show yet (for example a count, the latest date, a status summary) or link to the existing list. Keep the new element.',
   };
 }

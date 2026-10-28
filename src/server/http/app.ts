@@ -43,6 +43,7 @@ import { commitTweaks } from '../tweaks/commit.js';
 import { readTweaksState } from '../tweaks/store.js';
 import { applyDirectEditBatch } from '../direct-edit/batch.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
+import { onPlannedEdit } from '../direct-edit/planned-feed.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { previewOrigin, warmPropsTypes } from '../components/props-service.js';
@@ -348,6 +349,9 @@ export function createApp(deps: AppDeps): Hono {
   const directionLock = createKeyedMutex();
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
   const editDeps = { bus, projects, versions, runner, history: editHistory, previewOrigin: (project: Project, direction: Direction) => previewOrigin(preview, project, direction) };
+  onPlannedEdit((edit) =>
+    bus.emit(edit.kind === 'planned' ? { type: 'edit.planned', projectId: edit.projectId, directionId: edit.directionId, id: edit.id, patches: edit.patches } : { type: 'edit.unplanned', projectId: edit.projectId, directionId: edit.directionId, id: edit.id }),
+  );
   const canvas = deps.canvas ?? createCanvasService(bus, (projectId) => projects.projectDir(projectId));
   const announceCanvas = (project: Project): void => {
     void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));

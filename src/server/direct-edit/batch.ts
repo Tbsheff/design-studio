@@ -2,11 +2,12 @@ import { readFile, realpath } from 'node:fs/promises';
 import type { Direction, DirectEditBatchResult, DirectEditRequest, Project, TextSourceInfo, Version, VersionMeta } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
 import { savesSettled } from './save-queue.js';
-import { assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic } from './index.js';
+import { announceWhile, assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic } from './index.js';
 import type { DirectEditDeps, EditScope, PlannedEdit, ResolvedSource } from './index.js';
 import type { TailwindTheme } from './tailwind/theme.js';
 import { knownTokenVars } from './tokens.js';
 import { parseDirectEditBatch } from './validate.js';
+import { domPatchOf } from './planned-feed.js';
 
 interface TextSplice {
   index: number;
@@ -194,7 +195,7 @@ export async function applyDirectEditBatch(deps: DirectEditDeps, project: Projec
   const changed = groups.filter((group) => group.code !== group.original);
   if (changed.length === 0) return { files: [], version: await deps.versions.get(project, headVersionId), applied };
   const meta: VersionMeta = { kind: 'manual', prompt: batchPrompt(edits) };
-  const version = await writeAndCommitAll(deps, project, direction, changed, batchTitle(applied, tags), meta);
+  const version = await announceWhile(project, direction, () => edits.map((request, index) => (applied[index] ? domPatchOf(request, { applied: applied[index], ...(applied[index].tailwind ? { tailwind: applied[index].tailwind } : {}) }) : null)), () => writeAndCommitAll(deps, project, direction, changed, batchTitle(applied, tags), meta));
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,

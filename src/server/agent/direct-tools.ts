@@ -8,7 +8,8 @@ import { writeFileAtomic } from '../design-system/packs.js';
 import { readDesignSystemState } from '../design-system/state.js';
 import { invalidateTokenSource } from '../design-system/token-preview.js';
 import { plannedTokensText, writeTokensText } from '../design-system/update-tokens.js';
-import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic } from '../direct-edit/index.js';
+import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic, type PlannedEdit } from '../direct-edit/index.js';
+import { announcePlanned, domPatchOf, withdrawPlanned } from '../direct-edit/planned-feed.js';
 import { chooseEditSite, EDIT_TARGETS, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import { planStructureEdit } from '../direct-edit/structure-apply.js';
 import { knownTokenVars } from '../direct-edit/tokens.js';
@@ -145,6 +146,17 @@ function siteText(site: EditSite): string {
   return note ? ` ${note}` : '';
 }
 
+async function writeAnnounced(deps: DirectToolDeps, plan: PlannedEdit): Promise<void> {
+  const { project, direction } = deps.ctx;
+  const id = announcePlanned(project.id, direction.id, [domPatchOf(plan.request, plan.patch)]);
+  try {
+    await writeAtomic(plan.target.file, plan.patch.code);
+  } catch (error) {
+    withdrawPlanned(project.id, direction.id, id);
+    throw error;
+  }
+}
+
 async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolText> {
   const [element] = await findElements(deps, input.path, [input.selector]);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
@@ -155,7 +167,7 @@ async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolTe
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
   if (plan.patch.code === plan.original) return text(`${plan.target.relative}: the values were already set.`);
-  await writeAtomic(plan.target.file, plan.patch.code);
+  await writeAnnounced(deps, plan);
   const parts = [...plan.patch.applied.style, ...(plan.patch.applied.classes ? ['classes'] : []), ...(plan.patch.applied.text ? ['text'] : [])];
   const tailwind = plan.patch.tailwind;
   const classNote = tailwind && tailwind.mode !== 'none' ? ` Classes now: ${tailwind.classes.join(' ') || '(none)'}.${tailwind.note ? ` ${tailwind.note}` : ''}` : '';

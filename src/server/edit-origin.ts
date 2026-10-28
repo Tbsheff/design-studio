@@ -11,6 +11,10 @@ export function withMcpOrigin<T>(client: string, task: () => Promise<T>): Promis
   return store.run({ client }, task);
 }
 
+export function isOutsideRequest(): boolean {
+  return store.getStore() !== undefined;
+}
+
 export function stampOrigin<T extends VersionMeta>(meta: T): T {
   const origin = store.getStore();
   if (!origin || meta.origin) return meta;

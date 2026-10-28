@@ -19,6 +19,10 @@ function loc(source: { file: string; line: number }): string {
   return `${source.file}:${source.line}`;
 }
 
+function shortLoc(source: { file: string; line: number }): string {
+  return `${source.file.split('/').pop() ?? source.file}:${source.line}`;
+}
+
 export function dataTextPrompt(text: string, data: TextFromData): string {
   const shown = text.length > 80 ? `${text.slice(0, 79)}…` : text;
   return `The text "${shown}" comes from data: ${data.expression} in ${loc(data)}. Change it to: `;
@@ -29,7 +33,7 @@ export function DataTextNote({ data, text }: { data: TextFromData; text: string 
   return (
     <div className="ins-data-text wide" role="note">
       <span>
-        This text comes from data: <code>{data.expression}</code> in <code title={loc(data)}>{loc(data)}</code>
+        This text comes from data: <code>{data.expression}</code> in <code title={loc(data)}>{shortLoc(data)}</code>
       </span>
       {ask && (
         <button type="button" className="btn small ghost" onClick={() => ask(dataTextPrompt(text, data))}>
@@ -47,7 +51,7 @@ export function SharedSourceNote({ shared, editingUse, canUse, onToggle }: { sha
     return (
       <div className="ins-shared" role="note">
         <span>
-          Edits go to this use of {what} in <code title={loc(shared.use)}>{loc(shared.use)}</code>
+          Edits go to this use of {what} in <code title={loc(shared.use)}>{shortLoc(shared.use)}</code>
         </span>
         <button type="button" className="btn small ghost" onClick={onToggle}>
           Edit every {what}

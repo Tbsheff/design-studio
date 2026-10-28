@@ -8,6 +8,7 @@ import { DESIGN_SYSTEM_DIR, PACK_FILE, TOKENS_CSS_FILE, TOKENS_FILE } from '../.
 import type { CompiledTokenEntry, PackManifest, PackProblem, PackSource, PackSummary, Project, TokenFile } from '../../shared/contracts.js';
 import { compileTokens, parseTokenFile, resolveEntryValue } from './compile.js';
 import { composeDesignMd as composeWithNotes } from './design-md.js';
+import { extractRulesBlock, upsertRulesBlock } from '../design-rules/markdown.js';
 import { resourcePath } from '../resources.js';
 
 const PACKS_DIR = resourcePath('packs', path.join(path.dirname(fileURLToPath(import.meta.url)), 'packs'));
@@ -322,12 +323,18 @@ export function wiresReact(project: Project): boolean {
 
 export const WIRED_FILES = [REACT_ENTRY_FILE, 'index.html'];
 
+async function keepRules(file: string, next: string): Promise<string> {
+  const current = await readText(file);
+  const rules = current === null ? null : extractRulesBlock(current);
+  return rules === null || extractRulesBlock(next) !== null ? next : upsertRulesBlock(next, rules);
+}
+
 export async function applyPack(project: Project, workTree: string, pack: LoadedPack, options: ApplyPackOptions = {}): Promise<string[]> {
   await mkdir(path.join(workTree, DESIGN_SYSTEM_DIR), { recursive: true });
   await writeFileAtomic(path.join(workTree, TOKENS_FILE), pack.tokensText.endsWith('\n') ? pack.tokensText : `${pack.tokensText}\n`);
   await writeFileAtomic(path.join(workTree, PACK_FILE), `${JSON.stringify(pack.manifest, null, 2)}\n`);
   await writeFileAtomic(path.join(workTree, TOKENS_CSS_FILE), pack.css);
-  await writeFileAtomic(path.join(workTree, DESIGN_MD_FILE), composeDesignMd(pack, options.userDesignMd));
+  await writeFileAtomic(path.join(workTree, DESIGN_MD_FILE), await keepRules(path.join(workTree, DESIGN_MD_FILE), composeDesignMd(pack, options.userDesignMd)));
   const written = [TOKENS_FILE, PACK_FILE, TOKENS_CSS_FILE, DESIGN_MD_FILE];
   if (wiresReact(project)) written.push(...(await wireReact(workTree, pack.manifest)));
   return written;

@@ -1,3 +1,4 @@
+import type { DesignRule } from '../shared/design-rules.js';
 import type { InspectResult, RenderCheckOptions, TileRequest, TileResult } from './preview/browser.js';
 import type { RunTarget } from './agent/run-target.js';
 import type { RenderPage } from './preview/render-backend.js';
@@ -109,6 +110,7 @@ export interface AgentRunContext {
   attachments: Attachment[];
   designMd: string | null;
   designSystem?: DesignSystemPromptContext | null;
+  designRules?: DesignRule[];
   previewUrl: string | null;
   mentionFiles?: MentionFile[];
   target?: RunTarget | null;

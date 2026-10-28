@@ -1,3 +1,4 @@
+import type { DesignRule } from '../../shared/design-rules.js';
 import type { Project, RunMode } from '../../shared/contracts.js';
 import { tokenTable } from '../design-system/design-md.js';
 import type { DesignSystemPromptContext } from '../design-system/state.js';
@@ -222,12 +223,18 @@ export function buildTasteBlock(rules: TasteRule[], mode: RunMode): string {
   return `${head}\n\n<taste>\n${lines.join('\n')}\n</taste>`;
 }
 
+export function buildDesignRulesBlock(rules: DesignRule[], mode: RunMode): string {
+  const duty = mode === 'critique' ? '- In a critique, name each place the design breaks one of these rules.' : '- Follow every rule in each change, also when DESIGN.md prose, the taste block or a skill says otherwise. When the request conflicts with a rule, follow the rule and say so in one line of your reply. Do not change the rules block in DESIGN.md: only the user changes these rules.';
+  return `## Design rules (hard rules)\nThe user locked these rules for this project. Review checks the ones it can test on the page (classes, raw colors, fonts, component use) and lists each break.\n${duty}\n\n<design_rules>\n${rules.map((rule) => `- ${rule.text}`).join('\n')}\n</design_rules>`;
+}
+
 export function buildSystemPrompt(
   project: Project,
   mode: RunMode,
   designSystem: DesignSystemPromptContext | null = null,
   skillCount = 0,
   tasteRules: TasteRule[] = [],
+  designRules: DesignRule[] = [],
 ): string {
   const kindRules = buildAppRules(project, project.directions[0]?.workTree ?? '.') ?? (project.kind === 'html' ? HTML_RULES : REACT_RULES);
   const shellAllowed = true;
@@ -242,6 +249,7 @@ export function buildSystemPrompt(
   if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));
+  if (designRules.length > 0) sections.push(buildDesignRulesBlock(designRules, mode));
   const draft = buildDesignSystemDraftBlock(project);
   if (draft) sections.push(draft);
   return sections.join('\n\n');

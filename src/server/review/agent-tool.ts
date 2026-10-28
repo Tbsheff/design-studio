@@ -62,8 +62,8 @@ export async function runReviewFrameTool(deps: ReviewToolDeps, args: z.input<typ
     const target = contextTarget(deps.ctx, parsed.data);
     const frame = await reviewFrameOf(deps, parsed.data, target);
     const state = target && (frame.id === undefined || frame.id === target.id) ? target.state : DEFAULT_FRAME_STATE;
-    const review = await runReview(deps.preview, { project, direction, frame, baseUrl: withFrameStateHost(previewUrl, state) });
-    const findings = review.findings.map((f) => ({ kind: f.kind, severity: f.severity, element: f.element, selector: f.selector, source: f.source, message: f.message, ...(f.copies ? { copies: f.copies } : {}), directFix: f.fix ? { label: f.fix.label, style: f.fix.edit.style } : null }));
+    const review = await runReview(deps.preview, { project, direction, frame, baseUrl: withFrameStateHost(previewUrl, state), rules: deps.ctx.designRules ?? [] });
+    const findings = review.findings.map((f) => ({ kind: f.kind, severity: f.severity, element: f.element, selector: f.selector, source: f.source, message: f.message, ...(f.copies ? { copies: f.copies } : {}), ...(f.rule ? { rule: f.rule.text } : {}), directFix: f.fix ? { label: f.fix.label, style: f.fix.edit.style } : null }));
     const text = JSON.stringify({ frame: review.frame, counts: review.counts, findings, notes: [...review.notes, 'Fix findings with edit_element (directFix.style is the exact style) or with Edit for the ones that need judgment.'] }, null, 2);
     return { content: [{ type: 'text', text }] };
   } catch (error) {

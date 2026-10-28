@@ -67,6 +67,7 @@ import { registerPackRoutes } from './packs-routes.js';
 import { registerComponentRoutes } from './components-routes.js';
 import { registerPropsRoutes } from './props-routes.js';
 import { registerReviewRoutes } from './review-routes.js';
+import { registerRulesRoutes, rulesLoader } from './rules-routes.js';
 import { registerInsertRoutes } from './insert-routes.js';
 import { createComponentService } from '../components/thumbs.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -434,8 +435,12 @@ export function createApp(deps: AppDeps): Hono {
       console.error('[http] canvas context failed', error);
       return null;
     });
+    const designRules = await rulesFor(project, direction).catch((error: unknown) => {
+      console.error('[http] design rules load failed', error);
+      return [];
+    });
     await markLofi(project, direction, request);
-    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, previewUrl, mentionFiles, target });
+    const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, designRules, previewUrl, mentionFiles, target });
     runProjectIndex.set(handle.runId, project.id);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
@@ -1066,7 +1071,15 @@ export function createApp(deps: AppDeps): Hono {
     loadDirection,
   });
   registerPropsRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
-  registerReviewRoutes(app, { editDeps, preview, canvas, readBody, loadDirection, withDirection });
+  const rulesFor = rulesLoader(projects.projectDir);
+  registerReviewRoutes(app, { editDeps, preview, canvas, readBody, loadDirection, withDirection, rulesFor });
+  const commitDesignMd = async (project: Project, direction: Direction) => {
+    const version = await versions.commitFile(project, direction, 'DESIGN.md', 'Update design rules', { kind: 'manual' });
+    if (version) await recordVersion(project, direction, version);
+    await emitStatus(project, direction);
+    return version;
+  };
+  registerRulesRoutes(app, { preview, canvas, readBody, loadDirection, withDirection, projectDir: projects.projectDir, commitDesignMd });
   registerInsertRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
 
   const library = createPackLibrary(packs);

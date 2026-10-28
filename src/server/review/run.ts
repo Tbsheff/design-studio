@@ -13,6 +13,8 @@ import { axeDrafts, axeSelector, layoutDrafts, REVIEW_AXE_RULES, tapDrafts, toke
 import { verifyFixes } from './fixes.js';
 import { markShared, pageOwnDir } from './shared-files.js';
 import { reviewProbeExpression, type ProbeResult } from './probe.js';
+import type { DesignRule } from '../../shared/design-rules.js';
+import { applyTokenRules, probeRules, ruleDrafts } from '../design-rules/check.js';
 
 const LAYOUT_CAP = 12;
 const TOKEN_CAP = 60;
@@ -63,7 +65,7 @@ function askText(draft: Draft, frame: ReviewFrame): string {
 }
 
 function toFinding(draft: Draft, frame: ReviewFrame): ReviewFinding {
-  return { id: findingId(draft), kind: draft.kind, severity: draft.severity, selector: draft.selector, source: draft.source, element: draft.element, message: draft.message, fix: draft.fix, ask: askText(draft, frame), ...(draft.shared ? { shared: draft.shared } : {}) };
+  return { id: findingId(draft), kind: draft.kind, severity: draft.severity, selector: draft.selector, source: draft.source, element: draft.element, message: draft.message, fix: draft.fix, ask: askText(draft, frame), ...(draft.shared ? { shared: draft.shared } : {}), ...(draft.rule ? { rule: draft.rule } : {}) };
 }
 
 function ordered(findings: ReviewFinding[]): ReviewFinding[] {
@@ -132,6 +134,7 @@ export interface ReviewTarget {
   direction: Direction;
   frame: ReviewFrame;
   baseUrl?: string;
+  rules?: DesignRule[];
 }
 
 export async function runReview(preview: PreviewService, target: ReviewTarget): Promise<ReviewResult> {
@@ -141,7 +144,10 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   const entries = (await readDesignSystemState(project, direction)).entries;
   const { facts, all } = await preview.withPage(url, { width: frame.width, height: frame.height }, async (page) => {
     const read = await readPage(page, Boolean(project.app), frame.selector);
-    const found = [...axeDrafts(read.violations, read.probe.elements, entries), ...tapDrafts(read.probe.taps, entries), ...tokenDrafts(read.probe.tokens, read.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(read.layout)];
+    const rules = target.rules ?? [];
+    const ruleHits = await probeRules(page, rules, Boolean(project.app));
+    const base = [...axeDrafts(read.violations, read.probe.elements, entries), ...tapDrafts(read.probe.taps, entries), ...tokenDrafts(read.probe.tokens, read.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(read.layout)];
+    const found = [...applyTokenRules(rules, base), ...ruleDrafts(rules, ruleHits.hits)];
     return { facts: read, all: frame.selector ? await insideRoot(page, frame.selector, found) : found };
   });
   const drafts = project.app ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir) : all;

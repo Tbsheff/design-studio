@@ -24,6 +24,7 @@ export interface Draft {
   guard?: FixGuard;
   hint: string;
   shared?: string;
+  rule?: { id: string; text: string };
 }
 
 export interface AxeCheck {

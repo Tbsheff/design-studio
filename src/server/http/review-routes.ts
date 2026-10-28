@@ -9,6 +9,7 @@ import { resolveReviewFrame } from '../review/frame.js';
 import { lastReview, rememberReview, runReview } from '../review/run.js';
 import { BadRequestError } from '../store/errors.js';
 import type { PreviewService } from '../types.js';
+import type { DesignRule } from '../../shared/design-rules.js';
 
 interface ReviewRouteDeps {
   editDeps: DirectEditDeps;
@@ -17,6 +18,7 @@ interface ReviewRouteDeps {
   readBody: (c: Context) => Promise<unknown>;
   loadDirection: (pid: string, did: string) => Promise<{ project: Project; direction: Direction }>;
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
+  rulesFor: (project: Project, direction: Direction) => Promise<DesignRule[]>;
 }
 
 const side = z.number().int().min(200).max(4000);
@@ -36,7 +38,7 @@ async function currentReview(deps: ReviewRouteDeps, project: Project, direction:
   const last = lastReview(project.id, direction.id);
   if (!last) throw new BadRequestError('Run a review of this frame first (review_frame or the Review panel).');
   if (last.versionId === direction.headVersionId) return last;
-  const fresh = await runReview(deps.preview, { project, direction, frame: last.frame });
+  const fresh = await runReview(deps.preview, { project, direction, frame: last.frame, rules: await deps.rulesFor(project, direction) });
   rememberReview(fresh);
   return fresh;
 }
@@ -74,7 +76,7 @@ export function registerReviewRoutes(app: Hono, deps: ReviewRouteDeps): void {
     const input = parse(reviewSchema, await deps.readBody(c));
     const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
     const frame = await resolveReviewFrame(deps.canvas, project, direction, input);
-    const result = await runReview(deps.preview, { project, direction, frame });
+    const result = await runReview(deps.preview, { project, direction, frame, rules: await deps.rulesFor(project, direction) });
     rememberReview(result);
     return c.json(result);
   });

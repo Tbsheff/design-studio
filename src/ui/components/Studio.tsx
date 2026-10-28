@@ -53,6 +53,16 @@ import type { ExportTarget } from '../exportApi';
 
 const ExportDialog = lazy(() => import('./ExportDialog').then((m) => ({ default: m.ExportDialog })));
 const ShipDialog = lazy(() => import('./ShipDialog'));
+const RulesEditor = lazy(() => import('./RulesEditor'));
+
+function RulesSlot({ projectId, directionId }: { projectId: string; directionId: string | null }) {
+  if (!directionId) return null;
+  return (
+    <Suspense fallback={null}>
+      <RulesEditor key={directionId} projectId={projectId} directionId={directionId} />
+    </Suspense>
+  );
+}
 
 function ShipLayer({ projectId, open, onClose }: { projectId: string; open: boolean; onClose: () => void }) {
   if (!open) return null;
@@ -451,6 +461,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                   Edit DESIGN.md
                 </button>
               </div>
+              <RulesSlot projectId={projectId} directionId={did} />
             </>
           }
           chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}

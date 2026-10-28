@@ -316,6 +316,7 @@ async function reviewInput(deps: StudioToolDeps, run: RunToolState, screens: Run
     request: deps.ctx.request.prompt,
     findings: run.lastFindings,
     tasteRules: deps.tasteRules ?? [],
+    designRules: (deps.ctx.designRules ?? []).map((rule) => rule.text),
     images,
     kind: run.config.preset.quickCritic ? ('quick' as const) : ('full' as const),
     ...(screens.length > 1 ? { screens: describeScreens(screens) } : {}),

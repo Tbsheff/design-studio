@@ -8,6 +8,7 @@ import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import { LINKS_FILE } from '../../shared/links.js';
 import type { Direction, Project, Version, VersionMeta, WorkTreeStatus } from '../../shared/contracts.js';
 import { baseTitle, isRestoreKind, restoreTitle } from '../../shared/version-title.js';
+import { isOutsideEdit, isOwnEdit, stampOrigin } from '../edit-origin.js';
 import type { ServerConfig, SessionEndResult, SessionSpan, VersionStore } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
@@ -28,6 +29,9 @@ const RECORD = '\x1e';
 const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const ZERO_SHA = '0'.repeat(40);
 const FORCED_KINDS = new Set<VersionMeta['kind']>(['fork', 'undo', 'restore']);
+const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
+type OwnSpan = Omit<SessionSpan, 'outside'> & { base: string; head: string; outside: Version[] };
 
 interface StoredVersionMeta extends VersionMeta {
   directionId: string;
@@ -163,10 +167,15 @@ function parseCommitMessage(message: string): { title: string; meta: StoredVersi
   }
 }
 
+function originMeta(meta: StoredVersionMeta | null): Pick<VersionMeta, 'origin' | 'client'> {
+  if (meta?.origin !== 'mcp') return {};
+  return typeof meta.client === 'string' ? { origin: 'mcp', client: meta.client } : { origin: 'mcp' };
+}
+
 function toVersion(sha: string, parents: string, committedAt: string, message: string, changedFiles: string[]): Version {
   const { title, meta } = parseCommitMessage(message);
   const parentId = parents.trim().split(' ').filter(Boolean)[0] ?? null;
-  const publicMeta: VersionMeta = { kind: meta?.kind ?? 'manual' };
+  const publicMeta: VersionMeta = { kind: meta?.kind ?? 'manual', ...originMeta(meta) };
   if (meta?.runId !== undefined) publicMeta.runId = meta.runId;
   if (meta?.prompt !== undefined) publicMeta.prompt = meta.prompt;
   if (meta?.restoredFrom !== undefined) publicMeta.restoredFrom = meta.restoredFrom;
@@ -329,7 +338,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     title: string,
     meta: VersionMeta,
   ): Promise<Version> => {
-    const stored: StoredVersionMeta = { ...meta, directionId: direction.id, createdAt: Date.now() };
+    const stored: StoredVersionMeta = { ...stampOrigin(meta), directionId: direction.id, createdAt: Date.now() };
     const cleanTitle = title.replace(/\s+/g, ' ').trim() || meta.kind;
     const message = `${cleanTitle}\n\n${META_PREFIX}${JSON.stringify(stored)}\n`;
     const args = ['commit-tree', tree];
@@ -354,18 +363,60 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
   };
 
-  const spanOf = async (project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan & { base: string; head: string }> => {
+  const spanOf = async (project: Project, direction: Direction, baseVersionId: string): Promise<OwnSpan> => {
     const base = await requireCommit(project, baseVersionId);
     const head = await headOf(project, direction);
     if (head === null || !(await isAncestor(project, base, head))) {
-      return { base, head: head ?? base, count: 0, dirty: false, foreign: 'This design changed outside the edit session.', titles: [] };
+      return { base, head: head ?? base, count: 0, dirty: false, foreign: 'This design changed outside the edit session.', titles: [], outside: [] };
     }
-    if (head === base) return { base, head, count: 0, dirty: false, foreign: null, titles: [] };
-    const span = await readVersions(project, [`${base}..${head}`]);
-    const other = span.find((version) => version.meta.kind !== 'manual');
+    if (head === base) return { base, head, count: 0, dirty: false, foreign: null, titles: [], outside: [] };
+    const span = (await readVersions(project, [`${base}..${head}`])).reverse();
+    const own = span.filter((version) => isOwnEdit(version.meta));
+    const outside = span.filter((version) => isOutsideEdit(version.meta));
+    const other = span.find((version) => !isOwnEdit(version.meta) && !isOutsideEdit(version.meta));
     const foreign = other ? `"${other.title}" happened during the edit session.` : null;
-    const dirty = (await treeOf(project, head)) !== (await treeOf(project, base));
-    return { base, head, count: span.length, dirty, foreign, titles: span.map((version) => version.title).reverse() };
+    const headTree = await treeOf(project, head);
+    const kept = outside.length > 0 && own.length > 0 ? await replayTrees(project, await treeOf(project, base), outside) : null;
+    const dirty = own.length > 0 && (outside.length === 0 ? headTree !== (await treeOf(project, base)) : kept === null || kept.at(-1) !== headTree);
+    return { base, head, count: own.length, dirty, foreign, titles: own.map((version) => version.title), outside };
+  };
+
+  const replayTree = async (project: Project, onto: string, version: Version): Promise<string | null> => {
+    const from = version.parentId ? await treeOf(project, version.parentId) : EMPTY_TREE;
+    try {
+      const { stdout } = await runGit(repoScope(project), ['merge-tree', '--write-tree', `--merge-base=${from}`, onto, await treeOf(project, version.id)]);
+      return stdout.split('\n')[0]?.trim() || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const replayTrees = async (project: Project, onto: string, versions: Version[]): Promise<string[] | null> => {
+    const trees: string[] = [];
+    let current = onto;
+    for (const version of versions) {
+      const next = await replayTree(project, current, version);
+      if (next === null) return null;
+      trees.push(next);
+      current = next;
+    }
+    return trees;
+  };
+
+  const discardOwnOnly = async (project: Project, direction: Direction, span: OwnSpan, changed: string[]): Promise<SessionEndResult> => {
+    const trees = await replayTrees(project, await treeOf(project, span.base), span.outside);
+    if (trees === null) throw new ConflictError('An outside edit changed the same lines as your edits, so Discard would undo it too. Undo your edits one at a time, or save them.');
+    let parent = span.base;
+    let current = span.head;
+    const remapped: Record<string, { id: string; parentId: string }> = {};
+    for (const [index, version] of span.outside.entries()) {
+      const made = await commitTree(project, direction, trees[index] as string, parent, current, version.title, version.meta);
+      remapped[version.id] = { id: made.id, parentId: parent };
+      parent = made.id;
+      current = made.id;
+    }
+    await resetWorkTree(project, direction, await treeOf(project, span.head), await treeOf(project, parent), 'keep');
+    return { version: null, head: parent, changed, remapped };
   };
 
   const listUntracked = async (scope: GitScope): Promise<string[]> => {
@@ -547,8 +598,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     },
 
     async sessionSince(project: Project, direction: Direction, baseVersionId: string): Promise<SessionSpan> {
-      const { count, dirty, foreign, titles } = await spanOf(project, direction, baseVersionId);
-      return { count, dirty, foreign, titles };
+      const { count, dirty, foreign, titles, outside } = await spanOf(project, direction, baseVersionId);
+      return { count, dirty, foreign, titles, outside: outside.length };
     },
 
     endSession(project: Project, direction: Direction, baseVersionId: string, action: 'save' | 'discard', title: string, meta: VersionMeta): Promise<SessionEndResult> {
@@ -560,6 +611,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         const baseTree = await treeOf(project, span.base);
         const { stdout } = await runGit(repoScope(project), ['diff-tree', '-r', '--name-only', '-z', span.base, span.head]);
         const changed = splitNul(stdout);
+        if (span.outside.length > 0) {
+          if (action === 'discard' && span.count > 0) return discardOwnOnly(project, direction, span, changed);
+          return { version: null, head: span.head, changed: [] };
+        }
         if (action === 'save' && span.dirty) {
           const version = await commitTree(project, direction, headTree, span.base, span.head, title, meta);
           return { version, head: version.id, changed };

@@ -43,7 +43,7 @@ export async function listComponentSchemas(workTree: string): Promise<ComponentS
   return { components: listed.slice(0, LIST_MAX), truncated: listed.length > LIST_MAX };
 }
 
-async function previewOrigin(preview: PreviewService, project: Project, direction: Direction): Promise<string | null> {
+export async function previewOrigin(preview: PreviewService, project: Project, direction: Direction): Promise<string | null> {
   if (project.kind !== 'react') return null;
   try {
     return new URL(await preview.directionUrl(project, direction)).origin;

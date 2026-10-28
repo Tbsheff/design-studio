@@ -1,5 +1,7 @@
 import { APP_SOURCE_PATH } from '../../shared/app.js';
-import { SOURCE_LOC_ATTR, type ComponentUse, type SelectionContext, type SourceLoc } from '../../shared/contracts.js';
+import { SOURCE_LOC_ATTR, type ComponentUse, type SelectionContext, type SourceLoc, type TextSourceHints } from '../../shared/contracts.js';
+import type { ComponentOwner } from '../../shared/props.js';
+import { ownerWalk } from '../components/owner-probe.js';
 import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
 
@@ -14,6 +16,7 @@ interface RawElement {
   loc: string | null;
   usedAt: string | null;
   usedBy: ComponentUse | null;
+  owners: ComponentOwner[];
   ancestors: string[];
 }
 
@@ -60,7 +63,7 @@ function probeBody(): string {
     for (let p = el.parentElement; p && ancestors.length < 6; p = p.parentElement) ancestors.push(p.tagName.toLowerCase() + (p.id ? '#' + p.id : ''));
     const tagged = el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)});
     const app = tagged ? null : await (${appSourceBody()})(el);
-    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, ancestors };
+    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, owners: ${ownerWalk()}(el), ancestors };
   })`;
 }
 
@@ -74,7 +77,7 @@ function parseLoc(raw: string | null): SourceLoc | null {
 }
 
 function contextOf(selector: string, raw: RawElement): SelectionContext {
-  return { selector, tag: raw.tag, text: raw.text, outerHTML: raw.outerHTML, styles: raw.styles, rect: raw.rect, source: parseLoc(raw.loc), usedAt: parseLoc(raw.usedAt), usedBy: raw.usedBy, ancestors: raw.ancestors };
+  return { selector, tag: raw.tag, text: raw.text, outerHTML: raw.outerHTML, styles: raw.styles, rect: raw.rect, source: parseLoc(raw.loc), usedAt: parseLoc(raw.usedAt), usedBy: raw.usedBy, owners: raw.owners ?? [], ancestors: raw.ancestors };
 }
 
 export async function describeElements(preview: PreviewService, url: string, selectors: string[]): Promise<(SelectionContext | null)[]> {
@@ -96,4 +99,8 @@ export async function describeElement(preview: PreviewService, url: string, sele
     return page.evaluate<RawElement | null>(probe(selector));
   });
   return raw ? contextOf(selector, raw) : null;
+}
+
+export function textHintsOf(element: SelectionContext): TextSourceHints {
+  return { text: element.text, ...(element.usedAt ? { usedAt: element.usedAt } : {}), ...(element.owners?.length ? { owners: element.owners } : {}) };
 }

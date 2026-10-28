@@ -21,6 +21,7 @@ export interface ActivityDraft {
 export interface ActivityLog {
   record(tool: string, client: string, draft: ActivityDraft): Promise<McpActivity>;
   list(projectId: string): Promise<McpActivity[]>;
+  remap(projectId: string, remapped: Record<string, { id: string; parentId: string }>): Promise<void>;
 }
 
 function clean(text: string, max: number): string {
@@ -85,5 +86,14 @@ export function createActivityLog(dataDir: string, bus: EventBus): ActivityLog {
       });
     },
     list: (projectId) => serial(projectId, () => load(projectId)),
+    remap: (projectId, remapped) =>
+      serial(projectId, async () => {
+        const items = (await load(projectId)).map((item) => {
+          const moved = item.versionId ? remapped[item.versionId] : undefined;
+          return moved ? { ...item, versionId: moved.id, beforeVersionId: moved.parentId } : item;
+        });
+        cache.set(projectId, items);
+        await save(projectId, items);
+      }),
   };
 }

@@ -8,7 +8,9 @@ import type { AgentRunner, EventBus, ProjectStore, VersionStore } from '../types
 import { DirectEditError } from './errors.js';
 import type { PatchResult } from './errors.js';
 import { patchHtml } from './html.js';
+import { hasClassChange } from './classes.js';
 import { patchJsx } from './jsx.js';
+import { findTextSource } from './text-source.js';
 import { tailwindThemeFor, type TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
@@ -41,6 +43,7 @@ export interface DirectEditDeps {
   versions: VersionStore;
   runner: Pick<AgentRunner, 'isRunning'>;
   history?: EditRecorder;
+  previewOrigin?: (project: Project, direction: Direction) => Promise<string | null>;
 }
 
 export interface ResolvedSource {
@@ -113,6 +116,7 @@ export function patchSource(relative: string, source: string, request: DirectEdi
 
 export interface EditScope {
   projectKind: Project['kind'];
+  previewOrigin?: () => Promise<string | null>;
 }
 
 export async function themeForFile(workTree: string, relative: string, text: string, scope: EditScope | undefined): Promise<TailwindTheme | null> {
@@ -240,13 +244,33 @@ export async function planDirectEdit(workTree: string, request: DirectEditReques
   const target = await resolveSource(workTree, request.source.file);
   const original = await readFile(target.file, 'utf8');
   const theme = await themeForFile(workTree, target.relative, original, scope);
-  return { request, target, original, patch: patchSource(target.relative, original, request, theme) };
+  try {
+    return { request, target, original, patch: patchSource(target.relative, original, request, theme) };
+  } catch (error) {
+    if (!isDataText(error, request)) throw error;
+    return planTextSource(workTree, request, (await scope?.previewOrigin?.().catch(() => null)) ?? null, error);
+  }
+}
+
+function isDataText(error: unknown, request: DirectEditRequest): error is DirectEditError {
+  const onlyText = request.text !== undefined && Object.keys(request.style ?? {}).length === 0 && !hasClassChange(request.classes) && request.name === undefined;
+  return onlyText && error instanceof DirectEditError && error.code === 'text_from_data';
+}
+
+async function planTextSource(workTree: string, request: DirectEditRequest, previewOrigin: string | null, error: DirectEditError): Promise<PlannedEdit> {
+  const lookup = await findTextSource({ workTree, previewOrigin }, request.source, request.hints ?? null);
+  if ('reason' in lookup) throw new DirectEditError('text_from_data', `${error.message.replace(/ Change the data there, or ask the agent\.$/, '')} ${lookup.reason} Ask the agent to change it.`);
+  const { hit } = lookup;
+  const code = hit.write(request.text ?? '');
+  const patch: PatchResult = { code, tag: request.tag ?? 'text', applied: { style: [], text: true }, textSource: hit.info };
+  return { request, target: { file: hit.file, relative: hit.relative }, original: hit.original, patch };
 }
 
 export async function applyDirectEdit(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<DirectEditResult> {
   const request = parseDirectEditRequest(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
-  const plan = await planDirectEdit(direction.workTree, request, await knownTokenVars(direction.workTree), { projectKind: project.kind });
+  const previewOrigin = deps.previewOrigin ? () => (deps.previewOrigin as NonNullable<DirectEditDeps['previewOrigin']>)(project, direction) : undefined;
+  const plan = await planDirectEdit(direction.workTree, request, await knownTokenVars(direction.workTree), { projectKind: project.kind, ...(previewOrigin ? { previewOrigin } : {}) });
   const { target, original, patch } = plan;
   if (patch.code === original) return unchangedResult(deps, project, headVersionId, target.relative, patch);
   const version = await writeAndCommit(deps, project, direction, target, original, patch, request);
@@ -258,7 +282,7 @@ export async function applyDirectEdit(deps: DirectEditDeps, project: Project, di
     files: [{ file: target.file, relative: target.relative, before: original, after: patch.code }],
   });
   await publishVersion(deps, project, direction, version);
-  return { file: target.relative, version, applied: patch.applied, ...movedLoc(request.source.file, patch), ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
+  return { file: target.relative, version, applied: patch.applied, ...movedLoc(request.source.file, patch), ...(patch.tailwind ? { tailwind: patch.tailwind } : {}), ...(patch.textSource ? { textSource: patch.textSource } : {}) };
 }
 
 function movedLoc(file: string, patch: PatchResult): Pick<DirectEditResult, 'moved'> {

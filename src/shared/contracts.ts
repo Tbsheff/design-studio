@@ -251,6 +251,8 @@ export interface VersionMeta {
   restoredFrom?: string;
   directionId?: string;
   level?: RunLevel;
+  origin?: 'mcp';
+  client?: string;
 }
 
 export interface Version {
@@ -301,6 +303,21 @@ export interface TextFromData {
   file: string;
   line: number;
 }
+
+export interface TextSourceHints {
+  text: string;
+  usedAt?: SourceLoc | null;
+  owners?: { name: string; stack: string }[];
+}
+
+export interface TextSourceInfo {
+  file: string;
+  line: number;
+  what: string;
+  shared?: string;
+}
+
+export type TextSourceAnswer = { found: TextSourceInfo } | { reason: string };
 
 export interface ElementSourceInfo {
   component: string | null;
@@ -1005,6 +1022,7 @@ export interface DirectEditRequest {
   classes?: ClassChange;
   component?: string;
   variant?: string;
+  hints?: TextSourceHints;
 }
 
 export interface ClassChange {
@@ -1076,6 +1094,7 @@ export interface EditSessionState {
   count: number;
   dirty: boolean;
   blocked: string | null;
+  outside?: number;
 }
 
 export interface EditSessionEnd {
@@ -1095,6 +1114,7 @@ export interface DirectEditResult {
   applied: { style: string[]; text: boolean; classes?: boolean };
   moved?: SourceLoc;
   tailwind?: TailwindOutcome;
+  textSource?: TextSourceInfo;
 }
 
 export interface DirectEditBatchResult {

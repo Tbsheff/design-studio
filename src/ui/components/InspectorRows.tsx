@@ -21,7 +21,7 @@ export function ContentRow({ selection, edit }: { selection: SelectionContext; e
   const state = textEditability(selection);
   const onKeyDown = useRowKeys(edit.commit, edit.revertText);
   const data = useInspectorApp().element?.textFromData;
-  if (data) return <DataTextNote data={data} text={selection.text} />;
+  if (data) return <DataTextNote data={data} selection={selection} edit={edit} />;
   if (state !== 'ok') {
     return (
       <div className="ins-field wide readonly">

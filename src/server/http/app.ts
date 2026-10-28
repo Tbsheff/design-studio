@@ -45,6 +45,7 @@ import { applyDirectEditBatch } from '../direct-edit/batch.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
+import { previewOrigin } from '../components/props-service.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
 import { applyStyleReplace } from '../direct-edit/replace.js';
@@ -308,7 +309,7 @@ export function createApp(deps: AppDeps): Hono {
   const runProjectIndex = new Map<string, string>();
   const directionLock = createKeyedMutex();
   const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
-  const editDeps = { bus, projects, versions, runner, history: editHistory };
+  const editDeps = { bus, projects, versions, runner, history: editHistory, previewOrigin: (project: Project, direction: Direction) => previewOrigin(preview, project, direction) };
   const canvas = deps.canvas ?? createCanvasService(bus, (projectId) => projects.projectDir(projectId));
   const announceCanvas = (project: Project): void => {
     void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));
@@ -1101,7 +1102,7 @@ export function createApp(deps: AppDeps): Hono {
   registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree, relatives) => {
     invalidateTokenSource(workTree);
     if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
-  } });
+  }, onRemapped: (projectId, remapped) => void mcpRoutes.activity.remap(projectId, remapped) });
   registerCanvasRoutes(app, { projects, canvas, readBody });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
 

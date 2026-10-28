@@ -11,7 +11,7 @@ import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic } 
 import { planStructureEdit } from '../direct-edit/structure-apply.js';
 import { knownTokenVars } from '../direct-edit/tokens.js';
 import { withPagePath } from '../export/source.js';
-import { describeElements } from '../mcp/element.js';
+import { describeElements, textHintsOf } from '../mcp/element.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 import { evaluateToolUse } from './permissions.js';
 
@@ -106,8 +106,9 @@ async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElemen
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
   const workTree = deps.ctx.direction.workTree;
   const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
-  const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
-  const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree), { projectKind: deps.ctx.project.kind });
+  const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text, hints: textHintsOf(element) } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
+  const origin = deps.ctx.previewUrl ? new URL(deps.ctx.previewUrl).origin : null;
+  const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree), { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin });
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
   if (plan.patch.code === plan.original) return text(`${plan.target.relative}: the values were already set.`);
@@ -115,6 +116,8 @@ async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElemen
   const parts = [...plan.patch.applied.style, ...(plan.patch.applied.classes ? ['classes'] : []), ...(plan.patch.applied.text ? ['text'] : [])];
   const tailwind = plan.patch.tailwind;
   const classNote = tailwind && tailwind.mode !== 'none' ? ` Classes now: ${tailwind.classes.join(' ') || '(none)'}.${tailwind.note ? ` ${tailwind.note}` : ''}` : '';
+  const found = plan.patch.textSource;
+  if (found) return text(`Edited ${found.what} in ${found.file}:${found.line}, where the text of ${input.selector} comes from.${found.shared ? ` ${found.shared}` : ''} ${RUN_NOTE}`);
   return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${element.source.line}.${classNote} ${RUN_NOTE}`);
 }
 

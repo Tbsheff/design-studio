@@ -22,6 +22,10 @@ export function isFlexDisplay(display: string): boolean {
   return display === 'flex' || display === 'inline-flex';
 }
 
+export function isGridDisplay(display: string): boolean {
+  return display === 'grid' || display === 'inline-grid';
+}
+
 export function parentLayout(styles: Record<string, string>): ParentLayout {
   const display = (styles['parent-display'] ?? '').trim();
   const direction = (styles['parent-flex-direction'] ?? '').trim();

@@ -17,7 +17,7 @@ import { VariantScopeContext, useEditVariant } from '../editVariant';
 import { RadiusField } from './InspectorCorners';
 import { EffectsSection } from './InspectorEffects';
 import { AlignField, ColorField, InspectorSection, SelectField } from './InspectorFields';
-import { AutoLayoutSection, SizeRows } from './InspectorLayout';
+import { AutoLayoutSection, MinMaxRows, SizeRows } from './InspectorLayout';
 import { MultiCreateTokenHost, MultiNote } from './InspectorMulti';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
@@ -190,10 +190,13 @@ function LayoutSection({ edit, selection }: { edit: DirectEdit; selection: Selec
   const size = selection ? (
     <SizeRows edit={edit} selection={selection} />
   ) : (
-    <div className="ins-grid">
-      <NumberField short="W" spec={{ prop: 'width', label: 'Width', edit, min: 0 }} />
-      <NumberField short="H" spec={{ prop: 'height', label: 'Height', edit, min: 0 }} />
-    </div>
+    <>
+      <div className="ins-grid">
+        <NumberField short="W" spec={{ prop: 'width', label: 'Width', edit, min: 0 }} />
+        <NumberField short="H" spec={{ prop: 'height', label: 'Height', edit, min: 0 }} />
+      </div>
+      <MinMaxRows edit={edit} />
+    </>
   );
   return (
     <AutoLayoutSection edit={edit} title="Layout" lead={size}>

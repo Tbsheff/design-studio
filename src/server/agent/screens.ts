@@ -215,13 +215,19 @@ export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<R
   return screens;
 }
 
+const warmed = new Map<string, string>();
+
 export async function warmScreens(preview: PreviewService, project: Project, screens: readonly RunScreen[]): Promise<void> {
   const upstream = project.app ? await preview.apps?.ensure(project).catch(() => null) : null;
   if (!upstream) return;
   await Promise.all(
     [...new Set(screens.map((screen) => screen.pagePath))].map(async (pagePath) => {
+      const screen = screens.find((item) => item.pagePath === pagePath);
+      const stamp = screen ? await preview.sourceStamp?.(screen.url).catch(() => null) : null;
+      if (stamp && warmed.get(screen?.url ?? '') === stamp) return;
       const answer = await fetch(new URL(`/${pagePath}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
       await answer?.body?.cancel().catch(() => undefined);
+      if (stamp && screen) warmed.set(screen.url, stamp);
     }),
   );
 }

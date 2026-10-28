@@ -224,6 +224,7 @@ export async function prewarmChecks(preview: PreviewService, ctx: AgentRunContex
   preview.warmBrowser?.();
   if (!ctx.previewUrl || !ctx.project.app) return;
   const screens = await runScreens(preview, ctx, state.config, state).catch(() => []);
+  for (const screen of screens) void preview.sourceStamp?.(screen.url).catch(() => null);
   await warmScreens(preview, ctx.project, screens);
 }
 

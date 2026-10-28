@@ -22,12 +22,15 @@ function fileName(file: RepoContextFile): string {
   return file.path.split('/').pop() ?? file.path;
 }
 
+function label(file: RepoContextFile): string {
+  const note = USE_NOTE[file.use];
+  return `${file.path}${note ? ` (${note})` : ''}`;
+}
+
 function tipFor(files: RepoContextFile[]): string {
-  const lines = files.map((file) => {
-    const note = USE_NOTE[file.use];
-    return `${file.path}${note ? ` (${note})` : ''}`;
-  });
-  return `Each run reads these repo files: ${lines.join(', ')}. Lines that look like secrets are left out.`;
+  const read = files.filter(sent).map(label).join(', ');
+  const skipped = files.filter((file) => !sent(file)).map(label).join(', ');
+  return `Each run reads ${read}.${skipped ? ` Not sent: ${skipped}.` : ''} Lines that look like secrets are left out.`;
 }
 
 function useRunContext(projectId: string, directionId: string | null | undefined): RepoContextFile[] {

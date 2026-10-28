@@ -90,6 +90,12 @@ const STYLE_KEYS = [
   'row-gap',
   'column-gap',
   'justify-items',
+  'object-fit',
+  'object-position',
+  'background-image',
+  'background-size',
+  'background-position',
+  'background-repeat',
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;

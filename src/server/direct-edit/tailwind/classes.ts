@@ -32,7 +32,13 @@ export type SingleGroup =
   | 'text-shadow'
   | 'transform'
   | 'position'
-  | 'justify-items';
+  | 'justify-items'
+  | 'object-fit'
+  | 'object-position'
+  | 'bg-image'
+  | 'bg-size'
+  | 'bg-position'
+  | 'bg-repeat';
 export type Group = SidedGroup | SingleGroup;
 
 export interface ParsedClass {
@@ -116,6 +122,21 @@ const KEYWORD_GROUPS: Record<string, SingleGroup> = {
   absolute: 'position',
   fixed: 'position',
   sticky: 'position',
+  'object-contain': 'object-fit',
+  'object-cover': 'object-fit',
+  'object-fill': 'object-fit',
+  'object-none': 'object-fit',
+  'object-scale-down': 'object-fit',
+  'bg-cover': 'bg-size',
+  'bg-contain': 'bg-size',
+  'bg-auto': 'bg-size',
+  'bg-repeat': 'bg-repeat',
+  'bg-no-repeat': 'bg-repeat',
+  'bg-repeat-x': 'bg-repeat',
+  'bg-repeat-y': 'bg-repeat',
+  'bg-repeat-round': 'bg-repeat',
+  'bg-repeat-space': 'bg-repeat',
+  'bg-none': 'bg-image',
 };
 
 const TEXT_ALIGN = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
@@ -159,6 +180,12 @@ const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
   transform: 'transform',
   position: 'position',
   'justify-items': 'justify-items',
+  'object-fit': 'object-fit',
+  'object-position': 'object-position',
+  'background-image': 'bg-image',
+  'background-size': 'bg-size',
+  'background-position': 'bg-position',
+  'background-repeat': 'bg-repeat',
 };
 
 function splitVariants(raw: string): string[] {
@@ -242,6 +269,16 @@ function classifyShadow(suffix: string, theme: TailwindTheme | null): SingleGrou
   return null;
 }
 
+const OBJECT_POSITIONS = /^(center|top|bottom|left|right|left-top|left-bottom|right-top|right-bottom|top-left|top-right|bottom-left|bottom-right|\[.+\]|\(.+\))$/;
+const BG_POSITIONS = /^(center|top|bottom|left|right|left-top|left-bottom|right-top|right-bottom|top-left|top-right|bottom-left|bottom-right|\[position:.+\]|position-.+)$/;
+
+function classifyBg(suffix: string): SingleGroup | null {
+  if (/^\[(url\(|image:)/.test(suffix) || /^(linear|radial|conic|gradient)/.test(suffix)) return /^\[(url\(|image:)/.test(suffix) ? 'bg-image' : null;
+  if (/^\[(size|length):/.test(suffix) || /^size-/.test(suffix)) return 'bg-size';
+  if (BG_POSITIONS.test(suffix)) return 'bg-position';
+  return BG_NOT_COLOR.test(suffix) ? null : 'bg';
+}
+
 function classifyFlex(suffix: string): SingleGroup | null {
   if (/^(\d+|auto|initial|none)$/.test(suffix) || bracketed(suffix) !== null || /^\d+\/\d+$/.test(suffix)) return 'flex';
   return null;
@@ -284,7 +321,8 @@ const always = (group: SingleGroup): PrefixRule => () => group;
 const fromSet = (set: ReadonlySet<string>, group: SingleGroup): PrefixRule => (suffix) => (set.has(suffix) ? group : null);
 
 const PREFIX_RULES: Record<string, PrefixRule> = {
-  bg: (suffix) => (BG_NOT_COLOR.test(suffix) ? null : 'bg'),
+  bg: classifyBg,
+  object: (suffix) => (OBJECT_POSITIONS.test(suffix) ? 'object-position' : null),
   text: classifyText,
   'text-shadow': always('text-shadow'),
   font: classifyFont,

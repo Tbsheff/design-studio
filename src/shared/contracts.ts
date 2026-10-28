@@ -1123,6 +1123,12 @@ export const DIRECT_STYLE_PROPERTIES = [
   'row-gap',
   'column-gap',
   'justify-items',
+  'object-fit',
+  'object-position',
+  'background-image',
+  'background-size',
+  'background-position',
+  'background-repeat',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

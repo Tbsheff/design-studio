@@ -4,7 +4,7 @@ import { appSourceBody, ownerWalk, parseLoc } from '../components/owner-probe.js
 import type { PreviewService } from '../types.js';
 import { probeOnPage } from '../preview/probe-page.js';
 
-const STYLE_KEYS = ['display', 'position', 'color', 'background-color', 'font-family', 'font-size', 'font-weight', 'line-height', 'padding', 'margin', 'border-radius', 'width', 'height', 'gap'];
+const STYLE_KEYS = ['display', 'position', 'color', 'background-color', 'font-family', 'font-size', 'font-weight', 'line-height', 'padding', 'margin', 'border-radius', 'width', 'height', 'gap', 'object-fit', 'object-position', 'background-image'];
 
 interface RawElement {
   tag: string;

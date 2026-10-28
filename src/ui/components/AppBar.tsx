@@ -224,7 +224,7 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
       <div className="app-panel-head">
         <span className="app-status-dot" data-state={state} />
         <div className="grow">
-          <div className="mono">{app.appDir === '.' ? 'App folder' : app.appDir}</div>
+          <div className="app-panel-title">{app.appDir === '.' ? 'App folder' : <span className="mono">{app.appDir}</span>}</div>
           <div className="app-panel-sub">{statusLine(status, managed)}</div>
           {status?.message && <div className="app-panel-sub app-panel-message">{status.message}</div>}
         </div>

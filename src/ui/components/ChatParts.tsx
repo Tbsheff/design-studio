@@ -38,7 +38,7 @@ function RunTitle({ title, slot, onRename }: { title: string | undefined; slot: 
   if (slot) return slot;
   if (!title) return null;
   return (
-    <span className="run-title" data-testid="run-title" title={onRename ? `${title} (double-click to rename)` : title} onDoubleClick={onRename}>
+    <span className="run-title" data-testid="run-title" data-tip={onRename ? `${title} (double-click to rename)` : title} onDoubleClick={onRename}>
       {title}
     </span>
   );

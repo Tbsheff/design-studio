@@ -8,7 +8,7 @@ export function ThemeButton() {
   const ref = useRef<HTMLButtonElement>(null);
   return (
     <span className="theme-anchor">
-      <button ref={ref} type="button" className="icon-btn" aria-label="Theme" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button ref={ref} type="button" className="icon-btn" aria-label="Theme" data-tip="Theme" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
         <Icon name="moon" />
       </button>
       {open && (

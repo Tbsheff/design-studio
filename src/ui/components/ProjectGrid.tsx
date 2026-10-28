@@ -174,7 +174,7 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
         <button ref={openRef} type="button" className="project-open" tabIndex={active ? 0 : -1} onClick={() => actions.onOpen(project)} onPointerEnter={() => void prefetchStudio()} onFocus={() => { void prefetchStudio(); onFocusCard(); }} onKeyDown={onKeyDown}>
           {preview}
           <span className="project-body">
-            <span className="project-name" title={project.name}>
+            <span className="project-name" data-tip={project.name}>
               {project.name}
             </span>
             {meta}

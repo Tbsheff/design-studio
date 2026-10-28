@@ -1,8 +1,8 @@
 import { APP_SOURCE_PATH } from '../../shared/app.js';
 import type { SourceLoc } from '../../shared/contracts.js';
 import { OWNERS_MAX, OWNER_STACK_MAX, type ComponentOwner } from '../../shared/props.js';
-import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
+import { probeOnPage } from '../preview/probe-page.js';
 
 export interface ProbedElement {
   tag: string;
@@ -82,12 +82,8 @@ function probe(selector: string): string {
 }
 
 export async function probeOwners(preview: PreviewService, url: string, selector: string): Promise<ProbedElement | null> {
-  if (!preview.withPage) throw new Error('rendering is not available');
-  return preview.withPage(url, { width: 1440, height: 900 }, async (page) => {
-    await waitForPage(page);
-    const raw = await page.evaluate<RawProbe | null>(probe(selector));
-    return raw ? { tag: raw.tag, owners: raw.owners, usedAt: parseLoc(raw.usedAt) } : null;
-  });
+  const raw = await probeOnPage<RawProbe | null>(preview, url, { width: 1440, height: 900 }, probe(selector));
+  return raw ? { tag: raw.tag, owners: raw.owners, usedAt: parseLoc(raw.usedAt) } : null;
 }
 
 export function parseLoc(raw: string | null): SourceLoc | null {

@@ -9,6 +9,8 @@ import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } 
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
 import { renderSettled } from './render-wait.js';
+import { WarmPages } from './warm-pages.js';
+import { waitForPage } from '../export/capture.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
 
 const SERVER_TOKEN = 'server';
@@ -178,6 +180,18 @@ async function settle(page: RenderPage): Promise<void> {
 export class BrowserPool {
   private backendPromise: Promise<RenderBackend> | null = null;
   private closed = false;
+  private readonly warm = new WarmPages(async (url, viewport) => {
+    const page = await (await this.backend()).open(viewport);
+    try {
+      await page.goto(withServerBridgeParams(url, this.parentOrigin));
+      await settle(page);
+      await waitForPage(page);
+      return page;
+    } catch (error) {
+      await page.close();
+      throw error;
+    }
+  });
 
   constructor(
     private readonly parentOrigin: string,
@@ -197,9 +211,17 @@ export class BrowserPool {
     return this.withPage(url, viewport, task);
   }
 
+  peek<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+    return this.warm.run(url, viewport, task);
+  }
+
+  sourcesChanged(at?: number): void {
+    this.warm.markDirty(at);
+  }
+
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     await renderSettled();
-    const page = await (await this.backend()).open(viewport);
+    const page = await (async () => (await this.backend()).open(viewport))();
     try {
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
@@ -325,6 +347,7 @@ export class BrowserPool {
   }
 
   async close(): Promise<void> {
+    await this.warm.close();
     this.closed = true;
     const pending = this.backendPromise;
     this.backendPromise = null;

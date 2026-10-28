@@ -1,3 +1,4 @@
+import { noteTreeChange, onSourceChange } from '../direct-edit/change-feed.js';
 import { existsSync } from 'node:fs';
 import { lstat, symlink } from 'node:fs/promises';
 import path from 'node:path';
@@ -90,11 +91,14 @@ export function withDesignSystemWarning(results: RenderCheckResult[], problem: s
 }
 
 const APP_CACHE_MS = 1500;
+const WATCH_LAG_MS = 150;
 
 export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   const { config, bus, projects, versions } = deps;
   const snapshotRoots = new Map<string, string>();
   const forwardToVite = (change: DirectionChange): void => {
+    noteTreeChange(change.root, change.paths.map((relative) => path.join(change.root, ...relative.split('/'))));
+    browsers.loaded()?.then((pool) => pool.sourcesChanged(Date.now() - WATCH_LAG_MS)).catch(() => undefined);
     void recompileOnTokensChange(bus, change).catch((error: unknown) => console.error('[preview] tokens recompile failed', error));
     const files = change.paths.map((relative) => path.join(change.root, ...relative.split('/')));
     void vite
@@ -115,6 +119,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const { BrowserPool: Pool } = await import('./browser.js');
     return new Pool(config.previewOrigin);
   });
+  onSourceChange(() => browsers.loaded()?.then((pool) => pool.sourcesChanged()).catch(() => undefined));
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
   const apps = new AppServers({ bus, portBase: config.appPortBase ?? config.vitePortBase + 400, portCount: config.appPortCount ?? 200, dataDir: config.dataDir });
   const appCache = new Map<string, { project: Project | null; at: number }>();
@@ -277,6 +282,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
+    peekPage: async (url, viewport, task) => (await browsers.get()).peek(url, viewport, task),
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }

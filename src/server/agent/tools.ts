@@ -18,6 +18,7 @@ import { editElementShape, runEditElement, runSetToken, setTokenShape } from './
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
+import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -336,5 +337,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetProps(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool] });
+  const reviewFrameTool = tool(
+    'review_frame',
+    'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
+    reviewFrameShape,
+    (args) => runReviewFrameTool(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, reviewFrameTool] });
 }

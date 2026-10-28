@@ -107,7 +107,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
     <li className={`comment-row ${control.openId === comment.id ? 'open' : ''}`} data-testid="comment-row" data-status="queued">
       <PickNum comment={comment} control={control} />
       <div className="comment-row-body">
-        <CommentAuthor author={comment.author} />
+        <CommentAuthor author={comment.author} viewer={comment.from === 'viewer'} />
         {editing ? (
           <input
             aria-label={`Edit comment ${comment.n}`}
@@ -198,7 +198,7 @@ function DoneRow({
     <li className="comment-row" data-testid="comment-row" data-status={comment.status}>
       <PickNum comment={comment} control={control} />
       <div className="comment-row-body">
-        <CommentAuthor author={comment.author} />
+        <CommentAuthor author={comment.author} viewer={comment.from === 'viewer'} />
         <span className="comment-row-text">{comment.text}</span>
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
@@ -342,7 +342,8 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
   const resolved = by('resolved');
   const orphaned = by('orphaned');
   const queued = control.queued;
-  const outside = control.comments.filter((comment) => comment.status === 'draft' && comment.author);
+  const outside = control.comments.filter((comment) => comment.status === 'draft' && comment.author && comment.from !== 'viewer');
+  const viewers = control.comments.filter((comment) => comment.status === 'draft' && comment.from === 'viewer');
   const empty = control.comments.filter((comment) => comment.status !== 'draft' || comment.author).length === 0;
   const showResolved = control.showResolved;
   return (
@@ -373,6 +374,11 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
           )}
         </div>
       )}
+      <Section title="From viewers" count={viewers.length}>
+        {viewers.map((comment) => (
+          <DoneRow key={comment.id} comment={comment} control={control} onOpenRun={onOpenRun} onOpenVersion={onOpenVersion} />
+        ))}
+      </Section>
       <Section title="From outside agents" count={outside.length}>
         {outside.map((comment) => (
           <DoneRow key={comment.id} comment={comment} control={control} onOpenRun={onOpenRun} onOpenVersion={onOpenVersion} />

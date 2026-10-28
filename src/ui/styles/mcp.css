@@ -423,3 +423,13 @@
 .mcp-edit-head[aria-expanded='false'] .mcp-edit-caret {
   rotate: 180deg;
 }
+
+.comment-viewer-tag {
+  margin-left: var(--s-1);
+  padding: 0 6px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  font-weight: 500;
+}

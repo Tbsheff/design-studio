@@ -70,11 +70,13 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
   );
 }
 
-function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null }): MenuGroup[] {
+function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null; onShareLink?: (() => void) | null }): MenuGroup[] {
   const exportItem: MenuEntry = { id: 'export', label: 'Export…', icon: 'download', meta: 'PNG, PDF, HTML, handoff', disabled: !p.canExport, run: p.onExport, ...(p.canExport ? {} : { tip: 'Save a version to export' }) };
   const ship = p.onShip;
   const shipItem: MenuEntry[] = ship ? [{ id: 'ship', label: 'Ship as a pull request…', icon: 'branch', meta: 'Branch and PR', run: ship }] : [];
-  return [{ items: [exportItem, ...shipItem] }, { items: [], note: 'No share links yet. Designs stay on this computer.' }];
+  const link = p.onShareLink;
+  const linkItem: MenuEntry[] = link ? [{ id: 'share-link', label: 'Share a read-only link…', icon: 'link', meta: 'View and comment', disabled: !p.canExport, run: link, tip: p.canExport ? 'Others see still images of the frames and can comment' : 'Save a version to share' }] : [];
+  return [{ items: [exportItem, ...shipItem] }, { items: linkItem, note: 'Links are off until you make one. Nothing leaves this computer.' }];
 }
 
 export function DropMenu({ label, groups, className, align = 'start', tip, children, onOpen }: { label: string; groups: () => MenuGroup[]; className: string; align?: 'start' | 'end'; tip?: string; children: ReactNode; onOpen?: () => void }) {
@@ -156,6 +158,7 @@ interface Props {
   canExport: boolean;
   onExport: () => void;
   onShip?: (() => void) | null;
+  onShareLink?: (() => void) | null;
 }
 
 export function CanvasTopBar(p: Props) {

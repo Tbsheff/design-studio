@@ -426,6 +426,7 @@ export interface DesignComment {
   drawing?: CommentDrawing;
   author?: string;
   frame?: CommentFrame;
+  from?: 'viewer';
 }
 
 export interface CommentFrame {

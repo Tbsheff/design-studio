@@ -33,6 +33,7 @@ import { ARRANGE_TOOLS } from './arrange-tools.js';
 import { CONTEXT_TOOLS } from './context-tools.js';
 import { DOCTOR_TOOLS } from './doctor-tools.js';
 import { COMPONENT_PREVIEW_TOOLS } from './component-preview-tools.js';
+import { SHARE_TOOLS } from './share-tools.js';
 import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import type { ToolDef, ToolResult } from './tools.js';
@@ -179,7 +180,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token']);

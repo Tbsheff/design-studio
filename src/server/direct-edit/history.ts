@@ -1,4 +1,4 @@
-import { readFile, realpath } from 'node:fs/promises';
+import { readFile, realpath, rm } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, EditHistoryEntry, EditHistoryList, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
@@ -6,7 +6,7 @@ import type { EventBus } from '../types.js';
 import { emitSourceChange } from './change-feed.js';
 import { DirectEditError } from './errors.js';
 import { savedVersionId, savesSettled } from './save-queue.js';
-import { assertCanEdit, publishVersion, saveDeferred, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
+import { assertCanEdit, publishVersion, saveDeferred, writeAtomic, writeNewFile, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
 
 export const HISTORY_LIMIT = 100;
 
@@ -64,14 +64,30 @@ async function resolveFiles(workTree: string, record: EditRecord): Promise<strin
     const candidate = path.resolve(root, change.relative);
     if (!candidate.startsWith(root + path.sep)) return null;
     const real = await realpath(candidate).catch(() => null);
-    if (real === null || !real.startsWith(root + path.sep)) return null;
-    files.push(real);
+    const placed = real ?? (change.created ? await createdPath(candidate) : null);
+    if (placed === null || !placed.startsWith(root + path.sep)) return null;
+    files.push(placed);
   }
   return files;
 }
 
-async function writeInReverse(files: string[], texts: string[]): Promise<void> {
-  for (let index = files.length - 1; index >= 0; index -= 1) await writeAtomic(files[index] ?? '', texts[index] ?? '');
+async function createdPath(candidate: string): Promise<string | null> {
+  const dir = await realpath(path.dirname(candidate)).catch(() => null);
+  return dir === null ? null : path.join(dir, path.basename(candidate));
+}
+
+async function writeText(file: string, text: string | null): Promise<void> {
+  if (text === null) await rm(file, { force: true });
+  else if ((await readOrNull(file)) === null) await writeNewFile(file, text);
+  else await writeAtomic(file, text);
+}
+
+async function writeInReverse(files: string[], texts: (string | null)[]): Promise<void> {
+  for (let index = files.length - 1; index >= 0; index -= 1) await writeText(files[index] ?? '', texts[index] ?? null);
+}
+
+function textBefore(change: EditFileChange): string | null {
+  return change.created ? null : change.before;
 }
 
 function stepMeta(kind: HistoryStep, record: EditRecord): VersionMeta {
@@ -136,8 +152,8 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
   };
 
   const commitStep = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction, record: EditRecord, files: string[]): Promise<Version> => {
-    const wanted = (change: EditFileChange) => (kind === 'undo' ? change.before : change.after);
-    const current = (change: EditFileChange) => (kind === 'undo' ? change.after : change.before);
+    const wanted = (change: EditFileChange) => (kind === 'undo' ? textBefore(change) : change.after);
+    const current = (change: EditFileChange) => (kind === 'undo' ? change.after : textBefore(change));
     try {
       await writeInReverse(files, record.files.map(wanted));
     } catch (error) {
@@ -157,7 +173,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     if (!record) throw new DirectEditError('history_empty', kind === 'undo' ? 'Nothing to undo' : 'Nothing to redo');
     const files = await resolveFiles(direction.workTree, record);
     const texts = files === null ? [] : await Promise.all(files.map(readOrNull));
-    const expected = record.files.map((change) => (kind === 'undo' ? change.after : change.before));
+    const expected = record.files.map((change) => (kind === 'undo' ? change.after : textBefore(change)));
     if (files === null || texts.some((text, position) => text !== expected[position])) {
       clear(project.id, direction.id);
       throw stale();

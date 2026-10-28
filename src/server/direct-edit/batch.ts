@@ -1,8 +1,8 @@
-import { readFile, realpath } from 'node:fs/promises';
+import { readFile, realpath, rm } from 'node:fs/promises';
 import type { Direction, DirectEditBatchResult, DirectEditRequest, Project, TextSourceInfo, Version, VersionMeta } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
 import { savesSettled } from './save-queue.js';
-import { announceWhile, assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic } from './index.js';
+import { announceWhile, assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic, writeNewFile } from './index.js';
 import type { DirectEditDeps, EditScope, PlannedEdit, ResolvedSource } from './index.js';
 import type { TailwindTheme } from './tailwind/theme.js';
 import { knownTokenVars } from './tokens.js';
@@ -154,10 +154,10 @@ function batchPrompt(edits: DirectEditRequest[]): string {
   return prompt.length > MAX_PROMPT ? `${prompt.slice(0, MAX_PROMPT - 1)}…` : prompt;
 }
 
-export type WrittenFile = Pick<FileGroup, 'target' | 'original' | 'code'>;
+export type WrittenFile = Pick<FileGroup, 'target' | 'original' | 'code'> & { created?: boolean };
 
 async function restoreOriginals(groups: WrittenFile[]): Promise<void> {
-  const results = await Promise.allSettled(groups.map((group) => writeAtomic(group.target.file, group.original)));
+  const results = await Promise.allSettled(groups.map((group) => (group.created ? rm(group.target.file, { force: true }) : writeAtomic(group.target.file, group.original))));
   const failed = results.filter((result) => result.status === 'rejected').length;
   if (failed > 0) console.error(`direct edit batch: could not restore ${failed} file(s) after a failed edit`);
 }
@@ -174,8 +174,9 @@ export async function writeAndCommitAll(
   await savesSettled(project.id);
   try {
     for (const group of changed) {
+      if (group.created) await writeNewFile(group.target.file, group.code);
+      else await writeAtomic(group.target.file, group.code);
       written.push(group);
-      await writeAtomic(group.target.file, group.code);
     }
   } catch (error) {
     await restoreOriginals(written);

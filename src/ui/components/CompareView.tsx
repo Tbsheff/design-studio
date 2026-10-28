@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { ProjectKind, Version } from '../../shared/contracts';
 import { useUi } from '../storage';
 import { displayTitle, indexVersions } from '../versionLabels';
@@ -6,12 +6,15 @@ import { CompareFrame } from './CompareFrame';
 import { OverlayBoard, SliderBoard, type BoardProps } from './CompareModes';
 import { Icon } from './Icon';
 
-type Mode = 'side' | 'slider' | 'overlay';
+type Mode = 'side' | 'slider' | 'overlay' | 'code';
+
+const CompareCode = lazy(() => import('./CompareCode'));
 
 const MODES: { id: Mode; label: string; tip: string }[] = [
   { id: 'side', label: 'Side by side', tip: 'Both versions next to each other' },
   { id: 'slider', label: 'Slider', tip: 'Drag a line to wipe between versions' },
   { id: 'overlay', label: 'Overlay', tip: 'The newer version with changed pixels in red' },
+  { id: 'code', label: 'Code', tip: 'The line changes in each changed file' },
 ];
 const MODE_KEY = 'design-studio.compare-mode';
 
@@ -139,21 +142,29 @@ export function CompareView({ projectId, kind, left, right, versions, onClose }:
           Close compare
         </button>
       </div>
-      <div className={`compare ${mode === 'side' ? '' : 'single'}`} ref={ref} data-mode={mode}>
-        {error && (
-          <div className="stage-message" role="alert">
-            {error}
-          </div>
-        )}
-        {mode === 'side' && (
-          <>
-            <SidePane {...board} side="A" />
-            <SidePane {...board} side="B" />
-          </>
-        )}
-        {mode === 'slider' && <SliderBoard {...board} />}
-        {mode === 'overlay' && <OverlayBoard {...board} />}
-      </div>
+      {mode === 'code' ? (
+        <div className="compare-code-scroll" data-mode={mode}>
+          <Suspense fallback={null}>
+            <CompareCode projectId={projectId} older={older} newer={newer} />
+          </Suspense>
+        </div>
+      ) : (
+        <div className={`compare ${mode === 'side' ? '' : 'single'}`} ref={ref} data-mode={mode}>
+          {error && (
+            <div className="stage-message" role="alert">
+              {error}
+            </div>
+          )}
+          {mode === 'side' && (
+            <>
+              <SidePane {...board} side="A" />
+              <SidePane {...board} side="B" />
+            </>
+          )}
+          {mode === 'slider' && <SliderBoard {...board} />}
+          {mode === 'overlay' && <OverlayBoard {...board} />}
+        </div>
+      )}
     </div>
   );
 }

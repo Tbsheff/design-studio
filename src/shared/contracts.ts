@@ -1593,3 +1593,30 @@ export interface UpdateTokensResult {
   state: DesignSystemState;
   version: Version;
 }
+
+export interface VersionFileDiff {
+  path: string;
+  oldPath?: string;
+  status: 'added' | 'removed' | 'modified' | 'renamed';
+  additions: number;
+  deletions: number;
+  binary: boolean;
+  patch: string;
+  truncated: boolean;
+}
+
+export interface VersionThumbs {
+  from: string | null;
+  to: string | null;
+  mask: string | null;
+  changedPct: number | null;
+}
+
+export interface VersionChanges {
+  from: string;
+  to: string;
+  files: VersionFileDiff[];
+  totalFiles: number;
+  truncated: boolean;
+  thumbs?: VersionThumbs;
+}

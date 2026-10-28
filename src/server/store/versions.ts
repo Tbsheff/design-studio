@@ -705,6 +705,16 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
   };
 
+  const isEnvFile = (relative: string): boolean => {
+    const name = path.posix.basename(relative);
+    return (name === '.env' || name.startsWith('.env.')) && name !== '.env.example';
+  };
+
+  const discardDirect = (project: Project, direction: Direction, tree: string | null): Promise<WorkTreeStatus | null> => {
+    if (!project.app || tree === null) return Promise.resolve(null);
+    return direct.discard(project, direction, tree, (paths) => moveToTrash(project, direction.workTree, paths.filter((relative) => !isEnvFile(relative))));
+  };
+
   return {
     async ensureRepo(project: Project): Promise<void> {
       const gitDir = gitDirOf(project);
@@ -784,6 +794,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return locked(project, direction, async () => {
         const head = await headOf(project, direction);
         const tree = head === null ? null : await treeOf(project, head);
+        const fast = await discardDirect(project, direction, tree);
+        if (fast) return fast;
         const kept = await Promise.all(layoutFilesOf(project).map(async (file) => ({ target: layoutOf(direction, file), bytes: await readFile(layoutOf(direction, file)).catch(() => null) })));
         await resetWorkTree(project, direction, tree, tree, 'trash');
         for (const { target, bytes } of kept) {

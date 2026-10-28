@@ -5,6 +5,9 @@ import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { LOFI_STYLE_ID } from '../shared/lofi.js';
 import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
+import { createLockSet } from './locks.js';
+import { createMarquee } from './marquee.js';
+import { exposeHeadlessMatch, isMatchKind, matchingElements } from './select-match.js';
 import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
@@ -771,6 +774,7 @@ function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker 
 function startBridge(session: BridgeSession): void {
   const parentWindow = window.parent;
   let mode: 'select' | 'none' = 'none';
+  let marqueeOn = false;
   let hoverFrame = 0;
   let pendingHover: Element | null = null;
   let lastHover: Element | null = null;
@@ -830,6 +834,8 @@ function startBridge(session: BridgeSession): void {
   };
 
   const layers = createLayerIndex();
+  const locks = createLockSet(APP_MODE !== 'next');
+  const hitOf = (event: Event): Element | null => locks.hit(event, eventElement(event));
   let selected: Element | null = null;
   let selectedAt = -Infinity;
   let tracked: string[] = [];
@@ -857,9 +863,9 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (mode !== 'select' || textEditor.editing()) return;
+    if (mode !== 'select' || textEditor.editing() || marquee.move(event)) return;
     altHeld = event.altKey;
-    pendingHover = eventElement(event);
+    pendingHover = hitOf(event);
     if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
   };
 
@@ -895,18 +901,53 @@ function startBridge(session: BridgeSession): void {
     });
   };
 
+  const postSelectMany = async (elements: Element[], additive: boolean): Promise<void> => {
+    if (APP_MODE === 'next') await Promise.all(elements.map((element) => appSourceFor(element)));
+    const live = elements.filter((element) => element.isConnected);
+    const last = live.at(-1);
+    if (!last && additive) return;
+    if (last) {
+      selected = last;
+      selectedAt = performance.now();
+    }
+    post({ type: 'select-many', selections: live.map((element) => ({ ...selectionFor(element), path: ancestorPath(element) })), additive, at: performance.timeOrigin + performance.now(), ...(last ? { node: layers.idOf(last) } : {}) });
+  };
+
+  const marquee = createMarquee({
+    enabled: () => mode === 'select' && marqueeOn && !textEditor.editing(),
+    locked: (element) => locks.isLocked(element),
+    show: (rect) => {
+      if (rect && lastHover) {
+        lastHover = null;
+        post({ type: 'hover', rect: null });
+      }
+      post({ type: 'marquee', rect });
+    },
+    pick: (elements, additive) => void postSelectMany(elements, additive),
+  });
+
+  const onPointerDown = (event: PointerEvent): void => {
+    block(event);
+    if (!textEditor.owns(eventElement(event))) marquee.down(event, hitOf(event));
+  };
+
+  const onPointerUp = (event: PointerEvent): void => {
+    marquee.up(event);
+    block(event);
+  };
+
   const onClick = (event: MouseEvent): void => {
     if (mode !== 'select' && links.onClick(event)) return;
-    if (mode !== 'select' || textEditor.owns(eventElement(event))) return block(event);
+    if (mode !== 'select' || textEditor.owns(eventElement(event)) || marquee.takeClick()) return block(event);
     block(event);
-    const element = eventElement(event);
+    const element = hitOf(event);
     if (!element) return;
     postSelect(element, event.shiftKey);
   };
 
   const onContextMenu = (event: MouseEvent): void => {
     block(event);
-    const element = eventElement(event);
+    const element = hitOf(event);
     if (mode !== 'select' || !element || textEditor.owns(element)) return;
     const inSelection = element === selected || tracked.some((selector) => queryElement(selector) === element);
     if (!inSelection) postSelect(element, false);
@@ -922,7 +963,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onDblClick = (event: MouseEvent): void => {
-    const element = eventElement(event);
+    const element = hitOf(event);
     const target = mode === 'select' || element === selected ? element : null;
     if (textEditor.owns(element) || !textEditor.canEdit(target)) return block(event);
     event.preventDefault();
@@ -939,8 +980,15 @@ function startBridge(session: BridgeSession): void {
     return true;
   };
 
+  const cancelMarquee = (event: KeyboardEvent): boolean => {
+    if (event.key !== 'Escape' || !marquee.cancel()) return false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return true;
+  };
+
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (textEditor.onKeyDown(event)) return;
+    if (textEditor.onKeyDown(event) || cancelMarquee(event)) return;
     if (mode !== 'select' && links.onKeyDown(event)) return;
     onAltChange(event);
     const reorder = reorderMoveOf(event);
@@ -1025,6 +1073,7 @@ function startBridge(session: BridgeSession): void {
   const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
     'set-mode': (message) => {
       mode = message.mode === 'select' ? 'select' : 'none';
+      marqueeOn = message.marquee === true;
       lastHover = null;
       pendingHover = null;
     },
@@ -1055,7 +1104,22 @@ function startBridge(session: BridgeSession): void {
     'track-links': (message) => links.track(message.links),
     'play-links': (message) => links.play(message.links),
     'play-fx': (message) => links.fx(message),
-    'request-tree': () => post({ type: 'tree', ...layers.build() }),
+    'request-tree': () => post({ type: 'tree', ...layers.build(locks.ownLocked) }),
+    'set-locks': (message) => locks.set(message.keys),
+    'lock-node': (message) => {
+      const element = typeof message.id === 'number' ? layers.element(message.id) : null;
+      if (!element) return;
+      post({ type: 'locks', keys: locks.lock(element, message.locked === true) });
+      post({ type: 'tree', ...layers.build(locks.ownLocked) });
+    },
+    'select-matching': (message) => {
+      if (typeof message.requestId !== 'string' || typeof message.selector !== 'string' || !isMatchKind(message.by)) return;
+      const base = selected?.isConnected && selectorFor(selected) === message.selector ? selected : queryElement(message.selector);
+      if (!base) return post({ type: 'matched', requestId: message.requestId, count: 0, note: 'Select the element again.' });
+      const result = matchingElements(base, message.by, { useLoc: APP_MODE !== 'next', skip: (element) => locks.isLocked(element) });
+      void postSelectMany(result.elements, false);
+      post({ type: 'matched', requestId: message.requestId, count: result.elements.length, ...(result.note ? { note: result.note } : {}) });
+    },
     'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
     'select-node': (message) => {
       const element = typeof message.id === 'number' ? layers.element(message.id) : null;
@@ -1144,9 +1208,9 @@ function startBridge(session: BridgeSession): void {
 
   window.addEventListener('message', onMessage);
   window.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
-  window.addEventListener('pointerdown', block, { capture: true });
+  window.addEventListener('pointerdown', onPointerDown, { capture: true });
   window.addEventListener('mousedown', block, { capture: true });
-  window.addEventListener('pointerup', block, { capture: true });
+  window.addEventListener('pointerup', onPointerUp, { capture: true });
   window.addEventListener('mouseup', block, { capture: true });
   window.addEventListener('click', onClick, { capture: true });
   window.addEventListener('dblclick', onDblClick, { capture: true });
@@ -1171,6 +1235,8 @@ function startBridge(session: BridgeSession): void {
       window.requestAnimationFrame(() => {
         paintScheduled = false;
         post({ type: 'painted', at: performance.timeOrigin + performance.now() });
+        const moved = locks.refresh();
+        if (moved) post({ type: 'locks', keys: moved });
       });
     });
   };
@@ -1207,6 +1273,7 @@ const globalScope = window as unknown as Record<string, unknown>;
 if (!globalScope[marker]) {
   globalScope[marker] = true;
   exposeHeadlessScan(selectorFor);
+  exposeHeadlessMatch(APP_MODE !== 'next');
   markScopedElement();
   const session = readSession();
   if (session) startBridge(session);

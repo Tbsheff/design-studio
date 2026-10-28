@@ -1,4 +1,4 @@
-import { authoredSizes } from './authored.js';
+import { authoredBox } from './authored.js';
 import { ARRANGE_SHORTCUTS } from '../shared/arrange.js';
 
 export const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
@@ -54,7 +54,8 @@ function authoredStyles(element: Element): Record<string, string> {
 
 export function layoutStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {
   const parent = element.parentElement ? window.getComputedStyle(element.parentElement) : null;
-  const sizes = authoredSizes(element);
+  const positioned = computed.position === 'absolute' || computed.position === 'fixed';
+  const sizes = authoredBox(element, positioned);
   return {
     ...authoredStyles(element),
     'authored-width': sizes.width ?? '',
@@ -67,7 +68,55 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
     'parent-display': parent?.display ?? '',
     'parent-flex-direction': parent?.flexDirection ?? '',
     ...offsetStyles(element, computed),
+    ...(positioned ? constraintStyles(element, computed, sizes) : {}),
   };
+}
+
+interface Container {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+}
+
+function containerOf(element: HTMLElement, fixed: boolean): Container {
+  const parent = fixed ? null : element.offsetParent;
+  if (parent instanceof HTMLElement && parent !== document.body) {
+    const box = parent.getBoundingClientRect();
+    return { width: parent.clientWidth, height: parent.clientHeight, x: box.left + parent.clientLeft, y: box.top + parent.clientTop };
+  }
+  const scrolled = fixed ? { x: 0, y: 0 } : { x: -window.scrollX, y: -window.scrollY };
+  return { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight, ...scrolled };
+}
+
+function exact(value: number): string {
+  return `${Number(value.toFixed(2))}px`;
+}
+
+function constraintStyles(element: Element, computed: CSSStyleDeclaration, box: Partial<Record<string, string>>): Record<string, string> {
+  if (!(element instanceof HTMLElement)) return {};
+  const parent = containerOf(element, computed.position === 'fixed');
+  const rect = element.getBoundingClientRect();
+  return {
+    'authored-left': box.left ?? '',
+    'authored-right': box.right ?? '',
+    'authored-top': box.top ?? '',
+    'authored-bottom': box.bottom ?? '',
+    'container-width': exact(parent.width),
+    'container-height': exact(parent.height),
+    'pin-left': exact(rect.left - parent.x - (parseFloat(computed.marginLeft) || 0)),
+    'pin-top': exact(rect.top - parent.y - (parseFloat(computed.marginTop) || 0)),
+    'box-width': exact(rect.width),
+    'box-height': exact(rect.height),
+    'size-width': exact(rect.width - boxExtra(computed, 'x')),
+    'size-height': exact(rect.height - boxExtra(computed, 'y')),
+  };
+}
+
+function boxExtra(computed: CSSStyleDeclaration, axis: 'x' | 'y'): number {
+  if (computed.boxSizing === 'border-box') return 0;
+  const sides = axis === 'x' ? ['Left', 'Right'] : ['Top', 'Bottom'];
+  return sides.reduce((sum, side) => sum + (parseFloat(computed.getPropertyValue(`padding-${side.toLowerCase()}`)) || 0) + (parseFloat(computed.getPropertyValue(`border-${side.toLowerCase()}-width`)) || 0), 0);
 }
 
 function offsetStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {

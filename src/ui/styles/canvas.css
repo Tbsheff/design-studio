@@ -209,6 +209,11 @@
   background: var(--select-tint);
 }
 
+.box.marquee {
+  border: var(--stroke) solid var(--select);
+  background: var(--select-tint);
+}
+
 .box.selected {
   border: calc(var(--stroke) * 2) solid var(--select);
   box-shadow: 0 0 0 var(--stroke) var(--halo);
@@ -789,8 +794,17 @@ body.element-resizing .frame {
 
 .layers-row:hover .layers-eye,
 .layers-row.selected .layers-eye,
-.layers-row.is-hidden .layers-eye {
+.layers-row.is-hidden .layers-eye:not(.layers-lock),
+.layers-row.is-locked .layers-lock {
   opacity: 1;
+}
+
+.layers-lock + .layers-eye {
+  margin-left: 0;
+}
+
+.layers-row.is-locked .layers-lock {
+  color: var(--text-2);
 }
 
 .layers-eye:hover {

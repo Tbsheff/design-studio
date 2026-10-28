@@ -198,11 +198,18 @@ function liftOurStyle(hold: Hold, spec: Spec): string[] {
   return lifted;
 }
 
+const SUBPIXEL = 0.1;
+const PX_VALUE = /^-?\d+(\.\d+)?px$/;
+
+function samePixels(got: string, want: string): boolean {
+  return PX_VALUE.test(got) && PX_VALUE.test(want) && Math.abs(parseFloat(got) - parseFloat(want)) < SUBPIXEL;
+}
+
 function styleMismatch(hold: Hold): string | null {
   const computed = window.getComputedStyle(hold.element);
   for (const [prop, want] of hold.expected) {
     const got = computed.getPropertyValue(prop);
-    if (got !== want) return `${prop} is ${got || 'unset'} on the page, not ${want}`;
+    if (got !== want && !samePixels(got, want)) return `${prop} is ${got || 'unset'} on the page, not ${want}`;
   }
   return null;
 }

@@ -9,7 +9,7 @@ function clip(value: string, max: number): string {
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
-function isLayer(element: Element): boolean {
+export function isLayer(element: Element): boolean {
   return !SKIP_TAGS.has(element.tagName) && !element.id.startsWith('studio-');
 }
 
@@ -49,7 +49,7 @@ function sourceRefs(): Map<Element, string> {
 }
 
 export interface LayerIndex {
-  build(): { nodes: LayerNode[]; truncated: boolean };
+  build(locked?: (element: Element) => boolean): { nodes: LayerNode[]; truncated: boolean };
   idOf(element: Element): number;
   element(id: number): Element | null;
 }
@@ -70,7 +70,7 @@ export function createLayerIndex(): LayerIndex {
     return id;
   };
 
-  const build = (): { nodes: LayerNode[]; truncated: boolean } => {
+  const build = (locked?: (element: Element) => boolean): { nodes: LayerNode[]; truncated: boolean } => {
     byId = new Map();
     const refs = sourceRefs();
     const nodes: LayerNode[] = [];
@@ -89,6 +89,7 @@ export function createLayerIndex(): LayerIndex {
         childCount: children.length,
         hidden: element.getClientRects().length === 0,
         ...locOf(element, refs),
+        ...(locked?.(element) ? { locked: true } : {}),
       });
       for (let i = children.length - 1; i >= 0; i -= 1) stack.push({ element: children[i] as Element, depth: depth + 1 });
     }

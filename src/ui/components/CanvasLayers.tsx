@@ -32,6 +32,7 @@ export function CanvasLayersPanel({ frames, edits, frameName, selection, onSelec
     <LayersPanel
       tree={edits.tree ?? frames.tree}
       edits={actions}
+      onToggleLocked={edits.setNodeLocked}
       busy={!edits.settled}
       frameName={frameName}
       selectedNode={hasSelection ? frames.selectedNode : null}

@@ -154,7 +154,7 @@ const batch = defineTool(
   batchSchema,
   {
     title: 'Batch edit',
-    description: 'Make several changes as ONE version and one undo step. Pass edits (style, text and class edits on elements found by CSS selector, on one or more pages; the same code path as a multi-select in the studio inspector; a shared component use such as <Button> or <CardTitle> is edited where it is used unless the edit has target \"component\") or files (whole files, the same path rules as write_file). Up to 50 edits or 20 files. Structure ops (delete, duplicate, wrap, unwrap, move) are not part of a batch; use edit_element with op.',
+    description: 'Make several changes as ONE version and one undo step. Pass edits (style, text and class edits on elements found by CSS selector, on one or more pages; the same code path as a multi-select in the studio inspector; a shared component use such as <Button> or <CardTitle> is edited where it is used unless the edit has target \"component\") or files (whole files, the same path rules as write_file). Up to 50 edits or 20 files. Structure ops (delete, duplicate, wrap, group, unwrap, move) are not part of a batch; use edit_element with op.',
   },
   async (deps, input, client) => {
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);

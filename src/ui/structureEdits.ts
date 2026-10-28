@@ -3,7 +3,7 @@ import { STRUCTURE_KEY_IDS } from '../shared/structure-keys';
 import { parseLoc } from './commentAnchors';
 import type { PreviewMenuItem } from './components/PreviewMenu';
 
-export type SelectionOp = 'delete' | 'duplicate' | 'wrap' | 'unwrap';
+export type SelectionOp = 'delete' | 'duplicate' | 'wrap' | 'unwrap' | 'group';
 export type LayerDrop = { into: number } | { before: number } | { after: number };
 
 export const NO_SOURCE = 'This element has no source location, so it cannot be changed here.';
@@ -48,6 +48,7 @@ const LABELS: Record<StructureKey, string> = {
   unwrap: 'Unwrap',
   cut: 'Cut to move',
   paste: 'Move cut layers here',
+  group: 'Group selection',
 };
 
 const ICONS: Record<StructureKey, PreviewMenuItem['icon']> = {
@@ -57,9 +58,10 @@ const ICONS: Record<StructureKey, PreviewMenuItem['icon']> = {
   unwrap: 'expand',
   cut: 'arrowRight',
   paste: 'arrowDown',
+  group: 'layers',
 };
 
-const MENU_ORDER: StructureKey[] = ['duplicate', 'wrap', 'unwrap', 'cut', 'paste', 'delete'];
+const MENU_ORDER: StructureKey[] = ['duplicate', 'group', 'wrap', 'unwrap', 'cut', 'paste', 'delete'];
 
 function blockReason(key: StructureKey, state: StructureMenuState): string | undefined {
   if (!state.hasSource) return NO_SOURCE;
@@ -71,7 +73,7 @@ function blockReason(key: StructureKey, state: StructureMenuState): string | und
 export function structureMenuItems(state: StructureMenuState, run: (key: StructureKey) => void, leadDivider = false): PreviewMenuItem[] {
   return MENU_ORDER.map((key, index) => {
     const disabled = blockReason(key, state);
-    const label = state.count > 1 && key !== 'paste' && key !== 'wrap' ? `${LABELS[key]} ${state.count} layers` : LABELS[key];
+    const label = state.count > 1 && key !== 'paste' && key !== 'wrap' && key !== 'group' ? `${LABELS[key]} ${state.count} layers` : LABELS[key];
     return { id: `structure-${key}`, label, icon: ICONS[key], keyId: STRUCTURE_KEY_IDS[key], run: () => run(key), divider: (leadDivider && index === 0) || key === 'delete', ...(disabled ? { disabled } : {}) };
   });
 }

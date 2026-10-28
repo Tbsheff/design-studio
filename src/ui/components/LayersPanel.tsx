@@ -31,6 +31,7 @@ interface Props {
   onSelect: (id: number, additive: boolean) => void;
   onClose?: () => void;
   edits?: LayerEditActions | null;
+  onToggleLocked?: (id: number, locked: boolean) => void;
   busy?: boolean;
 }
 
@@ -112,6 +113,30 @@ interface RowProps {
   dropInto: boolean;
   onRenameDone: (node: LayerNode, value: string | null) => void;
   onToggleHidden: (node: LayerNode) => void;
+  onToggleLocked: ((node: LayerNode) => void) | null;
+}
+
+function LockButton({ node, onToggle }: { node: LayerNode; onToggle: (node: LayerNode) => void }) {
+  const label = node.locked ? 'Unlock' : 'Lock';
+  return (
+    <button
+      type="button"
+      className="layers-eye layers-lock"
+      tabIndex={-1}
+      aria-label={label}
+      aria-pressed={node.locked === true}
+      data-tip={`${label}  ⇧⌘L`}
+      data-tip-align="end"
+      onPointerDown={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle(node);
+      }}
+    >
+      <Icon name={node.locked ? 'lock' : 'unlock'} size={14} />
+    </button>
+  );
 }
 
 function EyeButton({ node, onToggleHidden }: { node: LayerNode; onToggleHidden: (node: LayerNode) => void }) {
@@ -146,7 +171,7 @@ function LayerRow(p: RowProps) {
       aria-level={node.depth + 1}
       aria-selected={p.selected}
       aria-expanded={node.childCount > 0 ? !p.collapsed : undefined}
-      className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}${p.dropInto ? ' drop-into' : ''}`}
+      className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}${node.locked ? ' is-locked' : ''}${p.dropInto ? ' drop-into' : ''}`}
       style={{ top: p.top, paddingLeft: 4 + node.depth * 12 }}
       data-tip={full}
       onPointerEnter={() => p.onHover(node.id)}
@@ -188,6 +213,7 @@ function LayerRow(p: RowProps) {
           {node.text && <span className="layers-text">{node.text}</span>}
         </>
       )}
+      {p.onToggleLocked && !p.editing && <LockButton node={node} onToggle={p.onToggleLocked} />}
       {p.editable && !p.editing ? <EyeButton node={node} onToggleHidden={p.onToggleHidden} /> : node.hidden && <span className="layers-flag">Hidden</span>}
     </div>
   );
@@ -244,8 +270,9 @@ function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>
   return { drop, dragging, onPress, onPointerMove, onPointerUp, onPointerCancel: reset };
 }
 
-const TOOLS: { key: StructureKey; label: string; icon: 'copy' | 'frame' | 'expand' | 'trash' }[] = [
+const TOOLS: { key: StructureKey; label: string; icon: 'copy' | 'frame' | 'expand' | 'trash' | 'layers' }[] = [
   { key: 'duplicate', label: 'Duplicate', icon: 'copy' },
+  { key: 'group', label: 'Group selection', icon: 'layers' },
   { key: 'wrap', label: 'Wrap in auto layout', icon: 'frame' },
   { key: 'unwrap', label: 'Unwrap', icon: 'expand' },
   { key: 'delete', label: 'Delete', icon: 'trash' },
@@ -275,7 +302,11 @@ function useRowMenu(edits: LayerEditActions | null | undefined, selectedNode: nu
   return { open, menu };
 }
 
-export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, onClose, edits, busy = false }: Props) {
+function isLockKey(e: KeyboardEvent<HTMLDivElement>): boolean {
+  return e.key.toLowerCase() === 'l' && e.shiftKey && (e.metaKey || e.ctrlKey) && !e.altKey;
+}
+
+export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, onClose, edits, onToggleLocked, busy = false }: Props) {
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const { collapsed, toggle } = useCollapsed(nodes, selectedNode);
   const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
@@ -331,6 +362,11 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (onToggleLocked && selectedRow && isLockKey(e)) {
+      e.preventDefault();
+      onToggleLocked(selectedRow.id, !selectedRow.locked);
+      return;
+    }
     if (editKey(e)) {
       e.preventDefault();
       return;
@@ -404,6 +440,7 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
                 dropInto={drag.drop?.into === node.id}
                 onRenameDone={finishRename}
                 onToggleHidden={(n) => edits?.onToggleHidden(n.id, !n.hidden)}
+                onToggleLocked={onToggleLocked ? (n) => onToggleLocked(n.id, !n.locked) : null}
               />
             ))}
             {drag.drop && drag.drop.line !== null && <div className="layers-drop" data-testid="layers-drop" style={{ top: drag.drop.line }} />}

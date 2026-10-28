@@ -40,6 +40,7 @@ import type { ToolDef, ToolResult } from './tools.js';
 import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
 import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
 import { COMPONENT_CREATE_TOOLS } from './component-create-tools.js';
+import { SELECT_TOOLS } from './select-tools.js';
 
 const FILE_MAX = 512 * 1024;
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
@@ -81,10 +82,12 @@ const schemas = {
       classes: classes.optional(),
       target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: an element that is the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes; other elements are edited in their own file. "component" edits the element in the shared component file, which changes every use ("element" is the same). "use" asks for the use site and fails when there is none.'),
       variant: variant.optional(),
-      op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
+      op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
+      also: z.array(z.object({ selector: selector.describe('CSS selector or layer id.') }).strict()).min(1).max(49).optional().describe('With op: more elements to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Layer ids from select_matching work here.'),
     })
     .strict()
+    .refine((input) => input.also === undefined || input.op !== undefined, 'also needs op')
     .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined && input.variant === undefined), 'pass style, text or classes, or op alone')
     .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none')
     .refine((input) => input.target !== 'use' || input.op === undefined, 'target use takes style, classes or text, not op'),
@@ -181,7 +184,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS, ...SELECT_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token', 'create_component', 'swap_instance']);
@@ -287,7 +290,7 @@ async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, clie
   return { result, activity: versionActivity(project, direction, `${before === null ? 'Created' : 'Wrote'} ${relative}`, version) };
 }
 
-const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved', clear: 'Cleared text in' } as const;
+const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved', clear: 'Cleared text in', group: 'Grouped' } as const;
 
 async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op: NonNullable<Input<'edit_element'>['op']>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
@@ -295,9 +298,11 @@ async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op
   const url = await pageUrl(deps, project, direction, input.path);
   const element = await sourceElement(deps, url, input.selector);
   const parent = input.targetSelector ? await sourceElement(deps, url, input.targetSelector) : null;
-  const body = { op, targets: [{ source: element.source, selector: input.selector, tag: element.tag }], ...(parent ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
+  const more = await Promise.all((input.also ?? []).map(async (item) => ({ item, found: await sourceElement(deps, url, item.selector) })));
+  const targets = [{ source: element.source, selector: input.selector, tag: element.tag }, ...more.map(({ item, found }) => ({ source: found.source, selector: item.selector, tag: found.tag }))];
+  const body = { op, targets, ...(parent ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
   const result = await studioCall<StructureEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  const summary = `${OP_WORDS[op]} ${element.tag}${parent ? ` into ${parent.tag}` : ''}`;
+  const summary = `${OP_WORDS[op]} ${targets.length > 1 ? `${targets.length} elements` : element.tag}${parent ? ` into ${parent.tag}` : ''}`;
   return { result: ok({ files: result.files, versionId: result.version.id, title: result.version.title, select: result.select }), activity: versionActivity(project, direction, summary, result.version) };
 }
 

@@ -9,6 +9,7 @@ import type { LayerTree } from './layersTree';
 import { IS_MAC } from './commands/keys';
 import { NO_SOURCE, dropRequest, selectionTargets, type LayerDrop, type SelectionOp } from './structureEdits';
 import { isTypingTarget } from './typingTarget';
+import { useLayerLocks } from './useLayerLocks';
 
 const RESELECT_MS = 5000;
 const NODE_WAIT_MS = 2000;
@@ -68,6 +69,7 @@ export interface LayerEdits {
   notify: (message: string) => void;
   renameNode: (id: number, name: string | null) => void;
   setNodeHidden: (id: number, hidden: boolean) => void;
+  setNodeLocked: (id: number, locked: boolean) => void;
   moveNode: (id: number, move: ReorderMove) => void;
   moveSelected: (move: ReorderMove) => void;
   structureKey: (key: StructureKey) => void;
@@ -126,6 +128,7 @@ export function useLayerEdits(o: Options): LayerEdits {
   const treeFresh = treeToken !== null && treeToken === o.frames.frontToken;
   const treeFreshRef = useRef(treeFresh);
   treeFreshRef.current = treeFresh;
+  const locks = useLayerLocks(o.projectId, o.directionId, o.frames.frontToken, o.frames.post);
 
   useEffect(() => {
     if (o.treeWanted && o.frames.frontToken) o.frames.post({ type: 'request-tree' });
@@ -370,6 +373,7 @@ export function useLayerEdits(o: Options): LayerEdits {
       })),
     (frame, msg: BridgeToParent) => {
       if (frame.token !== live.current.frames.frontToken) return;
+      locks.onBridge(msg);
       if (msg.type === 'tree') setTreeToken(frame.token);
       if (msg.type === 'painted') sendReselect();
       if (msg.type === 'select' && msg.selection && typeof msg.selection === 'object') resolveReselect(frame.token, msg.selection);
@@ -409,6 +413,7 @@ export function useLayerEdits(o: Options): LayerEdits {
     notify,
     renameNode,
     setNodeHidden,
+    setNodeLocked: locks.setNodeLocked,
     moveNode,
     moveSelected,
     structureKey,

@@ -874,7 +874,7 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version, and {arrange: ArrangeRequest} (align, distribute or tidy up siblings: parent justify/align/gap in an auto layout, left/top for absolute children; refusals are 422 with the reason) -> ArrangeResult with one version',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move|group, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version, and {arrange: ArrangeRequest} (align, distribute or tidy up siblings: parent justify/align/gap in an auto layout, left/top for absolute children; refusals are 422 with the reason) -> ArrangeResult with one version',
   elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null, variants: VariantSupport} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
@@ -945,7 +945,11 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
   | { ns: 'studio'; token: string; type: 'arrange-key'; key: string }
   | { ns: 'studio'; token: string; type: 'optimistic-result'; id: string; outcome: OptimisticOutcome; reason?: string; ms: number }
-  | { ns: 'studio'; token: string; type: 'play-layers'; layers: Record<string, LinkRect> };
+  | { ns: 'studio'; token: string; type: 'play-layers'; layers: Record<string, LinkRect> }
+  | { ns: 'studio'; token: string; type: 'marquee'; rect: SelectionContext['rect'] | null }
+  | { ns: 'studio'; token: string; type: 'select-many'; selections: SelectionContext[]; additive: boolean; at: number; node?: number }
+  | { ns: 'studio'; token: string; type: 'matched'; requestId: string; count: number; note?: string }
+  | { ns: 'studio'; token: string; type: 'locks'; keys: string[] };
 
 export interface LayerNode {
   id: number;
@@ -957,7 +961,12 @@ export interface LayerNode {
   hidden: boolean;
   loc?: string;
   ref?: string;
+  locked?: boolean;
 }
+
+export const MATCH_KINDS = ['component', 'classes', 'text-style'] as const;
+export type MatchKind = (typeof MATCH_KINDS)[number];
+export const MATCH_SELECT_MAX = 200;
 
 export const LAYER_TREE_MAX = 5000;
 export const LAYER_LABEL_MAX = 60;
@@ -1009,7 +1018,7 @@ export function isModZoomKey(event: ZoomKeyInput): boolean {
 }
 
 export type ParentToBridge =
-  | { ns: 'studio'; token: string; type: 'set-mode'; mode: 'select' | 'none' }
+  | { ns: 'studio'; token: string; type: 'set-mode'; mode: 'select' | 'none'; marquee?: boolean }
   | { ns: 'studio'; token: string; type: 'request-rects'; selectors: string[] }
   | { ns: 'studio'; token: string; type: 'clear' }
   | { ns: 'studio'; token: string; type: 'preview-style'; selector: string; style: Record<string, string | null> }
@@ -1040,7 +1049,10 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'optimistic-apply'; id: string; patch: DomPatch; written: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-settle'; id: string; ok: boolean; classes?: ClassDelta; reason?: string }
   | { ns: 'studio'; token: string; type: 'optimistic-drop' }
-  | { ns: 'studio'; token: string; type: 'play-fx'; layers: Record<string, LinkRect>; duration: number; easing: string };
+  | { ns: 'studio'; token: string; type: 'play-fx'; layers: Record<string, LinkRect>; duration: number; easing: string }
+  | { ns: 'studio'; token: string; type: 'select-matching'; requestId: string; selector: string; by: MatchKind }
+  | { ns: 'studio'; token: string; type: 'set-locks'; keys: string[] }
+  | { ns: 'studio'; token: string; type: 'lock-node'; id: number; locked: boolean };
 
 export interface ClassDelta {
   add: string[];
@@ -1152,7 +1164,7 @@ export interface DirectEditBatch {
   edits: DirectEditRequest[];
 }
 
-export const STRUCTURE_OPS = ['delete', 'duplicate', 'wrap', 'unwrap', 'move', 'clear'] as const;
+export const STRUCTURE_OPS = ['delete', 'duplicate', 'wrap', 'unwrap', 'move', 'clear', 'group'] as const;
 export type StructureOp = (typeof STRUCTURE_OPS)[number];
 
 export interface StructureTarget {
@@ -1175,7 +1187,7 @@ export interface StructureEditResult {
   select: (SourceLoc & { tag: string })[];
 }
 
-export type StructureKey = 'delete' | 'duplicate' | 'wrap' | 'unwrap' | 'cut' | 'paste';
+export type StructureKey = 'delete' | 'duplicate' | 'wrap' | 'unwrap' | 'cut' | 'paste' | 'group';
 
 export interface EditHistoryState {
   canUndo: boolean;

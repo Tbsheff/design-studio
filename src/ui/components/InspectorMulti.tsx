@@ -1,4 +1,6 @@
-import type { CreateTokenResult } from '../../shared/contracts';
+import { useSyncExternalStore, type MutableRefObject } from 'react';
+import type { BridgeToParent, CreateTokenResult, MatchKind, SelectionContext } from '../../shared/contracts';
+import type { PreviewPort } from '../bridge';
 import { cssVarFor } from '../../shared/token-match';
 import { api } from '../api';
 import type { StyleValues } from '../cssValues';
@@ -61,4 +63,71 @@ export function MultiCreateTokenHost({ projectId, directionId, tokens, edit, req
     return result;
   };
   return <CreateTokenDialog request={request} entries={tokens.entries} onSubmit={submit} onClose={onClose} />;
+}
+
+const MATCH_OPTIONS: { by: MatchKind; label: string; tip: string }[] = [
+  { by: 'component', label: 'Component', tip: 'Select every copy of this component or element' },
+  { by: 'classes', label: 'Classes', tip: 'Select elements with exactly the same classes' },
+  { by: 'text-style', label: 'Text style', tip: 'Select text with the same font, size, weight, line height and tracking' },
+];
+const MATCH_WAIT_MS = 5000;
+const MATCH_NOTE_MS = 6000;
+
+let matchNote: { text: string; at: number } | null = null;
+let matchSeq = 0;
+const matchSubs = new Set<() => void>();
+
+function setMatchNote(text: string | null): void {
+  matchNote = text ? { text, at: Date.now() } : null;
+  for (const sub of matchSubs) sub();
+}
+
+function subscribeMatch(sub: () => void): () => void {
+  matchSubs.add(sub);
+  return () => matchSubs.delete(sub);
+}
+
+function matchedText(message: Extract<BridgeToParent, { type: 'matched' }>): string {
+  if (message.note) return message.note;
+  return message.count <= 1 ? 'No other element matches.' : `Selected ${message.count} matching elements.`;
+}
+
+function askMatching(port: PreviewPort, selector: string, by: MatchKind): void {
+  matchSeq += 1;
+  const requestId = `match-${matchSeq}`;
+  setMatchNote(null);
+  const stop = port.listen?.((message) => {
+    if (message.type !== 'matched' || message.requestId !== requestId) return;
+    done();
+    setMatchNote(matchedText(message));
+  });
+  const timer = window.setTimeout(() => done(), MATCH_WAIT_MS);
+  function done(): void {
+    window.clearTimeout(timer);
+    stop?.();
+  }
+  port.post({ type: 'select-matching', requestId, selector, by });
+}
+
+export function SelectMatchingSection({ selection, port }: { selection: SelectionContext[]; port: MutableRefObject<PreviewPort | null> }) {
+  const note = useSyncExternalStore(subscribeMatch, () => matchNote);
+  const base = selection.at(-1);
+  if (!base) return null;
+  const fresh = note && Date.now() - note.at < MATCH_NOTE_MS ? note.text : null;
+  return (
+    <InspectorSection title="Select matching">
+      <div className="ins-add-links ins-select-matching" role="group" aria-label="Select matching">
+        {MATCH_OPTIONS.map((option) => (
+          <button key={option.by} type="button" className="ins-add-link" data-tip={option.tip} onClick={() => port.current && askMatching(port.current, base.selector, option.by)}>
+            {option.label}
+          </button>
+        ))}
+      </div>
+      {fresh && (
+        <p className="ins-select-matching-note" role="status">
+          {fresh}
+        </p>
+      )}
+    </InspectorSection>
+  );
 }

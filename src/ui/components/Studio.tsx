@@ -8,6 +8,7 @@ import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { POLISH_REQUEST } from '../polish';
 import { createDraftStore, homeVariations, uiStore, useDraftActive, useUi } from '../storage';
+import { setLeaveCheck } from '../route';
 import { useDesignSystemState } from '../useDesignSystemState';
 import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
@@ -224,6 +225,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const historyChain = editHistory.undoChain(canUndo, () => undoRef.current());
   const studioTokens = useStudioTokens({ projectId, directionId, tokens, ...tweaks.undoChain(historyChain.canUndo, historyChain.onUndo), redo: editHistory.redo, onCommitted: () => data.refreshVersions() });
   const { guard } = studioTokens;
+  const leaveCheck = studioTokens.draft.confirmLeave;
+  useEffect(() => {
+    setLeaveCheck(leaveCheck);
+    return () => setLeaveCheck(null);
+  }, [leaveCheck]);
   const detailsRun = runById(runs, detailsRunId);
   const componentList = useComponents(projectId, directionId, data.lastChange);
   const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(null);

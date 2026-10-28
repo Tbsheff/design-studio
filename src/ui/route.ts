@@ -17,6 +17,11 @@ export function pathForProject(projectId: string | null): string {
 }
 
 let installed = false;
+let leaveCheck: (() => boolean) | null = null;
+
+export function setLeaveCheck(check: (() => boolean) | null): void {
+  leaveCheck = check;
+}
 
 export function installRouting(): void {
   if (installed) return;
@@ -25,6 +30,7 @@ export function installRouting(): void {
   const canonical = pathForProject(current);
   if (window.location.pathname !== canonical) window.history.replaceState(null, '', `${canonical}${window.location.search}${window.location.hash}`);
   if (uiStore.get().activeProjectId !== current) uiStore.set({ activeProjectId: current });
+  if (current === null && uiStore.get().screen !== 'home') uiStore.set({ screen: 'home' });
   uiStore.subscribe(() => {
     const next = uiStore.get().activeProjectId;
     if (next === current) return;
@@ -33,6 +39,10 @@ export function installRouting(): void {
   });
   window.addEventListener('popstate', () => {
     const next = projectFromPath(window.location.pathname);
+    if (current !== null && next !== current && leaveCheck && !leaveCheck()) {
+      window.history.pushState(null, '', pathForProject(current));
+      return;
+    }
     current = next;
     if (uiStore.get().activeProjectId !== next) uiStore.set({ activeProjectId: next });
   });

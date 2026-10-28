@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { parse, type ParserPlugin } from '@babel/parser';
@@ -256,6 +256,24 @@ interface ProgramScope {
   root: string;
 }
 
+const configCache = new Map<string, { stamp: number; options: TS.CompilerOptions | null }>();
+
+function configOptions(ts: Ts, candidate: string, base: TS.CompilerOptions): TS.CompilerOptions | null {
+  const stamp = statSync(candidate, { throwIfNoEntry: false })?.mtimeMs ?? -1;
+  const known = configCache.get(candidate);
+  if (known?.stamp === stamp) return known.options;
+  const read = ts.readConfigFile(candidate, (target) => ts.sys.readFile(target));
+  let options: TS.CompilerOptions | null = null;
+  if (!read.error && read.config) {
+    const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(candidate), undefined, candidate);
+    const skip = path.basename(candidate) === 'tsconfig.json' && !parsed.options.paths && Array.isArray(read.config.references) && existsSync(path.join(path.dirname(candidate), 'tsconfig.app.json'));
+    if (!skip) options = { ...parsed.options, ...base, jsx: ts.JsxEmit.Preserve, paths: parsed.options.paths, baseUrl: parsed.options.baseUrl, moduleResolution: parsed.options.moduleResolution ?? base.moduleResolution };
+  }
+  if (configCache.size > 100) configCache.clear();
+  configCache.set(candidate, { stamp, options });
+  return options;
+}
+
 export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
   const base: TS.CompilerOptions = { jsx: ts.JsxEmit.Preserve, allowJs: true, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [] };
   let dir = path.dirname(file);
@@ -263,11 +281,8 @@ export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.Compi
     for (const name of ['tsconfig.app.json', 'tsconfig.json']) {
       const candidate = path.join(dir, name);
       if (!existsSync(candidate)) continue;
-      const read = ts.readConfigFile(candidate, (target) => ts.sys.readFile(target));
-      if (read.error || !read.config) continue;
-      const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(candidate), undefined, candidate);
-      if (name === 'tsconfig.json' && !parsed.options.paths && Array.isArray(read.config.references) && existsSync(path.join(dir, 'tsconfig.app.json'))) continue;
-      return { ...parsed.options, ...base, jsx: ts.JsxEmit.Preserve, paths: parsed.options.paths, baseUrl: parsed.options.baseUrl, moduleResolution: parsed.options.moduleResolution ?? base.moduleResolution };
+      const options = configOptions(ts, candidate, base);
+      if (options) return options;
     }
     const parent = path.dirname(dir);
     if (parent === dir) break;

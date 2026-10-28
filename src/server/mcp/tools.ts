@@ -2,7 +2,8 @@ import { withFrameStateHost } from '../../shared/frame-state.js';
 import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
 import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { SOURCE_LOC_ATTR, type Project } from '../../shared/contracts.js';
+import { SOURCE_LOC_ATTR, type Direction, type Project, type Version } from '../../shared/contracts.js';
+import { firstVersionState, firstVersionWaitText } from '../app/first-version.js';
 import { cleanExportPath, type ExportFrame } from '../../shared/export.js';
 import { DESIGN_MD_FILE } from '../design-system/packs.js';
 import { readDesignSystemFiles } from '../design-system/sync.js';
@@ -98,15 +99,30 @@ function json(value: unknown): ToolResult {
   return text(JSON.stringify(value, null, 2));
 }
 
+const LIVE_VERSION_ID = 'live';
+
+function liveAppSource(deps: ExportDeps, project: Project, direction: Direction): ExportSource {
+  const version: Version = { id: LIVE_VERSION_ID, directionId: direction.id, parentId: null, title: 'Live app', meta: { kind: 'init' }, createdAt: Date.now(), changedFiles: [] };
+  return { project, direction, version, root: direction.workTree, files: async () => direction.workTree, open: async () => ({ url: await deps.preview.directionUrl(project, direction), release: async () => undefined }) };
+}
+
+function versionLabel(src: ExportSource): string {
+  if (src.version.id !== LIVE_VERSION_ID) return `version ${src.version.id}`;
+  const state = firstVersionState(src.project.id);
+  return state?.pending ? `the live app (the first version is still being saved, about ${state.etaSeconds} s left)` : 'the live app';
+}
+
 async function source(deps: ExportDeps, args: Args): Promise<ExportSource> {
   const projectId = str(args, 'projectId', true) as string;
   const project = await deps.projects.get(projectId);
   let versionId = str(args, 'versionId');
+  if (versionId === LIVE_VERSION_ID) versionId = undefined;
   if (!versionId) {
     const directionId = str(args, 'directionId');
     const direction = directionId ? project.directions.find((d) => d.id === directionId) : project.directions[0];
     if (!direction) throw new ToolError('direction not found');
-    if (!direction.headVersionId) throw new ToolError('this direction has no saved version yet');
+    if (!direction.headVersionId && project.app) return liveAppSource(deps, project, direction);
+    if (!direction.headVersionId) throw new ToolError(firstVersionWaitText(project.id));
     versionId = direction.headVersionId;
   }
   return resolveSource(deps, project.id, versionId);
@@ -231,17 +247,27 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
   return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}), ...(state ? { state } : {}) };
 }
 
+const WARM_TIMEOUT_MS = 120_000;
+
+async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {
+  const upstream = project.app ? await deps.preview.apps?.ensure(project).catch(() => null) : null;
+  if (!upstream) return;
+  const answer = await fetch(new URL(`/${page ?? ''}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+  await answer?.body?.cancel().catch(() => undefined);
+}
+
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const picked = await frameShot(deps, raw);
   const args = picked.args;
   const src = await source(deps, args);
   const page = pagePath(args) ?? picked.path;
   const frame: ExportFrame = { name: 'Screenshot', width: picked.width ?? int(args, 'width', 320, 2560, 1440), height: picked.height ?? int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
+  await warmAppPage(deps, src.project, page);
   const opened = await src.open();
   try {
     const shot = await captureFrame(deps.preview, withFrameStateHost(opened.url, picked.state), frame, 1, args.fullPage === true ? 'page' : 'frame', undefined, MAX_SHOT_HEIGHT);
     const note = shot.cropped ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.` : '';
-    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${shot.width} × ${shot.height} px of version ${src.version.id}.${note}` }] };
+    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${shot.width} × ${shot.height} px of ${versionLabel(src)}.${note}` }] };
   } finally {
     await opened.release().catch(() => undefined);
   }

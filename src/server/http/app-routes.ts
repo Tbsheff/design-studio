@@ -2,14 +2,19 @@ import { spawn } from 'node:child_process';
 import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
-import type { AttachAppRequest, Direction, Project } from '../../shared/contracts.js';
+import type { AttachAppRequest, Direction, LegacyCanvasNotice, Project } from '../../shared/contracts.js';
+import { firstVersionState, firstVersionWaitText, isFirstVersionRunning, startFirstVersion, waitForFirstVersion, type AttachResponse } from '../app/first-version.js';
 import { listAppRoutes } from '../app/routes.js';
-import { BadRequestError, NotFoundError } from '../store/errors.js';
+import { setAsideLegacyCanvas } from '../canvas/service.js';
+import { userGit } from '../git/user-git.js';
+import { BadRequestError, ConflictError, NotFoundError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { PreviewService, VersionStore } from '../types.js';
 
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
+const EDIT_WAIT_MS = 20_000;
+const EDIT_ROUTES = /\/d\/[^/]+\/(direct-edit|discard|keep|undo|restore|insert|props|props\/variant-classes|review\/fix|tweaks\/commit|(edit-history|edit-session)\/\w+|design-system\/(apply|save|tokens|tokens\/update))$/;
 
 export interface AppRouteDeps {
   projects: StudioProjectStore;
@@ -77,27 +82,67 @@ export async function resolveSourceFile(workTree: string, source: string): Promi
   return { relative: relative.split(path.sep).join('/'), absolute, line: Number(match[2]), col: Number(match[3]) };
 }
 
-export async function finishAttach(deps: AppRouteDeps, attached: Project): Promise<Project> {
-  const fresh = attached.directions[0]?.headVersionId === null;
+function needsFirstVersion(project: Project): boolean {
+  return Boolean(project.app) && project.directions[0]?.headVersionId === null;
+}
+
+function ensureFirstVersion(deps: AppRouteDeps, project: Project): void {
+  if (!needsFirstVersion(project) || isFirstVersionRunning(project.id)) return;
+  startFirstVersion(project.id, deps.versions.untrackedCount?.(project) ?? null, () => deps.commitInit(project));
+}
+
+async function trackedByUserRepo(workTree: string, relative: string): Promise<boolean> {
+  const result = await userGit(workTree, ['ls-files', '--error-unmatch', '--', relative], { allowFail: true }).catch(() => null);
+  return result?.code === 0;
+}
+
+async function setAsideCanvas(deps: AppRouteDeps, project: Project): Promise<LegacyCanvasNotice | null> {
+  try {
+    return await setAsideLegacyCanvas(project, (id) => deps.projects.projectDir(id), trackedByUserRepo);
+  } catch (error) {
+    console.error(`[app] could not set aside the old canvas of ${project.id}`, error);
+    return null;
+  }
+}
+
+export async function finishAttach(deps: AppRouteDeps, attached: Project): Promise<AttachResponse> {
+  const fresh = needsFirstVersion(attached);
   deps.preview.apps?.forget(attached.id);
   deps.watch(attached, deps.projects.mainDirection(attached));
   const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
   if (attached.app?.mode === 'url') await starting;
-  if (fresh) {
-    await deps.versions.ensureRepo(attached);
-    void deps.commitInit(attached).catch((error: unknown) => console.error(`[app] first version of ${attached.id} failed`, error));
+  if (!fresh) return { project: attached, firstVersion: null, legacyCanvas: null };
+  const legacyCanvas = await setAsideCanvas(deps, attached);
+  await deps.versions.ensureRepo(attached);
+  ensureFirstVersion(deps, attached);
+  return { project: attached, firstVersion: firstVersionState(attached.id), legacyCanvas };
+}
+
+async function holdEditsForFirstVersion(deps: AppRouteDeps, pid: string): Promise<void> {
+  const project = await deps.projects.get(pid).catch(() => null);
+  if (!project || !needsFirstVersion(project)) return;
+  ensureFirstVersion(deps, project);
+  if (await waitForFirstVersion(pid, EDIT_WAIT_MS)) {
+    const saved = await deps.projects.get(pid);
+    if (!needsFirstVersion(saved)) return;
   }
-  return attached;
+  throw new ConflictError(firstVersionWaitText(pid));
 }
 
 export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   const { projects, preview } = deps;
 
-  app.post('/api/projects/attach', async (c) => c.json({ project: await finishAttach(deps, await projects.attachApp(attachRequest(await deps.readBody(c)))) }));
+  app.use('/api/projects/:pid/d/:did/*', async (c, next) => {
+    if (c.req.method !== 'GET' && EDIT_ROUTES.test(c.req.path)) await holdEditsForFirstVersion(deps, c.req.param('pid'));
+    await next();
+  });
+
+  app.post('/api/projects/attach', async (c) => c.json(await finishAttach(deps, await projects.attachApp(attachRequest(await deps.readBody(c))))));
 
   app.get('/api/projects/:pid/app', async (c) => {
     const project = await appProject(projects, c.req.param('pid'));
-    return c.json({ app: project.app, status: preview.apps?.status(project) ?? null, logs: preview.apps?.logs(project.id) ?? [] });
+    ensureFirstVersion(deps, project);
+    return c.json({ app: project.app, status: preview.apps?.status(project) ?? null, logs: preview.apps?.logs(project.id) ?? [], firstVersion: firstVersionState(project.id) });
   });
 
   app.post('/api/projects/:pid/app/config', async (c) => {

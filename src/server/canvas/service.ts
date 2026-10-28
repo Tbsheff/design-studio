@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { CANVAS_FILE, emptyCanvasFile, parseCanvasText, serializeCanvasFile, type CanvasFile } from '../../shared/canvas-file.js';
-import type { CanvasPresence, CanvasWriteSource, Direction, Project } from '../../shared/contracts.js';
+import type { CanvasPresence, CanvasWriteSource, Direction, LegacyCanvasNotice, Project } from '../../shared/contracts.js';
 import { ConflictError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import type { EventBus } from '../types.js';
@@ -56,6 +56,28 @@ export async function readProjectCanvas(project: Project, projectDir: ProjectDir
   const text = await readFile(canvasFileOf(project, projectDir), 'utf8').catch(() => null);
   if (text === null) return project.app && projectDir ? readCanvasAt(canvasOwner(project).workTree) : { canvas: null, text: null };
   return { canvas: parseCanvasText(text), text };
+}
+
+function setAsideName(now: Date): string {
+  const stamp = now.toISOString().replace(/\.\d+Z$/, '').replace(/[-:]/g, '').replace('T', '-');
+  return CANVAS_FILE.replace(/\.json$/, `.old-${stamp}.json`);
+}
+
+export async function setAsideLegacyCanvas(project: Project, projectDir: ProjectDirOf, tracked: (workTree: string, relative: string) => Promise<boolean>): Promise<LegacyCanvasNotice | null> {
+  if (!project.app) return null;
+  const own = canvasFileOf(project, projectDir);
+  if (await readFile(own, 'utf8').then(() => true, () => false)) return null;
+  const workTree = canvasOwner(project).workTree;
+  const legacy = await readCanvasAt(workTree);
+  if (legacy.text === null) return null;
+  const frames = legacy.canvas?.frames.length ?? 0;
+  if (await tracked(workTree, CANVAS_FILE)) {
+    await writeAtomic(own, serializeCanvasFile(emptyCanvasFile()));
+    return { file: CANVAS_FILE, movedTo: null, frames };
+  }
+  const movedTo = setAsideName(new Date());
+  await rename(canvasPath(workTree), path.join(workTree, ...movedTo.split('/')));
+  return { file: CANVAS_FILE, movedTo, frames };
 }
 
 function hashOf(text: string): string {

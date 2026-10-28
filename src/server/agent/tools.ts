@@ -25,6 +25,7 @@ import { runSetProps, setPropsShape } from './props-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
 import { SELECT_MATCHING_DESCRIPTION, runSelectMatching, selectMatchingShape } from './select-tool.js';
+import { DIFF_VERSIONS_DESCRIPTION, diffVersionsShape, runDiffVersions } from './version-diff-tool.js';
 import { getRunContextShape, runGetRunContext } from './context-tool.js';
 import { componentPreviewShape, runComponentPreview } from './component-preview-tool.js';
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
@@ -572,6 +573,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
   );
 
   const selectMatchingTool = tool('select_matching', SELECT_MATCHING_DESCRIPTION, selectMatchingShape, (args) => runSelectMatching(deps, args), { annotations: { readOnlyHint: true } });
+  const diffVersionsTool = tool('diff_versions', DIFF_VERSIONS_DESCRIPTION, diffVersionsShape, (args) => runDiffVersions({ runsDir: deps.runsDir, headVersionId: deps.ctx.direction.headVersionId }, args), { annotations: { readOnlyHint: true } });
 
   const measureTool = tool(
     'measure',
@@ -669,5 +671,5 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const swapInstanceTool = tool('swap_instance', SWAP_INSTANCE_AGENT_DESCRIPTION, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool] });
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool] });
 }

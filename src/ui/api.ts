@@ -61,6 +61,7 @@ export interface CanvasSnapshot {
 import type { CommitTweaksResult, TweaksState, TweakValue } from '../shared/tweaks';
 import { getSession } from './session';
 import type { ReviewFixResult, ReviewRequest, ReviewResult } from '../shared/review';
+import type { DesignRulesState, DesignRulesTestResult } from '../shared/design-rules';
 
 export class ApiError extends Error {
   constructor(
@@ -291,3 +292,9 @@ export function eventsUrl(pid: string, after: number): string {
 export function replaceStyle(pid: string, did: string, req: StyleReplaceRequest): Promise<StyleReplaceResult> {
   return timedEdit(pid, did, 'replace-style', req.matches.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, { replaceStyle: req }, pickMessage)).json()) as StyleReplaceResult);
 }
+
+export const rulesApi = {
+  get: (pid: string, did: string) => json<DesignRulesState>('GET', `${d(pid, did)}/rules`),
+  save: (pid: string, did: string, text: string) => json<{ state: DesignRulesState; versionId: string | null }>('PUT', `${d(pid, did)}/rules`, { text }),
+  test: (pid: string, did: string, text: string) => json<DesignRulesTestResult>('POST', `${d(pid, did)}/rules/test`, { text }),
+};

@@ -1,0 +1,83 @@
+.rules-editor {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+  min-width: 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.rules-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: 28px;
+}
+
+.rules-head h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+}
+
+.rules-input {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.rules-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 28px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.rules-kind {
+  height: 20px;
+  font-size: var(--t-2xs);
+}
+
+.rules-text {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rules-hits {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rules-row[data-tone='ok'] .rules-hits {
+  color: var(--ok);
+}
+
+.rules-row[data-tone='bad'] .rules-hits {
+  color: var(--danger);
+  font-weight: var(--w-medium);
+}
+
+.rules-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--t-xs);
+}

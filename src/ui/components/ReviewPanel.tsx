@@ -3,6 +3,7 @@ import { REVIEW_KIND_LABEL, REVIEW_KINDS, type ReviewFinding, type ReviewKind, t
 import type { ReviewState } from '../useReview';
 import { Icon } from './Icon';
 import { isTypingTarget } from '../typingTarget';
+import { PREVIEW_ESCAPE_EVENT } from '../useEscapeStop';
 
 interface Props {
   review: ReviewState;
@@ -131,8 +132,13 @@ function useEscapeClose(panel: RefObject<HTMLDivElement | null>, onClose: () => 
       if (!inPanel && isTypingTarget(e.target)) return;
       latest.current();
     };
+    const onFrameEscape = () => latest.current();
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
+    };
   }, [panel]);
 }
 

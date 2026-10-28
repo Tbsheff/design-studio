@@ -291,3 +291,7 @@ export function eventsUrl(pid: string, after: number): string {
 export function replaceStyle(pid: string, did: string, req: StyleReplaceRequest): Promise<StyleReplaceResult> {
   return timedEdit(pid, did, 'replace-style', req.matches.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, { replaceStyle: req }, pickMessage)).json()) as StyleReplaceResult);
 }
+
+export function arrange(projectId: string, directionId: string, req: import('../shared/arrange').ArrangeRequest): Promise<import('../shared/arrange').ArrangeResult> {
+  return timedEdit(projectId, directionId, 'arrange', req.targets.length, async () => (await (await request('POST', `${d(projectId, directionId)}/direct-edit`, { arrange: req }, pickMessage)).json()) as import('../shared/arrange').ArrangeResult);
+}

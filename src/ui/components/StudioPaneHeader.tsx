@@ -194,7 +194,8 @@ export function StudioPaneHeader(props: Props) {
               className="pane-project"
               aria-haspopup="menu"
               aria-expanded={open}
-              title={props.name}
+              data-tip={open ? undefined : props.name}
+              data-tip-align="start"
               onClick={() => setOpen((v) => !v)}
               onDoubleClick={() => setRenaming(true)}
             >

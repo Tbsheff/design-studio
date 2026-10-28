@@ -31,9 +31,9 @@ type Load = { state: DesignSystemState | null; error: string | null };
 
 function ValueCell({ value, color }: { value: string; color: boolean }) {
   return (
-    <span className="ds-value">
+    <span className="ds-value" data-tip={value}>
       {color && <span className="swatch" style={{ background: value }} aria-hidden="true" />}
-      <span className="truncate" title={value}>
+      <span className="truncate">
         {value}
       </span>
     </span>

@@ -87,7 +87,7 @@ export function TokensPanel({ tokens, draft }: Props) {
         </div>
       </PanelHead>
       {tokens.source && (
-        <p className="tkp-source" title={`${tokens.source.declarations} declarations, ${tokens.source.tokens} tokens, ${tokens.source.darkTokens} with a dark value`}>
+        <p className="tkp-source" data-tip={`${tokens.source.declarations} declarations, ${tokens.source.tokens} tokens, ${tokens.source.darkTokens} with a dark value`}>
           <Icon name="token" size={12} />
           <span className="truncate">From {tokens.source.file}</span>
         </p>

@@ -105,13 +105,15 @@ export function TokenPicker({ label, entries, mode, current, nearest, onChoose }
             role="option"
             aria-selected={i === index}
             className={`tk-option ${i === index ? 'active' : ''}`}
+            data-tip={modeValue(entry, mode)}
+            data-tip-align="end"
             onMouseMove={() => i !== index && setActive(i)}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => onChoose(entry)}
           >
             <Preview entry={entry} mode={mode} />
             <span className="tk-name">{entry.cssVar}</span>
-            <span className="tk-val" title={modeValue(entry, mode)}>
+            <span className="tk-val">
               {pxNote(entry, mode)}
             </span>
             <span className="tk-check" aria-hidden="true">

@@ -80,9 +80,9 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
   const dark = color && props.showDark;
   return (
     <li className={`tkp-row ${changed ? 'changed' : ''} ${dark ? 'has-dark' : ''}`} data-token={entry.cssVar}>
-      <div className="tkp-row-head">
+      <div className="tkp-row-head" data-tip={tokenTitle(entry)} data-tip-align="start">
         <span className={`tkp-mark ${changed ? 'on' : ''}`} aria-label={changed ? 'Changed, not committed' : undefined} role={changed ? 'img' : undefined} />
-        <code className="tkp-name truncate" title={tokenTitle(entry)}>
+        <code className="tkp-name truncate">
           {entry.cssVar}
         </code>
         <AliasChip value={shown.value} swatch={color ? props.swatchFor(shown.value, false) : null} />

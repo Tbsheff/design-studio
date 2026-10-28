@@ -188,7 +188,7 @@ function FileList({ plan, draft, focus, onFocus, onToggle }: { plan: ShipPrepare
         {plan.files.map((file) => (
           <li key={file.path} className={file.path === focus ? 'active' : undefined}>
             <input type="checkbox" aria-label={`Ship ${file.path}`} checked={draft.files.has(file.path)} disabled={!shippable(file)} onChange={() => onToggle(file.path)} />
-            <button type="button" className="ship-file" onClick={() => onFocus(file.path)} title={file.refused ?? file.conflict ?? file.path}>
+            <button type="button" className="ship-file" onClick={() => onFocus(file.path)} data-tip={file.refused ?? file.conflict ?? file.path}>
               <span className={`ship-status ${file.status}`}>{STATUS_LETTER[file.status]}</span>
               <span className="mono truncate">{file.path}</span>
               {(file.refused || file.conflict) && <Icon name="alert" size={12} />}
@@ -212,7 +212,7 @@ function ModePicker({ plan, mode, onMode }: { plan: ShipPrepare; mode: ShipMode;
       {MODES.map((item) => {
         const why = modeBlock(plan, item.id);
         return (
-          <label key={item.id} className={`ship-mode${why ? ' off' : ''}`} title={why ?? item.hint}>
+          <label key={item.id} className={`ship-mode${why ? ' off' : ''}`} data-tip={why ?? item.hint}>
             <input type="radio" name="ship-mode" checked={mode === item.id} disabled={Boolean(why)} onChange={() => onMode(item.id)} />
             <span>{item.label}</span>
             <small>{why ?? item.hint}</small>

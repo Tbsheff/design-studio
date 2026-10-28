@@ -93,7 +93,7 @@ function VariationBar({ state, project, direction, group, runs }: TopProps & { g
           <>
             <Icon name="compare" size={14} />
             <strong className="variation-bar-title">{group.length} variations</strong>
-            <span className="truncate variation-bar-prompt" title={first.prompt}>
+            <span className="truncate variation-bar-prompt">
               {first.prompt}
             </span>
           </>

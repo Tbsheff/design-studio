@@ -70,7 +70,7 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
       aria-valuemax={MAX_CHAT}
       aria-valuenow={chatWidth ?? undefined}
       tabIndex={0}
-      title="Drag to resize. Double-click to reset."
+      data-tip="Drag to resize. Double-click to reset."
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={stop}

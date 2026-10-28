@@ -35,13 +35,12 @@ function useDraftText(value: string, onChange: (next: string) => void) {
 export function TextValue({ label, value, invalid, onChange, mono }: ValueProps & { mono?: boolean }) {
   const t = useDraftText(value, onChange);
   return (
-    <div className={`ins-field tkp-field ${mono ? 'mono' : ''}`}>
+    <div className={`ins-field tkp-field ${mono ? 'mono' : ''}`} data-tip={value}>
       <input
         className="ins-input tkp-text"
         aria-label={label}
         aria-invalid={invalid || undefined}
         value={t.shown}
-        title={value}
         spellCheck={false}
         autoComplete="off"
         onChange={(event) => t.change(event.target.value)}
@@ -56,7 +55,7 @@ export function ColorValue({ label, value, invalid, onChange, swatch, suffix }: 
   const t = useDraftText(value, onChange);
   const hex = colorToHex(swatch) ?? colorHex(swatch);
   return (
-    <div className="ins-field color tkp-field">
+    <div className="ins-field color tkp-field" data-tip={value}>
       <span className={`ins-swatch ${hex ? '' : 'empty'}`} style={{ ['--swatch' as string]: swatch || 'transparent' }}>
         <input
           type="color"
@@ -71,7 +70,6 @@ export function ColorValue({ label, value, invalid, onChange, swatch, suffix }: 
         aria-label={label}
         aria-invalid={invalid || undefined}
         value={t.shown}
-        title={value}
         spellCheck={false}
         autoComplete="off"
         onChange={(event) => t.change(event.target.value)}
@@ -130,7 +128,7 @@ export function DimensionValue({ label, value, invalid, onChange, short, id }: V
     t.change(next);
   };
   return (
-    <div className="ins-field tkp-field">
+    <div className="ins-field tkp-field" data-tip={value}>
       <label htmlFor={id} className={`ins-scrub ${parseNumber(value) ? '' : 'static'}`} {...scrub}>
         {short}
       </label>
@@ -140,7 +138,6 @@ export function DimensionValue({ label, value, invalid, onChange, short, id }: V
         aria-label={label}
         aria-invalid={invalid || undefined}
         value={t.shown}
-        title={value}
         spellCheck={false}
         autoComplete="off"
         onChange={(event) => t.change(event.target.value)}

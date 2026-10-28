@@ -134,7 +134,7 @@ export function LinkArrows({ states, frames, active, startId, arrows, selectedId
         const box = frameBox(frameId);
         if (!box) return null;
         return (
-          <span key={frameId} className="link-broken-badge" data-testid="link-broken" style={{ left: box.x + box.width, top: box.y }} title={list.map((state) => LINK_ISSUE_TEXT[state.issue ?? 'element-missing']).join('\n')}>
+          <span key={frameId} className="link-broken-badge" data-testid="link-broken" style={{ left: box.x + box.width, top: box.y }} data-tip={list.map((state) => LINK_ISSUE_TEXT[state.issue ?? 'element-missing']).join('\n')}>
             <Icon name="unlink" size={11} />
             {list.length} broken
           </span>

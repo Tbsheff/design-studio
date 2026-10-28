@@ -7,11 +7,11 @@ export function McpPointBadge({ badge, frameName }: { badge: Badge; frameName: (
   if (!point) return null;
   const where = point.label ?? frameName(point.frameId);
   return (
-    <div className="mcp-point" role="status" data-testid="mcp-point" onPointerDown={(event) => event.stopPropagation()}>
+    <div className="mcp-point" role="status" data-tip={point.selector ? `${where}, ${point.selector}` : undefined} data-testid="mcp-point" onPointerDown={(event) => event.stopPropagation()}>
       <span className="mcp-point-avatar" aria-hidden="true">
         {authorInitial(point.client)}
       </span>
-      <span className="mcp-point-text" title={point.selector ? `${where}, ${point.selector}` : undefined}>
+      <span className="mcp-point-text">
         <strong>{point.client}</strong> is pointing at <strong>{where}</strong>
       </span>
       <button type="button" className="btn small" onClick={badge.show}>

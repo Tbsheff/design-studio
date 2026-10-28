@@ -133,6 +133,11 @@ function fieldsOf(plan: ShipPrepare, draft: Draft): Fields {
   };
 }
 
+function conflictHint(plan: ShipPrepare): string {
+  if (plan.base?.kind === 'last-ship') return 'Your checked-out commit does not have the last ship yet, so some files differ from this base. Merge that branch and pull, or pick “When attached” to ship all studio changes again.';
+  return 'Some files have your own changes that differ from the studio base. They cannot ship until you commit or undo them. Pick a file to see why.';
+}
+
 function leadText(plan: ShipPrepare | null): string {
   if (!plan?.repo) return 'Commit studio changes to a new branch in your repo.';
   return `Makes a new branch from ${plan.repo.branch ?? plan.repo.head.slice(0, 7)} in ${plan.repo.root}. Your checked-out branch, files and index do not change.`;
@@ -277,7 +282,7 @@ function PlanView({ plan, draft, fields, focus, onFocus, onBase, setDraft }: { p
         </div>
       )}
       {plan.files.length > 0 && draft && <FileList plan={plan} draft={draft} focus={focus} onFocus={onFocus} onToggle={toggle} />}
-      {plan.files.some((f) => f.conflict) && <p className="ship-warn">Some files have your own changes that differ from the studio base. They cannot ship until you commit or undo them. Pick a file to see why.</p>}
+      {plan.files.some((f) => f.conflict) && <p className="ship-warn">{conflictHint(plan)}</p>}
       {draft && fields && !plan.blocked && <ShipFields plan={plan} draft={draft} fields={fields} patch={patch} />}
     </>
   );

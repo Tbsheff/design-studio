@@ -270,7 +270,7 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string): Pro
   if (!base) return { ...emptyPrepare(project, settings, history, baseVersionId ? 'That base version is not in the history of this project.' : 'There is no older version to compare with.', repo), bases, headVersionId: head };
   const span = versions.slice(0, versions.findIndex((v) => v.id === base.versionId));
   const files = await shipFiles(ctx, repo, main.workTree, base.versionId, head);
-  const titles = span.map((v) => v.title).reverse();
+  const titles = [...new Set(span.map((v) => v.title).reverse())];
   const summary = await chatSummary(ctx, new Set(span.map((v) => v.id)));
   const title = span[0]?.title ?? project.name;
   const vars: ShipTemplateVars = { user: settings.user || (await defaultUser(repo.root)), issue: settings.issueId, title, summary, versions: titles, files: files.filter((f) => !f.refused).map((f) => f.path) };

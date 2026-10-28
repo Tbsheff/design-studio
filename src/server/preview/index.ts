@@ -111,7 +111,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const upstream = apps.upstreamOf(change.projectId);
     return upstream ? sourcesShifted(upstream, change.root, change.paths) : false;
   };
-  const stamps = new SourceStamps();
+  const stamps = new SourceStamps(path.join(config.dataDir, 'cache', 'route-graph'));
   const onChanged = (change: DirectionChange): void => {
     stamps.bump(`${change.projectId}:${change.directionId}`);
     forwardToVite(change);
@@ -260,6 +260,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       watchers.closeAll().catch(() => undefined),
       browsers.loaded()?.then((pool) => pool.close()).catch(() => undefined),
       server?.close().catch(() => undefined),
+      stamps.close().catch(() => undefined),
     ]);
   };
 

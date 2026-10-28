@@ -54,7 +54,8 @@ function configOptions(ts: Ts, candidate: string, base: TS.CompilerOptions): TS.
   const read = ts.readConfigFile(candidate, (target) => ts.sys.readFile(target));
   let options: TS.CompilerOptions | null = null;
   if (!read.error && read.config) {
-    const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(candidate), undefined, candidate);
+    const optionsOnlyHost: TS.ParseConfigHost = { ...ts.sys, readDirectory: () => [] };
+    const parsed = ts.parseJsonConfigFileContent(read.config, optionsOnlyHost, path.dirname(candidate), undefined, candidate);
     const skip = path.basename(candidate) === 'tsconfig.json' && !parsed.options.paths && Array.isArray(read.config.references) && existsSync(path.join(path.dirname(candidate), 'tsconfig.app.json'));
     if (!skip) options = { ...parsed.options, ...base, jsx: ts.JsxEmit.Preserve, paths: parsed.options.paths, baseUrl: parsed.options.baseUrl, moduleResolution: parsed.options.moduleResolution ?? base.moduleResolution };
   }

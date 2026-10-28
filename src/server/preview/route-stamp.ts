@@ -1,58 +1,118 @@
-import { createHash } from 'node:crypto';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-import type * as TS from 'typescript';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { Worker } from 'node:worker_threads';
 import type { AppRoute } from '../../shared/contracts.js';
 import { matchRouteFile } from '../agent/run-target.js';
 import { appRouterDir, listAppRoutes } from '../app/routes.js';
-import { compilerOptionsFor, nodeModulesFile } from '../components/props-program.js';
+import { REPO_ROOT } from '../config.js';
+import { RouteGraph, type ContentStamp } from './route-graph.js';
+import type { GraphReply, GraphRequest } from './route-graph-worker.js';
 
-type Ts = typeof TS;
-
-export interface ContentStamp {
-  key: string;
-  newest: number;
-}
-
-interface FileDeps {
-  mtimeMs: number;
-  size: number;
-  deps: string[];
-}
+export type { ContentStamp } from './route-graph.js';
 
 const SEGMENT_FILES = /^(layout|template|loading|error|not-found)\.(tsx|ts|jsx|js)$/;
 const GLOBAL_FILES = /^(next\.config|tailwind\.config|postcss\.config|middleware|proxy|instrumentation)\.(ts|js|mjs|cjs)$|^\.env(\..+)?$|^package\.json$|^tsconfig\.json$/;
-const STYLE_FILE = /\.(css|scss|sass|less)$/;
-const CODE_FILE = /\.(tsx?|jsx?|mjs|cjs)$/;
-const GRAPH_CAP = 40000;
 const ROUTES_MS = 3000;
 const FIRST_WAIT_MS = 400;
-
-let tsModule: Promise<Ts> | null = null;
-
-function loadTs(): Promise<Ts> {
-  tsModule ??= import('typescript').then((loaded) => ((loaded as { default?: Ts }).default ?? loaded) as Ts);
-  return tsModule;
-}
+const MAX_WORKER_FAILURES = 3;
+const OWN_URL = fileURLToPath(import.meta.url);
+const WORKER_FILE = path.join(path.dirname(OWN_URL), `route-graph-worker${path.extname(OWN_URL)}`);
+const TSX_LOADER = path.join(REPO_ROOT, 'node_modules', 'tsx', 'dist', 'loader.mjs');
 
 async function filesIn(dir: string, pattern: RegExp): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   return entries.filter((entry) => entry.isFile() && pattern.test(entry.name)).map((entry) => path.join(dir, entry.name));
 }
 
-function cacheFor(ts: Ts, workTree: string, options: TS.CompilerOptions, caches: Map<string, TS.ModuleResolutionCache>): TS.ModuleResolutionCache {
-  const key = `${JSON.stringify(options.paths ?? {})}|${options.baseUrl ?? ''}`;
-  let cache = caches.get(key);
-  if (!cache) {
-    cache = ts.createModuleResolutionCache(workTree, (name) => name, options);
-    caches.set(key, cache);
+interface Pending {
+  resolve: (stamp: ContentStamp | null) => void;
+  reject: (error: Error) => void;
+}
+
+class GraphWorker {
+  private worker: Worker | null = null;
+  private inProcess: RouteGraph | null = null;
+  private readonly pending = new Map<number, Pending>();
+  private nextId = 1;
+  private failures = 0;
+
+  constructor(private readonly cacheDir: string | null) {}
+
+  stamp(workTree: string, roots: string[]): Promise<ContentStamp | null> {
+    if (this.inProcess) return this.inProcess.stamp(workTree, roots);
+    const worker = this.spawn();
+    if (!worker) return this.stamp(workTree, roots);
+    const id = this.nextId++;
+    return new Promise<ContentStamp | null>((resolve, reject) => {
+      this.pending.set(id, { resolve, reject });
+      worker.ref();
+      worker.postMessage({ id, workTree, roots } satisfies GraphRequest);
+    });
   }
-  return cache;
+
+  async close(): Promise<void> {
+    const worker = this.worker;
+    this.worker = null;
+    if (!worker) return this.inProcess?.flush();
+    await new Promise<void>((resolve) => {
+      const done = (): void => resolve();
+      worker.once('message', done);
+      worker.once('exit', done);
+      worker.ref();
+      worker.postMessage('flush');
+    });
+    await worker.terminate();
+  }
+
+  private spawn(): Worker | null {
+    if (this.worker) return this.worker;
+    try {
+      const execArgv = WORKER_FILE.endsWith('.ts') ? ['--import', pathToFileURL(TSX_LOADER).href] : [];
+      const worker = new Worker(WORKER_FILE, { workerData: { cacheDir: this.cacheDir }, execArgv });
+      worker.unref();
+      worker.on('message', (reply: GraphReply) => this.settle(reply));
+      worker.on('error', (error) => this.fail(worker, error));
+      worker.on('exit', (code) => this.fail(worker, new Error(`route graph worker exited with code ${code}`)));
+      this.worker = worker;
+      return worker;
+    } catch (error) {
+      console.error('[preview] route graph worker did not start; walking in process', error);
+      this.inProcess = new RouteGraph(this.cacheDir);
+      return null;
+    }
+  }
+
+  private settle(reply: GraphReply): void {
+    if (!('id' in reply)) return;
+    const waiting = this.pending.get(reply.id);
+    if (!waiting) return;
+    this.pending.delete(reply.id);
+    if (this.pending.size === 0) this.worker?.unref();
+    if ('error' in reply) waiting.reject(new Error(reply.error));
+    else waiting.resolve(reply.stamp);
+  }
+
+  private fail(worker: Worker, error: Error): void {
+    if (this.worker !== worker) return;
+    this.worker = null;
+    this.failures += 1;
+    if (this.failures >= MAX_WORKER_FAILURES) this.inProcess = new RouteGraph(this.cacheDir);
+    const waiting = [...this.pending.values()];
+    this.pending.clear();
+    for (const item of waiting) item.reject(error);
+  }
 }
 
 export class RouteStamps {
-  private readonly files = new Map<string, FileDeps>();
   private readonly routes = new Map<string, { at: number; list: Promise<AppRoute[]> }>();
+  private readonly built = new Set<string>();
+  private readonly building = new Map<string, Promise<ContentStamp | null>>();
+  private readonly graph: GraphWorker;
+
+  constructor(cacheDir: string | null = null) {
+    this.graph = new GraphWorker(cacheDir);
+  }
 
   private routeList(workTree: string, appDir: string): Promise<AppRoute[]> {
     const key = `${workTree}|${appDir}`;
@@ -62,9 +122,6 @@ export class RouteStamps {
     this.routes.set(key, { at: Date.now(), list });
     return list;
   }
-
-  private readonly built = new Set<string>();
-  private readonly building = new Map<string, Promise<ContentStamp | null>>();
 
   async stamp(workTree: string, appDir: string, pathname: string): Promise<ContentStamp | null> {
     const key = `${workTree}|${appDir}|${pathname}`;
@@ -80,29 +137,15 @@ export class RouteStamps {
     return Promise.race([pending, new Promise<null>((resolve) => setTimeout(() => resolve(null), FIRST_WAIT_MS).unref())]);
   }
 
+  close(): Promise<void> {
+    return this.graph.close();
+  }
+
   private async compute(workTree: string, appDir: string, pathname: string): Promise<ContentStamp | null> {
     const page = matchRouteFile(await this.routeList(workTree, appDir), pathname);
     const pageFile = page ? path.join(workTree, page) : await this.notFoundFile(workTree, appDir);
     if (!pageFile) return null;
-    const roots = await this.roots(workTree, appDir, pageFile);
-    const ts = await loadTs();
-    const caches = new Map<string, TS.ModuleResolutionCache>();
-    const seen = new Map<string, FileDeps>();
-    let frontier = roots;
-    while (frontier.length) {
-      if (seen.size > GRAPH_CAP) return null;
-      const next: string[] = [];
-      const read = await Promise.all(frontier.filter((file) => !seen.has(file)).map(async (file) => [file, await this.depsOf(ts, workTree, file, caches)] as const));
-      for (const [file, deps] of read) {
-        if (!deps || seen.has(file)) continue;
-        seen.set(file, deps);
-        for (const dep of deps.deps) if (!seen.has(dep)) next.push(dep);
-      }
-      frontier = [...new Set(next)];
-    }
-    const parts = [...seen.entries()].map(([file, deps]) => `${file}:${deps.size}:${deps.mtimeMs}`).sort();
-    const newest = Math.max(0, ...[...seen.values()].map((deps) => deps.mtimeMs));
-    return { key: `r${parts.length}:${createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 16)}`, newest };
+    return this.graph.stamp(workTree, await this.roots(workTree, appDir, pageFile));
   }
 
   private async notFoundFile(workTree: string, appDir: string): Promise<string | null> {
@@ -122,34 +165,5 @@ export class RouteStamps {
     const segment = await Promise.all(dirs.map((dir) => filesIn(dir, SEGMENT_FILES)));
     const globals = await Promise.all([appRoot, path.join(appRoot, 'src')].map((dir) => filesIn(dir, GLOBAL_FILES)));
     return [pageFile, ...segment.flat(), ...globals.flat()];
-  }
-
-  private async depsOf(ts: Ts, workTree: string, file: string, caches: Map<string, TS.ModuleResolutionCache>): Promise<FileDeps | null> {
-    const info = await stat(file).catch(() => null);
-    if (!info?.isFile()) return null;
-    const known = this.files.get(file);
-    if (known && known.mtimeMs === info.mtimeMs && known.size === info.size) return known;
-    const deps = CODE_FILE.test(file) ? await this.imports(ts, workTree, file, caches) : [];
-    const entry = { mtimeMs: info.mtimeMs, size: info.size, deps };
-    if (this.files.size > GRAPH_CAP * 4) this.files.clear();
-    this.files.set(file, entry);
-    return entry;
-  }
-
-  private async imports(ts: Ts, workTree: string, file: string, caches: Map<string, TS.ModuleResolutionCache>): Promise<string[]> {
-    const text = await readFile(file, 'utf8').catch(() => '');
-    const specs = ts.preProcessFile(text, true, true).importedFiles.map((ref) => ref.fileName);
-    const options = compilerOptionsFor(ts, file, workTree);
-    const cache = cacheFor(ts, workTree, options, caches);
-    const out: string[] = [];
-    for (const spec of specs) {
-      if (STYLE_FILE.test(spec)) {
-        if (spec.startsWith('.')) out.push(path.resolve(path.dirname(file), spec));
-        continue;
-      }
-      const resolved = ts.resolveModuleName(spec, file, options, ts.sys, cache).resolvedModule?.resolvedFileName;
-      if (resolved && !nodeModulesFile(resolved) && !resolved.endsWith('.d.ts')) out.push(path.resolve(resolved));
-    }
-    return out;
   }
 }

@@ -58,8 +58,9 @@ async function buildServer(serverDir: string): Promise<Metafile[]> {
   const common: BuildOptions = { ...NODE_COMMON, format: 'esm', packages: 'external', metafile: true };
   const server = await build({ ...common, entryPoints: [path.join(ROOT, 'src', 'server', 'index.ts')], outfile: path.join(serverDir, 'index.js') });
   const runner = await build({ ...common, entryPoints: [path.join(ROOT, 'src', 'server', 'preview', 'vite-runner.ts')], outfile: path.join(serverDir, 'vite-runner.js') });
+  const routeGraph = await build({ ...common, entryPoints: [path.join(ROOT, 'src', 'server', 'preview', 'route-graph-worker.ts')], outfile: path.join(serverDir, 'route-graph-worker.js') });
   writeFileSync(path.join(serverDir, 'package.json'), `${JSON.stringify({ name: 'design-studio-server', private: true, type: 'module' }, null, 2)}\n`);
-  return [server.metafile, runner.metafile].filter((meta): meta is Metafile => meta !== undefined);
+  return [server.metafile, runner.metafile, routeGraph.metafile].filter((meta): meta is Metafile => meta !== undefined);
 }
 
 function packageName(specifier: string): string {

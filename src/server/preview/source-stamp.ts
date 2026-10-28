@@ -64,7 +64,15 @@ export class SourceStamps {
   private readonly epochs = new Map<string, number>();
   private readonly landedAt = new Map<string, string>();
   private readonly memo = new Map<string, { at: number; stamp: Promise<SourceStamp | null> }>();
-  private readonly routes = new RouteStamps();
+  private readonly routes: RouteStamps;
+
+  constructor(graphCacheDir: string | null = null) {
+    this.routes = new RouteStamps(graphCacheDir);
+  }
+
+  close(): Promise<void> {
+    return this.routes.close();
+  }
 
   register(prefix: string, key: string, workTree: string, appDir: string | null): void {
     const index = this.owners.findIndex((owner) => owner.prefix === prefix);

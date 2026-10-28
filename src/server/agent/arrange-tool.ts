@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ALIGN_OPS, DISTRIBUTE_OPS, arrangeLabel, type ArrangeAction } from '../../shared/arrange.js';
+import { unchangedNote } from '../../shared/arrange-plan.js';
 import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { ARRANGE_TARGETS_MAX, DEFAULT_ARRANGE_VIEWPORT, measureTargets, planArrange } from '../direct-edit/arrange.js';
@@ -86,7 +87,7 @@ export async function runArrange(deps: DirectToolDeps, args: z.input<typeof arra
     const targets = await Promise.all(parsed.data.targets.map(async (item) => ({ selector: await resolveSelector(deps, target, item.selector) })));
     const action = actionOf(parsed.data);
     const plan = await planArrange(deps.preview, target.url, { workTree: deps.ctx.direction.workTree, project: deps.ctx.project }, { targets, action, viewport: target.viewport });
-    if (plan.changed.length === 0) return text(plan.note ?? 'Already aligned.');
+    if (plan.changed.length === 0) return text(unchangedNote(action, plan.note));
     for (const file of plan.changed) {
       const problem = writeProblem(deps.ctx, file.target.relative);
       if (problem) return text(problem, true);

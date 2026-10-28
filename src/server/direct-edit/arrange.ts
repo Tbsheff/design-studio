@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { ALIGN_OPS, DISTRIBUTE_OPS, arrangeLabel, type ArrangeMode, type ArrangeRequest, type ArrangeResult, type ArrangeWrite, type MeasureResult } from '../../shared/arrange.js';
-import { planArrangeFacts, type PlannedArrangeWrite } from '../../shared/arrange-plan.js';
+import { planArrangeFacts, unchangedNote, type PlannedArrangeWrite } from '../../shared/arrange-plan.js';
 import type { Direction, DirectEditRequest, Project, VersionMeta } from '../../shared/contracts.js';
 import { measureRects } from '../../shared/measure.js';
 import { withPagePath } from '../export/source.js';
@@ -179,7 +179,7 @@ export async function applyArrange(deps: DirectEditDeps & { preview: PreviewServ
   const url = withPagePath(await deps.preview.directionUrl(project, direction), request.path || undefined);
   const plan = await planArrange(deps.preview, url, { workTree: direction.workTree, project }, request);
   const base = { mode: plan.mode, writes: plan.writes, classes: plan.classes };
-  if (plan.changed.length === 0) return { ...base, changed: false, files: [], version: await deps.versions.get(project, headVersionId), note: plan.note ?? 'Already aligned.' };
+  if (plan.changed.length === 0) return { ...base, changed: false, files: [], version: await deps.versions.get(project, headVersionId), note: unchangedNote(request.action, plan.note) };
   const title = arrangeTitle(request);
   const meta: VersionMeta = { kind: 'manual', prompt: title };
   const version = await writeAndCommitAll(deps, project, direction, plan.changed, title, meta);

@@ -62,6 +62,12 @@ type Item = ArrangeTargetFacts;
 export const NOT_SIBLINGS = 'Pick siblings: these elements have different parents.';
 export const NO_AUTO_LAYOUT = 'The parent has no auto layout. Add auto layout (Shift+A) or use Tidy up.';
 export const ALREADY_ALIGNED = 'Already aligned.';
+
+export function unchangedNote(action: ArrangeAction, note: string | null): string {
+  if (note && note !== ALREADY_ALIGNED) return note;
+  if ('align' in action) return ALREADY_ALIGNED;
+  return 'distribute' in action ? 'Already evenly spaced.' : 'Already tidy.';
+}
 const MAIN_NEEDS_ALL = 'This moves every child of the auto layout. Select all of its children, or align across its axis.';
 const DISTRIBUTE_NEEDS_ALL = 'Distribute in an auto layout spaces every child. Select all of its children.';
 const DISTRIBUTE_CROSS = 'An auto layout cannot space its children across its axis. Change its direction first.';

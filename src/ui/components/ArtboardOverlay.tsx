@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { formatMeasure, measureBetween, type MeasureLine } from '../measure';
+import { unionBox, type SnapGuide } from '../snap';
 import type { HoverBox } from '../usePreviewFrames';
 import type { ResizeControl, ResizeEdge } from '../useResizeHandles';
 
@@ -36,6 +37,25 @@ function ResizeHandles({ control, rect }: { control: ResizeControl; rect: Select
   );
 }
 
+export function guideStyle(g: SnapGuide) {
+  return g.axis === 'x' ? { left: g.at, top: g.from, height: g.to - g.from } : { left: g.from, top: g.at, width: g.to - g.from };
+}
+
+function fullStyle(g: SnapGuide) {
+  return g.axis === 'x' ? { left: g.at, top: 0, bottom: 0 } : { top: g.at, left: 0, right: 0 };
+}
+
+export function SnapGuides({ guides, full }: { guides: SnapGuide[]; full?: boolean }) {
+  if (guides.length === 0) return null;
+  return (
+    <div className={`snap-guides${full ? ' full' : ''}`} data-testid="snap-guides">
+      {guides.map((g) => (
+        <div key={`${g.axis}-${g.at}`} className={`snap-guide ${g.axis}`} style={full ? fullStyle(g) : guideStyle(g)} />
+      ))}
+    </div>
+  );
+}
+
 function lineStyle(l: MeasureLine) {
   return l.axis === 'x' ? { left: l.from, top: l.at, width: l.to - l.from } : { left: l.at, top: l.from, height: l.to - l.from };
 }
@@ -61,7 +81,7 @@ function sameRect(a: SelectionContext['rect'], b: SelectionContext['rect']): boo
 }
 
 export function ArtboardOverlay({ hover, selection, comments, zoom, resize }: Props) {
-  const anchor = selection.at(-1);
+  const anchor = unionBox(selection.map((s) => s.rect));
   const measuring = hover?.altKey && anchor && !hover.fromTree;
   const onSelected = hover !== null && selection.some((s) => sameRect(s.rect, hover.rect));
   return (
@@ -76,7 +96,8 @@ export function ArtboardOverlay({ hover, selection, comments, zoom, resize }: Pr
         return <div key={s.selector} className="box selected" data-selector={s.selector} style={{ left: s.rect.x, top: s.rect.y, width: live?.boxWidth ?? s.rect.width, height: live?.boxHeight ?? s.rect.height }} />;
       })}
       {resize?.target && <ResizeHandles control={resize} rect={resize.target.rect} />}
-      {measuring && hover && anchor && <Measurements from={anchor.rect} to={hover.rect} />}
+      {resize?.live && <SnapGuides guides={resize.live.guides} full />}
+      {measuring && hover && anchor && <Measurements from={anchor} to={hover.rect} />}
       {comments}
     </div>
   );

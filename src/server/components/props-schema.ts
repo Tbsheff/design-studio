@@ -256,7 +256,7 @@ interface ProgramScope {
   root: string;
 }
 
-function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
+export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
   const base: TS.CompilerOptions = { jsx: ts.JsxEmit.Preserve, allowJs: true, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [] };
   let dir = path.dirname(file);
   while (dir.startsWith(root)) {

@@ -18,6 +18,7 @@ import { LINK_TOOLS } from './link-tools.js';
 import { SHIP_TOOLS } from './ship-tools.js';
 import { VARIANT_TOOLS } from './variant-tools.js';
 import { PROPS_TOOLS } from './props-tools.js';
+import { INSERT_TOOLS } from './insert-tools.js';
 import { cleanRoute, routeLabel } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
@@ -158,7 +159,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...INSERT_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {

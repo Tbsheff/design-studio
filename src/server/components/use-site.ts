@@ -95,7 +95,7 @@ function appFrame(stack: string): { pathname: string; line: number; col: number 
   return null;
 }
 
-async function ownerUseSite(scope: UseSiteScope, root: string, owner: ComponentOwner): Promise<SourceLoc | null> {
+export async function ownerUseSite(scope: UseSiteScope, root: string, owner: ComponentOwner): Promise<SourceLoc | null> {
   if (!scope.previewOrigin) return null;
   const frame = appFrame(owner.stack);
   if (!frame) return null;

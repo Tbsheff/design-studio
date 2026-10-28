@@ -63,6 +63,7 @@ import { createFetcher } from '../design-system/extract/draft.js';
 import { registerPackRoutes } from './packs-routes.js';
 import { registerComponentRoutes } from './components-routes.js';
 import { registerPropsRoutes } from './props-routes.js';
+import { registerInsertRoutes } from './insert-routes.js';
 import { createComponentService } from '../components/thumbs.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, RunHandle, ServerConfig, VersionStore } from '../types.js';
@@ -1019,6 +1020,7 @@ export function createApp(deps: AppDeps): Hono {
     loadDirection,
   });
   registerPropsRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
+  registerInsertRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
 
   const library = createPackLibrary(packs);
   registerPackRoutes(app, {

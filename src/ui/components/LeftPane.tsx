@@ -6,6 +6,7 @@ import { ChatSplitter } from './ChatSplitter';
 import { ErrorsPanel } from './ErrorsPanel';
 import { Icon } from './Icon';
 import { Inspector } from './Inspector';
+import { McpEditStrip } from './McpFeed';
 import { PromptBox } from './PromptBox';
 import { RunDetails } from './RunDetails';
 import { TokensPanel } from './TokensPanel';
@@ -113,6 +114,7 @@ export function LeftPane(props: Props) {
         {edit && (
           <section className="pane-edit" aria-label="Edit">
             <Inspector {...props.inspector} />
+            <McpEditStrip mcp={props.chat.mcp ?? null} />
           </section>
         )}
         {sheet && <Sheet {...props} tab={tab} />}

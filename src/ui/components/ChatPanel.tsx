@@ -141,7 +141,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
-          <RunFeedbackRow run={run} latest={latest} onDetails={details} />
+          <RunFeedbackRow run={run} onDetails={details} />
           {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
         </MessageContent>

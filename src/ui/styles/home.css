@@ -1311,11 +1311,11 @@
   color: var(--text-3);
 }
 
-.home .disclosure-toggle {
+.home .link {
   color: var(--text-2);
 }
 
-.home .disclosure-toggle:hover:not(:disabled) {
+.home .link:hover:not(:disabled) {
   color: var(--text);
 }
 

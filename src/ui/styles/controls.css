@@ -43,6 +43,13 @@
   border-radius: var(--r-sm);
 }
 
+.btn.xs {
+  --btn-h: 24px;
+  padding: 0 var(--s-2);
+  font-size: var(--t-xs);
+  border-radius: var(--r-sm);
+}
+
 .btn.large {
   --btn-h: 36px;
   padding: 0 var(--s-4);

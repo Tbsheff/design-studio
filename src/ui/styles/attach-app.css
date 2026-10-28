@@ -138,7 +138,7 @@
   border-radius: 6px;
   background: transparent;
   color: var(--text);
-  font-size: 12.5px;
+  font-size: var(--t-xs);
   cursor: pointer;
 }
 
@@ -149,14 +149,14 @@
 
 .app-route .file {
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .app-route .tag {
-  font-size: 11px;
+  font-size: var(--t-2xs);
   color: var(--warn);
 }
 
@@ -164,7 +164,7 @@
   margin: 0;
   overflow: auto;
   padding: 8px 12px;
-  font: 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--t-2xs)/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--text-2);
   white-space: pre-wrap;
   word-break: break-word;
@@ -221,7 +221,7 @@
 
 .app-routes-more {
   padding: 6px 8px;
-  font-size: 11.5px;
+  font-size: var(--t-2xs);
   color: var(--text-3);
 }
 

@@ -14,8 +14,8 @@
   --line: rgb(28 27 25 / 0.12);
   --line-strong: rgb(28 27 25 / 0.22);
   --text: rgb(28 27 25 / 0.94);
-  --text-2: rgb(28 27 25 / 0.66);
-  --text-3: rgb(28 27 25 / 0.58);
+  --text-2: rgb(28 27 25 / 0.72);
+  --text-3: rgb(28 27 25 / 0.64);
   --text-faint: rgb(28 27 25 / 0.46);
   --on-accent: oklch(0.99 0.003 var(--hue));
 
@@ -115,6 +115,7 @@
   --bar-h: 40px;
   --pane-inset: 16px;
 
+  --t-2xs: 11px;
   --t-xs: 12px;
   --t-sm: 13px;
   --t-md: 14px;
@@ -125,6 +126,7 @@
   --lh-tight: 16px;
   --lh-body: 20px;
   --lh-loose: 24px;
+  --lh-2xs: 14px;
   --lh-xs: 16px;
   --lh-sm: 18px;
   --lh-md: 20px;

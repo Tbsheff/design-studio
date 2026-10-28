@@ -15,7 +15,7 @@
 .sm-group-head {
   margin: 0;
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: var(--w-medium);
   line-height: var(--lh-xs);
 }
@@ -64,7 +64,7 @@
   padding: 0 6px;
   border-radius: var(--r-sm);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -112,7 +112,7 @@
 .sm-menu code,
 .sm-picker code {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .sm-picker {

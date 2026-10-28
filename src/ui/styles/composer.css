@@ -767,7 +767,7 @@
   gap: 2px;
   height: 22px;
   padding-right: 2px;
-  font-size: 11px;
+  font-size: var(--t-2xs);
 }
 
 .composer-state-short {
@@ -851,7 +851,7 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-  font-size: 10.5px;
+  font-size: var(--t-2xs);
   line-height: 10.5px;
   font-weight: var(--w-medium);
   letter-spacing: 0.105px;

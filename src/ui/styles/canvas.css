@@ -222,7 +222,7 @@
   transform: scale(var(--inv-zoom, 1)) translateY(calc(var(--s-1) * -1));
   background: var(--accent);
   color: var(--on-accent);
-  font: var(--w-medium) 11px / 20px var(--mono);
+  font: var(--w-medium) var(--t-2xs) / 20px var(--mono);
   padding: 0 6px;
   white-space: nowrap;
   border-radius: var(--r-xs);

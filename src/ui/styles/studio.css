@@ -132,7 +132,7 @@
   border-radius: var(--r-full);
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 10px;
+  font-size: var(--t-2xs);
   line-height: 14px;
   font-variant-numeric: tabular-nums;
 }
@@ -346,26 +346,27 @@
 }
 
 .topbar-zoom {
-  height: 26px;
+  height: 28px;
   min-width: 48px;
   padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);
-  background: var(--info-tint);
-  color: var(--info);
-  font: var(--w-medium) 11px / 16px var(--font);
+  background: transparent;
+  color: var(--text-2);
+  font: var(--w-medium) var(--t-xs) / 16px var(--font);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
 
 .topbar-zoom:hover,
 .topbar-zoom[aria-expanded='true'] {
-  background: var(--info-tint-strong);
+  background: var(--surface-hover);
+  color: var(--text);
 }
 
 .canvas-topbar .btn.topbar-present,
 .canvas-topbar .btn.topbar-share {
-  --btn-h: 26px;
+  --btn-h: 28px;
   padding: 0 var(--s-3);
   border-radius: var(--r-md);
   font-size: var(--t-xs);
@@ -390,7 +391,7 @@
   border-radius: var(--r-full);
   background: var(--surface-active);
   color: var(--text-2);
-  font: var(--w-medium) 10px / 1 var(--font);
+  font: var(--w-medium) var(--t-2xs) / 1 var(--font);
 }
 
 .pane-canvas .canvas-viewrow {

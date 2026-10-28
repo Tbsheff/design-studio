@@ -4,6 +4,7 @@ import type { ProjectKind, SelectionContext } from '../../shared/contracts';
 import { api } from '../api';
 import { canAddFrame, FRAME_PRESETS, frameName, setFrameHidden, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
 import { uiStore, type UiState } from '../storage';
+import { isTypingTarget } from '../usePanZoom';
 import type { PanelTab } from '../usePanelTab';
 import { CanvasViewRow } from './CanvasToolbar';
 import { CanvasTopBar, type CanvasTool, type MenuGroup, type PresentMode } from './CanvasTopBar';
@@ -149,6 +150,21 @@ function useFileMenu(p: ChromeProps) {
 
 const NOOP = () => undefined;
 
+const toggleRulers = () => uiStore.set((st) => ({ rulers: !st.rulers }));
+
+function useRulersKey() {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'KeyR' || !e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.repeat || isTypingTarget(e.target)) return;
+      if (document.querySelector('.play-layer, .present-layer')) return;
+      e.preventDefault();
+      toggleRulers();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
+
 function barShell(shell: CanvasShell | undefined) {
   if (!shell) return { paneCollapsed: false, onExpandPane: NOOP, canExport: false, onExport: NOOP, directionName: null, onShip: null };
   return shell;
@@ -160,6 +176,7 @@ export function CanvasChrome(p: ChromeProps) {
   const closePresent = useCallback(() => setPresent(null), []);
   const closeTweak = useCallback(() => setTweakOpen(false), []);
   const file = useFileMenu(p);
+  useRulersKey();
   const shell = p.shell;
   const viewOpen = p.ui.viewRowOpen || p.view.source.kind === 'version';
   const onTool = (next: Exclude<CanvasTool, null>) => {
@@ -211,7 +228,7 @@ export function CanvasChrome(p: ChromeProps) {
         onShip={bar.onShip ?? null}
       />
       {tweakOpen && onTweak && <TweakPrompt scope={scopeOf(p.selection)} onSend={onTweak} onClose={closeTweak} />}
-      {viewOpen && <CanvasViewRow viewport={p.ui.viewport} {...p.view} />}
+      {viewOpen && <CanvasViewRow viewport={p.ui.viewport} {...p.view} rulers={{ on: p.ui.rulers, onToggle: toggleRulers }} />}
       {present && p.presentUrl && <PresentLayer url={p.presentUrl} sandbox={p.sandbox} fullscreen={present === 'fullscreen'} onClose={closePresent} />}
     </>
   );

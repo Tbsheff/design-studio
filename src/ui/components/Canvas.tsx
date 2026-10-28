@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
@@ -23,6 +23,9 @@ import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type Th
 import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
+import { FrameSnapLayer } from './CanvasOverlays';
+
+const CanvasRulers = lazy(() => import('./CanvasRulers'));
 import { RenderCheckPanel } from './RenderCheckPanel';
 import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
@@ -486,6 +489,7 @@ export function Canvas(props: Props) {
     selection: props.selection,
     enabled: editsEnabled && !commentMode,
     post: frames.post,
+    listen: frames.listen,
     holdSwap: frames.holdSwap,
     setSelection: props.setSelection,
     refreshRects: frames.refreshRects,
@@ -590,9 +594,15 @@ export function Canvas(props: Props) {
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} />
+          <FrameSnapLayer origin={active} />
           {proto.artboard}
         </div>
         {proto.stage}
+        {ui.rulers && (
+          <Suspense fallback={null}>
+            <CanvasRulers artboardRef={artboardRef} origin={active} selection={unionRect(props.selection)} />
+          </Suspense>
+        )}
         <DrawBar draw={draw} />
         <CommentModePill mode={comment} control={props.comments} />
         {capture && <div className="capture" data-testid="pan-capture" />}

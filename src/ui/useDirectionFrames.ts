@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BRIDGE_PASSIVE_PARAM, type Direction, type ProjectKind } from '../shared/contracts';
 import { api } from './api';
 import { frameSrc } from './bridge';
+import { markOf, withElementMark } from './elementMark';
 import { frameDirection, withFramePath, type CanvasFrame } from './canvasFrames';
 import { randomToken } from './session';
 import { useTokenFrames } from './tokenFrames';
@@ -72,7 +73,7 @@ export function useDirectionFrames(o: Options) {
     const token = tokens.current.get(frame.id) ?? randomToken();
     tokens.current.set(frame.id, token);
     const isCurrent = directionId !== null && directionId === o.currentId;
-    const base = directionId === null ? null : isCurrent ? o.currentUrl : (urls[directionId] ?? null);
+    const base = directionId === null ? null : isCurrent ? o.currentUrl : withElementMark(urls[directionId] ?? null, markOf(o.directions, directionId));
     const gated = !isCurrent || o.live;
     const build = (change: FilesChange | null) => (base ? frameSrc(passiveSrc(withFramePath(base, frame.path), o.kind, change) as string, token, { [BRIDGE_PASSIVE_PARAM]: '1' }) : null);
     const src = build(gated ? gate.shownFor(frame.id) : null);

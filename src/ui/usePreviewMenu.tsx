@@ -2,7 +2,8 @@ import { useCallback, useRef, useState, type MutableRefObject } from 'react';
 import type { SelectionContext, SelectMove, ZoomKey } from '../shared/contracts';
 import { formatCopyCss } from './authoredCss';
 import type { PreviewPort } from './bridge';
-import { runCommand } from './commands/registry';
+import { commandBlocker, runCommand } from './commands/registry';
+import { TRY_VARIANTS_COMMAND } from '../shared/element-variants';
 import { PreviewMenu, type PreviewMenuItem } from './components/PreviewMenu';
 import { uiStore } from './storage';
 import { selectionTargets, structureMenuItems } from './structureEdits';
@@ -29,9 +30,14 @@ function structureItems(o: Options): PreviewMenuItem[] {
   return structureMenuItems(state, edits.structureKey, true);
 }
 
+function disabledBy(reason: string | null): { disabled?: string } {
+  return reason ? { disabled: reason } : {};
+}
+
 function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
   return [
     { id: 'ask', label: 'Ask the agent about this', icon: 'chat', run: () => void runCommand('panel.focus-composer') },
+    { id: 'variants', label: 'Try variants…', icon: 'compare', run: () => void runCommand(TRY_VARIANTS_COMMAND), ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)) },
     { id: 'parent', label: 'Select parent', icon: 'pointer', keyId: 'select-parent', run: () => o.selectRelative(target.selector, 'parent') },
     { id: 'child', label: 'Select child', icon: 'pointer', keyId: 'select-child', run: () => o.selectRelative(target.selector, 'child') },
     { id: 'copy-css', label: 'Copy CSS', icon: 'copy', run: () => copyCss(o.port?.current ?? null, target.selector) },

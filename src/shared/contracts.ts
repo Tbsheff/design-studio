@@ -788,6 +788,7 @@ export const STUDIO_TOKEN_HEADER = 'x-studio-token';
 export const BRIDGE_TOKEN_PARAM = '__studio_token';
 export const BRIDGE_PARENT_ORIGIN_PARAM = '__studio_parent';
 export const BRIDGE_PASSIVE_PARAM = '__studio_passive';
+export const ELEMENT_MARK_PARAM = '__studio_mark';
 export const SOURCE_LOC_ATTR = 'data-studio-loc';
 export const BRIDGE_SCRIPT_PATH = '/__studio/bridge.js';
 export const BRIDGE_CHANGES_PATH = '/__studio/changes';

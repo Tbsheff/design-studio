@@ -27,6 +27,8 @@ export interface ElementVariantInfo {
   rejected: string | null;
 }
 
+export const TRY_VARIANTS_COMMAND = 'selection.try-variants';
+
 export const ATTACHED_APP_VARIANTS_REASON = 'Not on attached apps: each variant copies the whole app folder.';
 
 export function elementVariantsBlocker(project: Pick<Project, 'app'> | null, selection: readonly SelectionContext[]): string | null {

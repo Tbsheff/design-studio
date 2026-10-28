@@ -16,6 +16,7 @@ import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
   BRIDGE_PASSIVE_PARAM,
+  ELEMENT_MARK_PARAM,
   BRIDGE_TOKEN_PARAM,
   DIRECT_STYLE_PROPERTIES,
   SOURCE_LOC_ATTR,
@@ -1058,10 +1059,20 @@ function startBridge(session: BridgeSession): void {
   }
 }
 
+function markScopedElement(): void {
+  const loc = new URL(window.location.href).searchParams.get(ELEMENT_MARK_PARAM);
+  if (!loc || document.getElementById('studio-element-mark')) return;
+  const style = document.createElement('style');
+  style.id = 'studio-element-mark';
+  style.textContent = `[${SOURCE_LOC_ATTR}="${CSS.escape(loc)}"]{outline:2px solid oklch(0.62 0.19 255) !important;outline-offset:4px !important;}`;
+  (document.head ?? document.documentElement).appendChild(style);
+}
+
 const marker = '__studioBridgeStarted';
 const globalScope = window as unknown as Record<string, unknown>;
 if (!globalScope[marker]) {
   globalScope[marker] = true;
+  markScopedElement();
   const session = readSession();
   if (session) startBridge(session);
 }

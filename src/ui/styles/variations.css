@@ -243,3 +243,63 @@
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
+
+.element-variants {
+  width: min(480px, 100%);
+}
+
+.element-variants-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+
+.element-variants-field textarea {
+  resize: vertical;
+  min-height: 56px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.element-variants-field textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.element-variants-count {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+
+.element-variants-count > span {
+  margin-right: auto;
+}
+
+.element-variants-count .btn {
+  min-width: 36px;
+  font-variant-numeric: tabular-nums;
+}
+
+.element-variants-count .btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.frame-chip.keep[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.frame-error.scope {
+  max-width: 360px;
+  white-space: normal;
+}

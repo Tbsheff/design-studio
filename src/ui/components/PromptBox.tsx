@@ -1,5 +1,6 @@
 import { useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
+import { elementVariantsIntent } from '../../shared/element-variants';
 import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions, type MentionRequest } from '../useMentions';
 import { HistorySearch, useHistorySearch } from './HistorySearch';
@@ -58,6 +59,7 @@ interface VariationsPromptProps {
   max: number;
   onCount: (count: number) => void;
   onSend: (prompt: string, level: RunLevel, attachmentIds: string[]) => Promise<void>;
+  onElement?: (prompt: string, count: number, level: RunLevel) => Promise<void>;
 }
 
 type SendState = 'send' | 'queue' | 'stop';
@@ -326,7 +328,14 @@ export function PromptBox(props: Props) {
       const ids = files.flatMap((f) => (f.attachment ? [f.attachment.id] : []));
       const prompt = [draft.trim(), skillInstruction(skillIds)].filter(Boolean).join('\n\n');
       const fanOut = mode === 'edit' && props.variations && props.variations.count > 1 && props.selection.length === 0;
-      const sent = fanOut && props.variations ? props.variations.onSend(prompt, runLevel.level, ids) : props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
+      const elementCount = mode === 'edit' && props.selection.length === 1 ? elementVariantsIntent(prompt) : null;
+      const onElement = props.variations?.onElement;
+      const sent =
+        elementCount && onElement
+          ? onElement(prompt, elementCount, runLevel.level)
+          : fanOut && props.variations
+            ? props.variations.onSend(prompt, runLevel.level, ids)
+            : props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
       setDraft('');
       await sent;
       mentions.clear();

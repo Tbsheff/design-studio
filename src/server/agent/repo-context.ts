@@ -6,6 +6,9 @@ import type { Project } from '../../shared/contracts.js';
 import { REPO_CONTEXT_FILES, REPO_CONTEXT_MAX_BYTES, type RepoContextFile, type RepoContextScope, type RepoContextState } from '../../shared/repo-context.js';
 
 const MAX_FILE_BYTES = 256 * 1024;
+const FOCUS_ABOVE_BYTES = 12 * 1024;
+const FOCUS_FILES = new Set(['AGENTS.md', 'CLAUDE.md']);
+const UI_SECTION = /\b(ui|ux|design|styl\w*|css|tailwind|class(?:es|name)?|components?|layout|colou?rs?|tokens?|theme|fonts?|typography|frontend|front-end|react|next\.?js|tsx|jsx|pages?|routes?|screens?|views?|icons?|images?|assets?|a11y|accessib\w*|responsive|mobile|naming|conventions?|comments?|imports?|exports?|shadcn|storybook)\b/i;
 const WALK_LEVELS = 6;
 
 const SECRET_PATTERNS = [
@@ -131,6 +134,33 @@ function classify(candidate: Candidate, read: { real: string; size: number; text
   return { file: fileRecord(candidate, read.size, 'full', clean.dropped), text: clean.text };
 }
 
+interface DocSection {
+  title: string;
+  text: string;
+}
+
+function docSections(text: string): DocSection[] {
+  return text.split(/\n(?=## )/).map((part, index) => ({ title: index === 0 && !part.startsWith('## ') ? '' : (part.split('\n', 1)[0] ?? '').replace(/^##\s*/, ''), text: part }));
+}
+
+export function focusAgentDoc(text: string, relPath: string, extraTerms: readonly string[] = []): string {
+  const sections = docSections(text);
+  const touches = (section: DocSection) => UI_SECTION.test(section.text) || extraTerms.some((term) => term && section.text.includes(term));
+  const kept = sections.filter((section) => section.title === '' || touches(section));
+  const dropped = sections.filter((section) => !kept.includes(section));
+  if (dropped.length === 0) return text;
+  const note = `[The studio left out ${dropped.length} section(s) of ${relPath} that are not about UI, styling or files this run may touch: ${dropped.map((section) => section.title).join('; ')}. Read ${relPath} for them when the task needs it.]`;
+  return `${kept.map((section) => section.text).join('\n')}\n\n${note}`;
+}
+
+function focusLoaded(loaded: Loaded[], appRel: string): void {
+  const total = loaded.reduce((sum, item) => sum + Buffer.byteLength(item.text, 'utf8'), 0);
+  if (total <= FOCUS_ABOVE_BYTES) return;
+  for (const item of loaded) {
+    if (FOCUS_FILES.has(path.basename(item.file.path))) item.text = focusAgentDoc(item.text, item.file.path, [appRel]);
+  }
+}
+
 export function fairShares(sizes: number[], cap: number): number[] {
   const out = sizes.map(() => 0);
   let left = cap;
@@ -192,9 +222,11 @@ export async function loadRepoContext(project: Pick<Project, 'app'>, workTree: s
   const boundary = (await realOrNull(outer)) ?? outer;
   const designMd = await realOrNull(path.join(workTree, 'DESIGN.md'));
   const { loaded, files } = await loadFiles(candidates(found.dirs, outer), boundary, designMd);
+  const appRel = path.relative(outer, found.appDir);
+  focusLoaded(loaded, appRel);
   const shares = fairShares(loaded.map((item) => Buffer.byteLength(item.text, 'utf8')), REPO_CONTEXT_MAX_BYTES);
   const parts = loaded.map((item, index) => renderFile(item, shares[index] ?? 0));
   const bytes = files.reduce((sum, file) => sum + file.sentBytes, 0);
   const text = parts.length ? `<repo_context>\n${BLOCK_INTRO}\n\n${parts.join('\n\n')}\n</repo_context>` : null;
-  return { workspaceRoot: found.root, appDir: path.relative(outer, found.appDir) || '.', files, bytes, text };
+  return { workspaceRoot: found.root, appDir: appRel || '.', files, bytes, text };
 }

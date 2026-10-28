@@ -219,6 +219,13 @@ async function screenChecks(preview: PreviewService, ctx: AgentRunContext, confi
   return checked.flat();
 }
 
+export async function prewarmChecks(preview: PreviewService, ctx: AgentRunContext, state: RunToolState): Promise<void> {
+  preview.warmBrowser?.();
+  if (!ctx.previewUrl || !ctx.project.app) return;
+  const screens = await runScreens(preview, ctx, state.config, state).catch(() => []);
+  await warmScreens(preview, ctx.project, screens);
+}
+
 export async function saveCheck(runsDir: string, runId: string, index: number | string, results: RenderCheckResult[]): Promise<void> {
   await mkdir(runsDir, { recursive: true });
   await writeFile(path.join(runsDir, `${runId}-check-${index}.json`), `${JSON.stringify(results, null, 2)}\n`);

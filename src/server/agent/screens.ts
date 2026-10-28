@@ -218,10 +218,12 @@ export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<R
 export async function warmScreens(preview: PreviewService, project: Project, screens: readonly RunScreen[]): Promise<void> {
   const upstream = project.app ? await preview.apps?.ensure(project).catch(() => null) : null;
   if (!upstream) return;
-  for (const pagePath of new Set(screens.map((screen) => screen.pagePath))) {
-    const answer = await fetch(new URL(`/${pagePath}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
-    await answer?.body?.cancel().catch(() => undefined);
-  }
+  await Promise.all(
+    [...new Set(screens.map((screen) => screen.pagePath))].map(async (pagePath) => {
+      const answer = await fetch(new URL(`/${pagePath}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+      await answer?.body?.cancel().catch(() => undefined);
+    }),
+  );
 }
 
 export function describeScreens(screens: readonly RunScreen[]): string {

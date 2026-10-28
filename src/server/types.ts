@@ -157,4 +157,5 @@ export interface PreviewService {
   withPage?<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T>;
   elementShots?(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]>;
   sourceStamp?(url: string): Promise<string | null>;
+  warmBrowser?(): void;
 }

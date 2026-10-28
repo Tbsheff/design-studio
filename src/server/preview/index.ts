@@ -295,6 +295,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
     sourceStamp: stampFor,
+    warmBrowser: () => void browsers.get().then((pool) => pool.backend()).catch(() => undefined),
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }

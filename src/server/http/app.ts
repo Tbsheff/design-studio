@@ -74,6 +74,8 @@ import { loadRepoContext } from '../agent/repo-context.js';
 import { registerRunContextRoutes } from './run-context-routes.js';
 import { registerInsertRoutes } from './insert-routes.js';
 import { createComponentService } from '../components/thumbs.js';
+import { componentPreviewsFor } from '../components/preview.js';
+import { registerComponentPreviewRoutes } from './component-preview-routes.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { AgentRunner, EventBus, PreviewService, RunHandle, ServerConfig, VersionStore } from '../types.js';
 import { renderIndexHtml, serveStatic } from './static.js';
@@ -1081,6 +1083,7 @@ export function createApp(deps: AppDeps): Hono {
     service: createComponentService({ preview, scratchDir: (projectId) => path.join(projects.projectDir(projectId), '.component-shots') }),
     loadDirection,
   });
+  registerComponentPreviewRoutes(app, { previews: componentPreviewsFor(preview, path.join(config.dataDir, 'component-previews')), loadDirection });
   registerPropsRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   const rulesFor = rulesLoader(projects.projectDir);
   registerReviewRoutes(app, { editDeps, preview, canvas, readBody, loadDirection, withDirection, rulesFor });

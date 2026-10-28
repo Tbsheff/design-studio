@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentInfo, ProjectKind, SelectionContext } from '../../shared/contracts';
 import type { InsertableComponent } from '../../shared/insert';
 import { componentThumb, type ComponentList } from '../useComponents';
+import { ComponentPreviewThumb } from './ComponentPreviewThumb';
 import { DragGhost, InsertMenu, useComponentDrag, useInsertable, type ComponentDrag } from './ComponentInsert';
 import { Icon } from './Icon';
 import { PanelHead } from './SheetHead';
@@ -113,7 +114,11 @@ function Card({ item, props, drag, onInsertMenu }: CardProps) {
   return (
     <li className="cmp-item">
       <button type="button" className="cmp-card" aria-label={`Mention ${info.name}`} data-tip={tip} data-testid="component-card" onClick={() => props.onMention(info)} {...(insert ? drag.handlers(insert) : {})}>
-        <Thumb projectId={props.projectId} directionId={props.directionId as string} component={info} version={props.list.version} active={props.active} />
+        {insert ? (
+          <ComponentPreviewThumb projectId={props.projectId} directionId={props.directionId as string} id={insert.id} version={props.list.version} active={props.active} />
+        ) : (
+          <Thumb projectId={props.projectId} directionId={props.directionId as string} component={info} version={props.list.version} active={props.active} />
+        )}
         <span className="cmp-name truncate">{info.name}</span>
         <span className="cmp-meta truncate">{meta(info)}</span>
       </button>

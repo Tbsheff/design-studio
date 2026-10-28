@@ -64,7 +64,7 @@ function pickEntry(entries: LibraryEntry[], component: InsertComponentRequest['c
   throw refuse(`More than one component is named ${component.name} (${matches.map((entry) => entry.file).join(', ')}). Pass its file too`);
 }
 
-function humanize(name: string): string {
+export function humanize(name: string): string {
   const words = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').split(' ');
   return words.map((word, index) => (index === 0 ? word : word.toLowerCase())).join(' ');
 }
@@ -83,7 +83,7 @@ function requiredValue(spec: PropSpec): PropValue {
   return humanize(spec.name.charAt(0).toUpperCase() + spec.name.slice(1));
 }
 
-function propsFor(schema: ComponentSchema | null, given: Record<string, PropValue>): Record<string, PropValue> {
+export function propsFor(schema: ComponentSchema | null, given: Record<string, PropValue>): Record<string, PropValue> {
   const out: Record<string, PropValue> = {};
   for (const spec of schema?.props ?? []) {
     if (spec.optional || spec.name === 'asChild' || spec.from === 'variant' || spec.name in given) continue;

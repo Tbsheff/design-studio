@@ -4,6 +4,7 @@ import type { ComponentInstance, PropSpec, PropValue, VariantGroup } from '../..
 import { ApiError } from '../api';
 import { useProjectEvents } from '../events';
 import { propsApi } from '../propsApi';
+import { ComponentPreviewThumb } from './ComponentPreviewThumb';
 import { InspectorSection } from './InspectorFields';
 import { UiSelect } from './UiSelect';
 import '../styles/inspector-props.css';
@@ -300,6 +301,14 @@ export default function InspectorProps({ projectId, directionId, selection, edit
       <p className="prp-where">
         Used at {instance.use.file}:{instance.use.line}
       </p>
+      {component.file.startsWith('packages/') && (
+        <div className="prp-kit" data-testid="kit-preview">
+          <ComponentPreviewThumb projectId={projectId} directionId={directionId} id={`${component.file}#${component.name}`} version="0" active className="prp-kit-thumb" />
+          <p className="prp-where" data-tip={`${component.file}:${component.line}`}>
+            Kit component, default props
+          </p>
+        </div>
+      )}
       {component.props.length === 0 && <p className="ins-note">No props to edit here.</p>}
       <div className="prp-rows">
         {component.props.map((spec) => (

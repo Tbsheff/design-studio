@@ -127,7 +127,7 @@ function componentDraft(rule: ComponentRule, hit: RuleHitElement): Draft {
   const from = rule.module ? ` from ${rule.module}` : '';
   return {
     ...head(rule, hit),
-    key: `${rule.id}|${hit.loc ?? hit.selector}`,
+    key: `${rule.id}|${hit.selector}`,
     severity: 'medium',
     message: `Breaks the rule "${rule.text}": this is a plain <${rule.tag}>, not the ${rule.name} component.`,
     fix: null,
@@ -161,9 +161,9 @@ export function applyTokenRules(rules: DesignRule[], drafts: Draft[]): Draft[] {
   });
 }
 
-export function ruleHits(rules: DesignRule[], drafts: Pick<Draft, 'rule' | 'element' | 'source' | 'message'>[]): DesignRuleHit[] {
+export function ruleHits(rules: DesignRule[], drafts: (Pick<Draft, 'rule' | 'element' | 'source' | 'message'> & { copies?: number })[]): DesignRuleHit[] {
   return rules.map((rule) => {
     const mine = drafts.filter((draft) => draft.rule?.id === rule.id);
-    return { ruleId: rule.id, count: mine.length, samples: mine.slice(0, 5).map((draft) => ({ element: draft.element, source: draft.source, message: draft.message })) };
+    return { ruleId: rule.id, count: mine.reduce((sum, draft) => sum + (draft.copies ?? 1), 0), samples: mine.slice(0, 5).map((draft) => ({ element: draft.element, source: draft.source, message: draft.message })) };
   });
 }

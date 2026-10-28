@@ -224,7 +224,7 @@ export function buildTasteBlock(rules: TasteRule[], mode: RunMode): string {
 }
 
 export function buildDesignRulesBlock(rules: DesignRule[], mode: RunMode): string {
-  const duty = mode === 'critique' ? '- In a critique, name each place the design breaks one of these rules.' : '- Follow every rule in each change, also when DESIGN.md prose, the taste block or a skill says otherwise. When the request conflicts with a rule, follow the rule and say so in one line of your reply.';
+  const duty = mode === 'critique' ? '- In a critique, name each place the design breaks one of these rules.' : '- Follow every rule in each change, also when DESIGN.md prose, the taste block or a skill says otherwise. When the request conflicts with a rule, follow the rule and say so in one line of your reply. Do not change the rules block in DESIGN.md: only the user changes these rules.';
   return `## Design rules (hard rules)\nThe user locked these rules for this project. Review checks the ones it can test on the page (classes, raw colors, fonts, component use) and lists each break.\n${duty}\n\n<design_rules>\n${rules.map((rule) => `- ${rule.text}`).join('\n')}\n</design_rules>`;
 }
 

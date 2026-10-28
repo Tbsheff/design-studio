@@ -192,8 +192,9 @@ const RULES_PROBE = String.raw`async (input) => {
     const all = [fiber._debugStack && fiber._debugStack.stack, fiber.debugStack && fiber.debugStack.stack, fiber.stack];
     return all.find((s) => typeof s === 'string' && s.length > 0) || '';
   };
+  const ownLocs = new Map();
   const resolve = async (els, ownOnly) => {
-    const todo = [...new Set(els)].filter((el) => !el.hasAttribute(LOC) && fiberOf(el));
+    const todo = [...new Set(els)].filter((el) => fiberOf(el) && (ownOnly || !el.hasAttribute(LOC)));
     const batch = async (group) => {
       const stacks = [];
       for (const el of group) {
@@ -209,7 +210,8 @@ const RULES_PROBE = String.raw`async (input) => {
           const own = sources[i * 2];
           const owner = sources[i * 2 + 1];
           const loc = typeof own === 'string' ? own : typeof owner === 'string' ? owner : null;
-          if (loc) el.setAttribute(LOC, loc);
+          if (ownOnly) ownLocs.set(el, loc);
+          else if (loc) el.setAttribute(LOC, loc);
         });
       } catch {}
     };
@@ -222,7 +224,7 @@ const RULES_PROBE = String.raw`async (input) => {
     await resolve([...out.values()].flatMap((list) => list.map((item) => item[0])), false);
   }
   const ownFile = (el) => {
-    const loc = el.getAttribute(LOC);
+    const loc = input.app ? ownLocs.get(el) || null : el.getAttribute(LOC);
     const m = loc ? /^(.+):\d+:\d+$/.exec(loc) : null;
     return m ? m[1] : null;
   };
@@ -232,7 +234,7 @@ const RULES_PROBE = String.raw`async (input) => {
     if (!file || file.includes('node_modules/')) continue;
     const base = file.split('/').pop().replace(/\.[jt]sx?$/, '').toLowerCase();
     if (base === rule.name.toLowerCase() || base === kebab(rule.name)) continue;
-    add(rule, el, [{ cls: '<' + rule.tag + '>', prop: null, actual: file, expected: rule.name }], {});
+    add(rule, el, [{ cls: '<' + rule.tag + '>', prop: null, actual: file, expected: rule.name }], { loc: ownLocs.get(el) || el.getAttribute(LOC) });
   }
   for (const [ruleId, list] of out) for (const [el, misses, extra] of list) hits.push(info(el, ruleId, misses, extra));
   host.remove();

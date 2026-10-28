@@ -103,7 +103,7 @@ export default function RulesEditor({ projectId, directionId }: Props) {
   const dirty = text.trim() !== state.text.trim();
   const hits = new Map(result?.hits.map((hit) => [hit.ruleId, hit]) ?? []);
   const rules = result?.rules ?? state.rules;
-  const imported = state.imported;
+  const imported = state.imported && !text.includes(state.imported.trim()) ? state.imported : null;
   return (
     <section className="rules-editor" aria-label="Design rules">
       <div className="rules-head">

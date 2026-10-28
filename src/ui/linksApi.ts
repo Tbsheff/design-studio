@@ -1,6 +1,6 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { STUDIO_TOKEN_HEADER, type StudioEvent } from '../shared/contracts';
-import { emptyLinksFile, type LinkSource, type LinksFile, type LinkTarget, type LinkTransition, type PrototypeLink } from '../shared/links';
+import { emptyLinksFile, type LinkMotion, type LinkSource, type LinksFile, type LinkTarget, type LinkTransition, type PrototypeLink } from '../shared/links';
 import { ApiError } from './api';
 import { useProjectEvents } from './events';
 import { getSession } from './session';
@@ -80,7 +80,8 @@ export const linksApi = {
     setFile(projectId, links);
     return saved;
   },
-  update: (projectId: string, id: string, change: { to?: LinkTarget; transition?: LinkTransition }) => write(projectId, 'PATCH', `${base(projectId)}/${id}`, change),
+  update: (projectId: string, id: string, change: { to?: LinkTarget } & LinkMotion) => write(projectId, 'PATCH', `${base(projectId)}/${id}`, change),
+  keep: (projectId: string, ids: string[] | 'all', motion: LinkMotion = {}) => write(projectId, 'POST', `${base(projectId)}/keep`, { ids, ...motion }),
   remove: (projectId: string, id: string) => write(projectId, 'DELETE', `${base(projectId)}/${id}`),
   setStart: (projectId: string, frame: string) => write(projectId, 'PUT', `${base(projectId)}/start`, { frame }),
 };
@@ -96,4 +97,33 @@ export function useLinks(projectId: string): LinksFile {
   useEffect(() => load(projectId), [projectId]);
   useProjectEvents(projectId, receive);
   return useSyncExternalStore(subscribe, () => entries.get(projectId)?.file ?? EMPTY);
+}
+
+const IMPLICIT_DEBOUNCE_MS = 400;
+
+export function useImplicitLinks(projectId: string, framesKey: string): PrototypeLink[] {
+  const [links, setLinks] = useState<PrototypeLink[]>([]);
+  const timer = useRef(0);
+  const seq = useRef(0);
+  const fetchNow = useRef(() => undefined as void);
+  fetchNow.current = () => {
+    const at = ++seq.current;
+    call<{ implicit: PrototypeLink[] }>('GET', `${base(projectId)}/implicit`)
+      .then(({ implicit }) => {
+        if (at === seq.current) setLinks(implicit);
+      })
+      .catch((error: unknown) => console.error('[links] implicit load failed', error));
+  };
+  const later = () => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => fetchNow.current(), IMPLICIT_DEBOUNCE_MS);
+  };
+  useEffect(() => {
+    fetchNow.current();
+    return () => window.clearTimeout(timer.current);
+  }, [projectId, framesKey]);
+  useProjectEvents(projectId, (event) => {
+    if (event.type === 'files.changed' || event.type === 'links.changed' || event.type === 'version.created') later();
+  });
+  return links;
 }

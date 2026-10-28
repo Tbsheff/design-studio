@@ -40,6 +40,16 @@
   fill: var(--danger-tint);
 }
 
+.link-arrow.implicit path,
+.link-arrow.implicit .link-hotspot {
+  stroke-dasharray: 5 5;
+  opacity: 0.8;
+}
+
+.link-arrow.implicit .link-hotspot {
+  fill: transparent;
+}
+
 .link-head {
   fill: var(--accent);
 }
@@ -208,6 +218,29 @@
   margin-left: 4px;
 }
 
+.proto-found-count {
+  margin-left: 4px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.proto-found {
+  padding: 2px 6px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  color: var(--text-faint);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+}
+
+.proto-narrow {
+  max-width: 110px;
+}
+
+.proto-row.implicit .proto-meta {
+  font-style: italic;
+}
+
 .proto-list {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -307,7 +340,8 @@
   opacity: 0;
 }
 
-.play-slot.enter.t-slide-left {
+.play-slot.enter.t-slide-left,
+.play-slot.enter.t-push-left {
   transform: translateX(100%);
 }
 
@@ -315,11 +349,21 @@
   transform: translateX(-100%);
 }
 
+.play-slot.enter.t-push-up,
+.play-slot.enter.t-move-in {
+  transform: translateY(100%);
+}
+
+.play-slot.enter.t-push-down {
+  transform: translateY(-100%);
+}
+
 .play-slot.run,
-.play-slot.leaving {
+.play-slot.leaving,
+.play-slot.closing {
   transition:
-    transform 320ms var(--ease-out),
-    opacity 320ms var(--ease-out);
+    transform var(--play-ms, 320ms) var(--play-ease, var(--ease-out)),
+    opacity var(--play-ms, 320ms) var(--play-ease, var(--ease-out));
 }
 
 .play-slot.leaving.t-slide-left {
@@ -327,6 +371,68 @@
 }
 
 .play-slot.leaving.t-slide-right {
+  transform: translateX(100%);
+}
+
+.play-slot.leaving.t-push-up {
+  transform: translateY(-100%);
+}
+
+.play-slot.leaving.t-push-down,
+.play-slot.leaving.t-move-out {
+  transform: translateY(100%);
+}
+
+.play-slot.leaving.t-move-out {
+  z-index: 2;
+}
+
+.play-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+.play-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: var(--scrim);
+  cursor: default;
+  transition: opacity var(--play-ms, 320ms) var(--play-ease, var(--ease-out));
+}
+
+.play-overlay.loading .play-backdrop,
+.play-overlay.enter .play-backdrop,
+.play-overlay.closing .play-backdrop {
+  opacity: 0;
+}
+
+.play-slot[class*='overlay-'] {
+  pointer-events: none;
+}
+
+.play-slot[class*='overlay-'] .play-frame {
+  pointer-events: auto;
+}
+
+.play-slot.overlay-modal .play-frame {
+  border-radius: var(--r-lg);
+}
+
+.play-slot.overlay-drawer {
+  place-items: start end;
+}
+
+.play-slot.overlay-modal.enter:not(.t-instant),
+.play-slot.overlay-modal.closing:not(.t-instant) {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.play-slot.overlay-drawer.enter:not(.t-instant),
+.play-slot.overlay-drawer.closing:not(.t-instant) {
   transform: translateX(100%);
 }
 

@@ -14,6 +14,9 @@ import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './e
 import { createKeyedMutex } from './mutex.js';
 import { seedFromUserRepo } from './version-seed.js';
 import { createChangeTracker } from './version-tracker.js';
+import { ObjectStore, gitIdent, type CommitInfo } from './git-objects.js';
+import { createDirectStore } from './version-direct.js';
+import { FastPathUnavailable, diffTrees } from './version-fast.js';
 
 export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.next/', '.turbo/', '.studio/*', `!${CANVAS_FILE}`, `!${LINKS_FILE}`, '.DS_Store'];
 const LAYOUT_FILES = [CANVAS_FILE, LINKS_FILE];
@@ -36,6 +39,8 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/;
 const ZERO_SHA = '0'.repeat(40);
 const FORCED_KINDS = new Set<VersionMeta['kind']>(['fork', 'undo', 'restore']);
 const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+const STUDIO_NAME = 'Design Studio';
+const STUDIO_EMAIL = 'studio@localhost';
 
 type OwnSpan = Omit<SessionSpan, 'outside'> & { base: string; head: string; outside: Version[] };
 
@@ -227,6 +232,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const headIndexTrees = new Map<string, string>();
   const commitTrees = new Map<string, string>();
   const lockSweeps = new Map<string, Promise<void>>();
+  const objectStores = new Map<string, ObjectStore>();
 
   const largeUntracked = async (project: Project): Promise<string[]> => {
     const main = project.directions[0];
@@ -282,28 +288,32 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const refOf = (direction: Direction): string => `refs/heads/${direction.branch}`;
   const lockKey = (project: Project, direction: Direction): string => `${project.id}/${direction.id}`;
 
-  const resolveRef = async (project: Project, ref: string): Promise<string | null> => {
-    try {
-      const { stdout } = await runGit(repoScope(project), ['rev-parse', '--verify', '-q', `${ref}^{commit}`]);
-      const sha = stdout.trim();
-      return sha === '' ? null : sha;
-    } catch {
-      return null;
+  const objectsOf = (project: Project): ObjectStore => {
+    const gitDir = gitDirOf(project);
+    let store = objectStores.get(gitDir);
+    if (!store) {
+      store = new ObjectStore(gitDir, resolveGitBinary, gitEnv(repoScope(project)));
+      objectStores.set(gitDir, store);
     }
+    return store;
+  };
+
+  const readCommitObject = async (project: Project, sha: string): Promise<CommitInfo | null> => {
+    if (!existsSync(path.join(gitDirOf(project), 'HEAD'))) return null;
+    return objectsOf(project).readCommit(sha);
   };
 
   const requireCommit = async (project: Project, versionId: string): Promise<string> => {
     if (!SHA_PATTERN.test(versionId)) throw new BadRequestError('invalid versionId');
-    const sha = await resolveRef(project, versionId);
-    if (sha === null) throw new NotFoundError(`version ${versionId} not found`);
-    return sha;
+    if ((await readCommitObject(project, versionId)) === null) throw new NotFoundError(`version ${versionId} not found`);
+    return versionId;
   };
 
   const treeOf = async (project: Project, commit: string): Promise<string> => {
     const known = SHA_PATTERN.test(commit) ? commitTrees.get(commit) : undefined;
     if (known) return known;
-    const { stdout } = await runGit(repoScope(project), ['rev-parse', `${commit}^{tree}`]);
-    const tree = stdout.trim();
+    const parsed = SHA_PATTERN.test(commit) ? await readCommitObject(project, commit) : null;
+    const tree = parsed?.tree ?? (await runGit(repoScope(project), ['rev-parse', `${commit}^{tree}`])).stdout.trim();
     if (SHA_PATTERN.test(commit)) {
       if (commitTrees.size > MAX_CACHED_TREES) commitTrees.clear();
       commitTrees.set(commit, tree);
@@ -336,14 +346,10 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   };
 
   const commitInfo = async (project: Project, sha: string): Promise<{ parentId: string | null; title: string; meta: StoredVersionMeta | null }> => {
-    const { stdout } = await runGit(repoScope(project), ['log', '-n', '1', '--format=%P%x1f%B', sha, '--']);
-    const [parents = '', message = ''] = stdout.split(FIELD);
-    const parsed = parseCommitMessage(message);
-    return {
-      parentId: parents.trim().split(' ').filter(Boolean)[0] ?? null,
-      title: parsed.title,
-      meta: parsed.meta,
-    };
+    const commit = await readCommitObject(project, sha);
+    if (!commit) throw new NotFoundError(`version ${sha} not found`);
+    const parsed = parseCommitMessage(commit.message);
+    return { parentId: commit.parents[0] ?? null, title: parsed.title, meta: parsed.meta };
   };
 
   const originTitleOf = async (project: Project, sha: string): Promise<string> => {
@@ -420,23 +426,25 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     currentHead: string | null,
     title: string,
     meta: VersionMeta,
+    knownChanges?: string[],
   ): Promise<Version> => {
     const stored: StoredVersionMeta = { ...stampOrigin(meta), directionId: direction.id, createdAt: Date.now() };
     const cleanTitle = title.replace(/\s+/g, ' ').trim() || meta.kind;
     const message = `${cleanTitle}\n\n${META_PREFIX}${JSON.stringify(stored)}\n`;
-    const args = ['commit-tree', tree];
-    if (parent !== null) args.push('-p', parent);
-    args.push('-m', message);
-    const { stdout } = await runGit(repoScope(project), args);
-    const sha = stdout.trim();
+    const store = objectsOf(project);
+    const ident = gitIdent(STUDIO_NAME, STUDIO_EMAIL, new Date(stored.createdAt));
+    const sha = await store.writeCommit(tree, parent === null ? [] : [parent], ident, message);
     commitTrees.set(sha, tree);
-    await runGit(repoScope(project), ['update-ref', refOf(direction), sha, currentHead ?? ZERO_SHA]);
-    const changedFiles = await changedFilesOf(project, sha, parent !== null);
+    await store.updateRef(refOf(direction), sha, currentHead, ident);
+    const changedFiles = knownChanges ?? (parent === null ? await changedFilesOf(project, sha, false) : (await diffTrees(store, await treeOf(project, parent), tree)).map((change) => change.path));
     return toVersion(sha, parent ?? '', String(Math.floor(stored.createdAt / 1000)), message, changedFiles);
   };
 
-  const headOf = async (project: Project, direction: Direction): Promise<string | null> =>
-    resolveRef(project, refOf(direction));
+  const headOf = async (project: Project, direction: Direction): Promise<string | null> => {
+    if (!existsSync(path.join(gitDirOf(project), 'HEAD'))) return null;
+    const sha = await objectsOf(project).readRef(refOf(direction));
+    return sha !== null && (await readCommitObject(project, sha)) !== null ? sha : null;
+  };
 
   const isAncestor = async (project: Project, base: string, head: string): Promise<boolean> => {
     try {
@@ -532,6 +540,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     untracked: 'keep' | 'trash',
   ): Promise<void> => {
     const scope = directionScope(project, direction);
+    direct.forget(project, direction);
+    await direct.syncIndex(project, direction);
     const staged = await runGit(scope, from === null ? ['ls-files', '-z'] : ['diff-index', '--cached', '--name-only', '-z', from]);
     tracker.note(lockKey(project, direction), splitNul(staged.stdout));
     await indexToTree(scope, from);
@@ -549,12 +559,17 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const statusOf = async (project: Project, direction: Direction, paths?: string[]): Promise<WorkTreeStatus> => {
     await refreshExclude(project);
     const scope = directionScope(project, direction);
-    await (paths === undefined ? stageChanged(project, direction) : stagePaths(project, direction, paths));
+    const fast = project.app ? await direct.status(project, direction, paths) : 'git';
+    if (typeof fast !== 'string') return fast;
+    await direct.syncIndex(project, direction);
+    if (fast === 'full') await fullStage(project, direction);
+    else await (paths === undefined ? stageChanged(project, direction) : stagePaths(project, direction, paths));
     const head = await headOf(project, direction);
     const { stdout } = head
       ? await runGit(scope, ['diff-index', '--cached', '--name-only', '-z', head])
       : await runGit(scope, ['ls-files', '-z']);
     const changed = splitNul(stdout).filter((entry) => !LAYOUT_FILES.includes(entry));
+    if (project.app && head && (paths === undefined || fast === 'full')) direct.remember(project, direction, head, changed);
     return { dirty: changed.length > 0, changed };
   };
 
@@ -582,6 +597,39 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     await symlink(real, path.join(snapshotDir, 'node_modules'), 'dir').catch((error: NodeJS.ErrnoException) => {
       if (error.code !== 'EEXIST') throw error;
     });
+  };
+
+  const direct = createDirectStore({
+    objects: objectsOf,
+    headOf,
+    treeOf,
+    keyOf: lockKey,
+    neverTracked: (project) => (project.app ? APP_NEVER_TRACKED : NEVER_TRACKED),
+    staleMarkerOf: (project, direction) => path.join(gitDirOf(project), `index-${assertSafeId(direction.id, 'directionId')}.stale`),
+    changedSinceScan: (project, direction) => tracker.changedSinceScan(lockKey(project, direction), rootOf(direction)),
+    ignored: async (project, direction, paths) => {
+      const { stdout } = await runGit(directionScope(project, direction), ['check-ignore', '--no-index', '-z', '--stdin'], { input: `${paths.join('\0')}\0`, okCodes: [1] });
+      return new Set(splitNul(stdout));
+    },
+    stageGit: (project, direction, paths) => stagePaths(project, direction, paths),
+    resetIndex: async (project, direction, tree) => {
+      await runGit(directionScope(project, direction), ['read-tree', '--reset', tree]);
+    },
+  });
+
+  const commitDirect = async (project: Project, direction: Direction, paths: string[], title: string, meta: VersionMeta): Promise<Version | null | undefined> => {
+    const head = await headOf(project, direction);
+    if (head === null) return undefined;
+    try {
+      const built = await direct.buildCommit(project, direction, head, paths);
+      if (built === null) return null;
+      const version = await commitTree(project, direction, built.tree, head, head, title, meta, built.changed);
+      direct.committed(project, direction, head, version.id, paths);
+      return version;
+    } catch (error) {
+      if (error instanceof FastPathUnavailable) return undefined;
+      throw error;
+    }
   };
 
   const sweepLocks = (project: Project): Promise<void> => {
@@ -678,7 +726,12 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     commitFile(project: Project, direction: Direction, relative: string | string[], title: string, meta: VersionMeta): Promise<Version | null> {
       const listed = Array.isArray(relative) ? relative : [relative];
       const paths = [...listed, ...layoutFilesOf(project).filter((file) => !listed.includes(file) && existsSync(layoutOf(direction, file)))];
-      return locked(project, direction, () => commitPaths(project, direction, paths, title, meta));
+      return locked(project, direction, async () => {
+        const fast = project.app ? await commitDirect(project, direction, paths, title, meta) : undefined;
+        if (fast !== undefined) return fast;
+        await direct.syncIndex(project, direction);
+        return commitPaths(project, direction, paths, title, meta);
+      });
     },
 
     commit(project: Project, direction: Direction, title: string, meta: VersionMeta): Promise<Version | null> {
@@ -686,6 +739,8 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         await refreshExclude(project);
         const scope = directionScope(project, direction);
         const head = await headOf(project, direction);
+        direct.forget(project, direction);
+        await direct.syncIndex(project, direction);
         await fullStage(project, direction, Boolean(project.app) && head === null);
         const { stdout } = await runGit(scope, ['write-tree']);
         const tree = stdout.trim();
@@ -693,6 +748,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         if (parent !== null && !FORCED_KINDS.has(meta.kind) && (await treeOf(project, parent)) === tree) return null;
         const version = await commitTree(project, direction, tree, parent, head, title, meta);
         if (head === null) packLooseObjects(project);
+        if (project.app) direct.remember(project, direction, version.id, []);
         return version;
       });
     },
@@ -753,9 +809,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           target = await requireCommit(project, versionId);
         }
         const tree = await treeOf(project, target);
-        await resetWorkTree(project, direction, await treeOf(project, head), tree, 'keep');
+        const headTree = await treeOf(project, head);
+        const fast = project.app ? await direct.reset(project, direction, headTree, tree) : false;
+        if (!fast) await resetWorkTree(project, direction, headTree, tree, 'keep');
         const title = restoreTitle(kind, await originTitleOf(project, target));
-        return commitTree(project, direction, tree, head, head, title, { kind, restoredFrom: target });
+        const version = await commitTree(project, direction, tree, head, head, title, { kind, restoredFrom: target });
+        if (fast) direct.moved(project, direction, head, version.id);
+        return version;
       });
     },
 

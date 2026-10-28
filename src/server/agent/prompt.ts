@@ -82,6 +82,9 @@ The studio canvas shows frames. Each frame renders one page of this design at on
 - \`mcp__studio__canvas_point\`: at the end of a reply about one frame or element, point the user's canvas at it.
 - \`mcp__studio__list_links\` and \`mcp__studio__edit_links\`: prototype links (on click of an element, go to another frame) for Play mode. When the user asks to link a button or a page to a frame, use these, not \`href\` in the code. Read the page first for a selector that is stable (an id or a distinct class).`;
 
+const CONTEXT_RULES = `## Canvas context
+When the message has a <canvas-context> block, it names the frame the user had open. Put the change in that page: its page file and the components it imports, unless the user names another page. Do not search the project for the page. Check the result on that frame; pass \`frame\` or \`path\` to the check tools only to look at another page.`;
+
 const DIRECT_EDIT_RULES = `## Direct edits
 These tools change the design with the same code as the studio inspector and Tokens panel. Each patches only what it names and leaves the rest of the file as it was.
 - \`mcp__studio__edit_element\`: one element by CSS selector on the live page: inline \`style\`, the \`text\` of a leaf element, \`classes\` {add, remove}, \`variant\` ("md:", "hover:", "md:hover:", "dark:") to set the style for one breakpoint or state, or \`op\` delete, duplicate, wrap, unwrap, move (into \`targetSelector\`). Use it for a small exact change to an element you can select, such as "make the heading teal" or "remove this button". Use Edit or Write for new markup, stylesheet rules, a change across many elements, or elements made by \`.map()\` or a condition (the tool refuses those).
@@ -210,7 +213,7 @@ export function buildSystemPrompt(
   const sections =
     mode === 'critique'
       ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES, CANVAS_RULES]
-      : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, DIRECT_EDIT_RULES, EDIT_REPLY_RULES];
+      : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, CONTEXT_RULES, DIRECT_EDIT_RULES, EDIT_REPLY_RULES];
   if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));

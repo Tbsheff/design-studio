@@ -368,6 +368,15 @@ export interface ComponentInfo {
   selector: string | null;
 }
 
+export interface RunCanvasRef {
+  frameId: string;
+  label?: string;
+  path: string;
+  width: number;
+  height: number;
+  inView?: string[];
+}
+
 export interface RunRequest {
   prompt: string;
   mode: RunMode;
@@ -385,6 +394,7 @@ export interface RunRequest {
   task?: RunTask;
   referencePages?: ReferencePage[];
   states?: StatesRequest;
+  canvas?: RunCanvasRef;
 }
 
 export type CommentStatus = 'draft' | 'queued' | 'sent' | 'resolved' | 'orphaned';

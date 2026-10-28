@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import { SEARCH_PROPERTIES, STYLE_KINDS, STYLE_REPLACE_MAX, STYLE_TOKEN_MAX, matchesOf, replaceSummary, type StyleQuery } from '../../shared/style-search.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { writeAtomic } from '../direct-edit/index.js';
 import { planStyleReplace } from '../direct-edit/replace.js';
 import { scanPageStyles, styleReport, tokenEntriesFor, tokenLookupFor } from '../direct-edit/style-scan.js';
-import { withPagePath } from '../export/source.js';
-import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
+import { DEFAULT_FRAME_STATE } from '../../shared/frame-state.js';
+import { isContextFrame, pageUrl } from './run-target.js';
+import { canvasFrames, refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
 const property = z.enum([...STYLE_KINDS, ...SEARCH_PROPERTIES] as [string, ...string[]]).optional().describe('color, font-size, radius, spacing, or one CSS property such as background-color or padding-top. Leave out for all.');
 const value = z.string().trim().min(1).max(200).optional().describe('Value to match, for example "#1c1f23" or "14px". Compared with the computed value.');
 const scope = {
-  frame: z.string().trim().min(1).max(60).optional().describe('Canvas frame id or @label; its page and size are used. Leave out for the entry page at 1440x900.'),
+  frame: z.string().trim().min(1).max(60).optional().describe('Canvas frame id or @label; its page and size are used. Leave out for the frame from <canvas-context> (or the entry page at 1440x900).'),
   property,
   value,
 };
@@ -34,10 +34,13 @@ function issues(error: z.ZodError): string {
 
 async function pageOf(deps: DirectToolDeps, ref: string | undefined): Promise<{ url: string; viewport: { width: number; height: number } }> {
   if (!deps.ctx.previewUrl) throw new Error('Preview is not running for this direction, so styles cannot be scanned.');
-  const frames = ref ? ((await readCanvasAt(canvasOwner(deps.ctx.project).workTree)).canvas?.frames ?? []) : [];
+  const target = deps.ctx.target;
+  if (target && (!ref || isContextFrame(deps.ctx, ref))) return { url: pageUrl(deps.ctx.previewUrl, target.path, target.state), viewport: { width: target.width, height: target.height } };
+  const frames = ref ? await canvasFrames(deps) : [];
   const frame = ref ? findFrame(frames, ref) : null;
   if (ref && !frame && ref !== 'f1') throw new Error(`No frame ${ref} on the canvas.`);
-  return { url: withPagePath(deps.ctx.previewUrl, frame?.path || undefined), viewport: frame ? { width: frame.width, height: frame.height } : { width: 1440, height: 900 } };
+  const state = frame && frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;
+  return { url: pageUrl(deps.ctx.previewUrl, frame?.path ?? '', state), viewport: frame ? { width: frame.width, height: frame.height } : { width: 1440, height: 900 } };
 }
 
 function queryOf(input: { property?: string; value?: string; className?: string }): StyleQuery {

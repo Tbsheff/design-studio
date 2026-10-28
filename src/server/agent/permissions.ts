@@ -45,7 +45,13 @@ const EXECUTED_CONFIG_PATTERNS = [
   /^\.npmrc$/,
   /^\.yarnrc/,
   /^\.pnpmfile\.c?js$/,
+  /^next\.config\./,
+  /^turbo\.json$/,
+  /^pnpm-workspace\.yaml$/,
 ];
+const SECRET_FILE_PATTERNS = [/^\.env$/, /^\.env\.(?!example$|sample$|template$)/, /\.(pem|key|p12|pfx|keystore|jks)$/, /^id_(rsa|dsa|ecdsa|ed25519)/, /^\.netrc$/, /^credentials(\.json)?$/];
+const SECRET_IN_COMMAND = /(^|[\s'"=/])\.env(\.(?!example\b|sample\b|template\b)[\w.-]+)?(?=$|[\s'";|&)])/;
+const SECRET_MESSAGE = 'Design Studio keeps secrets files (.env, keys, credentials) away from the agent. Ask the user to change it by hand.';
 
 export interface ToolPolicy {
   workTree: string;
@@ -142,6 +148,25 @@ export function isInstallCommand(command: string): boolean {
   const tokens = commandTokens(command);
   if (tokens.some((token) => PACKAGE_TOOLS.has(token) || token === 'curl' || token === 'wget')) return true;
   return hasGoInstall(tokens);
+}
+
+export function isSecretFile(file: string): boolean {
+  const name = path.basename(file).toLowerCase();
+  return SECRET_FILE_PATTERNS.some((pattern) => pattern.test(name));
+}
+
+function checkSecretFiles(workTree: string, input: Record<string, unknown>): string | null {
+  for (const field of PATH_FIELDS) {
+    const value = input[field];
+    if (typeof value !== 'string') continue;
+    const absolute = path.isAbsolute(value) ? value : path.resolve(workTreeRoot(workTree), value);
+    if (isSecretFile(value) || isSecretFile(realpathNearest(absolute))) return SECRET_MESSAGE;
+  }
+  for (const field of PATTERN_FIELDS) {
+    const value = input[field];
+    if (typeof value === 'string' && /(^|\/)\.env(\.|$|\*)/.test(value)) return SECRET_MESSAGE;
+  }
+  return null;
 }
 
 function isExecutedConfigFile(file: string): boolean {
@@ -279,6 +304,7 @@ function touchesReadOnlyDir(policy: ToolPolicy, command: string): string | null 
 function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const command = input['command'];
   if (typeof command !== 'string') return 'Bash needs a command string.';
+  if (SECRET_IN_COMMAND.test(command)) return SECRET_MESSAGE;
   const readOnly = touchesReadOnlyDir(policy, command);
   if (readOnly) return `${readOnly}/ holds the untrusted source material of this design system. Shell commands may only read it (cat, ls, grep, find, head); change the design-system files instead.`;
   if (!policy.allowInstall && isInstallCommand(command)) {
@@ -291,7 +317,7 @@ function findToolProblem(policy: ToolPolicy, toolName: string, input: Record<str
   if (!permittedToolNames(policy).includes(toolName)) return `Tool ${toolName} is not available in Design Studio.`;
   if (policy.plan && (WRITE_PATH_TOOLS.has(toolName) || toolName === 'Bash' || toolName === TWEAKS_TOOL || toolName === CANVAS_PLACE_TOOL)) return PLAN_MODE_DENY;
   if (PATH_TOOLS.has(toolName)) {
-    const problem = checkPathTool(policy, toolName, input);
+    const problem = checkPathTool(policy, toolName, input) ?? checkSecretFiles(policy.workTree, input);
     if (problem) return problem;
   }
   if (WRITE_PATH_TOOLS.has(toolName)) {

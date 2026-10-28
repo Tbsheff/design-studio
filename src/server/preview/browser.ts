@@ -261,9 +261,11 @@ export class BrowserPool {
   }
 
   private async probeViewport(page: RenderPage, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, state: ViewportState): Promise<void> {
-    await page.goto(withServerBridgeParams(state.url, this.parentOrigin));
-    await settle(page);
-    if (options.prepare) await page.evaluate(options.prepare);
+    await timed(state.timings, 'goto', () => page.goto(withServerBridgeParams(state.url, this.parentOrigin)));
+    const nav = page.lastNav?.();
+    if (nav) Object.assign(state.timings, { load: nav.loadMs, idle: nav.idleMs });
+    await timed(state.timings, 'settle', () => settle(page));
+    if (options.prepare) await timed(state.timings, 'prepare', () => page.evaluate(options.prepare as string));
     state.horizontalOverflow = await page.evaluate<boolean>(OVERFLOW_EXPRESSION);
     state.probe = await page.evaluate<LayoutProbeResult>(layoutProbeExpression()).catch((error: unknown) => {
       state.pageErrors.push(`layout probe failed: ${errorText(error)}`);
@@ -277,10 +279,10 @@ export class BrowserPool {
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
+    const started = Date.now();
     const backend = await this.backend();
     const page = await backend.open({ width: spec.width, height: spec.height });
-    const state: ViewportState = { url, horizontalOverflow: false, probe: EMPTY_PROBE, inspection: null, timings: {}, pageErrors: [] };
-    const started = Date.now();
+    const state: ViewportState = { url, horizontalOverflow: false, probe: EMPTY_PROBE, inspection: null, timings: { open: Date.now() - started }, pageErrors: [] };
     let consoleErrors: string[] = [];
     try {
       await this.probeViewport(page, spec, screenshotPath, options, state).catch((error: unknown) => {

@@ -22,11 +22,16 @@ function collectErrors(page: Page): RenderErrors {
 
 function wrapPage(context: BrowserContext, page: Page): RenderPage {
   const errors = collectErrors(page);
+  let nav: { loadMs: number; idleMs: number } | null = null;
   return {
     async goto(url) {
+      const started = Date.now();
       await page.goto(url, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
+      const loaded = Date.now();
       await page.waitForLoadState('networkidle', { timeout: SETTLE_TIMEOUT_MS }).catch(() => undefined);
+      nav = { loadMs: loaded - started, idleMs: Date.now() - loaded };
     },
+    lastNav: () => nav,
     evaluate: <T>(expression: string) => page.evaluate<T>(expression),
     async screenshot(outPath: string, clip?: RenderClip) {
       await page.screenshot({ path: outPath, fullPage: true, ...(clip ? { clip } : {}) });

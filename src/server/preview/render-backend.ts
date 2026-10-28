@@ -6,6 +6,7 @@ export interface RenderPage {
   screenshot(outPath: string, clip?: RenderClip): Promise<void>;
   errors(): Promise<RenderErrors>;
   close(): Promise<void>;
+  lastNav?(): { loadMs: number; idleMs: number } | null;
 }
 
 export interface RenderBackend {

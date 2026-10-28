@@ -155,10 +155,14 @@ export function criticText(input: Omit<CriticInput, 'images'>): string {
   return blocks.filter(Boolean).join('\n\n');
 }
 
+export function mediaType(base64: string): 'image/png' | 'image/jpeg' {
+  return base64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+}
+
 function imageBlocks(images: CriticImage[]) {
   return images.flatMap((image) => [
     { type: 'text' as const, text: image.label },
-    { type: 'image' as const, source: { type: 'base64' as const, media_type: 'image/png' as const, data: image.data } },
+    { type: 'image' as const, source: { type: 'base64' as const, media_type: mediaType(image.data), data: image.data } },
   ]);
 }
 
@@ -228,29 +232,30 @@ function screenTitle(screen: RunScreen, index: number, total: number): string {
   return `Screen ${index + 1} of ${total} "${screen.label}"${screen.forced ? ' (opened by the studio without its click path, so text that a script fills may be empty)' : ''}`;
 }
 
-async function screenImages(preview: PreviewService, screen: RunScreen, title: string, plan: TilePlan, outPrefix: string): Promise<CriticImage[]> {
-  const images: CriticImage[] = [];
-  for (const name of ['desktop', 'mobile'] as const) {
-    const tile = plan[name];
-    const tiles = await preview.screenshotTiles(screen.url, { viewport: { width: tile.width, height: tile.height }, tileHeight: tile.tileHeight, maxTiles: tile.maxTiles, from: 0, outPrefix: `${outPrefix}-${name}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) });
-    for (const [index, file] of tiles.paths.entries()) {
-      images.push({ label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`, data: (await readFile(file)).toString('base64'), ...(screen.key ? { key: screen.key } : {}), screen: screen.label, viewport: name, path: file });
-    }
-  }
-  return images;
+async function viewportImages(preview: PreviewService, screen: RunScreen, title: string, name: 'desktop' | 'mobile', plan: TilePlan, outPrefix: string, fresh: boolean): Promise<CriticImage[]> {
+  const tile = plan[name];
+  const format = name === 'mobile' ? ('jpeg' as const) : ('png' as const);
+  const tiles = await preview.screenshotTiles(screen.url, { viewport: { width: tile.width, height: tile.height }, tileHeight: tile.tileHeight, maxTiles: tile.maxTiles, from: 0, outPrefix: `${outPrefix}-${name}`, format, ...(fresh ? { fresh } : {}), ...(screen.prepare ? { prepare: screen.prepare } : {}) });
+  return Promise.all(
+    tiles.paths.map(async (file, index) => ({ label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`, data: (await readFile(file)).toString('base64'), ...(screen.key ? { key: screen.key } : {}), screen: screen.label, viewport: name, path: file })),
+  );
 }
 
-export async function criticImages(preview: PreviewService, screens: readonly RunScreen[], outPrefix: string, maxImages = 5): Promise<CriticImage[]> {
+async function screenImages(preview: PreviewService, screen: RunScreen, title: string, plan: TilePlan, outPrefix: string, fresh: boolean): Promise<CriticImage[]> {
+  const [desktop, mobile] = await Promise.all((['desktop', 'mobile'] as const).map((name) => viewportImages(preview, screen, title, name, plan, outPrefix, fresh)));
+  return [...(desktop ?? []), ...(mobile ?? [])];
+}
+
+export async function criticImages(preview: PreviewService, screens: readonly RunScreen[], outPrefix: string, maxImages = 5, fresh = false): Promise<CriticImage[]> {
   const shown = screens.slice(0, Math.max(1, Math.floor(maxImages / 2)));
   if (shown.length <= 1) {
     const screen = shown[0];
     if (!screen) return [];
     const plan: TilePlan = { desktop: { ...CRITIC_TILES.desktop, maxTiles: Math.min(CRITIC_TILES.desktop.maxTiles, Math.max(1, maxImages - 2)) }, mobile: CRITIC_TILES.mobile };
-    return screenImages(preview, screen, screenTitle(screen, 0, 1), plan, outPrefix);
+    return screenImages(preview, screen, screenTitle(screen, 0, 1), plan, outPrefix, fresh);
   }
-  const images: CriticImage[] = [];
-  for (const [index, screen] of shown.entries()) images.push(...(await screenImages(preview, screen, screenTitle(screen, index, shown.length), SCREEN_TILES, `${outPrefix}-s${index + 1}`)));
-  return images;
+  const groups = await Promise.all(shown.map((screen, index) => screenImages(preview, screen, screenTitle(screen, index, shown.length), SCREEN_TILES, `${outPrefix}-s${index + 1}`, fresh)));
+  return groups.flat();
 }
 
 export async function changedSourceFor(workTree: string, appDir: string, since: number | undefined): Promise<ChangedSource[]> {

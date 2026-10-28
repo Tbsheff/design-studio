@@ -6,7 +6,9 @@ import type { CommandLayer as Layer } from './commands/registry';
 import { isTypingTarget } from './typingTarget';
 import { loadSession } from './session';
 import { uiStore, useUi } from './storage';
+import { installRouting } from './route';
 
+installRouting();
 if (uiStore.get().activeProjectId) void prefetchStudio();
 
 class ScreenBoundary extends Component<{ children: ReactNode }, { error: string | null }> {

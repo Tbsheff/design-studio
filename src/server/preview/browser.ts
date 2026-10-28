@@ -5,7 +5,7 @@ import { BRIDGE_PARENT_ORIGIN_PARAM, BRIDGE_TOKEN_PARAM } from '../../shared/con
 import type { CheckViewport, QualityFinding, RenderCheckResult } from '../../shared/contracts.js';
 import type { PlaceholderMode } from '../../shared/run-levels.js';
 import { runAxe, runSharedAxe, type AxeViolation } from './axe.js';
-import { CaptureCache, cacheKey, type StampFor } from './capture-cache.js';
+import { CaptureCache, cacheKey, type Stamps } from './capture-cache.js';
 import { layoutProbeExpression, type LayoutProbeResult } from './layout-probe.js';
 import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } from './quality.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
@@ -192,6 +192,15 @@ async function settle(page: RenderPage): Promise<void> {
 
 const CAPTURE_DIR = path.join(os.tmpdir(), 'design-studio-captures', String(process.pid));
 
+type SourceStamp = { key: string; newest: number | null };
+
+const SETTLE_GUARD_MS = 1000;
+
+function usable(stamp: SourceStamp | null, fresh: boolean | undefined): string | null {
+  if (!stamp) return null;
+  return fresh && stamp.newest === null ? null : stamp.key;
+}
+
 type CachedCheck = Omit<RenderCheckResult, 'screenshotPath'>;
 type CachedTiles = Omit<TileResult, 'paths'> & { count: number };
 
@@ -219,7 +228,7 @@ export class BrowserPool {
   constructor(
     private readonly parentOrigin: string,
     private readonly backendFactory: () => Promise<RenderBackend> = () => createRenderBackend(),
-    private readonly stampFor: StampFor = async () => null,
+    private readonly stamps: Stamps = { stampFor: async () => null },
   ) {}
 
   backend(): Promise<RenderBackend> {
@@ -238,9 +247,10 @@ export class BrowserPool {
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     await renderSettled();
     return this.pages.lease(viewport, async (page) => {
-      const stamp = await this.stampFor(url);
+      const stamp = (await this.stamps.stampFor(url))?.key ?? null;
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
+      await this.noteLanded(page, url);
       const shared: RenderPage = Object.assign(Object.create(page) as RenderPage, { axe: () => this.sharedAxe(page, url, viewport, '', stamp) });
       return task(shared);
     });
@@ -288,15 +298,17 @@ export class BrowserPool {
     await renderSettled();
     const key = tileKey(url, request);
     const ext = request.format === 'jpeg' ? '.jpg' : '.png';
-    const stamp = request.fresh ? null : await this.stampFor(url);
+    const started = Date.now();
+    const before = await this.stamps.stampFor(url);
+    const stamp = usable(before, request.fresh);
     const known = this.tiles.peek(key, stamp);
     if (known) {
       const paths = tilePaths(request.outPrefix, known.count, ext);
       if (await this.tiles.hit(key, stamp, paths)) return { paths, pageHeight: known.pageHeight, from: known.from, to: known.to, cached: true };
     }
-    const before = stamp ?? (await this.stampFor(url));
     const result = await this.captureTiles(url, request, ext);
-    if (before && (await this.stampFor(url)) === before) await this.tiles.store(key, before, { pageHeight: result.pageHeight, from: result.from, to: result.to, count: result.paths.length }, result.paths);
+    const keep = await this.storable(url, before, started);
+    if (keep) await this.tiles.store(key, keep, { pageHeight: result.pageHeight, from: result.from, to: result.to, count: result.paths.length }, result.paths);
     return result;
   }
 
@@ -326,6 +338,7 @@ export class BrowserPool {
     const nav = page.lastNav?.();
     if (nav) Object.assign(state.timings, { load: nav.loadMs, idle: nav.idleMs });
     await timed(state.timings, 'settle', () => settle(page));
+    await this.noteLanded(page, state.url);
     if (options.prepare) await timed(state.timings, 'prepare', () => page.evaluate(options.prepare as string));
     state.horizontalOverflow = await page.evaluate<boolean>(OVERFLOW_EXPRESSION);
     state.probe = await page.evaluate<LayoutProbeResult>(layoutProbeExpression()).catch((error: unknown) => {
@@ -344,16 +357,30 @@ export class BrowserPool {
     await renderSettled();
     const started = Date.now();
     const key = checkKey(url, spec, options);
-    const stamp = options.fresh ? null : await this.stampFor(url);
+    const before = await this.stamps.stampFor(url);
+    const stamp = usable(before, options.fresh);
     const known = await this.checks.hit(key, stamp, [screenshotPath]);
     if (known) return { ...known, screenshotPath, cached: true, timingsMs: { cached: Date.now() - started } };
-    const before = stamp ?? (await this.stampFor(url));
-    const result = await this.renderViewport(url, spec, screenshotPath, options, started, before);
-    if (before && (await this.stampFor(url)) === before) {
+    const result = await this.renderViewport(url, spec, screenshotPath, options, started, before?.key ?? null);
+    const keep = await this.storable(url, before, started);
+    if (keep) {
       const { screenshotPath: _path, ...value } = result;
-      await this.checks.store(key, before, value, [screenshotPath]);
+      await this.checks.store(key, keep, value, [screenshotPath]);
     }
     return result;
+  }
+
+  private async storable(url: string, before: SourceStamp | null, started: number): Promise<string | null> {
+    const after = await this.stamps.stampFor(url);
+    if (!after) return null;
+    if (after.newest !== null) return after.newest < started - SETTLE_GUARD_MS ? after.key : null;
+    return before?.key === after.key ? after.key : null;
+  }
+
+  private async noteLanded(page: RenderPage, url: string): Promise<void> {
+    if (!this.stamps.landed) return;
+    const href = await page.evaluate<string>('location.href').catch(() => null);
+    if (href) this.stamps.landed(url, href);
   }
 
   private async renderViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, started: number, stamp: string | null): Promise<RenderCheckResult> {

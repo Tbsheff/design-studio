@@ -11,7 +11,7 @@ import type { BrowserPool, RenderCheckOptions } from './browser.js';
 import { startHtmlServer } from './html-server.js';
 import type { HtmlServer, RootKind } from './html-server.js';
 import type { ViteManager, ViteTarget } from './vite-manager.js';
-import { SourceStamps } from './source-stamp.js';
+import { SourceStamps, type SourceStamp } from './source-stamp.js';
 import { WatcherManager } from './watcher.js';
 import { resolveFrameState } from '../app/frame-state.js';
 import { AppServers } from '../app/dev-server.js';
@@ -113,14 +113,14 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     forwardToVite(change);
   };
   const watchers = new WatcherManager({ bus, projects, versions, onChanged, needsReload: appSourcesShifted });
-  const stampFor = (url: string): Promise<string | null> => stamps.stampFor(url, (key) => watchers.flushed(key.slice(key.indexOf(':') + 1)));
+  const stampFor = (url: string): Promise<SourceStamp | null> => stamps.stampFor(url, (key) => watchers.flushed(key.slice(key.indexOf(':') + 1)));
   const vite = lazily<ViteManager>(async () => {
     const { ViteManager: Manager } = await import('./vite-manager.js');
     return new Manager({ bus, vitePortBase: config.vitePortBase, bridgeScript: loadBridgeScript });
   });
   const browsers = lazily<BrowserPool>(async () => {
     const { BrowserPool: Pool } = await import('./browser.js');
-    return new Pool(config.previewOrigin, undefined, stampFor);
+    return new Pool(config.previewOrigin, undefined, { stampFor, landed: (url: string, href: string) => stamps.landed(url, href) });
   });
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
   const apps = new AppServers({ bus, portBase: config.appPortBase ?? config.vitePortBase + 400, portCount: config.appPortCount ?? 200, dataDir: config.dataDir });
@@ -193,12 +193,12 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     if (project.app) {
       appCache.delete(project.id);
       void apps.ensure(project).catch(() => undefined);
-      stamps.register(appUrl(project), key, direction.workTree, true);
+      stamps.register(appUrl(project), key, direction.workTree, project.app.appDir);
       return appUrl(project);
     }
     if (project.kind === 'html') {
       const base = `${projectPreviewOrigin(project.id, config.previewPort)}/d/${encodeURIComponent(project.id)}/${encodeURIComponent(direction.id)}/`;
-      stamps.register(base, key, direction.workTree, false);
+      stamps.register(base, key, direction.workTree, null);
       return `${base}${encodeEntry(project.entry || 'index.html')}`;
     }
     const url = await viteUrl({
@@ -208,7 +208,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       projectId: project.id,
       directionId: direction.id,
     });
-    stamps.register(`${new URL(url).origin}/`, key, direction.workTree, false);
+    stamps.register(`${new URL(url).origin}/`, key, direction.workTree, null);
     return url;
   };
 
@@ -297,7 +297,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
-    sourceStamp: stampFor,
+    sourceStamp: async (url) => (await stampFor(url))?.key ?? null,
     warmBrowser: () => void browsers.get().then((pool) => pool.backend()).catch(() => undefined),
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };

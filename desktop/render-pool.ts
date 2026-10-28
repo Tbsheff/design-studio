@@ -5,9 +5,12 @@ import { PNG } from 'pngjs';
 import type { RenderClip, RenderErrors } from '../src/shared/render-rpc.js';
 import { pngSize } from './png-size.js';
 
-const POOL_SIZE = 3;
+const POOL_SIZE = 4;
 const IDLE_CLOSE_MS = 30_000;
-const NETWORK_QUIET_MS = 500;
+const NETWORK_QUIET_MS = 120;
+const LONG_REQUEST_MS = 1500;
+const STREAM_TYPES = new Set(['EventSource', 'WebSocket']);
+const CLEAR_STORAGES = ['cookies', 'localstorage', 'indexdb', 'serviceworkers', 'cachestorage', 'filesystem', 'shadercache'] as const;
 const MAX_SEGMENT_PX = 8000;
 const renderSessions = new WeakSet<Session>();
 
@@ -16,6 +19,8 @@ interface Slot {
   window: BrowserWindow;
   busy: boolean;
   idleTimer: NodeJS.Timeout | null;
+  sizeKey: string | null;
+  enabled: boolean;
 }
 
 interface CdpEvent {
@@ -26,7 +31,7 @@ interface CdpEvent {
 export interface PageState {
   slot: Slot;
   errors: RenderErrors;
-  inflight: Set<string>;
+  inflight: Map<string, number>;
   lastNetworkAt: number;
   scale: number;
 }
@@ -79,8 +84,10 @@ function exceptionText(params: Record<string, unknown>): string {
 
 function trackNetwork(state: PageState, event: CdpEvent): void {
   const requestId = String(event.params.requestId ?? '');
-  if (event.method === 'Network.requestWillBeSent') state.inflight.add(requestId);
-  else if (event.method === 'Network.loadingFinished' || event.method === 'Network.loadingFailed') state.inflight.delete(requestId);
+  if (event.method === 'Network.requestWillBeSent') {
+    if (STREAM_TYPES.has(String(event.params.type ?? ''))) return;
+    state.inflight.set(requestId, Date.now());
+  } else if (event.method === 'Network.loadingFinished' || event.method === 'Network.loadingFailed') state.inflight.delete(requestId);
   else return;
   state.lastNetworkAt = Date.now();
 }
@@ -118,7 +125,7 @@ export class RenderPool {
       paintWhenInitiallyHidden: true,
       webPreferences: { session: renderSession(index), sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false, spellcheck: false },
     });
-    const slot: Slot = { index, window, busy: false, idleTimer: null };
+    const slot: Slot = { index, window, busy: false, idleTimer: null, sizeKey: null, enabled: false };
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     window.webContents.on('will-navigate', (event, url) => {
       if (!this.allowed(url)) event.preventDefault();
@@ -148,9 +155,10 @@ export class RenderPool {
     return index;
   }
 
-  private acquire(): Promise<Slot> {
+  private acquire(sizeKey: string | null = null): Promise<Slot> {
     if (this.closed) return Promise.reject(new Error('render pool is closed'));
-    const idle = this.slots.find((slot) => !slot.busy && !slot.window.isDestroyed());
+    const free = this.slots.filter((slot) => !slot.busy && !slot.window.isDestroyed());
+    const idle = free.find((slot) => slot.sizeKey === sizeKey) ?? free[0];
     const slot = idle ?? (this.slots.length < POOL_SIZE ? this.addSlot() : null);
     if (slot) return Promise.resolve(this.claim(slot));
     return new Promise((resolve) => this.waiters.push(resolve));
@@ -184,8 +192,8 @@ export class RenderPool {
   }
 
   async open(width: number, height: number, scale = 1): Promise<PageState> {
-    const slot = await this.acquire();
-    const state: PageState = { slot, errors: { consoleErrors: [], pageErrors: [] }, inflight: new Set(), lastNetworkAt: Date.now(), scale: clampScale(scale) };
+    const slot = await this.acquire(`${width}x${height}`);
+    const state: PageState = { slot, errors: { consoleErrors: [], pageErrors: [] }, inflight: new Map(), lastNetworkAt: Date.now(), scale: clampScale(scale) };
     try {
       await this.prepare(state, width, height);
       return state;
@@ -197,19 +205,26 @@ export class RenderPool {
   }
 
   private async prepare(state: PageState, width: number, height: number): Promise<void> {
-    const contents = state.slot.window.webContents;
-    state.slot.window.setContentSize(width, height);
+    const { slot } = state;
+    const contents = slot.window.webContents;
     if (contents.getURL() === '') await contents.loadURL('about:blank');
     const cdp = contents.debugger;
-    if (!cdp.isAttached()) cdp.attach('1.3');
+    if (!cdp.isAttached()) {
+      cdp.attach('1.3');
+      slot.enabled = false;
+    }
     cdp.removeAllListeners('message');
     cdp.on('message', (_event, method, params) => onCdpEvent(state, { method, params: (params ?? {}) as Record<string, unknown> }));
-    await cdp.sendCommand('Network.enable');
-    await cdp.sendCommand('Runtime.enable');
-    await cdp.sendCommand('Log.enable');
-    await cdp.sendCommand('Page.enable');
+    if (!slot.enabled) {
+      await Promise.all([cdp.sendCommand('Network.enable'), cdp.sendCommand('Runtime.enable'), cdp.sendCommand('Log.enable'), cdp.sendCommand('Page.enable'), cdp.sendCommand('Emulation.setScrollbarsHidden', { hidden: true })]);
+      slot.enabled = true;
+    }
+    const sizeKey = `${width}x${height}`;
+    if (slot.sizeKey === sizeKey) return;
+    slot.sizeKey = null;
+    slot.window.setContentSize(width, height);
     await cdp.sendCommand('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
-    await cdp.sendCommand('Emulation.setScrollbarsHidden', { hidden: true });
+    slot.sizeKey = sizeKey;
   }
 
   async goto(state: PageState, url: string, timeoutMs: number, settleMs: number): Promise<void> {
@@ -224,8 +239,10 @@ export class RenderPool {
   private async networkIdle(state: PageState, settleMs: number): Promise<void> {
     const deadline = Date.now() + settleMs;
     while (Date.now() < deadline) {
-      if (state.inflight.size === 0 && Date.now() - state.lastNetworkAt >= NETWORK_QUIET_MS) return;
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      const now = Date.now();
+      const busy = [...state.inflight.values()].some((started) => now - started < LONG_REQUEST_MS);
+      if (!busy && now - state.lastNetworkAt >= NETWORK_QUIET_MS) return;
+      await new Promise((resolve) => setTimeout(resolve, 25));
     }
   }
 
@@ -282,11 +299,18 @@ export class RenderPool {
   async close(state: PageState): Promise<void> {
     const { slot } = state;
     if (slot.window.isDestroyed()) return this.release(slot);
-    const cdp = slot.window.webContents.debugger;
-    cdp.removeAllListeners('message');
-    await slot.window.webContents.loadURL('about:blank').catch(() => undefined);
-    await slot.window.webContents.session.clearStorageData().catch(() => undefined);
-    this.release(slot);
+    slot.window.webContents.debugger.removeAllListeners('message');
+    void this.clean(slot);
+  }
+
+  private async clean(slot: Slot): Promise<void> {
+    try {
+      await slot.window.webContents.loadURL('about:blank').catch(() => undefined);
+      await slot.window.webContents.session.clearStorageData({ storages: [...CLEAR_STORAGES] }).catch(() => undefined);
+    } finally {
+      if (slot.window.isDestroyed()) this.dropSlot(slot);
+      this.release(slot);
+    }
   }
 
   destroy(): void {

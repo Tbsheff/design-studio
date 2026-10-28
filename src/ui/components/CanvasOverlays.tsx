@@ -123,6 +123,13 @@ export function MarqueeLayer({ listen }: { listen: (handler: (message: BridgeToP
       }),
     [listen],
   );
+  const shown = rect !== null;
+  useEffect(() => {
+    if (!shown) return;
+    const clear = () => setRect(null);
+    window.addEventListener('pointerup', clear);
+    return () => window.removeEventListener('pointerup', clear);
+  }, [shown]);
   if (!rect) return null;
   return (
     <div className="overlay" aria-hidden="true">

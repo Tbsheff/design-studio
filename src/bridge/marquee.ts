@@ -28,6 +28,7 @@ interface Drag {
   scope: Element;
   active: boolean;
   pointer: number;
+  last: Rect | null;
 }
 
 function boxOf(drag: Drag, event: PointerEvent): Rect {
@@ -79,11 +80,12 @@ export function createMarquee(ports: MarqueePorts): Marquee {
     down(event, target) {
       swallow = false;
       if (event.button !== 0 || !ports.enabled()) return;
-      drag = { x: event.clientX, y: event.clientY, scope: scopeOf(target), active: false, pointer: event.pointerId };
+      drag = { x: event.clientX, y: event.clientY, scope: scopeOf(target), active: false, pointer: event.pointerId, last: null };
     },
     move(event) {
       if (!drag) return false;
       if ((event.buttons & 1) === 0) {
+        if (drag.active && drag.last) ports.pick(coveredElements(drag.scope, drag.last, ports.locked), event.shiftKey);
         finish();
         return false;
       }
@@ -96,7 +98,8 @@ export function createMarquee(ports: MarqueePorts): Marquee {
           void 0;
         }
       }
-      ports.show(boxOf(drag, event));
+      drag.last = boxOf(drag, event);
+      ports.show(drag.last);
       return true;
     },
     up(event) {

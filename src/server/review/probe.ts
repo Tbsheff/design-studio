@@ -99,23 +99,28 @@ const PROBE_SOURCE = String.raw`async (input) => {
   const resolveApp = async (els) => {
     const todo = els.filter((el) => !el.hasAttribute(LOC) && fiberOf(el));
     if (todo.length === 0) return;
-    const stacks = [];
-    for (const el of todo) {
-      const fiber = fiberOf(el);
-      stacks.push(stackOf(fiber), stackOf(fiber._debugOwner || null));
-    }
-    try {
-      const res = await fetch(SOURCE_PATH, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stacks }), cache: 'no-store' });
-      if (!res.ok) return;
-      const body = await res.json();
-      const sources = Array.isArray(body.sources) ? body.sources : [];
-      todo.forEach((el, i) => {
-        const own = sources[i * 2];
-        const owner = sources[i * 2 + 1];
-        const loc = typeof own === 'string' ? own : typeof owner === 'string' ? owner : null;
-        if (loc) el.setAttribute(LOC, loc);
-      });
-    } catch {}
+    const batch = async (group) => {
+      const stacks = [];
+      for (const el of group) {
+        const fiber = fiberOf(el);
+        stacks.push(stackOf(fiber), stackOf(fiber._debugOwner || null));
+      }
+      try {
+        const res = await fetch(SOURCE_PATH, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stacks }), cache: 'no-store' });
+        if (!res.ok) return;
+        const body = await res.json();
+        const sources = Array.isArray(body.sources) ? body.sources : [];
+        group.forEach((el, i) => {
+          const own = sources[i * 2];
+          const owner = sources[i * 2 + 1];
+          const loc = typeof own === 'string' ? own : typeof owner === 'string' ? owner : null;
+          if (loc) el.setAttribute(LOC, loc);
+        });
+      } catch {}
+    };
+    const groups = [];
+    for (let at = 0; at < todo.length; at += 10) groups.push(todo.slice(at, at + 10));
+    await Promise.all(groups.map(batch));
   };
   const find = (selector) => {
     try { return document.querySelector(selector); } catch { return null; }
@@ -124,7 +129,7 @@ const PROBE_SOURCE = String.raw`async (input) => {
   const hitEls = new Map();
   const seen = new Set();
   const push = (el, hit) => {
-    if (hits.length >= input.cap) return;
+    if (hits.length >= input.cap * 3) return;
     const selector = hitEls.get(el) || selectorOf(el);
     const key = selector + '|' + hit.prop + '|' + hit.value + '|' + (hit.cls || hit.rule || '');
     if (seen.has(key)) return;
@@ -163,7 +168,10 @@ const PROBE_SOURCE = String.raw`async (input) => {
     const id = (sheet.href || '') + ' ' + (owner && owner.getAttribute ? owner.getAttribute('data-vite-dev-id') || '' : '');
     if (/design-system|node_modules/.test(id)) return true;
     const text = owner && owner.textContent ? owner.textContent.slice(0, 400) : '';
-    return /tailwindcss/.test(text);
+    if (/tailwindcss/.test(text)) return true;
+    let rules = [];
+    try { rules = [...sheet.cssRules].slice(0, 400); } catch { return true; }
+    return rules.some((rule) => (typeof CSSLayerStatementRule !== 'undefined' && rule instanceof CSSLayerStatementRule) || rule.cssText.includes('--tw-'));
   };
   const scanRule = (rule) => {
     if (rule.cssRules && !(rule instanceof CSSStyleRule)) {

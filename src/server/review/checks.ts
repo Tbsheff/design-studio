@@ -2,7 +2,7 @@ import { converter, formatHex, parse, wcagContrast, type Color } from 'culori';
 import type { CompiledTokenEntry, DirectStyleProperty, LayoutFinding, SourceLoc } from '../../shared/contracts.js';
 import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
 import type { ReviewFix, ReviewKind, ReviewSeverity } from '../../shared/review.js';
-import { modeValue, resolveTokenValue, tokenFieldState } from '../../shared/token-match.js';
+import { lengthToPx, matchDimension, modeValue, resolveTokenValue, tokenFieldState } from '../../shared/token-match.js';
 import type { ProbeElement, TokenHit } from './probe.js';
 
 export interface FixGuard {
@@ -151,9 +151,19 @@ function contrastDraft(node: AxeNode, el: ProbeElement | null, entries: Compiled
   };
 }
 
-function tapEdit(el: ProbeElement): ReviewFix['edit'] | null {
+function spaceToken(value: string, entries: CompiledTokenEntry[]): string {
+  const px = lengthToPx(value);
+  if (px === null || px === 0) return value;
+  const fits = matchDimension(value, entries, 'space').filter((match) => (lengthToPx(match.value) ?? -1) >= px);
+  const best = fits.sort((a, b) => (lengthToPx(a.value) ?? 0) - (lengthToPx(b.value) ?? 0))[0];
+  return best ? `var(${best.cssVar})` : value;
+}
+
+function tapEdit(el: ProbeElement, entries: CompiledTokenEntry[]): ReviewFix['edit'] | null {
   const style = el.tapStyle;
-  return style && Object.keys(style).length > 0 ? editFor(el, style as Partial<Record<DirectStyleProperty, string>>) : null;
+  if (!style || Object.keys(style).length === 0) return null;
+  const tokened = Object.fromEntries(Object.entries(style).map(([prop, value]) => [prop, prop.startsWith('padding-') ? spaceToken(value, entries) : value]));
+  return editFor(el, tokened as Partial<Record<DirectStyleProperty, string>>);
 }
 
 function tapLabel(edit: ReviewFix['edit']): string {
@@ -161,9 +171,9 @@ function tapLabel(edit: ReviewFix['edit']): string {
   return 'width' in style || 'height' in style ? 'Make it 24 px' : 'Add padding';
 }
 
-export function tapDrafts(taps: ProbeElement[]): Draft[] {
+export function tapDrafts(taps: ProbeElement[], entries: CompiledTokenEntry[]): Draft[] {
   return taps.map((el) => {
-    const edit = tapEdit(el);
+    const edit = tapEdit(el, entries);
     return {
       ...base('tap-target', el, el.selector, el.tag),
       key: el.selector,
@@ -326,7 +336,15 @@ function tokenDraft(hit: TokenHit, el: ProbeElement | undefined, entries: Compil
   };
 }
 
-export function tokenDrafts(hits: TokenHit[], elements: Record<string, ProbeElement>, entries: CompiledTokenEntry[], tailwind: boolean): Draft[] {
-  const usable = entries.length > 0 ? hits : hits.filter((hit) => hit.via === 'class');
-  return usable.map((hit) => tokenDraft(hit, elements[hit.selector], entries, tailwind)).filter((draft): draft is Draft => draft !== null);
+function inProject(el: ProbeElement | undefined): boolean {
+  const loc = el?.loc ?? el?.nearLoc ?? null;
+  return loc !== null && !loc.includes('node_modules/');
+}
+
+export function tokenDrafts(hits: TokenHit[], elements: Record<string, ProbeElement>, entries: CompiledTokenEntry[], cap: number): Draft[] {
+  const usable = (entries.length > 0 ? hits : hits.filter((hit) => hit.via === 'class')).filter((hit) => inProject(elements[hit.selector]));
+  return usable
+    .map((hit) => tokenDraft(hit, elements[hit.selector], entries, true))
+    .filter((draft): draft is Draft => draft !== null)
+    .slice(0, cap);
 }

@@ -56,6 +56,7 @@ export interface CanvasSnapshot {
 }
 import type { CommitTweaksResult, TweaksState, TweakValue } from '../shared/tweaks';
 import { getSession } from './session';
+import type { ReviewFixResult, ReviewRequest, ReviewResult } from '../shared/review';
 
 export class ApiError extends Error {
   constructor(
@@ -254,6 +255,8 @@ export const api = {
     json<{ ok: boolean }>('POST', `/api/runs/${encodeURIComponent(runId)}/permissions/${encodeURIComponent(requestId)}`, decision),
   postTelemetry: (sample: TelemetrySample) => json<{ ok: boolean }>('POST', '/api/telemetry', sample),
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
+  review: (pid: string, did: string, body: ReviewRequest) => json<ReviewResult>('POST', `${d(pid, did)}/review`, body),
+  reviewFix: (pid: string, did: string, findingIds: string[]) => json<ReviewFixResult>('POST', `${d(pid, did)}/review/fix`, { findingIds }),
 };
 
 function editKind(req: DirectEditRequest): string {

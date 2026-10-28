@@ -68,6 +68,21 @@ function counts(findings: ReviewFinding[]): Record<ReviewSeverity, number> {
   return out;
 }
 
+function fromAppSource(draft: Draft): boolean {
+  return draft.source !== null && !draft.source.includes('node_modules/');
+}
+
+function keepSharedAsk(drafts: Draft[], appDir: string): Draft[] {
+  const prefix = appDir ? `${appDir.replace(/\/+$/, '')}/` : '';
+  for (const draft of drafts) {
+    const file = draft.fix?.edit.source.file;
+    if (!file || !prefix || file.startsWith(prefix)) continue;
+    draft.fix = null;
+    draft.hint = `This element comes from shared code at ${file}, so a change there reaches every place that uses it. ${draft.hint}`;
+  }
+  return drafts;
+}
+
 export interface ReviewTarget {
   project: Project;
   direction: Direction;
@@ -80,11 +95,15 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   if (!preview.withPage) throw new Error('rendering is not available');
   const url = withPagePath(target.baseUrl ?? (await preview.directionUrl(project, direction)), frame.path || undefined);
   const entries = (await readDesignSystemState(project, direction)).entries;
-  const facts = await preview.withPage(url, { width: frame.width, height: frame.height }, (page) => readPage(page, project.app !== undefined && project.app !== null));
-  const drafts = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tapDrafts(facts.probe.taps), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, true), ...layoutDrafts(facts.layout)];
+  const facts = await preview.withPage(url, { width: frame.width, height: frame.height }, (page) => readPage(page, Boolean(project.app)));
+  const all = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tapDrafts(facts.probe.taps, entries), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(facts.layout)];
+  const drafts = project.app ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir) : all;
   await verifyFixes(project, direction, drafts);
   const findings = ordered(unique(drafts.map((draft) => toFinding(draft, frame))));
-  const notes = entries.length === 0 ? ['This project has no design tokens, so only Tailwind arbitrary values count as off-token.'] : [];
+  const notes = [
+    ...(entries.length === 0 ? ['This project has no design tokens, so only Tailwind arbitrary values count as off-token.'] : []),
+    ...(all.length > drafts.length ? [`${all.length - drafts.length} findings on elements outside the app source (for example dev tool overlays) are not shown.`] : []),
+  ];
   return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes };
 }
 

@@ -578,6 +578,10 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
                 onExport: exporter.openHead,
                 onTweak: whenDirection(did, tweak),
                 onShip: openShip,
+                onAskAgent: (text) => {
+                  draft.set(text);
+                  void showPane('chat');
+                },
               },
               onTextCommit: (selector, text) => {
                 const target = selection.length === 1 ? selection[0] : undefined;

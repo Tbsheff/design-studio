@@ -4,6 +4,7 @@ import type { Attachment, ProjectKind, RunComment, RunMention, SelectionContext 
 import { statesTaskBlock } from '../../shared/states.js';
 import type { AgentRunContext, MentionFile } from '../types.js';
 import type { RunTarget, TargetFrame } from './run-target.js';
+import { layoutLines } from './layout-region.js';
 import { referenceBlock, variationBlock } from '../variations/message.js';
 import { referencePagesBlock } from '../reference-page.js';
 
@@ -118,6 +119,7 @@ export function canvasContextBlock(target: RunTarget | null | undefined, selecti
     'The user had this canvas frame open when they sent the message. Unless the message names another page, the request is about this page. screenshot, render_check and design_review render this frame by default.',
     `frame: ${frameLine(target)}${state}`,
     target.routeFile ? `page file: ${target.routeFile}` : null,
+    ...layoutLines(target.layout, target.owner, target.routeFile),
     elementLine(selection),
     target.inView.length ? `other frames in view: ${target.inView.map(frameLine).join('; ')}` : null,
     '</canvas-context>',

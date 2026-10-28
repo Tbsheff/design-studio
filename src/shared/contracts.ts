@@ -500,12 +500,20 @@ export interface LoopSummary {
   steps: LoopStep[];
 }
 
+export interface AppReviewRecord {
+  mobileShot: 'agent' | 'studio' | 'failed';
+  review: 'agent' | 'studio';
+  findings: number;
+  fixLoop: boolean;
+}
+
 export interface FinalCheck {
   ranBy: 'agent' | 'studio';
   errors: number;
   high: number;
   medium: number;
   low: number;
+  appReview?: AppReviewRecord;
 }
 
 export type RunStatus = 'running' | 'completed' | 'canceled' | 'failed' | 'budget_exceeded';
@@ -750,7 +758,7 @@ export interface LayoutFinding {
 
 export type CheckViewport = 'desktop' | 'tablet' | 'mobile';
 
-export type QualityCheckName = 'a11y' | 'tap-target' | 'placeholder' | 'tokens' | 'nav-mobile' | 'visual-diff' | 'generic-layout' | 'duplicate-content';
+export type QualityCheckName = 'a11y' | 'tap-target' | 'placeholder' | 'tokens' | 'nav-mobile' | 'visual-diff' | 'generic-layout' | 'duplicate-content' | 'outside-layout';
 
 export type QualitySeverity = 'high' | 'medium' | 'low';
 

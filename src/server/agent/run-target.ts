@@ -6,7 +6,8 @@ import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
 import type { CanvasService } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { withPagePath } from '../export/source.js';
-import type { AgentRunContext } from '../types.js';
+import type { AgentRunContext, PreviewService } from '../types.js';
+import { pageOwner, probeLayout, type LayoutRegion, type PageOwner } from './layout-region.js';
 
 export interface TargetFrame {
   id: string;
@@ -21,6 +22,8 @@ export interface RunTarget extends TargetFrame {
   stateName: string | null;
   routeFile: string | null;
   inView: TargetFrame[];
+  layout?: LayoutRegion | null;
+  owner?: PageOwner | null;
 }
 
 export interface ShotArgs {
@@ -182,4 +185,12 @@ export function editPageUrl(ctx: Pick<AgentRunContext, 'previewUrl' | 'target'>,
   const found = editPage(ctx, page);
   if (!found) throw new Error('Preview is not running for this direction.');
   return found.url;
+}
+
+export async function describeTargetLayout(preview: PreviewService, ctx: Pick<AgentRunContext, 'project' | 'direction' | 'previewUrl' | 'target' | 'request'>): Promise<void> {
+  const target = ctx.target;
+  if (!target || !ctx.previewUrl || !ctx.project.app || ctx.request.mode !== 'edit' || target.layout !== undefined) return;
+  const [layout, owner] = await Promise.all([probeLayout(preview, pageUrl(ctx.previewUrl, target.path, target.state)), target.routeFile ? pageOwner(ctx.direction.workTree, target.routeFile) : Promise.resolve(null)]);
+  target.layout = layout;
+  target.owner = owner;
 }

@@ -9,7 +9,8 @@ import { BASH_EDIT_TOOL, bashWriteProblem, builtinToolNames, createCanUseTool, c
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import { captureBaseline, prewarmChecks, type RunToolState } from './check-tool.js';
-import { runFinalCheck } from './final-check.js';
+import { appReviewGaps, appReviewNote, appReviewPrompt, noteReview, runFinalCheck, studioAppReview } from './final-check.js';
+import type { AppReviewRecord } from '../../shared/contracts.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
 import { lockReadOnly } from './read-only-lock.js';
@@ -24,6 +25,7 @@ import { desktopRegression, regressionPrompt, wantsRegressionCheck } from './reg
 import type { CommentStore } from '../store/comments.js';
 import type { CanvasService } from '../canvas/service.js';
 import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './user-message.js';
+import { describeTargetLayout } from './run-target.js';
 
 type QueryFn = typeof query;
 type StreamEventMessage = Extract<SDKMessage, { type: 'stream_event' }>;
@@ -221,10 +223,18 @@ export function addCriticCost(outcome: DriverOutcome, criticCostUsd: number): vo
   outcome.criticCostUsd = criticCostUsd;
 }
 
-async function attachFinalCheck(outcome: DriverOutcome, input: Parameters<typeof runFinalCheck>[0]): Promise<void> {
+async function attachFinalCheck(outcome: DriverOutcome, input: Parameters<typeof runFinalCheck>[0], appReview: AppReviewRecord | null): Promise<void> {
   if (outcome.status === 'failed') return;
   const finalCheck = await runFinalCheck(input);
-  if (finalCheck) outcome.finalCheck = finalCheck;
+  if (finalCheck) outcome.finalCheck = appReview ? { ...finalCheck, appReview } : finalCheck;
+}
+
+const APP_REVIEW_MIN_LEFT = 0.15;
+
+function roomForFixLoop(outcome: DriverOutcome, segment: AttemptSegment): boolean {
+  if (outcome.status !== 'completed') return false;
+  const cap = segment.setup.config.maxBudgetUsd;
+  return cap === null || segment.spentUsd + segment.setup.run.criticCostUsd < cap * (1 - APP_REVIEW_MIN_LEFT);
 }
 
 let sdkQueryPromise: Promise<QueryFn> | null = null;
@@ -255,6 +265,7 @@ interface StreamState {
   currentCallId: string | null;
   callStartedAt: number | null;
   apiMs: number;
+  onTool?: (name: string, input: unknown) => void;
 }
 
 function newStreamState(toolOrder: string[] = []): StreamState {
@@ -392,6 +403,7 @@ interface AttemptSegment {
   promptHash: string;
   spentUsd: number;
   maxBudgetUsd: number | null;
+  sessionId?: string | null;
 }
 
 function sumRunUsage(a: RunUsage, b: RunUsage): RunUsage {
@@ -547,6 +559,7 @@ function handleAssistant(message: AssistantMessage, state: StreamState, sink: Dr
     } else if (block.type === 'tool_use') {
       state.pendingTools.set(block.id, { name: block.name, input: block.input });
       state.toolOrder.push(block.name);
+      state.onTool?.(block.name, block.input);
       sink.toolStarted(block.id, block.name, block.input);
     }
   }
@@ -657,6 +670,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   async function runSegment(input: DriverInput, setup: AttemptSegment, sent: UserMessageParts, prior: PriorSession | null): Promise<{ state: StreamState; outcome: DriverOutcome }> {
     const runQuery = options.queryFn ?? (await loadSdkQuery());
     const state = newStreamState(setup.setup.run.log?.toolOrder);
+    state.onTool = (name, toolInput) => noteReview(setup.setup.run, name, toolInput);
     const spentBefore = setup.spentUsd;
     setup.setup.run.spentUsd = () => spentBefore + estimateStateCost(state, setup.setup.config.model);
     const stream = runQuery({ prompt: toSdkPrompt(sent), options: setup.sdkOptions });
@@ -669,6 +683,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const outcome = state.result ? mapResult(state.result, state.lastText, prior) : noResultOutcome(state, input.signal, prior, setup.setup.config.model);
     if (outcome.sessionTotals) outcome.sessionTotals = { ...outcome.sessionTotals, promptHash: setup.promptHash };
     setup.spentUsd += outcome.costUsd;
+    setup.sessionId = state.sessionId ?? setup.sessionId ?? null;
     return { state, outcome };
   }
 
@@ -721,6 +736,23 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     });
   }
 
+  async function continueAppReview(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<{ outcome: DriverOutcome; record: AppReviewRecord | null }> {
+    const run = segment.setup.run;
+    const gaps = input.signal.aborted || total.status === 'failed' ? null : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
+    if (!gaps) return { outcome: total, record: null };
+    const review = await studioAppReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId }, gaps);
+    const text = appReviewPrompt(review, gaps);
+    const sessionId = segment.sessionId;
+    if (!text || !sessionId || !roomForFixLoop(total, segment) || input.signal.aborted) return { outcome: { ...total, finalText: `${total.finalText}\n\n${appReviewNote(review.record)}` }, record: review.record };
+    input.sink.sent({ text, imageCount: review.images.length, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: (total.loop?.continuations ?? 0) + 1 });
+    segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
+    const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };
+    const next = await runSegment(input, segment, { text, images: review.images }, prior);
+    const record = { ...review.record, fixLoop: true };
+    const merged = mergeOutcomes(total, next.outcome);
+    return { outcome: { ...merged, finalText: `${merged.finalText}\n\n${appReviewNote(record)}` }, record };
+  }
+
   async function attempt(input: DriverInput, parts: UserMessageParts, resume: string | null): Promise<AttemptResult> {
     const { sink, signal } = input;
     const setup = await setupAttempt(input);
@@ -736,9 +768,10 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const first = await runSegment(input, segment, sent, prior);
     const looped = wantsLoop(setup.config, input.ctx.request.mode) ? await continueLoop(input, segment, first) : null;
     const checked = wantsDesignSystemCheck(input.ctx) ? await continueDesignSystem(input, segment, first) : first.outcome;
-    const outcome = looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : checked;
+    const reviewed = await continueAppReview(input, segment, looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : checked);
+    const outcome = reviewed.outcome;
     addCriticCost(outcome, setup.run.criticCostUsd);
-    if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId });
+    if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId }, reviewed.record);
     return { sawInit: first.state.sawInit, outcome };
   }
 
@@ -752,6 +785,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   };
 
   async function runAttempts(input: DriverInput): Promise<DriverOutcome> {
+    await describeTargetLayout(options.preview, input.ctx).catch(() => undefined);
     const parts = await buildUserMessageParts(input.ctx);
     const resume = input.ctx.direction.sessionId;
     if (!resume) return (await attempt(input, parts, null)).outcome;

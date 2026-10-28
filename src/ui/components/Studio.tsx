@@ -7,7 +7,7 @@ import { activeFrame, canvasStore, defaultLayout, type CanvasFrame } from '../ca
 import type { ComposerMode } from './RunSettings';
 import { api, errorText } from '../api';
 import { POLISH_REQUEST } from '../polish';
-import { createDraftStore, homeVariations, uiStore, useDraftActive, useUi } from '../storage';
+import { createDraftStore, homeVariations, uiStore, useDraftActive, useUi, type DraftStore } from '../storage';
 import { useDesignSystemState } from '../useDesignSystemState';
 import { usePackActions } from '../usePackActions';
 import { useStudioData } from '../useStudioData';
@@ -140,6 +140,20 @@ function whenDirection<T>(did: string | null, value: T): T | null {
 
 function neverRan(runsLoaded: boolean, runs: readonly unknown[]): boolean {
   return runsLoaded && runs.length === 0;
+}
+
+function appDirOf(project: { app?: { appDir: string } | null }): string | null {
+  return project.app?.appDir ?? null;
+}
+
+async function askAgent(prompt: string, draft: DraftStore, showChat: () => Promise<boolean>): Promise<void> {
+  if (!(await showChat())) return;
+  draft.set(prompt);
+  window.requestAnimationFrame(() => {
+    const input = document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]');
+    input?.focus();
+    input?.setSelectionRange(prompt.length, prompt.length);
+  });
 }
 
 export function Studio({ projectId, onExit }: { projectId: string; onExit: () => void }) {
@@ -449,6 +463,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
             tab: inspectorTab,
             onTab: setInspectorTab,
+            appDir: appDirOf(project),
+            onAskAgent: (prompt) => void askAgent(prompt, draft, () => showPane('chat')),
           }}
           details={{ projectId, run: detailsRun, onClose: () => setDetailsRunId(null) }}
           comments={{

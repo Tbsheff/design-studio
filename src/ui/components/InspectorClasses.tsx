@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
-import type { SourceLoc, TailwindOutcome } from '../../shared/contracts';
+import type { ElementSourceInfo, SourceLoc, TailwindOutcome } from '../../shared/contracts';
+
+export interface ElementInfo {
+  tailwind: TailwindOutcome | null;
+  element: ElementSourceInfo | null;
+}
 import { api } from '../api';
 
-export function useElementClasses(projectId: string, directionId: string | null, source: SourceLoc | null, savedAt: number): TailwindOutcome | null {
-  const [info, setInfo] = useState<TailwindOutcome | null>(null);
+export function useElementClasses(projectId: string, directionId: string | null, source: SourceLoc | null, savedAt: number): ElementInfo | null {
+  const [info, setInfo] = useState<ElementInfo | null>(null);
   const file = source?.file;
   const line = source?.line;
   const col = source?.col;
@@ -16,7 +21,7 @@ export function useElementClasses(projectId: string, directionId: string | null,
     api
       .elementClasses(projectId, directionId, { file, line, col })
       .then((result) => {
-        if (live) setInfo(result.tailwind);
+        if (live) setInfo({ tailwind: result.tailwind, element: result.element ?? null });
       })
       .catch(() => {
         if (live) setInfo(null);

@@ -10,7 +10,7 @@ import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
-import { USED_AT_ATTR, appSourceFor, appSourceMode } from './app-source.js';
+import { USED_AT_ATTR, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
@@ -246,7 +246,7 @@ function selectionFor(element: Element): SelectionContext {
     styles: stylesOf(element),
     rect: rectOf(element),
     source: sourceOf(element),
-    ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element) } : {}),
+    ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element), usedBy: componentUseOf(element) } : {}),
     ancestors: ancestorsOf(element),
   };
 }

@@ -15,6 +15,7 @@ import {
   type StructureEditResult,
   type DirectEditResult,
   type TailwindOutcome,
+  type ElementSourceInfo,
   type EditHistoryState,
   type EditSessionEnd,
   type EditSessionState,
@@ -223,7 +224,7 @@ export const api = {
     return (await res.json()) as EditSessionEnd;
   },
   elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
-    json<{ tailwind: TailwindOutcome | null }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
+    json<{ tailwind: TailwindOutcome | null; element: ElementSourceInfo | null }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
     json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>

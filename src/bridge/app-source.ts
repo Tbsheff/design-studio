@@ -1,5 +1,12 @@
-import { SOURCE_LOC_ATTR } from '../shared/contracts.js';
+import { SOURCE_LOC_ATTR, type ComponentUse } from '../shared/contracts.js';
 import { APP_SOURCE_PATH } from '../shared/app.js';
+
+interface DebugType {
+  displayName?: unknown;
+  name?: unknown;
+  render?: DebugType;
+  type?: DebugType;
+}
 
 interface DebugFiber {
   _debugStack?: { stack?: unknown } | null;
@@ -8,6 +15,8 @@ interface DebugFiber {
   _debugOwner?: DebugFiber | null;
   return?: DebugFiber | null;
   tag?: number;
+  name?: unknown;
+  type?: DebugType | string | null;
 }
 
 const HOST_COMPONENT = 5;
@@ -26,6 +35,26 @@ function fiberOf(element: Element): DebugFiber | null {
 }
 
 export const USED_AT_ATTR = 'data-studio-used-at';
+
+function textName(...values: unknown[]): string | null {
+  const found = values.find((value): value is string => typeof value === 'string' && value.length > 0);
+  return found ?? null;
+}
+
+function ownerName(owner: DebugFiber): string | null {
+  const type = typeof owner.type === 'object' ? owner.type : null;
+  return textName(owner.name, type?.displayName, type?.render?.displayName, type?.render?.name, type?.type?.displayName, type?.type?.name, type?.name);
+}
+
+export function componentUseOf(element: Element): ComponentUse | null {
+  const host = hostElementOf(element);
+  const owner = host?.fiber._debugOwner ?? null;
+  if (!host || !owner) return null;
+  const name = ownerName(owner);
+  if (!name) return null;
+  const parent = host.element.parentElement ? hostElementOf(host.element.parentElement) : null;
+  return { name, root: !parent || (parent.fiber._debugOwner ?? null) !== owner };
+}
 
 function stackOf(fiber: DebugFiber | null): string | null {
   const candidates = [fiber?._debugStack?.stack, fiber?.debugStack?.stack, fiber?.stack];

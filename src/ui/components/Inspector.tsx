@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
+import { sharedSourceOf } from '../../shared/app';
 import type { EditSessionEnd, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import type { DesignTokens } from '../useDesignSystemState';
@@ -6,6 +7,7 @@ import type { DirectEditCommit, DirectEditControl } from '../useDirectEdit';
 import { unsavedLabel, useEditSession, type EditSession, type EditSessionHandle, type SessionAction } from '../useEditSession';
 import { Icon } from './Icon';
 import { InspectorCode } from './InspectorCode';
+import { InspectorAppContext } from './InspectorShared';
 import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
 import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
@@ -35,6 +37,8 @@ interface InspectorProps {
   onRedo?: () => void;
   tab?: InspectorTab;
   onTab?: (tab: InspectorTab) => void;
+  appDir?: string | null;
+  onAskAgent?: (prompt: string) => void;
 }
 
 const TABS: { id: InspectorTab; label: string }[] = [
@@ -167,11 +171,16 @@ function Tabs({ tab, onTab }: { tab: InspectorTab; onTab: (tab: InspectorTab) =>
 }
 
 function SimpleTab(props: InspectorProps) {
+  const [useFor, setUseFor] = useState<string | null>(null);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
-  return <SimpleEditor key={target.selector} {...props} target={target} />;
+  const shared = props.appDir ? sharedSourceOf(target, props.appDir) : null;
+  const editingUse = Boolean(shared?.use && shared.name && useFor === target.selector);
+  const effective = editingUse && shared?.use && shared.name ? { ...target, source: shared.use, component: shared.name, usedAt: null } : target;
+  const sharedEditing = shared ? { shared, editingUse, onToggle: () => setUseFor(editingUse ? null : target.selector) } : null;
+  return <SimpleEditor key={`${target.selector}${editingUse ? '|use' : ''}`} {...props} target={effective} sharedEditing={sharedEditing} />;
 }
 
 function ProTab(props: InspectorProps) {
@@ -213,31 +222,33 @@ export function Inspector(props: InspectorProps) {
   });
   useSessionHandle(props.session, session);
   return (
-    <div className="edit-pane" aria-label="Edit">
-      <SessionHeader session={session} onDone={() => props.onExit?.()} />
-      {session.error && !session.asking && (
-        <div className="ins-error" role="alert">
-          <Icon name="alert" size={14} />
-          <span>{session.error}</span>
-          <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={session.clearError}>
-            <Icon name="close" size={12} />
-          </button>
-        </div>
-      )}
-      <LeavePrompt session={session} />
-      <Tabs tab={tab} onTab={onTab} />
-      {tab === 'simple' && <InspectorTools {...props} />}
-      <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
-        {tab === 'simple' && <SimpleTab {...props} />}
-        {tab === 'pro' && <ProTab {...props} />}
-        {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
-        {tab === 'tweaks' && (
-          <>
-            {props.tweaks && session.count > 0 && <p className="ins-note edit-tweaks-note">Save or discard your edits before you ask for a tweaks panel.</p>}
-            <InspectorTweaks tweaks={props.tweaks} blocked={session.count > 0} />
-          </>
+    <InspectorAppContext.Provider value={{ appDir: props.appDir ?? null, ask: props.onAskAgent ?? null, element: null }}>
+      <div className="edit-pane" aria-label="Edit">
+        <SessionHeader session={session} onDone={() => props.onExit?.()} />
+        {session.error && !session.asking && (
+          <div className="ins-error" role="alert">
+            <Icon name="alert" size={14} />
+            <span>{session.error}</span>
+            <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={session.clearError}>
+              <Icon name="close" size={12} />
+            </button>
+          </div>
         )}
+        <LeavePrompt session={session} />
+        <Tabs tab={tab} onTab={onTab} />
+        {tab === 'simple' && <InspectorTools {...props} />}
+        <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
+          {tab === 'simple' && <SimpleTab {...props} />}
+          {tab === 'pro' && <ProTab {...props} />}
+          {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
+          {tab === 'tweaks' && (
+            <>
+              {props.tweaks && session.count > 0 && <p className="ins-note edit-tweaks-note">Save or discard your edits before you ask for a tweaks panel.</p>}
+              <InspectorTweaks tweaks={props.tweaks} blocked={session.count > 0} />
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </InspectorAppContext.Provider>
   );
 }

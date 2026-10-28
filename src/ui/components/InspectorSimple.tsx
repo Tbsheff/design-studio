@@ -1,4 +1,5 @@
 import { useEffect, useState, type MutableRefObject, type ReactNode } from 'react';
+import type { SharedSource } from '../../shared/app';
 import type { SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import type { DesignTokens } from '../useDesignSystemState';
@@ -20,6 +21,7 @@ import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
 import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { InspectorSource } from './InspectorSource';
+import { InspectorAppContext, SharedSourceNote, dataTextPrompt, useInspectorApp } from './InspectorShared';
 import { NumberField } from './NumberField';
 
 export interface EditorProps {
@@ -77,14 +79,27 @@ function StatusText({ status }: { status: SaveStatus }) {
   return null;
 }
 
-export function ErrorLine({ status }: { status: SaveStatus }) {
+export function ErrorLine({ status, text }: { status: SaveStatus; text?: string }) {
+  const app = useInspectorApp();
   if (status.kind !== 'error') return null;
+  const data = status.code === 'text_from_data' ? app.element?.textFromData : null;
   return (
     <div className="ins-error" role="alert">
       <Icon name="alert" size={14} />
       <span>{status.message}</span>
+      {data && app.ask && (
+        <button type="button" className="btn small ghost ins-error-action" onClick={() => app.ask?.(dataTextPrompt(text ?? '', data))}>
+          Ask the agent to change it
+        </button>
+      )}
     </div>
   );
+}
+
+export interface SharedEditing {
+  shared: SharedSource;
+  editingUse: boolean;
+  onToggle: () => void;
 }
 
 function TextSection({ edit, ui, selection }: { edit: DirectEdit; ui: TokenUi | null; selection: SelectionContext | null }) {
@@ -222,7 +237,7 @@ function MetaRow({ tag, where, status, ui, onReset, resetDisabled, children }: {
   );
 }
 
-export function SimpleEditor(props: EditorProps & { target: SelectionContext }) {
+export function SimpleEditor(props: EditorProps & { target: SelectionContext; sharedEditing?: SharedEditing | null }) {
   const scope = { projectId: props.projectId, directionId: props.directionId, selection: props.target, tokens: props.tokens, onCommitted: props.onCommitted };
   const tk = useInspectorTokens(scope);
   const edit = useDirectEdit({
@@ -248,29 +263,35 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext }) 
   };
   const source = props.target.source;
   const classInfo = useElementClasses(props.projectId, props.directionId, source, savedAt);
-  const classLine = classInfo && edit.tailwind?.note ? { ...classInfo, note: edit.tailwind.note } : classInfo;
+  const tailwind = classInfo?.element?.component && !props.target.component ? null : (classInfo?.tailwind ?? null);
+  const classLine = tailwind && edit.tailwind?.note ? { ...tailwind, note: edit.tailwind.note } : tailwind;
+  const app = useInspectorApp();
+  const sharedEditing = props.sharedEditing;
   return (
-    <TokenUiContext.Provider value={tk.ui}>
-      <div className="inspector ins-simple" aria-label="Design inspector">
-        <InspectorBreadcrumb selection={props.target} port={props.port} />
-        <MetaRow tag={props.target.tag} where={source ? `${source.file}:${source.line}` : ''} status={edit.status} ui={tk.ui} onReset={edit.reset}>
-          <CopyCssButton authored={authored} />
-        </MetaRow>
-        <ClassLine info={classLine} />
-        <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
-        <div className="ins-scroll">
-          <ErrorLine status={edit.status} />
-          <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
-          <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
-          <InspectorOtherStyles css={authored.css} />
-          <div className="ins-export">
-            <CopyCodeMenu projectId={props.projectId} directionId={props.directionId} selector={props.target.selector} variant="row" />
+    <InspectorAppContext.Provider value={{ ...app, element: classInfo?.element ?? null }}>
+      <TokenUiContext.Provider value={tk.ui}>
+        <div className="inspector ins-simple" aria-label="Design inspector">
+          <InspectorBreadcrumb selection={props.target} port={props.port} />
+          <MetaRow tag={props.target.tag} where={source ? `${source.file}:${source.line}` : ''} status={edit.status} ui={tk.ui} onReset={edit.reset}>
+            <CopyCssButton authored={authored} />
+          </MetaRow>
+          <ClassLine info={classLine} />
+          <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
+          {sharedEditing && <SharedSourceNote shared={sharedEditing.shared} editingUse={sharedEditing.editingUse} canUse={sharedEditing.editingUse || classInfo?.element?.forwardsClassName === true} onToggle={sharedEditing.onToggle} />}
+          <div className="ins-scroll">
+            <ErrorLine status={edit.status} text={props.target.text} />
+            <TokenLint ui={tk.ui} edit={edit} css={authored.css} />
+            <SimpleSections edit={edit} ui={tk.ui} selection={props.target} />
+            <InspectorOtherStyles css={authored.css} />
+            <div className="ins-export">
+              <CopyCodeMenu projectId={props.projectId} directionId={props.directionId} selector={props.target.selector} variant="row" />
+            </div>
           </div>
+          <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
         </div>
-        <TokenNotes ui={tk.ui} note={tk.snap.note} onKeepRaw={keepRaw} onDismiss={tk.snap.dismiss} />
-      </div>
-      <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
-    </TokenUiContext.Provider>
+        <CreateTokenHost {...scope} edit={edit} request={tk.creating} onClose={tk.closeCreate} />
+      </TokenUiContext.Provider>
+    </InspectorAppContext.Provider>
   );
 }
 

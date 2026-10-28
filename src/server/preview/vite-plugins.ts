@@ -53,13 +53,16 @@ export function sourceTagsPlugin(rootCandidates: string[]): Plugin {
   return {
     name: 'studio-source-tags',
     enforce: 'pre',
-    transform(code, id) {
-      const file = id.split('?')[0] ?? id;
-      if (!/\.(jsx|tsx)$/i.test(file)) return null;
-      if (file.includes('/node_modules/') || file.startsWith('\0')) return null;
-      const relative = relativeInside(rootCandidates, file);
-      if (!relative) return null;
-      return tagJsxSource(code, file, relative);
+    transform: {
+      order: 'pre',
+      handler(code, id) {
+        const file = id.split('?')[0] ?? id;
+        if (!/\.(jsx|tsx)$/i.test(file)) return null;
+        if (file.includes('/node_modules/') || file.startsWith('\0')) return null;
+        const relative = relativeInside(rootCandidates, file);
+        if (!relative) return null;
+        return tagJsxSource(code, file, relative);
+      },
     },
   };
 }

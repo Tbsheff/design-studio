@@ -15,6 +15,7 @@ import { planStructureEdit } from '../direct-edit/structure-apply.js';
 import { knownTokenVars } from '../direct-edit/tokens.js';
 import { editPageUrl } from './run-target.js';
 import { describeElements, textHintsOf } from '../mcp/element.js';
+import { isLayerRef, memoPage, resolveLayerRefs, scopeOf, type Viewport } from '../mcp/layer-ref.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 import { evaluateToolUse } from './permissions.js';
 import { canvasOwner, readCanvasAt, type CanvasService } from '../canvas/service.js';
@@ -46,6 +47,7 @@ export const editElementShape = {
   target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'),
   op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
+  also: z.array(z.string().trim().min(1).max(2000)).min(1).max(49).optional().describe('With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here.'),
 };
 
 export const setTokenShape = {
@@ -95,12 +97,26 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+const EDIT_VIEWPORT: Viewport = { width: 1440, height: 900 };
+
+async function alsoSelectors(deps: DirectToolDeps, input: z.output<typeof editElementSchema>): Promise<string[]> {
+  const list = input.also ?? [];
+  if (!list.some((item) => isLayerRef(item)) || !deps.ctx.previewUrl) return list;
+  const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
+  const page = input.path ?? memoPage(scope, list.find((item) => isLayerRef(item))?.trim() ?? '');
+  const refs = list.filter((item) => isLayerRef(item)).map((item) => item.trim());
+  const paths = await resolveLayerRefs(deps.preview, editPageUrl(deps.ctx, page), EDIT_VIEWPORT, scope, refs);
+  return list.map((item) => (isLayerRef(item) ? (paths.get(item.trim()) ?? item) : item));
+}
+
 async function structureEdit(deps: DirectToolDeps, input: z.output<typeof editElementSchema>, op: StructureOp): Promise<ToolText> {
+  const also = await alsoSelectors(deps, input);
   const selectors = op === 'move' && input.targetSelector ? [input.selector, input.targetSelector] : [input.selector];
   const [element, parent] = await findElements(deps, input.path, selectors);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
-  const target = { source: element.source, selector: input.selector, tag: element.tag };
-  const raw = { op, targets: [target], ...(parent?.source ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
+  const more = also.length > 0 ? await findElements(deps, input.path, also) : [];
+  const targets = [element, ...more].map((found, index) => ({ source: found.source as NonNullable<SelectionContext['source']>, selector: [input.selector, ...also][index] as string, tag: found.tag }));
+  const raw = { op, targets, ...(parent?.source ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
   const plan = await planStructureEdit(deps.ctx.direction.workTree, raw);
   if (plan.changed.length === 0) return text('Nothing changed.');
   for (const file of plan.changed) {
@@ -176,16 +192,23 @@ async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolTe
   return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${site.source.line}.${classNote}${siteText(site)} ${RUN_NOTE}`);
 }
 
+function editShapeError(input: z.output<typeof editElementSchema>): string | null {
+  const hasChange = input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
+  if (input.op === undefined && !hasChange) return 'edit_element needs style, text or classes, or op.';
+  if (input.op !== undefined && (hasChange || input.variant !== undefined)) return 'Pass op alone, or style/text/classes without op.';
+  if ((input.op === 'move') !== (input.targetSelector !== undefined)) return 'op move needs targetSelector; other ops take none.';
+  if (input.also !== undefined && input.op === undefined) return 'also needs op.';
+  return null;
+}
+
 export async function runEditElement(deps: DirectToolDeps, args: EditElementArgs): Promise<ToolText> {
   const blocked = refusal(deps.ctx, 'edit_element');
   if (blocked) return failure(blocked);
   const parsed = editElementSchema.safeParse(args);
   if (!parsed.success) return failure(`edit_element: ${parsed.error.issues.map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`).join('; ')}`);
   const input = parsed.data;
-  const hasChange = input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
-  if (input.op === undefined && !hasChange) return failure('edit_element needs style, text or classes, or op.');
-  if (input.op !== undefined && (hasChange || input.variant !== undefined)) return failure('Pass op alone, or style/text/classes without op.');
-  if ((input.op === 'move') !== (input.targetSelector !== undefined)) return failure('op move needs targetSelector; other ops take none.');
+  const invalid = editShapeError(input);
+  if (invalid) return failure(invalid);
   try {
     return input.op ? await structureEdit(deps, input, input.op) : await styleEdit(deps, input);
   } catch (error) {

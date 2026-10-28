@@ -82,8 +82,10 @@ const schemas = {
       variant: variant.optional(),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (keep the children, drop the element; also ungroups) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
+      also: z.array(z.object({ selector: selector.describe('CSS selector or layer id.') }).strict()).min(1).max(49).optional().describe('With op: more elements to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Layer ids from select_matching work here.'),
     })
     .strict()
+    .refine((input) => input.also === undefined || input.op !== undefined, 'also needs op')
     .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined && input.variant === undefined), 'pass style, text or classes, or op alone')
     .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none')
     .refine((input) => input.target !== 'use' || input.op === undefined, 'target use takes style, classes or text, not op'),
@@ -294,9 +296,11 @@ async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op
   const url = await pageUrl(deps, project, direction, input.path);
   const element = await sourceElement(deps, url, input.selector);
   const parent = input.targetSelector ? await sourceElement(deps, url, input.targetSelector) : null;
-  const body = { op, targets: [{ source: element.source, selector: input.selector, tag: element.tag }], ...(parent ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
+  const more = await Promise.all((input.also ?? []).map(async (item) => ({ item, found: await sourceElement(deps, url, item.selector) })));
+  const targets = [{ source: element.source, selector: input.selector, tag: element.tag }, ...more.map(({ item, found }) => ({ source: found.source, selector: item.selector, tag: found.tag }))];
+  const body = { op, targets, ...(parent ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
   const result = await studioCall<StructureEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
-  const summary = `${OP_WORDS[op]} ${element.tag}${parent ? ` into ${parent.tag}` : ''}`;
+  const summary = `${OP_WORDS[op]} ${targets.length > 1 ? `${targets.length} elements` : element.tag}${parent ? ` into ${parent.tag}` : ''}`;
   return { result: ok({ files: result.files, versionId: result.version.id, title: result.version.title, select: result.select }), activity: versionActivity(project, direction, summary, result.version) };
 }
 

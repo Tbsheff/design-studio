@@ -372,7 +372,7 @@ const PIN_TIPS: Record<PinAxis, string> = {
 function PinSelect({ axis, mode, edit, selection, onPick }: { axis: PinAxis; mode: PinMode; edit: DirectEdit; selection: SelectionContext; onPick: (axis: PinAxis, mode: PinMode) => void }) {
   const change = (next: PinMode) => {
     if (next === mode) return;
-    edit.preview(pinPatch(axis, next, selection.styles), true);
+    edit.preview(pinPatch(axis, next, selection.styles, mode), true);
     edit.commit();
     onPick(axis, next);
   };

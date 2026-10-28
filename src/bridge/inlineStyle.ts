@@ -108,7 +108,15 @@ function constraintStyles(element: Element, computed: CSSStyleDeclaration, box: 
     'pin-top': exact(rect.top - parent.y - (parseFloat(computed.marginTop) || 0)),
     'box-width': exact(rect.width),
     'box-height': exact(rect.height),
+    'size-width': exact(rect.width - boxExtra(computed, 'x')),
+    'size-height': exact(rect.height - boxExtra(computed, 'y')),
   };
+}
+
+function boxExtra(computed: CSSStyleDeclaration, axis: 'x' | 'y'): number {
+  if (computed.boxSizing === 'border-box') return 0;
+  const sides = axis === 'x' ? ['Left', 'Right'] : ['Top', 'Bottom'];
+  return sides.reduce((sum, side) => sum + (parseFloat(computed.getPropertyValue(`padding-${side.toLowerCase()}`)) || 0) + (parseFloat(computed.getPropertyValue(`border-${side.toLowerCase()}-width`)) || 0), 0);
 }
 
 function offsetStyles(element: Element, computed: CSSStyleDeclaration): Record<string, string> {

@@ -9,11 +9,12 @@ interface AxisKeys {
   offset: string;
   container: string;
   box: string;
+  inner: string;
 }
 
 const AXES: Record<PinAxis, AxisKeys> = {
-  x: { start: 'left', end: 'right', size: 'width', offset: 'pin-left', container: 'container-width', box: 'box-width' },
-  y: { start: 'top', end: 'bottom', size: 'height', offset: 'pin-top', container: 'container-height', box: 'box-height' },
+  x: { start: 'left', end: 'right', size: 'width', offset: 'pin-left', container: 'container-width', box: 'box-width', inner: 'size-width' },
+  y: { start: 'top', end: 'bottom', size: 'height', offset: 'pin-top', container: 'container-height', box: 'box-height', inner: 'size-height' },
 };
 
 export const PIN_OPTIONS: Record<PinAxis, { value: PinMode; label: string }[]> = {
@@ -68,17 +69,17 @@ function numberOf(styles: Record<string, string>, key: string): number {
   return Number.isFinite(value) ? value : 0;
 }
 
-export function pinPatch(axis: PinAxis, mode: PinMode, styles: Record<string, string>): Record<string, string> {
+export function pinPatch(axis: PinAxis, mode: PinMode, styles: Record<string, string>, current: PinMode = pinModeOf(axis, styles)): Record<string, string> {
   const keys = AXES[axis];
   const pos = numberOf(styles, keys.offset);
   const size = numberOf(styles, keys.box);
+  const inner = styles[keys.inner] === undefined ? size : numberOf(styles, keys.inner);
   const box = numberOf(styles, keys.container);
-  const current = pinModeOf(axis, styles);
-  const fixed = current === 'both' || current === 'scale' ? { [keys.size]: px(size) } : {};
+  const fixed = current === 'both' || current === 'scale' ? { [keys.size]: px(inner) } : {};
   if (mode === 'end') return { [keys.start]: '', [keys.end]: px(box - pos - size), ...fixed };
   if (mode === 'both') return { [keys.start]: px(pos), [keys.end]: px(box - pos - size), [keys.size]: '' };
   if (mode === 'center') return { [keys.start]: centered(pos - box / 2), [keys.end]: '', ...fixed };
-  if (mode === 'scale' && box > 0) return { [keys.start]: percent((pos / box) * 100), [keys.end]: '', [keys.size]: percent((size / box) * 100) };
+  if (mode === 'scale' && box > 0) return { [keys.start]: percent((pos / box) * 100), [keys.end]: '', [keys.size]: percent((inner / box) * 100) };
   return { [keys.start]: px(pos), [keys.end]: '', ...fixed };
 }
 

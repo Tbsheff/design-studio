@@ -54,5 +54,6 @@ export async function findWorkspaceRoot(folder: string): Promise<WorkspaceRoot |
 
 export async function nextAppWorkspace(folder: string): Promise<WorkspaceRoot | null> {
   if (frameworkOf(await readPackage(folder)) !== 'next') return null;
+  if (!existsSync(path.join(folder, 'app')) && !existsSync(path.join(folder, 'src', 'app'))) return null;
   return findWorkspaceRoot(folder);
 }

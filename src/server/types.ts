@@ -136,6 +136,7 @@ export interface AppControl {
   stop(projectId: string): Promise<void>;
   restart(project: Project): Promise<string>;
   forget(projectId: string): void;
+  doctor?(project: Project, fresh?: boolean): Promise<import('../shared/app-doctor.js').AppDoctorResult>;
 }
 
 export interface PreviewService {

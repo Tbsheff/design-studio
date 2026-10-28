@@ -191,6 +191,7 @@ export interface AppServerStatus {
   command: string | null;
   message: string | null;
   startedAt: number | null;
+  doctor?: import('./app-doctor.js').AppDoctorResult | null;
 }
 
 export interface AppLogLine {

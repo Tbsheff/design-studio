@@ -271,6 +271,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
         return apps.restart(project);
       },
       forget: (projectId) => appCache.delete(projectId),
+      doctor: (project, fresh) => apps.doctor(project, fresh),
     },
     inspect: async (url, viewport, outPath, selectionLocs) => (await browsers.get()).inspect(url, viewport, outPath, selectionLocs),
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),

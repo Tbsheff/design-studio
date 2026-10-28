@@ -106,6 +106,20 @@ function importLine(ts: Ts | null, project: Project, library: Library & { specif
   return entry.kind === 'default' ? `import ${entry.name} from '${specifier}';` : `import { ${entry.name} } from '${specifier}';`;
 }
 
+const IMPORT_LINES_MAX = 5000;
+const importLines = new Map<string, string>();
+
+function cachedImportLine(ts: Ts | null, project: Project, library: Library & { specifiers: Map<string, string[]> }, entry: LibraryEntry): string {
+  const key = `${project.id}:${library.root}:${entry.kind}:${entry.name}:${entry.absolute}`;
+  let line = importLines.get(key);
+  if (line === undefined) {
+    line = importLine(ts, project, library, entry);
+    if (importLines.size >= IMPORT_LINES_MAX) importLines.clear();
+    importLines.set(key, line);
+  }
+  return line;
+}
+
 function partsOf(library: Library, entry: LibraryEntry): string[] {
   return library.entries.filter((other) => other.absolute === entry.absolute && other.name !== entry.name).map((other) => other.name);
 }
@@ -121,7 +135,7 @@ export async function searchComponents(project: Project, workTree: string, reque
     const schema = schemas[index] ?? null;
     const base = schema ?? { name: entry.name, file: entry.file, line: entry.line, props: [], cva: null, asChild: false, note: null };
     const example = jsxFor(entry, schema, { component: { name: entry.name }, target: { source: null }, position: 'inside' });
-    const importText = local ? `not exported: use it inside ${entry.file}` : importLine(ts, project, library, entry);
+    const importText = local ? `not exported: use it inside ${entry.file}` : cachedImportLine(ts, project, library, entry);
     return { ...base, name: entry.name, file: entry.file, line: entry.line, uses: entry.uses, source, folder: entry.folder, parts: partsOf(library, entry), import: importText, example };
   });
   const next = offset + page.length;

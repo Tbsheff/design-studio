@@ -7,6 +7,7 @@ import type { ExportDeps } from '../export/source.js';
 import type { AgentRunner, EventBus } from '../types.js';
 import type { ActivityLog } from './activity.js';
 import type { ApprovalAsk, ApprovalQueue } from './approvals.js';
+import { warmKit } from '../components/props-service.js';
 import { mcpErrorText } from './error-copy.js';
 import { downloadsFolder, isInside, safeFolder } from './folders.js';
 
@@ -61,6 +62,7 @@ export async function loadTarget(deps: EditDeps, projectId: string, directionId?
   if (project.designSystemFor && project.designSystemDeleted) throw new EditError('project not found');
   const direction = directionId ? project.directions.find((d) => d.id === directionId) : (project.directions.find((d) => d.id === 'main') ?? project.directions[0]);
   if (!direction) throw new EditError(`direction ${directionId ?? 'main'} not found in project ${project.id}`);
+  warmKit(project, direction);
   return { project, direction };
 }
 

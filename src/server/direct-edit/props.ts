@@ -238,7 +238,7 @@ export async function applySetProps(deps: DirectEditDeps, project: Project, dire
   if (plan.code === original) return { file: target.relative, version: await deps.versions.get(project, head), changed: [], removed: [], instance };
   const summary = Object.entries(request.props).map(([name, value]) => (value === null ? `remove ${name}` : `${name}=${JSON.stringify(value)}`)).join('; ');
   const version = await commitChange(deps, project, direction, target, original, plan.code, propsTitle(instance.tag, plan, request.props), `Props of <${instance.tag}> at ${target.relative}:${instance.use.line}: ${summary}`);
-  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use, usesIn(await sourceFiles(direction.workTree))) };
+  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use, usesIn(await sourceFiles(direction.workTree), direction.workTree)) };
 }
 
 function variantLiteral(ast: t.File, edit: VariantClassEdit): t.StringLiteral {

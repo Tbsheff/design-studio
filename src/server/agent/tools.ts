@@ -11,7 +11,6 @@ import { recordShot } from './polish-loop.js';
 import { beforeImages, changedSourceFor, criticImages, criticOutPrefix, describeCriticResult, runCritic, type CriticImage } from './critic.js';
 import { describeScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import type { TasteRule } from './taste.js';
-import { tweakControlSchema } from '../tweaks/schema.js';
 import { defineTweaks } from '../tweaks/store.js';
 import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
@@ -24,19 +23,21 @@ import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
-import { SELECT_MATCHING_DESCRIPTION, runSelectMatching, selectMatchingShape } from './select-tool.js';
-import { DIFF_VERSIONS_DESCRIPTION, diffVersionsShape, runDiffVersions } from './version-diff-tool.js';
+import { runSelectMatching, selectMatchingShape } from './select-tool.js';
+import { diffVersionsShape, runDiffVersions } from './version-diff-tool.js';
 import { getRunContextShape, runGetRunContext } from './context-tool.js';
 import { componentPreviewShape, runComponentPreview } from './component-preview-tool.js';
 import { reviewFrameShape, runReviewFrameTool } from '../review/agent-tool.js';
 import { insertComponentShape, runInsertComponent } from './insert-tool.js';
 import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } from './run-target.js';
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
+import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from './tool-help.js';
+import { HELP_TOOL, studioToolsFor } from './tool-sets.js';
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
-import { APP_DOCTOR_DESCRIPTION, runAppDoctor } from './doctor-tool.js';
-import { CREATE_COMPONENT_AGENT_DESCRIPTION, SWAP_INSTANCE_AGENT_DESCRIPTION, createComponentShape, runCreateComponent, runSwapInstance, swapInstanceShape } from './component-create-tool.js';
+import { runAppDoctor } from './doctor-tool.js';
+import { createComponentShape, runCreateComponent, runSwapInstance, swapInstanceShape } from './component-create-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -53,6 +54,13 @@ const TILE_PLAN: Record<ViewportName, { tileHeight: number; maxTiles: number }> 
 };
 
 type QueryFn = typeof query;
+
+const TWEAK_CONTROLS_NOTE = 'Each control: {id, label, cssVar, type: range {min, max, step?, unit?, default: number} | color {default} | toggle {on, off, default: boolean} | select {options: [{label, value}], default}}.';
+
+const agentEditElementShape = {
+  ...editElementShape,
+  style: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).optional().describe('CSS properties to set, kebab-case or camelCase keys; null removes one. Tailwind projects get theme classes.'),
+};
 
 const TARGET_SHAPE = {
   frame: frameRef.optional().describe('Canvas frame id or @label: render its page with its frame state. Leave out for the frame from <canvas-context>.'),
@@ -394,7 +402,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const screenshot = tool(
     'screenshot',
-    'Take PNG screenshots of one page of the live preview. With no frame or path it shows the frame from <canvas-context> (its page, size and frame state), or the entry page. Returns up to four images, top to bottom, starting at the y offset `from`. The text names the page and says whether more of it is below.',
+    TOOL_SHORT.screenshot,
     {
       ...TARGET_SHAPE,
       viewport: z.enum(['desktop', 'mobile', 'tablet']).optional().describe('Render size. Leave out for the frame size (desktop when there is no frame).'),
@@ -408,7 +416,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const renderCheck = tool(
     'render_check',
-    'Render one page of the current design at the sizes this run level uses. With no frame or path it checks the frame from <canvas-context> (its page and frame state), or the entry page. Returns JSON: `page`, then per viewport console errors, page errors, page-level horizontal overflow and `layout` findings (clipped, scrolls-sideways, past-viewport); then `quality` findings with severity high/medium/low (a11y from axe-core, tap-target, placeholder text, tokens, nav-mobile, visual-diff), selectors and source locations; then timings and the budget used.',
+    TOOL_SHORT.render_check,
     TARGET_SHAPE,
     (args) => runRenderCheck(deps, counters, args),
     { annotations: { readOnlyHint: true } },
@@ -416,7 +424,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const designReview = tool(
     'design_review',
-    'Prototype and polish runs. A separate critic model that has not seen your work reviews fresh desktop and mobile screenshots of every screen (the frame from <canvas-context> first, then each view of a multi-view page, each canvas frame, each changed app route; pass frame or path to review only that page), the latest render_check findings, the taste rules and the request. Returns JSON issues [{severity, area, screen, where, problem, fix}]. Prototype: one quick call. Polish: at most 2 calls; the second also compares desktop with the first call and files regressions.',
+    TOOL_SHORT.design_review,
     TARGET_SHAPE,
     (args) => runDesignReview(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -424,14 +432,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const defineTweaksTool = tool(
     'define_tweaks',
-    'Save the Tweaks panel controls for this design (replaces the whole list). Each control sets one CSS custom property: range {min, max, step?, unit?, default: number}, color {default}, toggle {on, off, default: boolean}, select {options: [{label, value}], default}. The user drags them for a live preview with no model call, and Commit writes the values into the :root declaration. Every cssVar must be declared in a top-level :root rule of the page CSS with the default value (a design-system token from tokens.css is already declared; Commit then updates tokens.json) and used with var() in the rules it changes. The result lists any var that is not declared or not used.',
-    { controls: z.array(tweakControlSchema).max(12) },
+    TOOL_SHORT.define_tweaks,
+    { controls: z.array(z.record(z.string(), z.unknown())).max(12).describe(TWEAK_CONTROLS_NOTE) },
     (args) => runDefineTweaks(deps, args.controls),
   );
 
   const designSystemCheck = tool(
     'design_system_check',
-    'Design-system projects only. Checks the design system files and returns "passed" or a list of problems: required tokens present and valid (DTCG, OKLCH, dark values), WCAG AA contrast (4.5:1) for fg and fg-muted on bg, fg on surface and each X-fg on X in light and dark, the 9 DESIGN.md sections with no "_To do:" lines, no raw colors in the kit page index.html, and font tokens that match the Google Fonts link and pack.json.',
+    TOOL_SHORT.design_system_check,
     {},
     () => runDesignSystemCheck(deps),
     { annotations: { readOnlyHint: true } },
@@ -439,7 +447,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const canvasListTool = tool(
     'canvas_list',
-    'List the frames on the studio canvas: id, label, page, size and position of each frame, which directions use the lo-fi look, what the user has selected, which frame is live and which frames are in view. Call it before you place or point at frames.',
+    TOOL_SHORT.canvas_list,
     {},
     () => runCanvasList(deps),
     { annotations: { readOnlyHint: true } },
@@ -447,14 +455,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const canvasPlaceTool = tool(
     'canvas_place',
-    'Add or move frames on the studio canvas. Pass { frames: [...] }, applied in order, so a later frame can use the @label of an earlier one. Each item: frame (id or @label to move; leave out to add), label, path (the page it shows), viewport or width/height, and one of below / rightOf / leftOf / above (another frame id or @label) with gap (default 80), or absolute x/y. With no placement a new frame goes to the right of all frames. Returns the placed frames and a warnings list when frames overlap.',
+    TOOL_SHORT.canvas_place,
     { frames: z.array(placeSchema).min(1).max(12) },
     (args) => runCanvasPlace(deps, args.frames),
   );
 
   const canvasPointTool = tool(
     'canvas_point',
-    'Show the user one frame: the studio makes the frame live, selects the element when you pass a CSS selector for an element inside that frame, and scrolls and zooms the canvas to it. Use it to say "this one" at the end of a reply.',
+    TOOL_SHORT.canvas_point,
     { frame: frameRef.describe('Frame id or @label.'), selector: z.string().max(400).optional() },
     (args) => runCanvasPoint(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -462,7 +470,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const listLinksTool = tool(
     'list_links',
-    'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
+    TOOL_SHORT.list_links,
     {},
     () => runListLinks(deps),
     { annotations: { readOnlyHint: true } },
@@ -470,14 +478,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const editLinksTool = tool(
     'edit_links',
-    'Add, replace or remove prototype links and set the Play start frame. add: [{fromFrame, selector, toFrame, transition?}] links the element (CSS selector on the page of fromFrame, which must exist on the rendered page) to toFrame (frame id or @label, or "back"); transition is instant, dissolve, slide-left or slide-right. A new link on the same element replaces the old one. remove: link ids. startFrame: frame id or @label. Links live in the studio, not in the page code.',
+    TOOL_SHORT.edit_links,
     editLinksShape,
     (args) => runEditLinks(deps, args),
   );
 
   const listFrameStatesTool = tool(
     'list_frame_states',
-    `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
+    TOOL_SHORT.list_frame_states,
     {},
     () => runListFrameStates(deps),
     { annotations: { readOnlyHint: true } },
@@ -485,7 +493,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const setFrameStateTool = tool(
     'set_frame_state',
-    `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,
+    TOOL_SHORT.set_frame_state,
     {
       frame: frameRef.describe('Frame id or @label.'),
       state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/),
@@ -496,14 +504,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const setFrameSessionTool = tool(
     'set_frame_session',
-    `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
+    TOOL_SHORT.set_frame_session,
     { user: z.object({ name: z.string().max(80), email: z.string().max(120) }).optional(), forgetCookies: z.boolean().optional() },
     (args) => runSetFrameSession(deps, args),
   );
 
   const listRouteLinksTool = tool(
     'list_route_links',
-    `Attached apps only. Read only. List the links found in the source of one app route (route pattern or concrete path): kind, href, target route, element and file:line. ${FLOW_NOTE}`,
+    TOOL_SHORT.list_route_links,
     { route: z.string().min(1).max(300) },
     (args) => runListRouteLinks(deps, args.route),
     { annotations: { readOnlyHint: true } },
@@ -511,7 +519,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const addFlowTool = tool(
     'add_flow',
-    `Attached apps only. Lay out route frames left to right with the same code as Flow in the studio, and make prototype links from the links in their source. routes: routes in order; or from: a route or frame id/@label, with depth (default 1) to add the routes it links to. params: sample values for dynamic segments. ${FLOW_NOTE}`,
+    TOOL_SHORT.add_flow,
     {
       routes: z.array(z.string().min(1).max(300)).max(12).optional(),
       from: z.string().min(1).max(300).optional(),
@@ -523,21 +531,21 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const editElementTool = tool(
     'edit_element',
-    'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
-    editElementShape,
+    TOOL_SHORT.edit_element,
+    agentEditElementShape,
     withLayerIds(deps, (args) => runEditElement(deps, args)),
   );
 
   const setTokenTool = tool(
     'set_token',
-    'Change one design token value with the same code as the studio Tokens panel: design-system/tokens.json (tokens.css is rebuilt) in a studio design system, or only that declaration in the app token CSS file of an imported app (Tailwind @theme, :root or .dark). theme dark changes the dark value. Use it instead of editing tokens.json or the token CSS by hand when you change a token value.',
+    TOOL_SHORT.set_token,
     setTokenShape,
     (args) => runSetToken(deps, args),
   );
 
   const prepareShipTool = tool(
     'prepare_ship',
-    'Attached app projects only. Read only. Lists the files the studio changed since the last ship (or since the app was attached), the files that cannot ship (secrets, .env, conflicts with the user\'s own changes) and the default branch name and pull request text. You cannot ship; only the user can, with the Ship button.',
+    TOOL_SHORT.prepare_ship,
     {},
     () => runPrepareShip(deps),
     { annotations: { readOnlyHint: true } },
@@ -545,14 +553,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const setPropsTool = tool(
     'set_props',
-    'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
+    TOOL_SHORT.set_props,
     setPropsShape,
     withLayerIds(deps, (args) => runSetProps(deps, args)),
   );
 
   const findStylesTool = tool(
     'find_styles',
-    'Read only. List the colors, font sizes, radii and spacing used on the page (or one canvas frame) with element counts and whether each value is a token, raw or mixed, like the inspector Selection colors panel. With value (and property) it lists the elements that use that computed value; inherited values count only on the element that sets them.',
+    TOOL_SHORT.find_styles,
     findStylesShape,
     (args) => runFindStyles(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -560,24 +568,24 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const replaceStyleTool = tool(
     'replace_style',
-    'Replace one style value with a token on every element of the page (or frame) that uses it, with the same code as "Replace with token…" in the studio inspector. token is a CSS variable or, in a Tailwind project, a theme class; Tailwind projects get classes, not inline style. Elements made by .map(), elements with a className built in code, and shared elements where only some copies use the value are skipped and counted. Use it to move raw values such as #1c1f23 or p-[13px] to tokens.',
+    TOOL_SHORT.replace_style,
     replaceStyleShape,
     (args) => runReplaceStyle(deps, args),
   );
 
   const arrangeTool = tool(
     'arrange',
-    'Align, distribute or tidy up sibling elements like Figma, with the same code as the studio arrange bar. In a flex parent it writes the parent layout (align-items, justify-content, gap) or align-self on some children; in a grid justify-items or align-items; absolute children move by left/top. align and distribute in a parent with no auto layout are refused; tidy adds auto layout (flex, gap) to it. Tailwind projects get classes. Pass one of align, distribute or tidy.',
+    TOOL_SHORT.arrange,
     arrangeShape,
     (args) => runArrange(deps, args),
   );
 
-  const selectMatchingTool = tool('select_matching', SELECT_MATCHING_DESCRIPTION, selectMatchingShape, (args) => runSelectMatching(deps, args), { annotations: { readOnlyHint: true } });
-  const diffVersionsTool = tool('diff_versions', DIFF_VERSIONS_DESCRIPTION, diffVersionsShape, (args) => runDiffVersions({ runsDir: deps.runsDir, headVersionId: deps.ctx.direction.headVersionId }, args), { annotations: { readOnlyHint: true } });
+  const selectMatchingTool = tool('select_matching', TOOL_SHORT.select_matching, selectMatchingShape, (args) => runSelectMatching(deps, args), { annotations: { readOnlyHint: true } });
+  const diffVersionsTool = tool('diff_versions', TOOL_SHORT.diff_versions, diffVersionsShape, (args) => runDiffVersions({ runsDir: deps.runsDir, headVersionId: deps.ctx.direction.headVersionId }, args), { annotations: { readOnlyHint: true } });
 
   const measureTool = tool(
     'measure',
-    'Read only. Measure the distance between two elements on the live page, like holding Alt in the studio: boxes, relation, horizontal and vertical gap, inset when one is inside the other, center offset and guide lines.',
+    TOOL_SHORT.measure,
     measureShape,
     (args) => runMeasure(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -585,7 +593,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const reviewFrameTool = tool(
     'review_frame',
-    'Run the studio Review panel checks on one canvas frame of the live page: color contrast with the nearest passing color token, tap target size, missing alt text and other axe-core rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values) and clipped or overflowing content. Returns JSON findings with severity, element, selector, source, message and directFix (the exact style for edit_element) or null when the fix needs judgment. Read only.',
+    TOOL_SHORT.review_frame,
     reviewFrameShape,
     withLayerIds(deps, (args) => runReviewFrameTool(deps, args)),
     { annotations: { readOnlyHint: true } },
@@ -593,28 +601,28 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const insertComponentTool = tool(
     'insert_component',
-    'Insert one instance of a React component from the project library with the same code as the studio Components panel: it writes <Name …>Text</Name> inside (as the last child) or after the target element, fills required props from the props type, and adds or extends the import line with the path the project uses (workspace package such as @workspace/ui/components/button, tsconfig path, or relative). Find the target by targetSelector on the live page or targetSource (file:line:col). Targets made by .map() or shown by a condition, and the top element of a component, are refused. Use it to add a library component; use Edit for other new markup.',
+    TOOL_SHORT.insert_component,
     insertComponentShape,
     withLayerIds(deps, (args) => runInsertComponent(deps, args)),
   );
 
   const insertJsxTool = tool(
     'insert_jsx',
-    'Insert a group of elements in one step with the same server code as the MCP insert_jsx tool and the studio Paste JSX menu: a JSX snippet (HTML in an HTML project) inside, before, after or in place of the target. Component tags that the file does not import are found in the project library and their import lines are added or extended. The snippet keeps its line breaks and gets the file indent. Markup only: text, string props, numbers, style objects and references to names the file has; functions, calls (hooks), conditions, .map() and spreads are refused. Targets made by .map() or a condition are refused. Use it to build a card, row or section from library components; clear_text removes stray text next to child elements.',
+    TOOL_SHORT.insert_jsx,
     insertJsxShape,
     withLayerIds(deps, (args) => runInsertJsx(deps, args)),
   );
 
   const clearTextTool = tool(
     'clear_text',
-    'Remove the plain text inside an element and keep its child elements, such as placeholder text next to children you inserted. On a library component it clears the text where the page uses it. Text from a prop or a { } expression stays.',
+    TOOL_SHORT.clear_text,
     clearTextShape,
     withLayerIds(deps, (args) => runClearText(deps, args)),
   );
 
   const listComponentsTool = tool(
     'list_components',
-    'Read only. Find the React components of the project with the same server code as the MCP list_components tool and the studio Components panel: shared workspace packages (the kit, such as packages/ui) first, then app components by use count. Each item has source (package or app), file, folder, parts (other components of the same file, such as CardHeader for Card), a ready import line, a minimal JSX example, the use count and the props schema with cva variants and their options. query searches names, then folders and files, then props and variants. Pages hold 20 items; pass nextCursor as cursor for the next page. Use the names in insert_jsx or insert_component and the variant options in set_props.',
+    TOOL_SHORT.list_components,
     listComponentsShape,
     (args) => runListComponents(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -622,7 +630,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const getLayersTool = tool(
     'get_layers',
-    'Read only. List the elements of the rendered page (or one canvas frame) as a compact tree with the same server code as the MCP get_layers tool: one line per element with a layer id, tag, <Component> when the element is the root of a component use, source file:line, a text preview and "+N inside" when deeper levels are cut. A layer id (such as "e0k3pz") works in place of a CSS selector in selector or targetSelector of edit_element, set_props, insert_component, insert_jsx, clear_text and review_frame; the page of the id is used when you leave out path. Ids come from the source location, so they stay the same after edits while that JSX stays on the same line. Use root to list one part of the page.',
+    TOOL_SHORT.get_layers,
     getLayersShape,
     (args) => runGetLayers(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -630,7 +638,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const listCommentsTool = tool(
     'list_comments',
-    'Read only. List the comments pinned on this direction with the same server code as the studio Comments pane and the MCP list_comments tool: number, author (an outside agent or the user), text, replies, element (selector, source file:line, component), frame and status. status: open (default), all or one status; frame: frame id, @label or page path.',
+    TOOL_SHORT.list_comments,
     listCommentsShape,
     (args) => runListComments(deps, args),
     { annotations: { readOnlyHint: true } },
@@ -638,14 +646,14 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const resolveCommentTool = tool(
     'resolve_comment',
-    'Mark one pinned comment resolved, with the same code as Resolve in the studio Comments pane. Use it only when the user asks you to resolve a comment; after a run the user resolves the comments you fixed with the Resolve button. comment: id or number.',
+    TOOL_SHORT.resolve_comment,
     resolveCommentShape,
     (args) => runResolveComment(deps, args),
   );
 
   const getRunContextTool = tool(
     'get_run_context',
-    'Read only. Read the repo context of this run again with the same server code as the MCP get_run_context tool: the app folder and workspace root AGENTS.md, CLAUDE.md, DESIGN.md and PRODUCT.md, cut to about 8 KB, secret-looking lines left out. The run message already has it as <repo_context>; call this only when you need the file list or a fresh copy.',
+    TOOL_SHORT.get_run_context,
     getRunContextShape,
     () => runGetRunContext(deps),
     { annotations: { readOnlyHint: true } },
@@ -653,7 +661,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const appDoctorTool = tool(
     'app_doctor',
-    APP_DOCTOR_DESCRIPTION,
+    TOOL_SHORT.app_doctor,
     { fresh: z.boolean().optional() },
     (args) => runAppDoctor(deps, args.fresh === true),
     { annotations: { readOnlyHint: true } },
@@ -661,15 +669,25 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const componentPreviewTool = tool(
     'component_preview',
-    'Read only. Render one component of the project library alone with its default props, with the same server code as the studio Components panel tiles and the MCP component_preview tool, and see it as an image. Use it to check what a kit component looks like before you use it. Components that need data, server code or an open state return the reason.',
+    TOOL_SHORT.component_preview,
     componentPreviewShape,
     (args) => runComponentPreview(deps, args),
     { annotations: { readOnlyHint: true } },
   );
 
-  const createComponentTool = tool('create_component', CREATE_COMPONENT_AGENT_DESCRIPTION, createComponentShape, (args) => runCreateComponent(deps, args));
+  const createComponentTool = tool('create_component', TOOL_SHORT.create_component, createComponentShape, (args) => runCreateComponent(deps, args));
 
-  const swapInstanceTool = tool('swap_instance', SWAP_INSTANCE_AGENT_DESCRIPTION, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
+  const swapInstanceTool = tool('swap_instance', TOOL_SHORT.swap_instance, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool] });
+  const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode);
+  const helpTool = tool(HELP_TOOL, TOOL_SHORT.studio_help, { tool: z.string().trim().max(40).describe('Tool name without the mcp__studio__ prefix.') }, async (args) => ({ content: [{ type: 'text' as const, text: studioHelp(args.tool, allowed) }] }), { annotations: { readOnlyHint: true } });
+  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, helpTool];
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: all.filter((entry) => allowed.has(entry.name)) });
+}
+
+export function studioHelp(name: string, allowed: ReadonlySet<string>): string {
+  const short = name.replace(/^mcp__studio__/, '');
+  if (!allowed.has(short) || short === HELP_TOOL) return `No studio tool ${short} in this run. Tools: ${[...allowed].filter((entry) => entry !== HELP_TOOL).join(', ')}.`;
+  return TOOL_HELP[short as Exclude<StudioToolName, 'studio_help'>];
+
 }

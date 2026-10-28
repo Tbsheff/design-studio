@@ -3,7 +3,7 @@ import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contract
 import { reorderMoveOf } from '../../shared/reorder';
 import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
 import { IS_MAC, tipWithKey } from '../commands/keys';
-import { ancestorsOf, cleanName, dropTarget, editableName, layerDrop, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
+import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
 import type { LayerDrop } from '../structureEdits';
 import { Icon } from './Icon';
 import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
@@ -206,12 +206,11 @@ interface DragHandlers {
 
 function rowDrop(rows: LayerNode[], id: number, y: number, handlers: DragHandlers): RowDrop | null {
   const { onDrop, onMove } = handlers;
-  if (onDrop) {
-    const target = layerDrop(rows, id, y, ROW);
-    return target ? { line: target.line, into: target.into, commit: () => onDrop(id, target.drop) } : null;
-  }
-  const target = dropTarget(rows, id, y, ROW);
-  return target && onMove ? { line: target.line, into: null, commit: () => onMove(id, target.move) } : null;
+  const target = onDrop ? layerDrop(rows, id, y, ROW) : null;
+  if (onDrop && target?.into != null) return { line: null, into: target.into, commit: () => onDrop(id, target.drop) };
+  const swap = onMove ? (onDrop ? adjacentMove : dropTarget)(rows, id, y, ROW) : null;
+  if (swap && onMove) return { line: swap.line, into: null, commit: () => onMove(id, swap.move) };
+  return target && onDrop ? { line: target.line, into: null, commit: () => onDrop(id, target.drop) } : null;
 }
 
 function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>, handlers: DragHandlers) {

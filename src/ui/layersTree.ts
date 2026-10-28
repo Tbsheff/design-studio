@@ -155,7 +155,7 @@ export function cleanName(value: string): string {
   return value.replace(UNSAFE_NAME_CHARS, '').slice(0, LAYER_LABEL_MAX);
 }
 
-const NO_CHILD_TAGS = new Set(['img', 'input', 'br', 'hr', 'textarea', 'select', 'video', 'audio', 'iframe', 'canvas', 'meta', 'link', 'source', 'track', 'wbr', 'area', 'col', 'embed']);
+const CONTAINER_TAGS = new Set(['div', 'section', 'main', 'article', 'aside', 'header', 'footer', 'nav', 'form', 'ul', 'ol', 'li', 'figure', 'body']);
 const EDGE_ZONE = 0.25;
 
 export interface LayerDropTarget {
@@ -178,7 +178,17 @@ export function layerDrop(rows: LayerNode[], id: number, y: number, rowHeight: n
   const row = rows[index];
   if (from < 0 || !row || (index >= from && index < subtreeEnd(rows, from))) return null;
   const frac = y / rowHeight - index;
-  const canHold = !NO_CHILD_TAGS.has(row.tag);
+  const canHold = row.childCount > 0 || (CONTAINER_TAGS.has(row.tag) && row.text === '');
   if (canHold && frac > EDGE_ZONE && frac < 1 - EDGE_ZONE) return { drop: { into: row.id }, line: null, into: row.id };
   return edgeDrop(rows, index, frac >= 0.5, rowHeight);
+}
+
+export function adjacentMove(rows: LayerNode[], id: number, y: number, rowHeight: number): DropTarget | null {
+  const from = rows.findIndex((r) => r.id === id);
+  const index = Math.floor(y / rowHeight);
+  const prev = from < 0 ? null : siblingRow(rows, from, -1);
+  const next = from < 0 ? null : siblingRow(rows, from, 1);
+  const onPrev = prev !== null && index >= prev && index < from;
+  const onNext = next !== null && index >= next && index < subtreeEnd(rows, next);
+  return onPrev || onNext ? dropTarget(rows, id, y, rowHeight) : null;
 }

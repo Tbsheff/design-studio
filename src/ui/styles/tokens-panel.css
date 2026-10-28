@@ -488,3 +488,14 @@
 .cmp-ghost-hint.bad {
   color: var(--danger);
 }
+
+.cmp-thumb.cmp-preview {
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  padding: var(--s-1);
+  box-sizing: border-box;
+}
+
+.cmp-thumb.cmp-preview img {
+  justify-self: center;
+  align-self: center;
+}

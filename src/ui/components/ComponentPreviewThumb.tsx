@@ -52,7 +52,7 @@ export function ComponentPreviewThumb({ projectId, directionId, id, version, act
     if (src) URL.revokeObjectURL(src);
   }, [src]);
   return (
-    <span ref={ref} className={`cmp-thumb ${shown.state === 'idle' ? 'loading' : shown.state} ${className}`} aria-hidden="true" data-testid="component-preview" data-state={shown.state} {...(shown.state === 'none' ? { 'data-tip': shown.reason } : {})}>
+    <span ref={ref} className={`cmp-thumb cmp-preview ${shown.state === 'idle' ? 'loading' : shown.state} ${className}`} aria-hidden="true" data-testid="component-preview" data-state={shown.state} {...(shown.state === 'none' ? { 'data-tip': shown.reason } : {})}>
       {src ? <img src={src} alt="" draggable={false} /> : shown.state === 'none' ? <Icon name="component" size={20} /> : null}
     </span>
   );

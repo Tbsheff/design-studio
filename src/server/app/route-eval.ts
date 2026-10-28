@@ -4,6 +4,7 @@ import path from 'node:path';
 import type * as t from '@babel/types';
 import { loadTypeScript, parseModuleFile, resolveImport } from '../components/props-schema.js';
 import { walkNodes } from '../direct-edit/text-source-files.js';
+import { hasWorkspaceMarker } from './workspace-root.js';
 
 export const UNKNOWN = '[*]';
 const MAX_EVAL_DEPTH = 48;
@@ -98,7 +99,7 @@ async function workspacePackages(start: string): Promise<Map<string, string>> {
   const found = new Map<string, string>();
   let dir = start;
   for (let up = 0; up < 6; up += 1) {
-    if (existsSync(path.join(dir, 'pnpm-workspace.yaml')) || existsSync(path.join(dir, 'turbo.json'))) break;
+    if (hasWorkspaceMarker(dir)) break;
     const parent = path.dirname(dir);
     if (parent === dir) return found;
     dir = parent;

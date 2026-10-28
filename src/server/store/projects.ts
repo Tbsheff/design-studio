@@ -9,6 +9,7 @@ import type { AttachAppRequest, AttachedApp, Attachment, Direction, Project, Pro
 import type { ProjectStore, ServerConfig, VersionStore } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from './errors.js';
 import { cleanAppDir, detectApp, frameworkOf } from '../app/detect.js';
+import { nextAppWorkspace } from '../app/workspace-root.js';
 import { MAX_SLUG_SUFFIX, slugCandidate, slugify } from '../../shared/folders.js';
 import { createKeyedMutex } from './mutex.js';
 import { packagedResource, resourcePath } from '../resources.js';
@@ -191,6 +192,14 @@ async function pickAppDir(folder: string, requested: string | undefined): Promis
   const pkg = (await readJson(path.join(appRoot, 'package.json')).catch(() => null)) as Record<string, unknown> | null;
   if (frameworkOf(pkg) !== 'next') throw new BadRequestError(`${appDir} has no next dependency in its package.json`);
   return appDir;
+}
+
+async function workspaceAppDir(folder: string, requested: string | undefined): Promise<{ root: string; appDir: string } | null> {
+  const sub = typeof requested === 'string' && requested.trim() !== '' ? cleanAppDir(requested) : '.';
+  if (sub === null) return null;
+  const target = await realpath(path.join(folder, sub)).catch(() => null);
+  const workspace = target ? await nextAppWorkspace(target) : null;
+  return workspace && workspace.root !== folder ? { root: workspace.root, appDir: workspace.appDir } : null;
 }
 
 export function createProjectStore(
@@ -383,10 +392,12 @@ export function createProjectStore(
 
     async attachApp(input: AttachAppRequest): Promise<Project> {
       if (typeof input.folder !== 'string' || input.folder.trim() === '') throw new BadRequestError('folder is required: the app code must be on this computer so routes and click-to-source can read it');
-      const folder = await resolveUserFolder(input.folder);
+      const opened = await resolveUserFolder(input.folder);
+      const workspace = await workspaceAppDir(opened, input.appDir);
+      const folder = workspace ? await resolveUserFolder(workspace.root).catch(() => opened) : opened;
       const url = typeof input.url === 'string' && input.url.trim() !== '' ? cleanAppUrl(input.url) : undefined;
       const env = cleanAppEnv(input.env);
-      const appDir = await pickAppDir(folder, input.appDir);
+      const appDir = await pickAppDir(folder, folder === opened ? input.appDir : workspace?.appDir);
       const app: AttachedApp = { framework: 'next', appDir, mode: url ? 'url' : 'managed', ...(url ? { url } : {}), ...(env ? { env } : {}) };
       const existing = (await this.list()).find((project) => project.app && project.imported?.sourcePath === folder && project.app.appDir === appDir);
       if (existing) return updateApp(existing.id, app, input.env === undefined);

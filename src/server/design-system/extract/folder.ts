@@ -6,7 +6,10 @@ import { matchName } from './names.js';
 import type { ValueKind } from './names.js';
 import { TokensFileError, harvestTokensFile } from './tokens-file.js';
 import type { Candidate, Harvest } from './types.js';
-import { candidate, candidatesFromVars } from './vars.js';
+import { candidate, harvestCssVars } from './vars.js';
+import { findTokenFile, safeFileInside } from '../app-tokens/detect.js';
+import { readCssTokens } from '../app-tokens/read-css.js';
+import { buildAppTokens } from '../app-tokens/tokens.js';
 import { normalizeColor } from './values.js';
 import { flattenJs, objectAfter } from './js-literal.js';
 
@@ -178,11 +181,25 @@ async function resolveRoot(folderPath: string): Promise<string> {
   return root;
 }
 
+async function absorbTokenFile(root: string, acc: ScanAccumulator): Promise<string | null> {
+  const relative = await findTokenFile(root).catch(() => null);
+  const file = relative ? await safeFileInside(root, relative) : null;
+  if (!relative || !file) return null;
+  for (const token of buildAppTokens(readCssTokens(await readFile(file, 'utf8')))) {
+    if (token.light) acc.props.root.set(token.name, token.light.value);
+    if (token.dark) acc.props.dark.set(token.name, token.dark.value);
+  }
+  acc.read.push(relative);
+  return file;
+}
+
 export async function scanFolder(folderPath: string, limits: FolderLimits = FOLDER_LIMITS): Promise<FolderScan> {
   const root = await resolveRoot(folderPath);
   const { files, skipped } = await collect(root, limits);
   const acc: ScanAccumulator = { props: { root: new Map(), dark: new Map() }, candidates: [], read: [], skipped };
-  await readMatched(root, files, limits, acc);
-  const candidates = [...candidatesFromVars(acc.props, 'folder', path.basename(root)), ...acc.candidates];
-  return { harvest: { source: 'folder', label: root, candidates }, files: acc.read, skipped: acc.skipped };
+  const main = await absorbTokenFile(root, acc);
+  await readMatched(root, files.filter((item) => item.file !== main), limits, acc);
+  const vars = harvestCssVars(acc.props, 'folder', path.basename(root));
+  const candidates = [...vars.candidates, ...acc.candidates];
+  return { harvest: { source: 'folder', label: root, candidates, extras: vars.extras }, files: acc.read, skipped: acc.skipped };
 }

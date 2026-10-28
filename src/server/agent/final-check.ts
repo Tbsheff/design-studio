@@ -2,9 +2,9 @@ import type { FinalCheck, RenderCheckResult } from '../../shared/contracts.js';
 import type { PreviewService, AgentRunContext } from '../types.js';
 import { buildCheckReport, saveCheck, type RunToolState } from './check-tool.js';
 import { countSeverities } from '../preview/quality.js';
-import { EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL } from './permissions.js';
+import { EDIT_ELEMENT_TOOL, SET_PROPS_TOOL, SET_TOKEN_TOOL } from './permissions.js';
 
-const EDIT_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL]);
+const EDIT_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL]);
 const CHECK_TOOL = 'mcp__studio__render_check';
 
 export function verifiedAfterLastEdit(toolOrder: readonly string[]): boolean {

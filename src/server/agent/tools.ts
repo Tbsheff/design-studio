@@ -17,6 +17,7 @@ import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type Canva
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
+import { runSetProps, setPropsShape } from './props-tool.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -328,5 +329,12 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool] });
+  const setPropsTool = tool(
+    'set_props',
+    'Change the props of one React component instance with the same code as the studio inspector Component section: it adds, replaces or removes JSX attributes at the use site, such as <Button variant="outline"> to variant="destructive" or size="sm", and leaves every other byte as it was. Find the instance by selector (an element inside it on the live page) or source (file:line:col of the JSX tag). Use it for a variant, size or flag change on a component; use Edit for new markup.',
+    setPropsShape,
+    (args) => runSetProps(deps, args),
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool] });
 }

@@ -1,8 +1,8 @@
 import type { CheckViewport, QualityFinding, QualitySeverity } from '../../shared/contracts.js';
 import type { ResolvedRunConfig } from '../../shared/run-levels.js';
-import { EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL } from './permissions.js';
+import { EDIT_ELEMENT_TOOL, SET_PROPS_TOOL, SET_TOKEN_TOOL } from './permissions.js';
 
-const EDIT_TOOL_NAMES = new Set(['Write', 'Edit', 'MultiEdit', EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL]);
+const EDIT_TOOL_NAMES = new Set(['Write', 'Edit', 'MultiEdit', EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL]);
 export const MAX_FIX_LOOPS = 3;
 const MIN_BUDGET_LEFT = 0.2;
 const MAX_CONTINUATIONS = 4;

@@ -257,6 +257,29 @@ direct edit (inspector, batch, MCP edit_element, agent edit_element) → planDir
 - `GET /api/projects/:pid/d/:did/classes?file&line&col` → `{tailwind}`; the inspector shows it as a read-only Classes line under the meta row (`InspectorClasses.tsx`), with the note of the last edit.
 - Copy as Tailwind (`export/copy-code.ts`) runs the computed styles through the same mapper (`tailwind/copy.ts`) with the project theme, or the default v4 theme.
 
+### Component props (instance panel)
+
+```
+bridge selection.owners (component-owner.ts: React fibers up .return, tags 0/1/11/14/15, name + _debugStack, ≤6)
+  → POST /d/:did/props/instance {owners, usedAt?, use?}
+  → use-site.ts: first app frame of each stack (no node_modules, .vite) → pathname on the direction's own Vite origin
+       → inline source map (source-map-js) → line → uppercase JSX element on that line (name match, column nearest)
+       attached Next apps: selection.usedAt
+  → props-schema.ts: import resolved with the TS compiler API (tsconfig paths), barrel re-exports ≤3 hops, inside the work tree
+       cva() (Babel): variants, defaultVariants, linked by the xVariants( call in the component body
+       own props (TS checker on the first call-signature param): declared in the work tree, not node_modules;
+       boolean → toggle, string-literal union → select, string/ReactNode → text, number; cache by file mtime
+  → ComponentInstance {use, component, values (literal attributes), dynamic, spread, uses}
+POST /d/:did/props {source, props} → direct-edit/props.ts: replace / add (new line at the same indent on multiline tags) / remove
+  the attribute; a value equal to the default (or false with no default) removes it; expressions → attribute_not_literal
+POST /d/:did/props/variant-classes {file, cva, prop, value, style?, classes?} → the variant string literal as a ClassSite → tailwind decideClassEdit
+```
+
+- Both writes are normal direct edits: direction lock, run check, one version, one history record, `publishVersion`.
+- UI: lazy `InspectorProps.tsx` at the top of the Simple tab; "Edit variant styles" warns that it changes every use.
+- MCP `list_components` (read-only hint, listed with the edit tools) and `set_props {selector | source, props}` (headless probe `owner-probe.ts`, then the same routes; feed row "Set Button variant secondary"). Agent `mcp__studio__set_props` uses `planSetProps` and writes without a version, like `edit_element`.
+- TypeScript loads on the first schema read (`import('typescript')`); without it only cva variants show.
+
 ### Edit history (Round 4)
 
 ```

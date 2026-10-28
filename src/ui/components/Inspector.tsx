@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import type { EditSessionEnd, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import type { DesignTokens } from '../useDesignSystemState';
@@ -10,6 +10,8 @@ import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
 import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import '../styles/inspector-edit.css';
+
+const InspectorProps = lazy(() => import('./InspectorProps'));
 
 export type InspectorTab = 'simple' | 'pro' | 'code' | 'tweaks';
 
@@ -166,12 +168,27 @@ function Tabs({ tab, onTab }: { tab: InspectorTab; onTab: (tab: InspectorTab) =>
   );
 }
 
+function ComponentSection(props: InspectorProps) {
+  const target = props.selection[0];
+  if (props.selection.length !== 1 || !target || !props.directionId || (!target.owners?.length && !target.usedAt)) return null;
+  return (
+    <Suspense fallback={null}>
+      <InspectorProps key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} />
+    </Suspense>
+  );
+}
+
 function SimpleTab(props: InspectorProps) {
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
-  return <SimpleEditor key={target.selector} {...props} target={target} />;
+  return (
+    <>
+      <ComponentSection {...props} />
+      <SimpleEditor key={target.selector} {...props} target={target} />
+    </>
+  );
 }
 
 function ProTab(props: InspectorProps) {

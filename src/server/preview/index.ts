@@ -14,6 +14,7 @@ import type { ViteManager, ViteTarget } from './vite-manager.js';
 import { WatcherManager } from './watcher.js';
 import { AppServers } from '../app/dev-server.js';
 import { createAppProxy, type AppTarget } from '../app/proxy.js';
+import { sourcesShifted } from '../app/source-map.js';
 
 interface PreviewServiceDeps {
   config: ServerConfig;
@@ -100,7 +101,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       ?.then((manager) => manager.notifyChanged(`d:${change.projectId}:${change.directionId}`, files))
       .catch(() => undefined);
   };
-  const watchers = new WatcherManager({ bus, projects, versions, onChanged: forwardToVite });
+  const appSourcesShifted = (change: { projectId: string; root: string; paths: string[] }): boolean => {
+    const upstream = apps.upstreamOf(change.projectId);
+    return upstream ? sourcesShifted(upstream, change.root, change.paths) : false;
+  };
+  const watchers = new WatcherManager({ bus, projects, versions, onChanged: forwardToVite, needsReload: appSourcesShifted });
   const vite = lazily<ViteManager>(async () => {
     const { ViteManager: Manager } = await import('./vite-manager.js');
     return new Manager({ bus, vitePortBase: config.vitePortBase, bridgeScript: loadBridgeScript });

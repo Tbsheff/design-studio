@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SourceMapConsumer, type RawSourceMap } from 'source-map-js';
@@ -34,6 +34,7 @@ const cache = new Map<string, string | null>();
 const MAP_TTL_MS = 30_000;
 const MAX_MAPS = 200;
 const chunkMaps = new Map<string, { consumer: Promise<SourceMapConsumer | null>; at: number }>();
+const lineCounts = new Map<string, number>();
 
 export function parseStack(stack: string): StackFrame[] {
   const frames: StackFrame[] = [];
@@ -143,6 +144,39 @@ function remember(key: string, value: string | null): void {
   cache.set(key, value);
 }
 
+function countLines(file: string): number | null {
+  try {
+    return readFileSync(file, 'utf8').split('\n').length;
+  } catch {
+    return null;
+  }
+}
+
+function rememberLines(target: SourceTarget, relative: string): void {
+  const key = path.join(target.workTree, relative);
+  if (lineCounts.has(key)) return;
+  const count = countLines(key);
+  if (count !== null) lineCounts.set(key, count);
+}
+
+export function sourcesShifted(upstream: string, root: string, paths: string[]): boolean {
+  let shifted = false;
+  for (const relative of paths) {
+    const key = path.join(root, relative);
+    const before = lineCounts.get(key);
+    if (before === undefined) continue;
+    const after = countLines(key);
+    if (after === before) continue;
+    if (after === null) lineCounts.delete(key);
+    else lineCounts.set(key, after);
+    shifted = true;
+  }
+  if (!shifted) return false;
+  for (const key of cache.keys()) if (key.startsWith(`${upstream}|`)) cache.delete(key);
+  for (const url of chunkMaps.keys()) if (url.startsWith(upstream)) chunkMaps.delete(url);
+  return true;
+}
+
 export async function resolveStackSources(target: SourceTarget, stacks: string[], previewOrigin: string): Promise<(string | null)[]> {
   const parsed = stacks.map((stack) => parseStack(stack).map((frame) => ({ ...frame, file: toUpstream(frame.file, previewOrigin, target.upstream) })));
   const unknown = new Map<string, StackFrame>();
@@ -158,6 +192,7 @@ export async function resolveStackSources(target: SourceTarget, stacks: string[]
         const file = original && !original.ignored && original.file ? workTreeRelative(target, original.file) : null;
         const line = original?.line1 ?? null;
         const col = original?.column1 ?? null;
+        if (file) rememberLines(target, file);
         remember(`${target.upstream}|${keyOf(frame)}`, file && line ? `${file}:${line}:${col ?? 1}` : null);
       });
     }),

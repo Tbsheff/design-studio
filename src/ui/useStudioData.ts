@@ -23,6 +23,7 @@ export interface FilesChange {
   changedAt: number;
   receivedAt: number;
   paths: string[];
+  reload?: boolean;
 }
 
 interface StudioData {
@@ -165,7 +166,7 @@ export function useStudioData(projectId: string): StudioData {
       switch (event.type) {
         case 'files.changed':
           if (live && event.directionId)
-            setLastChange({ directionId: event.directionId, changedAt: event.changedAt, receivedAt: Date.now(), paths: event.paths });
+            setLastChange({ directionId: event.directionId, changedAt: event.changedAt, receivedAt: Date.now(), paths: event.paths, ...(event.reload ? { reload: true } : {}) });
           break;
         case 'version.created':
           if (event.version.directionId === directionRef.current)

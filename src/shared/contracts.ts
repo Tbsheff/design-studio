@@ -566,7 +566,7 @@ export type StudioEventBody =
   | { type: 'run.usage'; runId: string; contextTokens: number }
   | { type: 'run.retry'; runId: string; attempt: number; max: number; delayMs: number; error: string }
   | { type: 'run.finished'; runId: string; summary: RunSummary }
-  | { type: 'files.changed'; paths: string[]; changedAt: number }
+  | { type: 'files.changed'; paths: string[]; changedAt: number; reload?: boolean }
   | { type: 'version.created'; version: Version }
   | { type: 'direction.updated'; direction: Direction }
   | { type: 'status.changed'; status: WorkTreeStatus }

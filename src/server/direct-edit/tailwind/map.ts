@@ -1,5 +1,5 @@
 import { colorDistance, parseColor, type ParsedColor } from './color.js';
-import type { Side, SidedGroup, SideValue, SingleGroup } from './classes.js';
+import type { Classified, Side, SidedGroup, SideValue, SingleGroup } from './classes.js';
 import type { TailwindTheme, ThemeNamespace } from './theme.js';
 import { emValue, lengthToPx, percent, plainNumber } from './units.js';
 
@@ -455,4 +455,25 @@ export function cssEdits(prop: string, value: string | null, theme: TailwindThem
 export function cssClass(prop: string, value: string, theme: TailwindTheme): string | null {
   const group = SINGLE_PROPS[prop];
   return group ? singleToken(prop, value, theme) : null;
+}
+
+const GAP_SIDE: Partial<Record<Side, string>> = { x: 'column-gap', y: 'row-gap' };
+const SHORTHAND: Partial<Record<SidedGroup, string>> = { padding: 'padding', margin: 'margin', gap: 'gap', radius: 'border-radius' };
+
+function sidedProps(group: SidedGroup, sides: Side[]): string[] {
+  const props = sides.flatMap((side) => {
+    if (group === 'gap') return [GAP_SIDE[side] ?? ''];
+    return Object.entries(BOX_PROPS)
+      .filter(([, [boxGroup, boxSide]]) => boxGroup === group && boxSide === side)
+      .map(([prop]) => prop);
+  });
+  const shorthand = SHORTHAND[group];
+  return [...props, ...(shorthand ? [shorthand] : [])].filter(Boolean);
+}
+
+export function classProps(cls: Classified): string[] {
+  if (cls.kind === 'sided') return sidedProps(cls.group, cls.sides);
+  return Object.entries(SINGLE_PROPS)
+    .filter(([, group]) => group === cls.group)
+    .map(([prop]) => prop);
 }

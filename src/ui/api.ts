@@ -47,6 +47,7 @@ import {
   type WorkTreeStatus,
 } from '../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../shared/folders';
+import type { VariantSupport } from '../shared/variants';
 import type { CanvasFile } from '../shared/canvas-file';
 
 export interface CanvasSnapshot {
@@ -222,8 +223,8 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/edit-session/${action}`, { baseVersionId }, pickMessage);
     return (await res.json()) as EditSessionEnd;
   },
-  elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
-    json<{ tailwind: TailwindOutcome | null }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
+  elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }, variant = '') =>
+    json<{ tailwind: TailwindOutcome | null; variants?: VariantSupport }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${encodeURIComponent(variant)}` : ''}`),
   elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
     json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>

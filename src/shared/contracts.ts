@@ -775,8 +775,8 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
-  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null} (the class list of the element and whether style edits write classes or inline style)',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
+  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, variants: VariantSupport} (the class list of the element and whether style edits write classes or inline style)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -977,6 +977,7 @@ export interface DirectEditRequest {
   move?: ReorderMove;
   insert?: InsertKind;
   classes?: ClassChange;
+  variant?: string;
 }
 
 export interface ClassChange {

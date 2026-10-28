@@ -8,6 +8,7 @@ import { applySplices, leadingWhitespaceStart, type Splice } from './splice.js';
 import { htmlNameSplice, htmlPositionAt, planHtmlMove } from './structure.js';
 import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
 import { htmlClassSite } from './tailwind/html-site.js';
+import { variantCssProps, variantCssSplices } from './variant-css.js';
 import type { TailwindOutcome } from '../../shared/contracts.js';
 
 type ParentNode = DefaultTreeAdapterMap['parentNode'];
@@ -168,11 +169,12 @@ export function htmlElementSpan(source: string, loc: SourcePosition): { start: n
 }
 
 function classOrStyleSplices(source: string, element: Element, style: Record<string, string | null>, edit: SourceEdit, theme: TailwindTheme | null): { splices: Splice[]; tailwind?: TailwindOutcome } {
-  const decision = decideClassEdit(() => htmlClassSite(source, element), style, edit.classes, theme);
+  const decision = decideClassEdit(() => htmlClassSite(source, element), style, edit.classes, theme, edit.variant ?? '');
   if (decision.kind !== 'classes') {
     const splice = Object.keys(style).length > 0 ? styleSplice(source, element, style) : null;
     return { splices: splice ? [splice] : [], ...(decision.kind === 'inline' ? { tailwind: decision.fallback.outcome } : {}) };
   }
+  if (decision.patch.variant) return { splices: decision.patch.plan.splices, tailwind: decision.patch.outcome };
   const mapped = new Set(decision.patch.inlineProps);
   const attr = element.attrs.find((entry) => entry.name === 'style');
   const present = new Set(attr ? parseDeclarations(attr.value).map((entry) => entry.prop) : []);
@@ -188,6 +190,18 @@ function classOrStyleSplices(source: string, element: Element, style: Record<str
 export function htmlClassInfo(source: string, loc: SourcePosition, theme: TailwindTheme | null): TailwindOutcome | null {
   const element = findElementAt(parse(source, { sourceCodeLocationInfo: true }), loc);
   return element ? describeSite(htmlClassSite(source, element), theme) : null;
+}
+
+function variantCssPatch(source: string, document: DefaultTreeAdapterMap['document'], element: Element, style: Record<string, string | null>, edit: SourceEdit): PatchResult {
+  if (hasClassChange(edit.classes)) throw new DirectEditError('variant_not_supported', 'This page does not use Tailwind, so classes cannot take a variant. Send style instead');
+  const splices = Object.keys(style).length > 0 && edit.variant ? variantCssSplices(source, document, element, style, edit.variant) : [];
+  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: Object.keys(style), text: false } };
+}
+
+export function htmlVariantProps(source: string, loc: SourcePosition, variant: string): string[] {
+  const document = parse(source, { sourceCodeLocationInfo: true });
+  const element = findElementAt(document, loc);
+  return element ? variantCssProps(document, element, variant) : [];
 }
 
 export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit, theme: TailwindTheme | null = null): PatchResult {
@@ -210,6 +224,7 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit,
   }
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
+  if (edit.variant && !theme) return variantCssPatch(source, document, element, style, edit);
   const classed = classOrStyleSplices(source, element, style, edit, theme);
   splices.push(...classed.splices);
   const classes = hasClassChange(edit.classes);

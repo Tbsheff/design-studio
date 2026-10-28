@@ -1,3 +1,4 @@
+import { DEFAULT_BREAKPOINTS } from '../../../shared/variants.js';
 import { createRequire } from 'node:module';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -32,6 +33,7 @@ export interface TailwindTheme {
   colors: ThemeColor[];
   colorNames: Set<string>;
   vars: Map<string, { ns: ThemeNamespace; name: string }>;
+  breakpoints: Map<string, number>;
 }
 
 const V3_DEFAULTS = `@theme default {
@@ -226,6 +228,7 @@ function emptyTheme(version: TailwindVersion): TailwindTheme {
     colors: [],
     colorNames: new Set(),
     vars: new Map(),
+    breakpoints: new Map(),
   };
 }
 
@@ -289,6 +292,14 @@ function addV3Color(theme: TailwindTheme, token: AppToken): void {
   theme.vars.set(token.name, { ns: 'color', name });
 }
 
+const BREAKPOINT_VAR = /^--breakpoint-([a-z0-9][a-z0-9-]*)$/;
+
+function addBreakpoint(theme: TailwindTheme, name: string, value: string): void {
+  const px = lengthToPx(value);
+  if (px === null) theme.breakpoints.delete(name);
+  else theme.breakpoints.set(name, px);
+}
+
 export function buildTheme(version: TailwindVersion, defaultCss: string, projectCss: string[]): TailwindTheme {
   const theme = emptyTheme(version);
   const sheets = [{ sheet: readCssTokens(defaultCss), project: false }, ...projectCss.map((css) => ({ sheet: readCssTokens(css), project: true }))];
@@ -297,13 +308,16 @@ export function buildTheme(version: TailwindVersion, defaultCss: string, project
     const inTheme = token.lights.some(isThemeDecl);
     const project = projectNames.has(token.name);
     const spot = namespaceOf(token.name);
+    const breakpoint = inTheme ? BREAKPOINT_VAR.exec(token.name)?.[1] : undefined;
     if (token.name === '--spacing' && inTheme) theme.spacingPx = lengthToPx(token.value) ?? theme.spacingPx;
+    else if (breakpoint) addBreakpoint(theme, breakpoint, token.value);
     else if (inTheme && spot) addThemeToken(theme, token, spot, project);
     else if (version === 3 && project && !spot) addV3Color(theme, token);
   }
   for (const [name, value] of Object.entries({ black: '#000', white: '#fff' })) {
     if (!theme.colorNames.has(name)) addColor(theme, name, value, false);
   }
+  if (theme.breakpoints.size === 0) for (const entry of DEFAULT_BREAKPOINTS) theme.breakpoints.set(entry.name, entry.px);
   return theme;
 }
 

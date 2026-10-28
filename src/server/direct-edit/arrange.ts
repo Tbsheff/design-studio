@@ -63,33 +63,39 @@ function refuse(message: string): DirectEditError {
 }
 
 function mappedNote(write: PlannedArrangeWrite, copies: number): string {
-  return `${write.selector} is one of ${copies} copies made by one line of code (a .map() loop), so it cannot get its own value. Ask the agent to change the data or the loop.`;
+  return `Skipped ${write.selector}: it is one of ${copies} copies made by one line of code (a .map() loop), so it cannot get its own value. Change the data or the loop in the code.`;
 }
 
-function checkCopies(writes: PlannedArrangeWrite[], copiesOf: Map<string, number>): void {
+function onlyRemovals(group: PlannedArrangeWrite[]): boolean {
+  return group.every((entry) => Object.values(entry.style).every((value) => value === null));
+}
+
+function keptGroup(group: PlannedArrangeWrite[], copies: number): PlannedArrangeWrite[] | null {
+  const first = group[0] as PlannedArrangeWrite;
+  if (copies <= 1) return group;
+  if (group.length === copies && group.every((entry) => JSON.stringify(entry.style) === JSON.stringify(first.style))) return [first];
+  if (onlyRemovals(group)) return [{ ...first, style: Object.assign({}, ...group.map((entry) => entry.style)) as Record<string, null> }];
+  return null;
+}
+
+function withoutCopies(writes: PlannedArrangeWrite[], copiesOf: Map<string, number>): { writes: PlannedArrangeWrite[]; note: string | null } {
   const byLoc = new Map<string, PlannedArrangeWrite[]>();
   for (const entry of writes) {
-    if (!entry.source) throw refuse(`${entry.selector} has no source location, so it cannot be arranged. Ask the agent to change it.`);
+    if (!entry.source) throw refuse(`${entry.selector} has no source location, so it cannot be arranged. Change it in the code.`);
     const key = locKey(entry.source);
     byLoc.set(key, [...(byLoc.get(key) ?? []), entry]);
   }
+  const kept: PlannedArrangeWrite[] = [];
+  const notes: string[] = [];
   for (const group of byLoc.values()) {
     const first = group[0] as PlannedArrangeWrite;
-    const copies = Math.max(copiesOf.get(first.selector) ?? 1, group.length);
-    if (copies <= 1) continue;
-    const same = group.every((entry) => JSON.stringify(entry.style) === JSON.stringify(first.style));
-    if (group.length < copies || !same) throw refuse(mappedNote(first, copies));
+    const copies = Math.max(copiesOf.get(first.selector) ?? 1, new Set(group.map((entry) => entry.selector)).size);
+    const keep = keptGroup(group, copies);
+    if (keep) kept.push(...keep);
+    else notes.push(mappedNote(first, copies));
   }
-}
-
-function uniqueWrites(writes: PlannedArrangeWrite[]): PlannedArrangeWrite[] {
-  const seen = new Set<string>();
-  return writes.filter((entry) => {
-    const key = entry.source ? locKey(entry.source) : entry.selector;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  if (kept.length === 0 && notes.length > 0) throw refuse(notes.join(' '));
+  return { writes: kept, note: notes.length > 0 ? notes.join(' ') : null };
 }
 
 async function siteWrite(scope: EditSiteScope, entry: PlannedArrangeWrite, probed: ProbedSource | undefined): Promise<ArrangeWrite & { request: DirectEditRequest }> {
@@ -155,10 +161,11 @@ export async function planArrange(preview: PreviewService, url: string, scope: A
   const plan = planArrangeFacts(probe.facts, request.action);
   if (!plan.ok) throw refuse(plan.reason);
   const copies = new Map(probe.facts.targets.map((target) => [target.selector, target.copies]));
-  checkCopies(plan.writes, copies);
-  const writes = await Promise.all(uniqueWrites(plan.writes).map((entry) => siteWrite(scope, entry, probe.sources.get(entry.selector))));
+  const kept = withoutCopies(plan.writes, copies);
+  const writes = await Promise.all(kept.writes.map((entry) => siteWrite(scope, entry, probe.sources.get(entry.selector))));
   const patched = await patchFiles(scope.workTree, scope.project.kind, writes.map((entry) => entry.request));
-  return { mode: plan.mode, writes: writes.map(({ request: _request, ...entry }) => entry), note: plan.note, ...patched };
+  const note = [plan.note, kept.note].filter((part): part is string => Boolean(part)).join(' ') || null;
+  return { mode: plan.mode, writes: writes.map(({ request: _request, ...entry }) => entry), note, ...patched };
 }
 
 function arrangeTitle(request: ArrangeRequest): string {

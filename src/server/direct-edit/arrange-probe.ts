@@ -58,7 +58,8 @@ function probeExpression(selectors: string[]): string {
     const sameParent = els.every((el) => el.parentElement === parentEl);
     const kids = parentEl ? Array.from(parentEl.children) : [];
     const kidSources = new Map();
-    for (const kid of kids) kidSources.set(kid, await sourceOf(kid));
+    const found = await Promise.all(kids.map((kid) => sourceOf(kid)));
+    kids.forEach((kid, i) => kidSources.set(kid, found[i]));
     const targets = [];
     for (const [i, el] of els.entries()) {
       const cs = getComputedStyle(el);

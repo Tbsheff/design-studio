@@ -205,7 +205,7 @@ function gridPlan(facts: ArrangeFacts, parent: ArrangeParentFacts, action: Arran
   if ('distribute' in action) return refuse(GRID_DISTRIBUTE);
   const gap = Math.round(mean([parent.rowGap, parent.columnGap]));
   if (Math.round(parent.rowGap) === gap && Math.round(parent.columnGap) === gap) return done('auto-layout', []);
-  return done('auto-layout', [write(parent, { gap: px(gap), 'row-gap': null, 'column-gap': null })]);
+  return done('auto-layout', [write(parent, { 'row-gap': null, 'column-gap': null }), write(parent, { gap: px(gap) })]);
 }
 
 function moveWrite(item: Item, dx: number, dy: number): PlannedArrangeWrite {

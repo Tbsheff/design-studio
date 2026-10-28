@@ -122,7 +122,8 @@ Which tool to use:
 - One small style or text change to one element: \`edit_element\`.
 - Raw colors or sizes on the page: \`find_styles\`, then \`replace_style\` with a token.
 - Align, space evenly or tidy up siblings: \`arrange\`.
-- Logic, data wiring, new files or many changes at once: Edit or Write.`;
+- Logic, data wiring, new files or many changes at once: Edit or Write.
+- Replace or place an image, or set its fit, focal point or alt text: \`mcp__studio__set_image\` (\`selector\`, \`path\` of an attached or project image or an https \`url\`, \`fit\`, \`focal\`, \`alt\`). It copies the file into the assets folder for you.`;
 
 const EDIT_REPLY_RULES = `## Replies
 Keep chat replies short: one to three sentences on what you changed, then one line on the checks you ran and what you left unfixed, as the <run-level> block asks. Never paste source code into chat.`;

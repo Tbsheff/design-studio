@@ -30,6 +30,11 @@ const KEYWORDS: Record<string, Record<string, string>> = {
   'text-transform': { uppercase: 'uppercase', lowercase: 'lowercase', capitalize: 'capitalize', none: 'normal-case' },
   'text-decoration-line': { underline: 'underline', overline: 'overline', 'line-through': 'line-through', none: 'no-underline' },
   overflow: { hidden: 'overflow-hidden', auto: 'overflow-auto', scroll: 'overflow-scroll', visible: 'overflow-visible', clip: 'overflow-clip' },
+  'object-fit': { contain: 'object-contain', cover: 'object-cover', fill: 'object-fill', none: 'object-none', 'scale-down': 'object-scale-down' },
+  'object-position': { center: 'object-center', '50% 50%': 'object-center', top: 'object-top', bottom: 'object-bottom', left: 'object-left', right: 'object-right' },
+  'background-size': { cover: 'bg-cover', contain: 'bg-contain', auto: 'bg-auto' },
+  'background-position': { center: 'bg-center', '50% 50%': 'bg-center', top: 'bg-top', bottom: 'bg-bottom', left: 'bg-left', right: 'bg-right' },
+  'background-repeat': { repeat: 'bg-repeat', 'no-repeat': 'bg-no-repeat', 'repeat-x': 'bg-repeat-x', 'repeat-y': 'bg-repeat-y' },
   'border-style': { solid: 'border-solid', dashed: 'border-dashed', dotted: 'border-dotted', double: 'border-double', hidden: 'border-hidden', none: 'border-none' },
 };
 const SINGLE_PROPS: Record<string, SingleGroup> = {
@@ -62,6 +67,12 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   transform: 'transform',
   position: 'position',
   'justify-items': 'justify-items',
+  'object-fit': 'object-fit',
+  'object-position': 'object-position',
+  'background-image': 'bg-image',
+  'background-size': 'bg-size',
+  'background-position': 'bg-position',
+  'background-repeat': 'bg-repeat',
 };
 const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
   'padding-top': ['padding', 't'],
@@ -373,9 +384,16 @@ function flexToken(value: string): string {
   return `flex-${arbitrary(text)}`;
 }
 
+const IMAGE_TOKENS: Record<string, (value: string) => string> = {
+  'object-position': (value) => `object-${arbitrary(value)}`,
+  'background-image': (value) => (value.trim() === 'none' ? 'bg-none' : `bg-${arbitrary(value)}`),
+};
+
 function singleToken(prop: string, value: string, theme: TailwindTheme): string {
   const keyword = KEYWORDS[prop]?.[value.trim().toLowerCase()];
   if (keyword) return keyword;
+  const image = IMAGE_TOKENS[prop];
+  if (image) return image(value);
   switch (prop) {
     case 'color':
       return `text-${colorSuffix(value, theme, 'color')}`;

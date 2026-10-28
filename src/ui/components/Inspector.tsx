@@ -15,9 +15,11 @@ import { InspectorArrange } from './InspectorArrange';
 import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import { resetEditVariant, useEditVariant } from '../editVariant';
+import { imageKindOf } from '../../shared/image';
 import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
+const InspectorImage = lazy(() => import('./InspectorImage'));
 
 export type InspectorTab = 'simple' | 'pro' | 'components' | 'code' | 'tweaks';
 
@@ -188,6 +190,16 @@ function ComponentSection(props: InspectorProps) {
   );
 }
 
+function ImageSection(props: InspectorProps) {
+  const target = props.selection[0];
+  if (props.selection.length !== 1 || !target || !props.directionId || !imageKindOf(target)) return null;
+  return (
+    <Suspense fallback={null}>
+      <InspectorImage key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} port={props.port} />
+    </Suspense>
+  );
+}
+
 function useUseSite(props: InspectorProps) {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
@@ -205,10 +217,26 @@ function SimpleTab(props: InspectorProps) {
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
+  if (reason && target && props.editable && props.selection.length === 1 && imageKindOf(target)) {
+    return (
+      <div className="inspector ins-simple">
+        <div className="ins-scroll">
+          <ImageSection {...props} />
+          <EmptyState reason="The other styles of this image come from a component outside the project. Ask the agent to change them in Chat." notice={props.notice} />
+        </div>
+      </div>
+    );
+  }
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
   if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
   return (
-    <SimpleEditor key={`${target.selector}|${variant}${site.editingUse ? '|use' : ''}`} {...props} target={site.effective ?? target} sharedEditing={site.sharedEditing} component={<ComponentSection {...props} />} />
+    <SimpleEditor key={`${target.selector}|${variant}${site.editingUse ? '|use' : ''}`} {...props} target={site.effective ?? target} sharedEditing={site.sharedEditing} component={
+        <>
+          <ImageSection {...props} />
+          <ComponentSection {...props} />
+        </>
+      }
+    />
   );
 }
 

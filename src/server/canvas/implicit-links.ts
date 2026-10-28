@@ -11,6 +11,7 @@ export interface PageAnchor {
   selector: string;
   tag: string;
   text?: string;
+  label?: string;
 }
 
 export type AnchorReader = (frame: CanvasFileFrame) => Promise<PageAnchor[]>;
@@ -92,8 +93,9 @@ export function htmlAnchors(html: string): PageAnchor[] {
   return found.flatMap((anchor) => {
     const selector = cleanLinkSelector(selectorOf(anchor));
     if (!selector) return [];
-    const text = (counts.get(selector) ?? 0) > 1 ? cleanLinkText(anchor.text) : null;
-    return [{ href: anchor.href, selector, tag: anchor.tag, ...(text ? { text } : {}) }];
+    const name = cleanLinkText(anchor.text);
+    const text = (counts.get(selector) ?? 0) > 1 ? name : null;
+    return [{ href: anchor.href, selector, tag: anchor.tag, ...(text ? { text } : name ? { label: name } : {}) }];
   });
 }
 
@@ -130,7 +132,8 @@ function targetFrame(from: CanvasFileFrame, key: string, frames: readonly Canvas
 }
 
 function linkFrom(from: CanvasFileFrame, to: CanvasFileFrame, anchor: Omit<PageAnchor, 'href'>): PrototypeLink {
-  const source = { frame: from.id, path: from.path ?? '', selector: anchor.selector, tag: anchor.tag, ...(anchor.text ? { text: anchor.text } : {}) };
+  const label = anchor.text ? null : cleanLinkText(anchor.label);
+  const source = { frame: from.id, path: from.path ?? '', selector: anchor.selector, tag: anchor.tag, ...(anchor.text ? { text: anchor.text } : {}), ...(label ? { label } : {}) };
   return { id: implicitId(source), from: source, to: { frame: to.id }, transition: 'instant', implicit: true };
 }
 

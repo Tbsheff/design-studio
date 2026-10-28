@@ -67,8 +67,11 @@ function moveFrom(element: Element, before: Rect, timing: KeyframeAnimationOptio
   const dy = before.y - after.y;
   const sx = before.width / after.width;
   const sy = before.height / after.height;
-  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) return;
-  element.animate([{ transformOrigin: '0 0', transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` }, { transformOrigin: '0 0', transform: 'none' }], timing);
+  const text = ownText(element) !== '';
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && (text || (Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01))) return;
+  const from = text ? `translate(${dx}px, ${dy}px)` : `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+  element.animate([{ transformOrigin: '0 0', transform: from }, { transformOrigin: '0 0', transform: 'none' }], timing);
+  if (text && (Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01)) element.animate([{ opacity: 0.35 }, { opacity: 1 }], timing);
 }
 
 export function smartAnimate(raw: unknown, durationRaw: unknown, easingRaw: unknown): number {

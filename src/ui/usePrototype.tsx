@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { ProjectKind, SelectionContext } from '../shared/contracts';
-import { isBackTarget, startFrameOf, withImplicit, type PrototypeLink } from '../shared/links';
+import { isBackTarget, sourceName, startFrameOf, withImplicit, type PrototypeLink } from '../shared/links';
 import { api } from './api';
 import { frameDirection, frameName, withFramePath, type CanvasFrame } from './canvasFrames';
 import { frameStateOf, useCurrentFrameStates } from './frameStates';
@@ -65,7 +65,7 @@ export function usePrototype(o: Options) {
     const frame = o.frames.find((item) => item.id === id);
     return frame ? frameTitle(frame) : 'missing frame';
   };
-  const linkTitle = (link: PrototypeLink) => `${link.from.text ? `“${link.from.text}”` : link.from.selector} in ${titleById(link.from.frame)} → ${isBackTarget(link.to) ? 'Back' : titleById(link.to.frame)}`;
+  const linkTitle = (link: PrototypeLink) => `${sourceName(link.from)} in ${titleById(link.from.frame)} → ${isBackTarget(link.to) ? 'Back' : titleById(link.to.frame)}`;
   const urls = useRef(new Map<string, Promise<string>>());
   const frameStates = useCurrentFrameStates();
   const withState = (frame: CanvasFrame, url: string): string => (frameStates ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id)) : url);

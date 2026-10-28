@@ -27,6 +27,8 @@ import type { CommentStore } from '../store/comments.js';
 import type { CanvasService } from '../canvas/service.js';
 import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './user-message.js';
 import { describeTargetLayout } from './run-target.js';
+import { createScreenshotTrimStore } from './screenshot-trim-store.js';
+import { designMdDigest } from './design-md-digest.js';
 
 type QueryFn = typeof query;
 type StreamEventMessage = Extract<SDKMessage, { type: 'stream_event' }>;
@@ -170,8 +172,19 @@ interface PreparedMessage {
   recommendedSkills: string[];
 }
 
-function prepareMessage(parts: UserMessageParts, skills: PreparedSkills, input: DriverInput, prompt: { text: string; hash: string }, resume: string | null, config: ResolvedRunConfig): PreparedMessage {
-  const recommendedSkills = config.preset.skills ? recommendSkills(skills.catalog.skills, skills.enabled, input.ctx.request) : [];
+export function namedSkills(enabled: readonly string[], prompt: string): string[] {
+  return enabled.filter((id) => prompt.includes(id) || prompt.includes(`skill:${id.split(':').pop() ?? id}`));
+}
+
+function runSkillIds(skills: PreparedSkills, input: DriverInput, config: ResolvedRunConfig): { recommended: string[]; loaded: string[] } {
+  if (!config.preset.skills) return { recommended: [], loaded: [] };
+  const recommended = recommendSkills(skills.catalog.skills, skills.enabled, input.ctx.request);
+  return { recommended, loaded: [...new Set([...recommended, ...namedSkills(skills.enabled, input.ctx.request.prompt)])] };
+}
+
+function prepareMessage(parts: UserMessageParts, setup: AttemptSetup, input: DriverInput, prompt: { text: string; hash: string }, resume: string | null): PreparedMessage {
+  const { config } = setup;
+  const recommendedSkills = setup.runSkills.recommended;
   const withSkills = withRunLevel(withRecommendedSkills(parts, recommendedSkills), config, input.ctx.request.mode, { app: Boolean(input.ctx.project.app), appTokens: input.ctx.project.kind === 'react' && Boolean(input.ctx.designSystem?.source) });
   const sent = resume ? withUpdatedInstructions(withSkills, prompt.text, prompt.hash, priorFor(input, resume)) : withSkills;
   return { sent, updatedInstructions: sent !== withSkills, recommendedSkills };
@@ -385,9 +398,9 @@ const ISOLATION_SETTINGS = {
   enabledPlugins: Object.fromEntries(BUILTIN_PLUGINS_OFF.map((id) => [id, false])),
 };
 
-function skillOptions(skills: PreparedSkills): Pick<Options, 'plugins' | 'skills'> {
-  if (skills.enabled.length === 0) return { skills: [] };
-  return { plugins: skills.pluginDirs.map((dir) => ({ type: 'local', path: dir, skipMcpDiscovery: true })), skills: skills.enabled };
+function skillOptions(skills: PreparedSkills, loaded: readonly string[]): Pick<Options, 'plugins' | 'skills'> {
+  if (skills.enabled.length === 0 || loaded.length === 0) return { skills: [] };
+  return { plugins: skills.pluginDirs.map((dir) => ({ type: 'local', path: dir, skipMcpDiscovery: true })), skills: [...loaded] };
 }
 
 async function loadSkills(options: SdkDriverOptions, input: DriverInput): Promise<PreparedSkills> {
@@ -444,6 +457,7 @@ interface AttemptSetup {
   config: ResolvedRunConfig;
   run: RunToolState;
   tasteRules: TasteRule[];
+  runSkills: { recommended: string[]; loaded: string[] };
   bashGate?: ToolGate;
 }
 
@@ -512,7 +526,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     mcpServers: { studio },
     tools: builtins,
     settings: ISOLATION_SETTINGS,
-    ...skillOptions(skills),
+    ...skillOptions(skills, setup.runSkills.loaded),
     canUseTool: createCanUseTool(policy, options.onPermission, setup.bashGate),
     hooks: {
       PreToolUse: [{ hooks: [createPreToolUseGuard(policy, options.onHookDecision, baselineGate(setup.run, signal), (toolUseId, name, toolInput) => input.sink.beforeWrite(toolUseId, name, toolInput), setup.bashGate)], timeout: BASELINE_GATE_TIMEOUT_S }],
@@ -528,7 +542,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
     abortController: controller,
     env: { ...env, [TODO_TOOL_ENV]: '0' },
     systemPrompt: buildSystemPrompt(ctx.project, ctx.request.mode, ctx.designSystem ?? null, skills.invocableCount, setup.tasteRules, ctx.designRules ?? []),
-    ...(resume ? { resume } : {}),
+    ...(resume ? { resume, sessionStore: createScreenshotTrimStore(options.claudeHome) } : {}),
     ...(options.onStderr ? { stderr: options.onStderr } : {}),
     ...(options.claudeExecutable ? { pathToClaudeCodeExecutable: options.claudeExecutable } : {}),
   };
@@ -680,7 +694,8 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
     void prewarmChecks(options.preview, input.ctx, run).catch(() => undefined);
-    return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
+    const skills = await loadSkills(options, input);
+    return { skills, config, run, tasteRules: loadTasteRules(options.tasteHome), runSkills: runSkillIds(skills, input, config), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
   }
 
   async function runSegment(input: DriverInput, setup: AttemptSegment, sent: UserMessageParts, prior: PriorSession | null): Promise<{ state: StreamState; outcome: DriverOutcome }> {
@@ -777,7 +792,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const prior = priorFor(input, resume);
     const systemPrompt = typeof sdkOptions.systemPrompt === 'string' ? sdkOptions.systemPrompt : '';
     const promptHash = hashPrompt(systemPrompt);
-    const message = prepareMessage(parts, setup.skills, input, { text: systemPrompt, hash: promptHash }, resume, setup.config);
+    const message = prepareMessage(parts, setup, input, { text: systemPrompt, hash: promptHash }, resume);
     const { sent } = message;
     sink.sent({ text: sent.text, imageCount: sent.images.length, updatedInstructions: message.updatedInstructions, recommendedSkills: message.recommendedSkills, promptHash, resume });
 
@@ -803,7 +818,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
 
   async function runAttempts(input: DriverInput): Promise<DriverOutcome> {
     await describeTargetLayout(options.preview, input.ctx).catch(() => undefined);
-    const parts = await buildUserMessageParts(input.ctx);
+    const parts = await buildUserMessageParts({ ...input.ctx, designMd: designMdDigest(input.ctx.designMd) ?? null });
     const resume = input.ctx.direction.sessionId;
     if (!resume) return (await attempt(input, parts, null)).outcome;
     try {

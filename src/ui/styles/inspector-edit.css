@@ -764,3 +764,39 @@
 .layers-list.dragging:focus-visible {
   box-shadow: none;
 }
+
+.ins-source-block {
+  display: grid;
+  gap: 2px;
+  flex: none;
+  padding: 2px calc(var(--pane-inset) - var(--s-1)) 6px var(--pane-inset);
+  border-bottom: 1px solid var(--line);
+}
+
+.ins-source-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 24px;
+}
+
+.ins-source-label {
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.ins-source-path {
+  font-size: 11px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
+
+.ins-source-note {
+  color: var(--text-3);
+  font-size: 11px;
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
-import type { CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
+import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
@@ -31,6 +31,7 @@ import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit'
 import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
+import { appRoutePages, useAppCanvas } from './AppCanvas';
 
 interface Props {
   projectId: string;
@@ -53,12 +54,17 @@ interface Props {
   onMakeStates?: (frame: CanvasFrame) => void;
   directions?: CanvasDirections;
   shell?: CanvasShell;
+  app?: AttachedApp | null;
 }
 
 export interface CanvasCommentTools {
   tokens?: readonly CompiledTokenEntry[];
   components?: readonly ComponentInfo[] | null;
   onSteer?: (text: string) => void;
+}
+
+function shellDirectionName(shell: CanvasShell | undefined): string | null {
+  return shell?.directionName ?? null;
 }
 
 function inEditPane(shell: CanvasShell | undefined): boolean {
@@ -273,6 +279,7 @@ interface LabelInput {
   baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
   directionName: string | null;
   frameActions?: (frame: CanvasFrame, directionId: string | null) => FrameMenuItem[];
+  appPages?: (() => Promise<string[]>) | null;
 }
 
 function frameMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null): FrameMenuItem[] {
@@ -307,7 +314,7 @@ function useFrameLabels(o: LabelInput) {
       extras: (
         <>
           {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
-          <FramePageMenu path={frame.path ?? ''} listPages={o.kind === 'html' && did ? listPages(did) : null} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FramePageMenu path={frame.path ?? ''} listPages={o.appPages ?? (o.kind === 'html' && did ? listPages(did) : null)} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
           <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
         </>
       ),
@@ -480,7 +487,8 @@ export function Canvas(props: Props) {
     const blocked = props.running ? 'A run is going.' : did !== directionId ? 'Open this direction first.' : undefined;
     return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
   };
-  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: props.shell?.directionName ?? null, frameActions });
+  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
+  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, size: viewport });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
@@ -511,6 +519,7 @@ export function Canvas(props: Props) {
         stage={() => stageRef.current}
         view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch }}
       />
+      {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
       {previewMenu.menu}
       <div className="canvas-body">
@@ -529,6 +538,7 @@ export function Canvas(props: Props) {
           }}
         >
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
+          {appCanvas.note}
           <ArtboardOverlay
             hover={overlayHover(frames.hover, picking || commentMode)}
             selection={props.selection}

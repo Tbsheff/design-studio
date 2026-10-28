@@ -532,6 +532,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               projectId,
               directionId: did,
               kind: project.kind,
+              app: project.app,
               headVersionId: direction?.headVersionId ?? null,
               source,
               onSource: setSource,

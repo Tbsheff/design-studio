@@ -1,8 +1,8 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { formatAnswers, needsQuestions } from '../../shared/clarify';
-import { DEFAULT_SETTINGS, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
+import { DEFAULT_SETTINGS, type AppCandidate, type ClarifyQuestion, type PackSummary, type Project, type ProjectKind, type ProjectSettings, type RunLevel, type Starter } from '../../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../../shared/folders';
-import { api, errorText } from '../api';
+import { ApiError, api, errorText } from '../api';
 import { findPack, pickable, usePacks, type PacksState } from '../packs';
 import { homeVariations, uiStore, useUi } from '../storage';
 import { maxVariationsFor } from '../variationsApi';
@@ -31,6 +31,7 @@ const ClarifyForm = lazy(() => clarifyChunk.then((m) => ({ default: m.ClarifyFor
 const loadTrash = () => import('./HomeTrash');
 const loadSlash = () => import('./HomeSlash');
 const HomeTrash = lazy(loadTrash);
+const AttachAppDialog = lazy(() => import('./AttachAppDialog'));
 const loadPops = () => import('./HomePopovers');
 const PlusMenu = lazy(() => loadPops().then((m) => ({ default: m.PlusMenu })));
 const PackPopover = lazy(() => loadPops().then((m) => ({ default: m.PackPopover })));
@@ -599,6 +600,8 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
     showToast,
   });
 
+  const [pickApp, setPickApp] = useState<{ folder: string; candidates: AppCandidate[] } | null>(null);
+
   const importFolder = async (path: string) => {
     setBusy('import');
     setFormError(null);
@@ -606,13 +609,15 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       const { project } = await api.importProject(path);
       onOpen(project.id);
     } catch (err) {
-      setFormError(errorText(err));
+      const data = err instanceof ApiError ? (err.data as { code?: string; candidates?: AppCandidate[] } | undefined) : undefined;
+      if (data?.code === 'pick_app' && data.candidates) setPickApp({ folder: path, candidates: data.candidates });
+      else setFormError(errorText(err));
       setBusy(null);
     }
   };
 
   const linkCode = async () => {
-    const picked = await chooser.choose('Choose a folder with an index.html or a Vite app');
+    const picked = await chooser.choose('Choose a folder with an index.html, a Vite app or a Next.js app');
     if (picked.path) return void importFolder(picked.path);
     if (picked.unsupported) {
       setShowOpenFolder(true);
@@ -811,6 +816,11 @@ export function Home({ onOpen }: { onOpen: (projectId: string) => void }) {
       {trashOpen && (
         <Suspense fallback={null}>
           <HomeTrash onClose={() => setTrashOpen(false)} onRestored={() => void loadProjects()} />
+        </Suspense>
+      )}
+      {pickApp && (
+        <Suspense fallback={null}>
+          <AttachAppDialog folder={pickApp.folder} candidates={pickApp.candidates} onClose={() => setPickApp(null)} onAttached={(project) => onOpen(project.id)} />
         </Suspense>
       )}
       <HomeToast toast={toast} onDone={clearToast} />

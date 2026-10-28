@@ -431,6 +431,7 @@ export function usePreviewFrames(o: Options) {
     (frame: BridgeFrame, msg: BridgeToParent) => {
       const cur = opts.current;
       if (msg.type === 'ready') {
+        for (const listener of listeners.current) listener(msg);
         if (treeWanted.current && frame.token === frontRef.current) postToFrame(frame, { type: 'request-tree' });
         return syncFrame(frame);
       }

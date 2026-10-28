@@ -90,16 +90,27 @@ function structurePrompt(request: StructureEditRequest): string {
   return `Structure edit: ${request.op} ${locs}${where}`;
 }
 
-export async function applyStructureEdit(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<StructureEditResult> {
+export interface StructurePlan {
+  request: StructureEditRequest;
+  changed: FileResult[];
+  title: string;
+}
+
+export async function planStructureEdit(workTree: string, raw: unknown): Promise<StructurePlan> {
   const request = parseStructureEdit(raw);
-  const headVersionId = assertCanEdit(deps, project, direction);
-  const groups = await groupTargets(direction.workTree, request);
-  await assertSameFile(direction.workTree, request, groups);
-  const gap = await frameGap(direction.workTree);
+  const groups = await groupTargets(workTree, request);
+  await assertSameFile(workTree, request, groups);
+  const gap = await frameGap(workTree);
   const results = await Promise.all(groups.map((group) => planFile(group, request, gap)));
   const changed = results.filter((result) => result.code !== result.original);
+  return { request, changed, title: structureTitle(request, results.flatMap((result) => result.tags), results[0]?.placeTag ?? null) };
+}
+
+export async function applyStructureEdit(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<StructureEditResult> {
+  const parsed = parseStructureEdit(raw);
+  const headVersionId = assertCanEdit(deps, project, direction);
+  const { request, changed, title } = await planStructureEdit(direction.workTree, parsed);
   if (changed.length === 0) return { files: [], version: await deps.versions.get(project, headVersionId), select: [] };
-  const title = structureTitle(request, results.flatMap((result) => result.tags), results[0]?.placeTag ?? null);
   const meta: VersionMeta = { kind: 'manual', prompt: structurePrompt(request) };
   const version = await writeAndCommitAll(deps, project, direction, changed, title, meta);
   deps.history?.record({

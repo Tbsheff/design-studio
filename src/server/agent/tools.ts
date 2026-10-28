@@ -14,6 +14,7 @@ import { defineTweaks } from '../tweaks/store.js';
 import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
+import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -264,5 +265,19 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool] });
+  const editElementTool = tool(
+    'edit_element',
+    'Change one element found by CSS selector on the live page, with the same code as the studio inspector: inline style (CSS properties, null removes), the text of a leaf element, or classes {add, remove} on a plain class/className string. Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
+    editElementShape,
+    (args) => runEditElement(deps, args),
+  );
+
+  const setTokenTool = tool(
+    'set_token',
+    'Change one design token value with the same code as the studio Tokens panel: design-system/tokens.json (tokens.css is rebuilt) in a studio design system, or only that declaration in the app token CSS file of an imported app (Tailwind @theme, :root or .dark). theme dark changes the dark value. Use it instead of editing tokens.json or the token CSS by hand when you change a token value.',
+    setTokenShape,
+    (args) => runSetToken(deps, args),
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, editElementTool, setTokenTool] });
 }

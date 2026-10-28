@@ -101,10 +101,13 @@ export async function resolveSource(workTree: string, file: string): Promise<Res
 
 export function patchSource(relative: string, source: string, request: DirectEditRequest, tailwind: TailwindTheme | null = null): PatchResult {
   const extension = path.extname(relative).toLowerCase();
-  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes };
+  const edit = { style: request.style ?? {}, text: request.text, tag: request.tag, name: request.name, move: request.move, insert: request.insert, classes: request.classes, component: request.component };
   const position = { line: request.source.line, col: request.source.col };
-  if (extension === '.html' || extension === '.htm') return patchHtml(source, position, edit, tailwind);
-  return patchJsx(source, position, edit, { typescript: extension === '.tsx', tailwind });
+  if (extension === '.html' || extension === '.htm') {
+    if (request.component !== undefined) throw new DirectEditError('invalid_request', 'Component uses can be edited in .jsx and .tsx files only');
+    return patchHtml(source, position, edit, tailwind);
+  }
+  return patchJsx(source, position, edit, { typescript: extension === '.tsx', tailwind, file: relative });
 }
 
 export interface EditScope {

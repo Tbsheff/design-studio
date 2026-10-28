@@ -10,6 +10,7 @@ const UNSAFE_VALUE = /[;{}<>\\\u0000-\u001f\u007f]/;
 const SCRIPT_URL = /javascript\s*:|expression\s*\(/i;
 const MAX_NAME = 60;
 const UNSAFE_NAME = /["'`<>{}&\\\u0000-\u001f\u007f]/;
+const COMPONENT_NAME = /^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/;
 
 const styleValueSchema = z
   .string()
@@ -53,8 +54,10 @@ const requestSchema = z
     move: z.enum(['up', 'down']).optional(),
     insert: z.enum(INSERT_KINDS).optional(),
     classes: classesSchema.optional(),
+    component: z.string().max(100).regex(COMPONENT_NAME, 'component must be a component name such as Button').optional(),
   })
   .strict()
+  .refine((request) => request.component === undefined || (request.name === undefined && request.move === undefined && request.insert === undefined), 'a component use takes style, classes and text only')
   .refine(
     (request) => request.text !== undefined || request.name !== undefined || request.move !== undefined || request.insert !== undefined || hasClasses(request.classes) || Object.keys(request.style ?? {}).length > 0,
     'style, text, classes, name, move or insert is required',
@@ -86,6 +89,7 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.move !== undefined) request.move = parsed.data.move;
   if (parsed.data.insert !== undefined) request.insert = parsed.data.insert;
   if (hasClasses(parsed.data.classes)) request.classes = parsed.data.classes;
+  if (parsed.data.component !== undefined) request.component = parsed.data.component;
   return request;
 }
 

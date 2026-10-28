@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import { STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type ElementSourceInfo, type SelectionContext, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
@@ -14,7 +14,7 @@ import { describeElement } from './element.js';
 import { FolderError, safeFolder } from './folders.js';
 import { HISTORY_TOOLS } from './history-tools.js';
 import { LIBRARY_TOOLS } from './library-tools.js';
-import { cleanRoute, routeLabel } from '../../shared/app.js';
+import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
 const FILE_MAX = 512 * 1024;
@@ -55,12 +55,14 @@ const schemas = {
       style: style.optional().describe('CSS properties to set. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
       classes: classes.optional(),
+      target: z.enum(['element', 'use']).optional().describe('Attached apps only. "use" edits the className prop (and text) where the shared component is used, for example <Button className="..."> in the page file, so only this use changes. Leave out to edit the element in its own file, which changes every use of a shared component.'),
       op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
       targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
     .refine((input) => (input.op === undefined ? input.text !== undefined || hasClasses(input) || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined && input.classes === undefined), 'pass style, text or classes, or op alone')
-    .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none'),
+    .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none')
+    .refine((input) => input.target !== 'use' || input.op === undefined, 'target use takes style, classes or text, not op'),
   add_comment: z
     .object({
       projectId,
@@ -136,7 +138,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
+  edit_element: { title: 'Edit element', description: 'Change the style, the Tailwind classes or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. In a Tailwind project style changes become theme classes; the result lists the classes and says when the edit fell back to inline style. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. In an attached app, an element inside a shared component (a file outside the app folder, such as packages/ui/button.tsx) changes every use; the result says so, and target "use" edits the className of this one use instead. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -262,15 +264,46 @@ async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op
   return { result: ok({ files: result.files, versionId: result.version.id, title: result.version.title, select: result.select }), activity: versionActivity(project, direction, summary, result.version) };
 }
 
+type SourcedElement = SelectionContext & { source: NonNullable<SelectionContext['source']> };
+
+function locText(loc: { file: string; line: number; col: number }): string {
+  return `${loc.file}:${loc.line}:${loc.col}`;
+}
+
+async function useSiteTarget(deps: EditDeps, project: Project, directionId: string, element: SourcedElement, selector: string): Promise<{ source: SourcedElement['source']; component: string }> {
+  const shared = project.app ? sharedSourceOf(element, project.app.appDir) : null;
+  if (!shared?.use || !shared.name) throw new EditError(`${selector} is not the outer element of a shared component use, so there is no use site to edit. Leave out target to edit ${element.source.file}.`);
+  const info = await studioCall<{ element: ElementSourceInfo | null }>(deps, 'GET', `${base(project, directionId)}/classes?file=${encodeURIComponent(element.source.file)}&line=${element.source.line}&col=${element.source.col}`);
+  if (!info.element?.forwardsClassName) throw new EditError(`<${shared.name}> in ${element.source.file} does not pass its className prop to ${selector}, so a class at ${locText(shared.use)} would not reach it. Leave out target to edit ${element.source.file}.`);
+  return { source: shared.use, component: shared.name };
+}
+
+function sharedNote(project: Project, element: SourcedElement): { changes: string; hint: string } | null {
+  const shared = project.app ? sharedSourceOf(element, project.app.appDir) : null;
+  if (!shared) return null;
+  const what = shared.name ? `every ${shared.name}` : `every use of ${shared.file}`;
+  const hint = shared.use ? `Pass target "use" to change only the use at ${locText(shared.use)}.` : '';
+  return { changes: `${shared.file} is a shared component, so this edit changes ${what}. ${hint}`.trim(), hint };
+}
+
 async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<Done> {
   if (input.op) return structureElement(deps, input, input.op);
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
-  const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}) };
-  const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
+  const use = input.target === 'use' ? await useSiteTarget(deps, project, direction.id, element, input.selector) : null;
+  const target = use ? { source: use.source, component: use.component } : { source: element.source, tag: element.tag };
+  const body = { ...target, selector: input.selector, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}), ...(hasClasses(input) ? { classes: input.classes } : {}) };
+  const note = use ? null : sharedNote(project, element);
+  let result: DirectEditResult;
+  try {
+    result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
+  } catch (error) {
+    if (error instanceof EditError && note?.hint) throw new EditError(`${error.message} ${note.hint}`);
+    throw error;
+  }
   const tailwind = result.tailwind ? { classes: result.tailwind.classes, wrote: result.tailwind.mode, ...(result.tailwind.note ? { note: result.tailwind.note } : {}) } : {};
-  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied, ...tailwind }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
+  return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied, ...tailwind, ...(note ? { shared: note.changes } : {}) }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
 }
 
 function frameTarget(): DesignComment['target'] {

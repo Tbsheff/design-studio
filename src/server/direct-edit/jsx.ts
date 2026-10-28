@@ -9,12 +9,15 @@ import { leadingWhitespaceStart } from './splice.js';
 import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
 import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
 import { jsxClassSite } from './tailwind/jsx-site.js';
-import type { TailwindOutcome } from '../../shared/contracts.js';
+import type { ElementSourceInfo, TailwindOutcome, TextFromData } from '../../shared/contracts.js';
 
 interface JsxPatchOptions {
   typescript?: boolean;
   tailwind?: TailwindTheme | null;
+  file?: string;
 }
+
+const MAX_EXPRESSION_TEXT = 80;
 
 interface StyleEntry {
   node: t.ObjectExpression['properties'][number];
@@ -69,12 +72,32 @@ export function parseSource(source: string, typescript: boolean): t.File {
   }
 }
 
-function hostTagName(element: t.JSXElement): string {
+function jsxNameText(name: t.JSXOpeningElement['name']): string {
+  if (name.type === 'JSXIdentifier') return name.name;
+  if (name.type === 'JSXNamespacedName') return `${name.namespace.name}:${name.name.name}`;
+  return `${jsxNameText(name.object)}.${name.property.name}`;
+}
+
+function isHostName(name: t.JSXOpeningElement['name']): boolean {
+  return name.type === 'JSXIdentifier' && /^[a-z]/.test(name.name);
+}
+
+function hostTagName(element: t.JSXElement, file: string | undefined): string {
   const name = element.openingElement.name;
-  if (name.type !== 'JSXIdentifier' || !/^[a-z]/.test(name.name)) {
-    throw new DirectEditError('not_host_element', 'Only host elements such as <div> can be edited directly');
+  if (!isHostName(name)) {
+    const where = file ? ` in ${file}` : '';
+    throw new DirectEditError('not_host_element', `This element comes from <${jsxNameText(name)}>${where}, which picks its tag when the page runs. Edit the place where the component is used, or ask the agent.`);
   }
-  return name.name;
+  return jsxNameText(name);
+}
+
+function componentTagName(element: t.JSXElement, component: string): string {
+  const name = element.openingElement.name;
+  const text = jsxNameText(name);
+  if (isHostName(name) || (text !== component && text.split('.').pop() !== component.split('.').pop())) {
+    throw new DirectEditError('stale_selection', `No <${component}> starts at this place any more. Select the element again.`);
+  }
+  return text;
 }
 
 function startOf(node: t.Node): number {
@@ -244,10 +267,42 @@ function replaceRange(magic: MagicString, start: number, end: number, text: stri
   else magic.appendLeft(start, text);
 }
 
-function patchText(magic: MagicString, source: string, element: t.JSXElement, text: string): void {
+function expressionText(source: string, node: t.Node): string {
+  const text = source.slice(startOf(node), endOf(node)).replace(/\s+/g, ' ');
+  return text.length > MAX_EXPRESSION_TEXT ? `${text.slice(0, MAX_EXPRESSION_TEXT - 1)}…` : text;
+}
+
+function containsJsx(root: t.Node): boolean {
+  const stack: t.Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop();
+    if (!node) break;
+    if (node.type === 'JSXElement' || node.type === 'JSXFragment') return true;
+    pushChildren(stack, node);
+  }
+  return false;
+}
+
+export function textFromData(source: string, element: t.JSXElement, file: string): TextFromData | null {
+  const meaningful = element.children.filter((child) => !isIgnorableText(child));
+  if (meaningful.some((child) => containsJsx(child))) return null;
+  for (const child of meaningful) {
+    if (child.type !== 'JSXExpressionContainer' || child.expression.type === 'JSXEmptyExpression' || isStringExpression(child)) continue;
+    return { expression: expressionText(source, child.expression), file, line: child.loc?.start.line ?? element.loc?.start.line ?? 1 };
+  }
+  return null;
+}
+
+export function textFromDataMessage(data: TextFromData): string {
+  return `This text comes from data: ${data.expression} in ${data.file}:${data.line}. Change the data there, or ask the agent.`;
+}
+
+function patchText(magic: MagicString, source: string, element: t.JSXElement, text: string, file: string | undefined): void {
   if (element.openingElement.selfClosing || !element.closingElement) {
     throw new DirectEditError('text_not_editable', 'This element has no children to edit; ask the agent');
   }
+  const data = textFromData(source, element, file ?? 'this file');
+  if (data) throw new DirectEditError('text_from_data', textFromDataMessage(data));
   const meaningful = element.children.filter((child) => !isIgnorableText(child));
   const [child] = meaningful;
   if (meaningful.length > 1) throw new DirectEditError('text_not_editable', TEXT_NOT_EDITABLE_MESSAGE);
@@ -304,8 +359,10 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   if (!element) throw new DirectEditError('element_not_found', `No JSX element starts at line ${loc.line}, column ${loc.col}`);
   if (edit.insert !== undefined) throw new DirectEditError('invalid_request', 'Adding elements works in HTML files only');
   const name = element.openingElement.name;
+  if (edit.component !== undefined) return patchComponentUse(source, element, edit, options);
+  if (!isHostName(name)) hostTagName(element, options.file);
   assertSameTag(edit.tag, name.type === 'JSXIdentifier' ? name.name : null);
-  const tag = hostTagName(element);
+  const tag = hostTagName(element, options.file);
   const typescript = options.typescript ?? true;
   if (edit.move !== undefined) {
     const plan = planJsxMove(source, element, jsxAncestors(ast.program, element), edit.move);
@@ -317,8 +374,54 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   const styleKeys = Object.keys(style);
   const tailwind = patchClassesOrStyle(magic, source, element, style, edit, options.tailwind ?? null);
   const classes = hasClassChange(edit.classes);
-  if (edit.text !== undefined) patchText(magic, source, element, edit.text);
+  if (edit.text !== undefined) patchText(magic, source, element, edit.text, options.file);
   return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) }, ...(tailwind ? { tailwind } : {}) };
+}
+
+function patchComponentUse(source: string, element: t.JSXElement, edit: SourceEdit, options: JsxPatchOptions): PatchResult {
+  const component = edit.component ?? '';
+  const tag = componentTagName(element, component);
+  const style = edit.style ?? {};
+  const magic = new MagicString(source);
+  let tailwind: TailwindOutcome | undefined;
+  if (Object.keys(style).length > 0 || hasClassChange(edit.classes)) {
+    const decision = decideClassEdit(() => jsxClassSite(source, element), style, edit.classes, options.tailwind ?? null);
+    if (decision.kind !== 'classes') {
+      const reason = decision.kind === 'inline' ? (decision.fallback.outcome.note ?? '').replace(/, so this edit went to inline style\.$/, '.') : 'This change has no Tailwind class in this project.';
+      throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only. ${reason}`.trim());
+    }
+    const unmapped = Object.keys(style).filter((prop) => !decision.patch.inlineProps.includes(prop));
+    if (unmapped.length > 0) throw new DirectEditError('classes_not_editable', `This use of <${tag}> takes Tailwind classes only, and ${unmapped.join(', ')} has no class.`);
+    for (const splice of decision.patch.plan.splices) replaceRange(magic, splice.start, splice.end, splice.text);
+    tailwind = decision.patch.outcome;
+  }
+  if (edit.text !== undefined) patchText(magic, source, element, edit.text, options.file);
+  return { code: magic.toString(), tag, applied: { style: Object.keys(style), text: edit.text !== undefined, ...(hasClassChange(edit.classes) ? { classes: true } : {}) }, ...(tailwind ? { tailwind } : {}) };
+}
+
+function forwardsClassName(element: t.JSXElement): boolean {
+  for (const attribute of element.openingElement.attributes) {
+    if (attribute.type === 'JSXSpreadAttribute') continue;
+    if (attribute.name.type !== 'JSXIdentifier' || (attribute.name.name !== 'className' && attribute.name.name !== 'class')) continue;
+    const value = attribute.value;
+    if (value?.type !== 'JSXExpressionContainer') return false;
+    const stack: t.Node[] = [value.expression];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (!node) break;
+      if (node.type === 'Identifier' && node.name === 'className') return true;
+      pushChildren(stack, node);
+    }
+    return false;
+  }
+  return false;
+}
+
+export function jsxElementInfo(source: string, loc: SourcePosition, typescript: boolean, file: string): ElementSourceInfo | null {
+  const element = findJsxElement(parseSource(source, typescript).program, loc);
+  if (!element) return null;
+  const name = element.openingElement.name;
+  return { component: isHostName(name) ? null : jsxNameText(name), forwardsClassName: forwardsClassName(element), textFromData: element.closingElement ? textFromData(source, element, file) : null };
 }
 
 function inlineKeys(element: t.JSXElement): Set<string> | null {

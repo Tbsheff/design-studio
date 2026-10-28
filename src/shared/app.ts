@@ -1,10 +1,28 @@
-import type { Project } from './contracts.js';
+import type { Project, SelectionContext, SourceLoc } from './contracts.js';
 
 export const APP_SOURCE_PATH = '/__studio/source';
 export const APP_REDIRECT_PARAM = '__studio_redirected_from';
 
 export function isAttachedApp(project: Pick<Project, 'app'> | null | undefined): boolean {
   return Boolean(project?.app);
+}
+
+export interface SharedSource {
+  file: string;
+  name: string | null;
+  use: SourceLoc | null;
+}
+
+export function isOutsideAppDir(file: string, appDir: string): boolean {
+  const dir = appDir.replace(/^\.\/?/, '').replace(/\/+$/, '');
+  return dir !== '' && file !== dir && !file.startsWith(`${dir}/`);
+}
+
+export function sharedSourceOf(selection: Pick<SelectionContext, 'source' | 'usedAt' | 'usedBy'>, appDir: string): SharedSource | null {
+  const source = selection.source;
+  if (!source || !isOutsideAppDir(source.file, appDir)) return null;
+  const name = selection.usedBy?.name ?? null;
+  return { file: source.file, name, use: selection.usedAt && name && selection.usedBy?.root ? selection.usedAt : null };
 }
 
 export function cleanRoute(raw: string): string | null {

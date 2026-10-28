@@ -9,6 +9,7 @@ type DirectEditErrorCode =
   | 'not_host_element'
   | 'style_not_literal'
   | 'text_not_editable'
+  | 'text_from_data'
   | 'cannot_move'
   | 'cannot_restructure'
   | 'attribute_not_literal'
@@ -65,6 +66,7 @@ export interface SourceEdit {
   move?: 'up' | 'down';
   insert?: 'text' | 'frame' | 'rect' | 'ellipse';
   classes?: ClassChange;
+  component?: string;
 }
 
 export interface PatchResult {

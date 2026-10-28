@@ -6,6 +6,7 @@ import type { CanvasPresence, CanvasWriteSource, Direction, Project } from '../.
 import { ConflictError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import type { EventBus } from '../types.js';
+import { createLinksService, type LinksService } from './links.js';
 
 export interface CanvasSnapshot {
   canvas: CanvasFile | null;
@@ -27,6 +28,7 @@ export interface CanvasService {
   setPresence(projectId: string, presence: CanvasPresence): void;
   presence(projectId: string): CanvasPresence | null;
   point(project: Project, frameId: string, selector?: string): void;
+  links: LinksService;
 }
 
 const MAIN_DIRECTION_ID = 'main';
@@ -52,7 +54,7 @@ export async function readCanvasAt(workTree: string): Promise<{ canvas: CanvasFi
   return { canvas: parseCanvasText(text), text };
 }
 
-async function writeAtomic(target: string, text: string): Promise<void> {
+export async function writeAtomic(target: string, text: string): Promise<void> {
   await mkdir(path.dirname(target), { recursive: true });
   const temp = `${target}.${randomBytes(4).toString('hex')}.tmp`;
   try {
@@ -67,6 +69,7 @@ async function writeAtomic(target: string, text: string): Promise<void> {
 export function createCanvasService(bus: EventBus): CanvasService {
   const lock = createKeyedMutex();
   const presences = new Map<string, CanvasPresence>();
+  const links = createLinksService(bus);
 
   const snapshotOf = async (project: Project): Promise<CanvasSnapshot> => {
     const { canvas, text } = await readCanvasAt(canvasOwner(project).workTree);
@@ -103,6 +106,8 @@ export function createCanvasService(bus: EventBus): CanvasService {
   return {
     ownerOf: canvasOwner,
 
+    links,
+
     read: snapshotOf,
 
     write(project, canvas, write) {
@@ -127,6 +132,7 @@ export function createCanvasService(bus: EventBus): CanvasService {
     async announce(project) {
       const snapshot = await lock(keyOf(project), () => snapshotOf(project));
       emit(project, snapshot, { source: 'restore' });
+      await links.announce(project);
     },
 
     setPresence(projectId, presence) {

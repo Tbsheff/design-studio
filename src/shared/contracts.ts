@@ -1,4 +1,5 @@
 import type { CanvasFile } from './canvas-file';
+import type { LinkQuery, LinkRectReport, LinksFile } from './links';
 import type { StatesRequest } from './states';
 export type ProjectKind = 'html' | 'react';
 
@@ -557,6 +558,7 @@ export type StudioEventBody =
   | { type: 'versions.changed' }
   | { type: 'canvas.changed'; canvas: CanvasFile | null; hash: string | null; source: CanvasWriteSource; writer?: string }
   | { type: 'canvas.point'; frameId: string; selector?: string; at: number }
+  | { type: 'links.changed'; links: LinksFile; source: CanvasWriteSource }
   | { type: 'mcp.approval'; approval: McpApprovalRecord }
   | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
   | { type: 'mcp.activity'; activity: McpActivity }
@@ -786,6 +788,8 @@ export const SOURCE_LOC_ATTR = 'data-studio-loc';
 export const BRIDGE_SCRIPT_PATH = '/__studio/bridge.js';
 export const BRIDGE_CHANGES_PATH = '/__studio/changes';
 
+export type PlayKey = 'exit' | 'restart' | 'back';
+
 export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
@@ -811,6 +815,9 @@ export type BridgeToParent =
     }
   | { ns: 'studio'; token: string; type: 'zoom-key'; key: ZoomKey; at: number }
   | { ns: 'studio'; token: string; type: 'anchor-rects'; anchors: AnchorReport[] }
+  | { ns: 'studio'; token: string; type: 'link-rects'; links: LinkRectReport[] }
+  | { ns: 'studio'; token: string; type: 'play-click'; id: string }
+  | { ns: 'studio'; token: string; type: 'play-key'; key: PlayKey }
   | { ns: 'studio'; token: string; type: 'anchor-contexts'; requestId: string; contexts: (SelectionContext | null)[] }
   | { ns: 'studio'; token: string; type: 'text-edit'; selector: string; state: 'start' | 'cancel' }
   | { ns: 'studio'; token: string; type: 'text-commit'; selector: string; text: string; at: number }
@@ -894,6 +901,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'lofi-preview'; css: string }
   | { ns: 'studio'; token: string; type: 'set-theme'; theme: 'light' | 'dark' | null }
   | { ns: 'studio'; token: string; type: 'track-anchors'; anchors: AnchorQuery[] }
+  | { ns: 'studio'; token: string; type: 'track-links'; links: LinkQuery[] }
+  | { ns: 'studio'; token: string; type: 'play-links'; links: LinkQuery[] | null }
   | { ns: 'studio'; token: string; type: 'describe-anchors'; requestId: string; anchors: AnchorQuery[] }
   | { ns: 'studio'; token: string; type: 'request-tree' }
   | { ns: 'studio'; token: string; type: 'hover-node'; id: number | null }

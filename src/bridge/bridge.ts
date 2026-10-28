@@ -10,6 +10,7 @@ import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
+import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appSourceFor, appSourceMode } from './app-source.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
@@ -827,6 +828,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onClick = (event: MouseEvent): void => {
+    if (mode !== 'select' && links.onClick(event)) return;
     if (mode !== 'select' || textEditor.owns(eventElement(event))) return block(event);
     block(event);
     const element = eventElement(event);
@@ -870,6 +872,7 @@ function startBridge(session: BridgeSession): void {
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (textEditor.onKeyDown(event)) return;
+    if (mode !== 'select' && links.onKeyDown(event)) return;
     onAltChange(event);
     const reorder = reorderMoveOf(event);
     if (reorder && selected?.isConnected && !isTypingElement(eventElement(event))) {
@@ -903,6 +906,7 @@ function startBridge(session: BridgeSession): void {
 
   const onScroll = (): void => {
     anchors.schedule();
+    links.schedule();
     if (scrollFrame) return;
     scrollFrame = window.requestAnimationFrame(() => {
       scrollFrame = 0;
@@ -912,6 +916,7 @@ function startBridge(session: BridgeSession): void {
 
   const rects = createRectTracker(post);
   const anchors = createAnchorTracker(post);
+  const links = createLinkBridge(post);
   const livePreview = createLivePreview();
   const textEditor = createTextEditor({
     post,
@@ -951,6 +956,8 @@ function startBridge(session: BridgeSession): void {
     'lofi-preview': (message) => previewStyles.apply('lofi', message.css),
     'set-theme': (message) => themeControl.set(message.theme),
     'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
+    'track-links': (message) => links.track(message.links),
+    'play-links': (message) => links.play(message.links),
     'request-tree': () => post({ type: 'tree', ...layers.build() }),
     'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
     'select-node': (message) => {
@@ -1030,6 +1037,7 @@ function startBridge(session: BridgeSession): void {
   const schedulePainted = (): void => {
     rects.schedule();
     anchors.schedule();
+    links.schedule();
     if (paintScheduled) return;
     paintScheduled = true;
     window.requestAnimationFrame(() => {

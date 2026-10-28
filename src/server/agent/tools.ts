@@ -15,6 +15,7 @@ import { checkDesignSystem, describeCheck } from '../design-system/check.js';
 import type { CanvasService } from '../canvas/service.js';
 import { canvasList, canvasPlace, canvasPoint, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { editElementShape, runEditElement, runSetToken, setTokenShape } from './direct-tools.js';
+import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -71,6 +72,18 @@ export function runCanvasPlace(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, fra
 
 export function runCanvasPoint(deps: Pick<StudioToolDeps, 'ctx' | 'canvas'>, args: { frame: string; selector?: string }) {
   return withCanvas(deps, 'canvas_point', (ctx) => canvasPoint(ctx, args));
+}
+
+function agentLinkProbe(deps: Pick<StudioToolDeps, 'ctx' | 'preview'>): LinkProbe | undefined {
+  return probeWithPreview(deps.preview, deps.ctx.project, deps.ctx.direction);
+}
+
+export function runListLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>) {
+  return withCanvas(deps, 'list_links', (ctx) => listLinks(ctx, agentLinkProbe(deps)));
+}
+
+export function runEditLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>, args: EditLinksArgs) {
+  return withCanvas(deps, 'edit_links', (ctx) => editLinks(ctx, args, agentLinkProbe(deps)));
 }
 
 function errorText(message: string) {
@@ -265,6 +278,21 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
+  const listLinksTool = tool(
+    'list_links',
+    'List the prototype links (on click of an element, go to a frame) used by Play mode: id, frame, selector, target frame or "back", transition, broken (null or why the link no longer works) and startFrame. Each page with links is rendered to check the elements.',
+    {},
+    () => runListLinks(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const editLinksTool = tool(
+    'edit_links',
+    'Add, replace or remove prototype links and set the Play start frame. add: [{fromFrame, selector, toFrame, transition?}] links the element (CSS selector on the page of fromFrame, which must exist on the rendered page) to toFrame (frame id or @label, or "back"); transition is instant, dissolve, slide-left or slide-right. A new link on the same element replaces the old one. remove: link ids. startFrame: frame id or @label. Links live in the studio, not in the page code.',
+    editLinksShape,
+    (args) => runEditLinks(deps, args),
+  );
+
   const editElementTool = tool(
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
@@ -279,5 +307,5 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runSetToken(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, editElementTool, setTokenTool] });
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool] });
 }

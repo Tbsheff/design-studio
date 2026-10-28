@@ -5,6 +5,7 @@ import type { CanvasPresence } from '../../shared/contracts.js';
 import type { CanvasService } from '../canvas/service.js';
 import { BadRequestError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
+import { registerLinksRoutes } from './links-routes.js';
 
 interface CanvasRouteDeps {
   projects: StudioProjectStore;
@@ -49,6 +50,7 @@ function parsePresence(raw: unknown): CanvasPresence {
 
 export function registerCanvasRoutes(app: Hono, deps: CanvasRouteDeps): void {
   const { projects, canvas, readBody } = deps;
+  registerLinksRoutes(app, deps);
 
   app.get('/api/projects/:pid/canvas', async (c) => {
     const project = await projects.get(c.req.param('pid'));

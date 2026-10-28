@@ -23,6 +23,7 @@ interface Props {
   addFrame?: ReactNode;
   theme?: { dark: boolean; onToggle: () => void };
   lofi?: { on: boolean; onToggle: () => void };
+  links?: { on: boolean; onToggle: () => void };
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
@@ -198,6 +199,15 @@ function LofiSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
+function LinksSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button type="button" className="btn small ghost select-toggle links-toggle" aria-pressed={on} data-tip={on ? 'Hide the link arrows' : 'Show the link arrows'} onClick={onToggle}>
+      <Icon name="link" size={14} />
+      <span className="label">Link arrows</span>
+    </button>
+  );
+}
+
 export function CanvasViewRow(props: Props) {
   return (
     <div className="toolbar canvas-viewrow" role="toolbar" aria-label="View options">
@@ -205,6 +215,7 @@ export function CanvasViewRow(props: Props) {
       {props.addFrame}
       {props.theme && <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />}
       {props.lofi && <LofiSwitch on={props.lofi.on} onToggle={props.lofi.onToggle} />}
+      {props.links && <LinksSwitch on={props.links.on} onToggle={props.links.onToggle} />}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />

@@ -698,6 +698,27 @@ bridge PREVIEW_LAYERS 'lofi' → <style id="studio-lofi-preview"> last in <head>
 - The flag is per direction and lives in `.studio/canvas.json`, so it reloads, goes into versions, and follows restore. A run at Prototype or Polish level turns it off, because those levels mean real visual design.
 - The layer only changes the preview. User files, export, handoff and screenshots taken by the agent stay as they are.
 
+## Prototype links and Play (round 2)
+
+```
+Prototype tool: click an element (bridge select) → drag its + handle (parent DOM) onto a frame
+  → elementsFromPoint → closest('[data-frame-id]') → POST /api/projects/:pid/links
+MCP add_link / agent edit_links ──► canvas/link-tools.ts (render check of the selector) ──┐
+UI PATCH / DELETE / PUT start ──► http/links-routes.ts ───────────────────────────────────┤
+                                                                                          ▼
+              <main work tree>/.studio/links.json (canvas.links, own mutex key) ──► links.changed {links, source}
+canvas frames (live + passive bridges) ◄─ track-links ─ useLinkRects ─ link-rects ─► arrows, broken marks
+Play layer iframes (fresh token, passive param) ◄─ play-links ─ PlayMode ─ play-click / play-key ─► next frame
+```
+
+- Format (`src/shared/links.ts`): `{version: 1, start?: frameId, links: [{id: l<n>, from: {frame, path, selector, tag?, text?}, to: {frame} | {back: true}, transition}]}`. Transitions: `instant`, `dissolve`, `slide-left`, `slide-right`. Keys sorted, links sorted by id, one link per (frame, selector); a second link on the same element replaces the first. Not in `canvas-file.ts`, so a per-frame mode can change that file without a conflict.
+- Versions: the file is a layout file like `canvas.json`: `!.studio/links.json` in the excludes, `commitFile` adds it, `status` hides it, `discard` keeps its bytes, and `canvas.announce` (restore, undo, edit-session discard) also sends `links.changed`. A link edit makes no version; it goes into the next one.
+- Broken (derived, never stored): the from frame or the target frame is gone, the from frame shows another page than `from.path`, or the element cannot be found. Element lookup (`bridge/play.ts` `resolveLink`, and the same rules in the `list_links` render script): the selector with the same tag and the same text (an `#id` selector skips the text check), else the first element with that tag and text, else missing. An empty `canvas.json` counts as the default frame `f1`.
+- Canvas: arrows and the Start flag draw only with the Prototype tool on, in one SVG inside `.artboard` (artboard coordinates, `non-scaling-stroke`); the view row has a "Link arrows" switch. A link to a frame on the left curves over the frames. Entering a frame with the Prototype tool on clears the selection, so a handle never belongs to another frame.
+- Play (Present › Play prototype, or Play in the prototype bar): opens at `start` (else the first frame), each frame at its own size scaled to fit. The iframe gets a new token and `BRIDGE_PASSIVE_PARAM`, so it never replaces the canvas frame's session in `sessionStorage`. The bridge stops a click on a linked element in the capture phase (`preventDefault`, `stopImmediatePropagation`) and sends `play-click`; other clicks run as usual, so app links and Next.js client navigation still work. Keys: Esc exits, R restarts, Backspace (and ← in the parent) goes back; the bridge forwards them when focus is in the frame and not in a text field. Back uses a history stack and the reverse slide.
+- Agent tools: `mcp__studio__list_links` (read only) and `mcp__studio__edit_links {add, remove, startFrame}` (refused in plan mode and critique runs, in `NO_CHANGE_TOOLS`). Mock: `[links] <fromFrame> <selector> -> <toFrame>`.
+- Limits: a full page load inside an attached app during Play drops the Play bridge for that iframe, so linked clicks stop until the next frame change. A new frame can reuse the id of a removed frame (`nextFrameId`), which makes an old broken link point at it.
+
 ## Versions, chat rewind and comments (Round 7)
 
 - Version thumbnails: `GET /api/projects/:pid/versions/:vid/thumb` shoots the version snapshot on the first request (one shared shot queue, one at a time) and then serves `thumbs/v-<vid>.png`. The Versions panel fetches only rows in view while the panel is open, at most 2 at a time.
@@ -809,6 +830,9 @@ MCP client ──HTTP JSON-RPC, Bearer <mcp token>──► MCP server 127.0.0.1
 | `design_system_status {projectId}` | `GET /api/projects/:pid/design-system-draft` (sources, coverage, check) | no |
 | `save_design_system {projectId, name?, force, reason?}` | refuses while sources are read or the check fails; `force` needs `reason` (shown in the feed row); then `POST /d/main/design-system/save` | yes |
 | `list_design_systems {drafts}` | `GET /api/packs` plus the backing project id of each draft | no |
+| `list_links {projectId, directionId?, check?}` | `canvas/link-tools.ts` `listLinks`; one render per page with links marks `broken` | no |
+| `add_link {projectId, directionId?, fromFrame, selector, toFrame \| "back", transition?}` | render check of the selector on the from frame's page, then `canvas.links.update` (source `agent`) | yes |
+| `remove_link {projectId, directionId?, linkId}`, `set_start_frame {projectId, directionId?, frame}` | `canvas.links.update` | yes |
 
 - Edit history: `edit_element`, `batch_edit` edits, `set_token` and `write_file` of an existing file record into the same `direct-edit/history.ts` stack as the UI, so `undo` from MCP and ⌘Z in the studio step the same entries. New files and `batch_edit` files with a new file are not recorded; use `restore_version`.
 - Improve with AI is a studio run, so `create_design_system` passes `improve=off`: `LiveDraftStart.autoImprove: false` starts the draft with `improve: skipped` and the reason "Started from an outside agent…". The Improve button in the app still works.

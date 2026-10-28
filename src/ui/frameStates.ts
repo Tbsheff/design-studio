@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { STUDIO_TOKEN_HEADER, type StudioEvent } from '../shared/contracts';
-import { DEFAULT_FRAME_STATE, withFrameStateHost, type FrameStateDef, type FrameStatesView, type MockUser } from '../shared/frame-state';
+import { DEFAULT_FRAME_STATE, DEFAULT_MOCK_USER, withFrameStateHost, type FrameStateDef, type FrameStatesView, type MockUser } from '../shared/frame-state';
 import { ApiError } from './api';
 import { useProjectEvents } from './events';
 import { getSession } from './session';
@@ -44,11 +44,15 @@ function load(projectId: string): void {
   loading.add(projectId);
   call<FrameStatesView>('GET', base(projectId))
     .then((view) => store(projectId, view))
-    .catch(() => undefined)
+    .catch(() => {
+      if (!views.has(projectId)) store(projectId, { states: [], frames: {}, session: { user: { ...DEFAULT_MOCK_USER }, usesMockUser: true, captured: [], capturedAt: null } });
+    })
     .finally(() => loading.delete(projectId));
 }
 
-export function useFrameStates(projectId: string, isApp: boolean): FrameStatesView | null {
+export type FrameStatesRead = FrameStatesView | null | undefined;
+
+export function useFrameStates(projectId: string, isApp: boolean): FrameStatesRead {
   useEffect(() => {
     if (!isApp) return;
     current = projectId;
@@ -62,7 +66,7 @@ export function useFrameStates(projectId: string, isApp: boolean): FrameStatesVi
   useProjectEvents(isApp ? projectId : null, (event: StudioEvent) => {
     if (event.type === 'frame-states.changed') store(projectId, event.states);
   });
-  const read = useCallback(() => (isApp ? (views.get(projectId) ?? null) : null), [projectId, isApp]);
+  const read = useCallback(() => (isApp ? views.get(projectId) : null), [projectId, isApp]);
   return useSyncExternalStore(subscribe, read, read);
 }
 
@@ -76,11 +80,9 @@ export function frameStateOf(view: FrameStatesView | null, frameId: string): str
   return view?.frames[frameId] ?? DEFAULT_FRAME_STATE;
 }
 
-export function frameStateUrl(url: string, view: FrameStatesView | null, frameId: string): string;
-export function frameStateUrl(url: string | null, view: FrameStatesView | null, frameId: string): string | null;
-export function frameStateUrl(url: string | null, view: FrameStatesView | null, frameId: string): string | null {
-  if (!url || !view) return url;
-  return withFrameStateHost(url, frameStateOf(view, frameId));
+export function frameStateUrl(url: string | null, view: FrameStatesRead, frameId: string): string | null {
+  if (!url || view === undefined) return null;
+  return view ? withFrameStateHost(url, frameStateOf(view, frameId)) : url;
 }
 
 export async function setFrameState(projectId: string, frameId: string, state: string, mock?: { name?: string; rules?: unknown[] }): Promise<FrameStateDef> {

@@ -51,4 +51,21 @@ const setTool = defineTool(
   },
 );
 
-export const FRAME_STATE_TOOLS = [listTool, setTool];
+const sessionTool = defineTool(
+  'set_frame_session',
+  z
+    .object({
+      projectId,
+      user: z.object({ name: z.string().trim().min(1).max(80), email: z.string().trim().min(3).max(120) }).strict().optional().describe('Mock user that signed-in states send while no real sign-in was kept.'),
+      forgetCookies: z.boolean().optional().describe('Forget the cookies the app set in signed-in frames (a kept real sign-in).'),
+    })
+    .strict(),
+  { title: 'Set frame session', description: `Change the session that signed-in frame states use, with the same code as the frame state menu: the mock user, or forget the kept cookies. ${FRAME_STATES_NOTE}`, idempotent: true },
+  async (deps, input) => {
+    const { project, direction } = await loadTarget(deps, input.projectId);
+    const view = await studioCall<FrameStatesView>(deps, 'PATCH', `/api/projects/${encodeURIComponent(project.id)}/frame-states/session`, { ...(input.user ? { user: input.user } : {}), ...(input.forgetCookies ? { forget: true } : {}) });
+    return { result: { content: [{ type: 'text', text: describeFrameStates(project, view) }] }, activity: { projectId: project.id, directionId: direction.id, summary: input.forgetCookies ? 'Forgot the kept frame cookies' : 'Changed the frame mock user' } };
+  },
+);
+
+export const FRAME_STATE_TOOLS = [listTool, setTool, sessionTool];

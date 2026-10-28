@@ -36,8 +36,7 @@ import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
 import { appRoutePages, useAppCanvas } from './AppCanvas';
 import { usePrototype } from '../usePrototype';
-import { frameStateUrl, useFrameStates } from '../frameStates';
-import type { FrameStatesView } from '../../shared/frame-state';
+import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameStates';
 
 interface Props {
   projectId: string;
@@ -257,7 +256,7 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
     });
 }
 
-function livePageUrl(baseUrl: string | null, active: CanvasFrame, states: FrameStatesView | null): string | null {
+function livePageUrl(baseUrl: string | null, active: CanvasFrame, states: FrameStatesRead): string | null {
   return baseUrl ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id) : null;
 }
 

@@ -38,9 +38,7 @@ function InstallFix({ hint }: { hint: FolderInspection | null }) {
   const full = `cd ${JSON.stringify(install.dir)} && ${install.command}`;
   return (
     <div className="app-fail-fix">
-      <span>
-        Run <code>{install.command}</code> in <span className="mono">{install.dir}</span>, then press Start again.
-      </span>
+      <span className="app-fail-label">Install the dependencies in a terminal, then press Start again</span>
       <div className="app-fail-cmd">
         <code className="truncate">{full}</code>
         <CopyButton text={full} label="Copy the install command" />
@@ -98,7 +96,7 @@ export function AppFailure({ projectId, app, status, onRetry, onLog, onClose, on
         </button>
       </div>
       {status.message && <p className="app-fail-message">{status.message}</p>}
-      <InstallFix hint={hint} />
+      {managed && <InstallFix hint={hint} />}
       <UrlForm projectId={projectId} app={app} onSaved={onSaved} />
       <div className="app-fail-foot">
         <button type="button" className="btn small ghost" onClick={onLog}>

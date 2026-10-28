@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
+import { AppFailure } from './AppFailure';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
 
@@ -80,7 +81,8 @@ function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (
             type="button"
             role="listitem"
             className="app-route"
-            title={route.dynamic ? 'Fill in the dynamic segments, then add the frame' : `Add a frame for ${route.route}`}
+            data-tip={route.dynamic ? 'Fill in the dynamic segments, then add the frame' : `Add a frame for ${route.route}`}
+            data-tip-align="start"
             onClick={() => (route.dynamic ? setCustom(route.route) : onAddRoute(route.route))}
           >
             <span>
@@ -102,7 +104,7 @@ function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (
   );
 }
 
-function LogsTab({ logs }: { logs: AppLogLine[] }) {
+function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
   const ref = useRef<HTMLPreElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -110,7 +112,8 @@ function LogsTab({ logs }: { logs: AppLogLine[] }) {
   }, [logs.length]);
   return (
     <pre ref={ref} className="app-logs" aria-label="Dev server log">
-      {logs.length === 0 ? 'No output yet.' : logs.map((line, index) => (
+      {!managed && <span className="studio">The studio did not start this dev server, so it cannot show its output. Look in the terminal where it runs. The studio checks are below.{'\n'}</span>}
+      {logs.length === 0 ? (managed ? 'No output yet.' : '') : logs.map((line, index) => (
         <span key={index} className={line.stream}>
           {line.text}
           {'\n'}
@@ -171,16 +174,26 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'settings', label: 'Settings' },
 ];
 
+function stateText(status: AppServerStatus | null, managed: boolean): string {
+  const state = status?.state ?? 'idle';
+  if (managed) return STATE_TEXT[state];
+  return state === 'ready' ? 'Answers' : state === 'failed' ? 'No answer' : state === 'starting' ? 'Checking' : 'Not checked';
+}
+
 function statusLine(status: AppServerStatus | null, managed: boolean): string {
-  const parts = [STATE_TEXT[status?.state ?? 'idle']];
+  const parts = [stateText(status, managed)];
   if (status?.upstream) parts.push(status.upstream);
   parts.push(managed ? 'started by the studio' : 'your dev server');
-  if (status?.message) parts.push(status.message);
   return parts.join(' · ');
 }
 
 function ServerButtons({ state, managed, control }: { state: AppServerStatus['state']; managed: boolean; control: (action: 'start' | 'stop' | 'restart') => void }) {
-  if (!managed) return null;
+  if (!managed)
+    return state === 'starting' ? null : (
+      <button type="button" className="btn small" onClick={() => control('start')}>
+        Check again
+      </button>
+    );
   const running = state === 'ready';
   return (
     <>
@@ -198,11 +211,10 @@ function ServerButtons({ state, managed, control }: { state: AppServerStatus['st
   );
 }
 
-function AppPanel({ projectId, app, onAddRoute, onClose }: AppBarProps & { onClose: () => void }) {
-  const [tab, setTab] = useState<Tab>('routes');
+function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab }: AppBarProps & { onClose: () => void; tab: Tab; setTab: (tab: Tab) => void }) {
   const { status, logs, refresh } = useAppState(projectId, true);
   const state = status?.state ?? 'idle';
-  const managed = app.mode === 'managed';
+  const managed = (status?.mode ?? app.mode) === 'managed';
   const control = (action: 'start' | 'stop' | 'restart') => void api.appControl(projectId, action).then(refresh).catch(() => undefined);
   return (
     <div className="app-panel" role="dialog" aria-label="App">
@@ -211,6 +223,7 @@ function AppPanel({ projectId, app, onAddRoute, onClose }: AppBarProps & { onClo
         <div className="grow">
           <div className="mono">{app.appDir === '.' ? 'App folder' : app.appDir}</div>
           <div className="app-panel-sub">{statusLine(status, managed)}</div>
+          {status?.message && <div className="app-panel-sub app-panel-message">{status.message}</div>}
         </div>
         <ServerButtons state={state} managed={managed} control={control} />
         <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
@@ -225,24 +238,50 @@ function AppPanel({ projectId, app, onAddRoute, onClose }: AppBarProps & { onClo
         ))}
       </div>
       {tab === 'routes' && <RoutesTab projectId={projectId} onAddRoute={onAddRoute} />}
-      {tab === 'logs' && <LogsTab logs={logs} />}
+      {tab === 'logs' && <LogsTab logs={logs} managed={managed} />}
       {tab === 'settings' && <SettingsTab projectId={projectId} app={app} onSaved={refresh} />}
     </div>
   );
 }
 
+export const APP_PANEL_EVENT = 'studio:app-panel';
+
+function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void): void {
+  useEffect(() => {
+    const show = (event: Event) => {
+      const next = (event as CustomEvent<unknown>).detail;
+      setTab(next === 'logs' || next === 'settings' ? next : 'routes');
+      setOpen(true);
+    };
+    window.addEventListener(APP_PANEL_EVENT, show);
+    return () => window.removeEventListener(APP_PANEL_EVENT, show);
+  }, [setTab, setOpen]);
+}
+
 export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const [open, setOpen] = useState(false);
-  const { status } = useAppState(projectId, false);
+  const [tab, setTab] = useState<Tab>('routes');
+  const [hidden, setHidden] = useState<string | null>(null);
+  const { status, refresh } = useAppState(projectId, false);
   const state = status?.state ?? 'idle';
+  const managed = (status?.mode ?? app.mode) === 'managed';
+  useOpenRequests(setTab, setOpen);
+  const failKey = status?.state === 'failed' ? `${status.startedAt ?? 0}|${status.message ?? ''}` : null;
+  const failed = failKey !== null && failKey !== hidden && !open;
+  const retry = () => void api.appControl(projectId, managed ? 'restart' : 'start').then(refresh).catch(() => undefined);
+  const showLog = () => {
+    setTab('logs');
+    setOpen(true);
+  };
   return (
     <div className="app-bar-root">
-      <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((v) => !v)} data-tip="Routes and dev server">
+      {failed && status && <AppFailure projectId={projectId} app={app} status={status} onRetry={retry} onLog={showLog} onClose={() => setHidden(failKey)} onSaved={refresh} />}
+      <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((v) => !v)} data-tip="Routes, dev server and log">
         <span className="app-status-dot" data-state={state} />
         <span>{app.framework === 'next' ? 'Next.js' : 'App'}</span>
-        <span className="app-panel-sub">{STATE_TEXT[state]}</span>
+        <span className="app-panel-sub">{stateText(status, managed)}</span>
       </button>
-      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} />}
+      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} tab={tab} setTab={setTab} />}
     </div>
   );
 }

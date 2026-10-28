@@ -1,6 +1,8 @@
+import { useEffect, useRef, type RefObject } from 'react';
 import { REVIEW_KIND_LABEL, REVIEW_KINDS, type ReviewFinding, type ReviewKind, type ReviewSeverity } from '../../shared/review';
 import type { ReviewState } from '../useReview';
 import { Icon } from './Icon';
+import { isTypingTarget } from '../typingTarget';
 
 interface Props {
   review: ReviewState;
@@ -40,7 +42,7 @@ function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
       <button type="button" className="review-target" disabled={!finding.selector} data-tip={finding.selector ? 'Select on the canvas' : undefined} onClick={() => a.onSelect(finding)}>
         <span className={`review-sev ${finding.severity}`} aria-label={SEVERITY_WORD[finding.severity]} />
         <span className="truncate">{finding.element}</span>
-        {finding.copies && finding.copies > 1 && <span className="review-copies">{finding.copies} copies</span>}
+        {finding.copies && finding.copies > 1 && !finding.element.startsWith('in ') && <span className="review-copies">{finding.copies} copies</span>}
         {finding.shared && <span className="review-copies">shared</span>}
       </button>
       <p className="review-msg">{finding.message}</p>
@@ -119,10 +121,27 @@ function Body({ review, live, a }: { review: ReviewState; live: boolean; a: Acti
   );
 }
 
+function useEscapeClose(panel: RefObject<HTMLDivElement | null>, onClose: () => void) {
+  const latest = useRef(onClose);
+  latest.current = onClose;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const inPanel = e.target instanceof Node && panel.current?.contains(e.target);
+      if (!inPanel && isTypingTarget(e.target)) return;
+      latest.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [panel]);
+}
+
 export default function ReviewPanel(p: Props) {
+  const panel = useRef<HTMLDivElement>(null);
+  useEscapeClose(panel, p.onClose);
   const a: Actions = { fixBlocked: fixBlocked(p.live, p.running), fixing: p.review.fixing, canAsk: p.canAsk, onSelect: p.onSelect, onAsk: p.onAsk, onFix: (list) => void p.review.fix(list) };
   return (
-    <div className="review-panel" role="region" aria-label="Review">
+    <div ref={panel} className="review-panel" role="region" aria-label="Review">
       <div className="review-head">
         <Icon name="check" />
         <strong>Review</strong>

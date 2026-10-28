@@ -12,6 +12,7 @@ export interface ProbeElement {
   width: number;
   height: number;
   padding: [number, number, number, number];
+  tapStyle?: Record<string, string> | null;
 }
 
 export interface TokenHit {
@@ -28,6 +29,7 @@ export interface ProbeResult {
   elements: Record<string, ProbeElement | null>;
   tokens: TokenHit[];
   tokenElements: Record<string, ProbeElement>;
+  taps: ProbeElement[];
 }
 
 export interface ProbeInput {
@@ -172,8 +174,9 @@ const PROBE_SOURCE = String.raw`async (input) => {
     const el = find(rule.selectorText);
     if (!el) return;
     for (const prop of rule.style) {
-      const raw = rawIn(prop, rule.style.getPropertyValue(prop));
-      if (raw) push(el, { via: 'rule', prop, value: raw, rule: rule.selectorText.slice(0, 120) });
+      const family = prop.replace(/^border-(top|bottom)-(left|right)-radius$/, 'border-radius').replace(/^(row|column)-gap$/, 'gap').replace(/^(padding|margin)-(top|right|bottom|left)$/, '$1');
+      const raw = rawIn(family, rule.style.getPropertyValue(prop));
+      if (raw) push(el, { via: 'rule', prop: family, value: raw, rule: rule.selectorText.slice(0, 120) });
     }
   };
   const all = [...document.body.querySelectorAll('*')].filter((el) => !el.closest('svg') || el.tagName.toLowerCase() === 'svg').slice(0, 4000);
@@ -189,13 +192,59 @@ const PROBE_SOURCE = String.raw`async (input) => {
       for (const rule of rules) scanRule(rule);
     }
   }
+  const TAP = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="checkbox"], [role="switch"], [role="tab"], [role="menuitem"]';
+  const inSentence = (el) => {
+    if (getComputedStyle(el).display !== 'inline' || !el.parentElement) return false;
+    const own = (el.textContent || '').trim().length;
+    return (el.parentElement.textContent || '').trim().length > own + 1;
+  };
+  const shown = (el, r) => {
+    const cs = getComputedStyle(el);
+    return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && Number(cs.opacity) !== 0 && !el.closest('[aria-hidden="true"]');
+  };
+  const smallTaps = [];
+  for (const el of document.body.querySelectorAll(TAP)) {
+    if (smallTaps.length >= 20) break;
+    const r = el.getBoundingClientRect();
+    if (!shown(el, r) || (r.width >= 24 && r.height >= 24) || inSentence(el) || (el.parentElement && el.parentElement.closest(TAP))) continue;
+    smallTaps.push(el);
+  }
   const targets = input.selectors.map((s) => [s, find(s)]);
-  if (input.app) await resolveApp([...targets.map((t) => t[1]).filter(Boolean), ...hitEls.keys()]);
+  if (input.app) await resolveApp([...targets.map((t) => t[1]).filter(Boolean), ...hitEls.keys(), ...smallTaps]);
   const elements = {};
   for (const [s, el] of targets) elements[s] = el ? info(el, s) : null;
   const tokenElements = {};
   for (const [el, selector] of hitEls) tokenElements[selector] = info(el, selector);
-  return { elements, tokens: hits, tokenElements };
+  const grow = (n) => {
+    if (n >= 24) return 0;
+    const half = Math.ceil((24 - n) / 2);
+    return half + (half % 2);
+  };
+  const fits = (el, style) => {
+    const saved = el.getAttribute('style');
+    for (const [key, value] of Object.entries(style)) el.style.setProperty(key, value);
+    const r = el.getBoundingClientRect();
+    if (saved === null) el.removeAttribute('style');
+    else el.setAttribute('style', saved);
+    return r.width >= 24 && r.height >= 24;
+  };
+  const tapStyle = (el) => {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'inline' || cs.display === 'contents') return null;
+    const r = el.getBoundingClientRect();
+    const v = grow(r.height);
+    const h = grow(r.width);
+    const pad = {};
+    if (v > 0) Object.assign(pad, { 'padding-top': px(cs.paddingTop) + v + 'px', 'padding-bottom': px(cs.paddingBottom) + v + 'px' });
+    if (h > 0) Object.assign(pad, { 'padding-left': px(cs.paddingLeft) + h + 'px', 'padding-right': px(cs.paddingRight) + h + 'px' });
+    if (fits(el, pad)) return pad;
+    const size = {};
+    if (r.width < 24) size.width = '24px';
+    if (r.height < 24) size.height = '24px';
+    return fits(el, size) ? size : null;
+  };
+  const taps = smallTaps.map((el) => ({ ...info(el, selectorOf(el)), tapStyle: tapStyle(el) }));
+  return { elements, tokens: hits, tokenElements, taps };
 }`;
 
 export function reviewProbeExpression(input: ProbeInput): string {

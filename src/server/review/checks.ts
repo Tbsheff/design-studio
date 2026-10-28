@@ -1,4 +1,4 @@
-import { differenceEuclidean, formatHex, parse, wcagContrast, type Color } from 'culori';
+import { converter, formatHex, parse, wcagContrast, type Color } from 'culori';
 import type { CompiledTokenEntry, DirectStyleProperty, LayoutFinding, SourceLoc } from '../../shared/contracts.js';
 import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
 import type { ReviewFix, ReviewKind, ReviewSeverity } from '../../shared/review.js';
@@ -43,7 +43,7 @@ export interface AxeViolation {
   nodes: AxeNode[];
 }
 
-export const REVIEW_AXE_RULES = ['color-contrast', 'target-size', 'image-alt', 'input-image-alt', 'svg-img-alt', 'role-img-alt', 'area-alt', 'object-alt', 'button-name', 'link-name', 'label', 'select-name', 'aria-allowed-attr', 'aria-required-attr', 'html-has-lang'];
+export const REVIEW_AXE_RULES = ['color-contrast', 'image-alt', 'input-image-alt', 'svg-img-alt', 'role-img-alt', 'area-alt', 'object-alt', 'button-name', 'link-name', 'label', 'select-name', 'aria-allowed-attr', 'aria-required-attr', 'html-has-lang'];
 export const AXE_NODES_PER_RULE = 20;
 const ALT_RULES = new Set(['image-alt', 'input-image-alt', 'svg-img-alt', 'role-img-alt', 'area-alt', 'object-alt']);
 const LOC = /^(.+):(\d+):(\d+)$/;
@@ -96,22 +96,34 @@ interface PassingToken {
   ratio: number;
 }
 
-const OKLAB_DISTANCE = differenceEuclidean('oklab');
+const TEXT_ROLE = /(^|-)(fg|text|foreground|ink|body|heading|muted|copy)(-|$)/;
+
+function colorDistance(a: Color, b: Color): number {
+  const left = converter('oklab')(a);
+  const right = converter('oklab')(b);
+  if (!left || !right) return Number.POSITIVE_INFINITY;
+  return Math.hypot(left.l - right.l, 2 * (left.a - right.a), 2 * (left.b - right.b));
+}
+
+function passingTokens(fg: Color, back: Color, need: number, entries: CompiledTokenEntry[]): (PassingToken & { distance: number; text: boolean })[] {
+  const out: (PassingToken & { distance: number; text: boolean })[] = [];
+  for (const entry of entries) {
+    const color = entry.type === 'color' ? resolvedColor(entry, entries) : null;
+    if (!color) continue;
+    const ratio = wcagContrast(color, back);
+    if (ratio < need) continue;
+    out.push({ cssVar: entry.cssVar, hex: formatHex(color) ?? '', ratio: Math.round(ratio * 100) / 100, distance: colorDistance(fg, color), text: TEXT_ROLE.test(entry.cssVar.replace(/^--/, '')) });
+  }
+  return out;
+}
 
 export function nearestPassingToken(fg: string, bg: string, need: number, entries: CompiledTokenEntry[]): PassingToken | null {
   const text = parse(fg);
   const back = parse(bg);
   if (!text || !back) return null;
-  let best: (PassingToken & { distance: number }) | null = null;
-  for (const entry of entries) {
-    if (entry.type !== 'color') continue;
-    const color = resolvedColor(entry, entries);
-    if (!color) continue;
-    const ratio = wcagContrast(color, back);
-    if (ratio < need) continue;
-    const distance = OKLAB_DISTANCE(text, color);
-    if (!best || distance < best.distance) best = { cssVar: entry.cssVar, hex: formatHex(color) ?? '', ratio: Math.round(ratio * 100) / 100, distance };
-  }
+  const all = passingTokens(text, back, need, entries);
+  const pool = all.some((item) => item.text) ? all.filter((item) => item.text) : all;
+  const best = pool.sort((a, b) => a.distance - b.distance)[0];
   return best ? { cssVar: best.cssVar, hex: best.hex, ratio: best.ratio } : null;
 }
 
@@ -139,36 +151,28 @@ function contrastDraft(node: AxeNode, el: ProbeElement | null, entries: Compiled
   };
 }
 
-function grow(size: number): number {
-  if (size >= TAP_MIN) return 0;
-  const half = Math.ceil((TAP_MIN - size) / 2);
-  return half + (half % 2);
-}
-
 function tapEdit(el: ProbeElement): ReviewFix['edit'] | null {
-  if (el.display === 'inline' || el.display === 'contents' || el.display === 'none') return null;
-  const v = grow(el.height);
-  const h = grow(el.width);
-  const [top, right, bottom, left] = el.padding;
-  const style: Partial<Record<DirectStyleProperty, string>> = {};
-  if (v > 0) Object.assign(style, { 'padding-top': `${top + v}px`, 'padding-bottom': `${bottom + v}px` });
-  if (h > 0) Object.assign(style, { 'padding-left': `${left + h}px`, 'padding-right': `${right + h}px` });
-  return Object.keys(style).length > 0 ? editFor(el, style) : null;
+  const style = el.tapStyle;
+  return style && Object.keys(style).length > 0 ? editFor(el, style as Partial<Record<DirectStyleProperty, string>>) : null;
 }
 
-function tapDraft(node: AxeNode, el: ProbeElement | null): Draft {
-  const selector = axeSelector(node);
-  const head = base('tap-target', el, selector, node.html);
-  const size = el ? `${el.width}x${el.height} px` : 'too small';
-  const edit = el ? tapEdit(el) : null;
-  return {
-    ...head,
-    key: `${selector}`,
-    severity: el && Math.min(el.width, el.height) < 16 ? 'high' : 'medium',
-    message: `This target is ${size}; tap targets need at least ${TAP_MIN}x${TAP_MIN} px or more space around them.`,
-    fix: edit ? { label: 'Add padding', edit } : null,
-    hint: `Make the target at least ${TAP_MIN}x${TAP_MIN} px, for example with padding, without changing how it looks more than needed.`,
-  };
+function tapLabel(edit: ReviewFix['edit']): string {
+  const style = edit.style ?? {};
+  return 'width' in style || 'height' in style ? 'Make it 24 px' : 'Add padding';
+}
+
+export function tapDrafts(taps: ProbeElement[]): Draft[] {
+  return taps.map((el) => {
+    const edit = tapEdit(el);
+    return {
+      ...base('tap-target', el, el.selector, el.tag),
+      key: el.selector,
+      severity: Math.min(el.width, el.height) < 16 ? 'high' : 'medium',
+      message: `This target is ${el.width}x${el.height} px; tap targets need at least ${TAP_MIN}x${TAP_MIN} px.`,
+      fix: edit ? { label: tapLabel(edit), edit } : null,
+      hint: `Make the target at least ${TAP_MIN}x${TAP_MIN} px, for example with padding or a larger hit area, and keep the look close to the design.`,
+    };
+  });
 }
 
 function axeDraft(violation: AxeViolation, node: AxeNode, el: ProbeElement | null): Draft {
@@ -190,9 +194,7 @@ export function axeDrafts(violations: AxeViolation[], elements: Record<string, P
     violation.nodes.slice(0, AXE_NODES_PER_RULE).map((node) => {
       const selector = axeSelector(node);
       const el = selector ? (elements[selector] ?? null) : null;
-      if (violation.id === 'color-contrast') return contrastDraft(node, el, entries);
-      if (violation.id === 'target-size') return tapDraft(node, el);
-      return axeDraft(violation, node, el);
+      return violation.id === 'color-contrast' ? contrastDraft(node, el, entries) : axeDraft(violation, node, el);
     }),
   );
 }
@@ -248,8 +250,11 @@ function classProps(utility: string, value: string): DirectStyleProperty[] {
   return CLASS_PROPS[utility] ?? [];
 }
 
+const SHORTHAND = new Set(['padding', 'margin']);
+
 function inlineProps(prop: string): DirectStyleProperty[] {
   if (prop === 'background') return ['background-color'];
+  if (SHORTHAND.has(prop)) return CLASS_PROPS[prop.charAt(0)] ?? [];
   return STYLE_PROPS.has(prop) ? [prop as DirectStyleProperty] : [];
 }
 
@@ -283,7 +288,7 @@ function hitSubject(hit: TokenHit): string {
 }
 
 function fixable(hit: TokenHit, props: DirectStyleProperty[]): boolean {
-  if (props.length === 0 || hit.via === 'rule') return false;
+  if (props.length === 0 || hit.via === 'rule' || (hit.via === 'inline' && SHORTHAND.has(hit.prop))) return false;
   return hit.via === 'inline' || !hit.variants;
 }
 

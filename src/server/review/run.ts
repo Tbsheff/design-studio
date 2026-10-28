@@ -8,7 +8,7 @@ import { loadAxeSource } from '../preview/axe.js';
 import { layoutProbeExpression, type LayoutProbeResult } from '../preview/layout-probe.js';
 import type { RenderPage } from '../preview/render-backend.js';
 import type { PreviewService } from '../types.js';
-import { axeDrafts, axeSelector, layoutDrafts, REVIEW_AXE_RULES, tokenDrafts, type AxeViolation, type Draft } from './checks.js';
+import { axeDrafts, axeSelector, layoutDrafts, REVIEW_AXE_RULES, tapDrafts, tokenDrafts, type AxeViolation, type Draft } from './checks.js';
 import { verifyFixes } from './fixes.js';
 import { reviewProbeExpression, type ProbeResult } from './probe.js';
 
@@ -81,7 +81,7 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   const url = withPagePath(target.baseUrl ?? (await preview.directionUrl(project, direction)), frame.path || undefined);
   const entries = (await readDesignSystemState(project, direction)).entries;
   const facts = await preview.withPage(url, { width: frame.width, height: frame.height }, (page) => readPage(page, project.app !== undefined && project.app !== null));
-  const drafts = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, true), ...layoutDrafts(facts.layout)];
+  const drafts = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tapDrafts(facts.probe.taps), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, true), ...layoutDrafts(facts.layout)];
   await verifyFixes(project, direction, drafts);
   const findings = ordered(unique(drafts.map((draft) => toFinding(draft, frame))));
   const notes = entries.length === 0 ? ['This project has no design tokens, so only Tailwind arbitrary values count as off-token.'] : [];

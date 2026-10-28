@@ -37,6 +37,13 @@ const EDITING_RULES = `## How to edit
 - Create a new file only when the request needs one.
 - Stay inside the working directory. Do not touch \`.git\` or \`node_modules\`.`;
 
+const SHELL_EDIT_RULES = `## Shell and file changes
+Make design changes with Edit, Write or mcp__studio__insert_jsx: the studio tracks them, shows each diff to the user and checks the result. Use Bash to read, search, build and run scripts, not to rewrite files with sed, python or \`cat > file\`. If a shell command changes files, the studio records those changes as edits. It refuses git writes and puts back changes to \`.env*\`, keys and read-only files.`;
+
+function shellEditRules(project: Project): string[] {
+  return project.settings.allowBash ? [SHELL_EDIT_RULES] : [];
+}
+
 const SELECTION_RULES = `## Selected elements
 When the message has a <selected-elements> block, the user pointed at those elements in the preview.
 - Change ONLY those elements and their direct styles. Do not edit global styles, design tokens, CSS variables, or other sections.
@@ -231,7 +238,7 @@ export function buildSystemPrompt(
   const sections =
     mode === 'critique'
       ? [ROLE, kindRules, policy, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, CRITIQUE_RULES, CANVAS_RULES]
-      : [ROLE, kindRules, policy, EDITING_RULES, SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, CONTEXT_RULES, DIRECT_EDIT_RULES, EDIT_REPLY_RULES];
+      : [ROLE, kindRules, policy, EDITING_RULES, ...shellEditRules(project), SELECTION_RULES, QUALITY_RULES, DESIGN_MD_RULES, VERIFY_RULES, CANVAS_RULES, CONTEXT_RULES, DIRECT_EDIT_RULES, EDIT_REPLY_RULES];
   if (skillCount > 0) sections.push(skillsRule(skillCount, shellAllowed && project.settings.allowBash && mode !== 'critique'));
   if (tasteRules.length > 0) sections.push(buildTasteBlock(tasteRules, mode));
   if (designSystem) sections.push(buildDesignSystemBlock(project, mode, designSystem));

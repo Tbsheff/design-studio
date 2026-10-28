@@ -28,6 +28,8 @@ export const REVIEW_FRAME_TOOL = 'mcp__studio__review_frame';
 export const LIST_COMPONENTS_TOOL = 'mcp__studio__list_components';
 export const GET_LAYERS_TOOL = 'mcp__studio__get_layers';
 const DIRECT_EDIT_TOOLS = new Set<string>([EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL, INSERT_JSX_TOOL, CLEAR_TEXT_TOOL]);
+export const BASH_EDIT_TOOL = 'studio:bash-edit';
+export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>(['Write', 'Edit', 'MultiEdit', BASH_EDIT_TOOL, ...DIRECT_EDIT_TOOLS]);
 const STUDIO_MCP_TOOLS = ['mcp__studio__screenshot', 'mcp__studio__render_check', 'mcp__studio__design_review', 'mcp__studio__define_tweaks', DESIGN_SYSTEM_CHECK_TOOL, CANVAS_LIST_TOOL, CANVAS_PLACE_TOOL, CANVAS_POINT_TOOL, LIST_LINKS_TOOL, EDIT_LINKS_TOOL, LIST_FRAME_STATES_TOOL, SET_FRAME_STATE_TOOL, SET_FRAME_SESSION_TOOL, EDIT_ELEMENT_TOOL, SET_TOKEN_TOOL, SET_PROPS_TOOL, FIND_STYLES_TOOL, REPLACE_STYLE_TOOL, INSERT_COMPONENT_TOOL, INSERT_JSX_TOOL, CLEAR_TEXT_TOOL, 'mcp__studio__prepare_ship', REVIEW_FRAME_TOOL, LIST_COMPONENTS_TOOL, GET_LAYERS_TOOL] as const;
 
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
@@ -186,7 +188,7 @@ function checkSecretFiles(workTree: string, input: Record<string, unknown>): str
   return null;
 }
 
-function isExecutedConfigFile(file: string): boolean {
+export function isExecutedConfigFile(file: string): boolean {
   const name = path.basename(file).toLowerCase();
   return EXECUTED_CONFIG_PATTERNS.some((pattern) => pattern.test(name));
 }
@@ -302,32 +304,62 @@ function checkSkill(policy: ToolPolicy, input: Record<string, unknown>): string 
 const READ_ONLY_COMMANDS = new Set(['cat', 'ls', 'head', 'tail', 'grep', 'rg', 'wc', 'file', 'stat', 'du', 'tree', 'find', 'cd', 'pwd', 'echo', 'sort', 'uniq', 'jq']);
 const FIND_WRITES = /\s-(delete|exec|execdir|ok|okdir|fprint\w*|fls)\b/;
 
+function writesInsideDir(dir: string, command: string): boolean {
+  const pattern = new RegExp(`(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|[\\s'")]|$)`);
+  if (!pattern.test(command)) return false;
+  if (/[>]|\btee\b/.test(command)) return true;
+  const segments = command.split(/&&|\|\||;|\||\n/).map((part) => part.trim()).filter(Boolean);
+  return segments.some((segment) => {
+    const word = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/)[0] ?? '';
+    return !READ_ONLY_COMMANDS.has(word) || (word === 'find' && FIND_WRITES.test(segment));
+  });
+}
+
 function touchesReadOnlyDir(policy: ToolPolicy, command: string): string | null {
-  const dirs = policy.readOnlyDirs ?? [];
-  for (const dir of dirs) {
-    const pattern = new RegExp(`(^|[\\s'"=:(/.])${dir.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|[\\s'")]|$)`);
-    if (!pattern.test(command)) continue;
-    if (/[>]|\btee\b/.test(command)) return dir;
-    const segments = command.split(/&&|\|\||;|\||\n/).map((part) => part.trim()).filter(Boolean);
-    const writes = segments.some((segment) => {
-      const word = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/)[0] ?? '';
-      return !READ_ONLY_COMMANDS.has(word) || (word === 'find' && FIND_WRITES.test(segment));
-    });
-    if (writes) return dir;
-  }
-  return null;
+  return (policy.readOnlyDirs ?? []).find((dir) => writesInsideDir(dir, command)) ?? null;
+}
+
+const GIT_READ_VERBS = new Set(['status', 'diff', 'log', 'show', 'ls-files', 'rev-parse', 'blame', 'grep', 'cat-file', 'ls-tree', 'describe', 'shortlog', '--version', 'version', 'help']);
+const GIT_MESSAGE = 'Design Studio keeps its own versions, so the agent may only read git (status, diff, log, show). Ask the user to run other git commands by hand.';
+
+function gitVerb(segment: string): string | null {
+  const words = segment.replace(/^(\w+=\S*\s+)*/, '').split(/\s+/).filter(Boolean);
+  const at = words.findIndex((word) => path.basename(word) === 'git');
+  if (at === -1) return null;
+  let index = at + 1;
+  while (index < words.length && (words[index] ?? '').startsWith('-') && words[index] !== '--version') index += (words[index] === '-C' || words[index] === '-c') ? 2 : 1;
+  return words[index] ?? '';
+}
+
+function writesGit(command: string): boolean {
+  if (writesInsideDir('.git', command)) return true;
+  return command.split(/&&|\|\||;|\||\n|\$\(|`/).some((segment) => {
+    const verb = gitVerb(segment.trim());
+    return verb !== null && !GIT_READ_VERBS.has(verb);
+  });
 }
 
 function checkBash(policy: ToolPolicy, input: Record<string, unknown>): string | null {
   const command = input['command'];
   if (typeof command !== 'string') return 'Bash needs a command string.';
   if (SECRET_IN_COMMAND.test(command)) return SECRET_MESSAGE;
+  if (writesGit(command)) return GIT_MESSAGE;
   const readOnly = touchesReadOnlyDir(policy, command);
   if (readOnly) return `${readOnly}/ holds the untrusted source material of this design system. Shell commands may only read it (cat, ls, grep, find, head); change the design-system files instead.`;
   if (!policy.allowInstall && isInstallCommand(command)) {
     return 'Package managers, downloads and inline code (sh -c, eval, node -e, python -c) are turned off for this project.';
   }
   return null;
+}
+
+export function bashWriteProblem(policy: Pick<ToolPolicy, 'workTree' | 'allowInstall' | 'readOnlyDirs'>, relative: string): string | null {
+  const input = { file_path: relative };
+  if (relative.split('/').some((segment) => BLOCKED_SEGMENTS.has(segment))) return `${relative} is inside .git or node_modules, which is off limits.`;
+  if (isSecretFile(relative)) return SECRET_MESSAGE;
+  const problem = checkReadOnlyDirs({ ...policy, mode: 'edit', allowBash: true }, input);
+  if (problem) return problem;
+  if (policy.allowInstall) return null;
+  return isExecutedConfigFile(relative) ? `Package installs are off in this project, so the agent may not change ${path.basename(relative)}: build tools run this file as code. Ask the user to change it by hand.` : null;
 }
 
 const PLAN_BLOCKED = new Set<string>([...WRITE_PATH_TOOLS, 'Bash', TWEAKS_TOOL, CANVAS_PLACE_TOOL, EDIT_LINKS_TOOL, ...DIRECT_EDIT_TOOLS]);
@@ -375,7 +407,7 @@ export function createPreToolUseGuard(
   policy: ToolPolicy,
   onDecision?: (toolName: string, result: PermissionResult) => void,
   beforeChange?: () => Promise<void>,
-  onAllowed?: (toolUseId: string, toolName: string, input: Record<string, unknown>) => void,
+  onAllowed?: (toolUseId: string, toolName: string, input: Record<string, unknown>) => void | Promise<void>,
   bashGate?: ToolGate,
 ): HookCallback {
   return async (hookInput) => {
@@ -387,7 +419,7 @@ export function createPreToolUseGuard(
     onDecision?.(hookInput.tool_name, result);
     if (result.behavior === 'allow') {
       if (beforeChange && canChangePreview(hookInput.tool_name)) await beforeChange();
-      onAllowed?.(hookInput.tool_use_id, hookInput.tool_name, record);
+      await onAllowed?.(hookInput.tool_use_id, hookInput.tool_name, record);
       return {};
     }
     return {

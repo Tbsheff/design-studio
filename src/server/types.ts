@@ -67,6 +67,7 @@ export interface VersionStore {
   untrackedCount?(project: Project): number | null;
   commitFile(project: Project, direction: Direction, relativePath: string | string[], title: string, meta: VersionMeta): Promise<Version | null>;
   status(project: Project, direction: Direction, paths?: string[]): Promise<WorkTreeStatus>;
+  headFile?(project: Project, direction: Direction, relativePath: string): Promise<Uint8Array | null>;
   discard(project: Project, direction: Direction): Promise<WorkTreeStatus>;
   restore(project: Project, direction: Direction, versionId: string, kind: 'undo' | 'restore'): Promise<Version>;
   checkoutInto(project: Project, versionId: string, targetDir: string): Promise<void>;

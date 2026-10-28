@@ -530,6 +530,7 @@ export interface ToolCallRecord {
   isError: boolean;
   summary?: string;
   diff?: ToolDiff;
+  diffs?: ToolDiff[];
   denied?: boolean;
 }
 
@@ -608,7 +609,7 @@ export type StudioEventBody =
   | { type: 'run.thinking.delta'; runId: string; text: string }
   | { type: 'run.thinking'; runId: string; text: string }
   | { type: 'run.tool.started'; runId: string; toolUseId: string; name: string; input: unknown }
-  | { type: 'run.tool.finished'; runId: string; toolUseId: string; isError: boolean; summary: string; durationMs: number; diff?: ToolDiff; denied?: boolean }
+  | { type: 'run.tool.finished'; runId: string; toolUseId: string; isError: boolean; summary: string; durationMs: number; diff?: ToolDiff; diffs?: ToolDiff[]; denied?: boolean }
   | { type: 'run.user'; runId: string; id: string; text: string }
   | { type: 'run.queue'; runId: string; items: QueuedMessage[] }
   | { type: 'run.stopping'; runId: string }

@@ -575,6 +575,16 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       return lock(lockKey(project, direction), () => statusOf(project, direction, paths));
     },
 
+    async headFile(project: Project, direction: Direction, relativePath: string): Promise<Uint8Array | null> {
+      const head = await headOf(project, direction);
+      if (head === null) return null;
+      try {
+        return await runGitBuffer(repoScope(project), ['cat-file', 'blob', `${head}:${relativePath}`]);
+      } catch {
+        return null;
+      }
+    },
+
     discard(project: Project, direction: Direction): Promise<WorkTreeStatus> {
       return lock(lockKey(project, direction), async () => {
         const head = await headOf(project, direction);

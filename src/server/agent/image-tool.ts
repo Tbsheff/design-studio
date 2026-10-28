@@ -66,7 +66,7 @@ async function targetFor(deps: DirectToolDeps, input: Input) {
   const url = editPageUrl(deps.ctx, input.page);
   const [element] = await describeElements(deps.preview, url, [input.selector]);
   if (!element) throw new Error(`No element matches ${input.selector} on the page.`);
-  const probed = element.source ? null : await probeOwners(deps.preview, url, input.selector).catch(() => null);
+  const probed = await probeOwners(deps.preview, url, input.selector).catch(() => null);
   if (!element.source && !probed?.owners.length) throw new Error(`${input.selector} has no source location. Pass source (file:line:col).`);
   return { source: element.source, tag: element.tag, selector: input.selector, background: imageKindOf(element) === 'background', ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }

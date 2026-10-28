@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import type { Direction, Project, VersionMeta } from '../../shared/contracts.js';
+import type { Direction, Project, SourceLoc, VersionMeta } from '../../shared/contracts.js';
 import { IMAGE_ALT_MAX, IMAGE_FITS, IMAGE_MODES, type ImageFit, type SetImageResult } from '../../shared/image.js';
 import { OWNERS_MAX, OWNER_STACK_MAX } from '../../shared/props.js';
 import type { InsertScope } from '../components/insert.js';
+import { loadLibrary } from '../components/insert-list.js';
+import { ownerUseSite } from '../components/use-site.js';
 import { DirectEditError } from './errors.js';
 import { jsxElementAt, jsxTagName, setHtmlAttrs, setJsxAttrs, type AttrChanges } from './image-attrs.js';
 import { imageFromBase64, imageFromUrl, type ImageBytes } from './image-source.js';
@@ -124,10 +126,25 @@ function titleOf(mode: ImagePlan['mode'], tag: string, request: ParsedImageReque
   return `${mode === 'background' ? 'Background image' : 'Image'} of ${tag}: ${parts.join(', ') || 'no change'}`;
 }
 
+const NO_SOURCE = 'This element has no source location. Ask the agent to change the image in Chat.';
+
+async function useSiteOf(scope: InsertScope, owners: ParsedImageRequest['target']['owners']): Promise<SourceLoc | null> {
+  const owner = owners?.find((item) => /^[A-Z]/.test(item.name));
+  if (!owner) return null;
+  const { root } = await loadLibrary(scope.project, scope.workTree);
+  return ownerUseSite({ workTree: scope.workTree, previewOrigin: scope.previewOrigin }, root, owner).catch(() => null);
+}
+
+async function sourceFor(scope: InsertScope, target: ParsedImageRequest['target']): Promise<{ source: SourceLoc; target: ResolvedSource }> {
+  const own = target.source ? await resolveSource(scope.workTree, target.source.file).catch((error: unknown) => (target.owners?.length ? null : Promise.reject(error))) : null;
+  if (own && target.source) return { source: target.source, target: own };
+  const use = await useSiteOf(scope, target.owners);
+  if (!use) throw new DirectEditError('element_not_found', NO_SOURCE);
+  return { source: use, target: await resolveSource(scope.workTree, use.file) };
+}
+
 async function planReplace(scope: InsertScope, request: ParsedImageRequest, mode: ImagePlan['mode'], image: ImageBytes | null): Promise<ImagePlan> {
-  const source = request.target.source;
-  if (!source) throw new DirectEditError('element_not_found', 'This element has no source location. Ask the agent to change the image in Chat.');
-  const target = await resolveSource(scope.workTree, source.file);
+  const { source, target } = await sourceFor(scope, request.target);
   const original = await readFile(target.file, 'utf8');
   const asset = image ? await planAsset(scope.project, scope.workTree, target.relative, image) : null;
   const html = isHtml(target.relative);

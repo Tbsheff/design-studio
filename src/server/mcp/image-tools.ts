@@ -60,7 +60,7 @@ async function targetFor(deps: EditDeps, project: Project, direction: Direction,
   const url = await pageUrl(deps, project, direction, input.page);
   const element = await describeElement(deps.preview, url, sel);
   if (!element) throw new EditError(`No element matches ${sel} on the page.`);
-  const probed = element.source ? null : await probeOwners(deps.preview, url, sel).catch(() => null);
+  const probed = await probeOwners(deps.preview, url, sel).catch(() => null);
   if (!element.source && !probed?.owners.length) throw new EditError(`${sel} has no source location. Pass source with the file:line:col of its tag.`);
   return { source: element.source, tag: element.tag, selector: sel, background: imageKindOf(element) === 'background', ...(probed?.owners.length ? { owners: probed.owners } : {}) };
 }

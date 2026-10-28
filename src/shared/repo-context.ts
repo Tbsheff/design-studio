@@ -1,5 +1,5 @@
 export const REPO_CONTEXT_FILES = ['AGENTS.md', 'CLAUDE.md', 'DESIGN.md', 'PRODUCT.md'] as const;
-export const REPO_CONTEXT_MAX_BYTES = 8192;
+export const REPO_CONTEXT_MAX_BYTES = 32768;
 
 export type RepoContextScope = 'app' | 'workspace';
 export type RepoContextUse = 'full' | 'cut' | 'design_md' | 'duplicate' | 'import_only' | 'too_large';

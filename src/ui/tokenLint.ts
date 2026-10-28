@@ -22,12 +22,19 @@ const SHORTHANDS: Record<string, DirectStyleProperty[]> = {
 };
 
 const LINTED = Object.keys(TOKEN_GROUP_FOR_PROPERTY) as DirectStyleProperty[];
+const CSS_WIDE = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
+const BORDER_KEYWORDS = /^(none|hidden|solid|dashed|dotted|double|groove|ridge|inset|outset|thin|medium|thick|inherit|initial|unset|revert|revert-layer|currentcolor|0|[\d.]+[a-z%]*)$/i;
+
+function borderHasColor(value: string): boolean {
+  return value.split(/\s+/).some((part) => part !== '' && !BORDER_KEYWORDS.test(part));
+}
 
 export function authoredProps(css: AuthoredCss | null): Map<DirectStyleProperty, string> {
   const out = new Map<DirectStyleProperty, string>();
   if (!css) return out;
   const take = (text: string) => {
     for (const { prop, value } of parseDeclarations(text)) {
+      if (prop === 'border' && !borderHasColor(value)) continue;
       const targets = SHORTHANDS[prop] ?? (LINTED.includes(prop as DirectStyleProperty) ? [prop as DirectStyleProperty] : []);
       for (const target of targets) out.set(target, value);
     }
@@ -50,8 +57,13 @@ function fontFallback(prop: DirectStyleProperty, entries: CompiledTokenEntry[]):
   return entry ? { cssVar: entry.cssVar, path: entry.path, value: entry.value, distance: 1, exact: false } : null;
 }
 
+function noBorder(values: StyleValues): boolean {
+  const style = values['border-style'] ?? '';
+  return style === '' || style === 'none' || style === 'hidden' || !(parseFloat(values['border-width'] ?? '') > 0);
+}
+
 function issueFor(prop: DirectStyleProperty, value: string, authored: string, entries: CompiledTokenEntry[], mode: TokenMode): LintIssue | null {
-  if (/var\(/.test(authored) || isUnsetValue(value)) return null;
+  if (/var\(/.test(authored) || CSS_WIDE.test(authored.trim()) || isUnsetValue(value)) return null;
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
   if (!group || tokensForProperty(prop, entries).length === 0) return null;
   const best = matchForProperty(prop, value, entries, mode)[0];
@@ -70,7 +82,7 @@ export function lintValues(values: StyleValues, entries: CompiledTokenEntry[], m
   const issues: LintIssue[] = [];
   for (const prop of LINTED) {
     const source = authored.get(prop);
-    if (source === undefined) continue;
+    if (source === undefined || (prop === 'border-color' && noBorder(values))) continue;
     const issue = issueFor(prop, values[prop], source, entries, mode);
     if (!issue) continue;
     const same = issues.find((item) => item.token.cssVar === issue.token.cssVar && item.value === issue.value && item.kind === issue.kind);

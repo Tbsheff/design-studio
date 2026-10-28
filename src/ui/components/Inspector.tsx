@@ -1,10 +1,11 @@
-import { Suspense, lazy, useEffect, useRef, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import { sharedSourceOf } from '../../shared/app';
 import type { EditSessionEnd, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import type { DesignTokens } from '../useDesignSystemState';
 import type { DirectEditCommit, DirectEditControl } from '../useDirectEdit';
 import { unsavedLabel, useEditSession, type EditSession, type EditSessionHandle, type SessionAction } from '../useEditSession';
+import { ComponentsPanel } from './ComponentsPanel';
 import { Icon } from './Icon';
 import { InspectorCode } from './InspectorCode';
 import { InspectorAppContext } from './InspectorShared';
@@ -16,7 +17,7 @@ import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
 
-export type InspectorTab = 'simple' | 'pro' | 'code' | 'tweaks';
+export type InspectorTab = 'simple' | 'pro' | 'components' | 'code' | 'tweaks';
 
 interface InspectorProps {
   projectId: string;
@@ -42,11 +43,13 @@ interface InspectorProps {
   onTab?: (tab: InspectorTab) => void;
   appDir?: string | null;
   onAskAgent?: (prompt: string) => void;
+  components?: ComponentProps<typeof ComponentsPanel>;
 }
 
 const TABS: { id: InspectorTab; label: string }[] = [
   { id: 'simple', label: 'Simple' },
-  { id: 'pro', label: 'Pro' },
+  { id: 'pro', label: 'Layers' },
+  { id: 'components', label: 'Components' },
   { id: 'code', label: 'Code' },
   { id: 'tweaks', label: 'Tweaks' },
 ];
@@ -103,7 +106,7 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
       >
         {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
       </button>
-      <button type="button" className="btn small edit-save" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
+      <button type="button" className="btn small primary" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
         {session.busy === 'save' ? 'Saving…' : 'Save'}
       </button>
     </div>
@@ -130,7 +133,7 @@ function LeavePrompt({ session }: { session: EditSession }) {
         <button type="button" className="btn small" disabled={session.busy !== null || session.blocked !== null} onClick={() => void session.answer('discard')}>
           Discard
         </button>
-        <button ref={first} type="button" className="btn small edit-save" disabled={session.busy !== null} onClick={() => void session.answer('save')}>
+        <button ref={first} type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.answer('save')}>
           Save
         </button>
       </div>
@@ -195,10 +198,7 @@ function SimpleTab(props: InspectorProps) {
   const effective = editingUse && shared?.use && shared.name ? { ...target, source: shared.use, component: shared.name, usedAt: null } : target;
   const sharedEditing = shared ? { shared, editingUse, onToggle: () => setUseFor(editingUse ? null : target.selector) } : null;
   return (
-    <>
-      <ComponentSection {...props} />
-      <SimpleEditor key={`${target.selector}|${variant}${editingUse ? '|use' : ''}`} {...props} target={effective} sharedEditing={sharedEditing} />
-    </>
+    <SimpleEditor key={`${target.selector}|${variant}${editingUse ? '|use' : ''}`} {...props} target={effective} sharedEditing={sharedEditing} component={<ComponentSection {...props} />} />
   );
 }
 
@@ -206,8 +206,16 @@ function ProTab(props: InspectorProps) {
   return (
     <div className="edit-pro">
       <div className="edit-pro-layers">{props.layers ?? <p className="ins-hint">Layers show for the live preview. Press ⌥1 to open them on the canvas.</p>}</div>
-      <InspectorTools {...props} />
       {props.selection.length === 0 && <p className="ins-hint">{EMPTY_HINT}</p>}
+    </div>
+  );
+}
+
+function ComponentsTab({ components }: { components: InspectorProps['components'] }) {
+  if (!components) return <p className="ins-hint edit-tab-empty">Components show for projects with a component list.</p>;
+  return (
+    <div className="edit-components">
+      <ComponentsPanel {...components} active />
     </div>
   );
 }
@@ -257,10 +265,11 @@ export function Inspector(props: InspectorProps) {
         )}
         <LeavePrompt session={session} />
         <Tabs tab={tab} onTab={onTab} />
-        {tab === 'simple' && <InspectorTools {...props} />}
+        {(tab === 'simple' || tab === 'pro') && <InspectorTools {...props} />}
         <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
           {tab === 'simple' && <SimpleTab {...props} />}
           {tab === 'pro' && <ProTab {...props} />}
+          {tab === 'components' && <ComponentsTab components={props.components} />}
           {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
           {tab === 'tweaks' && (
             <>

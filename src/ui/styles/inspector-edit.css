@@ -50,16 +50,6 @@
   font-weight: var(--w-medium);
 }
 
-.edit-pane .btn.edit-save {
-  background: var(--accent);
-  box-shadow: none;
-  color: var(--on-accent);
-}
-
-.edit-pane .btn.edit-save:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
 .edit-tabs {
   display: flex;
   align-items: center;
@@ -270,9 +260,46 @@
   padding: 0 calc(var(--pane-inset) - var(--s-1)) 0 var(--pane-inset);
 }
 
+.ins-head {
+  flex: none;
+  padding-top: var(--s-1);
+  border-bottom: 1px solid var(--line);
+}
+
 .ins-meta .ins-source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
   flex: 1 1 auto;
   min-width: 80px;
+  height: 24px;
+  padding: 0 var(--s-1);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  direction: ltr;
+  font-size: var(--t-2xs);
+  cursor: pointer;
+}
+
+.ins-meta .ins-source > svg {
+  flex: none;
+  opacity: 0;
+}
+
+.ins-meta .ins-source:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.ins-meta .ins-source:hover > svg,
+.ins-meta .ins-source:focus-visible > svg {
+  opacity: 1;
+}
+
+.ins-meta .ins-source:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .ins-meta .ins-header-end {
@@ -292,6 +319,7 @@
 }
 
 .edit-pane .ins-crumbs {
+  border-bottom: 0;
   padding: 0 calc(var(--pane-inset) - var(--s-1));
 }
 
@@ -673,76 +701,6 @@
   bottom: var(--s-2);
 }
 
-@supports (appearance: base-select) {
-  .edit-pane .ins-field.select select,
-  .edit-pane .ins-field.select select::picker(select) {
-    appearance: base-select;
-  }
-
-  .edit-pane .ins-field.select select {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    border: 0;
-    color: var(--text);
-  }
-
-  .edit-pane .ins-field.select select::picker-icon {
-    display: none;
-  }
-
-  .edit-pane .ins-field.select select::picker(select) {
-    min-width: max(160px, anchor-size(width));
-    margin-block: var(--s-1);
-    padding: var(--s-1);
-    border: 0;
-    border-radius: var(--r-lg);
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-pop);
-    color: var(--text);
-    font-size: var(--t-xs);
-    line-height: 16px;
-    position-try-fallbacks: flip-block;
-  }
-
-  .edit-pane .ins-field.select option {
-    display: flex;
-    align-items: center;
-    gap: var(--s-2);
-    min-height: 28px;
-    padding: 0 var(--s-2);
-    border-radius: var(--r-md);
-    font-size: var(--t-xs);
-    font-weight: var(--w-medium);
-    cursor: pointer;
-  }
-
-  .edit-pane .ins-field.select option::checkmark {
-    order: -1;
-    width: 16px;
-    color: var(--accent-text);
-    content: '✓';
-    visibility: hidden;
-  }
-
-  .edit-pane .ins-field.select option:checked::checkmark {
-    visibility: visible;
-  }
-
-  .edit-pane .ins-field.select option:is(:hover, :focus-visible) {
-    outline: none;
-    background: var(--surface-hover);
-  }
-
-  .edit-pane .ins-field.select option:checked {
-    background: transparent;
-  }
-
-  .edit-pane .ins-field.select option:checked:is(:hover, :focus-visible) {
-    background: var(--surface-hover);
-  }
-}
-
 .edit-pane .box-ring .side {
   padding: 0 var(--s-1);
   text-align: center;
@@ -765,18 +723,9 @@
   box-shadow: none;
 }
 
-.ins-classes {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  gap: 2px var(--s-2);
-  flex: none;
-  padding: 0 var(--pane-inset) var(--s-2);
-}
-
-.ins-classes-label {
+.ins-classes-tag {
   color: var(--text-3);
-  font-size: var(--t-xs);
+  font-size: var(--t-2xs);
 }
 
 .ins-classes-list {
@@ -794,44 +743,11 @@
 }
 
 .ins-classes-note {
-  grid-column: 1 / -1;
   margin: 0;
 }
 
-.ins-source-block {
-  display: grid;
-  gap: 2px;
-  flex: none;
-  padding: 2px calc(var(--pane-inset) - var(--s-1)) 6px var(--pane-inset);
-  border-bottom: 1px solid var(--line);
-}
-
-.ins-source-row {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--s-1);
-  min-height: 24px;
-}
-
-.ins-source-label {
+.ins-classes-list.resolved {
   color: var(--text-3);
-  font-size: var(--t-2xs);
-}
-
-.ins-source-path {
-  font-size: var(--t-2xs);
-  color: var(--text-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  direction: rtl;
-  text-align: left;
-}
-
-.ins-source-note {
-  color: var(--text-3);
-  font-size: var(--t-2xs);
 }
 
 .ins-shared {
@@ -878,4 +794,113 @@
 .ins-error-action {
   margin-left: auto;
   flex: none;
+}
+
+.edit-pane .ins-section-head h3 {
+  min-width: 0;
+}
+
+.ins-section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+  margin-left: -16px;
+  padding: 0 var(--s-1) 0 2px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ins-section-toggle > svg {
+  flex: none;
+  color: var(--text-3);
+  opacity: 0;
+  transform: rotate(90deg);
+  transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+.ins-section.closed .ins-section-toggle > svg {
+  transform: none;
+  opacity: 1;
+}
+
+.ins-section-head:hover .ins-section-toggle:not(:disabled) > svg,
+.ins-section-toggle:focus-visible > svg {
+  opacity: 1;
+}
+
+.ins-section-toggle:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.ins-section-toggle:disabled {
+  cursor: default;
+}
+
+.ins-section-toggle:disabled > svg {
+  visibility: hidden;
+}
+
+.ins-section-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.edit-pane .ins-section.closed {
+  padding-block: var(--s-2);
+}
+
+.edit-pane .ins-section.closed .ins-section-head {
+  margin-bottom: 0;
+}
+
+.edit-pane .ins-field .ui-select-root {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.edit-pane .ins-field .ui-select {
+  height: 100%;
+  padding: 0 0 0 var(--s-1);
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--t-xs);
+}
+
+.edit-pane .ins-field .ui-select:hover:not(:disabled),
+.edit-pane .ins-field .ui-select[aria-expanded='true'] {
+  background: transparent;
+}
+
+.edit-pane .ins-field .ui-select .ui-select-value {
+  text-align: right;
+}
+
+.edit-pane .ins-field .ui-select:focus-visible {
+  outline: 0;
+}
+
+.edit-pane .ins-field:has(.ui-select:focus-visible) {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.edit-components {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-components > .cmp {
+  flex: 1;
+  min-height: 0;
+}
+
+.edit-tab-empty {
+  padding: var(--s-3) var(--pane-inset);
 }

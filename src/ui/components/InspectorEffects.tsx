@@ -103,7 +103,7 @@ export function EffectsSection({ edit }: { edit: DirectEdit }) {
     <InspectorSection title="Effects" aside={add}>
       {list === null ? (
         <div className="ins-custom">
-          <code className="ins-custom-value" title={edit.values['box-shadow']}>
+          <code className="ins-custom-value" data-tip={edit.values['box-shadow']}>
             {edit.values['box-shadow'] || 'Mixed'}
           </code>
           <button type="button" className="btn ghost small" onClick={() => writeShadows(edit, [])}>

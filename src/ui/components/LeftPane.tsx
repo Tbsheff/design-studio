@@ -112,7 +112,7 @@ export function LeftPane(props: Props) {
         </div>
         {edit && (
           <section className="pane-edit" aria-label="Edit">
-            <Inspector {...props.inspector} />
+            <Inspector {...props.inspector} components={props.components} />
           </section>
         )}
         {sheet && <Sheet {...props} tab={tab} />}

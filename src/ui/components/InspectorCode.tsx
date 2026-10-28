@@ -121,7 +121,7 @@ export function InspectorCode({ projectId, directionId, selection }: Props) {
   return (
     <div className="ins-code">
       <div className="ins-code-bar">
-        <span className="ins-code-file" title={snippet.kind === 'ready' && snippet.file ? `${snippet.file}:${snippet.line}` : undefined}>
+        <span className="ins-code-file" data-tip={snippet.kind === 'ready' && snippet.file ? `${snippet.file}:${snippet.line}` : undefined}>
           {snippet.kind === 'ready' && snippet.file ? `${snippet.file}:${snippet.line}` : 'Rendered HTML'}
         </span>
         {snippet.kind === 'ready' && <CopySnippet code={snippet.code} />}

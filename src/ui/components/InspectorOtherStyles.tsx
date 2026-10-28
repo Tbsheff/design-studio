@@ -51,7 +51,7 @@ export function InspectorOtherStyles({ css }: { css: AuthoredCss | null }) {
       {open ? (
         <ul className="ins-other-list">
           {rows.map((row) => (
-            <li key={row.prop} className="ins-other-row" title={`${row.prop}: ${row.value}\nFrom ${row.source}`}>
+            <li key={row.prop} className="ins-other-row" data-tip={`${row.prop}: ${row.value}\nFrom ${row.source}`}>
               <span className="ins-other-decl">
                 <span className="prop">{row.prop}</span>: <span className="value">{row.value}</span>
               </span>

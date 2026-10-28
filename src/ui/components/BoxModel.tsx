@@ -14,11 +14,6 @@ function propsOf(box: Box): DirectStyleProperty[] {
   return SIDES.map((side) => `${box}-${side}` as DirectStyleProperty);
 }
 
-function allEqual(edit: DirectEdit, box: Box): boolean {
-  const values = propsOf(box).map((prop) => edit.values[prop]);
-  return values.every((value) => value === values[0]);
-}
-
 function LinkToggle({ box, linked, onToggle }: { box: Box; linked: boolean; onToggle: () => void }) {
   const name = box === 'padding' ? 'Padding' : 'Margin';
   return (
@@ -66,8 +61,8 @@ function BoxRing(props: { box: Box; edit: DirectEdit; linked: boolean; onToggle:
 }
 
 export function BoxModel({ edit }: { edit: DirectEdit }) {
-  const [linkPadding, setLinkPadding] = useState(() => allEqual(edit, 'padding'));
-  const [linkMargin, setLinkMargin] = useState(() => allEqual(edit, 'margin'));
+  const [linkPadding, setLinkPadding] = useState(false);
+  const [linkMargin, setLinkMargin] = useState(false);
   return (
     <div className="box-model">
       <BoxRing box="margin" edit={edit} linked={linkMargin} onToggle={() => setLinkMargin((x) => !x)}>

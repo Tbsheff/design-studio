@@ -122,6 +122,7 @@ interface OpenProps {
   initial: string | null;
   busy: boolean;
   onSend: () => void;
+  onFix?: () => void;
   onSave: (text: string) => void;
   onResolve: () => void;
   onReopen: () => void;
@@ -208,6 +209,11 @@ export function OpenCommentPopover(props: OpenProps) {
           <CommentAuthor author={comment.author} />
           <span className={`thread-status ${comment.status}`}>{STATUS_LABEL[comment.status]}</span>
           <span className="spacer" />
+          {props.onFix && (
+            <button type="button" className="thread-icon" aria-label="Fix with agent" data-tip="Fix with agent: fill the chat" data-tip-side="top" data-testid="comment-fix-open" onClick={props.onFix}>
+              <Icon name="sparkle" size={14} />
+            </button>
+          )}
           {comment.status !== 'resolved' && comment.status !== 'sent' && (
             <button type="button" className="thread-icon" aria-label="Resolve" data-tip="Resolve" data-tip-side="top" onClick={props.onResolve}>
               <Icon name="check" size={14} />

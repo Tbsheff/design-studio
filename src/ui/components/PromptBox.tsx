@@ -30,6 +30,8 @@ import { useCommands, type Command } from '../commands/registry';
 import { composerCommands, isModeCycleKey, nextMode, slashCommands } from '../commands/composerCommands';
 import { IS_MAC } from '../commands/keys';
 import { shortcutLabel } from '../../shared/keymap';
+import { useCommentPrefill, type PrefillRequest } from '../useCommentPrefill';
+import { ComposerComments } from './ComposerComments';
 
 interface Props {
   projectId: string;
@@ -42,8 +44,9 @@ interface Props {
   canvasChip?: RunCanvasChip | null;
   running: boolean;
   disabled: boolean;
-  onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) => Promise<void>;
+  onSend: (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[], commentIds?: string[]) => Promise<void>;
   onCancel: () => void;
+  prefill?: PrefillRequest | null;
   variations?: VariationsPromptProps;
   queued?: boolean;
   queue?: QueuedMessage[];
@@ -300,6 +303,7 @@ export function PromptBox(props: Props) {
     disabledReason: designsBlocker(mode, props.selection.length),
   };
 
+  const prefill = useCommentPrefill({ request: props.prefill, draft: props.draft, setFiles, maxImages: MAX_IMAGES, focus: focusInput });
   const uploading = files.some((f) => !f.attachment && !f.error);
   const mentions = useMentions({ projectId: props.projectId, directionId: props.directionId, tokens: props.tokens, draft, setDraft, components: props.components, request: props.mentionRequest });
   const historySearch = useHistorySearch(props.history ?? []);
@@ -339,10 +343,11 @@ export function PromptBox(props: Props) {
           ? onElement(prompt, elementCount, runLevel.level)
           : fanOut && props.variations
             ? props.variations.onSend(prompt, runLevel.level, ids)
-            : props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions);
+            : props.onSend(prompt, mode, ids, runLevel.level, effort, mentions.mentions, prefill.linked);
       setDraft('');
       await sent;
       mentions.clear();
+      prefill.clear();
       files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       setFiles([]);
       setSkillIds([]);
@@ -421,6 +426,7 @@ export function PromptBox(props: Props) {
       >
         <RunContextChip chip={props.canvasChip} />
         <SelectionChips selection={props.selection} onRemove={props.onRemoveSelection} />
+        <ComposerComments count={prefill.linked.length} onClear={prefill.clear} />
         <AttachmentThumbs files={files} onRemove={removeFile} />
         <MentionChips mentions={mentions.mentions} onRemove={mentions.remove} />
         <SkillChips ids={skillIds} onRemove={(id) => setSkillIds((prev) => prev.filter((x) => x !== id))} />

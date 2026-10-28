@@ -80,6 +80,10 @@ function hostedClose(shell: CanvasShell | undefined, close: () => void): (() => 
   return shell ? undefined : close;
 }
 
+function noteCommentFrame(control: CommentsControl | undefined, active: { id: string; path?: string; label?: string }): void {
+  if (control) control.frameRef.current = { id: active.id, path: active.path ?? '', ...(active.label ? { label: active.label } : {}) };
+}
+
 function pageNameOf(path: string | undefined): string {
   const file = path?.split('/').pop()?.replace(/\.html?$/i, '');
   return file && file !== 'index' ? file : 'Page';
@@ -400,6 +404,7 @@ export function Canvas(props: Props) {
   const check = useRenderCheck(projectId, directionId);
 
   const comment = useCommentMode(props.comments, source.kind === 'live', setSelectMode);
+  noteCommentFrame(props.comments, active);
   const commentMode = comment.on;
   const live = source.kind === 'live';
   const pane = useShellPane(props.shell, comment, selectMode, setSelectMode, live, ui.layersOpen);

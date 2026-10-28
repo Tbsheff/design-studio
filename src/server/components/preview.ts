@@ -34,7 +34,7 @@ export interface PreviewComponent {
 
 type Outcome = { png: Buffer } | { reason: string; transient?: boolean };
 
-export type PreviewResult = { ok: true; png: Buffer; cached: boolean; component: PreviewComponent; props: Record<string, PropValue>; text: string | null } | { ok: false; reason: string; component: PreviewComponent | null };
+export type PreviewResult = { ok: true; png: Buffer; hash: string; cached: boolean; component: PreviewComponent; props: Record<string, PropValue>; text: string | null } | { ok: false; reason: string; component: PreviewComponent | null };
 
 interface Job {
   hash: string;
@@ -298,7 +298,7 @@ export function createComponentPreviews(deps: { preview: PreviewService; cacheDi
       const hit = await cached(project.id, hash);
       const outcome = hit ?? (await outcomeFor(project, direction, hash, () => ({ entry, tree: sample.tree, root: library.root, appDir })));
       const meta = { component, props: sample.props, text: sample.text };
-      return 'png' in outcome ? { ok: true, png: outcome.png, cached: hit !== null, ...meta } : { ok: false, reason: outcome.reason, component };
+      return 'png' in outcome ? { ok: true, png: outcome.png, hash, cached: hit !== null, ...meta } : { ok: false, reason: outcome.reason, component };
     },
   };
 }

@@ -200,7 +200,7 @@ export async function loadLibrary(project: Project, workTree: string): Promise<L
   for (const entry of [...entries, ...locals]) entry.uses = counts.get(entry.local) ?? 0;
   const app = scan.length > 1 ? (scan.at(-1) ?? '') + path.sep : null;
   const outsideKit = (entry: LibraryEntry) => Number(app !== null && entry.absolute.startsWith(app));
-  entries.sort((a, b) => outsideKit(a) - outsideKit(b) || Number(a.uses === 0) - Number(b.uses === 0) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
+  entries.sort((a, b) => Number(a.uses === 0) - Number(b.uses === 0) || outsideKit(a) - outsideKit(b) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
   return { root, scan, entries, locals, files, imports, texts, specifiers };
 }
 

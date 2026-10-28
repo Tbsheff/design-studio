@@ -37,7 +37,9 @@ export function registerComponentPreviewRoutes(app: Hono, deps: ComponentPreview
       throw error;
     }
     if (!result.ok) return c.json({ error: 'no-preview', message: result.reason, component: result.component }, 422);
+    const etag = `"${result.hash}"`;
+    if (c.req.header('if-none-match') === etag) return c.body(null, 304, { etag, 'cache-control': 'private, no-cache' });
     const meta = encodeURIComponent(JSON.stringify({ component: result.component, props: result.props, text: result.text, cached: result.cached }));
-    return c.body(new Uint8Array(result.png), 200, { 'content-type': 'image/png', 'cache-control': 'private, max-age=600', [COMPONENT_PREVIEW_PROPS_HEADER]: meta });
+    return c.body(new Uint8Array(result.png), 200, { 'content-type': 'image/png', 'cache-control': 'private, no-cache', etag, [COMPONENT_PREVIEW_PROPS_HEADER]: meta });
   });
 }

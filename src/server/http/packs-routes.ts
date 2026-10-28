@@ -91,7 +91,12 @@ export function registerPackRoutes(app: Hono, deps: PackRouteDeps): void {
     const pack = await registry.get(id);
     if (!pack) throw new BadRequestError(`unknown packId: ${id}`);
     try {
-      return c.json(await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => applyPackToDirection(editDeps, project, direction, pack)));
+      return c.json(
+        await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) => {
+          if (project.app) throw new BadRequestError('An attached app keeps its own design system in its code. Applying a studio pack would overwrite files in your repository.');
+          return applyPackToDirection(editDeps, project, direction, pack);
+        }),
+      );
     } catch (error) {
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;

@@ -47,7 +47,7 @@ import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
-import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from '../store/errors.js';
+import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
 import { createCommandRuleStore } from '../store/command-rules.js';
@@ -75,6 +75,7 @@ import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
 import { createProjectLibrary } from '../store/project-library.js';
 import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
 import { registerHomeRoutes } from './home-routes.js';
+import { finishAttach, registerAppRoutes } from './app-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
@@ -464,6 +465,7 @@ export function createApp(deps: AppDeps): Hono {
   app.onError((error, c) => {
     const status = error instanceof NotFoundError ? 404 : error instanceof BadRequestError ? 400 : error instanceof ConflictError ? 409 : 500;
     if (status === 500) console.error('[http]', error);
+    if (error instanceof PickAppError) return c.json({ error: error.message, code: 'pick_app', candidates: error.candidates }, 409);
     return c.json({ error: error.message }, status);
   });
 
@@ -510,9 +512,14 @@ export function createApp(deps: AppDeps): Hono {
     return c.json({ project, runId });
   });
 
+  const appRouteDeps = { projects, versions, preview, readBody, commitInit: (project: Project) => commitInit(project), watch: (project: Project, direction: Direction) => watchDirection(project, direction) };
+  registerAppRoutes(app, appRouteDeps);
+
   app.post('/api/projects/import', async (c) => {
     const body = await readBody(c);
-    const imported = await projects.importFolder(requireString(body, 'path'));
+    const appDir = optionalString(body, 'appDir');
+    const imported = await projects.importFolder(requireString(body, 'path'), { ...(appDir ? { appDir } : {}), skipApp: body.skipApp === true });
+    if (imported.app) return c.json({ project: await finishAttach(appRouteDeps, imported) });
     await versions.ensureRepo(imported);
     const project = await commitInit(imported);
     watchDirection(project, projects.mainDirection(project));

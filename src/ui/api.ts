@@ -1,4 +1,4 @@
-import type { CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
+import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
@@ -172,7 +172,13 @@ export const api = {
     const res = await request('POST', `${d(pid, did)}/tweaks/commit`, { values }, pickMessage);
     return (await res.json()) as CommitTweaksResult;
   },
-  importProject: (path: string) => json<{ project: Project }>('POST', '/api/projects/import', { path }),
+  importProject: (path: string, options: { appDir?: string; skipApp?: boolean } = {}) => json<{ project: Project }>('POST', '/api/projects/import', { path, ...options }),
+  attachApp: (input: AttachAppRequest) => json<{ project: Project }>('POST', '/api/projects/attach', input),
+  appState: (pid: string) => json<{ app: AttachedApp; status: AppServerStatus | null; logs: AppLogLine[] }>('GET', `${p(pid)}/app`),
+  appControl: (pid: string, action: 'start' | 'stop' | 'restart') => json<AppServerStatus>('POST', `${p(pid)}/app/${action}`),
+  appConfig: (pid: string, input: { url?: string; env?: Record<string, string> }) => json<{ app: AttachedApp }>('POST', `${p(pid)}/app/config`, input),
+  appRoutes: (pid: string) => json<{ routes: AppRoute[] }>('GET', `${p(pid)}/app/routes`),
+  openSource: (pid: string, did: string, source: string) => json<{ opened: boolean; path: string }>('POST', `${d(pid, did)}/open-source`, { source }),
   listWorkspaces: () => json<WorkspaceList>('GET', '/api/workspaces'),
   addWorkspace: (path: string, label?: string) => json<WorkspaceFolder>('POST', '/api/workspaces', { path, ...(label ? { label } : {}) }),
   renameWorkspace: (id: string, label: string) => json<WorkspaceFolder>('PATCH', `/api/workspaces/${encodeURIComponent(id)}`, { label }),

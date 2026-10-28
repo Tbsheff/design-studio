@@ -19,6 +19,7 @@ import { MultiCreateTokenHost, MultiNote } from './InspectorMulti';
 import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
 import { CreateTokenHost, FontField, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
+import { InspectorSource } from './InspectorSource';
 import { NumberField } from './NumberField';
 
 export interface EditorProps {
@@ -256,6 +257,7 @@ export function SimpleEditor(props: EditorProps & { target: SelectionContext }) 
           <CopyCssButton authored={authored} />
         </MetaRow>
         <ClassLine info={classLine} />
+        <InspectorSource projectId={props.projectId} directionId={props.directionId} selection={props.target} />
         <div className="ins-scroll">
           <ErrorLine status={edit.status} />
           <TokenLint ui={tk.ui} edit={edit} css={authored.css} />

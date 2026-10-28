@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid';
 import type { Direction, Project, TrashItem, TrashedProject } from '../../shared/contracts.js';
 import type { AgentRunner, PreviewService, ServerConfig, VersionStore } from '../types.js';
 import type { StudioProjectStore } from './projects.js';
-import { ConflictError, NotFoundError, assertSafeId } from './errors.js';
+import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 
 const COPIED_PROJECT_PARTS = ['git', 'attachments'];
 const TRASH_RECORD = 'trashed.json';
@@ -75,6 +75,7 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
   return {
     async duplicate(projectId: string): Promise<Project> {
       const source = await projects.get(projectId);
+      if (source.app) throw new BadRequestError('An attached app points at your own folder, so Duplicate would copy the whole repository. Attach the folder again instead.');
       const main = projects.mainDirection(source);
       const name = copyName(source.name);
       const folder = await projects.reserveFolder(await targetParent(source), name);

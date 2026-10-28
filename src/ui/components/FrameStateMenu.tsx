@@ -27,7 +27,7 @@ function StateRows({ view, chosen, onPick }: { view: FrameStatesView; chosen: st
       {view.states.map((state) => (
         <button key={state.id} type="button" role="menuitemradio" aria-checked={state.id === chosen} className="ui-menu-item" tabIndex={-1} data-tip={STATE_HINTS[state.kind]} onClick={() => onPick(state)}>
           <span>{state.name}</span>
-          {state.kind === 'mock' && <span className="ui-menu-meta">{state.mocks?.length ?? 0} rules</span>}
+          {state.kind === 'mock' && <span className="ui-menu-meta">{state.mocks?.length === 1 ? '1 rule' : `${state.mocks?.length ?? 0} rules`}</span>}
         </button>
       ))}
     </div>

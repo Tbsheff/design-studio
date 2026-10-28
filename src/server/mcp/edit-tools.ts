@@ -24,7 +24,7 @@ import { STYLE_TOOLS } from './style-tools.js';
 import { REVIEW_TOOLS } from './review-tools.js';
 import { INSERT_TOOLS } from './insert-tools.js';
 import { cleanRoute, routeLabel } from '../../shared/app.js';
-import { chooseEditSite, EDIT_TARGETS, locText, siteNote, siteRequest, type EditSite } from '../direct-edit/edit-site.js';
+import { chooseEditSite, EDIT_TARGETS, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import type { ToolDef, ToolResult } from './tools.js';
 
 const FILE_MAX = 512 * 1024;
@@ -285,11 +285,12 @@ function isTextOnly(input: Input<'edit_element'>): boolean {
   return input.text !== undefined && !hasClasses(input) && Object.keys(input.style ?? {}).length === 0;
 }
 
-async function postEdit(deps: EditDeps, url: string, input: Input<'edit_element'>, element: SourcedElement, site: EditSite): Promise<DirectEditResult> {
+async function postEdit(deps: EditDeps, url: string, input: Input<'edit_element'>, element: SourcedElement, site: EditSite, workTree: string, project: Project): Promise<DirectEditResult> {
   try {
     return await studioCall<DirectEditResult>(deps, 'POST', url, editBody(input, element, site));
   } catch (error) {
     if (!(error instanceof EditError) || site.kind !== 'use' || site.explicit || error.code !== 'text_not_editable' || !isTextOnly(input)) throw error;
+    if (!(await textComesFromData({ workTree, project }, element.source))) throw error;
     const component: EditSite = { kind: 'component', source: element.source, tag: element.tag, shared: site.shared, explicit: false };
     return studioCall<DirectEditResult>(deps, 'POST', url, editBody(input, element, component)).catch(() => {
       throw error;
@@ -309,7 +310,7 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
   const site = await chooseEditSite({ workTree: direction.workTree, project }, element, { selector: input.selector, target: input.target, classes: hasClasses(input) || Object.keys(input.style ?? {}).length > 0 });
   if ('error' in site) throw new EditError(site.error);
-  const result = await postEdit(deps, `${base(project, direction.id)}/direct-edit`, input, element, site);
+  const result = await postEdit(deps, `${base(project, direction.id)}/direct-edit`, input, element, site, direction.workTree, project);
   const note = siteNote(site);
   const tailwind = result.tailwind ? { classes: result.tailwind.classes, wrote: result.tailwind.mode, ...(result.tailwind.note ? { note: result.tailwind.note } : {}) } : {};
   const source = result.textSource ? { textSource: `Edited ${result.textSource.what} in ${result.textSource.file}:${result.textSource.line}.${result.textSource.shared ? ` ${result.textSource.shared}` : ''}` } : {};

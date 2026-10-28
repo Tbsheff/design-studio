@@ -8,7 +8,7 @@ import { readDesignSystemState } from '../design-system/state.js';
 import { invalidateTokenSource } from '../design-system/token-preview.js';
 import { plannedTokensText, writeTokensText } from '../design-system/update-tokens.js';
 import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic } from '../direct-edit/index.js';
-import { chooseEditSite, EDIT_TARGETS, siteNote, siteRequest, type EditSite } from '../direct-edit/edit-site.js';
+import { chooseEditSite, EDIT_TARGETS, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import { planStructureEdit } from '../direct-edit/structure-apply.js';
 import { knownTokenVars } from '../direct-edit/tokens.js';
 import { withPagePath } from '../export/source.js';
@@ -125,9 +125,10 @@ async function planSite(deps: DirectToolDeps, input: EditInput, element: Sourced
   } catch (error) {
     const textOnly = input.text !== undefined && !hasStyleOrClasses(input);
     if (site.kind !== 'use' || site.explicit || !textOnly || !(error instanceof DirectEditError) || error.code !== 'text_not_editable') throw error;
-    return planKnown({ kind: 'component', source: element.source, tag: element.tag, shared: site.shared, explicit: false }).catch(() => {
-      throw error;
-    });
+    if (!(await textComesFromData({ workTree, project: deps.ctx.project }, element.source))) throw error;
+    const fallback = await planKnown({ kind: 'component', source: element.source, tag: element.tag, shared: site.shared, explicit: false }).catch(() => null);
+    if (!fallback || fallback.planned.target.relative === site.shared.file) throw error;
+    return fallback;
   }
 }
 

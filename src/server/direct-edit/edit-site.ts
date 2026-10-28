@@ -49,6 +49,11 @@ export async function chooseEditSite(scope: EditSiteScope, element: Sourced, ask
   return { kind: 'use', source: use.loc, component: use.name, shared, explicit: ask.target === 'use' };
 }
 
+export async function textComesFromData(scope: EditSiteScope, loc: SourceLoc): Promise<boolean> {
+  const info = await elementClassInfo(scope.workTree, scope.project.kind, loc).catch(() => null);
+  return Boolean(info?.element?.textFromData);
+}
+
 export function siteRequest(site: EditSite): { source: SourceLoc; component: string } | { source: SourceLoc; tag: string } {
   return site.kind === 'use' ? { source: site.source, component: site.component } : { source: site.source, tag: site.tag };
 }

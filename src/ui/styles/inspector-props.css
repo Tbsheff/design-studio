@@ -1,0 +1,168 @@
+.prp {
+  flex: none;
+  max-height: 50%;
+  overflow-y: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.prp-chip {
+  max-width: 60%;
+  overflow: hidden;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-full);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prp-where {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.prp-where code,
+.prp-where span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prp-where code {
+  font-family: var(--mono);
+}
+
+.prp-rows {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.prp-field .prp-name {
+  width: 92px;
+  min-width: 92px;
+  overflow: hidden;
+  color: var(--text-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prp-field.set .prp-name {
+  color: var(--text);
+}
+
+.prp-bool {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  padding: 0 var(--s-2);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+}
+
+.prp-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.prp-switch:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.prp-switch.on {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.prp-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--dur) var(--ease);
+}
+
+.prp-switch.on .prp-switch-knob {
+  transform: translateX(14px);
+}
+
+.prp-status {
+  margin: 0;
+}
+
+.prp-status.error {
+  color: var(--danger);
+}
+
+.prp-styles-btn {
+  justify-self: start;
+}
+
+.prp-variant {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.prp-warn {
+  margin: 0;
+  color: var(--warn);
+}
+
+.prp-classes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.prp-class {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 2px 1px var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: var(--t-xs);
+}
+
+.prp-class code {
+  font-family: var(--mono);
+}
+
+.prp-class-x {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.prp-class-x:hover {
+  background: var(--line);
+  color: var(--text);
+}

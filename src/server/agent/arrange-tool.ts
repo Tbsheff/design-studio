@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { inputIssues } from '../../shared/input-errors.js';
 import { ALIGN_OPS, DISTRIBUTE_OPS, arrangeLabel, type ArrangeAction } from '../../shared/arrange.js';
 import { unchangedNote } from '../../shared/arrange-plan.js';
 import { canvasOwner, readCanvasAt } from '../canvas/service.js';
@@ -36,10 +37,6 @@ const RUN_NOTE = 'The run saves this change in its version, like your file edits
 
 function text(message: string, isError = false): ToolText {
   return { content: [{ type: 'text', text: message }], ...(isError ? { isError: true } : {}) };
-}
-
-function issues(error: z.ZodError): string {
-  return error.issues.map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`).join('; ');
 }
 
 function describeError(error: unknown): string {
@@ -81,7 +78,7 @@ export async function runArrange(deps: DirectToolDeps, args: z.input<typeof arra
   const blocked = refusal(deps.ctx, 'arrange');
   if (blocked) return text(blocked, true);
   const parsed = arrangeSchema.safeParse(args);
-  if (!parsed.success) return text(`arrange: ${issues(parsed.error)}`, true);
+  if (!parsed.success) return text(`arrange: ${inputIssues(arrangeSchema, parsed.error)}`, true);
   try {
     const target = await pageOf(deps, { ...parsed.data, path: memoPath(deps, parsed.data, parsed.data.targets.map((item) => item.selector)) });
     const targets = await Promise.all(parsed.data.targets.map(async (item) => ({ selector: await resolveSelector(deps, target, item.selector) })));
@@ -103,7 +100,7 @@ export async function runArrange(deps: DirectToolDeps, args: z.input<typeof arra
 
 export async function runMeasure(deps: DirectToolDeps, args: z.input<typeof measureSchema>): Promise<ToolText> {
   const parsed = measureSchema.safeParse(args);
-  if (!parsed.success) return text(`measure: ${issues(parsed.error)}`, true);
+  if (!parsed.success) return text(`measure: ${inputIssues(measureSchema, parsed.error)}`, true);
   try {
     const target = await pageOf(deps, { ...parsed.data, path: memoPath(deps, parsed.data, [parsed.data.a.selector, parsed.data.b.selector]) });
     const [a, b] = await Promise.all([resolveSelector(deps, target, parsed.data.a.selector), resolveSelector(deps, target, parsed.data.b.selector)]);

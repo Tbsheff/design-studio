@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
+import { inputIssues } from '../../shared/input-errors.js';
 import { DIRECT_STYLE_PROPERTIES, type DirectStyleProperty, type Project, type Version } from '../../shared/contracts.js';
 import { kebabKeys } from '../../shared/style-keys.js';
 import { evaluateToolUse } from '../agent/permissions.js';
@@ -53,8 +54,7 @@ export interface ToolSpec {
 export function parseInput<S extends z.ZodType>(schema: S, args: Record<string, unknown>): z.output<S> {
   const result = schema.safeParse(args);
   if (!result.success) {
-    const issue = result.error.issues[0];
-    throw new EditError(issue ? `${issue.path.join('.') || 'input'}: ${issue.message}` : 'input is not valid');
+    throw new EditError(result.error.issues.length > 0 ? inputIssues(schema, result.error) : 'input is not valid');
   }
   return result.data;
 }

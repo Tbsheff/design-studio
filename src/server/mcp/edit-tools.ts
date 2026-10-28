@@ -1,3 +1,4 @@
+import { FLOW_TOOLS } from './flow-tools.js';
 import { FRAME_STATE_TOOLS } from './frame-state-tools.js';
 import { COMMENT_TOOLS } from './comment-tools.js';
 import { readFile } from 'node:fs/promises';
@@ -171,7 +172,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token']);

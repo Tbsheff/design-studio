@@ -92,6 +92,7 @@ import { resolveRunTarget } from '../agent/run-target.js';
 import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
 import { registerFrameStateRoutes } from './frame-state-routes.js';
+import { registerFlowRoutes } from './flow-routes.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 import { registerMcpRoutes } from './mcp-routes.js';
 import { registerShipRoutes } from './ship-routes.js';
@@ -1141,6 +1142,7 @@ export function createApp(deps: AppDeps): Hono {
   }, onRemapped: (projectId, remapped) => void mcpRoutes.activity.remap(projectId, remapped) });
   registerCanvasRoutes(app, { projects, canvas, readBody });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
+  registerFlowRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });
   const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });

@@ -4,6 +4,7 @@ import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
 import { APP_PANEL_EVENT, publishAppStatus } from '../appStatus';
 import { AppFailure } from './AppFailure';
+import FlowTab from './FlowTab';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
 
@@ -198,9 +199,10 @@ function SettingsTab({ projectId, app, onSaved }: { projectId: string; app: Atta
   );
 }
 
-type Tab = 'routes' | 'logs' | 'settings';
+type Tab = 'routes' | 'flow' | 'logs' | 'settings';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'routes', label: 'Routes' },
+  { id: 'flow', label: 'Flow' },
   { id: 'logs', label: 'Log' },
   { id: 'settings', label: 'Settings' },
 ];
@@ -269,6 +271,7 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
         ))}
       </div>
       {tab === 'routes' && <RoutesTab projectId={projectId} onAddRoute={onAddRoute} />}
+      {tab === 'flow' && <FlowTab projectId={projectId} />}
       {tab === 'logs' && <LogsTab logs={logs} managed={managed} />}
       {tab === 'settings' && <SettingsTab projectId={projectId} app={app} onSaved={refresh} />}
     </div>
@@ -279,7 +282,7 @@ function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) =>
   useEffect(() => {
     const show = (event: Event) => {
       const next = (event as CustomEvent<unknown>).detail;
-      setTab(next === 'logs' || next === 'settings' ? next : 'routes');
+      setTab(next === 'logs' || next === 'settings' || next === 'flow' ? next : 'routes');
       setOpen(true);
     };
     window.addEventListener(APP_PANEL_EVENT, show);

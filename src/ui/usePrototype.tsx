@@ -3,6 +3,8 @@ import type { ProjectKind, SelectionContext } from '../shared/contracts';
 import { isBackTarget, startFrameOf, type PrototypeLink } from '../shared/links';
 import { api } from './api';
 import { frameDirection, frameName, withFramePath, type CanvasFrame } from './canvasFrames';
+import { frameStateOf, useCurrentFrameStates } from './frameStates';
+import { withFrameStateHost } from '../shared/frame-state';
 import { linksApi, useLinks } from './linksApi';
 import { useLinkRects } from './useLinkRects';
 import { LinkArrows, LinkDragLine, LinkHandle, linkOfSelection, linkSourceOf, PrototypeBar, useLinkDrag } from './components/PrototypeLayer';
@@ -63,7 +65,10 @@ export function usePrototype(o: Options) {
   };
   const linkTitle = (link: PrototypeLink) => `${link.from.text ? `“${link.from.text}”` : link.from.selector} in ${titleById(link.from.frame)} → ${isBackTarget(link.to) ? 'Back' : titleById(link.to.frame)}`;
   const urls = useRef(new Map<string, Promise<string>>());
-  const urlOf = (frame: CanvasFrame): Promise<string | null> => {
+  const frameStates = useCurrentFrameStates();
+  const withState = (frame: CanvasFrame, url: string): string => (frameStates ? withFrameStateHost(url, frameStateOf(frameStates.view, frame.id)) : url);
+  const urlOf = (frame: CanvasFrame): Promise<string | null> => baseUrlOf(frame).then((url) => (url ? withState(frame, url) : null));
+  const baseUrlOf = (frame: CanvasFrame): Promise<string | null> => {
     const did = frameDirection(frame, o.directionId);
     if (!did) return Promise.resolve(null);
     if (did === o.directionId && o.baseUrl) return Promise.resolve(withFramePath(o.baseUrl, frame.path));

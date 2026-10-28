@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { FRAME_PRESETS, frameName, type CanvasFrame } from '../canvasFrames';
 import { FrameResizeHandles, type ResizeEdge } from './FrameControls';
+import { FlowFromHere } from './FlowFromHere';
 import { FrameStateMenu } from './FrameStateMenu';
 import { Icon } from './Icon';
 
@@ -58,6 +59,7 @@ export function FrameLabel({ frame, active, removable, directionId, badge, numbe
         {!badge && title && <span className="frame-size">{size}</span>}
       </button>
       <FrameStateMenu frameId={frame.id} frameName={name} />
+      {!badge && <FlowFromHere frameId={frame.id} frameName={name} />}
       {extras}
       {removable && (
         <button type="button" className="frame-remove" aria-label={`Remove ${name} frame`} data-tip="Remove frame" onClick={() => onRemove(frame)}>

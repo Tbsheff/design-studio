@@ -62,6 +62,31 @@ function unique(findings: ReviewFinding[]): ReviewFinding[] {
   return findings.filter((finding) => !seen.has(finding.id) && Boolean(seen.add(finding.id)));
 }
 
+function noTokensNote(probe: ProbeResult): string {
+  if (probe.tokens.some((hit) => hit.via === 'class')) return 'This project has no design tokens, so only Tailwind arbitrary values such as p-[6px] count as off-token.';
+  return 'This project has no design tokens yet, so Review skips the off-token check.';
+}
+
+function copyKey(finding: ReviewFinding): string | null {
+  return finding.source ? `${finding.kind}|${finding.source}|${finding.message}` : null;
+}
+
+function grouped(findings: ReviewFinding[]): ReviewFinding[] {
+  const first = new Map<string, ReviewFinding>();
+  const out: ReviewFinding[] = [];
+  for (const finding of findings) {
+    const key = copyKey(finding);
+    const seen = key ? first.get(key) : undefined;
+    if (seen) {
+      seen.copies = (seen.copies ?? 1) + 1;
+      continue;
+    }
+    if (key) first.set(key, finding);
+    out.push(finding);
+  }
+  return out;
+}
+
 function counts(findings: ReviewFinding[]): Record<ReviewSeverity, number> {
   const out: Record<ReviewSeverity, number> = { high: 0, medium: 0, low: 0 };
   for (const finding of findings) out[finding.severity] += 1;
@@ -99,9 +124,9 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   const all = [...axeDrafts(facts.violations, facts.probe.elements, entries), ...tapDrafts(facts.probe.taps, entries), ...tokenDrafts(facts.probe.tokens, facts.probe.tokenElements, entries, TOKEN_CAP), ...layoutDrafts(facts.layout)];
   const drafts = project.app ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir) : all;
   await verifyFixes(project, direction, drafts);
-  const findings = ordered(unique(drafts.map((draft) => toFinding(draft, frame))));
+  const findings = ordered(grouped(unique(drafts.map((draft) => toFinding(draft, frame)))));
   const notes = [
-    ...(entries.length === 0 ? ['This project has no design tokens, so only Tailwind arbitrary values count as off-token.'] : []),
+    ...(entries.length === 0 ? [noTokensNote(facts.probe)] : []),
     ...(all.length > drafts.length ? [`${all.length - drafts.length} findings on elements outside the app source (for example dev tool overlays) are not shown.`] : []),
   ];
   return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes };

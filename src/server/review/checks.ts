@@ -1,8 +1,9 @@
 import { converter, formatHex, parse, wcagContrast, type Color } from 'culori';
-import type { CompiledTokenEntry, DirectStyleProperty, LayoutFinding, SourceLoc } from '../../shared/contracts.js';
+import type { CompiledTokenEntry, DirectStyleProperty, LayoutFinding, SourceLoc, TokenMatch } from '../../shared/contracts.js';
 import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
 import type { ReviewFix, ReviewKind, ReviewSeverity } from '../../shared/review.js';
-import { lengthToPx, matchDimension, modeValue, resolveTokenValue, tokenFieldState } from '../../shared/token-match.js';
+import { isSnappable, lengthToPx, matchDimension, matchForProperty, modeValue, resolveTokenValue, tokenFieldState } from '../../shared/token-match.js';
+import { keepsHue } from './hue.js';
 import type { ProbeElement, TokenHit } from './probe.js';
 
 export interface FixGuard {
@@ -121,7 +122,7 @@ export function nearestPassingToken(fg: string, bg: string, need: number, entrie
   const text = parse(fg);
   const back = parse(bg);
   if (!text || !back) return null;
-  const all = passingTokens(text, back, need, entries);
+  const all = passingTokens(text, back, need, entries).filter((item) => keepsHue(text, item.hex));
   const pool = all.some((item) => item.text) ? all.filter((item) => item.text) : all;
   const best = pool.sort((a, b) => a.distance - b.distance)[0];
   return best ? { cssVar: best.cssVar, hex: best.hex, ratio: best.ratio } : null;
@@ -272,11 +273,23 @@ interface TokenPick {
   value: string;
   cssVar: string | null;
   note: string;
+  otherHue?: boolean;
+}
+
+function sameHueSnap(prop: DirectStyleProperty, value: string, entries: CompiledTokenEntry[]): TokenMatch | null {
+  return matchForProperty(prop, value, entries).find((match) => isSnappable('color', match) && keepsHue(value, match.value)) ?? null;
+}
+
+function colorPick(prop: DirectStyleProperty, value: string, entries: CompiledTokenEntry[], snap: TokenMatch): TokenPick {
+  const same = sameHueSnap(prop, value, entries);
+  if (same) return { value: `var(${same.cssVar})`, cssVar: same.cssVar, note: ` The nearest token of the same hue is ${same.cssVar} (${same.value}).` };
+  return { value: '', cssVar: null, otherHue: true, note: ` The nearest token, ${snap.cssVar} (${snap.value}), has another hue, so it is not a safe fix.` };
 }
 
 function tokenPick(prop: DirectStyleProperty, value: string, entries: CompiledTokenEntry[]): TokenPick | null {
   const state = tokenFieldState(prop, value, entries);
   if (state.kind === 'token') return { value: `var(${state.match.cssVar})`, cssVar: state.match.cssVar, note: ` It equals the token ${state.match.cssVar}.` };
+  if (state.kind === 'raw' && state.snap && COLOR_VALUE.test(value) && !keepsHue(value, state.snap.value)) return colorPick(prop, value, entries, state.snap);
   if (state.kind === 'raw' && state.snap) return { value: `var(${state.snap.cssVar})`, cssVar: state.snap.cssVar, note: ` The nearest token is ${state.snap.cssVar} (${state.snap.value}).` };
   if (state.kind === 'raw' && state.nearest) return { value: '', cssVar: null, note: ` The nearest token, ${state.nearest.cssVar} (${state.nearest.value}), is not close.` };
   return null;
@@ -312,6 +325,7 @@ function tokenFix(hit: TokenHit, el: ProbeElement | undefined, props: DirectStyl
 function tokenHint(hit: TokenHit, pick: TokenPick | null): string {
   if (hit.via === 'rule') return `Change the value in the CSS rule ${hit.rule} to a project token.`;
   if (hit.variants) return `Change ${hit.cls} to a token class and keep the variant ${hit.variants}.`;
+  if (pick?.otherHue) return 'Add a token for this color, or ask the agent to pick a token of the same hue.';
   return pick?.cssVar ? `Use ${pick.cssVar}.` : 'Use the nearest design token or theme step, or add a token if the value is needed.';
 }
 

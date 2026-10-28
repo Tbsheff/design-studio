@@ -544,7 +544,7 @@ export function Canvas(props: Props) {
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
-      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} />
+      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} toolKey={`${protoOn}-${comment.on}-${layersOpen}`} />
       {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}

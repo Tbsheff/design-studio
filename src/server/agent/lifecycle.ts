@@ -605,7 +605,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         summary.error = `Finishing the run failed: ${describeError(error)}`;
       }
 
-      publishTodos(todoTracker.close(status));
+      publishTodos(todoTracker.close(status, ctx.request.mode === 'edit' && !ctx.request.plan));
       const finishedAt = Date.now();
       summary.status = status;
       summary.finishedAt = finishedAt;

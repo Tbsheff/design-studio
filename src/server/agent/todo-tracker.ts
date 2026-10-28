@@ -132,12 +132,17 @@ export function trackedTodos(agent: readonly TodoItem[], events: readonly TodoEv
   return withActive(marked, running);
 }
 
-export function closeTodos(todos: readonly TodoItem[], status: RunStatus): TodoItem[] {
-  const success = status === 'completed';
+function skipNote(status: RunStatus, builds: boolean): string {
+  if (status === 'canceled') return 'Not done: the run was stopped.';
+  return builds ? 'Not done: the run ended early.' : 'Not done: this run only planned or reviewed.';
+}
+
+export function closeTodos(todos: readonly TodoItem[], status: RunStatus, builds = true): TodoItem[] {
+  const success = status === 'completed' && builds;
   return todos.map((todo): TodoItem => {
     if (todo.status === 'completed') return todo;
     if (success) return { ...todo, status: 'completed', by: 'run', note: 'Marked done when the run finished. No step of the run showed this todo.' };
-    return { ...todo, status: 'pending', skipped: true, note: status === 'canceled' ? 'Not done: the run was stopped.' : 'Not done: the run ended early.' };
+    return { ...todo, status: 'pending', skipped: true, note: skipNote(status, builds) };
   });
 }
 
@@ -186,7 +191,7 @@ export function evidenceOf(facts: ToolFacts): TodoEvidence | null {
 export interface TodoTracker {
   setAgent(todos: TodoItem[]): TodoItem[];
   record(event: TodoEvidence): TodoItem[] | null;
-  close(status: RunStatus): TodoItem[] | null;
+  close(status: RunStatus, builds: boolean): TodoItem[] | null;
 }
 
 export function createTodoTracker(): TodoTracker {
@@ -211,9 +216,9 @@ export function createTodoTracker(): TodoTracker {
       events.push(event);
       return current(true);
     },
-    close(status) {
+    close(status, builds) {
       if (agent.length === 0) return null;
-      const next = closeTodos(trackedTodos(agent, events, false), status);
+      const next = closeTodos(trackedTodos(agent, events, false), status, builds);
       last = JSON.stringify(next);
       return next;
     },

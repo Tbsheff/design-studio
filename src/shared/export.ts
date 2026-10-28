@@ -1,6 +1,6 @@
 import type { McpActivity, McpApprovalRecord } from './contracts.js';
 
-export type ExportFormat = 'png' | 'pdf' | 'html' | 'zip' | 'handoff';
+export type ExportFormat = 'png' | 'pdf' | 'html' | 'zip' | 'handoff' | 'svg' | 'pptx';
 export type ExportScale = 1 | 2 | 3;
 export type ExportScope = 'page' | 'frame';
 export type CopyCodeFormat = 'html' | 'tailwind';

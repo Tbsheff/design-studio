@@ -219,6 +219,7 @@ export function CanvasTopBar(p: Props) {
           <span>Prototype</span>
         </button>
       </div>
+      <span data-topbar-slot="review" style={{ display: 'contents' }} />
       <DropMenu label="Present" className="btn ghost topbar-present" groups={presentGroups} align="end">
         <span>Present</span>
         <Icon name="chevronDown" size={12} />

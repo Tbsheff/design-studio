@@ -23,6 +23,7 @@ import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
 import { RenderCheckPanel } from './RenderCheckPanel';
+import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
 import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
@@ -541,6 +542,7 @@ export function Canvas(props: Props) {
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
+      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} />
       {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}

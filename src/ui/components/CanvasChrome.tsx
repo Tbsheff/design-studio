@@ -20,6 +20,7 @@ export interface CanvasShell {
   onExport: () => void;
   onTweak: ((prompt: string) => void) | null;
   onShip?: (() => void) | null;
+  onAskAgent?: (text: string) => void;
 }
 
 type SetSelectMode = (update: (m: boolean) => boolean) => void;

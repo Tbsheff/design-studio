@@ -1,5 +1,6 @@
 import { watch } from 'chokidar';
 import type { FSWatcher } from 'chokidar';
+import { watch as watchTree } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
@@ -20,7 +21,7 @@ interface DirectionWatch {
   projectId: string;
   directionId: string;
   root: string;
-  watcher: FSWatcher;
+  watcher: TreeWatcher;
   readyPromise: Promise<void>;
   pending: Set<string>;
   statusPaths: Set<string>;
@@ -38,6 +39,14 @@ function isIgnored(root: string, target: string): boolean {
   return relative.split(path.sep).some((segment) => IGNORED_SEGMENTS.has(segment));
 }
 
+interface TreeWatcher {
+  close(): Promise<void> | void;
+}
+
+function nativeTreeWatch(project: Project): boolean {
+  return process.platform === 'darwin' && project.imported !== null && project.imported.created !== true;
+}
+
 export class WatcherManager {
   private readonly watches = new Map<string, DirectionWatch>();
 
@@ -52,27 +61,17 @@ export class WatcherManager {
     if (existing && existing.root === path.resolve(direction.workTree)) return;
     if (existing) this.unwatch(direction.id);
     const root = path.resolve(direction.workTree);
-    const watcher = watch(root, {
+    if (nativeTreeWatch(project)) {
+      this.watchNative(project, direction, root);
+      return;
+    }
+    const watcher: FSWatcher = watch(root, {
       ignored: (target: string) => isIgnored(root, target),
       ignoreInitial: true,
       awaitWriteFinish: false,
       persistent: true,
     });
-    const entry: DirectionWatch = {
-      projectId: project.id,
-      directionId: direction.id,
-      root,
-      watcher,
-      readyPromise: new Promise<void>((resolve) => watcher.once('ready', () => resolve())),
-      pending: new Set(),
-      statusPaths: new Set(),
-      flushTimer: null,
-      statusTimer: null,
-      lastStatusAt: 0,
-      statusRunning: false,
-      statusQueued: false,
-      closed: false,
-    };
+    const entry = this.entryFor(project, direction, root, watcher, new Promise<void>((resolve) => watcher.once('ready', () => resolve())));
     const watchedAt = Date.now();
     watcher.once('ready', () => void this.recordEarlyWrites(entry, watchedAt));
     const onPath = (target: string): void => this.record(entry, target);
@@ -83,6 +82,37 @@ export class WatcherManager {
     watcher.on('unlinkDir', onPath);
     watcher.on('error', () => undefined);
     this.watches.set(direction.id, entry);
+  }
+
+  private entryFor(project: Project, direction: Direction, root: string, watcher: TreeWatcher, readyPromise: Promise<void>): DirectionWatch {
+    return {
+      projectId: project.id,
+      directionId: direction.id,
+      root,
+      watcher,
+      readyPromise,
+      pending: new Set(),
+      statusPaths: new Set(),
+      flushTimer: null,
+      statusTimer: null,
+      lastStatusAt: 0,
+      statusRunning: false,
+      statusQueued: false,
+      closed: false,
+    };
+  }
+
+  private watchNative(project: Project, direction: Direction, root: string): void {
+    let entry: DirectionWatch | null = null;
+    const native = watchTree(root, { recursive: true, persistent: true }, (_event, name) => {
+      if (!entry || !name) return;
+      const target = path.join(root, name.toString());
+      if (!isIgnored(root, target)) this.record(entry, target);
+    });
+    native.on('error', () => undefined);
+    entry = this.entryFor(project, direction, root, { close: () => native.close() }, Promise.resolve());
+    this.watches.set(direction.id, entry);
+    void this.recordEarlyWrites(entry, Date.now());
   }
 
   ready(directionId: string): Promise<void> {

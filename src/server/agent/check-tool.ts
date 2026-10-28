@@ -14,7 +14,8 @@ import { describeScreens, planScreens, samePage, warmScreens, type RunScreen } f
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
 import { EDIT_TOOL_NAMES } from './permissions.js';
 import { defaultShotTarget, type ShotTarget } from './run-target.js';
-import { outsideFindings, probeLayout } from './layout-region.js';
+import { probeLayout } from './layout-region.js';
+import { regionFindings } from './fit-check.js';
 
 const DIFF_VIEWPORTS: CheckViewport[] = ['desktop', 'mobile'];
 
@@ -164,6 +165,14 @@ function nextStepLine(state: Pick<RunToolState, 'config' | 'criticCalls' | 'shot
   return loopLine(state, blocking);
 }
 
+const FIT_CHECKS = new Set(['size-request', 'duplicate-data']);
+
+function fitLine(findings: QualityFinding[]): string | null {
+  const fit = findings.filter((finding) => FIT_CHECKS.has(finding.check));
+  if (fit.length === 0) return null;
+  return `Required next: the new UI does not fit the request (${fit.map((finding) => finding.check).join(', ')}). Fix it with Edit before you finish: ${fit.map((finding) => finding.fix).join(' ')} Then run render_check again; the studio measures it again.`;
+}
+
 export async function buildCheckReport(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state?: RunToolState, picked?: ShotTarget | null): Promise<CheckReport> {
   const timings: Record<string, number> = {};
   const started = Date.now();
@@ -185,14 +194,14 @@ export async function buildCheckReport(preview: PreviewService, ctx: AgentRunCon
   const findings = sortFindings(results.flatMap((result) => result.quality ?? []));
   timings['total'] = Date.now() - started;
   if (state?.log) recordCheck(state.log, findings);
-  const tail = state ? [budgetLine(state), nextStepLine(state, findings.filter(isBlocking).length)].filter(Boolean).join('\n') : null;
+  const tail = state ? [budgetLine(state), fitLine(findings), nextStepLine(state, findings.filter(isBlocking).length)].filter(Boolean).join('\n') : null;
   return { results, findings, text: reportText(results, findings, timings, tail, target?.label ?? null, screens) };
 }
 
 async function layoutFindings(preview: PreviewService, ctx: AgentRunContext, url: string | null): Promise<QualityFinding[]> {
   const target = ctx.target;
   if (!target?.layout || !url || !samePage(url, defaultShotTarget(ctx)?.url)) return [];
-  return outsideFindings(target.layout, await probeLayout(preview, url), target.owner);
+  return regionFindings(target.layout, await probeLayout(preview, url), target.owner, ctx.request.prompt);
 }
 
 export async function runScreens(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state: RunToolState, maxScreens?: number): Promise<RunScreen[]> {

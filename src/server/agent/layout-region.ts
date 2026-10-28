@@ -17,6 +17,15 @@ export interface LayoutRegion {
   columnBox: LayoutBox | null;
   owners: string[];
   outside: Record<string, number>;
+  contentWidth?: number;
+  rows?: string[];
+  cards?: LayoutCard[];
+}
+
+export interface LayoutCard {
+  name: string;
+  box: LayoutBox;
+  rows: string[];
 }
 
 export interface PageOwner {
@@ -71,7 +80,15 @@ const LAYOUT_EXPRESSION = `(() => {
       outside[key] = (outside[key] || 0) + 1;
     }
   }
-  return { main: name(main), mainBox: box(main), column: column === main ? null : name(column), columnBox: column === main ? null : box(column), owners, outside };
+  const norm = (text) => text.replace(/\\s+/g, ' ').trim();
+  const ownText = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+  const rowsOf = (root, max) => [...root.querySelectorAll('*')].filter((el) => ownText(el) && el.getClientRects().length).map((el) => norm(el.innerText || '')).filter((t) => t.length >= 2 && t.length <= 160).slice(0, max);
+  const cardLike = (el) => { const s = getComputedStyle(el); return el.dataset.slot === 'card' || (s.boxShadow !== 'none' && area(el) > 4000) || (parseFloat(s.borderTopWidth) > 0 && parseFloat(s.borderLeftWidth) > 0 && parseFloat(s.borderTopLeftRadius) > 0 && area(el) > 4000); };
+  const cards = [...main.querySelectorAll('*')].filter((el) => shown(el) && cardLike(el)).slice(0, 60).map((el) => ({ name: name(el), box: box(el), rows: rowsOf(el, 40) })).filter((c) => c.rows.length);
+  const holder = column === main ? main : column;
+  const hs = getComputedStyle(holder);
+  const contentWidth = Math.round(holder.getBoundingClientRect().width - parseFloat(hs.paddingLeft) - parseFloat(hs.paddingRight));
+  return { main: name(main), mainBox: box(main), column: column === main ? null : name(column), columnBox: column === main ? null : box(column), owners, outside, contentWidth, rows: rowsOf(main, 800), cards };
 })()`;
 
 function withTimeout<T>(task: Promise<T>, ms: number): Promise<T | null> {

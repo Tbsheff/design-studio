@@ -62,8 +62,9 @@ const REGRESSION_SYSTEM = `You compare desktop screenshots of a design BEFORE an
 const APP_RULES = `<app-rules>
 This run changed an existing app. Also check these, and file each problem as an issue:
 - Placement ("area": "placement"): the new UI sits inside the section it belongs to, next to the content it relates to, not as a detached block at the top of the page or on the wrong page.
-- No duplicated data ("area": "duplicate-content", medium): the new UI does not repeat data the page already shows (for example a card that lists the same documents as the list right below it).
-- Width and density ("area": "density"): it matches the width of the cards or columns next to it. When the request says compact, small or summary, it is compact: about 400 px wide or one grid column at most, with no large empty areas.
+- No duplicated data ("area": "duplicate-content", high): the new UI does not repeat data the page already shows (for example a card that lists the same documents as the list right below it). Name the repeated items.
+- Width and density ("area": "density"): it matches the width of the cards or columns next to it. When the request says compact, small or summary, it is compact: at most half the content width (about 400 to 600 px) or one grid column, with no large empty areas. A small element that spans the content width is high.
+- The studio measures the page: a \`size-request\` or \`duplicate-data\` entry in <check-findings> is a measured fact. File each one as a high issue ("area": "density" or "duplicate-content"), repeat its width in px and % or the repeated items, and give one concrete fix that keeps the new element.
 - Real components and tokens ("area": "components"): it uses the app's own components and token classes, not raw colors, inline styles or hand-made copies of existing components.
 - Code ("area": "code", from <changed-source>): unused imports, hard-coded dates, IDs, names or strings that should come from props or the page's data, sample data where the page already has real data, and leftover code comments. Name the file and the line.
 </app-rules>`;

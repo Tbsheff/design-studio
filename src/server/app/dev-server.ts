@@ -68,7 +68,7 @@ async function answers(upstream: string): Promise<boolean> {
 export function missingNextMessage(workTree: string, appDir: string): string {
   const appRoot = path.join(workTree, appDir);
   const hint = installHint(workTree, appDir);
-  return `next is not installed in ${appRoot}. Run ${hint.command} in ${hint.dir}, then press Start. Or start the dev server yourself and use its URL.`;
+  return `next is not installed in ${appRoot}. Run ${hint.command} in ${hint.dir}, then start the app again. Or start the dev server yourself and use its URL.`;
 }
 
 function childEnv(extra: Record<string, string> | undefined, port: number): NodeJS.ProcessEnv {
@@ -137,33 +137,47 @@ export class AppServers {
     const app = project.app;
     if (!app) return Promise.reject(new Error('project is not an attached app'));
     const server = this.entry(project);
+    if (server.status.mode !== app.mode) this.switchMode(server, app.mode);
     if (app.mode === 'url') return this.checkUrl(server, new URL(app.url ?? '').origin);
     if (server.ready && server.status.state !== 'failed' && server.status.state !== 'stopped') return server.ready;
     server.workTree = project.directions[0]?.workTree ?? server.workTree;
-    server.ready = this.spawnNext(server, project).catch((error: unknown) => {
+    const attempt: Promise<string> = this.spawnNext(server, project).catch((error: unknown) => {
+      if (server.ready !== attempt) throw error;
       const message = error instanceof Error ? error.message : String(error);
       this.log(server, 'studio', message);
       this.setStatus(server, { state: 'failed', message });
       throw error;
     });
-    return server.ready;
+    server.ready = attempt;
+    return attempt;
+  }
+
+  private switchMode(server: AppServer, mode: AppServerStatus['mode']): void {
+    this.killGroup(server.child, 'SIGTERM');
+    server.child = null;
+    server.ready = null;
+    this.setStatus(server, { state: 'idle', mode, upstream: null, command: null, message: null, startedAt: null });
   }
 
   private checkUrl(server: AppServer, upstream: string): Promise<string> {
     if (server.status.upstream === upstream && server.status.state === 'ready') return Promise.resolve(upstream);
     if (server.ready && server.status.state === 'starting' && server.status.upstream === upstream) return server.ready;
     this.setStatus(server, { state: 'starting', mode: 'url', upstream, command: null, message: null, startedAt: Date.now() });
-    server.ready = answers(upstream).then((up) => {
+    const probe: Promise<string> = answers(upstream).then((up) => {
+      const current = server.ready === probe;
       if (up) {
-        this.setStatus(server, { state: 'ready', message: null });
+        if (current) this.setStatus(server, { state: 'ready', message: null });
         return upstream;
       }
       const message = `Nothing answers at ${upstream}. Start your dev server there, or change the URL in the app settings.`;
-      this.log(server, 'studio', message);
-      this.setStatus(server, { state: 'failed', message });
+      if (current) {
+        this.log(server, 'studio', message);
+        this.setStatus(server, { state: 'failed', message });
+      }
       throw new Error(message);
     });
-    return server.ready;
+    server.ready = probe;
+    return probe;
   }
 
   private async spawnNext(server: AppServer, project: Project): Promise<string> {
@@ -184,10 +198,11 @@ export class AppServers {
     const exited = new Promise<never>((_, reject) => {
       child.once('error', (error) => reject(error));
       child.once('exit', (code, signal) => {
-        if (server.child === child) server.child = null;
+        const current = server.child === child;
+        if (current) server.child = null;
         const message = `next dev exited (${signal ?? `code ${code ?? 0}`})`;
         this.log(server, 'studio', message);
-        if (server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' ? 'stopped' : 'failed', message, upstream: null });
+        if (current && server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' ? 'stopped' : 'failed', message, upstream: null });
         reject(new Error(message));
       });
     });

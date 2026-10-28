@@ -3,9 +3,10 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
 import type { FolderInspection, FolderKind } from '../../shared/open-app.js';
-import { detectApp, frameworkOf } from '../app/detect.js';
+import { detectApp, frameworkOf, readPackage, type AppDetection } from '../app/detect.js';
 import { nextBinary } from '../app/dev-server.js';
 import { installHint } from '../app/install-hint.js';
+import { nextAppWorkspace } from '../app/workspace-root.js';
 import { findTokenFile } from '../design-system/app-tokens/detect.js';
 import { BadRequestError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -45,16 +46,26 @@ async function plainKind(folder: string): Promise<FolderKind | null> {
   return existsSync(path.join(folder, 'index.html')) ? 'html' : null;
 }
 
+async function memberDetection(root: string, appDir: string): Promise<AppDetection> {
+  const pkg = await readPackage(path.join(root, appDir));
+  return { framework: 'next', appDir, candidates: [{ appDir, name: String(pkg?.name ?? path.basename(appDir)), framework: 'next' }] };
+}
+
+function chooseAppDir(detected: AppDetection, wanted: string | null): string | null {
+  const chosen = wanted && detected.candidates.some((candidate) => candidate.appDir === wanted) ? wanted : null;
+  const preferred = detected.candidates.find((candidate) => PREFERRED_APP.test(candidate.appDir)) ?? detected.candidates[0];
+  return chosen ?? detected.appDir ?? preferred?.appDir ?? null;
+}
+
 export async function inspectFolder(projects: StudioProjectStore, raw: string, wanted: string | null = null): Promise<FolderInspection> {
   const empty: FolderInspection = { path: raw, name: path.basename(raw), kind: null, appDir: null, candidates: [], depsInstalled: null, install: null, projectId: null, problem: null };
   const found = await realFolder(raw);
   if ('problem' in found) return { ...empty, problem: found.problem };
-  const folder = found.path;
-  const detected = await detectApp(folder);
+  const workspace = await nextAppWorkspace(found.path);
+  const folder = workspace?.root ?? found.path;
+  const detected = workspace ? await memberDetection(folder, workspace.appDir) : await detectApp(folder);
   const kind = detected.framework === 'next' ? 'next' : await plainKind(folder);
-  const chosen = wanted && detected.candidates.some((candidate) => candidate.appDir === wanted) ? wanted : null;
-  const preferred = detected.candidates.find((candidate) => PREFERRED_APP.test(candidate.appDir)) ?? detected.candidates[0];
-  const appDir = kind === 'next' ? (chosen ?? detected.appDir ?? preferred?.appDir ?? null) : null;
+  const appDir = kind === 'next' ? chooseAppDir(detected, wanted) : null;
   const hint = appDir ? installHint(folder, appDir) : null;
   const existing = (await projects.list()).find((project) => project.imported?.sourcePath === folder && (kind !== 'next' || project.app?.appDir === appDir));
   const problem = kind === null ? 'This folder has no Next.js app, no Vite app and no index.html. Add the name of your app folder to the path.' : null;
@@ -68,6 +79,7 @@ export async function inspectFolder(projects: StudioProjectStore, raw: string, w
     install: hint ? { command: hint.command, dir: hint.dir } : null,
     projectId: existing?.id ?? null,
     problem,
+    workspace: workspace ? { root: workspace.root, name: workspace.name, opened: found.path } : null,
   };
 }
 

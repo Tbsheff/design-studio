@@ -7,7 +7,7 @@ const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'] as co
 const DEFAULT_WORKSPACE_GLOBS = ['apps/*'];
 const MAX_WORKSPACE_DIRS = 200;
 
-async function readPackage(dir: string): Promise<Record<string, unknown> | null> {
+export async function readPackage(dir: string): Promise<Record<string, unknown> | null> {
   try {
     const parsed = JSON.parse(await readFile(path.join(dir, 'package.json'), 'utf8')) as unknown;
     return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
@@ -45,7 +45,7 @@ function globsFromPnpmWorkspace(text: string): string[] {
   return globs;
 }
 
-async function workspaceGlobs(root: string, pkg: Record<string, unknown> | null): Promise<string[] | null> {
+export async function workspaceGlobs(root: string, pkg: Record<string, unknown> | null): Promise<string[] | null> {
   const pnpmFile = path.join(root, 'pnpm-workspace.yaml');
   if (existsSync(pnpmFile)) return globsFromPnpmWorkspace(await readFile(pnpmFile, 'utf8'));
   const workspaces = pkg?.workspaces;

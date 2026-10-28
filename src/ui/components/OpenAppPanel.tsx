@@ -85,9 +85,10 @@ function StatusLine({ path, checking, error, result }: { path: string; checking:
   if (!result?.kind) return null;
   const where = result.kind === 'next' && result.appDir && result.appDir !== '.' ? ` in ${result.appDir}` : '';
   const known = result.projectId ? ' · already a project' : '';
+  const monorepo = result.workspace ? ` · opened as part of the ${result.workspace.name} monorepo` : '';
   return (
     <p className="open-app-status" data-tone="ok">
-      <Icon name="check" size={12} /> {KIND_TEXT[result.kind]}{where}{known} · <span className="mono">{result.path}</span>
+      <Icon name="check" size={12} /> {KIND_TEXT[result.kind]}{where}{monorepo}{known} · <span className="mono">{result.path}</span>
     </p>
   );
 }

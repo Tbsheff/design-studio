@@ -35,6 +35,7 @@ import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
 import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import type { ToolDef, ToolResult } from './tools.js';
 import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
+import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
 
 const FILE_MAX = 512 * 1024;
 const viewport = z.enum(['desktop', 'tablet', 'mobile']);
@@ -163,7 +164,7 @@ const META: Record<Name, Meta> = {
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
   create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
-  attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. A folder that is not attached yet waits for the user to approve it in Design Studio. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder.' },
+  attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. A folder that is not attached yet waits for the user to approve it in Design Studio. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder. A Next.js app folder inside a monorepo (pnpm-workspace.yaml, turbo.json or package.json workspaces) opens at the workspace root with that folder as appDir, so the shared kit, Tailwind CSS and root DESIGN.md are found; the result has workspaceRoot and appDir (workspaceRoot is null outside a monorepo).' },
   add_route_frame: { title: 'Add route frame', description: 'Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it. On a canvas with no saved frames, the first route frame is f1 and replaces the default entry-page frame.' },
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
@@ -375,13 +376,15 @@ async function createProject(deps: EditDeps, input: Input<'create_project'>): Pr
 
 async function attachApp(deps: EditDeps, input: Input<'attach_app'>, client: string): Promise<Done> {
   const folder = await safeFolder(input.folder, deps.dataDir);
-  const known = (await deps.projects.list()).some((project) => project.app && project.imported?.sourcePath === folder);
-  if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: 'The studio agent and write_file can then change the real files in this folder.' });
+  const workspace = input.appDir ? null : await workspaceOf(folder);
+  const known = (await deps.projects.list()).some((project) => project.app && sameFolderOrRoot(project, folder, workspace));
+  const scope = workspace ? `the ${workspace.name} monorepo at ${workspace.root} (this folder is its app ${workspace.appDir})` : 'this folder';
+  if (!known) await approve(deps, { tool: 'attach_app', action: 'Attach an app folder so edits write to its real files', projectId: null, client, title: `${client} wants to attach ${oneLine(folder, 160)}`, detail: `The studio agent and write_file can then change the real files in ${scope}.` });
   const { project, firstVersion, legacyCanvas } = await studioCall<AttachResponse>(deps, 'POST', '/api/projects/attach', { folder, ...(input.url ? { url: input.url } : {}), ...(input.appDir ? { appDir: input.appDir } : {}), ...(input.name ? { name: input.name } : {}) });
   const main = project.directions[0];
   const state = await studioCall<{ status: AppServerStatus | null }>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/app`).catch(() => ({ status: null }));
   const server = state.status ? { state: state.status.state, upstream: state.status.upstream, message: state.status.message } : null;
-  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, server, ...attachReadiness(firstVersion, legacyCanvas), next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
+  const result = ok({ projectId: project.id, directionId: main?.id ?? null, name: project.name, folder: main?.workTree ?? null, app: project.app, ...workspaceFields(project, folder), server, ...attachReadiness(firstVersion, legacyCanvas), next: server?.state === 'failed' ? 'The dev server is not running. Fix the problem in server.message; the studio tries again on the next attach_app call or preview load.' : 'Call list_routes, then add_route_frame.' });
   return { result, activity: { projectId: project.id, directionId: main?.id ?? null, summary: `Attached ${oneLine(project.name, 60)}` } };
 }
 

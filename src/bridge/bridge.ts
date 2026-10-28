@@ -485,7 +485,8 @@ function createLivePreview(): LivePreview {
       backup.props.delete(prop);
     }
     if (backup && backup.props.size === 0) styleBackups.delete(element);
-    const textNodes = text ? (textBackups.get(element) ?? null) : null;
+    const saved = text ? textBackups.get(element) : undefined;
+    const textNodes = saved && saved.length === 1 && saved[0] instanceof Text ? saved : null;
     if (textNodes) textBackups.delete(element);
     return { props: taken, hadAttribute: backup ? backup.hadAttribute : null, textNodes };
   };

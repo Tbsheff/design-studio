@@ -48,6 +48,7 @@ interface Entry {
   startedAt: number;
   writtenAt: number;
   sawChange: boolean;
+  changedAt: number;
 }
 
 export interface Optimistic {
@@ -56,7 +57,8 @@ export interface Optimistic {
   drop(): void;
 }
 
-const WRITTEN_TIMEOUT_MS = 10_000;
+const UNCHANGED_TIMEOUT_MS = 30_000;
+const MISMATCH_QUIET_MS = 1500;
 const PENDING_TIMEOUT_MS = 30_000;
 const MAX_ENTRIES = 50;
 const MAX_CLASSES = 40;
@@ -224,6 +226,17 @@ function rollback(hold: Hold): void {
   if (hold.textNode && hold.textOriginal !== null) hold.textNode.nodeValue = hold.textOriginal;
 }
 
+function touches(entry: Entry, record: MutationRecord): boolean {
+  const element = entry.hold?.element;
+  if (!element) return false;
+  if (record.type === 'attributes') return record.target === element;
+  return entry.spec.text !== null && element.contains(record.target);
+}
+
+function isOverdue(entry: Entry, now: number): boolean {
+  return entry.sawChange ? now - entry.changedAt > MISMATCH_QUIET_MS : now - entry.writtenAt > UNCHANGED_TIMEOUT_MS;
+}
+
 export function createOptimistic(deps: OptimisticDeps): Optimistic {
   const entries = new Map<string, Entry>();
   let observer: MutationObserver | null = null;
@@ -305,7 +318,7 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
         continue;
       }
       if (deps.previewing(entry.hold.element)) entry.writtenAt = now;
-      else reconcile(entry, now - entry.writtenAt > WRITTEN_TIMEOUT_MS);
+      else reconcile(entry, isOverdue(entry, now));
     }
   };
 
@@ -314,9 +327,11 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   };
 
   function noteChanges(records: MutationRecord[]): void {
+    const now = performance.now();
     for (const entry of entries.values()) {
-      const element = entry.hold?.element;
-      if (element && records.some((record) => element === record.target || element.contains(record.target))) entry.sawChange = true;
+      if (!records.some((record) => touches(entry, record))) continue;
+      entry.sawChange = true;
+      entry.changedAt = now;
     }
     schedule();
   }
@@ -351,7 +366,7 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
     if (typeof id !== 'string' || entries.has(id) || entries.size >= MAX_ENTRIES || typeof patch?.selector !== 'string') return;
     const element = query(patch.selector);
     const now = performance.now();
-    const entry: Entry = { id, patch, spec: specOf(patch, deps.styleKeys), hold: null, state: written ? 'written' : 'pending', startedAt: now, writtenAt: now, sawChange: false };
+    const entry: Entry = { id, patch, spec: specOf(patch, deps.styleKeys), hold: null, state: written ? 'written' : 'pending', startedAt: now, writtenAt: now, sawChange: false, changedAt: now };
     if (!isStyled(element)) return deps.report(id, 'skipped', 0, 'No element matches the selector in this frame.');
     entries.set(id, entry);
     void verified(patch, element).then((ok) => {

@@ -12,6 +12,7 @@ import type { BrowserPool, RenderCheckOptions } from './browser.js';
 import { startHtmlServer } from './html-server.js';
 import type { HtmlServer, RootKind } from './html-server.js';
 import type { ViteManager, ViteTarget } from './vite-manager.js';
+import { SourceStamps, type SourceStamp } from './source-stamp.js';
 import { WatcherManager } from './watcher.js';
 import { resolveFrameState } from '../app/frame-state.js';
 import { AppServers } from '../app/dev-server.js';
@@ -110,14 +111,20 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const upstream = apps.upstreamOf(change.projectId);
     return upstream ? sourcesShifted(upstream, change.root, change.paths) : false;
   };
-  const watchers = new WatcherManager({ bus, projects, versions, onChanged: forwardToVite, needsReload: appSourcesShifted });
+  const stamps = new SourceStamps();
+  const onChanged = (change: DirectionChange): void => {
+    stamps.bump(`${change.projectId}:${change.directionId}`);
+    forwardToVite(change);
+  };
+  const watchers = new WatcherManager({ bus, projects, versions, onChanged, needsReload: appSourcesShifted });
+  const stampFor = (url: string): Promise<SourceStamp | null> => stamps.stampFor(url, (key) => watchers.flushed(key.slice(key.indexOf(':') + 1)));
   const vite = lazily<ViteManager>(async () => {
     const { ViteManager: Manager } = await import('./vite-manager.js');
     return new Manager({ bus, vitePortBase: config.vitePortBase, bridgeScript: loadBridgeScript });
   });
   const browsers = lazily<BrowserPool>(async () => {
     const { BrowserPool: Pool } = await import('./browser.js');
-    return new Pool(config.previewOrigin);
+    return new Pool(config.previewOrigin, undefined, { stampFor, landed: (url: string, href: string) => stamps.landed(url, href) });
   });
   onSourceChange(() => browsers.loaded()?.then((pool) => pool.sourcesChanged()).catch(() => undefined));
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
@@ -187,21 +194,27 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
 
   const directionUrl = async (project: Project, direction: Direction): Promise<string> => {
     watchers.watch(project, direction);
+    const key = `${project.id}:${direction.id}`;
     if (project.app) {
       appCache.delete(project.id);
       void apps.ensure(project).catch(() => undefined);
+      stamps.register(appUrl(project), key, direction.workTree, project.app.appDir);
       return appUrl(project);
     }
     if (project.kind === 'html') {
-      return `${projectPreviewOrigin(project.id, config.previewPort)}/d/${encodeURIComponent(project.id)}/${encodeURIComponent(direction.id)}/${encodeEntry(project.entry || 'index.html')}`;
+      const base = `${projectPreviewOrigin(project.id, config.previewPort)}/d/${encodeURIComponent(project.id)}/${encodeURIComponent(direction.id)}/`;
+      stamps.register(base, key, direction.workTree, null);
+      return `${base}${encodeEntry(project.entry || 'index.html')}`;
     }
-    return viteUrl({
+    const url = await viteUrl({
       key: `d:${project.id}:${direction.id}`,
       root: direction.workTree,
       cacheDir: path.join(projects.projectDir(project.id), 'vite-cache', direction.id),
       projectId: project.id,
       directionId: direction.id,
     });
+    stamps.register(`${new URL(url).origin}/`, key, direction.workTree, null);
+    return url;
   };
 
   const snapshotUrl = async (project: Project, versionId: string, snapshotDir: string): Promise<string> => {
@@ -211,12 +224,14 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
       return `${projectPreviewOrigin(project.id, config.previewPort)}/s/${encodeURIComponent(project.id)}/${encodeURIComponent(versionId)}/${encodeEntry(project.entry || 'index.html')}`;
     }
     await linkNodeModules(project, snapshotDir);
-    return viteUrl({
+    const url = await viteUrl({
       key: `s:${project.id}:${versionId}`,
       root: snapshotDir,
       cacheDir: path.join(projects.projectDir(project.id), 'vite-cache', `snapshot-${versionId}`),
       projectId: project.id,
     });
+    stamps.forget(url);
+    return url;
   };
 
   const snapshotShot = async (project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }> => {
@@ -258,6 +273,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     unwatch: (directionId) => watchers.unwatch(directionId),
     release: async (project, direction) => {
       watchers.unwatchOf(project.id, direction.id);
+      stamps.forgetKey(`${project.id}:${direction.id}`);
       appCache.delete(project.id);
       if (project.app) await apps.stop(project.id);
       await vite.loaded()?.then((manager) => manager.stopOne(`d:${project.id}:${direction.id}`));
@@ -270,9 +286,13 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
         appCache.delete(project.id);
         return apps.ensure(project);
       },
-      stop: (projectId) => apps.stop(projectId),
+      stop: (projectId) => {
+        stamps.bumpProject(projectId);
+        return apps.stop(projectId);
+      },
       restart: async (project) => {
         appCache.delete(project.id);
+        stamps.bumpProject(project.id);
         return apps.restart(project);
       },
       forget: (projectId) => appCache.delete(projectId),
@@ -283,6 +303,8 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
     peekPage: async (url, viewport, task) => (await browsers.get()).peek(url, viewport, task),
+    sourceStamp: async (url) => (await stampFor(url))?.key ?? null,
+    warmBrowser: () => void browsers.get().then((pool) => pool.backend()).catch(() => undefined),
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }

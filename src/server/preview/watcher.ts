@@ -57,6 +57,12 @@ export class WatcherManager {
     return this.watches.has(directionId);
   }
 
+  async flushed(directionId: string): Promise<void> {
+    const entry = this.watches.get(directionId);
+    if (!entry || (!entry.flushTimer && entry.pending.size === 0)) return;
+    await new Promise((resolve) => setTimeout(resolve, COALESCE_MS + 5));
+  }
+
   watch(project: Project, direction: Direction): void {
     const existing = this.watches.get(direction.id);
     if (existing && existing.root === path.resolve(direction.workTree)) return;

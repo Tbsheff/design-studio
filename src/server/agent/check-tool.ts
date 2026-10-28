@@ -12,6 +12,7 @@ import type { AgentRunContext, PreviewService } from '../types.js';
 import type { CriticImage } from './critic.js';
 import { describeScreens, planScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
+import { EDIT_TOOL_NAMES } from './permissions.js';
 import { defaultShotTarget, type ShotTarget } from './run-target.js';
 
 const DIFF_VIEWPORTS: CheckViewport[] = ['desktop', 'mobile'];
@@ -41,15 +42,24 @@ export interface RunToolState {
   reviewShots?: CriticImage[];
   regressionDone?: boolean;
   regressionNote?: string;
+  captureMark?: number;
+}
+
+export function freshCapture(ctx: AgentRunContext, state: RunToolState | undefined): boolean {
+  const order = state?.log?.toolOrder;
+  if (!ctx.project.app || !order || !state) return false;
+  const fresh = order.slice(state.captureMark ?? 0).some((name) => EDIT_TOOL_NAMES.has(name));
+  state.captureMark = order.length;
+  return fresh;
 }
 
 function selectionLocs(selection: SelectionContext[] | undefined): string[] {
   return (selection ?? []).flatMap((item) => (item.source ? [`${item.source.file}:${item.source.line}:${item.source.col}`] : []));
 }
 
-function checkOptions(ctx: AgentRunContext, config: ResolvedRunConfig): RenderCheckOptions {
+function checkOptions(ctx: AgentRunContext, config: ResolvedRunConfig, fresh = false): RenderCheckOptions {
   const checks = config.preset.checks;
-  return { viewports: checks.viewports, quality: checks.quality, placeholder: checks.placeholder, selectionLocs: selectionLocs(ctx.request.selection) };
+  return { viewports: checks.viewports, quality: checks.quality, placeholder: checks.placeholder, selectionLocs: selectionLocs(ctx.request.selection), ...(fresh ? { fresh } : {}) };
 }
 
 export function budgetLine(state: Pick<RunToolState, 'config' | 'spentUsd' | 'criticCostUsd'>): string | null {
@@ -109,6 +119,7 @@ function viewportView(result: RenderCheckResult) {
     layout: result.layout,
     layoutTotal: result.layoutTotal,
     timingsMs: result.timingsMs,
+    ...(result.cached ? { cached: true } : {}),
   };
 }
 
@@ -155,10 +166,12 @@ export async function buildCheckReport(preview: PreviewService, ctx: AgentRunCon
   const timings: Record<string, number> = {};
   const started = Date.now();
   const target = picked ?? defaultShotTarget(ctx);
-  const raw = await timedStep(timings, 'render', () => preview.renderCheck(ctx.project, ctx.direction, { ...checkOptions(ctx, config), ...(target ? { url: target.url } : {}) }));
+  const fresh = freshCapture(ctx, state);
+  const mainRender = timedStep(timings, 'render', () => preview.renderCheck(ctx.project, ctx.direction, { ...checkOptions(ctx, config, fresh), ...(target ? { url: target.url } : {}) }));
+  mainRender.catch(() => undefined);
   const screens = state ? await timedStep(timings, 'screens', () => runScreens(preview, ctx, config, state).catch(() => [])) : [];
   const mainUrl = target?.url ?? ctx.previewUrl;
-  const extra = await timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens, mainUrl));
+  const [raw, extra] = await Promise.all([mainRender, timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens, mainUrl, fresh))]);
   const tokens = await timedStep(timings, 'tokens', () => tokenFindings(ctx, config).catch(() => []));
   const targeted = (ctx.request.selection ?? []).length > 0;
   const diff = config.preset.checks.quality ? await timedStep(timings, 'diff', () => diffFindings(state, raw, targeted, target?.url ?? null)) : [];
@@ -189,14 +202,14 @@ function tagScreen(result: RenderCheckResult, screen: string): RenderCheckResult
   return { ...result, screen, quality: (result.quality ?? []).map((finding) => ({ ...finding, screen })) };
 }
 
-async function screenChecks(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, screens: RunScreen[], mainUrl: string | null): Promise<RenderCheckResult[]> {
+async function screenChecks(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, screens: RunScreen[], mainUrl: string | null, fresh: boolean): Promise<RenderCheckResult[]> {
   const extra = screens.filter((screen) => !isMain(screen, mainUrl)).slice(0, config.preset.screens?.checkScreens ?? 0);
   if (extra.length === 0) return [];
   await warmScreens(preview, ctx.project, extra);
   const viewports = config.preset.checks.viewports.filter((viewport) => viewport !== 'tablet');
   const checked = await Promise.all(
     extra.map(async (screen, index) => {
-      const options = { ...checkOptions(ctx, config), viewports, url: screen.url, filePrefix: `${ctx.direction.id}-screen-${index + 1}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) };
+      const options = { ...checkOptions(ctx, config, fresh), viewports, url: screen.url, filePrefix: `${ctx.direction.id}-screen-${index + 1}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) };
       const results = await preview.renderCheck(ctx.project, ctx.direction, options).catch((error: unknown) => {
         console.warn(`[agent] screen check failed for ${screen.label}: ${error instanceof Error ? error.message : String(error)}`);
         return [];
@@ -205,6 +218,14 @@ async function screenChecks(preview: PreviewService, ctx: AgentRunContext, confi
     }),
   );
   return checked.flat();
+}
+
+export async function prewarmChecks(preview: PreviewService, ctx: AgentRunContext, state: RunToolState): Promise<void> {
+  preview.warmBrowser?.();
+  if (!ctx.previewUrl || !ctx.project.app) return;
+  const screens = await runScreens(preview, ctx, state.config, state).catch(() => []);
+  for (const screen of screens) void preview.sourceStamp?.(screen.url).catch(() => null);
+  await warmScreens(preview, ctx.project, screens);
 }
 
 export async function saveCheck(runsDir: string, runId: string, index: number | string, results: RenderCheckResult[]): Promise<void> {

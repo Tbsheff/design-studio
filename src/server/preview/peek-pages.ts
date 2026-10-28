@@ -2,6 +2,7 @@ import type { RenderPage } from './render-backend.js';
 
 type Viewport = { width: number; height: number; scale?: number };
 type Opener = (url: string, viewport: Viewport) => Promise<RenderPage>;
+type Closer = (page: RenderPage) => Promise<void>;
 
 interface WarmPage {
   page: RenderPage;
@@ -54,11 +55,14 @@ function refreshed(clock: PageClock, dirtyAt: number): boolean {
   return clock.rebuildAt >= dirtyAt && applied && clock.now - Math.max(clock.mutationAt, clock.doneAt) >= QUIET_MS;
 }
 
-export class WarmPages {
+export class PeekPages {
   private readonly pages = new Map<string, WarmPage>();
   private dirtyAt = 0;
 
-  constructor(private readonly open: Opener) {}
+  constructor(
+    private readonly open: Opener,
+    private readonly closePage: Closer,
+  ) {}
 
   markDirty(at = Date.now()): void {
     this.dirtyAt = Math.max(this.dirtyAt, at);
@@ -79,7 +83,10 @@ export class WarmPages {
   async close(): Promise<void> {
     const all = [...this.pages.values()];
     this.pages.clear();
-    await Promise.all(all.map(async (warm) => (await warm.ready.then(() => warm.page).catch(() => null))?.close()));
+    await Promise.all(all.map(async (warm) => {
+      const page = await warm.ready.then(() => warm.page).catch(() => null);
+      if (page) await this.closePage(page);
+    }));
   }
 
   private async fresh(key: string, url: string, viewport: Viewport): Promise<WarmPage> {
@@ -139,6 +146,6 @@ export class WarmPages {
     const warm = this.pages.get(key);
     if (!warm) return;
     this.pages.delete(key);
-    void warm.ready.then(() => warm.page.close()).catch(() => undefined);
+    void warm.ready.then(() => this.closePage(warm.page)).catch(() => undefined);
   }
 }

@@ -786,6 +786,7 @@ export interface RenderCheckResult {
   timingsMs?: Record<string, number>;
   backend?: 'playwright' | 'electron';
   screen?: string;
+  cached?: boolean;
 }
 
 export const API_ROUTES = {

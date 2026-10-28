@@ -281,15 +281,24 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     [zoomStep, zoomTo, fit, zoomToBox],
   );
 
+  const frameOrigin = useRef<{ frame: HTMLIFrameElement; at: number; x: number; y: number; h: number } | null>(null);
   const frameWheel = useCallback(
     (frame: HTMLIFrameElement | null, e: FrameWheel) => {
       const el = stageRef.current;
       if (!el || !frame) return;
-      const frameRect = frame.getBoundingClientRect();
-      const stageRect = el.getBoundingClientRect();
-      const z = view().zoom;
-      const { dy } = wheelPixels(e, frame.clientHeight);
-      wheelZoomAt(frameRect.left - stageRect.left + e.clientX * z, frameRect.top - stageRect.top + e.clientY * z, wheelZoomFactor(dy));
+      const now = performance.now();
+      let o = frameOrigin.current;
+      if (!o || o.frame !== frame || now - o.at > WHEEL_IDLE_MS) {
+        const frameRect = frame.getBoundingClientRect();
+        const stageRect = el.getBoundingClientRect();
+        const v = view();
+        o = { frame, at: now, x: (frameRect.left - stageRect.left - v.x) / v.zoom, y: (frameRect.top - stageRect.top - v.y) / v.zoom, h: frame.clientHeight };
+      }
+      o.at = now;
+      frameOrigin.current = o;
+      const v = view();
+      const { dy } = wheelPixels(e, o.h);
+      wheelZoomAt(v.x + (o.x + e.clientX) * v.zoom, v.y + (o.y + e.clientY) * v.zoom, wheelZoomFactor(dy));
     },
     [stageRef, wheelZoomAt, view],
   );
@@ -297,11 +306,18 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
+    let rect: DOMRect | null = null;
+    let height = 0;
+    let lastAt = 0;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const { dx, dy } = wheelPixels(e, el.clientHeight);
+      if (!rect || e.timeStamp - lastAt > WHEEL_IDLE_MS) {
+        rect = el.getBoundingClientRect();
+        height = el.clientHeight;
+      }
+      lastAt = e.timeStamp;
+      const { dx, dy } = wheelPixels(e, height);
       if (e.ctrlKey || e.metaKey) {
-        const rect = el.getBoundingClientRect();
         wheelZoomAt(e.clientX - rect.left, e.clientY - rect.top, wheelZoomFactor(dy));
       } else {
         offset.current = { x: offset.current.x - dx, y: offset.current.y - dy };

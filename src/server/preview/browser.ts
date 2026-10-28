@@ -1,18 +1,28 @@
 import { mkdir } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { BRIDGE_PARENT_ORIGIN_PARAM, BRIDGE_TOKEN_PARAM } from '../../shared/contracts.js';
 import type { CheckViewport, QualityFinding, RenderCheckResult } from '../../shared/contracts.js';
 import type { PlaceholderMode } from '../../shared/run-levels.js';
-import { runAxe } from './axe.js';
+import { runAxe, runSharedAxe, type AxeViolation } from './axe.js';
+import { CaptureCache, cacheKey, type StampFor } from './capture-cache.js';
 import { layoutProbeExpression, type LayoutProbeResult } from './layout-probe.js';
 import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } from './quality.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
+import { WarmPages } from './page-pool.js';
 import { renderSettled } from './render-wait.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
 
 const SERVER_TOKEN = 'server';
-const TWO_FRAMES = 'new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))';
+const QUIET_EXPRESSION = `new Promise((resolve) => {
+  let timer = 0;
+  const observer = new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(done, 80); });
+  const cap = setTimeout(done, 1000);
+  function done() { observer.disconnect(); clearTimeout(cap); clearTimeout(timer); Promise.resolve(document.fonts ? document.fonts.ready : null).then(() => resolve(true)); }
+  observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); timer = setTimeout(done, 80); }));
+})`;
 const OVERFLOW_EXPRESSION = 'document.documentElement.scrollWidth > window.innerWidth + 1';
 const PAGE_HEIGHT_EXPRESSION = 'Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)';
 
@@ -38,6 +48,7 @@ export interface RenderCheckOptions {
   url?: string;
   filePrefix?: string;
   prepare?: string;
+  fresh?: boolean;
 }
 
 interface PageInspection {
@@ -68,7 +79,7 @@ function wantsAxe(viewport: CheckViewport): boolean {
   return viewport !== 'tablet';
 }
 
-async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: RenderCheckOptions, timings: Record<string, number>): Promise<PageInspection> {
+async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: RenderCheckOptions, timings: Record<string, number>, shared?: () => Promise<AxeViolation[]>): Promise<PageInspection> {
   const placeholder = options.placeholder ?? 'off';
   const probe = await timed(timings, 'probe', () =>
     page.evaluate<QualityProbeResult>(
@@ -82,7 +93,7 @@ async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: Ren
       }),
     ),
   );
-  const axe = options.quality && wantsAxe(spec.viewport) ? await timed(timings, 'axe', () => runAxe(page, spec.viewport)) : [];
+  const axe = options.quality && wantsAxe(spec.viewport) ? await timed(timings, 'axe', () => runAxe(page, spec.viewport, shared)) : [];
   const placeholders = placeholderFindings(probe.placeholder, placeholder, spec.viewport);
   const quality = options.quality ? [...axe, ...tapFindings(probe.tap, spec.viewport), ...placeholders, ...genericFindings(probe.generic ?? []), ...duplicateFindings(probe.duplicates ?? [], spec.viewport)] : placeholders;
   return { quality, nav: probe.nav, selectionRects: probe.selectionRects, timingsMs: timings };
@@ -97,6 +108,8 @@ export interface TileRequest {
   theme?: 'light' | 'dark';
   still?: boolean;
   prepare?: string;
+  format?: 'png' | 'jpeg';
+  fresh?: boolean;
 }
 
 export interface TileResult {
@@ -104,6 +117,7 @@ export interface TileResult {
   pageHeight: number;
   from: number;
   to: number;
+  cached?: boolean;
 }
 
 export function planTiles(pageHeight: number, tileHeight: number, from: number, maxTiles: number): { y: number; height: number }[] {
@@ -134,6 +148,7 @@ interface ViewportState {
   inspection: PageInspection | null;
   timings: Record<string, number>;
   pageErrors: string[];
+  stamp: string | null;
 }
 
 function errorText(error: unknown): string {
@@ -172,16 +187,39 @@ export function elementClipsExpression(selectors: string[]): string {
 }
 
 async function settle(page: RenderPage): Promise<void> {
-  await page.evaluate(TWO_FRAMES).catch(() => undefined);
+  await page.evaluate(QUIET_EXPRESSION).catch(() => undefined);
+}
+
+const CAPTURE_DIR = path.join(os.tmpdir(), 'design-studio-captures', String(process.pid));
+
+type CachedCheck = Omit<RenderCheckResult, 'screenshotPath'>;
+type CachedTiles = Omit<TileResult, 'paths'> & { count: number };
+
+function checkKey(url: string, spec: ViewportSpec, options: RenderCheckOptions): string {
+  return cacheKey({ url, viewport: spec.viewport, quality: options.quality === true, placeholder: options.placeholder ?? 'off', selection: options.selectionLocs ?? [], prepare: options.prepare ?? '' });
+}
+
+function tileKey(url: string, request: TileRequest): string {
+  const { outPrefix: _out, fresh: _fresh, ...rest } = request;
+  return cacheKey({ url, ...rest });
+}
+
+function tilePaths(outPrefix: string, count: number, ext: string): string[] {
+  return Array.from({ length: count }, (_, index) => `${outPrefix}-${index + 1}${ext}`);
 }
 
 export class BrowserPool {
   private backendPromise: Promise<RenderBackend> | null = null;
   private closed = false;
+  private readonly pages = new WarmPages(() => this.backend());
+  private readonly checks = new CaptureCache<CachedCheck>(path.join(CAPTURE_DIR, 'checks'));
+  private readonly tiles = new CaptureCache<CachedTiles>(path.join(CAPTURE_DIR, 'tiles'));
+  private readonly axeRuns = new Map<string, { stamp: string; run: Promise<AxeViolation[]> }>();
 
   constructor(
     private readonly parentOrigin: string,
     private readonly backendFactory: () => Promise<RenderBackend> = () => createRenderBackend(),
+    private readonly stampFor: StampFor = async () => null,
   ) {}
 
   backend(): Promise<RenderBackend> {
@@ -199,14 +237,25 @@ export class BrowserPool {
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     await renderSettled();
-    const page = await (await this.backend()).open(viewport);
-    try {
+    return this.pages.lease(viewport, async (page) => {
+      const stamp = await this.stampFor(url);
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
-      return await task(page);
-    } finally {
-      await page.close();
-    }
+      const shared: RenderPage = Object.assign(Object.create(page) as RenderPage, { axe: () => this.sharedAxe(page, url, viewport, '', stamp) });
+      return task(shared);
+    });
+  }
+
+  private sharedAxe(page: RenderPage, url: string, size: { width: number; height: number }, prepare: string, stamp: string | null): Promise<AxeViolation[]> {
+    if (!stamp) return runSharedAxe(page);
+    const key = cacheKey({ url, width: size.width, height: size.height, prepare });
+    const known = this.axeRuns.get(key);
+    if (known?.stamp === stamp) return known.run;
+    const run = runSharedAxe(page);
+    this.axeRuns.set(key, { stamp, run });
+    run.catch(() => this.axeRuns.delete(key));
+    if (this.axeRuns.size > 400) this.axeRuns.delete(this.axeRuns.keys().next().value as string);
+    return run;
   }
 
   async screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string> {
@@ -236,6 +285,22 @@ export class BrowserPool {
   }
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
+    await renderSettled();
+    const key = tileKey(url, request);
+    const ext = request.format === 'jpeg' ? '.jpg' : '.png';
+    const stamp = request.fresh ? null : await this.stampFor(url);
+    const known = this.tiles.peek(key, stamp);
+    if (known) {
+      const paths = tilePaths(request.outPrefix, known.count, ext);
+      if (await this.tiles.hit(key, stamp, paths)) return { paths, pageHeight: known.pageHeight, from: known.from, to: known.to, cached: true };
+    }
+    const before = stamp ?? (await this.stampFor(url));
+    const result = await this.captureTiles(url, request, ext);
+    if (before && (await this.stampFor(url)) === before) await this.tiles.store(key, before, { pageHeight: result.pageHeight, from: result.from, to: result.to, count: result.paths.length }, result.paths);
+    return result;
+  }
+
+  private async captureTiles(url: string, request: TileRequest, ext: string): Promise<TileResult> {
     return this.withPage(url, request.viewport, async (page) => {
       if (request.prepare) await page.evaluate(request.prepare).catch(() => undefined);
       if (request.theme === 'dark') {
@@ -249,27 +314,26 @@ export class BrowserPool {
       const pageHeight = await page.evaluate<number>(PAGE_HEIGHT_EXPRESSION);
       const tiles = planTiles(pageHeight, request.tileHeight, request.from, request.maxTiles);
       await mkdir(path.dirname(request.outPrefix), { recursive: true });
-      const paths: string[] = [];
-      for (const [index, tile] of tiles.entries()) {
-        const outPath = `${request.outPrefix}-${index + 1}.png`;
-        await page.screenshot(outPath, { x: 0, y: tile.y, width: request.viewport.width, height: tile.height });
-        paths.push(outPath);
-      }
+      const paths = tilePaths(request.outPrefix, tiles.length, ext);
+      for (const [index, tile] of tiles.entries()) await page.screenshot(paths[index] as string, { x: 0, y: tile.y, width: request.viewport.width, height: tile.height });
       const last = tiles[tiles.length - 1];
       return { paths, pageHeight, from: tiles[0]?.y ?? 0, to: last ? last.y + last.height : 0 };
     });
   }
 
   private async probeViewport(page: RenderPage, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, state: ViewportState): Promise<void> {
-    await page.goto(withServerBridgeParams(state.url, this.parentOrigin));
-    await settle(page);
-    if (options.prepare) await page.evaluate(options.prepare);
+    await timed(state.timings, 'goto', () => page.goto(withServerBridgeParams(state.url, this.parentOrigin)));
+    const nav = page.lastNav?.();
+    if (nav) Object.assign(state.timings, { load: nav.loadMs, idle: nav.idleMs });
+    await timed(state.timings, 'settle', () => settle(page));
+    if (options.prepare) await timed(state.timings, 'prepare', () => page.evaluate(options.prepare as string));
     state.horizontalOverflow = await page.evaluate<boolean>(OVERFLOW_EXPRESSION);
     state.probe = await page.evaluate<LayoutProbeResult>(layoutProbeExpression()).catch((error: unknown) => {
       state.pageErrors.push(`layout probe failed: ${errorText(error)}`);
       return EMPTY_PROBE;
     });
-    state.inspection = await inspectQuality(page, spec, options, state.timings).catch((error: unknown) => {
+    const shared = () => this.sharedAxe(page, state.url, spec, options.prepare ?? '', state.stamp);
+    state.inspection = await inspectQuality(page, spec, options, state.timings, shared).catch((error: unknown) => {
       state.pageErrors.push(`quality probe failed: ${errorText(error)}`);
       return null;
     });
@@ -277,21 +341,34 @@ export class BrowserPool {
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
-    const backend = await this.backend();
-    const page = await backend.open({ width: spec.width, height: spec.height });
-    const state: ViewportState = { url, horizontalOverflow: false, probe: EMPTY_PROBE, inspection: null, timings: {}, pageErrors: [] };
+    await renderSettled();
     const started = Date.now();
+    const key = checkKey(url, spec, options);
+    const stamp = options.fresh ? null : await this.stampFor(url);
+    const known = await this.checks.hit(key, stamp, [screenshotPath]);
+    if (known) return { ...known, screenshotPath, cached: true, timingsMs: { cached: Date.now() - started } };
+    const before = stamp ?? (await this.stampFor(url));
+    const result = await this.renderViewport(url, spec, screenshotPath, options, started, before);
+    if (before && (await this.stampFor(url)) === before) {
+      const { screenshotPath: _path, ...value } = result;
+      await this.checks.store(key, before, value, [screenshotPath]);
+    }
+    return result;
+  }
+
+  private async renderViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, started: number, stamp: string | null): Promise<RenderCheckResult> {
+    const backend = await this.backend();
+    const state: ViewportState = { url, horizontalOverflow: false, probe: EMPTY_PROBE, inspection: null, timings: {}, pageErrors: [], stamp: options.fresh ? null : stamp };
     let consoleErrors: string[] = [];
-    try {
+    await this.pages.lease({ width: spec.width, height: spec.height }, async (page) => {
+      state.timings['open'] = Date.now() - started;
       await this.probeViewport(page, spec, screenshotPath, options, state).catch((error: unknown) => {
         state.pageErrors.push(errorText(error));
       });
       const collected = await page.errors();
       consoleErrors = collected.consoleErrors;
       state.pageErrors.unshift(...collected.pageErrors);
-    } finally {
-      await page.close();
-    }
+    });
     return {
       viewport: spec.viewport,
       width: spec.width,
@@ -326,6 +403,7 @@ export class BrowserPool {
 
   async close(): Promise<void> {
     this.closed = true;
+    await this.pages.closeAll().catch(() => undefined);
     const pending = this.backendPromise;
     this.backendPromise = null;
     const backend = await pending?.catch(() => null);

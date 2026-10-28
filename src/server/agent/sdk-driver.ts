@@ -8,7 +8,7 @@ import { EMPTY_USAGE, deliveredContext, type DriverInput, type DriverOutcome, ty
 import { BASH_EDIT_TOOL, bashWriteProblem, builtinToolNames, createCanUseTool, createPreToolUseGuard, type ToolPolicy } from './permissions.js';
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
-import { captureBaseline, type RunToolState } from './check-tool.js';
+import { captureBaseline, prewarmChecks, type RunToolState } from './check-tool.js';
 import { runFinalCheck } from './final-check.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
@@ -650,6 +650,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       ...(options.canvas ? { canvas: options.canvas } : {}),
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
+    void prewarmChecks(options.preview, input.ctx, run).catch(() => undefined);
     return { skills: await loadSkills(options, input), config, run, tasteRules: loadTasteRules(options.tasteHome), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };
   }
 

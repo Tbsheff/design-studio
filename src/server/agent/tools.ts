@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import type { TileResult } from '../preview/browser.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
-import { budgetLine, buildCheckReport, runScreens, saveCheck, type RunToolState } from './check-tool.js';
+import { budgetLine, buildCheckReport, freshCapture, runScreens, saveCheck, type RunToolState } from './check-tool.js';
 import { recordShot } from './polish-loop.js';
 import { beforeImages, changedSourceFor, criticImages, criticOutPrefix, describeCriticResult, runCritic, type CriticImage } from './critic.js';
 import { describeScreens, samePage, warmScreens, type RunScreen } from './screens.js';
@@ -256,7 +256,8 @@ export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolC
   const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {
     await mkdir(deps.runsDir, { recursive: true });
-    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(dark ? { theme: 'dark' as const } : {}), ...(target.prepare ? { prepare: target.prepare } : {}) });
+    const fresh = freshCapture(deps.ctx, deps.run);
+    const tiles = await deps.preview.screenshotTiles(target.url, { viewport: box, ...TILE_PLAN[viewport], from: start.from, outPrefix, ...(fresh ? { fresh } : {}), ...(dark ? { theme: 'dark' as const } : {}), ...(target.prepare ? { prepare: target.prepare } : {}) });
     return { content: [...(await tileContent(tiles.paths)), { type: 'text' as const, text: `Page ${target.label}. ${dark ? 'Dark theme. ' : ''}${describeTiles(viewport, tiles, box)}${start.note}` }] };
   } catch (error) {
     return errorText(`Screenshot failed: ${describeError(error)}`);
@@ -340,7 +341,7 @@ export async function runDesignReview(deps: StudioToolDeps, args: ShotArgs = {})
   try {
     const screens = await reviewScreens(deps, run, target, args);
     const prefix = criticOutPrefix(deps.runsDir, deps.runId, run.criticCalls);
-    const images = await criticImages(deps.preview, screens, prefix, run.config.preset.screens?.maxImages);
+    const images = await criticImages(deps.preview, screens, prefix, run.config.preset.screens?.maxImages, freshCapture(deps.ctx, run));
     const input = await reviewInput(deps, run, screens, images);
     const result = await runCritic(await loadQuery(deps), input, run.config.criticModel as string, run.config.maxBudgetUsd === null ? null : run.config.preset.criticBudgetUsd, deps.env);
     run.criticCostUsd += result.costUsd;

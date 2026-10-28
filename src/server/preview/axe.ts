@@ -24,14 +24,17 @@ const AXE_RULES = [
 ];
 
 const NODES_PER_RULE = 3;
+const REVIEW_EXTRA_RULES = ['svg-img-alt', 'role-img-alt', 'area-alt', 'object-alt'];
+export const SHARED_AXE_RULES: readonly string[] = [...new Set([...AXE_RULES, ...REVIEW_EXTRA_RULES])];
 
 interface AxeNode {
   target: unknown[];
   html: string;
   failureSummary?: string;
+  any?: { id: string; data?: Record<string, unknown> | null }[];
 }
 
-interface AxeViolation {
+export interface AxeViolation {
   id: string;
   impact?: string | null;
   help: string;
@@ -85,8 +88,17 @@ function axeRunExpression(rules: readonly string[]): string {
   return `window.axe.run(document, { runOnly: { type: 'rule', values: ${JSON.stringify(rules)} }, resultTypes: ['violations'] }).then((result) => result.violations)`;
 }
 
-export async function runAxe(page: AxePage, viewport: CheckViewport): Promise<QualityFinding[]> {
+export async function runSharedAxe(page: AxePage): Promise<AxeViolation[]> {
   await page.evaluate(`${await loadAxeSource()}\n;0`);
-  const violations = await page.evaluate<AxeViolation[]>(axeRunExpression(AXE_RULES));
-  return axeFindings(violations, viewport);
+  return page.evaluate<AxeViolation[]>(axeRunExpression(SHARED_AXE_RULES));
+}
+
+export function pickRules<T extends { id: string }>(violations: readonly T[], rules: readonly string[]): T[] {
+  const wanted = new Set(rules);
+  return violations.filter((violation) => wanted.has(violation.id));
+}
+
+export async function runAxe(page: AxePage, viewport: CheckViewport, shared?: () => Promise<AxeViolation[]>): Promise<QualityFinding[]> {
+  const violations = await (shared ? shared() : runSharedAxe(page));
+  return axeFindings(pickRules(violations, AXE_RULES), viewport);
 }

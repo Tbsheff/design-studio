@@ -30,7 +30,14 @@ export interface ScreenDeps {
   ctx: AgentRunContext;
   canvas?: CanvasService;
   startedAt?: number;
-  cache?: { stamp: string; screens: RunScreen[] };
+  cache?: ScreenCache;
+}
+
+export interface ScreenCache {
+  stamp: string;
+  screens: RunScreen[];
+  touchedStamp?: string;
+  touched?: string[];
 }
 
 interface PageRef {
@@ -80,7 +87,7 @@ export async function changedSince(workTree: string, dir: string, since: number)
 
 async function fileStamp(workTree: string): Promise<string> {
   const parts: string[] = [];
-  await walk(workTree, '', (file) => parts.push(file), { left: 400 });
+  await walk(workTree, '', (file, size, mtimeMs) => parts.push(`${file}:${size}:${mtimeMs}`), { left: 400 });
   return parts.sort().join('|');
 }
 
@@ -103,9 +110,14 @@ function framePage(base: string, frame: CanvasFileFrame, view: FrameStatesView |
 async function touchedPaths(deps: ScreenDeps): Promise<Set<string>> {
   const app = deps.ctx.project.app;
   if (!app || deps.startedAt === undefined) return new Set();
+  const stamp = deps.ctx.previewUrl ? await deps.preview.sourceStamp?.(deps.ctx.previewUrl) : null;
+  const memo = stamp ? `${stamp}#${deps.startedAt}` : null;
+  if (memo && deps.cache?.touchedStamp === memo && deps.cache.touched) return new Set(deps.cache.touched);
   const workTree = deps.ctx.direction.workTree;
   const [routes, changed] = await Promise.all([listAppRoutes(workTree, app.appDir).catch(() => []), changedSince(workTree, app.appDir, deps.startedAt)]);
-  return touchedRoutes(routes, changed);
+  const touched = touchedRoutes(routes, changed);
+  if (memo && deps.cache) Object.assign(deps.cache, { touchedStamp: memo, touched: [...touched] });
+  return touched;
 }
 
 export function touchedRoutes(routes: readonly AppRoute[], changed: readonly string[]): Set<string> {
@@ -163,25 +175,18 @@ async function explorePage(deps: ScreenDeps, page: PageRef, room: number, single
   }));
 }
 
-async function pageStillValid(page: RenderPage, screens: readonly RunScreen[]): Promise<boolean> {
-  const href = await page.evaluate<string>('location.href');
-  for (const [index, screen] of screens.entries()) {
-    if (index > 0) await page.goto(href);
-    if (screen.prepare && !(await page.evaluate<boolean>(screen.prepare).catch(() => false))) return false;
-    const now = await page.evaluate<{ signature: string }>(screenSignatureExpression()).catch(() => null);
-    if (screen.signature !== undefined && now?.signature !== screen.signature) return false;
-  }
-  return true;
+async function screenStillValid(page: RenderPage, screen: RunScreen): Promise<boolean> {
+  if (screen.prepare && !(await page.evaluate<boolean>(screen.prepare).catch(() => false))) return false;
+  const now = await page.evaluate<{ signature: string }>(screenSignatureExpression()).catch(() => null);
+  return now?.signature === screen.signature;
 }
 
 async function stillValid(preview: PreviewService, screens: readonly RunScreen[]): Promise<boolean> {
   const withPage = preview.withPage?.bind(preview);
   if (!withPage) return true;
-  for (const url of new Set(screens.map((screen) => screen.url))) {
-    const group = screens.filter((screen) => screen.url === url && screen.signature !== undefined);
-    if (group.length > 1 && !(await withPage(url, DESKTOP, (page) => pageStillValid(page, group)).catch(() => false))) return false;
-  }
-  return true;
+  const checked = screens.filter((screen) => screen.signature !== undefined && screens.filter((other) => other.url === screen.url).length > 1);
+  const valid = await Promise.all(checked.map((screen) => withPage(screen.url, DESKTOP, (page) => screenStillValid(page, screen)).catch(() => false)));
+  return valid.every(Boolean);
 }
 
 async function htmlScreens(deps: ScreenDeps, pages: PageRef[], plan: ScreenPlan): Promise<RunScreen[]> {
@@ -200,7 +205,11 @@ export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<R
   const { pages, hash } = await canvasPages(deps);
   if (deps.ctx.project.app) return pages.slice(0, plan.maxScreens).map((page) => ({ key: page.url, label: page.label, url: page.url, pagePath: page.pagePath, ...(page.touched ? { touched: true } : {}) }));
   const stamp = `${hash}#${plan.maxScreens}#${await fileStamp(deps.ctx.direction.workTree)}`;
-  if (deps.cache?.stamp === stamp && (await stillValid(deps.preview, deps.cache.screens))) return deps.cache.screens;
+  if (deps.cache?.stamp === stamp) return deps.cache.screens;
+  if (deps.cache?.screens.length && deps.cache.stamp.startsWith(`${hash}#${plan.maxScreens}#`) && (await stillValid(deps.preview, deps.cache.screens))) {
+    deps.cache.stamp = stamp;
+    return deps.cache.screens;
+  }
   const screens = await htmlScreens(deps, pages, plan);
   if (deps.cache) Object.assign(deps.cache, { stamp, screens });
   return screens;
@@ -209,10 +218,12 @@ export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<R
 export async function warmScreens(preview: PreviewService, project: Project, screens: readonly RunScreen[]): Promise<void> {
   const upstream = project.app ? await preview.apps?.ensure(project).catch(() => null) : null;
   if (!upstream) return;
-  for (const pagePath of new Set(screens.map((screen) => screen.pagePath))) {
-    const answer = await fetch(new URL(`/${pagePath}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
-    await answer?.body?.cancel().catch(() => undefined);
-  }
+  await Promise.all(
+    [...new Set(screens.map((screen) => screen.pagePath))].map(async (pagePath) => {
+      const answer = await fetch(new URL(`/${pagePath}`, upstream), { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+      await answer?.body?.cancel().catch(() => undefined);
+    }),
+  );
 }
 
 export function describeScreens(screens: readonly RunScreen[]): string {

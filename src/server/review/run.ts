@@ -4,7 +4,7 @@ import { REVIEW_KIND_LABEL, REVIEW_KINDS, type ReviewFinding, type ReviewFrame, 
 import { readDesignSystemState } from '../design-system/state.js';
 import { waitForPage } from '../export/capture.js';
 import { withPagePath } from '../export/source.js';
-import { loadAxeSource } from '../preview/axe.js';
+import { loadAxeSource, pickRules } from '../preview/axe.js';
 import { layoutProbeExpression, type LayoutProbeResult } from '../preview/layout-probe.js';
 import type { RenderPage } from '../preview/render-backend.js';
 import type { PreviewService } from '../types.js';
@@ -29,13 +29,17 @@ interface PageFacts {
   probe: ProbeResult;
 }
 
+async function ownAxe(page: RenderPage, context: string): Promise<AxeViolation[]> {
+  await page.evaluate(`${await loadAxeSource()}\n;0`);
+  return page.evaluate<AxeViolation[]>(`window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`);
+}
+
 async function readPage(page: RenderPage, app: boolean, within: string | undefined): Promise<PageFacts> {
   await waitForPage(page);
   const context = within ? `document.querySelector(${JSON.stringify(within)})` : 'document';
   const matched = within ? await page.evaluate<number>(`(() => { try { return document.querySelectorAll(${JSON.stringify(within)}).length; } catch { return 0; } })()`) : 0;
   if (within && matched === 0) throw new BadRequestError(`No element matches selector ${within} on this page. Check it with get_screenshot or the canvas selection.`);
-  await page.evaluate(`${await loadAxeSource()}\n;0`);
-  const violations = await page.evaluate<AxeViolation[]>(`window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`);
+  const violations = !within && page.axe ? pickRules((await page.axe()) as AxeViolation[], REVIEW_AXE_RULES) : await ownAxe(page, context);
   const layout = await page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP));
   const selectors = [...new Set(violations.flatMap((violation) => violation.nodes.map(axeSelector)).filter((selector): selector is string => selector !== null))];
   const probe = await page.evaluate<ProbeResult>(reviewProbeExpression({ selectors, app, scanRules: true, cap: TOKEN_CAP }));

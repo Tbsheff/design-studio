@@ -6,10 +6,14 @@ export interface RenderPage {
   screenshot(outPath: string, clip?: RenderClip): Promise<void>;
   errors(): Promise<RenderErrors>;
   close(): Promise<void>;
+  lastNav?(): { loadMs: number; idleMs: number } | null;
+  reset?(): Promise<void>;
+  axe?(): Promise<import('./axe.js').AxeViolation[]>;
 }
 
 export interface RenderBackend {
   readonly name: RenderBackendName;
+  readonly reusablePages?: boolean;
   open(viewport: { width: number; height: number; scale?: number }): Promise<RenderPage>;
   close(): Promise<void>;
 }

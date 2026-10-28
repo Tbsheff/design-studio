@@ -1,11 +1,42 @@
 import { useRef, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
-import { activeFrame, RESIZE_MIN, resizeFrame, viewportOf, type CanvasFrame } from './canvasFrames';
+import { activeFrame, RESIZE_MIN, resizeFrame, viewportOf, shownFrames, type Box, type CanvasFrame, type CanvasLayout } from './canvasFrames';
+import { snapOff, snapRect, type SnapGuide, type SpacingBadge } from './snap';
 import type { ResizeEdge } from './components/FrameControls';
 import { uiStore } from './storage';
 import type { CanvasFrames } from './useCanvasFrames';
 import type { PanZoom } from './usePanZoom';
 
 const MAX_SIDE = 4000;
+
+export interface FrameSnapView {
+  guides: SnapGuide[];
+  spacing: SpacingBadge[];
+  shift: { x: number; y: number };
+}
+
+const EMPTY_SNAP: FrameSnapView = { guides: [], spacing: [], shift: { x: 0, y: 0 } };
+
+function createSnapStore() {
+  let view = EMPTY_SNAP;
+  const subs = new Set<() => void>();
+  return {
+    get: () => view,
+    set: (next: FrameSnapView | null) => {
+      view = next ?? EMPTY_SNAP;
+      for (const fn of subs) fn();
+    },
+    subscribe: (fn: () => void) => {
+      subs.add(fn);
+      return () => subs.delete(fn);
+    },
+  };
+}
+
+export const frameSnapStore = createSnapStore();
+
+export function otherFrames(layout: CanvasLayout, id: string): Box[] {
+  return shownFrames(layout).filter((f) => f.id !== id);
+}
 
 export function resizedSize(start: { width: number; height: number }, edge: ResizeEdge, dx: number, dy: number, keepRatio: boolean): { width: number; height: number } {
   const clamp = (v: number) => Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
@@ -22,6 +53,17 @@ export function resizedSize(start: { width: number; height: number }, edge: Resi
     height *= scale;
   }
   return { width: clamp(width), height: clamp(height) };
+}
+
+function snapSize(frame: CanvasFrame, edge: ResizeEdge, size: { width: number; height: number }, candidates: Box[], zoom: number, off: boolean) {
+  if (off || candidates.length === 0) {
+    frameSnapStore.set(null);
+    return size;
+  }
+  const res = snapRect({ rect: { x: frame.x, y: frame.y, ...size }, candidates, zoom, x: edge === 'bottom' ? null : 'end', y: edge === 'right' ? null : 'end' });
+  frameSnapStore.set({ guides: res.guides, spacing: [], shift: { x: 0, y: 0 } });
+  const clamp = (v: number) => Math.round(Math.min(MAX_SIDE, Math.max(RESIZE_MIN, v)));
+  return { width: clamp(res.rect.width), height: clamp(res.rect.height) };
 }
 
 function paintSize(host: HTMLElement, size: { width: number; height: number } | null, restore: { width: string; height: string }) {
@@ -54,17 +96,20 @@ export function useFrameResize(frames: CanvasFrames, pz: PanZoom, artboardRef: R
     const start = { width: frame.width, height: frame.height };
     let size = start;
     let shift = e.shiftKey;
+    let off = snapOff(e);
+    const candidates = otherFrames(frames.layout, frame.id);
     let last = { x: startX, y: startY };
     const restore = { width: host.style.width, height: host.style.height };
     document.body.classList.add(`frame-resize-${edge}`);
     const place = () => {
-      size = resizedSize(start, edge, (last.x - startX) / zoom, (last.y - startY) / zoom, shift);
+      size = snapSize(frame, edge, resizedSize(start, edge, (last.x - startX) / zoom, (last.y - startY) / zoom, shift), candidates, zoom, shift || off);
       paintSize(host, size, restore);
     };
     place();
     const move = (ev: PointerEvent) => {
       last = { x: ev.clientX, y: ev.clientY };
       shift = ev.shiftKey;
+      off = snapOff(ev);
       place();
     };
     const key = (ev: KeyboardEvent) => {
@@ -80,6 +125,7 @@ export function useFrameResize(frames: CanvasFrames, pz: PanZoom, artboardRef: R
       window.removeEventListener('keyup', key);
       document.body.classList.remove(`frame-resize-${edge}`);
       dragging.current = false;
+      frameSnapStore.set(null);
       paintSize(host, null, restore);
       if (size.width === start.width && size.height === start.height) return;
       frames.update((l) => resizeFrame(l, frame.id, size.width, size.height));

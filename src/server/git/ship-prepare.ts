@@ -256,7 +256,18 @@ function emptyPrepare(project: Project, settings: ShipSettings, history: ShipRec
   return { projectId: project.id, repo, blocked, base: null, bases: [], headVersionId: null, files: [], versions: [], summary: '', settings, defaults: { branch: '', title: '', commitMessage: '', body: '' }, vars: { user: settings.user, issue: settings.issueId, title: '', summary: '', versions: [], files: [] }, history };
 }
 
-export async function prepareShip(ctx: ShipContext, baseVersionId?: string): Promise<ShipPrepare> {
+const MAIN_EDIT = /^(Insert|Add|Create|Build)\b/;
+
+export function sessionTitle(titles: string[], fallback: string): string {
+  const edits = titles.filter((title) => !/^(Undo|Redo): /.test(title));
+  if (edits.length === 0) return titles[titles.length - 1] ?? fallback;
+  if (edits.length === 1) return edits[0] as string;
+  const main = edits.find((title) => MAIN_EDIT.test(title)) ?? (edits[0] as string);
+  const more = edits.length - 1;
+  return `${main} and ${more} more edit${more === 1 ? '' : 's'}`;
+}
+
+export async function prepareShip(ctx: ShipContext, baseVersionId?: string, options: { title?: string | undefined } = {}): Promise<ShipPrepare> {
   const { project } = ctx;
   const { settings, history } = await readShipState(ctx.projectDir);
   if (!project.app) return emptyPrepare(project, settings, history, 'Ship works for attached app projects only.');
@@ -273,7 +284,7 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string): Pro
   const files = await shipFiles(ctx, repo, main.workTree, base.versionId, head);
   const titles = [...new Set(span.map((v) => v.title).reverse())];
   const summary = await chatSummary(ctx, new Set(span.map((v) => v.id)));
-  const title = span[0]?.title ?? project.name;
+  const title = options.title?.trim() || sessionTitle(titles, project.name);
   const vars: ShipTemplateVars = { user: settings.user || (await defaultUser(repo.root)), issue: settings.issueId, title, summary, versions: titles, files: files.filter((f) => !f.refused).map((f) => f.path) };
   const commitMessage = titles.length > 1 ? `${title}\n\n${titles.map((t) => `- ${t}`).join('\n')}` : title;
   const { binary: _binary, ...format } = await detectShipFormat(repo.root, repo.prefix);

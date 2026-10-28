@@ -5,7 +5,9 @@ import { findFrame, frameRef } from '../canvas/tools.js';
 import { EditError, loadTarget, type EditDeps } from './edit-deps.js';
 import type { PreviewService } from '../types.js';
 import { defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, type Done } from './edit-kit.js';
-import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, scanLayers, scopeOf, type Layer, type Viewport } from './layer-ref.js';
+import { noteRenderedPage } from '../preview/render-wait.js';
+import { noteShownFiles } from './source-loc.js';
+import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, resolveLayerRefs, scanLayers, scopeOf, type Layer, type Viewport } from './layer-ref.js';
 
 type Direction = Project['directions'][number];
 type Args = Record<string, unknown>;
@@ -32,10 +34,6 @@ async function frameTarget(deps: EditDeps, project: Project, ref: string | undef
   return { viewport: { width: frame.width, height: frame.height }, ...(frame.path ? { path: frame.path } : {}), ...(frame.directionId ? { directionId: frame.directionId } : {}) };
 }
 
-function shortLoc(loc: string): string {
-  return loc.replace(/:\d+$/, '');
-}
-
 function fileNamer(layers: Layer[]): (loc: string) => string {
   const byBase = new Map<string, Set<string>>();
   for (const layer of layers) {
@@ -52,9 +50,9 @@ function fileNamer(layers: Layer[]): (loc: string) => string {
     const base = file.split('/').pop() as string;
     if ((byBase.get(base)?.size ?? 0) > 1 || !named.has(file)) {
       named.add(file);
-      return shortLoc(loc);
+      return loc;
     }
-    return shortLoc(`${base}${loc.slice(file.length)}`);
+    return `${base}${loc.slice(file.length)}`;
   };
 }
 
@@ -87,11 +85,39 @@ export interface LayerTreeInput {
 
 export async function layerTreeText(preview: PreviewService, input: LayerTreeInput): Promise<string | null> {
   const root = input.root ? (isLayerRef(input.root) ? await resolveLayerRef(preview, input.url, input.viewport, input.scope, input.root.trim()) : input.root) : null;
+  noteRenderedPage(input.scope.split('/')[0] ?? '', input.page);
   const tree = await scanLayers(preview, input.url, input.viewport, input.scope, input.page, { root, depth: input.depth, max: LAYERS_MAX });
   if (!tree) return null;
-  const shown = tree.layers.filter((layer) => layer.depth >= 0).length;
-  const head = `${input.page || '(entry page)'} ${input.viewport.width}×${input.viewport.height} · ${shown} layers${tree.truncated ? ` (cut at ${LAYERS_MAX}; pass root or a lower depth)` : ''}`;
-  return [head, ...outline(tree.layers, input.depth)].join('\n');
+  const { kept, hidden } = root ? { kept: tree.layers, hidden: [] } : appLayers(tree.layers);
+  noteShownFiles(input.scope, kept.flatMap((layer) => [layer.own, layer.used]).filter((loc): loc is string => loc !== null).map((loc) => loc.replace(/:\d+:\d+$/, '')));
+  const head = headLine(input.page, input.viewport, kept.filter((layer) => layer.depth >= 0).length, tree.truncated, hidden);
+  return [head, ...outline(kept, input.depth)].join('\n');
+}
+
+function appLayers(layers: Layer[]): { kept: Layer[]; hidden: string[] } {
+  const kept: Layer[] = [];
+  const hidden: string[] = [];
+  let group: Layer[] = [];
+  const flush = () => {
+    const top = group[0];
+    if (top && group.some((layer) => layer.own !== null)) kept.push(...group);
+    else if (top) hidden.push(top.comp ? `<${top.comp}>` : top.tag);
+    group = [];
+  };
+  for (const layer of layers) {
+    if (layer.depth === 0 && layer.parent === -1) flush();
+    if (layer.depth >= 0) group.push(layer);
+    else kept.push(layer);
+  }
+  flush();
+  return { kept, hidden };
+}
+
+function headLine(page: string | undefined, viewport: Viewport, shown: number, truncated: boolean, hidden: string[]): string {
+  const names = [...new Set(hidden)];
+  const cut = truncated ? ` (cut at ${LAYERS_MAX}; pass root or a lower depth)` : '';
+  const outside = hidden.length > 0 ? ` · ${hidden.length} top-level layers with no app source hidden (${names.slice(0, 4).join(', ')}${names.length > 4 ? ', …' : ''}); pass root to list one` : '';
+  return `${page || '(entry page)'} ${viewport.width}×${viewport.height} · ${shown} layers${cut}${outside}`;
 }
 
 const getLayers = defineTool(
@@ -100,7 +126,7 @@ const getLayers = defineTool(
   {
     title: 'Get layer tree',
     description:
-      'List the elements of a rendered page as a compact tree, one element per line: layer id, tag, <Component> when the element is the root of a component (Card, Badge), source file:line (the use site for a component root, else the JSX that makes the element), a text preview, and "+N inside" when deeper levels are cut. Each layer id (such as "e0k3pz") works in place of a CSS selector in every tool that takes selector or targetSelector (edit_element, batch_edit, set_props, insert_component, add_link, add_comment, canvas_point) and as element in get_screenshot. Ids come from the source location, so they stay the same after edits and hot reloads while that JSX stays on the same line. Use root to list one part of the page.',
+      'List the elements of a rendered page as a compact tree, one element per line: layer id, tag, <Component> when the element is the root of a component (Card, Badge), source file:line:col (the use site for a component root, else the JSX that makes the element; pass it as targetSource or source), a text preview, and "+N inside" when deeper levels are cut. Top-level layers with no app source (the Next dev overlay, dev toolbars) are left out and the first line counts them. Each layer id (such as "e0k3pz") works in place of a CSS selector in every tool that takes selector or targetSelector (edit_element, batch_edit, set_props, insert_component, add_link, add_comment, canvas_point) and as element in get_screenshot. Ids stay the same after edits, inserts, undo and redo made through the studio, also when lines move; an id stops working only when its element is removed or its file changes outside the studio. Use root to list one part of the page.',
     readOnly: true,
     idempotent: true,
   },
@@ -164,12 +190,31 @@ export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: 
   if (!target) return args;
   const scope = scopeOf(target.project.id, target.direction.id);
   const out = copyArgs(args);
+  const byPage = new Map<string, { page: string | undefined; slots: { holder: Args; key: string; ref: string; nested: boolean }[] }>();
   for (const slot of selectorSlots(out)) {
     const ref = String(slot.holder[slot.key]).trim();
     const nested = slot.holder !== out;
     const page = stringAt(slot.holder, 'path') ?? (nested ? stringAt(out, 'path') : undefined) ?? memoPage(scope, ref);
-    slot.holder[slot.key] = await resolveForEdit(deps, await pageUrl(deps, target.project, target.direction, page), EDIT_VIEWPORT, scope, ref);
-    if (page !== undefined && slot.holder.path === undefined && (nested || takesPath)) slot.holder.path = page;
+    const group = byPage.get(page ?? '') ?? { page, slots: [] };
+    group.slots.push({ ...slot, ref, nested });
+    byPage.set(page ?? '', group);
+  }
+  for (const { page, slots } of byPage.values()) {
+    const url = await pageUrl(deps, target.project, target.direction, page);
+    const paths = await resolveRefs(deps, url, scope, slots.map((slot) => slot.ref));
+    for (const slot of slots) {
+      slot.holder[slot.key] = paths.get(slot.ref) as string;
+      if (page !== undefined && slot.holder.path === undefined && (slot.nested || takesPath)) slot.holder.path = page;
+    }
   }
   return out;
+}
+
+async function resolveRefs(deps: EditDeps, url: string, scope: string, refs: string[]): Promise<Map<string, string>> {
+  try {
+    return await resolveLayerRefs(deps.preview, url, EDIT_VIEWPORT, scope, refs);
+  } catch (error) {
+    if (error instanceof LayerRefError) throw new EditError(error.message);
+    throw error;
+  }
 }

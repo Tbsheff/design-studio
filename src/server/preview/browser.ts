@@ -8,6 +8,7 @@ import { layoutProbeExpression, type LayoutProbeResult } from './layout-probe.js
 import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } from './quality.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
+import { renderSettled } from './render-wait.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
 
 const SERVER_TOKEN = 'server';
@@ -197,6 +198,7 @@ export class BrowserPool {
   }
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+    await renderSettled();
     const page = await (await this.backend()).open(viewport);
     try {
       await page.goto(withServerBridgeParams(url, this.parentOrigin));

@@ -7,6 +7,9 @@ import type { ExportDeps } from '../export/source.js';
 import { createActivityLog, type ActivityLog } from '../mcp/activity.js';
 import { createApprovalQueue } from '../mcp/approvals.js';
 import { createMcpService } from '../mcp/server.js';
+import { warmUpstream } from '../mcp/tools.js';
+import { onSourceChange } from '../direct-edit/change-feed.js';
+import { recentPages, startRender } from '../preview/render-wait.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
 import type { AgentRunner, EventBus } from '../types.js';
 
@@ -29,6 +32,18 @@ async function body(c: Context): Promise<Record<string, unknown>> {
   return parsed as Record<string, unknown>;
 }
 
+function warmAfterEdits(deps: McpRouteDeps): void {
+  onSourceChange((change) => {
+    const pages = recentPages(change.projectId);
+    if (pages.length === 0) return;
+    startRender(change.projectId, async () => {
+      const project = await deps.projects.get(change.projectId);
+      const upstream = project.app ? await deps.preview.apps?.ensure(project).catch(() => null) : null;
+      if (upstream) await Promise.all(pages.map((page) => warmUpstream(upstream, page || undefined)));
+    });
+  });
+}
+
 export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: ActivityLog } {
   const approvals = createApprovalQueue({
     appOpen: deps.appOpen,
@@ -48,6 +63,7 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: Ac
       ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
     });
   const activity = createActivityLog(deps.dataDir, deps.bus);
+  warmAfterEdits(deps);
   const mcp = createMcpService(deps.dataDir, deps, { ...deps, request, approvals, activity });
   void mcp.boot();
 

@@ -6,7 +6,9 @@ import { Hono } from 'hono';
 import type { McpStatus } from '../../shared/export.js';
 import type { ExportDeps } from '../export/source.js';
 import { callTool, ToolError, TOOLS } from './tools.js';
-import { callEditTool, EDIT_NAMES, EDIT_TOOLS } from './edit-tools.js';
+import { firstVersionBlock } from '../app/first-version.js';
+import { renderedSince, renderPending, renderSettled } from '../preview/render-wait.js';
+import { callEditTool, EDIT_NAMES, EDIT_TOOLS, RENDER_WAIT_TOOLS } from './edit-tools.js';
 import { EditError, type EditDeps } from './edit-deps.js';
 import { withLayerSelectors } from './layer-tools.js';
 import { withMcpOrigin } from '../edit-origin.js';
@@ -17,7 +19,7 @@ const MAX_BODY = 1024 * 1024;
 const SERVER_NAME = 'design-studio';
 const READ_INSTRUCTIONS = 'Design Studio is a local design tool. These tools read its projects: list_projects first, then get_tokens, get_design_md, get_frame_html, get_screenshot, list_files and read_file with a projectId. For an attached app, list_routes lists its routes.';
 const READ_ONLY_NOTE = ' All tools are read-only. The user can turn on Allow edits in Design Studio to add tools that edit the design and the canvas.';
-const EDITS_NOTE = " Allow edits is on: canvas_list, get_layers, canvas_place, canvas_point, add_frame, remove_frame, write_file, edit_element, batch_edit, find_styles, replace_style, list_components, set_props, insert_component, insert_jsx, clear_text, review_frame, apply_fix, undo, redo, edit_history, add_comment, list_comments, reply_comment, resolve_comment, create_project, open_folder, restore_version, apply_design_system, set_token, create_design_system, design_system_status, save_design_system, list_design_systems, attach_app, add_route_frame, list_links, add_link, remove_link, set_start_frame, list_frame_states, set_frame_state, set_frame_session, keep_variant, export, prepare_ship and ship. Each design edit is saved as a version the user can undo (prototype links and the canvas layout save with the next version); edit_element and batch_edit take variant ('md:', 'hover:', 'md:hover:', 'dark:') to style one breakpoint or state; in an attached app they edit a shared component use (<Button>, <CardTitle>) in the page file where it is used, unless target is 'component'; list_comments {status, frame} lists pinned comments with their element, frame and author; set_frame_state shows an attached app frame signed in, empty, loading, with errors or with mock data (it changes no file and makes no version); edit_element and batch_edit text on text from a prop, a literal array, a constant or a messages key changes that literal at its source; use insert_jsx to build a group of elements (a Card with its header, rows, badges and buttons) in one call with its imports, and clear_text (or edit_element op 'clear') to remove placeholder text next to child elements; get_layers lists the page as a tree of short layer ids (e0k3pz) that every selector or targetSelector input and get_screenshot element accept in place of a CSS selector; list_components {query} finds kit components with an import line and a JSX example; use batch_edit to make several edits one version, review_frame to list review findings for a frame (selector limits them to one element subtree) and apply_fix to apply the fixes that need no judgment (a fix in a file outside the page's own route folder needs allowShared: true), and undo or redo to step the same edit history as the studio's Cmd+Z. These tools never start, steer or stop the studio agent (Improve with AI on a design system draft runs only from the app), and design edits are refused while a studio run edits that direction.";
+const EDITS_NOTE = " Allow edits is on: canvas_list, get_layers, canvas_place, canvas_point, add_frame, remove_frame, write_file, edit_element, batch_edit, find_styles, replace_style, list_components, set_props, insert_component, insert_jsx, clear_text, review_frame, apply_fix, undo, redo, edit_history, add_comment, list_comments, reply_comment, resolve_comment, create_project, open_folder, restore_version, apply_design_system, set_token, create_design_system, design_system_status, save_design_system, list_design_systems, attach_app, add_route_frame, list_links, add_link, remove_link, set_start_frame, list_frame_states, set_frame_state, set_frame_session, keep_variant, export, prepare_ship and ship. Each design edit is saved as a version the user can undo (prototype links and the canvas layout save with the next version); edit_element and batch_edit take variant ('md:', 'hover:', 'md:hover:', 'dark:') to style one breakpoint or state; in an attached app they edit a shared component use (<Button>, <CardTitle>) in the page file where it is used, unless target is 'component'; list_comments {status, frame} lists pinned comments with their element, frame and author; set_frame_state shows an attached app frame signed in, empty, loading, with errors or with mock data (it changes no file and makes no version); edit_element and batch_edit text on text from a prop, a literal array, a constant or a messages key changes that literal at its source; use insert_jsx to build a group of elements (a Card with its header, rows, badges and buttons) in one call with its imports, and clear_text (or edit_element op 'clear') to remove placeholder text next to child elements; get_layers lists the page as a tree of short layer ids (e0k3pz) that every selector or targetSelector input and get_screenshot element accept in place of a CSS selector, with file:line:col that targetSource and source accept (file:line works when one tag starts on that line); ids stay the same when studio edits move lines; edit tools return when the file is written and saved, and get_screenshot, get_layers and review_frame wait for the dev server rebuild (pass wait: 'render' to an edit to wait in that call); list_components {query} finds kit components with an import line and a JSX example; use batch_edit to make several edits one version, review_frame to list review findings for a frame (selector limits them to one element subtree) and apply_fix to apply the fixes that need no judgment (a fix in a file outside the page's own route folder needs allowShared: true), and undo or redo to step the same edit history as the studio's Cmd+Z. These tools never start, steer or stop the studio agent (Improve with AI on a design system draft runs only from the app), and design edits are refused while a studio run edits that direction.";
 const EDITS_OFF = 'Allow edits is off in Design Studio, so this tool is not available. The user can turn it on in Export > Connect to Claude Code. Then reconnect the MCP server.';
 const DEFAULT_CLIENT = 'MCP client';
 const MAX_SESSIONS = 200;
@@ -82,9 +84,40 @@ function argsOf(raw: unknown): Record<string, unknown> {
 
 const TAKES_PATH = new Set(EDIT_TOOLS.filter((tool) => 'path' in ((tool.inputSchema.properties as Record<string, unknown> | undefined) ?? {})).map((tool) => tool.name));
 
+function splitWait(name: string, raw: unknown): { args: Record<string, unknown>; wait: boolean } {
+  const { wait, ...args } = argsOf(raw);
+  if (!RENDER_WAIT_TOOLS.has(name) || wait === undefined) return { args: argsOf(raw), wait: false };
+  if (wait !== 'render') throw new EditError('wait must be "render" or left out.');
+  return { args, wait: true };
+}
+
+async function withRender(result: unknown, projectId: unknown, started: number): Promise<unknown> {
+  const id = typeof projectId === 'string' ? projectId : undefined;
+  const waited = id !== undefined && (renderPending(id) || renderedSince(id, started));
+  const settled = await renderSettled(id);
+  const content = (result as { content?: unknown[] }).content;
+  if (!Array.isArray(content)) return result;
+  const note = !waited ? 'No page of this app was rendered yet, so there was no rebuild to wait for.' : settled ? `The dev server rebuilt the page ${Date.now() - started} ms after the call started.` : 'The dev server did not finish the rebuild within 60 s.';
+  return { ...(result as object), content: [...content, { type: 'text', text: note }] };
+}
+
+const FIRST_VERSION_WAIT_MS = 20_000;
+
+async function firstVersionRefusal(edits: EditDeps, name: string, projectId: unknown): Promise<string | null> {
+  if (!RENDER_WAIT_TOOLS.has(name) || typeof projectId !== 'string') return null;
+  const project = await edits.projects.get(projectId).catch(() => null);
+  return project ? firstVersionBlock(project, FIRST_VERSION_WAIT_MS) : null;
+}
+
 async function runEdit(edits: EditDeps, name: string, raw: unknown, client: string): Promise<unknown> {
   try {
-    return await withMcpOrigin(client, async () => callEditTool(edits, name, await withLayerSelectors(edits, argsOf(raw), TAKES_PATH.has(name)), client));
+    const started = Date.now();
+    const { args, wait } = splitWait(name, raw);
+    const blocked = await firstVersionRefusal(edits, name, args.projectId);
+    if (blocked) return { content: [{ type: 'text', text: blocked }], isError: true };
+    const result = await withMcpOrigin(client, async () => callEditTool(edits, name, await withLayerSelectors(edits, args, TAKES_PATH.has(name)), client));
+    const failed = (result as { isError?: boolean }).isError === true;
+    return wait && !failed ? await withRender(result, args.projectId, started) : result;
   } catch (error) {
     const known = error instanceof EditError || (error instanceof Error && 'status' in error);
     if (!known) console.error('[mcp] edit tool failed', name, error);

@@ -84,8 +84,8 @@ export interface AttachResponse {
 }
 
 function legacyCanvasNote(legacy: LegacyCanvasNotice): string {
-  if (legacy.movedTo) return `An old ${legacy.file} from an earlier attach (${legacy.frames} frames) was moved to ${legacy.movedTo}. Nothing was deleted. The canvas starts empty.`;
-  return `The old ${legacy.file} (${legacy.frames} frames) is tracked by your git, so it stays in place. The studio does not use it. The canvas starts empty.`;
+  if (legacy.movedTo) return `An old ${legacy.file} from an earlier attach (${legacy.frames} frames) was moved to ${legacy.movedTo}. Nothing was deleted. The new canvas has no saved frames: it shows the entry page as f1 until add_route_frame or canvas_place adds frames.`;
+  return `The old ${legacy.file} (${legacy.frames} frames) is tracked by your git, so it stays in place. The studio does not use it. The new canvas has no saved frames: it shows the entry page as f1 until add_route_frame or canvas_place adds frames.`;
 }
 
 export function attachReadiness(firstVersion: FirstVersionState | null, legacy: LegacyCanvasNotice | null): { ready: boolean; etaSeconds: number; firstVersion?: string; oldCanvas?: string } {

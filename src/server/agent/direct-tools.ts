@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { kebabKeys } from '../../shared/style-keys.js';
 import { DIRECT_STYLE_PROPERTIES, STRUCTURE_OPS, TOKENS_FILE, type DirectStyleProperty, type SelectionContext, type StructureOp } from '../../shared/contracts.js';
 import { appTokensFor, readAppTokensAt } from '../design-system/app-tokens/source.js';
 import { plannedCssText } from '../design-system/app-tokens/write.js';
@@ -30,7 +31,7 @@ const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
 export const editElementShape = {
   selector: z.string().trim().min(1).max(2000).describe('CSS selector of one element on the page, for example "h1" or "[data-name=\'Hero\'] button".'),
   path: z.string().trim().max(300).optional().describe('Page path, for example "about.html". Leave out for the entry page.'),
-  style: z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict().optional().describe('CSS properties to set inline. null removes the property.'),
+  style: z.preprocess(kebabKeys, z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict()).optional().describe('CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property.'),
   text: z.string().max(5000).optional().describe('New text of a leaf element.'),
   classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge().'),
   variant: z.string().trim().max(60).optional().describe('Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'),

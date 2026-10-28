@@ -4,10 +4,11 @@ import { COMPONENT_LIST_MAX, COMPONENT_SOURCES, PROP_NAME, PROP_TEXT_MAX, PROPS_
 import { probeOwners } from '../components/owner-probe.js';
 import { EditError, loadTarget, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, versionActivity, type Done } from './edit-kit.js';
+import { scopeOf } from './layer-ref.js';
+import { resolveSourceLoc } from './source-loc.js';
 
 type Direction = Project['directions'][number];
 
-const LOC = /^(.+):(\d+):(\d+)$/;
 const propValue = z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean(), z.null()]);
 
 const listSchema = z
@@ -27,7 +28,7 @@ const setSchema = z
     directionId,
     path: pagePath,
     selector: selector.optional().describe('CSS selector of an element inside the component instance on the page, for example "button" or "main button:nth-of-type(2)". The nearest component (such as <Button> or <Badge> from packages/ui) that has props is changed, and the result names its use site (file:line:col).'),
-    source: z.string().trim().max(1100).optional().describe('Use site of the component as file:line:col of its JSX tag, for example "src/App.tsx:14:9". Use this or selector.'),
+    source: z.string().trim().max(1100).optional().describe('Use site of the component as file:line:col of its JSX tag, for example "src/App.tsx:14:9" (get_layers prints it). file:line works when one JSX tag starts on that line. Use this or selector.'),
     props: z
       .record(z.string().regex(PROP_NAME), propValue)
       .refine((props) => Object.keys(props).length > 0 && Object.keys(props).length <= PROPS_MAX, `pass 1 to ${PROPS_MAX} props`)
@@ -36,11 +37,6 @@ const setSchema = z
   .strict()
   .refine((input) => (input.selector === undefined) !== (input.source === undefined), 'pass selector or source, not both');
 
-function parseLoc(raw: string): SourceLoc {
-  const match = LOC.exec(raw);
-  if (!match) throw new EditError('source must be file:line:col, for example src/App.tsx:14:9');
-  return { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) };
-}
 
 async function useSiteOf(deps: EditDeps, project: Project, direction: Direction, page: string | undefined, sel: string): Promise<ComponentInstance> {
   const probed = await probeOwners(deps.preview, await pageUrl(deps, project, direction, page), sel);
@@ -54,12 +50,33 @@ function valueText(value: PropValue | null): string {
   return value === null ? 'default' : String(value);
 }
 
+type ListedComponent = ComponentSchemaList['components'][number];
+
+function sharedNotes(items: ListedComponent[]): Map<string, string[]> {
+  const byNote = new Map<string, string[]>();
+  for (const item of items) if (item.note) byNote.set(item.note, [...(byNote.get(item.note) ?? []), item.name]);
+  return new Map([...byNote].filter(([, names]) => names.length > 1));
+}
+
+function compactList(list: ComponentSchemaList): unknown {
+  const notes = sharedNotes(list.components);
+  const firstOfFile = new Map<string, string>();
+  const components = list.components.map((item) => {
+    const { note, parts, ...rest } = item as ListedComponent & { parts?: string[] };
+    const first = firstOfFile.get(item.file);
+    if (!first) firstOfFile.set(item.file, item.name);
+    return { ...rest, ...(note && !notes.has(note) ? { note } : {}), ...(first ? { sameFileAs: first } : parts ? { parts } : {}) };
+  });
+  const shared = [...notes].map(([note, names]) => `${names.join(', ')}: ${note}`);
+  return { ...list, components, ...(shared.length > 0 ? { notes: shared } : {}) };
+}
+
 const listComponents = defineTool(
   'list_components',
   listSchema,
   {
     title: 'List components and props',
-    description: 'Find the React components of the project, shared workspace packages (the kit, such as packages/ui) first, then by use count. Each item has source (package or app), file, line, folder, parts (the other components of the same file, such as CardHeader for Card), a ready import line and a minimal JSX example, the use count, and the props schema: each prop with its control (select with options, boolean, text, number), default, and whether it comes from a cva() variant or the TypeScript props type; the cva variants with the classes of each option; and asChild. Pages hold 20 items: pass nextCursor as cursor for the next one. Use the names with insert_component and the options with set_props.',
+    description: 'Find the React components of the project, shared workspace packages (the kit, such as packages/ui) first, then by use count. Each item has source (package or app), file, line, folder, parts (the other components of the same file, such as CardHeader for Card; later items of that file say sameFileAs instead), a ready import line and a minimal JSX example, the use count, and the props schema: each prop with its control (select with options, boolean, text, number), default, and whether it comes from a cva() variant or the TypeScript props type; the cva variants with the classes of each option; and asChild. Pages hold 20 items: pass nextCursor as cursor for the next one. Use the names with insert_component and the options with set_props.',
     readOnly: true,
     idempotent: true,
   },
@@ -69,7 +86,7 @@ const listComponents = defineTool(
     const params = new URLSearchParams({ limit: String(input.limit ?? 20) });
     for (const key of ['query', 'source', 'cursor'] as const) if (input[key]) params.set(key, input[key] as string);
     const list = await studioCall<ComponentSchemaList>(deps, 'GET', `${base(project, direction.id)}/props/components?${params}`);
-    return { result: ok(list) };
+    return { result: ok(compactList(list)) };
   },
 );
 
@@ -83,7 +100,7 @@ const setProps = defineTool(
   async (deps, input): Promise<Done> => {
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
     refuseWhileRunning(deps, project, direction);
-    const source = input.source ? parseLoc(input.source) : (await useSiteOf(deps, project, direction, input.path, input.selector ?? '')).use;
+    const source = input.source ? await resolveSourceLoc(direction.workTree, scopeOf(project.id, direction.id), input.source) : (await useSiteOf(deps, project, direction, input.path, input.selector ?? '')).use;
     const result = await studioCall<SetPropsResult>(deps, 'POST', `${base(project, direction.id)}/props`, { source, props: input.props });
     const tag = result.instance?.tag ?? 'component';
     if (result.changed.length === 0 && result.removed.length === 0) return { result: ok({ changed: false, use: source, values: result.instance?.values ?? {}, note: 'Every prop already had that value.' }) };

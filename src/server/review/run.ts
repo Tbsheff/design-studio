@@ -21,6 +21,7 @@ const SEVERITY_RANK: Record<ReviewSeverity, number> = { high: 0, medium: 1, low:
 export const DEFAULT_REVIEW_FRAME: ReviewFrame = { width: 1440, height: 900 };
 
 interface PageFacts {
+  matched: number;
   violations: AxeViolation[];
   layout: LayoutFinding[];
   probe: ProbeResult;
@@ -29,13 +30,14 @@ interface PageFacts {
 async function readPage(page: RenderPage, app: boolean, within: string | undefined): Promise<PageFacts> {
   await waitForPage(page);
   const context = within ? `document.querySelector(${JSON.stringify(within)})` : 'document';
-  if (within && !(await page.evaluate<boolean>(`(() => { try { return ${context} !== null; } catch { return false; } })()`))) throw new BadRequestError(`No element matches selector ${within} on this page. Check it with get_screenshot or the canvas selection.`);
+  const matched = within ? await page.evaluate<number>(`(() => { try { return document.querySelectorAll(${JSON.stringify(within)}).length; } catch { return 0; } })()`) : 0;
+  if (within && matched === 0) throw new BadRequestError(`No element matches selector ${within} on this page. Check it with get_screenshot or the canvas selection.`);
   await page.evaluate(`${await loadAxeSource()}\n;0`);
   const violations = await page.evaluate<AxeViolation[]>(`window.axe.run(${context}, { runOnly: { type: 'rule', values: ${JSON.stringify(REVIEW_AXE_RULES)} }, resultTypes: ['violations'] }).then((result) => result.violations)`);
   const layout = await page.evaluate<LayoutProbeResult>(layoutProbeExpression(LAYOUT_CAP));
   const selectors = [...new Set(violations.flatMap((violation) => violation.nodes.map(axeSelector)).filter((selector): selector is string => selector !== null))];
   const probe = await page.evaluate<ProbeResult>(reviewProbeExpression({ selectors, app, scanRules: true, cap: TOKEN_CAP }));
-  return { violations, layout: layout.findings, probe };
+  return { matched, violations, layout: layout.findings, probe };
 }
 
 async function insideRoot(page: RenderPage, root: string, drafts: Draft[]): Promise<Draft[]> {
@@ -120,6 +122,11 @@ function keepSharedAsk(drafts: Draft[], appDir: string): Draft[] {
   return drafts;
 }
 
+function selectorNote(selector: string, matched: number): string {
+  if (matched <= 1) return `1 element matches ${selector}; only findings inside it are shown.`;
+  return `${matched} elements match ${selector}; only findings inside the first one are shown. Pass a more exact selector or a layer id from get_layers for another one.`;
+}
+
 export interface ReviewTarget {
   project: Project;
   direction: Direction;
@@ -143,7 +150,7 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   const findings = ordered(grouped(unique(drafts.map((draft) => toFinding(draft, frame)))));
   const notes = [
     ...(entries.length === 0 ? [noTokensNote(facts.probe)] : []),
-    ...(frame.selector ? [`Only findings inside ${frame.selector} are shown.`] : []),
+    ...(frame.selector ? [selectorNote(frame.selector, facts.matched)] : []),
     ...(all.length > drafts.length ? [`${all.length - drafts.length} findings on elements outside the app source (for example dev tool overlays) are not shown.`] : []),
   ];
   return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes };

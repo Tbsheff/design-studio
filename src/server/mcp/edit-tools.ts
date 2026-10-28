@@ -27,7 +27,7 @@ import { INSERT_TOOLS } from './insert-tools.js';
 import { JSX_INSERT_TOOLS } from './jsx-insert-tools.js';
 import { LAYER_TOOLS } from './layer-tools.js';
 import { cleanRoute, routeLabel, sharedSourceOf } from '../../shared/app.js';
-import { chooseEditSite, EDIT_TARGETS, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
+import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
 import type { ToolDef, ToolResult } from './tools.js';
 import { attachReadiness, firstVersionBlock, type AttachResponse } from '../app/first-version.js';
 
@@ -66,7 +66,7 @@ const schemas = {
       directionId,
       path: pagePath,
       selector: selector.describe('CSS selector of one element on the page.'),
-      style: style.optional().describe('CSS properties to set. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.'),
+      style: style.optional().describe('CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property. In a Tailwind project the server writes theme classes (p-6, bg-primary, rounded-lg) instead of inline style, and an arbitrary value only when no theme step fits.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
       classes: classes.optional(),
       target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: an element that is the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes; other elements are edited in their own file. "component" edits the element in the shared component file, which changes every use ("element" is the same). "use" asks for the use site and fails when there is none.'),
@@ -159,7 +159,7 @@ const META: Record<Name, Meta> = {
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
   create_project: { title: 'Create project', description: 'Create an empty design project in the default projects folder. Returns the project id and the direction id.' },
   attach_app: { title: 'Attach app', description: 'Open an existing Next.js app (or a monorepo with apps/*) as a project. The project points at the folder; nothing is copied. With url the studio proxies your running dev server; without it the studio starts next dev on a free port. A folder that is not attached yet waits for the user to approve it in Design Studio. Returns the project id. Edits from the studio agent and write_file then go to the real files in that folder.' },
-  add_route_frame: { title: 'Add route frame', description: 'Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it.' },
+  add_route_frame: { title: 'Add route frame', description: 'Add a canvas frame that shows one route of an attached app at a viewport. get_screenshot with the returned frame id renders it. On a canvas with no saved frames, the first route frame is f1 and replaces the default entry-page frame.' },
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
   set_token: { title: 'Set token', description: 'Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.' },
@@ -174,8 +174,16 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
 const EXTRA_TOOLS: ToolSpec[] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
+export const RENDER_WAIT_TOOLS = new Set(['edit_element', 'batch_edit', 'set_props', 'insert_component', 'insert_jsx', 'clear_text', 'write_file', 'apply_fix', 'replace_style', 'undo', 'redo', 'set_token']);
+const WAIT_PROPERTY = { type: 'string', enum: ['render'], description: 'Leave out to get the result as soon as the file is written and saved as a version; the app rebuilds in the background, and get_screenshot, get_layers and review_frame wait for that rebuild. "render": also wait until the dev server has rebuilt the page.' };
+
+function withWait(name: string, schema: Record<string, unknown>): Record<string, unknown> {
+  if (!RENDER_WAIT_TOOLS.has(name)) return schema;
+  return { ...schema, properties: { ...((schema.properties as Record<string, unknown> | undefined) ?? {}), wait: WAIT_PROPERTY } };
+}
+
 function toolDef(name: string, schema: z.ZodType, meta: Meta): ToolDef {
-  return { name, title: meta.title, description: meta.description, inputSchema: jsonSchema(schema), annotations: { readOnlyHint: meta.readOnly === true, destructiveHint: meta.destructive === true, idempotentHint: meta.idempotent === true, openWorldHint: false } };
+  return { name, title: meta.title, description: meta.description, inputSchema: withWait(name, jsonSchema(schema)), annotations: { readOnlyHint: meta.readOnly === true, destructiveHint: meta.destructive === true, idempotentHint: meta.idempotent === true, openWorldHint: false } };
 }
 
 export const EDIT_TOOLS: ToolDef[] = [...(Object.keys(schemas) as Name[]).map((name) => toolDef(name, schemas[name], META[name])), ...EXTRA_TOOLS.map((tool) => toolDef(tool.name, tool.schema, tool.meta))];
@@ -215,9 +223,9 @@ async function pointFrame(deps: EditDeps, ctx: CanvasToolContext, ref: string, s
   return ok({ frame: frameId, label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, badge, note });
 }
 
-async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string): Promise<Done> {
+async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string, options: { seed?: boolean } = {}): Promise<Done> {
   const before = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
-  const result = await canvasPlace(ctx, specs);
+  const result = await canvasPlace(ctx, specs, options);
   if (result.isError) return { result };
   const after = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const placed = placedFrames(specs, before, after);
@@ -322,7 +330,7 @@ async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promis
   const note = siteNote(site);
   const tailwind = result.tailwind ? { classes: result.tailwind.classes, wrote: result.tailwind.mode, ...(result.tailwind.note ? { note: result.tailwind.note } : {}) } : {};
   const source = result.textSource ? { textSource: `Edited ${result.textSource.what} in ${result.textSource.file}:${result.textSource.line}.${result.textSource.shared ? ` ${result.textSource.shared}` : ''}` } : {};
-  const where = { file: result.file, at: editedAt(result, site), editedAt: site.kind === 'use' ? 'use' : 'component', ...(note ? { [site.kind === 'use' ? 'use' : 'shared']: note } : {}) };
+  const where = { file: result.file, at: editedAt(result, site), editedAt: editedAtLabel(site), ...(note ? { [site.kind === 'use' ? 'use' : 'shared']: note } : {}) };
   return { result: ok({ ...where, versionId: result.version.id, title: result.version.title, applied: result.applied, ...tailwind, ...source }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text, hasClasses(input)), result.version) };
 }
 
@@ -379,7 +387,7 @@ async function addRouteFrame(deps: EditDeps, input: Input<'add_route_frame'>): P
   if (route === null || /\[|\]/.test(route)) throw new EditError(`Route ${input.route} is not a page path. Fill in dynamic segments like [id] first.`);
   const spec = { path: route.replace(/^\/+/, ''), viewport: input.viewport ?? 'desktop', label: input.label ?? routeLabel(route), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
   void deps.preview.apps?.ensure(ctx.project).then((upstream) => fetch(new URL(route, upstream), { redirect: 'manual', signal: AbortSignal.timeout(180_000) })).catch(() => undefined);
-  return placeWithActivity(ctx, [spec], 'Added');
+  return placeWithActivity(ctx, [spec], 'Added', { seed: false });
 }
 
 async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<Done> {

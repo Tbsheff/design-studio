@@ -23,6 +23,7 @@ export interface TextSourceHit {
 export type TextSourceLookup = { hit: TextSourceHit } | { reason: string };
 
 const TRACE_BUDGET = 4000;
+const STATE_NOTE = 'It is the first value of React state, so the page shows the change after a reload.';
 const MAX_LISTED = 3;
 
 function normal(text: string): string {
@@ -109,7 +110,8 @@ function describe(candidate: Candidate): TextSourceInfo {
   const { mod, node } = candidate;
   const fallback = defaultLabel(mod, node);
   const what = attributeLabel(mod, node) ?? fallback?.what ?? chainLabel(mod, node);
-  return { file: mod.relative, line: node.loc?.start.line ?? 1, what, ...(fallback ? { shared: fallback.shared } : {}) };
+  const notes = [fallback?.shared, candidate.state ? STATE_NOTE : undefined].filter((note): note is string => Boolean(note));
+  return { file: mod.relative, line: node.loc?.start.line ?? 1, what, ...(notes.length > 0 ? { shared: notes.join(' ') } : {}) };
 }
 
 function jsxAttributeText(text: string, quote: string): string {
@@ -161,6 +163,7 @@ function stuckReason(ctx: TraceContext): string {
 
 function mismatchReason(found: Candidate[]): string {
   const listed = found.slice(0, MAX_LISTED).map(locText).join(', ');
+  if (found.every((candidate) => candidate.state)) return `It is React state that the page sets when it runs (first value at ${listed}), so there is no text in the source to change.`;
   return `The text on the page is not the text in the source (${listed}). It may change when the page runs.`;
 }
 

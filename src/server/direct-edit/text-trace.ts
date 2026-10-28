@@ -11,6 +11,7 @@ export interface Candidate {
   node: t.StringLiteral | t.TemplateLiteral;
   value: string;
   via: string[];
+  state?: boolean;
 }
 
 export interface TraceContext {
@@ -258,7 +259,8 @@ async function traceDeclarator(ctx: TraceContext, mod: TextModule, binding: Bind
   const hook = init.type === 'CallExpression' ? nameOf(init.callee) : null;
   if (init.type === 'CallExpression' && hook && STATE_HOOKS.has(hook) && binding.steps[0] === 0) {
     const first = init.arguments[0];
-    return all([fromDefault, first ? trace(ctx, mod, first, [...binding.steps.slice(1), ...steps]) : Promise.resolve([])]);
+    const initial = first ? (await trace(ctx, mod, first, [...binding.steps.slice(1), ...steps])).map((candidate) => ({ ...candidate, state: true })) : [];
+    return [...(await fromDefault), ...initial];
   }
   return all([fromDefault, trace(ctx, mod, init, [...binding.steps, ...steps])]);
 }

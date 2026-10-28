@@ -84,6 +84,13 @@ function SourceTextRow({ found, edit }: { found: TextSourceInfo; edit: TextEditS
 export function DataTextNote({ data, selection, edit }: { data: TextFromData; selection: SelectionContext; edit: TextEditScope }) {
   const answer = useTextSource(edit, selection);
   if (answer && 'found' in answer) return <SourceTextRow found={answer.found} edit={edit} />;
+  if (!answer && edit.scope.directionId && selection.source) {
+    return (
+      <div className="ins-data-text wide" role="status">
+        <span>Looking for where this text is set…</span>
+      </div>
+    );
+  }
   return <DataTextAsk data={data} text={selection.text} reason={answer && 'reason' in answer ? answer.reason : null} />;
 }
 

@@ -21,7 +21,9 @@ const MAX_DEPTH = 12;
 const MAX_BYTES = 512 * 1024;
 const LIST_TTL_MS = 10_000;
 const READ_BATCH = 64;
+const TEXT_CACHE_MAX = 10_000;
 const listed = new Map<string, { at: number; files: Promise<string[]> }>();
+const texts = new Map<string, { mtime: number; text: string }>();
 
 export function isNode(value: unknown): value is t.Node {
   return typeof value === 'object' && value !== null && typeof (value as { type?: unknown }).type === 'string';
@@ -132,12 +134,23 @@ export async function messageFiles(root: string): Promise<string[]> {
   return out.filter((file) => /(^|[\\/])(locales?|messages|i18n|lang|translations)([\\/]|$)/i.test(path.relative(root, file)));
 }
 
+async function cachedText(file: string): Promise<string> {
+  const info = await stat(file).catch(() => null);
+  if (!info || info.size > MAX_BYTES) return '';
+  const known = texts.get(file);
+  if (known && known.mtime === info.mtimeMs) return known.text;
+  const text = await readFile(file, 'utf8').catch(() => '');
+  if (texts.size >= TEXT_CACHE_MAX) texts.delete(texts.keys().next().value as string);
+  texts.set(file, { mtime: info.mtimeMs, text });
+  return text;
+}
+
 export async function filesMentioning(files: string[], needle: RegExp): Promise<string[]> {
   const hits: string[] = [];
   for (let index = 0; index < files.length; index += READ_BATCH) {
     const batch = files.slice(index, index + READ_BATCH);
-    const texts = await Promise.all(batch.map((file) => readFile(file, 'utf8').catch(() => '')));
-    texts.forEach((text, offset) => {
+    const found = await Promise.all(batch.map(cachedText));
+    found.forEach((text, offset) => {
       if (needle.test(text)) hits.push(batch[offset] as string);
     });
   }

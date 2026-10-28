@@ -78,7 +78,8 @@ export function useEditSession(o: Options) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
   useProjectEvents(projectId, (event) => {
     if (event.directionId !== undefined && event.directionId !== directionId) return;
-    if (event.type === 'version.created' && event.version.meta.kind !== 'manual' && viewRef.current.count === 0) {
+    const outside = event.type === 'version.created' && (event.version.meta.kind !== 'manual' || event.version.meta.origin === 'mcp');
+    if (event.type === 'version.created' && outside && viewRef.current.count === 0) {
       setView({ base: event.version.id, count: 0, dirty: false, blocked: null });
       return;
     }

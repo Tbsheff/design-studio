@@ -18,6 +18,7 @@ interface EditHistoryRouteDeps {
   readBody: (c: Context) => Promise<unknown>;
   loadDirection: (pid: string, did: string) => Promise<{ project: Project; direction: Direction }>;
   onRestored?: (workTree: string, relatives: string[]) => void;
+  onRemapped?: (projectId: string, remapped: Record<string, { id: string; parentId: string }>) => void;
 }
 
 const SHA = /^[0-9a-f]{40}$/;
@@ -89,7 +90,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
       const base = raw === undefined ? direction.headVersionId : baseOf(raw);
       if (base === null) return { baseVersionId: '', count: 0, dirty: false, blocked: 'This direction has no saved version yet.' };
       const span = editDeps.versions.sessionSince ? await editDeps.versions.sessionSince(project, direction, base) : null;
-      return { baseVersionId: base, count: span?.count ?? 0, dirty: span?.dirty ?? false, blocked: span?.foreign ?? null };
+      return { baseVersionId: base, count: span?.count ?? 0, dirty: span?.dirty ?? false, blocked: span?.foreign ?? null, outside: span?.outside ?? 0 };
     })();
     return c.json(state);
   });
@@ -117,6 +118,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
           editDeps.bus.emit({ type: 'status.changed', projectId: project.id, directionId: direction.id, status });
         }
         if (action === 'discard' && ended.changed.length > 0) deps.onRestored?.(direction.workTree, ended.changed);
+        if (ended.remapped) deps.onRemapped?.(project.id, ended.remapped);
         if (span.count > 0) {
           history.forget(project.id, direction.id);
           editDeps.bus.emit({ type: 'versions.changed', projectId: project.id, directionId: direction.id });

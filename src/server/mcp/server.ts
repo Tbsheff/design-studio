@@ -8,6 +8,7 @@ import type { ExportDeps } from '../export/source.js';
 import { callTool, ToolError, TOOLS } from './tools.js';
 import { callEditTool, EDIT_NAMES, EDIT_TOOLS } from './edit-tools.js';
 import type { EditDeps } from './edit-deps.js';
+import { withMcpOrigin } from '../edit-origin.js';
 import { newToken, readMcpSettings, writeMcpSettings, type McpSettings } from './settings.js';
 
 const PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
@@ -80,7 +81,7 @@ function argsOf(raw: unknown): Record<string, unknown> {
 
 async function runEdit(edits: EditDeps, name: string, raw: unknown, client: string): Promise<unknown> {
   try {
-    return await callEditTool(edits, name, argsOf(raw), client);
+    return await withMcpOrigin(client, () => callEditTool(edits, name, argsOf(raw), client));
   } catch (error) {
     const known = error instanceof Error && 'status' in error;
     if (!known) console.error('[mcp] edit tool failed', name, error);

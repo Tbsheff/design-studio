@@ -77,12 +77,14 @@ export interface SessionSpan {
   dirty: boolean;
   foreign: string | null;
   titles: string[];
+  outside?: number;
 }
 
 export interface SessionEndResult {
   version: Version | null;
   head: string;
   changed: string[];
+  remapped?: Record<string, { id: string; parentId: string }>;
 }
 
 export interface RunHandle {

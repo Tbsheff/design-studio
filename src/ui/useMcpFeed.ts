@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { McpActivity, McpApprovalOutcome, McpApprovalRecord } from '../shared/contracts';
 import { useProjectEvents } from './events';
 import { mcpApi } from './mcpApi';
@@ -22,21 +22,28 @@ function mergeActivity(list: McpActivity[], add: McpActivity[]): McpActivity[] {
   return [...list, ...fresh].sort((a, b) => a.at - b.at).slice(-KEEP);
 }
 
+function replaceActivity(list: McpActivity[], stored: McpActivity[]): McpActivity[] {
+  const byId = new Map(stored.map((item) => [item.id, item]));
+  return mergeActivity(list.map((item) => byId.get(item.id) ?? item), stored);
+}
+
 export function useMcpFeed(projectId: string, directionId: string | null): McpFeedState {
   const [activity, setActivity] = useState<McpActivity[]>([]);
   const [approvals, setApprovals] = useState<McpApprovalCard[]>([]);
-  useEffect(() => {
+  const reload = useCallback(() => {
     let live = true;
     mcpApi
       .activity(projectId)
-      .then((res) => live && setActivity((prev) => mergeActivity(prev, res.activity)))
+      .then((res) => live && setActivity((prev) => replaceActivity(prev, res.activity)))
       .catch(() => undefined);
     return () => {
       live = false;
     };
   }, [projectId]);
+  useEffect(reload, [reload]);
   useProjectEvents(projectId, (event) => {
-    if (event.type === 'mcp.activity') setActivity((prev) => mergeActivity(prev, [event.activity]));
+    if (event.type === 'versions.changed') reload();
+    else if (event.type === 'mcp.activity') setActivity((prev) => mergeActivity(prev, [event.activity]));
     else if (event.type === 'mcp.approval') {
       const { approval } = event;
       if (approval.expiresAt <= Date.now()) return;

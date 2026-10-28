@@ -1100,7 +1100,7 @@ export function createApp(deps: AppDeps): Hono {
   registerEditHistoryRoutes(app, { history: editHistory, editDeps, projects, withDirection, readBody, loadDirection, onRestored: (workTree, relatives) => {
     invalidateTokenSource(workTree);
     if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
-  } });
+  }, onRemapped: (projectId, remapped) => void mcpRoutes.activity.remap(projectId, remapped) });
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });

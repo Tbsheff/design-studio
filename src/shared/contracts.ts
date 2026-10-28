@@ -251,6 +251,8 @@ export interface VersionMeta {
   restoredFrom?: string;
   directionId?: string;
   level?: RunLevel;
+  origin?: 'mcp';
+  client?: string;
 }
 
 export interface Version {
@@ -1075,6 +1077,7 @@ export interface EditSessionState {
   count: number;
   dirty: boolean;
   blocked: string | null;
+  outside?: number;
 }
 
 export interface EditSessionEnd {

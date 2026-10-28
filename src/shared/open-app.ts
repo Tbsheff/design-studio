@@ -12,4 +12,5 @@ export interface FolderInspection {
   install: { command: string; dir: string } | null;
   projectId: string | null;
   problem: string | null;
+  workspace?: { root: string; name: string; opened: string } | null;
 }

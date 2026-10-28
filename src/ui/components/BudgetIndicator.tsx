@@ -9,7 +9,7 @@ function money(value: number): string {
 }
 
 function limitLabel(value: number | null): string {
-  return value === null ? 'No limit' : `${money(value)} limit`;
+  return value === null ? 'No limit' : money(value);
 }
 
 function parseLimit(raw: string): number | null | 'bad' {

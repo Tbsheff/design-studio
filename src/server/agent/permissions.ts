@@ -186,7 +186,7 @@ function checkSecretFiles(workTree: string, input: Record<string, unknown>): str
   return null;
 }
 
-function isExecutedConfigFile(file: string): boolean {
+export function isExecutedConfigFile(file: string): boolean {
   const name = path.basename(file).toLowerCase();
   return EXECUTED_CONFIG_PATTERNS.some((pattern) => pattern.test(name));
 }

@@ -158,6 +158,13 @@ interface MockFlags {
   fail: boolean;
 }
 
+async function mockShellWrite(absolute: string): Promise<void> {
+  const current = await readFile(absolute, 'utf8').catch(() => null);
+  const next = current === null ? 'MOCK_VALUE=1\n' : current.includes('<h1') ? current.replace(/(<h1[^>]*>)[^<]*/, '$1Edited by a shell command') : `${current.trimEnd()}\n/* edited by a shell command */\n`;
+  await mkdir(path.dirname(absolute), { recursive: true });
+  await writeFile(absolute, next);
+}
+
 class MockSession {
   private toolCounter = 0;
   private writes = 0;
@@ -250,19 +257,16 @@ class MockSession {
     await this.deliverQueued();
   }
 
-  async bashWrite(relativePath: string): Promise<string | null> {
+  async bashWrite(targets: string): Promise<string | null> {
+    const files = targets.split(',').filter(Boolean);
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
-    const input = { command: `python3 scripts/patch.py ${path.basename(relativePath)}` };
+    const input = { command: `python3 scripts/patch.py ${files.map((file) => path.basename(file)).join(' ')}` };
     const settings = this.input.ctx.project.settings;
     const policy: ToolPolicy = { workTree: this.workTree, mode: 'edit', allowBash: settings.allowBash, allowInstall: settings.allowInstall };
     this.sink.toolStarted(toolUseId, 'Bash', input);
     await this.sink.beforeWrite(toolUseId, 'Bash', input);
-    const absolute = path.resolve(this.workTree, relativePath);
-    const current = await readFile(absolute, 'utf8').catch(() => null);
-    const next = current === null ? 'MOCK_VALUE=1\n' : current.includes('<h1') ? current.replace(/(<h1[^>]*>)[^<]*/, '$1Edited by a shell command') : `${current.trimEnd()}\n// edited by a shell command\n`;
-    await mkdir(path.dirname(absolute), { recursive: true });
-    await writeFile(absolute, next);
+    for (const file of files) await mockShellWrite(path.resolve(this.workTree, file));
     const result = await this.sink.bashFinished?.(toolUseId, (relative) => bashWriteProblem(policy, relative));
     this.sink.toolFinished(toolUseId, false, `Bash ${input.command}`);
     return result?.message ?? null;

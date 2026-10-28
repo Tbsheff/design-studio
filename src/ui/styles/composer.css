@@ -1262,8 +1262,11 @@
   margin-left: auto;
 }
 
-.budget-ind-wrap {
+.prompt-foot {
   position: relative;
+}
+
+.budget-ind-wrap {
   flex: none;
 }
 

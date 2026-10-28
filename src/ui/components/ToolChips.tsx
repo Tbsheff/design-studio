@@ -149,10 +149,10 @@ export function DiffView({ diff }: { diff: ToolDiff }) {
 
 function ShellEditDetail({ tool, diffs }: { tool: ToolRow; diffs: ToolDiff[] }) {
   return (
-    <div className="flex flex-col gap-2 text-xs">
+    <div className="flex min-w-0 flex-col gap-2 text-xs">
       {tool.summary && <span className="font-mono break-all text-muted-foreground">{tool.summary}</span>}
       {diffs.map((diff) => (
-        <div key={diff.path} className="flex flex-col gap-1">
+        <div key={diff.path} className="flex min-w-0 flex-col gap-1">
           <span className="flex items-center gap-2 font-mono break-all text-foreground">
             {diff.path}
             <DiffBadge added={diff.added} removed={diff.removed} />

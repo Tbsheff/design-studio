@@ -3,13 +3,13 @@ import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ToolDiff } from '../../shared/contracts.js';
 import { diffLines } from '../../shared/line-diff.js';
-import { isSecretFile } from './permissions.js';
+import { isExecutedConfigFile, isSecretFile } from './permissions.js';
 
 export const DIFF_MAX_BYTES = 1_000_000;
 const QUIET_MS = 150;
 const MAX_WAIT_MS = 1500;
 const MAX_PATHS = 60;
-const SECRET_SCAN_DEPTH = 3;
+const GUARD_SCAN_DEPTH = 12;
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', '.next', '.turbo', '.vite', '.studio', 'vite-cache']);
 
 export type FileText = { kind: 'missing' } | { kind: 'text'; text: string } | { kind: 'skip' };
@@ -69,12 +69,16 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function scanSecrets(root: string, dir: string, depth: number, found: Map<string, Uint8Array>): Promise<void> {
+function isGuardedName(file: string): boolean {
+  return isSecretFile(file) || isExecutedConfigFile(file);
+}
+
+async function scanGuarded(root: string, dir: string, depth: number, found: Map<string, Uint8Array>): Promise<void> {
   const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
   for (const item of items) {
     const target = path.join(dir, item.name);
-    if (item.isDirectory() && depth < SECRET_SCAN_DEPTH && !SKIP_DIRS.has(item.name)) await scanSecrets(root, target, depth + 1, found);
-    else if (item.isFile() && isSecretFile(item.name)) {
+    if (item.isDirectory() && depth < GUARD_SCAN_DEPTH && !SKIP_DIRS.has(item.name)) await scanGuarded(root, target, depth + 1, found);
+    else if (item.isFile() && isGuardedName(item.name)) {
       const bytes = await readFile(target).catch(() => null);
       if (bytes) found.set(path.relative(root, target).split(path.sep).join('/'), bytes);
     }
@@ -100,21 +104,16 @@ export function createBashEditTracker(deps: BashEditDeps) {
   const root = path.resolve(deps.workTree);
   const known = new Map<string, Uint8Array | null>();
   const watches = new Map<string, Watch>();
-  let secrets: Promise<Map<string, Uint8Array>> | null = null;
+  let guarded: Promise<Map<string, Uint8Array>> | null = null;
 
-  const secretSnapshot = (): Promise<Map<string, Uint8Array>> => {
-    secrets ??= (async () => {
+  const guardedSnapshot = (): Promise<Map<string, Uint8Array>> => {
+    guarded ??= (async () => {
       const found = new Map<string, Uint8Array>();
-      await scanSecrets(root, root, 0, found);
+      await scanGuarded(root, root, 0, found);
       return found;
     })();
-    return secrets;
+    return guarded;
   };
-
-  async function before(relative: string): Promise<Uint8Array | null> {
-    if (known.has(relative)) return known.get(relative) ?? null;
-    return deps.headFile(relative);
-  }
 
   async function putBack(relative: string, bytes: Uint8Array | null): Promise<void> {
     const absolute = path.join(root, relative);
@@ -126,12 +125,10 @@ export function createBashEditTracker(deps: BashEditDeps) {
     await writeFile(absolute, bytes);
   }
 
-  async function guardSecret(relative: string): Promise<boolean> {
-    const saved = (await secretSnapshot()).get(relative) ?? null;
-    const now = readBytes(path.join(root, relative));
-    if (sameBytes(saved, now)) return false;
-    await putBack(relative, saved);
-    return true;
+  async function before(relative: string): Promise<Uint8Array | null> {
+    if (known.has(relative)) return known.get(relative) ?? null;
+    if (isGuardedName(relative)) return (await guardedSnapshot()).get(relative) ?? null;
+    return deps.headFile(relative);
   }
 
   async function settle(watch: Watch): Promise<void> {
@@ -146,10 +143,6 @@ export function createBashEditTracker(deps: BashEditDeps) {
   }
 
   async function inspect(relative: string, check: BashWriteCheck, problems: Map<string, string>, diffs: ToolDiff[]): Promise<void> {
-    if (isSecretFile(relative)) {
-      if (await guardSecret(relative)) problems.set(relative, check(relative) ?? 'secrets files stay as they are');
-      return;
-    }
     const after = readBytes(path.join(root, relative));
     const old = await before(relative);
     if (sameBytes(old, after)) return;
@@ -166,7 +159,7 @@ export function createBashEditTracker(deps: BashEditDeps) {
 
   return {
     prepare(): void {
-      void secretSnapshot();
+      void guardedSnapshot();
     },
 
     close(): void {
@@ -179,7 +172,7 @@ export function createBashEditTracker(deps: BashEditDeps) {
     },
 
     async start(toolUseId: string): Promise<void> {
-      await secretSnapshot();
+      await guardedSnapshot();
       const watch: Watch = { paths: new Set(), lastEventAt: 0, stop: () => undefined };
       watch.stop = deps.subscribe((paths) => {
         for (const entry of paths) watch.paths.add(entry);

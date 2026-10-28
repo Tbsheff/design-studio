@@ -320,7 +320,7 @@ export async function planCreateComponent(scope: InsertScope, raw: unknown): Pro
   const edits = await withTempFile(component, built.code, () => useEdits(context, uses, shape.slots, variants));
   const relative = path.relative(library.root, component).split(path.sep).join('/');
   const created: WrittenFile = { target: { file: component, relative }, original: '', code: built.code, created: true };
-  const title = `Create component ${request.name} from ${uses.length === 1 ? tagText(first.element.openingElement.name) : `${uses.length} elements`}`;
+  const title = `Create component ${request.name} from ${uses.length === 1 ? `<${tagText(first.element.openingElement.name)}>` : `${uses.length} elements`}`;
   return { files: [created, ...edits.files], component: created.target, name: request.name, props: built.props, variants: variants?.values ?? [], select: edits.select, importFrom: edits.importFrom, title };
 }
 

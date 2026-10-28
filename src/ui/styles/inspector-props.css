@@ -172,3 +172,24 @@
   height: 48px;
   margin: 0;
 }
+
+.prp-variant-group {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.prp-group-label {
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  font-weight: var(--w-medium);
+}
+
+.prp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.prp-swap {
+  position: relative;
+}

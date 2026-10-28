@@ -1,4 +1,4 @@
-import type { ClassEditRequest, TailwindOutcome } from '../../../shared/contracts.js';
+import type { ClassChange, TailwindOutcome } from '../../../shared/contracts.js';
 import { DirectEditError } from '../errors.js';
 import { cssEdits, isMappedProperty } from './map.js';
 import { ClassEditError, planClassEdit, siteClasses, type ClassEdit, type ClassPlan, type ClassSite } from './plan.js';
@@ -32,7 +32,7 @@ function styleEdits(style: Record<string, string | null>, theme: TailwindTheme):
   return { edits, unmapped };
 }
 
-function classOps(classes: ClassEditRequest | undefined): ClassEdit[] {
+function classOps(classes: ClassChange | undefined): ClassEdit[] {
   return [...(classes?.remove ?? []).map((token) => ({ kind: 'remove' as const, token })), ...(classes?.add ?? []).map((token) => ({ kind: 'add' as const, token }))];
 }
 
@@ -42,7 +42,7 @@ function outcome(mode: TailwindOutcome['mode'], classes: string[], dynamic: bool
 
 export type ClassDecision = { kind: 'classes'; patch: ClassPatch } | { kind: 'inline'; fallback: InlineFallback } | { kind: 'none' };
 
-export function decideClassEdit(site: () => ClassSite, style: Record<string, string | null>, classes: ClassEditRequest | undefined, theme: TailwindTheme | null): ClassDecision {
+export function decideClassEdit(site: () => ClassSite, style: Record<string, string | null>, classes: ClassChange | undefined, theme: TailwindTheme | null): ClassDecision {
   const explicit = classOps(classes);
   const styled = theme && Object.keys(style).length > 0 && !isVisibilityToggle(style);
   if (!styled && explicit.length === 0) return { kind: 'none' };

@@ -52,9 +52,10 @@ function patchGroups(groups: FileGroup[], applied: AppliedEdit[], tags: string[]
 
 function batchTitle(applied: AppliedEdit[], tags: string[]): string {
   const style = [...new Set(applied.flatMap((entry) => entry.style))];
-  const parts = applied.some((entry) => entry.text) ? [...style, 'text'] : style;
+  const classes = applied.some((entry) => entry.classes);
+  const parts = [...style, ...(classes ? ['classes'] : []), ...(applied.some((entry) => entry.text) ? ['text'] : [])];
   const subject = applied.length === 1 ? (tags[0] ?? 'element') : `${applied.length} elements`;
-  if (style.length === 0) return `Edit text of ${subject}`;
+  if (style.length === 0 && !classes) return `Edit text of ${subject}`;
   return `Edit ${subject}: ${parts.join(', ')}`;
 }
 

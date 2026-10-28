@@ -3,6 +3,7 @@ import type { DefaultTreeAdapterMap } from 'parse5';
 import { applyDeclarationChanges, parseDeclarations, serializeDeclarations } from './css.js';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
+import { hasClassChange } from './classes.js';
 import { applySplices, leadingWhitespaceStart, type Splice } from './splice.js';
 import { htmlNameSplice, htmlPositionAt, planHtmlMove } from './structure.js';
 import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
@@ -211,7 +212,8 @@ export function patchHtml(source: string, loc: SourcePosition, edit: SourceEdit,
   const styleKeys = Object.keys(style);
   const classed = classOrStyleSplices(source, element, style, edit, theme);
   splices.push(...classed.splices);
+  const classes = hasClassChange(edit.classes);
   const hasText = edit.text !== undefined;
   if (edit.text !== undefined) splices.push(textSplice(source, element, edit.text));
-  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText }, ...(classed.tailwind ? { tailwind: classed.tailwind } : {}) };
+  return { code: applySplices(source, splices), tag: element.tagName, applied: { style: styleKeys, text: hasText, ...(classes ? { classes } : {}) }, ...(classed.tailwind ? { tailwind: classed.tailwind } : {}) };
 }

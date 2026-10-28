@@ -4,6 +4,7 @@ import type * as t from '@babel/types';
 import MagicString from 'magic-string';
 import { DirectEditError, TEXT_NOT_EDITABLE_MESSAGE, assertSameTag } from './errors.js';
 import type { PatchResult, SourceEdit, SourcePosition } from './errors.js';
+import { hasClassChange } from './classes.js';
 import { leadingWhitespaceStart } from './splice.js';
 import { NAME_ATTR, jsxAncestors, jsxElementAt, jsxNameAttribute, jsxNameLiteral, planJsxMove } from './structure.js';
 import { decideClassEdit, describeSite, type TailwindTheme } from './tailwind/index.js';
@@ -315,8 +316,9 @@ export function patchJsx(source: string, loc: SourcePosition, edit: SourceEdit, 
   const style = edit.style ?? {};
   const styleKeys = Object.keys(style);
   const tailwind = patchClassesOrStyle(magic, source, element, style, edit, options.tailwind ?? null);
+  const classes = hasClassChange(edit.classes);
   if (edit.text !== undefined) patchText(magic, source, element, edit.text);
-  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined }, ...(tailwind ? { tailwind } : {}) };
+  return { code: magic.toString(), tag, applied: { style: styleKeys, text: edit.text !== undefined, ...(classes ? { classes } : {}) }, ...(tailwind ? { tailwind } : {}) };
 }
 
 function inlineKeys(element: t.JSXElement): Set<string> | null {

@@ -152,7 +152,7 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     return project;
   };
 
-  const createLive = async (live: LiveDrafts, request: DraftRequest, images: ImageInput[], started: number): Promise<DesignSystemDraftResult> => {
+  const createLive = async (live: LiveDrafts, request: DraftRequest, images: ImageInput[], started: number, autoImprove: boolean): Promise<DesignSystemDraftResult> => {
     checkDraftUrls(request, deps.allowLoopback);
     const base = await draftBase(library.registry, request);
     const draft = assembleDraft(request, base, emptyHarvested(), KIT_GROUPS);
@@ -164,7 +164,7 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
       await library.deletePack(pack.manifest.id).catch((cleanup: unknown) => console.error('[design-systems] could not remove the draft pack', cleanup));
       throw error;
     }
-    live.start({ project, packId: pack.manifest.id, request, base, imageCount: images.length });
+    live.start({ project, packId: pack.manifest.id, request, base, imageCount: images.length, autoImprove });
     return { project, pack: pack.summary, coverage: draft.coverage, ms: Date.now() - started };
   };
 
@@ -173,7 +173,7 @@ export function registerDesignSystemRoutes(app: Hono, deps: DesignSystemRouteDep
     const body = await readDraftBody(c, deps.readBody);
     const merged = body.tokensFile && typeof body.raw === 'object' && body.raw !== null ? { ...body.raw, tokensFile: body.tokensFile } : body.raw;
     const request = parseDraftRequest(merged, body.images.length);
-    if (deps.live) return c.json(await createLive(deps.live, request, body.images, started));
+    if (deps.live) return c.json(await createLive(deps.live, request, body.images, started, c.req.query('improve') !== 'off'));
     const draft = await buildDraft(request, { registry: library.registry, fetcher }, { allowLoopback: deps.allowLoopback, imageCount: body.images.length });
     const pack = await library.createUserPack(draft.pack);
     let project: Project;

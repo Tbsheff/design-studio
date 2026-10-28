@@ -665,7 +665,7 @@ export const API_ROUTES = {
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
   importProject: 'POST /api/projects/import {path} -> {project}',
-  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself. 400 no source, blocked URL, unknown base pack',
+  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped). 400 no source, blocked URL, unknown base pack',
   getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
@@ -901,10 +901,10 @@ export interface DirectEditRequest {
   name?: string | null;
   move?: ReorderMove;
   insert?: InsertKind;
-  classes?: ClassEditRequest;
+  classes?: ClassChange;
 }
 
-export interface ClassEditRequest {
+export interface ClassChange {
   add?: string[];
   remove?: string[];
 }
@@ -957,6 +957,17 @@ export interface EditHistoryState {
   redoLabel: string | null;
 }
 
+export interface EditHistoryEntry {
+  label: string;
+  versionId: string;
+  files: string[];
+}
+
+export interface EditHistoryList {
+  undo: EditHistoryEntry[];
+  redo: EditHistoryEntry[];
+}
+
 export interface EditSessionState {
   baseVersionId: string;
   count: number;
@@ -978,7 +989,7 @@ export interface AuthoredRule {
 export interface DirectEditResult {
   file: string;
   version: Version;
-  applied: { style: string[]; text: boolean };
+  applied: { style: string[]; text: boolean; classes?: boolean };
   moved?: SourceLoc;
   tailwind?: TailwindOutcome;
 }
@@ -986,7 +997,7 @@ export interface DirectEditResult {
 export interface DirectEditBatchResult {
   files: string[];
   version: Version;
-  applied: { file: string; style: string[]; text: boolean; tailwind?: TailwindOutcome }[];
+  applied: { file: string; style: string[]; text: boolean; classes?: boolean; tailwind?: TailwindOutcome }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

@@ -1,6 +1,6 @@
 import { readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
-import type { Direction, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
+import type { Direction, EditHistoryEntry, EditHistoryList, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
 import type { EventBus } from '../types.js';
 import { DirectEditError } from './errors.js';
@@ -17,6 +17,7 @@ export interface EditStepResult {
 
 export interface EditHistory extends EditRecorder {
   state(projectId: string, directionId: string): EditHistoryState;
+  list?(projectId: string, directionId: string, limit: number): EditHistoryList;
   step(kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult>;
   clear(projectId: string, directionId?: string): void;
   forget(projectId: string, directionId: string): void;
@@ -104,6 +105,17 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     return { canUndo: undo !== undefined, canRedo: redo !== undefined, undoLabel: undo?.label ?? null, redoLabel: redo?.label ?? null };
   };
 
+  const list = (projectId: string, directionId: string, max: number): EditHistoryList => {
+    const stacks = projects.get(projectId);
+    const entries = (records: EditRecord[]): EditHistoryEntry[] =>
+      records
+        .filter((record) => record.directionId === directionId)
+        .slice(-max)
+        .reverse()
+        .map((record) => ({ label: record.label, versionId: record.versionId, files: record.files.map((change) => change.relative) }));
+    return { undo: entries(stacks?.undo ?? []), redo: entries(stacks?.redo ?? []) };
+  };
+
   const clear = (projectId: string, directionId?: string): void => {
     const stacks = projects.get(projectId);
     if (!stacks) return;
@@ -168,5 +180,5 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     changed(entry.projectId, entry.directionId);
   };
 
-  return { record, state, step, clear, forget };
+  return { record, state, list, step, clear, forget };
 }

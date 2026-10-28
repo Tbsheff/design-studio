@@ -1,4 +1,4 @@
-import type { ClassEditRequest, TailwindOutcome } from '../../shared/contracts.js';
+import type { ClassChange, TailwindOutcome } from '../../shared/contracts.js';
 
 type DirectEditErrorCode =
   | 'invalid_request'
@@ -64,13 +64,13 @@ export interface SourceEdit {
   name?: string | null;
   move?: 'up' | 'down';
   insert?: 'text' | 'frame' | 'rect' | 'ellipse';
-  classes?: ClassEditRequest;
+  classes?: ClassChange;
 }
 
 export interface PatchResult {
   code: string;
   tag: string;
-  applied: { style: string[]; text: boolean };
+  applied: { style: string[]; text: boolean; classes?: boolean };
   title?: string;
   moved?: SourcePosition;
   tailwind?: TailwindOutcome;

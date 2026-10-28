@@ -49,6 +49,12 @@ const TOOL_ICONS: Record<string, IconName> = {
   resolve_comment: 'check',
   create_project: 'plus',
   export: 'download',
+  batch_edit: 'layers',
+  undo: 'undo',
+  redo: 'reload',
+  open_folder: 'folder',
+  create_design_system: 'palette',
+  save_design_system: 'book',
 };
 
 function useNow(stepMs: number, active: boolean): number {
@@ -205,7 +211,7 @@ export function McpApproval({ card, compact = false, onAnswer }: { card: McpAppr
   return (
     <section className={`permission mcp-approval${compact ? ' compact' : ''}`} role="group" aria-label={approval.title} data-testid="mcp-approval" data-outcome="pending">
       <header className="permission-head">
-        <Icon name="download" size={14} />
+        <Icon name={TOOL_ICONS[approval.tool] ?? 'download'} size={14} />
         <strong>{approval.title}</strong>
       </header>
       {approval.detail && <p className="mcp-approval-detail">{approval.detail}</p>}

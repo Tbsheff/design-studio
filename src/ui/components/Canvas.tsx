@@ -20,6 +20,7 @@ import { usePreviewMenu } from '../usePreviewMenu';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
 import { usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
+import { usePlannedEdits } from '../usePlannedEdits';
 import type { BuildError, FilesChange } from '../useStudioData';
 import type { CanvasSource } from './CanvasToolbar';
 import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
@@ -499,7 +500,8 @@ export function Canvas(props: Props) {
   });
   const resetInline = inline.reset;
   useEffect(() => resetInline(), [frames.frontToken, resetInline]);
-  useTokenFrames(frames.slots, frames.elements, kind);
+  useTokenFrames(frames.slots, frames.elements, kind, live);
+  usePlannedEdits(projectId, directionId, live);
   const passive = useDirectionFrames({
     projectId,
     kind,

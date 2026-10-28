@@ -92,7 +92,7 @@ export function useDirectionFrames(o: Options) {
     () => slots.filter((s) => s.src && s.directionId === o.currentId).map((s) => ({ token: s.token, src: s.src as string })),
     [slotKey],
   );
-  useTokenFrames(tokenSlots, elements, o.kind);
+  useTokenFrames(tokenSlots, elements, o.kind, o.live);
   return { slots, elements, onSwapDone: gate.onSwapDone };
 }
 

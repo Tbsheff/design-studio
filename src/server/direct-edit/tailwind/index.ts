@@ -42,6 +42,13 @@ function outcome(mode: TailwindOutcome['mode'], classes: string[], dynamic: bool
   return { mode, classes, dynamic, note: notes.length > 0 ? notes.join(' ') : null };
 }
 
+function planOutcome(site: ClassSite, plan: ClassPlan): TailwindOutcome {
+  const before = new Set(siteClasses(site));
+  const after = new Set(plan.classes);
+  const delta = { add: [...after].filter((name) => !before.has(name)), remove: [...before].filter((name) => !after.has(name)) };
+  return { ...outcome('classes', plan.classes, site.dynamic, plan.notes), delta };
+}
+
 export type ClassDecision = { kind: 'classes'; patch: ClassPatch } | { kind: 'inline'; fallback: InlineFallback } | { kind: 'none' };
 
 function assertBreakpoint(theme: TailwindTheme, variant: string): void {
@@ -60,7 +67,7 @@ function decideVariantEdit(site: () => ClassSite, style: Record<string, string |
   if (fromStyle.unmapped.length > 0) throw new DirectEditError('variant_not_supported', `No Tailwind class maps ${fromStyle.unmapped.join(', ')}, so it cannot be set for ${variant}`);
   try {
     const plan = planClassEdit(resolved, [...fromStyle.edits, ...explicit], theme);
-    return { kind: 'classes', patch: { plan, outcome: outcome('classes', plan.classes, resolved.dynamic, plan.notes), inlineProps: [], variant: true } };
+    return { kind: 'classes', patch: { plan, outcome: planOutcome(resolved, plan), inlineProps: [], variant: true } };
   } catch (error) {
     if (error instanceof ClassEditError) throw new DirectEditError('classes_not_editable', error.message);
     throw error;
@@ -81,7 +88,7 @@ export function decideClassEdit(site: () => ClassSite, style: Record<string, str
   try {
     const plan = planClassEdit(resolved, [...fromStyle.edits, ...explicit], theme);
     const inlineProps = styled ? Object.keys(style).filter((prop) => !fromStyle.unmapped.includes(prop)) : [];
-    return { kind: 'classes', patch: { plan, outcome: outcome('classes', plan.classes, resolved.dynamic, plan.notes), inlineProps, variant: false } };
+    return { kind: 'classes', patch: { plan, outcome: planOutcome(resolved, plan), inlineProps, variant: false } };
   } catch (error) {
     if (!(error instanceof ClassEditError)) throw error;
     if (explicit.length > 0) throw new DirectEditError('classes_not_editable', error.message);

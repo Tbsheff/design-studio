@@ -15,6 +15,8 @@ import { tailwindThemeFor, type TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
 import { isPendingVersion, saveLater, savesSettled } from './save-queue.js';
+import { isOutsideRequest } from '../edit-origin.js';
+import { announcePlanned, domPatchOf, withdrawPlanned } from './planned-feed.js';
 
 export { DirectEditError } from './errors.js';
 export { parseDirectEditRequest } from './validate.js';
@@ -212,9 +214,21 @@ export function saveDeferred(deps: DirectEditDeps, project: Project, direction: 
   return saveLater({ versions: deps.versions, publish: (p, d, version, withStatus) => publishVersion(deps, p, d, version, withStatus), failed }, project, direction, relatives, title, meta);
 }
 
+export async function announceWhile<T>(project: Project, direction: Direction, patches: () => Parameters<typeof announcePlanned>[2], write: () => Promise<T>): Promise<T> {
+  const id = isOutsideRequest() ? announcePlanned(project.id, direction.id, patches()) : null;
+  try {
+    return await write();
+  } catch (error) {
+    withdrawPlanned(project.id, direction.id, id);
+    throw error;
+  }
+}
+
 async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, patch: PatchResult, request: DirectEditRequest): Promise<Version> {
-  await savesSettled(project.id);
-  await writeAtomic(target.file, patch.code);
+  await announceWhile(project, direction, () => [domPatchOf(request, patch)], async () => {
+    await savesSettled(project.id);
+    await writeAtomic(target.file, patch.code);
+  });
   return saveDeferred(deps, project, direction, [target.relative], editTitle(patch.tag, patch.applied, request), { kind: 'manual', prompt: editSummary(request) });
 }
 

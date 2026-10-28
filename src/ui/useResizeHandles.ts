@@ -5,6 +5,7 @@ import type { BridgeToParent } from '../shared/contracts';
 import type { ParentMessageBody } from './bridge';
 import { snapOff, snapRect, type Rect, type SnapGuide } from './snap';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
+import { startOptimistic } from './optimisticEdit';
 
 export type ResizeEdge = 'e' | 's' | 'se';
 
@@ -154,13 +155,15 @@ export function useResizeHandles(o: Options): ResizeControl {
     if (!req || !cur.directionId) return;
     const selector = d.target.selector;
     cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
+    const optimistic = startOptimistic({ post: cur.post, refreshRects: cur.refreshRects }, req, (message) => live.current.onError(message));
     try {
-      await api.directEdit(cur.projectId, cur.directionId, req);
+      const result = await api.directEdit(cur.projectId, cur.directionId, req);
+      optimistic.saved(result.tailwind);
       live.current.refreshRects();
     } catch (err) {
       const back = { width: d.target.styles.width ?? '', height: d.target.styles.height ?? '' };
+      optimistic.failed(errorText(err));
       live.current.setSelection((prev) => mergeCommit(prev, { selector, style: back }));
-      live.current.post({ type: 'preview-style', selector, style: axisStyle(d, d.base) });
       live.current.onError(errorText(err));
     }
   }, []);

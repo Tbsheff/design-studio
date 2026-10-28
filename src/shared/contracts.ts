@@ -654,7 +654,9 @@ export type StudioEventBody =
   | { type: 'mcp.point'; point: McpPoint }
   | { type: 'design-system.sources'; sources: DraftSourcesState }
   | { type: 'app.status'; status: AppServerStatus }
-  | { type: 'frame-states.changed'; states: import('./frame-state.js').FrameStatesView };
+  | { type: 'frame-states.changed'; states: import('./frame-state.js').FrameStatesView }
+  | { type: 'edit.planned'; id: string; patches: DomPatch[] }
+  | { type: 'edit.unplanned'; id: string };
 
 export interface McpActivity {
   id: string;
@@ -930,7 +932,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string }
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
   | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
-  | { ns: 'studio'; token: string; type: 'arrange-key'; key: string };
+  | { ns: 'studio'; token: string; type: 'arrange-key'; key: string }
+  | { ns: 'studio'; token: string; type: 'optimistic-result'; id: string; outcome: OptimisticOutcome; reason?: string; ms: number };
 
 export interface LayerNode {
   id: number;
@@ -1021,7 +1024,27 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
   | { ns: 'studio'; token: string; type: 'select-at'; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
-  | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string };
+  | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string }
+  | { ns: 'studio'; token: string; type: 'optimistic-apply'; id: string; patch: DomPatch; written: boolean }
+  | { ns: 'studio'; token: string; type: 'optimistic-settle'; id: string; ok: boolean; classes?: ClassDelta; reason?: string }
+  | { ns: 'studio'; token: string; type: 'optimistic-drop' };
+
+export interface ClassDelta {
+  add: string[];
+  remove: string[];
+}
+
+export interface DomPatch {
+  selector: string;
+  loc?: string;
+  tag?: string;
+  trusted?: boolean;
+  style?: Record<string, string | null>;
+  classes?: ClassDelta;
+  text?: string;
+}
+
+export type OptimisticOutcome = 'confirmed' | 'mismatch' | 'timeout' | 'skipped';
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -1102,6 +1125,7 @@ export interface ClassChange {
 export interface TailwindOutcome {
   mode: 'classes' | 'inline' | 'none';
   classes: string[];
+  delta?: ClassDelta;
   dynamic: boolean;
   note: string | null;
 }

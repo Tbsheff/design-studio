@@ -4,6 +4,7 @@ import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
 import { editVariantStore } from './editVariant';
+import { startOptimistic } from './optimisticEdit';
 
 export type SaveStatus =
   | { kind: 'idle' }
@@ -89,7 +90,6 @@ export function useDirectEdit(o: Options) {
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
-  const committed = useRef<{ style: Partial<StyleValues>; text?: string }>({ style: {} });
 
   const setDraft = useCallback((next: Partial<StyleValues>) => {
     draftRef.current = next;
@@ -103,13 +103,7 @@ export function useDirectEdit(o: Options) {
 
   const post = useCallback((body: Parameters<PreviewPort['post']>[0]) => opts.current.port.current?.post(body), []);
 
-  const resetPreview = useCallback(() => {
-    post({ type: 'preview-reset' });
-    const selector = opts.current.selection.selector;
-    const kept = committed.current;
-    if (Object.keys(kept.style).length > 0) post({ type: 'preview-style', selector, style: kept.style });
-    if (kept.text !== undefined) post({ type: 'preview-text', selector, text: kept.text });
-  }, [post]);
+  const resetPreview = useCallback(() => post({ type: 'preview-reset' }), [post]);
 
   const cancel = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
@@ -162,15 +156,19 @@ export function useDirectEdit(o: Options) {
     const req = buildEditRequest(cur.selection, style, text, cur.variant);
     if (!req || !cur.directionId) return;
     setStatus({ kind: 'saving' });
+    const optimistic = startOptimistic(cur.port.current, req, (message) => setStatus({ kind: 'error', message, code: 'optimistic_mismatch' }));
     const request = api
       .directEdit(cur.projectId, cur.directionId, req)
       .then((result) => {
+        optimistic.saved(result.tailwind);
         setTailwind(result.tailwind ?? null);
-        committed.current = { style: { ...committed.current.style, ...style }, text: text ?? committed.current.text };
         cur.onCommitted({ selector: req.selector, style, text });
         setStatus({ kind: 'saved', at: Date.now() });
       })
-      .catch(fail);
+      .catch((err: unknown) => {
+        optimistic.failed(failureText(err));
+        fail(err);
+      });
     inflight.current = request;
     await request;
     inflight.current = null;
@@ -258,7 +256,6 @@ export function useDirectEdit(o: Options) {
 
   const absorb = useCallback(
     (style: Partial<StyleValues>) => {
-      committed.current = { ...committed.current, style: { ...committed.current.style, ...style } };
       const next = { ...draftRef.current };
       for (const prop of Object.keys(style) as DirectStyleProperty[]) delete next[prop];
       setDraft(next);

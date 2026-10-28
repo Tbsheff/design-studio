@@ -15,6 +15,7 @@ import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
 import { componentOwners } from './component-owner.js';
+import { createOptimistic, type Released } from './optimistic.js';
 import { dropElement, insideTarget } from './insert-target.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
@@ -383,6 +384,8 @@ interface LivePreview {
   previewText(selector: unknown, text: unknown): void;
   reset(): void;
   authoredInline(element: Element): string;
+  release(element: StyledElement, props: string[], text: boolean): Released;
+  previewing(element: Element): boolean;
 }
 
 const PREVIEW_STYLE_KEYS = new Set<string>(DIRECT_STYLE_PROPERTIES);
@@ -445,7 +448,7 @@ function createLivePreview(): LivePreview {
         backup.props.set(prop, { value: element.style.getPropertyValue(prop), priority: element.style.getPropertyPriority(prop) });
       }
       if (value === null) element.style.removeProperty(prop);
-      else element.style.setProperty(prop, value);
+      else element.style.setProperty(prop, value, 'important');
     }
   };
 
@@ -472,7 +475,31 @@ function createLivePreview(): LivePreview {
     return (backup ? backup.attribute : element.getAttribute('style')) ?? '';
   };
 
-  return { previewStyle, previewText, reset, authoredInline };
+  const release = (element: StyledElement, props: string[], text: boolean): Released => {
+    const backup = styleBackups.get(element);
+    const taken = new Map<string, { value: string; priority: string }>();
+    for (const prop of props) {
+      const original = backup?.props.get(prop);
+      if (!original || !backup) continue;
+      taken.set(prop, original);
+      backup.props.delete(prop);
+    }
+    if (backup && backup.props.size === 0) styleBackups.delete(element);
+    const saved = text ? textBackups.get(element) : undefined;
+    const textNodes = saved && saved.length === 1 && saved[0] instanceof Text ? saved : null;
+    if (textNodes) textBackups.delete(element);
+    return { props: taken, hadAttribute: backup ? backup.hadAttribute : null, textNodes };
+  };
+
+  const previewing = (element: Element): boolean => (isStyledElement(element) && styleBackups.has(element)) || textBackups.has(element);
+
+  return { previewStyle, previewText, reset, authoredInline, release, previewing };
+}
+
+function sourceStrings(element: Element): Promise<{ own: string | null; usedAt: string | null }> {
+  const usedAt = element.getAttribute(USED_AT_ATTR);
+  if (APP_MODE === 'next') return appSourceFor(element).then((own) => ({ own, usedAt: element.getAttribute(USED_AT_ATTR) ?? usedAt }));
+  return Promise.resolve({ own: element.closest(`[${SOURCE_LOC_ATTR}]`)?.getAttribute(SOURCE_LOC_ATTR) ?? null, usedAt });
 }
 
 const MAX_TOKEN_PREVIEW_CSS = 200_000;
@@ -969,6 +996,13 @@ function startBridge(session: BridgeSession): void {
       if (selected !== element) postSelect(element, false);
     },
   });
+  const optimistic = createOptimistic({
+    report: (id, outcome, ms, reason) => post({ type: 'optimistic-result', id, outcome, ms, ...(reason ? { reason } : {}) }),
+    styleKeys: PREVIEW_STYLE_KEYS,
+    release: (element, props, text) => livePreview.release(element, props, text),
+    previewing: (element) => livePreview.previewing(element),
+    sourceOf: sourceStrings,
+  });
   const previewStyles = createPreviewStyles();
   const themeControl = createThemeControl();
   let forcedDark = false;
@@ -1006,6 +1040,9 @@ function startBridge(session: BridgeSession): void {
     'preview-style': (message) => livePreview.previewStyle(message.selector, message.style),
     'preview-text': (message) => livePreview.previewText(message.selector, message.text),
     'preview-reset': () => livePreview.reset(),
+    'optimistic-apply': (message) => optimistic.apply(message.id, message.patch, message.written === true),
+    'optimistic-settle': (message) => optimistic.settle(message.id, message.ok === true, message.classes, message.reason),
+    'optimistic-drop': () => optimistic.drop(),
     'tokens-preview': (message) => previewStyles.apply('tokens', message.css),
     'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
     'lofi-preview': (message) => previewStyles.apply('lofi', message.css),

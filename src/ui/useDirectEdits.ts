@@ -5,6 +5,7 @@ import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
 import { batchEdits, mergeValues, multiBlockReason } from './mixedValues';
 import type { DirectEdit, DirectEditCommit, DirectEditControl, SaveStatus } from './useDirectEdit';
+import { startOptimistic } from './optimisticEdit';
 
 interface Options {
   projectId: string;
@@ -40,7 +41,6 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
-  const committed = useRef<Partial<StyleValues>>({});
 
   const setDraft = useCallback((next: Partial<StyleValues>) => {
     draftRef.current = next;
@@ -52,10 +52,7 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
     for (const s of opts.current.selections) port?.post({ type: 'preview-style', selector: s.selector, style });
   }, []);
 
-  const resetPreview = useCallback(() => {
-    opts.current.port.current?.post({ type: 'preview-reset' });
-    if (Object.keys(committed.current).length > 0) postAll(committed.current);
-  }, [postAll]);
+  const resetPreview = useCallback(() => opts.current.port.current?.post({ type: 'preview-reset' }), []);
 
   const cancel = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
@@ -104,14 +101,19 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
     const edits = batchEdits(cur.selections, basesRef.current, style);
     if (edits.length === 0) return;
     setStatus({ kind: 'saving' });
+    const problem = (message: string) => setStatus({ kind: 'error', message, code: 'optimistic_mismatch' });
+    const optimistic = edits.map((edit) => startOptimistic(cur.port.current, edit, problem));
     const request = api
       .directEditBatch(cur.projectId, cur.directionId, { edits })
-      .then(() => {
-        committed.current = { ...committed.current, ...style };
+      .then((result) => {
+        optimistic.forEach((one, index) => one.saved(result.applied[index]?.tailwind));
         for (const edit of edits) cur.onCommitted({ selector: edit.selector, style });
         setStatus({ kind: 'saved', at: Date.now() });
       })
-      .catch(fail);
+      .catch((err: unknown) => {
+        for (const one of optimistic) one.failed(failureText(err));
+        fail(err);
+      });
     inflight.current = request;
     await request;
     inflight.current = null;
@@ -177,7 +179,6 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
 
   const absorb = useCallback(
     (style: Partial<StyleValues>) => {
-      committed.current = { ...committed.current, ...style };
       const next = { ...draftRef.current };
       for (const prop of Object.keys(style) as DirectStyleProperty[]) delete next[prop];
       setDraft(next);

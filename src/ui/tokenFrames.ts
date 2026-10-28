@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore, type MutableRefObject } from 'react';
 import type { BridgeToParent, ProjectKind } from '../shared/contracts';
-import { postToFrame, useBridge, type BridgeFrame } from './bridge';
+import { postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 
 export type ThemeChoice = 'light' | 'dark' | null;
 
@@ -12,6 +12,7 @@ interface FrameSlot {
 type FrameSource = () => BridgeFrame;
 
 const sources = new Map<string, FrameSource>();
+const liveTokens = new Set<string>();
 const HOLD_FALLBACK_MS = 4000;
 interface HoldState {
   timer: number | null;
@@ -64,11 +65,22 @@ function expireHold(channel: CssChannel): void {
   releaseHold(channel);
 }
 
-function registerTokenFrame(token: string, source: FrameSource): () => void {
+function registerTokenFrame(token: string, source: FrameSource, live: boolean): () => void {
   sources.set(token, source);
+  if (live) liveTokens.add(token);
+  else liveTokens.delete(token);
   return () => {
-    if (sources.get(token) === source) sources.delete(token);
+    if (sources.get(token) !== source) return;
+    sources.delete(token);
+    liveTokens.delete(token);
   };
+}
+
+export function postToLiveFrames(body: ParentMessageBody): void {
+  for (const token of liveTokens) {
+    const frame = sources.get(token)?.();
+    if (frame?.element) postToFrame(frame, body);
+  }
 }
 
 function tokenFrames(): BridgeFrame[] {
@@ -163,11 +175,11 @@ export function useTokenFrameSync(): void {
   );
 }
 
-export function useTokenFrames(slots: FrameSlot[], elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>, kind: ProjectKind): void {
+export function useTokenFrames(slots: FrameSlot[], elements: MutableRefObject<Record<string, HTMLIFrameElement | null>>, kind: ProjectKind, live = false): void {
   useEffect(() => {
     const offs = slots.map((slot) =>
-      registerTokenFrame(slot.token, () => ({ key: slot.token, token: slot.token, url: slot.src, kind, element: elements.current[slot.token] ?? null })),
+      registerTokenFrame(slot.token, () => ({ key: slot.token, token: slot.token, url: slot.src, kind, element: elements.current[slot.token] ?? null }), live),
     );
     return () => offs.forEach((off) => off());
-  }, [slots, elements, kind]);
+  }, [slots, elements, kind, live]);
 }

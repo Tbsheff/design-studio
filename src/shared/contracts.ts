@@ -950,7 +950,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'marquee'; rect: SelectionContext['rect'] | null }
   | { ns: 'studio'; token: string; type: 'select-many'; selections: SelectionContext[]; additive: boolean; at: number; node?: number }
   | { ns: 'studio'; token: string; type: 'matched'; requestId: string; count: number; note?: string }
-  | { ns: 'studio'; token: string; type: 'locks'; keys: string[] };
+  | { ns: 'studio'; token: string; type: 'locks'; keys: string[] }
+  | { ns: 'studio'; token: string; type: 'file-drop'; files: File[]; selection: SelectionContext | null; inside: boolean; label: string; rect: SelectionContext['rect'] | null };
 
 export interface LayerNode {
   id: number;

@@ -1212,7 +1212,25 @@ function startBridge(session: BridgeSession): void {
     handler(message);
   };
 
+  const hasFiles = (event: DragEvent): boolean => Array.from(event.dataTransfer?.types ?? []).includes('Files');
+  const onDragOver = (event: DragEvent): void => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    const element = dropElement(event.clientX, event.clientY);
+    if (element) postHover(element);
+  };
+  const onFileDrop = (event: DragEvent): void => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    const files = Array.from(event.dataTransfer?.files ?? []).filter((file) => file.type.startsWith('image/')).slice(0, 1);
+    const element = dropElement(event.clientX, event.clientY);
+    post({ type: 'file-drop', files, selection: element ? selectionFor(element) : null, inside: element ? insideTarget(element) : false, label: element ? shortLabel(element) : '', rect: element ? rectOf(element) : null });
+  };
+
   window.addEventListener('message', onMessage);
+  window.addEventListener('dragover', onDragOver, { capture: true });
+  window.addEventListener('drop', onFileDrop, { capture: true });
   window.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
   window.addEventListener('pointerdown', onPointerDown, { capture: true });
   window.addEventListener('mousedown', block, { capture: true });

@@ -1120,7 +1120,7 @@ export interface DirectEditResult {
 export interface DirectEditBatchResult {
   files: string[];
   version: Version;
-  applied: { file: string; style: string[]; text: boolean; classes?: boolean; tailwind?: TailwindOutcome }[];
+  applied: { file: string; style: string[]; text: boolean; classes?: boolean; tailwind?: TailwindOutcome; textSource?: TextSourceInfo }[];
 }
 
 const PREVIEW_HOST_SUFFIX = '.localhost';

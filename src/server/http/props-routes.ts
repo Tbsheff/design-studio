@@ -41,7 +41,9 @@ export function registerPropsRoutes(app: Hono, deps: PropsRouteDeps): void {
     try {
       return c.json({ instance: await instanceFor(deps.preview, project, direction, parsed.data as InstanceQuery) });
     } catch (error) {
-      return editError(c, error);
+      if (error instanceof DirectEditError) return editError(c, error);
+      console.error(`props instance: ${error instanceof Error ? error.message : String(error)}`);
+      return c.json({ error: 'props_failed', message: 'The props of this element could not be read.' }, 500);
     }
   });
 

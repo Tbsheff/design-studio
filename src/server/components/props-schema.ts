@@ -1,16 +1,17 @@
-import { existsSync, statSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { parse, type ParserPlugin } from '@babel/parser';
 import type * as t from '@babel/types';
 import type * as TS from 'typescript';
 import type { ComponentSchema, CvaInfo, PropSpec, PropValue, VariantGroup } from '../../shared/props.js';
+import { compilerOptionsFor, createProgram, MAX_OPTIONS, nodeModulesFile, ProgramBudgetError, typedProps, type ProgramScope, type TypedProps } from './props-program.js';
+
+export { compilerOptionsFor } from './props-program.js';
 
 type Ts = typeof TS;
 
 const SOURCE_EXT = /\.(tsx|ts|jsx|js|mts|mjs)$/i;
-const SKIPPED_PROPS = new Set(['children', 'className', 'style', 'ref', 'key', 'dangerouslySetInnerHTML']);
-const MAX_OPTIONS = 60;
 const MAX_HOPS = 3;
 const CACHE_MAX = 300;
 
@@ -250,108 +251,6 @@ function variantSpecs(cva: CvaInfo | null, defaults: Record<string, PropValue>):
   });
 }
 
-interface ProgramScope {
-  ts: Ts;
-  program: TS.Program;
-  root: string;
-}
-
-const configCache = new Map<string, { stamp: number; options: TS.CompilerOptions | null }>();
-
-function configOptions(ts: Ts, candidate: string, base: TS.CompilerOptions): TS.CompilerOptions | null {
-  const stamp = statSync(candidate, { throwIfNoEntry: false })?.mtimeMs ?? -1;
-  const known = configCache.get(candidate);
-  if (known?.stamp === stamp) return known.options;
-  const read = ts.readConfigFile(candidate, (target) => ts.sys.readFile(target));
-  let options: TS.CompilerOptions | null = null;
-  if (!read.error && read.config) {
-    const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(candidate), undefined, candidate);
-    const skip = path.basename(candidate) === 'tsconfig.json' && !parsed.options.paths && Array.isArray(read.config.references) && existsSync(path.join(path.dirname(candidate), 'tsconfig.app.json'));
-    if (!skip) options = { ...parsed.options, ...base, jsx: ts.JsxEmit.Preserve, paths: parsed.options.paths, baseUrl: parsed.options.baseUrl, moduleResolution: parsed.options.moduleResolution ?? base.moduleResolution };
-  }
-  if (configCache.size > 100) configCache.clear();
-  configCache.set(candidate, { stamp, options });
-  return options;
-}
-
-export function compilerOptionsFor(ts: Ts, file: string, root: string): TS.CompilerOptions {
-  const base: TS.CompilerOptions = { jsx: ts.JsxEmit.Preserve, allowJs: true, noEmit: true, skipLibCheck: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, types: [] };
-  let dir = path.dirname(file);
-  while (dir.startsWith(root)) {
-    for (const name of ['tsconfig.app.json', 'tsconfig.json']) {
-      const candidate = path.join(dir, name);
-      if (!existsSync(candidate)) continue;
-      const options = configOptions(ts, candidate, base);
-      if (options) return options;
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return base;
-}
-
-export function createProgram(ts: Ts, files: string[], root: string): ProgramScope {
-  const options = compilerOptionsFor(ts, files[0] ?? path.join(root, 'index.ts'), root);
-  return { ts, program: ts.createProgram({ rootNames: files, options }), root };
-}
-
-function nodeModulesFile(file: string): boolean {
-  return file.split(/[\\/]/).includes('node_modules');
-}
-
-function controlOf(ts: Ts, checker: TS.TypeChecker, type: TS.Type): Pick<PropSpec, 'control' | 'options' | 'node'> | null {
-  const text = checker.typeToString(type);
-  if (/\bReactNode\b|\bReactElement\b|JSX\.Element/.test(text) || type.aliasSymbol?.name === 'ReactNode') return { control: 'text', node: true };
-  const parts = type.isUnion() ? type.types : [type];
-  if (parts.every((part) => (part.flags & ts.TypeFlags.BooleanLike) !== 0)) return { control: 'boolean' };
-  if (parts.every((part) => part.isStringLiteral())) return { control: 'select', options: parts.map((part) => (part as TS.StringLiteralType).value).slice(0, MAX_OPTIONS) };
-  if (parts.every((part) => (part.flags & ts.TypeFlags.StringLike) !== 0)) return { control: 'text' };
-  if (parts.every((part) => (part.flags & ts.TypeFlags.NumberLike) !== 0)) return { control: 'number' };
-  return null;
-}
-
-function declarationNode(ts: Ts, source: TS.SourceFile, name: string): TS.Node | null {
-  let found: TS.Node | null = null;
-  const visit = (node: TS.Node): void => {
-    if (found) return;
-    if ((ts.isVariableDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name && ts.isIdentifier(node.name) && node.name.text === name) {
-      found = node.name;
-      return;
-    }
-    if (ts.isSourceFile(node) || ts.isVariableStatement(node) || ts.isVariableDeclarationList(node)) ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return found;
-}
-
-export function typedProps(scope: ProgramScope, file: string, name: string, defaults: Record<string, PropValue>): PropSpec[] | null {
-  const { ts, program, root } = scope;
-  const source = program.getSourceFile(file);
-  if (!source) return null;
-  const checker = program.getTypeChecker();
-  const at = declarationNode(ts, source, name);
-  if (!at) return null;
-  const symbol = checker.getSymbolAtLocation(at);
-  if (!symbol) return null;
-  const signature = checker.getTypeOfSymbolAtLocation(symbol, at).getCallSignatures()[0];
-  const param = signature?.parameters[0];
-  if (!param) return [];
-  const propsType = checker.getTypeOfSymbolAtLocation(param, at);
-  const specs: PropSpec[] = [];
-  for (const prop of checker.getPropertiesOfType(propsType)) {
-    if (SKIPPED_PROPS.has(prop.name) || specs.length >= 40) continue;
-    const declared = prop.declarations?.[0]?.getSourceFile().fileName ?? '';
-    if (!declared || nodeModulesFile(declared) || !path.resolve(declared).startsWith(root)) continue;
-    const type = checker.getNonNullableType(checker.getTypeOfSymbolAtLocation(prop, at));
-    const control = controlOf(ts, checker, type);
-    if (!control) continue;
-    const fallback = defaults[prop.name];
-    specs.push({ name: prop.name, ...control, optional: (prop.flags & ts.SymbolFlags.Optional) !== 0, from: 'type', ...(fallback !== undefined ? { default: fallback } : {}) });
-  }
-  return specs;
-}
-
 export async function readModule(file: string): Promise<ParsedModule | null> {
   const code = await readFile(file, 'utf8').catch(() => null);
   if (code === null || code.length > 512 * 1024) return null;
@@ -412,33 +311,95 @@ function remember(key: string, entry: CacheEntry): void {
   cache.set(key, entry);
 }
 
-function buildSchema(parsed: ParsedModule, ref: ComponentRef, root: string, scope: ProgramScope | null): ComponentSchema | null {
+function moduleSpecifiers(ast: t.File): string[] {
+  const out = new Set<string>();
+  for (const statement of ast.program.body) {
+    if ((statement.type === 'ImportDeclaration' || statement.type === 'ExportAllDeclaration' || statement.type === 'ExportNamedDeclaration') && statement.source) out.add(statement.source.value);
+  }
+  return [...out];
+}
+
+type ProgramFor = (file: string, parsed: ParsedModule) => ProgramScope | Error;
+
+function programs(ts: Ts, root: string): ProgramFor {
+  const built = new Map<string, ProgramScope | Error>();
+  return (file, parsed) => {
+    let scope = built.get(file);
+    if (!scope) {
+      try {
+        scope = createProgram(ts, file, moduleSpecifiers(parsed.ast), root);
+      } catch (error) {
+        scope = error instanceof Error ? error : new Error(String(error));
+      }
+      built.set(file, scope);
+    }
+    return scope;
+  };
+}
+
+function typedNote(typed: TypedProps): string | null {
+  const parts = [typed.inherited > 0 ? `${typed.inherited} inherited attributes are not listed.` : '', typed.partial ? 'Only the first props are listed.' : ''].filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
+function failureNote(error: unknown): string {
+  if (error instanceof ProgramBudgetError) return `The props type is too large to read here (${error.message}); only cva variants are shown.`;
+  console.error(`props schema: ${error instanceof Error ? error.message : String(error)}`);
+  return 'The props type could not be read; only cva variants are shown.';
+}
+
+interface TypedRead {
+  typed: TypedProps | null;
+  note: string | null;
+  keep: boolean;
+}
+
+function failed(error: unknown): TypedRead {
+  return { typed: null, note: failureNote(error), keep: !(error instanceof ProgramBudgetError && error.timedOut) };
+}
+
+function readTyped(program: ProgramFor | null, parsed: ParsedModule, ref: ComponentRef, defaults: Record<string, PropValue>): TypedRead {
+  if (!program) return { typed: null, note: 'TypeScript is not available, so only cva variants are shown.', keep: true };
+  const scope = program(ref.file, parsed);
+  if (scope instanceof Error) return failed(scope);
+  try {
+    const typed = typedProps(scope, ref.file, ref.name, defaults);
+    return typed ? { typed, note: typedNote(typed), keep: !typed.timedOut } : { typed: null, note: 'The props type could not be read; only cva variants are shown.', keep: true };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+function buildSchema(parsed: ParsedModule, ref: ComponentRef, root: string, program: ProgramFor | null): { schema: ComponentSchema | null; keep: boolean } {
   const declared = declaredComponents(parsed.ast).find((item) => item.name === ref.name);
-  if (!declared) return null;
+  if (!declared) return { schema: null, keep: true };
   const cva = linkedCva(parsed.code, declared, cvaCalls(parsed.ast));
   const variants = variantSpecs(cva, declared.defaults);
-  const typed = scope ? typedProps(scope, ref.file, ref.name, declared.defaults) : null;
+  const { typed, note, keep } = readTyped(program, parsed, ref, declared.defaults);
   const names = new Set(variants.map((spec) => spec.name));
-  const props = [...variants, ...(typed ?? []).filter((spec) => !names.has(spec.name))];
-  const note = typed === null ? (scope ? 'The props type could not be read; only cva variants are shown.' : 'TypeScript is not available, so only cva variants are shown.') : null;
-  return { name: ref.name, file: path.relative(root, ref.file).split(path.sep).join('/'), line: declared.line, props, cva, asChild: props.some((spec) => spec.name === 'asChild'), note };
+  const props = [...variants, ...(typed?.specs ?? []).filter((spec) => !names.has(spec.name))];
+  const schema: ComponentSchema = { name: ref.name, file: path.relative(root, ref.file).split(path.sep).join('/'), line: declared.line, props, cva, asChild: props.some((spec) => spec.name === 'asChild'), note };
+  return { schema, keep };
 }
 
 export async function componentSchemas(workTree: string, refs: ComponentRef[]): Promise<(ComponentSchema | null)[]> {
   const root = await realpath(workTree);
   const stamps = await Promise.all(refs.map((ref) => stampOf(ref.file)));
   const keys = refs.map((ref, index) => `${root}|${ref.file}|${ref.name}|${stamps[index]}`);
+  const fresh = new Map<string, ComponentSchema | null>();
   const missing = refs.filter((_, index) => !cache.has(keys[index] as string));
   if (missing.length > 0) {
     const ts = await loadTypeScript();
-    const scope = ts ? createProgram(ts, [...new Set(missing.map((ref) => ref.file))], root) : null;
+    const program = ts ? programs(ts, root) : null;
     for (const ref of missing) {
-      const index = refs.indexOf(ref);
+      const key = keys[refs.indexOf(ref)] as string;
       const parsed = await readModule(ref.file);
-      remember(keys[index] as string, { stamp: stamps[index] as string, schema: parsed ? buildSchema(parsed, ref, root, scope) : null });
+      const built = parsed ? buildSchema(parsed, ref, root, program) : { schema: null, keep: true };
+      fresh.set(key, built.schema);
+      if (built.keep) remember(key, { stamp: key.slice(key.lastIndexOf('|') + 1), schema: built.schema });
     }
   }
-  return keys.map((key) => cache.get(key)?.schema ?? null);
+  return keys.map((key) => (fresh.has(key) ? (fresh.get(key) ?? null) : (cache.get(key)?.schema ?? null)));
 }
 
 export async function componentSchema(workTree: string, ref: ComponentRef): Promise<ComponentSchema | null> {

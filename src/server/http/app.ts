@@ -45,7 +45,7 @@ import { applyDirectEditBatch } from '../direct-edit/batch.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
-import { previewOrigin } from '../components/props-service.js';
+import { previewOrigin, warmPropsTypes } from '../components/props-service.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
 import { applyStyleReplace } from '../direct-edit/replace.js';
@@ -918,7 +918,9 @@ export function createApp(deps: AppDeps): Hono {
 
   app.get('/api/projects/:pid/d/:did/preview', async (c) => {
     const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json({ url: await preview.directionUrl(project, direction) });
+    const url = await preview.directionUrl(project, direction);
+    warmPropsTypes(project, direction);
+    return c.json({ url });
   });
 
   app.get('/api/projects/:pid/d/:did/tree', async (c) => {

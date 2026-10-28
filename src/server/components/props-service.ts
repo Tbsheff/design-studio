@@ -5,7 +5,8 @@ import type { Direction, Project } from '../../shared/contracts.js';
 import type { ComponentInstance, ComponentSchemaList, InstanceQuery } from '../../shared/props.js';
 import type { PreviewService } from '../types.js';
 import { listFiles } from './inventory.js';
-import { componentSchemas, declaredComponents, readModule, type ComponentRef } from './props-schema.js';
+import { warmProgram } from './props-program.js';
+import { componentSchemas, declaredComponents, loadTypeScript, readModule, type ComponentRef } from './props-schema.js';
 import { countUses, resolveInstance } from './use-site.js';
 
 const LIST_MAX = 40;
@@ -55,4 +56,15 @@ export async function previewOrigin(preview: PreviewService, project: Project, d
 export async function instanceFor(preview: PreviewService, project: Project, direction: Direction, query: InstanceQuery): Promise<ComponentInstance | null> {
   const files = await sourceFiles(direction.workTree);
   return resolveInstance({ workTree: direction.workTree, previewOrigin: await previewOrigin(preview, project, direction) }, query, usesIn(files));
+}
+
+const WARM_DELAY_MS = 4000;
+
+export function warmPropsTypes(project: Project, direction: Direction): void {
+  if (project.kind !== 'react') return;
+  setTimeout(() => {
+    void Promise.all([loadTypeScript(), realpath(direction.workTree)])
+      .then(([ts, root]) => ts && warmProgram(ts, root))
+      .catch(() => undefined);
+  }, WARM_DELAY_MS).unref();
 }

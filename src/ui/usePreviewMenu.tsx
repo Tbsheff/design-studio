@@ -5,18 +5,28 @@ import type { PreviewPort } from './bridge';
 import { runCommand } from './commands/registry';
 import { PreviewMenu, type PreviewMenuItem } from './components/PreviewMenu';
 import { uiStore } from './storage';
+import { selectionTargets, structureMenuItems } from './structureEdits';
 import { requestAuthoredCss } from './useAuthoredCss';
+import type { LayerEdits } from './useLayerEdits';
 
 interface Options {
   selection: SelectionContext[];
   port: MutableRefObject<PreviewPort | null> | undefined;
   selectRelative: (selector: string, move: SelectMove) => void;
   zoom: (key: ZoomKey) => void;
+  edits: Pick<LayerEdits, 'enabled' | 'structureKey' | 'canPaste' | 'busy'>;
 }
 
 async function copyCss(port: PreviewPort | null, selector: string): Promise<void> {
   const css = await requestAuthoredCss(port, selector);
   if (css) await navigator.clipboard.writeText(formatCopyCss(css)).catch(() => undefined);
+}
+
+function structureItems(o: Options): PreviewMenuItem[] {
+  const edits = o.edits;
+  if (!edits.enabled) return [];
+  const state = { count: o.selection.length, hasSource: selectionTargets(o.selection) !== null, canPaste: edits.canPaste, busy: edits.busy };
+  return structureMenuItems(state, edits.structureKey, true);
 }
 
 function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
@@ -27,6 +37,7 @@ function menuItems(o: Options, target: SelectionContext): PreviewMenuItem[] {
     { id: 'copy-css', label: 'Copy CSS', icon: 'copy', run: () => copyCss(o.port?.current ?? null, target.selector) },
     { id: 'zoom', label: 'Zoom to selection', icon: 'search', keyId: 'zoom-selection', run: () => o.zoom('selection') },
     { id: 'layers', label: 'Show in layers', icon: 'layers', keyId: 'layers', run: () => uiStore.set({ layersOpen: true }) },
+    ...structureItems(o),
   ];
 }
 

@@ -220,3 +220,14 @@ export function jsxNameLiteral(attribute: t.JSXAttribute): t.StringLiteral {
   if (value?.type === 'JSXExpressionContainer' && value.expression.type === 'StringLiteral') return value.expression;
   throw new DirectEditError('attribute_not_literal', `The ${NAME_ATTR} prop is not a plain string; ask the agent to change it`);
 }
+
+export function jsxElementsOnLine(root: t.Node, line: number): t.JSXElement[] {
+  const found: t.JSXElement[] = [];
+  const stack: t.Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as t.Node;
+    if (node.type === 'JSXElement' && node.openingElement.loc?.start.line === line) found.push(node);
+    stack.push(...childNodes(node));
+  }
+  return found;
+}

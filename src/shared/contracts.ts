@@ -708,7 +708,7 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest -> DirectEditResult (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -761,6 +761,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'app-key'; id: AppKey }
   | { ns: 'studio'; token: string; type: 'context-menu'; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
+  | { ns: 'studio'; token: string; type: 'structure-key'; selector: string; key: StructureKey }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string };
 
 export interface LayerNode {
@@ -771,6 +772,7 @@ export interface LayerNode {
   text: string;
   childCount: number;
   hidden: boolean;
+  loc?: string;
 }
 
 export const LAYER_TREE_MAX = 5000;
@@ -908,6 +910,31 @@ export type InsertKind = (typeof INSERT_KINDS)[number];
 export interface DirectEditBatch {
   edits: DirectEditRequest[];
 }
+
+export const STRUCTURE_OPS = ['delete', 'duplicate', 'wrap', 'unwrap', 'move'] as const;
+export type StructureOp = (typeof STRUCTURE_OPS)[number];
+
+export interface StructureTarget {
+  source: SourceLoc;
+  selector?: string;
+  tag?: string;
+}
+
+export interface StructureEditRequest {
+  op: StructureOp;
+  targets: StructureTarget[];
+  into?: StructureTarget;
+  before?: StructureTarget;
+  after?: StructureTarget;
+}
+
+export interface StructureEditResult {
+  files: string[];
+  version: Version;
+  select: (SourceLoc & { tag: string })[];
+}
+
+export type StructureKey = 'delete' | 'duplicate' | 'wrap' | 'unwrap' | 'cut' | 'paste';
 
 export interface EditHistoryState {
   canUndo: boolean;

@@ -10,6 +10,8 @@ export interface PreviewMenuItem {
   keyId?: KeyId;
   run: () => void | Promise<unknown>;
   hidden?: boolean;
+  disabled?: string;
+  divider?: boolean;
 }
 
 const EDGE = 8;
@@ -67,20 +69,32 @@ export function PreviewMenu({ at, label, items, onClose }: { at: { x: number; y:
       {items
         .filter((item) => !item.hidden)
         .map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              onClose();
-              void item.run();
-            }}
-          >
-            <Icon name={item.icon} size={14} />
-            <span>{item.label}</span>
-            {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
-          </button>
+          <MenuRow key={item.id} item={item} onClose={onClose} />
         ))}
     </div>
+  );
+}
+
+function MenuRow({ item, onClose }: { item: PreviewMenuItem; onClose: () => void }) {
+  return (
+    <>
+      {item.divider && <div className="preview-menu-divider" role="separator" />}
+      <button
+        type="button"
+        role="menuitem"
+        aria-disabled={item.disabled ? true : undefined}
+        data-tip={item.disabled}
+        data-tip-align="end"
+        onClick={() => {
+          if (item.disabled) return;
+          onClose();
+          void item.run();
+        }}
+      >
+        <Icon name={item.icon} size={14} />
+        <span>{item.label}</span>
+        {item.keyId ? <KeyHint id={item.keyId} /> : <span />}
+      </button>
+    </>
   );
 }

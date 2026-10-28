@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import { DIRECT_STYLE_PROPERTIES, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import { DIRECT_STYLE_PROPERTIES, STRUCTURE_OPS, TOKENS_FILE, type CompiledTokenEntry, type DesignComment, type DesignSystemState, type DirectEditResult, type DirectStyleProperty, type PackSummary, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { evaluateToolUse } from '../agent/permissions.js';
@@ -65,9 +65,12 @@ const schemas = {
       selector: selector.describe('CSS selector of one element on the page.'),
       style: style.optional().describe('CSS properties to set. null removes the property.'),
       text: z.string().max(5000).optional().describe('New text content of the element.'),
+      op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead of style/text: delete, duplicate, wrap (in a flex column frame), unwrap (keep the children, drop the element) or move (into targetSelector, as its last child).'),
+      targetSelector: selector.optional().describe('For op move: CSS selector of the new parent element.'),
     })
     .strict()
-    .refine((input) => input.text !== undefined || Object.keys(input.style ?? {}).length > 0, 'pass style or text'),
+    .refine((input) => (input.op === undefined ? input.text !== undefined || Object.keys(input.style ?? {}).length > 0 : input.text === undefined && input.style === undefined), 'pass style or text, or op alone')
+    .refine((input) => (input.op === 'move') === (input.targetSelector !== undefined), 'op move needs targetSelector; other ops take none'),
   add_comment: z
     .object({
       projectId,
@@ -133,7 +136,7 @@ const META: Record<Name, Meta> = {
   add_frame: { title: 'Add frame', description: 'Add a frame for a page or a state (path + viewport) to the canvas, to the right of all frames unless you pass rightOf or below.' },
   remove_frame: { title: 'Remove frame', description: 'Remove one frame from the canvas. The page file stays.', destructive: true, idempotent: true },
   write_file: { title: 'Write file', description: 'Write or replace one text file in the project folder and save it as a version labelled "Edit by <client>", so the user can undo it. The same path rules as the studio agent apply: no .studio/, no files outside the project, no build config files, no generated design-system/tokens.css.' },
-  edit_element: { title: 'Edit element', description: 'Change the style or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. The source file changes and a version is saved.' },
+  edit_element: { title: 'Edit element', description: 'Change the style or the text of one element, found by CSS selector on a page, with the same code path as the studio inspector. Or pass op to delete, duplicate, wrap in an auto layout frame, unwrap, or move the element into targetSelector, with the same code path as the studio layers and canvas menu. Elements made by .map(), a condition or a function call are refused. The source file changes and a version is saved, so the user can undo it.' },
   add_comment: { title: 'Add comment', description: 'Pin a comment on an element (CSS selector) or on the whole frame. The comment shows your client name. It does not send anything to the studio agent.' },
   reply_comment: { title: 'Reply to comment', description: 'Add a reply to a pinned comment.' },
   resolve_comment: { title: 'Resolve comment', description: 'Mark a pinned comment as resolved.', idempotent: true },
@@ -288,12 +291,32 @@ async function writeProjectFile(deps: EditDeps, input: Input<'write_file'>, clie
   return { result, activity: versionActivity(project, direction, `${before === null ? 'Created' : 'Wrote'} ${relative}`, version) };
 }
 
-async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<Done> {
+async function sourceElement(deps: EditDeps, url: string, sel: string) {
+  const element = await describeElement(deps.preview, url, sel);
+  if (!element) throw new EditError(`No element matches ${sel} on the page.`);
+  if (!element.source) throw new EditError(`${sel} has no source location, so it cannot be edited directly. Use write_file.`);
+  return { ...element, source: element.source };
+}
+
+const OP_WORDS = { delete: 'Deleted', duplicate: 'Duplicated', wrap: 'Wrapped', unwrap: 'Unwrapped', move: 'Moved' } as const;
+
+async function structureElement(deps: EditDeps, input: Input<'edit_element'>, op: NonNullable<Input<'edit_element'>['op']>): Promise<Done> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
   refuseWhileRunning(deps, project, direction);
-  const element = await describeElement(deps.preview, await pageUrl(deps, project, direction, input.path), input.selector);
-  if (!element) throw new EditError(`No element matches ${input.selector} on the page.`);
-  if (!element.source) throw new EditError('That element has no source location, so the inspector cannot edit it. Use write_file.');
+  const url = await pageUrl(deps, project, direction, input.path);
+  const element = await sourceElement(deps, url, input.selector);
+  const parent = input.targetSelector ? await sourceElement(deps, url, input.targetSelector) : null;
+  const body = { op, targets: [{ source: element.source, selector: input.selector, tag: element.tag }], ...(parent ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
+  const result = await studioCall<StructureEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
+  const summary = `${OP_WORDS[op]} ${element.tag}${parent ? ` into ${parent.tag}` : ''}`;
+  return { result: ok({ files: result.files, versionId: result.version.id, title: result.version.title, select: result.select }), activity: versionActivity(project, direction, summary, result.version) };
+}
+
+async function editElement(deps: EditDeps, input: Input<'edit_element'>): Promise<Done> {
+  if (input.op) return structureElement(deps, input, input.op);
+  const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+  refuseWhileRunning(deps, project, direction);
+  const element = await sourceElement(deps, await pageUrl(deps, project, direction, input.path), input.selector);
   const body = { source: element.source, selector: input.selector, tag: element.tag, ...(input.style && Object.keys(input.style).length > 0 ? { style: input.style } : {}), ...(input.text !== undefined ? { text: input.text } : {}) };
   const result = await studioCall<DirectEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
   return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied }), activity: versionActivity(project, direction, editSummary(element.tag, input.style, input.text), result.version) };

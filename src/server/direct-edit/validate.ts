@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { DIRECT_STYLE_PROPERTIES, INSERT_KINDS } from '../../shared/contracts.js';
-import type { DirectEditBatch, DirectEditRequest } from '../../shared/contracts.js';
+import { DIRECT_STYLE_PROPERTIES, INSERT_KINDS, STRUCTURE_OPS } from '../../shared/contracts.js';
+import type { DirectEditBatch, DirectEditRequest, StructureEditRequest } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
 
 const MAX_VALUE = 200;
@@ -108,4 +108,36 @@ export function parseDirectEditBatch(raw: unknown): DirectEditBatch {
     return request;
   });
   return { edits };
+}
+
+const structureTargetSchema = z
+  .object({
+    source: z.object({ file: z.string().min(1).max(1024), line: z.number().int().min(1), col: z.number().int().min(1) }).strict(),
+    selector: z.string().max(2000).optional(),
+    tag: z.string().max(100).regex(/^[a-z][a-z0-9-]*$/, 'tag must be a lowercase tag name').optional(),
+  })
+  .strict();
+
+const structureSchema = z
+  .object({
+    op: z.enum(STRUCTURE_OPS),
+    targets: z.array(structureTargetSchema).min(1).max(MAX_BATCH),
+    into: structureTargetSchema.optional(),
+    before: structureTargetSchema.optional(),
+    after: structureTargetSchema.optional(),
+  })
+  .strict()
+  .refine((request) => [request.into, request.before, request.after].filter(Boolean).length === (request.op === 'move' ? 1 : 0), 'move needs exactly one of into, before or after; other ops take none');
+
+export function isStructureEdit(raw: unknown): boolean {
+  return typeof raw === 'object' && raw !== null && 'op' in raw;
+}
+
+export function parseStructureEdit(raw: unknown): StructureEditRequest {
+  const parsed = structureSchema.safeParse(raw);
+  if (!parsed.success) {
+    const detail = parsed.error.issues.map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`).join('; ');
+    throw new DirectEditError('invalid_request', `Invalid structure edit: ${detail}`);
+  }
+  return parsed.data;
 }

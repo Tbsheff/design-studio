@@ -8,6 +8,7 @@ type DirectEditErrorCode =
   | 'style_not_literal'
   | 'text_not_editable'
   | 'cannot_move'
+  | 'cannot_restructure'
   | 'attribute_not_literal'
   | 'no_change'
   | 'stale_selection'

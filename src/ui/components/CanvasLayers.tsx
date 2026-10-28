@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shared/contracts';
 import { isTypingTarget } from '../typingTarget';
 import type { LayerTree } from '../layersTree';
+import { selectionTargets, structureMenuItems } from '../structureEdits';
 import type { LayerEdits } from '../useLayerEdits';
 import { Icon } from './Icon';
 import { LayersPanel } from './LayersPanel';
@@ -13,13 +14,18 @@ interface TreeFrames {
   selectNode: (id: number, additive: boolean) => void;
 }
 
-export function CanvasLayersPanel({ frames, edits, frameName, hasSelection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; hasSelection: boolean; onSelectMode: () => void; onClose?: () => void }) {
+export function CanvasLayersPanel({ frames, edits, frameName, selection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; selection: SelectionContext[]; onSelectMode: () => void; onClose?: () => void }) {
+  const hasSelection = selection.length > 0;
+  const menuState = { count: selection.length, hasSource: selectionTargets(selection) !== null, canPaste: edits.canPaste, busy: edits.busy };
   const actions = edits.enabled
     ? {
         onRename: edits.renameNode,
         onToggleHidden: edits.setNodeHidden,
         onMove: edits.moveNode,
         onMoveSelected: edits.moveSelected,
+        onStructureKey: edits.structureKey,
+        onDrop: edits.dropNode,
+        menuItems: () => structureMenuItems(menuState, edits.structureKey),
       }
     : null;
   return (

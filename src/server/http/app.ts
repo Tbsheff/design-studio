@@ -10,6 +10,7 @@ import type {
   Attachment,
   Direction,
   DirectEditBatchResult,
+  StructureEditResult,
   DirectEditResult,
   DirectionVariation,
   DraftImproveStart,
@@ -44,7 +45,8 @@ import { applyDirectEditBatch } from '../direct-edit/batch.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
-import { isDirectEditBatch } from '../direct-edit/validate.js';
+import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
+import { applyStructureEdit } from '../direct-edit/structure-apply.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import { createCommentStore, type CommentStore } from '../store/comments.js';
@@ -849,10 +851,12 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/projects/:pid/d/:did/direct-edit', async (c) => {
     const body = await readBody(c);
     try {
-      const result = await withDirection<DirectEditResult | DirectEditBatchResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        isDirectEditBatch(body)
-          ? applyDirectEditBatch(editDeps, project, direction, body)
-          : applyDirectEdit(editDeps, project, direction, body),
+      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
+        isStructureEdit(body)
+          ? applyStructureEdit(editDeps, project, direction, body)
+          : isDirectEditBatch(body)
+            ? applyDirectEditBatch(editDeps, project, direction, body)
+            : applyDirectEdit(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {

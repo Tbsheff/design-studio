@@ -1,4 +1,4 @@
-import { LAYER_LABEL_MAX, LAYER_TREE_MAX, type LayerNode, type SelectMove } from '../shared/contracts.js';
+import { LAYER_LABEL_MAX, LAYER_TREE_MAX, SOURCE_LOC_ATTR, type LayerNode, type SelectMove } from '../shared/contracts.js';
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'NOSCRIPT', 'LINK', 'META', 'BASE', 'TITLE']);
 const TEXT_MAX = 40;
@@ -27,6 +27,11 @@ function nameOf(element: Element): string {
 function textOf(element: Element): string {
   if (Array.from(element.childNodes).some((node) => node.nodeType === Node.ELEMENT_NODE)) return '';
   return clip(element.textContent ?? '', TEXT_MAX);
+}
+
+function locOf(element: Element): { loc?: string } {
+  const loc = element.getAttribute(SOURCE_LOC_ATTR);
+  return loc ? { loc } : {};
 }
 
 export interface LayerIndex {
@@ -68,6 +73,7 @@ export function createLayerIndex(): LayerIndex {
         text: textOf(element),
         childCount: children.length,
         hidden: element.getClientRects().length === 0,
+        ...locOf(element),
       });
       for (let i = children.length - 1; i >= 0; i -= 1) stack.push({ element: children[i] as Element, depth: depth + 1 });
     }

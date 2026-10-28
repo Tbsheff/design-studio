@@ -47,7 +47,7 @@ function startsAt(element: Element, position: SourcePosition): boolean {
   return startTag !== undefined && startTag.startLine === position.line && startTag.startCol === position.col;
 }
 
-function findElementAt(root: ParentNode, position: SourcePosition): Element | null {
+export function findElementAt(root: ParentNode, position: SourcePosition): Element | null {
   for (const child of childrenOf(root)) {
     if (!isElement(child)) continue;
     if (startsAt(child, position)) return child;

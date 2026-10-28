@@ -22,6 +22,7 @@ import { FLOW_MAX_DEPTH, type FlowInput } from '../../shared/route-flow.js';
 import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksArgs, type LinkProbe } from '../canvas/link-tools.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
+import { runSetImage, SET_IMAGE_AGENT_DESCRIPTION, setImageShape } from './image-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
 import { SELECT_MATCHING_DESCRIPTION, runSelectMatching, selectMatchingShape } from './select-tool.js';
@@ -669,5 +670,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
 
   const swapInstanceTool = tool('swap_instance', SWAP_INSTANCE_AGENT_DESCRIPTION, swapInstanceShape, withLayerIds(deps, (args) => runSwapInstance(deps, args)));
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool] });
+  const setImageTool = tool('set_image', SET_IMAGE_AGENT_DESCRIPTION, setImageShape, (args) => runSetImage(deps, args));
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, setImageTool] });
 }

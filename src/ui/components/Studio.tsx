@@ -505,7 +505,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             },
           }}
           tokens={studioTokens.panel}
-          components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', onMention: (component) => { showPane('chat'); setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 }));
+          components={{ projectId, directionId: did, list: componentList, active: panel.tab === 'components', kind: project.kind, selection, onMention: (component) => { showPane('chat'); setMentionRequest((prev) => ({ mention: componentMention(component), seq: (prev?.seq ?? 0) + 1 }));
             },
           }}
           todos={chatState.todos}

@@ -13,6 +13,7 @@ import { FrameLabel, FrameUndoBar, PassiveFrame } from './CanvasFrames';
 import { ArtboardOverlay } from './ArtboardOverlay';
 import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
 import { useLayerEdits } from '../useLayerEdits';
+import { useComponentInsert } from '../useComponentInsert';
 import { useResizeHandles } from '../useResizeHandles';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { usePreviewMenu } from '../usePreviewMenu';
@@ -473,6 +474,7 @@ export function Canvas(props: Props) {
   useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
   const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode: picking, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
+  useComponentInsert({ projectId, directionId, kind, enabled: editsEnabled, frames, selection: props.selection, notify: layerEdits.notify });
   const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits });
   openMenu.current = previewMenu.onContextMenu;
   const resize = useResizeHandles({

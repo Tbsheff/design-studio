@@ -206,11 +206,11 @@ function assertContainer(parent: StructNode): void {
   if (!parent.inner && !parent.selfClose) throw refuse(`<${parent.tag}> cannot hold child elements`);
 }
 
-function intoSplice(source: string, nodes: StructNode[], parent: StructNode, closeTag: string): Splice {
+function intoSplice(source: string, texts: (indent: string | null) => string[], parent: StructNode, closeTag: string): Splice {
   assertContainer(parent);
   const parentIndent = indentAt(source, parent.start);
   const childIndent = parentIndent === null ? null : parentIndent + INDENT_STEP;
-  const pieces = movedTexts(source, nodes, childIndent);
+  const pieces = texts(childIndent);
   if (childIndent === null) {
     const inline = joinInline(pieces);
     if (parent.selfClose) return { ...parent.selfClose, text: `>${inline.text}${closeTag}`, marks: inline.marks.map((mark) => mark + 1) };
@@ -228,15 +228,15 @@ function intoSplice(source: string, nodes: StructNode[], parent: StructNode, clo
   return { start: end, end, text: `${lines.text}\n${parentIndent}`, marks: lines.marks };
 }
 
-function besideSplice(source: string, nodes: StructNode[], ref: StructNode, after: boolean): Splice {
+function besideSplice(source: string, texts: (indent: string | null) => string[], ref: StructNode, after: boolean): Splice {
   if (ref.root || ref.fixed) throw refuse(`Elements cannot be placed next to <${ref.tag}>`);
   const indent = indentAt(source, ref.start);
   if (indent === null || !ownLine(source, ref)) {
-    const inline = joinInline(movedTexts(source, nodes, null));
+    const inline = joinInline(texts(null));
     const at = after ? ref.end : ref.start;
     return { start: at, end: at, ...inline };
   }
-  const pieces = movedTexts(source, nodes, indent);
+  const pieces = texts(indent);
   if (after) {
     const lines = joinLines(pieces, indent, '\n');
     return { start: ref.end, end: ref.end, ...lines };
@@ -261,8 +261,28 @@ function moveOp(source: string, nodes: StructNode[], place: Placement, closeTag:
   nodes.forEach(assertMovable);
   const ref = placeRef(place);
   if (nodes.some((node) => contains(node, ref))) throw refuse('An element cannot move into itself or next to its own child');
-  const insert = place.into ? intoSplice(source, nodes, place.into, closeTag(place.into)) : besideSplice(source, nodes, ref, place.after !== undefined);
+  const texts = (indent: string | null) => movedTexts(source, nodes, indent);
+  const insert = place.into ? intoSplice(source, texts, place.into, closeTag(place.into)) : besideSplice(source, texts, ref, place.after !== undefined);
   return [insert, ...nodes.map((node) => removal(source, node))];
+}
+
+export interface InsertInput {
+  text: string;
+  place: Placement;
+  closeTag: (node: StructNode) => string;
+  extra?: Range & { text: string };
+}
+
+function indentLines(text: string, indent: string | null): string {
+  return indent === null ? text : text.split('\n').map((line, index) => (index > 0 && line !== '' ? indent + line : line)).join('\n');
+}
+
+export function planInsert(source: string, input: InsertInput): OpPlan {
+  const ref = placeRef(input.place);
+  if (ref.fixed) throw refuse(`<${ref.tag}> cannot be changed this way`);
+  const texts = (indent: string | null) => [indentLines(input.text, indent)];
+  const insert = input.place.into ? intoSplice(source, texts, input.place.into, input.closeTag(input.place.into)) : besideSplice(source, texts, ref, input.place.after !== undefined);
+  return applyTracked(source, [insert, ...(input.extra ? [{ ...input.extra, marks: [] }] : [])]);
 }
 
 export function outermost(nodes: StructNode[]): StructNode[] {

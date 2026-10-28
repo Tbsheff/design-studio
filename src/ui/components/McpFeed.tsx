@@ -40,6 +40,7 @@ const TOOL_ICONS: Record<string, IconName> = {
   edit_element: 'pencil',
   set_props: 'component',
   replace_style: 'token',
+  insert_component: 'component',
   canvas_place: 'frame',
   add_frame: 'frame',
   add_route_frame: 'frame',

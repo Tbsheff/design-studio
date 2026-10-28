@@ -96,7 +96,26 @@ function fontsRule(url: string | null): string[] {
   return [`- Fonts: link this stylesheet in HTML \`<head>\` (React projects already load it from index.html): \`<link rel="stylesheet" href="${url}">\``];
 }
 
+function appTokenLines(entries: DesignSystemPromptContext['entries']): string {
+  return entries
+    .map((entry) => {
+      const raw = entry.source?.value ?? entry.value;
+      const dark = entry.source?.darkValue;
+      return `${entry.cssVar}: ${raw}${dark ? ` | dark: ${dark}` : ''}`;
+    })
+    .join('\n');
+}
+
+function buildAppTokensBlock(mode: RunMode, designSystem: DesignSystemPromptContext, file: string): string {
+  const rules = `## App tokens
+This folder is the user's app. Its design tokens are the CSS custom properties in \`${file}\` (Tailwind \`@theme\`, \`:root\` and \`.dark\` blocks). The list below has every token with its declared value and its \`.dark\` value.
+- Use these tokens (Tailwind utilities such as \`bg-primary\`, or \`var(--token)\`) for colors, fonts, sizes, spacing, radii and shadows. Do not hard-code a value that a token covers.
+${mode === 'critique' ? '- In a critique, flag hard-coded values that a token covers, and name the token.' : `- Change a token only when the user asks for it. Then edit only that declaration in \`${file}\` and keep the rest of the file as it is.`}`;
+  return `${rules}\n\n<app_tokens file="${file}">\n${appTokenLines(designSystem.entries)}\n</app_tokens>`;
+}
+
 function buildDesignSystemBlock(project: Project, mode: RunMode, designSystem: DesignSystemPromptContext): string {
+  if (designSystem.source) return buildAppTokensBlock(mode, designSystem, designSystem.source.file);
   const kindRule = project.kind === 'html' ? HTML_LINK_RULE : REACT_IMPORT_RULE;
   const modeRules = mode === 'critique' ? [CRITIQUE_TOKEN_RULE] : [kindRule, ...fontsRule(designSystem.googleFontsUrl), SELECTION_TOKEN_RULE];
   const parts = [[DESIGN_SYSTEM_RULES, ...modeRules].join('\n')];

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { CompiledTokenEntry, DesignSystemState, Direction, Project } from '../../shared/contracts.js';
+import type { AppTokenSource, CompiledTokenEntry, DesignSystemState, Direction, Project } from '../../shared/contracts.js';
+import { appTokenState, loadAppTokens, usesAppTokens } from './app-tokens/source.js';
 import { stripTokenBlock } from './design-md.js';
 import { DESIGN_MD_FILE } from './packs.js';
 import { readDesignSystemFiles } from './sync.js';
@@ -12,10 +13,15 @@ export interface DesignSystemPromptContext {
   entries: CompiledTokenEntry[];
   googleFontsUrl: string | null;
   errors: string[];
+  source?: AppTokenSource;
 }
 
 export async function readDesignSystemState(project: Project, direction: Direction): Promise<DesignSystemState> {
   const files = await readDesignSystemFiles(direction.workTree);
+  if (!files && usesAppTokens(project)) {
+    const app = await loadAppTokens(direction.workTree);
+    if (app) return appTokenState(app);
+  }
   return {
     packId: files ? (files.manifest?.id ?? project.packId ?? null) : null,
     manifest: files?.manifest ?? null,
@@ -39,8 +45,12 @@ function capDesignMd(content: string): string {
   return `${content.slice(0, DESIGN_MD_PROMPT_CAP)}\n[DESIGN.md cut at ${DESIGN_MD_PROMPT_CAP} characters]`;
 }
 
-export async function loadDesignSystemPromptContext(workTree: string): Promise<DesignSystemPromptContext | null> {
+export async function loadDesignSystemPromptContext(workTree: string, project?: Project): Promise<DesignSystemPromptContext | null> {
   const files = await readDesignSystemFiles(workTree);
+  if (!files && project && usesAppTokens(project)) {
+    const app = await loadAppTokens(workTree);
+    return app ? { designMd: null, entries: app.entries, googleFontsUrl: null, errors: [], source: app.summary } : null;
+  }
   if (!files) return null;
   const designMd = await readDesignMd(workTree);
   const fontsUrl = files.manifest?.fonts?.googleFontsUrl;

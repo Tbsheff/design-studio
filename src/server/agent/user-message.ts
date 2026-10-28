@@ -121,7 +121,7 @@ export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' 
   if (comments.length) blocks.push(formatComments(comments));
   const mentions = mentionsBlock(ctx.request.mentions ?? [], ctx.mentionFiles ?? []);
   if (mentions) blocks.push(mentions);
-  if (!ctx.designSystem && ctx.designMd && ctx.designMd.trim()) {
+  if ((!ctx.designSystem || ctx.designSystem.source) && ctx.designMd && ctx.designMd.trim()) {
     blocks.push(`<design_md>\n${ctx.designMd.trim()}\n</design_md>`);
   }
   return blocks.join('\n\n');

@@ -22,7 +22,8 @@ const DESC_TAG = /^(p|small|dd|.*Description)$/;
 const LABEL_TAG = /^(a|button|label|Link|NavLink|Button|Label)$/;
 const GENERIC = ['label', 'value', 'detail', 'note'];
 const RESERVED = new Set(['key', 'ref', 'className', 'style', 'children', 'variant', 'class', 'default', 'new', 'delete', 'function', 'return', 'this', 'var', 'let', 'const', 'in', 'for', 'if', 'else', 'switch', 'case', 'import', 'export', 'typeof', 'void', 'with', 'while', 'do', 'try', 'catch', 'finally', 'throw', 'super', 'extends', 'enum', 'yield', 'await']);
-const UTILITY = /^(?:bg|text|border|ring|from|to|via|fill|stroke|outline|shadow|decoration|divide|accent|caret|placeholder|font)-(.+)$/;
+const PLAIN_WORDS = new Set(['foreground', 'background', 'surface', 'border', 'text', 'bg', 'default', 'color']);
+const UTILITY =/^(?:bg|text|border|ring|from|to|via|fill|stroke|outline|shadow|decoration|divide|accent|caret|placeholder|font)-(.+)$/;
 
 function camel(value: string): string {
   const words = value.replace(/[^A-Za-z0-9]+/g, ' ').trim().split(/\s+/).filter(Boolean);
@@ -75,7 +76,9 @@ function wordOf(token: string): string | null {
   if (bare.includes('[')) return null;
   const match = UTILITY.exec(bare);
   const rest = (match ? (match[1] ?? '') : bare.slice(bare.indexOf('-') + 1)).replace(/\/\d+$/, '').replace(/-\d{2,3}$/, '');
-  return /^[a-z][a-z0-9-]*$/.test(rest) ? rest : null;
+  if (!/^[a-z][a-z0-9-]*$/.test(rest)) return null;
+  const parts = rest.split('-').filter((part) => !PLAIN_WORDS.has(part) && !/^\d/.test(part));
+  return parts.at(-1) ?? null;
 }
 
 function groupNames(keys: string[][]): string[] {
@@ -137,15 +140,15 @@ export function classExpression(part: VariantPlan['parts'][number], plan: Varian
   return part.base ? `\`${part.base} \${${part.constName}[${plan.prop}]}\`` : `${part.constName}[${plan.prop}]`;
 }
 
-function typeOf(slot: Slot): string {
+function typeOf(slot: Slot, q: string): string {
   if (slot.kind === 'node' || slot.name === 'children') return 'ReactNode';
   const component = /^[A-Z]/.test(slot.tag) || slot.tag.includes('.');
   if (slot.typed === 'string' && (!component || slot.kind === 'text')) return 'string';
-  return `ComponentProps<${component ? `typeof ${slot.tag}` : `'${slot.tag}'`}>['${slot.attr ?? ''}']`;
+  return `ComponentProps<${component ? `typeof ${slot.tag}` : `${q}${slot.tag}${q}`}>[${q}${slot.attr ?? ''}${q}]`;
 }
 
-export function propList(slots: Slot[], variants: VariantPlan | null): CreatedProp[] {
-  const props = slots.filter((slot) => slot.kind !== 'class').map((slot) => ({ name: slot.name, type: typeOf(slot), optional: slot.values.some((value) => value === null) }));
+export function propList(slots: Slot[], variants: VariantPlan | null, q = "'"): CreatedProp[] {
+  const props = slots.filter((slot) => slot.kind !== 'class').map((slot) => ({ name: slot.name, type: typeOf(slot, q), optional: slot.values.some((value) => value === null) }));
   if (variants) props.push({ name: variants.prop, type: variants.values.map((value) => `'${value}'`).join(' | '), optional: true });
   return props;
 }
@@ -186,7 +189,7 @@ export interface ComponentFileInput {
 
 export function componentFile(input: ComponentFileInput): { code: string; props: CreatedProp[] } {
   const { name, style, variants } = input;
-  const props = propList(input.slots, variants);
+  const props = propList(input.slots, variants, style.quote);
   const cvaImport = variants && style.cva ? `import { cva${style.typescript ? ', type VariantProps' : ''} } from ${quoted('class-variance-authority', style)}${style.semi}` : null;
   const head = [reactTypes(props, style), cvaImport, ...input.imports].filter((line): line is string => line !== null);
   const consts = variants ? variants.parts.map((part) => variantConst(part, variants, style)) : [];

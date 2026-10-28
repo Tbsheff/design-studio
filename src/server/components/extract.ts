@@ -17,7 +17,7 @@ import { removeImport } from './import-cleanup.js';
 import { compareUses, importMap, tagText, type ShapeUse, type Slot } from './extract-shape.js';
 import { classExpression, componentFile, nameSlots, planVariants, reindent, useSite, type FileStyle, type VariantPlan } from './extract-file.js';
 import { resolveTarget, seenImports, type InsertScope } from './insert.js';
-import { libraryRoots, loadLibrary } from './insert-list.js';
+import { loadLibrary } from './insert-list.js';
 import { loadTypeScript, parseModuleFile, resolveImport } from './props-schema.js';
 
 type Ts = Awaited<ReturnType<typeof loadTypeScript>>;
@@ -347,9 +347,10 @@ function packageName(dir: string, root: string): string | null {
 
 export async function componentFolders(project: Project, workTree: string): Promise<ComponentFolderList> {
   if (project.kind !== 'react') return { folders: [], note: 'This is an HTML project. Components need a React project.' };
-  const { root, scan } = await libraryRoots(project, workTree);
+  const { root, scan, entries } = await loadLibrary(project, workTree);
   const rel = (dir: string) => path.relative(root, dir).split(path.sep).join('/') || '.';
-  const folders: ComponentFolder[] = scan.slice(0, -1).map((dir) => ({ folder: rel(dir), kind: 'kit', label: `${packageName(dir, root) ?? rel(dir)} kit` }));
+  const kits = scan.slice(0, -1).filter((dir) => entries.some((entry) => entry.absolute.startsWith(dir + path.sep)));
+  const folders: ComponentFolder[] = kits.map((dir) => ({ folder: rel(dir), kind: 'kit', label: `${packageName(dir, root) ?? rel(dir)} kit` }));
   const app = scan.at(-1) ?? root;
   const appBase = path.basename(app) === 'src' ? path.dirname(app) : app;
   const candidates = [path.join(appBase, 'src', 'components'), path.join(appBase, 'components')];

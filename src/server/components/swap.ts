@@ -195,13 +195,14 @@ export async function swapCandidates(project: Project, workTree: string, use: So
   const pool = library.entries.filter((entry) => entry.name !== site.name && entry.absolute !== site.target.file && (!site.children || entry.children));
   const picked = [...pool].sort((a, b) => rank(a) - rank(b) || b.uses - a.uses || a.name.localeCompare(b.name)).slice(0, SCHEMA_BUDGET);
   const schemas = await componentSchemas(workTree, picked.map((entry) => ({ file: entry.absolute, name: entry.local })));
-  const fits: (SwapCandidate & { rank: number })[] = [];
+  const fits: (SwapCandidate & { rank: number; uses: number })[] = [];
   picked.forEach((entry, index) => {
     const fit = fitOf(site, entry, schemas[index] ?? null);
     if (typeof fit === 'string' || fit.drop.length > 2) return;
-    fits.push({ name: entry.name, file: entry.file, keep: fit.keep, drop: fit.drop, add: Object.keys(fit.add), rank: fit.drop.length * 10 + Object.keys(fit.add).length + rank(entry) });
+    const shared = fit.keep.filter((name) => schemas[index]?.props.some((spec) => spec.name === name)).length;
+    fits.push({ name: entry.name, file: entry.file, keep: fit.keep, drop: fit.drop, add: Object.keys(fit.add), rank: fit.drop.length * 100 - shared * 10 + Object.keys(fit.add).length + rank(entry), uses: entry.uses });
   });
-  const candidates = fits.sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name)).slice(0, CANDIDATES_MAX).map(({ rank: _rank, ...item }) => item);
+  const candidates = fits.sort((a, b) => a.rank - b.rank || b.uses - a.uses || a.name.localeCompare(b.name)).slice(0, CANDIDATES_MAX).map(({ rank: _rank, uses: _uses, ...item }) => item);
   const note = site.spread ? `This ${site.name} also spreads props, so some props may not fit the new component.` : candidates.length === 0 ? `No other component fits the props of this ${site.name}.` : null;
   return { from: site.name, candidates, note };
 }

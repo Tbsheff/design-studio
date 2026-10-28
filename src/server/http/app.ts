@@ -49,6 +49,8 @@ import { previewOrigin, warmPropsTypes } from '../components/props-service.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
 import { applyStyleReplace } from '../direct-edit/replace.js';
+import { applyArrange, isArrangeBody } from '../direct-edit/arrange.js';
+import type { ArrangeResult } from '../../shared/arrange.js';
 import { isStyleReplaceBody, type StyleReplaceResult } from '../../shared/style-search.js';
 import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
@@ -893,8 +895,10 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/projects/:pid/d/:did/direct-edit', async (c) => {
     const body = await readBody(c);
     try {
-      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult | StyleReplaceResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        isStyleReplaceBody(body)
+      const result = await withDirection<DirectEditResult | DirectEditBatchResult | StructureEditResult | StyleReplaceResult | ArrangeResult>(c.req.param('pid'), c.req.param('did'), (project, direction) =>
+        isArrangeBody(body)
+          ? applyArrange({ ...editDeps, preview }, project, direction, body)
+          : isStyleReplaceBody(body)
           ? applyStyleReplace(editDeps, project, direction, body)
           : isStructureEdit(body)
           ? applyStructureEdit(editDeps, project, direction, body)

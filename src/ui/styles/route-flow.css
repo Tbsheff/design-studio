@@ -1,0 +1,97 @@
+.flow-tab {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.flow-routes {
+  flex: 1;
+  min-height: 84px;
+  overflow: auto;
+}
+
+.flow-tab .app-route[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.flow-order {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--t-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-controls {
+  display: grid;
+  gap: 8px;
+  padding: 8px 4px 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.flow-label {
+  width: 96px;
+  flex-shrink: 0;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-param input {
+  flex: 1;
+  min-width: 0;
+}
+
+.flow-result {
+  display: grid;
+  gap: 2px;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.flow-warn {
+  color: var(--warn);
+}
+
+.flow-skip {
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-chip.flow {
+  opacity: 0;
+}
+
+.frame-label:hover .frame-chip.flow,
+.frame-label.active .frame-chip.flow,
+.frame-chip.flow:focus-visible,
+.frame-chip.flow.busy,
+.frame-chip.flow.done {
+  opacity: 1;
+}
+
+.frame-chip.flow.done {
+  color: var(--accent-text);
+}
+
+.frame-chip.flow .spinner {
+  width: 10px;
+  height: 10px;
+}

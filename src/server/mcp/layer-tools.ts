@@ -154,6 +154,7 @@ function selectorSlots(args: Args): { holder: Args; key: string }[] {
   };
   visit(args);
   for (const value of Object.values(args)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) visit(value as Args);
     if (!Array.isArray(value)) continue;
     for (const item of value) if (item && typeof item === 'object' && !Array.isArray(item)) visit(item as Args);
   }
@@ -167,7 +168,10 @@ async function directionOf(deps: EditDeps, args: Args): Promise<{ project: Proje
 
 function copyArgs(args: Args): Args {
   const out: Args = { ...args };
-  for (const [key, value] of Object.entries(args)) if (Array.isArray(value)) out[key] = value.map((item) => (item && typeof item === 'object' ? { ...item } : item));
+  for (const [key, value] of Object.entries(args)) {
+    if (Array.isArray(value)) out[key] = value.map((item) => (item && typeof item === 'object' ? { ...item } : item));
+    else if (value && typeof value === 'object') out[key] = { ...value };
+  }
   return out;
 }
 

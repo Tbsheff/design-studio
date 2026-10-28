@@ -10,7 +10,7 @@ import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { createForceState, type ForcedState } from './force-state.js';
-import { isLayoutKey, layoutStyles } from './inlineStyle.js';
+import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
 import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
@@ -74,6 +74,18 @@ const STYLE_KEYS = [
   'border-width',
   'border-style',
   'border-color',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'min-width',
+  'max-width',
+  'min-height',
+  'max-height',
+  'row-gap',
+  'column-gap',
+  'justify-items',
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;
@@ -340,6 +352,12 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
       post({ type: 'layout-key' });
       return;
     }
+    const chord = arrangeChordOf(event);
+    if (chord && !isTypingElement(eventElement(event))) {
+      event.preventDefault();
+      post({ type: 'arrange-key', key: chord });
+      return;
+    }
     const key = zoomKeyOf(event);
     if (!key) return;
     const mod = isModZoomKey(event);
@@ -567,6 +585,20 @@ function queryElement(selector: string): Element | null {
   } catch {
     return null;
   }
+}
+
+const NEIGHBOR_MAX = 200;
+
+function neighborRects(selector: unknown): { parent: Rect | null; siblings: Rect[] } {
+  const element = typeof selector === 'string' && selector.length <= 2000 ? queryElement(selector) : null;
+  const parent = element?.parentElement;
+  if (!element || !parent) return { parent: null, siblings: [] };
+  const siblings = Array.from(parent.children)
+    .filter((child) => child !== element)
+    .slice(0, NEIGHBOR_MAX)
+    .map(rectOf)
+    .filter((rect) => rect.width > 0 || rect.height > 0);
+  return { parent: rectOf(parent), siblings };
 }
 
 function sameElements(a: (Element | null)[], b: (Element | null)[]): boolean {
@@ -1042,6 +1074,9 @@ function startBridge(session: BridgeSession): void {
         return found ? selectionFor(found.element) : null;
       });
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
+    },
+    'request-neighbors': (message) => {
+      if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });
     },
   };
 

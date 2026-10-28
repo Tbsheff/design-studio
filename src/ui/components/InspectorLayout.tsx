@@ -1,9 +1,9 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
-import { PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
+import { PREVIEW_ARRANGE_KEY_EVENT, PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
 import { isTypingTarget } from '../typingTarget';
 import type { DirectEdit } from '../useDirectEdit';
-import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, parentLayout, sizeFacts, sizeModeOf, sizePatch, type Axis, type SizeFacts, type SizeMode } from '../sizing';
+import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, isGridDisplay, parentLayout, sizeFacts, sizeModeOf, sizePatch, type Axis, type SizeFacts, type SizeMode } from '../sizing';
 import { Icon, type IconName } from './Icon';
 import { InspectorSection, SelectField } from './InspectorFields';
 import { NumberField } from './NumberField';
@@ -20,24 +20,37 @@ function isLayoutShortcut(event: KeyboardEvent): boolean {
   return event.code === 'KeyA' && event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && !event.repeat;
 }
 
-function useAddLayoutKey(root: RefObject<HTMLElement | null>, onAdd: () => void): void {
-  const latest = useRef(onAdd);
-  latest.current = onAdd;
+const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
+
+function isRemoveShortcut(event: KeyboardEvent): boolean {
+  return event.code === 'KeyA' && event.shiftKey && event.altKey && !event.metaKey && !event.ctrlKey && !event.repeat;
+}
+
+function useLayoutKeys(root: RefObject<HTMLElement | null>, onAdd: () => void, onRemove: () => void): void {
+  const latest = useRef({ onAdd, onRemove });
+  latest.current = { onAdd, onRemove };
   useEffect(() => {
     const visible = () => Boolean(root.current && !root.current.closest('[inert]'));
     const onKey = (event: KeyboardEvent) => {
-      if (!isLayoutShortcut(event) || isTypingTarget(event.target) || !visible()) return;
+      const add = isLayoutShortcut(event);
+      if ((!add && !isRemoveShortcut(event)) || isTypingTarget(event.target) || !visible()) return;
       event.preventDefault();
-      latest.current();
+      if (add) latest.current.onAdd();
+      else latest.current.onRemove();
     };
     const onForwarded = () => {
-      if (visible()) latest.current();
+      if (visible()) latest.current.onAdd();
+    };
+    const onArrangeKey = (event: Event) => {
+      if ((event as CustomEvent<{ key?: string }>).detail?.key === REMOVE_LAYOUT_CHORD && visible()) latest.current.onRemove();
     };
     window.addEventListener('keydown', onKey);
     window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
     return () => {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+      window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
     };
   }, [root]);
 }
@@ -51,8 +64,15 @@ const POSITIONS = ['start', 'center', 'end'];
 
 const DISPLAYS = ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'none'];
 
-function AlignGrid({ edit, isRow }: { edit: DirectEdit; isRow: boolean }) {
-  const active = activeCell(edit.values['justify-content'], edit.values['align-items'], isRow);
+function gridValue(value: string): string {
+  if (value === 'flex-start') return 'start';
+  if (value === 'flex-end') return 'end';
+  return value;
+}
+
+function AlignGrid({ edit, isRow, grid = false }: { edit: DirectEdit; isRow: boolean; grid?: boolean }) {
+  const justifyProp = grid ? 'justify-items' : 'justify-content';
+  const active = activeCell(edit.values[justifyProp], edit.values['align-items'], isRow);
   return (
     <div className="ins-align-grid" role="group" aria-label="Alignment">
       {[0, 1, 2].map((row) =>
@@ -69,7 +89,7 @@ function AlignGrid({ edit, isRow }: { edit: DirectEdit; isRow: boolean }) {
               data-tip={label}
               onClick={() => {
                 const cell = alignCell(col, row, isRow);
-                write(edit, { 'justify-content': cell.justify, 'align-items': cell.align });
+                write(edit, grid ? { 'justify-items': gridValue(cell.justify), 'align-items': gridValue(cell.align) } : { 'justify-content': cell.justify, 'align-items': cell.align });
               }}
             >
               <span className="ins-align-dot" aria-hidden="true" />
@@ -81,9 +101,64 @@ function AlignGrid({ edit, isRow }: { edit: DirectEdit; isRow: boolean }) {
   );
 }
 
+type GapMode = 'fixed' | 'auto';
+
+const GAP_MODES: { value: GapMode; label: string }[] = [
+  { value: 'fixed', label: 'Fixed' },
+  { value: 'auto', label: 'Auto' },
+];
+
+const DEFAULT_GAP = '8px';
+
+function useLastGap(edit: DirectEdit): string {
+  const last = useRef(parseFloat(edit.values.gap) > 0 ? edit.values.gap : DEFAULT_GAP);
+  if (parseFloat(edit.values.gap) > 0) last.current = edit.values.gap;
+  return last.current;
+}
+
+function GapModeField({ edit }: { edit: DirectEdit }) {
+  const mode: GapMode = edit.values['justify-content'] === 'space-between' ? 'auto' : 'fixed';
+  const lastGap = useLastGap(edit);
+  const change = (next: GapMode) => {
+    if (next === mode) return;
+    write(edit, next === 'auto' ? { 'justify-content': 'space-between', gap: '' } : { 'justify-content': '', gap: lastGap });
+  };
+  return (
+    <div className="ins-field select ins-gap-mode" data-tip="Auto puts the space between the children" data-tip-align="end">
+      <span className="ins-scrub static">Gap</span>
+      <UiSelect className="ins-select" aria-label="Gap mode" value={mode} options={GAP_MODES} onChange={change} />
+    </div>
+  );
+}
+
+function GapFields({ edit, split, auto }: { edit: DirectEdit; split: boolean; auto: boolean }) {
+  if (split) {
+    return (
+      <div className="ins-gap-pair">
+        <NumberField short="Row" spec={{ prop: 'row-gap', label: 'Row gap', edit, min: 0 }} />
+        <NumberField short="Col" spec={{ prop: 'column-gap', label: 'Column gap', edit, min: 0 }} />
+      </div>
+    );
+  }
+  if (auto) return null;
+  return <NumberField short="Gap" spec={{ prop: 'gap', label: 'Gap', edit, min: 0 }} />;
+}
+
+function GridControls({ edit }: { edit: DirectEdit }) {
+  return (
+    <div className="ins-flex">
+      <AlignGrid edit={edit} isRow grid />
+      <div className="ins-flex-side">
+        <GapFields edit={edit} split auto={false} />
+      </div>
+    </div>
+  );
+}
+
 function FlexControls({ edit }: { edit: DirectEdit }) {
   const direction = edit.values['flex-direction'].startsWith('column') ? 'column' : 'row';
   const wraps = edit.values['flex-wrap'] === 'wrap' || edit.values['flex-wrap'] === 'wrap-reverse';
+  const auto = edit.values['justify-content'] === 'space-between';
   return (
     <div className="ins-flex">
       <AlignGrid edit={edit} isRow={direction === 'row'} />
@@ -115,7 +190,8 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
             <Icon name="wrap" size={14} />
           </button>
         </div>
-        <NumberField short="Gap" spec={{ prop: 'gap', label: 'Gap', edit, min: 0 }} />
+        <GapModeField edit={edit} />
+        <GapFields edit={edit} split={wraps} auto={auto} />
       </div>
     </div>
   );
@@ -124,11 +200,18 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
 export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children }: { edit: DirectEdit; title?: string; lead?: ReactNode; children?: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
-  useAddLayoutKey(root, () => {
-    if (!isFlexDisplay(edit.values.display)) write(edit, { display: 'flex' });
-  });
+  const grid = isGridDisplay(edit.values.display);
+  useLayoutKeys(
+    root,
+    () => {
+      if (!isFlexDisplay(edit.values.display) && !isGridDisplay(edit.values.display)) write(edit, { display: 'flex' });
+    },
+    () => {
+      if (isFlexDisplay(edit.values.display)) write(edit, { display: 'block' });
+    },
+  );
   const remove = (
-    <button type="button" className="icon-btn small" aria-label="Remove auto layout" data-tip="Remove auto layout" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
+    <button type="button" className="icon-btn small" aria-label="Remove auto layout" aria-keyshortcuts="Alt+Shift+A" data-tip="Remove auto layout ⌥⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
       <Icon name="minus" size={14} />
     </button>
   );
@@ -138,7 +221,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
           <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
-          {!flex && (
+          {!flex && !grid && (
             <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" data-tip="⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'flex' })}>
               <Icon name="plus" size={14} />
               Add auto layout
@@ -146,6 +229,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
           )}
         </div>
         {flex && <FlexControls edit={edit} />}
+        {grid && <GridControls edit={edit} />}
       </div>
       {children}
     </InspectorSection>
@@ -208,6 +292,75 @@ function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
   );
 }
 
+const LIMITS = [
+  { prop: 'min-width', short: 'Min W', label: 'Min width' },
+  { prop: 'max-width', short: 'Max W', label: 'Max width' },
+  { prop: 'min-height', short: 'Min H', label: 'Min height' },
+  { prop: 'max-height', short: 'Max H', label: 'Max height' },
+] as const;
+
+const UNSET_LIMITS = new Set(['', 'auto', 'none', '0', '0px']);
+
+function limitsSet(edit: DirectEdit): boolean {
+  return LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
+}
+
+export function MinMaxRows({ edit }: { edit: DirectEdit }) {
+  const [open, setOpen] = useState(false);
+  if (!open && !limitsSet(edit)) {
+    return (
+      <p className="ins-add-links ins-limits-add">
+        <button type="button" className="ins-add-link" onClick={() => setOpen(true)}>
+          + Min/Max
+        </button>
+      </p>
+    );
+  }
+  return (
+    <div className="ins-grid ins-limits">
+      {LIMITS.map((limit) => (
+        <NumberField key={limit.prop} short={limit.short} spec={{ prop: limit.prop, label: limit.label, edit, min: 0 }} />
+      ))}
+    </div>
+  );
+}
+
+const IN_FLOW = { position: '', top: '', right: '', bottom: '', left: '' };
+
+function isPositioned(value: string): boolean {
+  return value === 'absolute' || value === 'fixed';
+}
+
+function PositionRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+  const on = isPositioned(edit.values.position);
+  const toggle = () => {
+    if (on) write(edit, IN_FLOW);
+    else write(edit, { position: 'absolute', left: selection.styles['offset-left'] || '0px', top: selection.styles['offset-top'] || '0px' });
+  };
+  return (
+    <>
+      <div className="ins-layout-row">
+        <button
+          type="button"
+          className="btn small has-icon ins-abs-toggle"
+          aria-pressed={on}
+          data-tip={on ? 'Put the element back in the flow' : 'Take the element out of the flow. X and Y count from the nearest positioned ancestor.'}
+          onClick={toggle}
+        >
+          <Icon name={on ? 'check' : 'frame'} size={14} />
+          Absolute position
+        </button>
+      </div>
+      {on && (
+        <div className="ins-grid">
+          <NumberField short="X" spec={{ prop: 'left', label: 'Left (X)', edit }} />
+          <NumberField short="Y" spec={{ prop: 'top', label: 'Top (Y)', edit }} />
+        </div>
+      )}
+    </>
+  );
+}
+
 export function SizeRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
   const parent = parentLayout(selection.styles);
   return (
@@ -216,7 +369,9 @@ export function SizeRows({ edit, selection }: { edit: DirectEdit; selection: Sel
         <SizeRow axis="width" edit={edit} selection={selection} />
         <SizeRow axis="height" edit={edit} selection={selection} />
       </div>
-      {(parent.flex || parent.grid) && <AlignSelf edit={edit} column={parent.flex && !parent.row} />}
+      <MinMaxRows edit={edit} />
+      {(parent.flex || parent.grid) && !isPositioned(edit.values.position) && <AlignSelf edit={edit} column={parent.flex && !parent.row} />}
+      <PositionRows edit={edit} selection={selection} />
     </>
   );
 }

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import type { SelectionContext } from '../shared/contracts';
 import { api, errorText } from './api';
+import type { BridgeToParent } from '../shared/contracts';
 import type { ParentMessageBody } from './bridge';
+import { snapOff, snapRect, type Rect, type SnapGuide } from './snap';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 
 export type ResizeEdge = 'e' | 's' | 'se';
@@ -17,6 +19,7 @@ interface Options {
   selection: SelectionContext[];
   enabled: boolean;
   post: (body: ParentMessageBody) => void;
+  listen?: (handler: (message: BridgeToParent) => void) => () => void;
   holdSwap?: (held: boolean, settle: boolean) => void;
   setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
   refreshRects: () => void;
@@ -33,6 +36,9 @@ interface Drag {
   size: Size;
   target: SelectionContext;
   axes: Set<'width' | 'height'>;
+  candidates: Rect[];
+  guides: SnapGuide[];
+  stopListen: () => void;
 }
 
 export interface ResizeLive {
@@ -40,6 +46,7 @@ export interface ResizeLive {
   height: number;
   boxWidth: number;
   boxHeight: number;
+  guides: SnapGuide[];
 }
 
 export interface ResizeControl {
@@ -72,6 +79,30 @@ export function resizedSize(edge: ResizeEdge, base: Size, dx: number, dy: number
   return { w: Math.max(1, Math.round(w)), h: Math.max(1, Math.round(h)) };
 }
 
+let neighborSeq = 0;
+
+function requestNeighbors(d: Drag, o: Options): void {
+  if (!o.listen) return;
+  neighborSeq += 1;
+  const requestId = `nb-${neighborSeq}`;
+  const stop = o.listen((message) => {
+    if (message.type !== 'neighbors' || message.requestId !== requestId) return;
+    d.candidates = message.parent ? [message.parent, ...message.siblings] : message.siblings;
+    stop();
+  });
+  d.stopListen = stop;
+  o.post({ type: 'request-neighbors', requestId, selector: d.target.selector });
+}
+
+export function snapSize(d: Pick<Drag, 'edge' | 'base' | 'target' | 'candidates' | 'zoom'>, next: Size, off: boolean): { size: Size; guides: SnapGuide[] } {
+  if (off || d.candidates.length === 0) return { size: next, guides: [] };
+  const r = d.target.rect;
+  const box = { x: r.x, y: r.y, width: r.width + next.w - d.base.w, height: r.height + next.h - d.base.h };
+  const res = snapRect({ rect: box, candidates: d.candidates, zoom: d.zoom, x: d.edge === 's' ? null : 'end', y: d.edge === 'e' ? null : 'end' });
+  const size = { w: Math.max(1, Math.round(next.w + res.rect.width - box.width)), h: Math.max(1, Math.round(next.h + res.rect.height - box.height)) };
+  return { size, guides: res.guides };
+}
+
 function axisStyle(d: Drag, size: Size): Record<string, string> {
   const style: Record<string, string> = {};
   if (d.axes.has('width')) style.width = `${size.w}px`;
@@ -90,18 +121,19 @@ export function useResizeHandles(o: Options): ResizeControl {
   const live = useRef(o);
   live.current = o;
   const drag = useRef<Drag | null>(null);
-  const [size, setSize] = useState<{ size: Size; base: Size } | null>(null);
+  const [size, setSize] = useState<{ size: Size; base: Size; rect: Rect; guides: SnapGuide[] } | null>(null);
   const target = o.enabled && o.selection.length === 1 && o.selection[0]?.source ? (o.selection[0] ?? null) : null;
 
   const preview = useCallback((d: Drag, next: Size, keepRatio: boolean) => {
     d.size = next;
     if (d.edge !== 's' || keepRatio) d.axes.add('width');
     if (d.edge !== 'e' || keepRatio) d.axes.add('height');
-    setSize({ size: next, base: d.base });
+    setSize({ size: next, base: d.base, rect: d.target.rect, guides: d.guides });
     live.current.post({ type: 'preview-style', selector: d.target.selector, style: axisStyle(d, next) });
   }, []);
 
   const end = useCallback((committing = false) => {
+    drag.current?.stopListen();
     drag.current = null;
     setSize(null);
     document.body.classList.remove('element-resizing');
@@ -142,14 +174,18 @@ export function useResizeHandles(o: Options): ResizeControl {
       const handle = e.currentTarget;
       handle.setPointerCapture(e.pointerId);
       const base = { w: pxOf(sel.styles.width, sel.rect.width), h: pxOf(sel.styles.height, sel.rect.height) };
-      const d: Drag = { edge, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, zoom: scaleOf(handle) || 1, base, size: base, target: sel, axes: new Set() };
+      const d: Drag = { edge, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, zoom: scaleOf(handle) || 1, base, size: base, target: sel, axes: new Set(), candidates: [], guides: [], stopListen: () => undefined };
       drag.current = d;
       document.body.classList.add('element-resizing');
       live.current.holdSwap?.(true, false);
-      setSize({ size: base, base });
+      setSize({ size: base, base, rect: sel.rect, guides: [] });
+      requestNeighbors(d, live.current);
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== d.pointerId || drag.current !== d) return;
-        preview(d, resizedSize(d.edge, d.base, (ev.clientX - d.startX) / d.zoom, (ev.clientY - d.startY) / d.zoom, ev.shiftKey), ev.shiftKey);
+        const raw = resizedSize(d.edge, d.base, (ev.clientX - d.startX) / d.zoom, (ev.clientY - d.startY) / d.zoom, ev.shiftKey);
+        const snapped = snapSize(d, raw, ev.shiftKey || snapOff(ev));
+        d.guides = snapped.guides;
+        preview(d, snapped.size, ev.shiftKey);
       };
       const detach = () => {
         handle.removeEventListener('pointermove', onMove);
@@ -187,7 +223,7 @@ export function useResizeHandles(o: Options): ResizeControl {
 
   const liveBox =
     size && target
-      ? { width: size.size.w, height: size.size.h, boxWidth: target.rect.width + size.size.w - size.base.w, boxHeight: target.rect.height + size.size.h - size.base.h }
+      ? { width: size.size.w, height: size.size.h, boxWidth: size.rect.width + size.size.w - size.base.w, boxHeight: size.rect.height + size.size.h - size.base.h, guides: size.guides }
       : null;
   return { target, live: liveBox, onHandleDown };
 }

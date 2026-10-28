@@ -950,3 +950,131 @@ body.element-resizing .frame {
 .canvas.text-editing .resize-frame {
   display: none;
 }
+
+.snap-guides {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.snap-guides.full {
+  inset: 0;
+  width: auto;
+  height: auto;
+}
+
+.snap-guide,
+.snap-gap,
+.snap-gap::before,
+.snap-gap::after {
+  position: absolute;
+  background: var(--measure);
+}
+
+.snap-guide.x,
+.snap-gap.y {
+  width: var(--stroke);
+}
+
+.snap-guide.y,
+.snap-gap.x {
+  height: var(--stroke);
+}
+
+.snap-gap::before,
+.snap-gap::after {
+  content: '';
+}
+
+.snap-gap.x::before,
+.snap-gap.x::after {
+  top: calc(var(--stroke) * -4);
+  width: var(--stroke);
+  height: calc(var(--stroke) * 9);
+}
+
+.snap-gap.x::before {
+  left: 0;
+}
+
+.snap-gap.x::after {
+  right: 0;
+}
+
+.snap-gap.y::before,
+.snap-gap.y::after {
+  left: calc(var(--stroke) * -4);
+  width: calc(var(--stroke) * 9);
+  height: var(--stroke);
+}
+
+.snap-gap.y::before {
+  top: 0;
+}
+
+.snap-gap.y::after {
+  bottom: 0;
+}
+
+.snap-gap-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  transform: scale(var(--inv-zoom, 1));
+  padding: 0 var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--measure);
+  color: var(--on-measure);
+  font: 500 var(--t-xs) / 20px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.canvas-rulers {
+  --ruler-bg: var(--surface);
+  --ruler-tick: var(--line-strong);
+  --ruler-text: var(--text-3);
+  --ruler-mark: var(--accent);
+  --ruler-mark-text: var(--on-accent);
+  --ruler-line: var(--line);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  font-family: var(--font);
+}
+
+.canvas-ruler {
+  position: absolute;
+  display: block;
+}
+
+.canvas-ruler.top {
+  left: 20px;
+  top: 0;
+  width: calc(100% - 20px);
+  height: 20px;
+}
+
+.canvas-ruler.left {
+  left: 0;
+  top: 20px;
+  width: 20px;
+  height: calc(100% - 20px);
+}
+
+.canvas-ruler-corner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}

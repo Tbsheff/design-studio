@@ -22,6 +22,8 @@ const KEYWORDS: Record<string, Record<string, string>> = {
   'flex-wrap': { wrap: 'flex-wrap', nowrap: 'flex-nowrap', 'wrap-reverse': 'flex-wrap-reverse' },
   'align-items': { center: 'items-center', 'flex-start': 'items-start', start: 'items-start', 'flex-end': 'items-end', end: 'items-end', baseline: 'items-baseline', stretch: 'items-stretch', normal: 'items-normal' },
   'align-self': { auto: 'self-auto', center: 'self-center', 'flex-start': 'self-start', start: 'self-start', 'flex-end': 'self-end', end: 'self-end', stretch: 'self-stretch', baseline: 'self-baseline' },
+  position: { static: 'static', relative: 'relative', absolute: 'absolute', fixed: 'fixed', sticky: 'sticky' },
+  'justify-items': { center: 'justify-items-center', start: 'justify-items-start', 'flex-start': 'justify-items-start', end: 'justify-items-end', 'flex-end': 'justify-items-end', stretch: 'justify-items-stretch', normal: 'justify-items-normal' },
   'justify-content': { center: 'justify-center', 'flex-start': 'justify-start', start: 'justify-start', 'flex-end': 'justify-end', end: 'justify-end', 'space-between': 'justify-between', 'space-around': 'justify-around', 'space-evenly': 'justify-evenly', stretch: 'justify-stretch', normal: 'justify-normal' },
   'text-align': { left: 'text-left', center: 'text-center', right: 'text-right', justify: 'text-justify', start: 'text-start', end: 'text-end' },
   'font-style': { italic: 'italic', normal: 'not-italic' },
@@ -58,6 +60,8 @@ const SINGLE_PROPS: Record<string, SingleGroup> = {
   overflow: 'overflow',
   'text-shadow': 'text-shadow',
   transform: 'transform',
+  position: 'position',
+  'justify-items': 'justify-items',
 };
 const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
   'padding-top': ['padding', 't'],
@@ -72,6 +76,14 @@ const BOX_PROPS: Record<string, [SidedGroup, Side]> = {
   'column-gap': ['gap', 'x'],
   width: ['dims', 'w'],
   height: ['dims', 'h'],
+  'min-width': ['dims', 'minw'],
+  'max-width': ['dims', 'maxw'],
+  'min-height': ['dims', 'minh'],
+  'max-height': ['dims', 'maxh'],
+  top: ['inset', 't'],
+  right: ['inset', 'r'],
+  bottom: ['inset', 'b'],
+  left: ['inset', 'l'],
   'border-top-left-radius': ['radius', 'tl'],
   'border-top-right-radius': ['radius', 'tr'],
   'border-bottom-right-radius': ['radius', 'br'],
@@ -151,10 +163,11 @@ function spacingValue(value: string, theme: TailwindTheme, allowAuto: boolean): 
 
 function dimsValue(value: string, side: Side, theme: TailwindTheme): SideValue {
   const text = value.trim().toLowerCase();
-  const keyword: Record<string, string> = { auto: 'auto', '100%': 'full', 'fit-content': 'fit', 'min-content': 'min', 'max-content': 'max' };
+  const keyword: Record<string, string> = { auto: 'auto', '100%': 'full', 'fit-content': 'fit', 'min-content': 'min', 'max-content': 'max', none: 'none' };
   if (keyword[text]) return signed(keyword[text], false);
-  if (side === 'w' && text === '100vw') return signed('screen', false);
-  if (side === 'h' && text === '100vh') return signed('screen', false);
+  const horizontal = side === 'w' || side === 'minw' || side === 'maxw';
+  if (horizontal && text === '100vw') return signed('screen', false);
+  if (!horizontal && text === '100vh') return signed('screen', false);
   if (text === '100dvh' || text === '100svh' || text === '100lvh') return signed(text.slice(3), false);
   const pct = percent(text);
   if (pct !== null) {
@@ -163,6 +176,17 @@ function dimsValue(value: string, side: Side, theme: TailwindTheme): SideValue {
     return signed(arbitrary(text), false);
   }
   return spacingValue(value, theme, false);
+}
+
+function insetValue(value: string, theme: TailwindTheme): SideValue {
+  const text = value.trim().toLowerCase();
+  if (text === '100%') return signed('full', false);
+  const pct = percent(text);
+  if (pct !== null && pct !== 0) {
+    const fraction = FRACTIONS.find(([share]) => Math.abs(share - Math.abs(pct)) < 0.05);
+    return fraction ? signed(fraction[1], pct < 0) : signed(arbitrary(text), false);
+  }
+  return spacingValue(value, theme, true);
 }
 
 function radiusValue(value: string, theme: TailwindTheme): SideValue {
@@ -419,6 +443,7 @@ function boxValues(value: string): Record<'t' | 'r' | 'b' | 'l', string> | null 
 function sidedValue(group: SidedGroup, side: Side, value: string, theme: TailwindTheme): SideValue {
   if (group === 'radius') return radiusValue(value, theme);
   if (group === 'dims') return dimsValue(value, side, theme);
+  if (group === 'inset') return insetValue(value, theme);
   return spacingValue(value, theme, group === 'margin');
 }
 

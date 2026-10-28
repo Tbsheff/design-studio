@@ -861,7 +861,7 @@ export const API_ROUTES = {
   deleteCommentReply: 'DELETE /api/projects/:pid/d/:did/comments/:cid/replies/:rid -> DesignComment',
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
-  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version',
+  directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}, variant? ("md:hover:": style writes md:hover: classes, or a media/:hover rule in a plain HTML file)} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version, and {replaceStyle: {matches, token}} (style search and replace, up to 500 matches; .map() copies and className built in code are skipped with a reason) -> StyleReplaceResult with one version, and {arrange: ArrangeRequest} (align, distribute or tidy up siblings: parent justify/align/gap in an auto layout, left/top for absolute children; refusals are 422 with the reason) -> ArrangeResult with one version',
   elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col&variant? -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null, variants: VariantSupport} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
@@ -924,7 +924,9 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'reorder-key'; selector: string; move: ReorderMove }
   | { ns: 'studio'; token: string; type: 'structure-key'; selector: string; key: StructureKey }
   | { ns: 'studio'; token: string; type: 'authored'; requestId: string; rules: AuthoredRule[]; inline: string }
-  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string };
+  | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
+  | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
+  | { ns: 'studio'; token: string; type: 'arrange-key'; key: string };
 
 export interface LayerNode {
   id: number;
@@ -1013,7 +1015,8 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
   | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
-  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean };
+  | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
+  | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string };
 
 export const DIRECT_STYLE_PROPERTIES = [
   'color',
@@ -1055,6 +1058,18 @@ export const DIRECT_STYLE_PROPERTIES = [
   'overflow',
   'text-shadow',
   'transform',
+  'position',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'min-width',
+  'max-width',
+  'min-height',
+  'max-height',
+  'row-gap',
+  'column-gap',
+  'justify-items',
 ] as const;
 
 export type DirectStyleProperty = (typeof DIRECT_STYLE_PROPERTIES)[number];

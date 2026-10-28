@@ -904,3 +904,72 @@
 .edit-tab-empty {
   padding: var(--s-3) var(--pane-inset);
 }
+
+.ins-arrange-wrap {
+  flex: none;
+}
+
+.ins-arrange-wrap:empty {
+  display: none;
+}
+
+.ins-arrange-wrap[data-shown] {
+  border-bottom: 1px solid var(--line);
+}
+
+.ins-arrange .ins-tool {
+  width: 28px;
+  height: 28px;
+}
+
+.ins-arrange-wrap .ins-arrange-note {
+  margin: 0 var(--pane-inset) var(--s-2);
+}
+
+.ins-arrange-note.error {
+  color: var(--danger);
+}
+
+.ins-arrange-ok {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 28px;
+  padding: 0 var(--pane-inset) var(--s-1);
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.ins-arrange-ok .icon {
+  flex: none;
+  color: var(--ok);
+}
+
+.ins-gap-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.ins-gap-mode .ins-select {
+  padding-left: var(--s-2);
+}
+
+.ins-limits-add {
+  margin: 0;
+}
+
+.edit-pane .btn.small.ins-abs-toggle {
+  grid-column: 1 / -1;
+  justify-self: start;
+  height: 28px;
+  padding: 0 var(--s-2);
+  gap: var(--s-1);
+}
+
+.ins-abs-toggle[aria-pressed='true'] {
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text);
+}

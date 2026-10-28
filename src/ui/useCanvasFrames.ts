@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { zoomKeyOf, type ProjectKind, type SelectionContext, type ZoomKey } from '../shared/contracts';
 import { activeFrame, addFrame, canvasStore, defaultLayout, followDirection, moveFrame, removeFrame, resizeActive, useCanvasLayout, viewportOf, type Box, type CanvasFrame, type CanvasLayout } from './canvasFrames';
+import { snapOff, snapRect } from './snap';
 import { useDesktopCommand } from './desktop';
 import { uiStore, useUi } from './storage';
 import { blocksZoomKey, type PanZoom } from './usePanZoom';
 import type { FilesChange } from './useStudioData';
-import { useFrameResize } from './useFrameResize';
+import { frameSnapStore, otherFrames, useFrameResize } from './useFrameResize';
 
 const ZOOM_ECHO_MS = 150;
 const DRAG_THRESHOLD = 3;
@@ -100,6 +101,19 @@ export function useZoomInput(apply: (key: ZoomKey) => void): (key: ZoomKey, from
   return zoomBy;
 }
 
+function snapMove(state: DragState, candidates: Box[], wx: number, wy: number, off: boolean): { x: number; y: number } {
+  if (off || candidates.length === 0) {
+    frameSnapStore.set(null);
+    return { x: wx, y: wy };
+  }
+  const f = state.frame;
+  const res = snapRect({ rect: { x: f.x + wx, y: f.y + wy, width: f.width, height: f.height }, candidates, zoom: state.zoom, x: 'move', y: 'move' });
+  const sx = res.rect.x - f.x;
+  const sy = res.rect.y - f.y;
+  frameSnapStore.set({ guides: res.guides, spacing: res.spacing, shift: state.isActive ? { x: -sx, y: -sy } : { x: 0, y: 0 } });
+  return { x: sx, y: sy };
+}
+
 interface DragState {
   frame: CanvasFrame;
   isActive: boolean;
@@ -169,29 +183,31 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     };
     const startX = e.clientX;
     const startY = e.clientY;
+    const candidates = otherFrames(layout, frame.id);
     let moved = false;
-    let dx = 0;
-    let dy = 0;
+    let world = { x: 0, y: 0 };
     const move = (ev: PointerEvent) => {
-      dx = ev.clientX - startX;
-      dy = ev.clientY - startY;
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
       if (!moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
       if (!moved) document.body.classList.add('frame-dragging');
       moved = true;
-      placeDrag(state, artboardRef.current, dx, dy);
+      world = snapMove(state, candidates, dx / state.zoom, dy / state.zoom, snapOff(ev));
+      placeDrag(state, artboardRef.current, world.x * state.zoom, world.y * state.zoom);
     };
     const end = () => {
       target.removeEventListener('pointermove', move as EventListener);
       target.removeEventListener('pointerup', end);
       target.removeEventListener('pointercancel', end);
       document.body.classList.remove('frame-dragging');
+      frameSnapStore.set(null);
       placeDrag(state, artboardRef.current, 0, 0);
       if (!moved) {
         frames.activate(frame);
         return;
       }
       pz.freeze();
-      frames.update((l) => moveFrame(l, frame.id, dx / state.zoom, dy / state.zoom));
+      frames.update((l) => moveFrame(l, frame.id, world.x, world.y));
     };
     target.addEventListener('pointermove', move as EventListener);
     target.addEventListener('pointerup', end);

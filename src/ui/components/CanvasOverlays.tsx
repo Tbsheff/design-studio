@@ -1,4 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { formatMeasure } from '../measure';
+import type { SpacingBadge } from '../snap';
+import { frameSnapStore } from '../useFrameResize';
+import { guideStyle } from './ArtboardOverlay';
 import { Icon } from './Icon';
 
 export function PresentLayer({ url, sandbox, fullscreen, onClose }: { url: string; sandbox?: string; fullscreen: boolean; onClose: () => void }) {
@@ -83,3 +87,27 @@ export function TweakPrompt({ scope, onSend, onClose }: { scope: string | null; 
   );
 }
 
+
+function gapStyle(b: SpacingBadge) {
+  return b.axis === 'x' ? { left: b.from, top: b.at, width: b.to - b.from } : { left: b.at, top: b.from, height: b.to - b.from };
+}
+
+export function FrameSnapLayer({ origin }: { origin: { x: number; y: number } }) {
+  const view = useSyncExternalStore(frameSnapStore.subscribe, frameSnapStore.get);
+  if (view.guides.length === 0 && view.spacing.length === 0) return null;
+  const style = { left: -origin.x, top: -origin.y, translate: `${view.shift.x}px ${view.shift.y}px` };
+  return (
+    <div className="snap-guides frame-snap" data-testid="frame-snap" style={style}>
+      {view.guides.map((g) => (
+        <div key={`g-${g.axis}-${g.at}`} className={`snap-guide ${g.axis}`} style={guideStyle(g)} />
+      ))}
+      {view.spacing.map((b) => (
+        <div key={`s-${b.axis}-${b.from}-${b.to}`} className={`snap-gap ${b.axis}`} style={gapStyle(b)}>
+          <span className="snap-gap-label" data-value={b.value}>
+            {formatMeasure(b.value)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}

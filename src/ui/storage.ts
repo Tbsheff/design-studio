@@ -34,6 +34,7 @@ export interface UiState {
   layersOpen: boolean;
   paneCollapsed: boolean;
   viewRowOpen: boolean;
+  rulers: boolean;
 }
 
 export type HomeSort = 'recent' | 'name' | 'created';
@@ -57,6 +58,7 @@ const defaults: UiState = {
   layersOpen: false,
   paneCollapsed: false,
   viewRowOpen: false,
+  rulers: false,
 };
 
 function libraryFromOf(value: unknown): LibraryFrom | null {
@@ -85,6 +87,7 @@ function loadUiState(): UiState {
       layersOpen: parsed.layersOpen === true,
       paneCollapsed: parsed.paneCollapsed === true,
       viewRowOpen: parsed.viewRowOpen === true,
+      rulers: parsed.rulers === true,
     };
   } catch {
     return defaults;

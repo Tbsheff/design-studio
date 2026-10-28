@@ -24,6 +24,7 @@ interface Props {
   theme?: { dark: boolean; onToggle: () => void };
   lofi?: { on: boolean; onToggle: () => void };
   links?: { on: boolean; onToggle: () => void };
+  rulers?: { on: boolean; onToggle: () => void };
 }
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
@@ -208,6 +209,17 @@ function LinksSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
+function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button type="button" className="btn small ghost select-toggle rulers-toggle" aria-pressed={on} aria-keyshortcuts="Shift+R" data-tip={on ? 'Hide rulers' : 'Show rulers'} onClick={onToggle}>
+      <svg className="icon" width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <path d="M2.5 2.5h11v4h-11zM5 2.5v2M8 2.5v2M11 2.5v2M2.5 6.5v7h4v-7M2.5 9h2M2.5 11.5h2" />
+      </svg>
+      <span className="label">Rulers</span> <kbd>⇧R</kbd>
+    </button>
+  );
+}
+
 export function CanvasViewRow(props: Props) {
   return (
     <div className="toolbar canvas-viewrow" role="toolbar" aria-label="View options">
@@ -216,6 +228,7 @@ export function CanvasViewRow(props: Props) {
       {props.theme && <ThemeSwitch dark={props.theme.dark} onToggle={props.theme.onToggle} />}
       {props.lofi && <LofiSwitch on={props.lofi.on} onToggle={props.lofi.onToggle} />}
       {props.links && <LinksSwitch on={props.links.on} onToggle={props.links.onToggle} />}
+      {props.rulers && <RulersSwitch on={props.rulers.on} onToggle={props.rulers.onToggle} />}
       <div className="toolbar-sep" />
       <SourceControls source={props.source} onSource={props.onSource} hasHead={props.hasHead} />
       <div className="spacer" />

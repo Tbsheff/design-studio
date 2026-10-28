@@ -301,3 +301,6 @@ export const rulesApi = {
   save: (pid: string, did: string, text: string) => json<{ state: DesignRulesState; versionId: string | null }>('PUT', `${d(pid, did)}/rules`, { text }),
   test: (pid: string, did: string, text: string, frame?: { frame: string; path?: string; width: number; height: number }) => json<DesignRulesTestResult>('POST', `${d(pid, did)}/rules/test`, { text, ...frame }),
 };
+export function arrange(projectId: string, directionId: string, req: import('../shared/arrange').ArrangeRequest): Promise<import('../shared/arrange').ArrangeResult> {
+  return timedEdit(projectId, directionId, 'arrange', req.targets.length, async () => (await (await request('POST', `${d(projectId, directionId)}/direct-edit`, { arrange: req }, pickMessage)).json()) as import('../shared/arrange').ArrangeResult);
+}

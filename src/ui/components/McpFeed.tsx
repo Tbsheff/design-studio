@@ -57,6 +57,8 @@ const TOOL_ICONS: Record<string, IconName> = {
   export: 'download',
   ship: 'branch',
   batch_edit: 'layers',
+  arrange: 'frame',
+  measure: 'scan',
   undo: 'undo',
   redo: 'reload',
   open_folder: 'folder',

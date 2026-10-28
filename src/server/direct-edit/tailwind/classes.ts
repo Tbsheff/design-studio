@@ -1,8 +1,8 @@
 import type { TailwindTheme } from './theme.js';
 import { lengthToPx } from './units.js';
 
-export type Side = 't' | 'r' | 'b' | 'l' | 'x' | 'y' | 'tl' | 'tr' | 'br' | 'bl' | 'w' | 'h';
-export type SidedGroup = 'padding' | 'margin' | 'gap' | 'radius' | 'dims';
+export type Side = 't' | 'r' | 'b' | 'l' | 'x' | 'y' | 'tl' | 'tr' | 'br' | 'bl' | 'w' | 'h' | 'minw' | 'maxw' | 'minh' | 'maxh';
+export type SidedGroup = 'padding' | 'margin' | 'gap' | 'radius' | 'dims' | 'inset';
 export type SingleGroup =
   | 'color'
   | 'bg'
@@ -30,7 +30,9 @@ export type SingleGroup =
   | 'case'
   | 'overflow'
   | 'text-shadow'
-  | 'transform';
+  | 'transform'
+  | 'position'
+  | 'justify-items';
 export type Group = SidedGroup | SingleGroup;
 
 export interface ParsedClass {
@@ -50,7 +52,7 @@ export type Classified =
   | { kind: 'sided'; group: SidedGroup; sides: Side[]; value: SideValue; size?: boolean }
   | { kind: 'single'; group: SingleGroup };
 
-export const SIDED_GROUPS: ReadonlySet<string> = new Set<SidedGroup>(['padding', 'margin', 'gap', 'radius', 'dims']);
+export const SIDED_GROUPS: ReadonlySet<string> = new Set<SidedGroup>(['padding', 'margin', 'gap', 'radius', 'dims', 'inset']);
 
 const BOX_SIDES: Record<string, Side[]> = { '': ['t', 'r', 'b', 'l'], x: ['l', 'r'], y: ['t', 'b'], t: ['t'], r: ['r'], b: ['b'], l: ['l'], s: ['l'], e: ['r'] };
 const CORNER_SIDES: Record<string, Side[]> = {
@@ -109,6 +111,11 @@ const KEYWORD_GROUPS: Record<string, SingleGroup> = {
   'transform-none': 'transform',
   'transform-gpu': 'transform',
   'transform-cpu': 'transform',
+  static: 'position',
+  relative: 'position',
+  absolute: 'position',
+  fixed: 'position',
+  sticky: 'position',
 };
 
 const TEXT_ALIGN = new Set(['left', 'center', 'right', 'justify', 'start', 'end']);
@@ -150,6 +157,8 @@ const ARBITRARY_PROPERTY: Record<string, SingleGroup> = {
   overflow: 'overflow',
   'text-shadow': 'text-shadow',
   transform: 'transform',
+  position: 'position',
+  'justify-items': 'justify-items',
 };
 
 function splitVariants(raw: string): string[] {
@@ -244,7 +253,8 @@ function sided(group: SidedGroup, sides: Side[] | undefined, suffix: string, neg
 }
 
 const GAP_SIDES: Record<string, Side[]> = { x: ['x'], y: ['y'], '': ['x', 'y'] };
-const DIM_SIDES: Record<string, Side[]> = { w: ['w'], h: ['h'], size: ['w', 'h'] };
+const DIM_SIDES: Record<string, Side[]> = { w: ['w'], h: ['h'], size: ['w', 'h'], 'min-w': ['minw'], 'max-w': ['maxw'], 'min-h': ['minh'], 'max-h': ['maxh'] };
+const INSET_SIDES: Record<string, Side[]> = { inset: ['t', 'r', 'b', 'l'], 'inset-x': ['l', 'r'], 'inset-y': ['t', 'b'], top: ['t'], right: ['r'], bottom: ['b'], left: ['l'], start: ['l'], end: ['r'] };
 
 type SidedRule = [RegExp, (match: RegExpExecArray, negative: boolean) => Classified | null];
 
@@ -252,7 +262,8 @@ const SIDED_RULES: SidedRule[] = [
   [/^([pm])([xytrblse]?)-(.+)$/, (m, negative) => sided(m[1] === 'p' ? 'padding' : 'margin', BOX_SIDES[m[2] ?? ''], m[3] ?? '', negative)],
   [/^gap(?:-([xy]))?-(.+)$/, (m) => sided('gap', GAP_SIDES[m[1] ?? ''], m[2] ?? '', false)],
   [/^rounded(?:-(tl|tr|br|bl|ss|se|ee|es|t|r|b|l|s|e)(?=-|$))?(?:-(.+))?$/, (m) => sided('radius', CORNER_SIDES[m[1] ?? ''], m[2] ?? '', false)],
-  [/^(w|h|size)-(.+)$/, (m, negative) => sided('dims', DIM_SIDES[m[1] ?? ''], m[2] ?? '', negative, m[1] === 'size')],
+  [/^(w|h|size|min-w|max-w|min-h|max-h)-(.+)$/, (m, negative) => sided('dims', DIM_SIDES[m[1] ?? ''], m[2] ?? '', negative, m[1] === 'size')],
+  [/^(inset-x|inset-y|inset|top|right|bottom|left|start|end)-(.+)$/, (m, negative) => sided('inset', INSET_SIDES[m[1] ?? ''], m[2] ?? '', negative)],
 ];
 
 function classifySided(utility: string, negative: boolean): Classified | null | undefined {
@@ -285,6 +296,7 @@ const PREFIX_RULES: Record<string, PrefixRule> = {
   justify: fromSet(JUSTIFY, 'justify'),
   items: fromSet(ITEMS, 'items'),
   self: fromSet(SELF, 'self'),
+  'justify-items': fromSet(ITEMS, 'justify-items'),
   shadow: classifyShadow,
   overflow: fromSet(OVERFLOW, 'overflow'),
   ...Object.fromEntries(['blur', 'brightness', 'contrast', 'grayscale', 'hue-rotate', 'invert', 'saturate', 'sepia', 'drop-shadow'].map((name) => [name, always('filter')])),
@@ -319,7 +331,8 @@ const PREFIX: Record<SidedGroup, Partial<Record<string, string>>> = {
   margin: { all: 'm', x: 'mx', y: 'my', t: 'mt', r: 'mr', b: 'mb', l: 'ml' },
   gap: { all: 'gap', x: 'gap-x', y: 'gap-y' },
   radius: { all: 'rounded', t: 'rounded-t', r: 'rounded-r', b: 'rounded-b', l: 'rounded-l', tl: 'rounded-tl', tr: 'rounded-tr', br: 'rounded-br', bl: 'rounded-bl' },
-  dims: { all: 'size', w: 'w', h: 'h' },
+  dims: { all: 'size', w: 'w', h: 'h', minw: 'min-w', maxw: 'max-w', minh: 'min-h', maxh: 'max-h' },
+  inset: { all: 'inset', x: 'inset-x', y: 'inset-y', t: 'top', r: 'right', b: 'bottom', l: 'left' },
 };
 
 export function emitSided(group: SidedGroup, part: string, value: SideValue, variants: string): string {
@@ -369,12 +382,13 @@ function compactCorners(map: SideMap): Array<[string, SideValue]> {
 }
 
 export function compactSides(group: SidedGroup, map: SideMap, useSize: boolean): Array<[string, SideValue]> {
-  if (group === 'padding' || group === 'margin') return compactBox(map);
+  if (group === 'padding' || group === 'margin' || group === 'inset') return compactBox(map);
   if (group === 'radius') return compactCorners(map);
   if (group === 'gap') {
     if (map.x && sameValue(map.x, map.y)) return [['all', map.x]];
     return [...(map.x ? [['x', map.x] as [string, SideValue]] : []), ...(map.y ? [['y', map.y] as [string, SideValue]] : [])];
   }
-  if (useSize && map.w && sameValue(map.w, map.h)) return [['all', map.w]];
-  return [...(map.w ? [['w', map.w] as [string, SideValue]] : []), ...(map.h ? [['h', map.h] as [string, SideValue]] : [])];
+  const limits = (['minw', 'maxw', 'minh', 'maxh'] as const).flatMap((side) => (map[side] ? [[side, map[side]] as [string, SideValue]] : []));
+  if (useSize && map.w && sameValue(map.w, map.h)) return [['all', map.w], ...limits];
+  return [...(map.w ? [['w', map.w] as [string, SideValue]] : []), ...(map.h ? [['h', map.h] as [string, SideValue]] : []), ...limits];
 }

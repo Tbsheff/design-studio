@@ -1253,3 +1253,71 @@
   padding: 8px 12px;
   color: var(--text-2);
 }
+
+.prompt-foot-trail {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+  margin-left: auto;
+}
+
+.budget-ind-wrap {
+  position: relative;
+  flex: none;
+}
+
+.budget-ind {
+  margin-right: 0;
+}
+
+.ui-menu.budget-pop {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: calc(100% + 4px);
+  min-width: 220px;
+  transform-origin: bottom right;
+  animation: composer-pop-in 120ms var(--ease-out);
+}
+
+.budget-custom {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 4px var(--s-2);
+}
+
+.budget-custom-row {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.budget-custom-row input {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-sm);
+  border: 0;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-custom-row input[aria-invalid='true'] {
+  box-shadow: inset 0 0 0 1px var(--danger);
+}
+
+.budget-error {
+  padding: 2px var(--s-2) 4px;
+  color: var(--danger);
+  font-size: var(--t-2xs);
+}

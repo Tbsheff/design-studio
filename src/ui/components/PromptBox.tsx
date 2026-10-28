@@ -5,6 +5,7 @@ import { MentionChips, MentionList } from './MentionPicker';
 import { useMentions, type MentionRequest } from '../useMentions';
 import { HistorySearch, useHistorySearch } from './HistorySearch';
 import { ContextMeter } from './ContextMeter';
+import { BudgetIndicator } from './BudgetIndicator';
 import { QueuedMessages } from './QueuedMessages';
 import { useComposerKeys } from '../useComposerKeys';
 import { Composer, ComposerInput, ComposerToolbar, ComposerToolbarSpacer } from '../ai/components/ai/composer';
@@ -485,7 +486,12 @@ export function PromptBox(props: Props) {
       <Disclosure
         className="prompt-foot"
         lead={<SkillsIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />}
-        trail={<ContextMeter tokens={props.contextTokens ?? null} model={props.model} />}
+        trail={
+          <span className="prompt-foot-trail">
+            <BudgetIndicator projectId={props.projectId} settings={props.settings} onSaved={props.onSettingsSaved} />
+            <ContextMeter tokens={props.contextTokens ?? null} model={props.model} />
+          </span>
+        }
       />
     </div>
   );

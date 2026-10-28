@@ -54,6 +54,20 @@
   stroke-width: 3;
 }
 
+.link-start-anchor {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: scale(var(--inv-zoom, 1));
+}
+
+.link-start {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+}
+
 .link-start,
 .link-broken-badge {
   position: absolute;
@@ -71,6 +85,7 @@
 }
 
 .link-start {
+  transform: none;
   background: var(--accent);
   color: var(--on-accent);
 }
@@ -166,13 +181,21 @@
 
 .proto-select {
   max-width: 180px;
-  height: 26px;
-  padding: 0 6px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
+}
+
+.proto-hint {
+  min-width: 0;
+}
+
+.canvas:has(.app-canvas-bar) .proto-bar {
+  left: auto;
+  right: var(--s-3);
+  max-width: calc(100% - 200px);
+  translate: none;
+}
+
+.canvas:has(.app-fail) .proto-hint {
+  display: none;
 }
 
 .proto-broken,

@@ -498,7 +498,6 @@ export function Canvas(props: Props) {
     ? { on: lofiList.includes(liveDirection), onToggle: () => canvasStore.setLofi(projectId, liveDirection, !lofiList.includes(liveDirection), layout) }
     : undefined;
   const darkSwitch = themeSwitch(props.darkPreview, theme);
-  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check });
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
   const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
@@ -510,6 +509,7 @@ export function Canvas(props: Props) {
   };
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
   const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
+  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check, play: proto.play });
   const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport });
 
 

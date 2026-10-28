@@ -183,8 +183,11 @@
 
 .ui-select > svg {
   flex: none;
-  margin-left: auto;
   color: var(--text-3);
+}
+
+.ui-select > svg:last-child {
+  margin-left: auto;
 }
 
 .ui-select-value {

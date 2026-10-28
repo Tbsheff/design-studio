@@ -1,6 +1,18 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import { placeFixed } from '../popoverPlacement';
-import { Icon } from './Icon';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
+import { createPortal } from "react-dom";
+import { placeFixed } from "../popoverPlacement";
+import { Icon } from "./Icon";
 
 export interface UiSelectOption<V extends string = string> {
   value: V;
@@ -12,20 +24,29 @@ interface Props<V extends string> {
   value: V;
   options: readonly UiSelectOption<V>[];
   onChange: (value: V) => void;
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   id?: string;
   disabled?: boolean;
   className?: string;
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
   placeholder?: string;
   tip?: string;
   icon?: ReactNode;
 }
 
-const HIDDEN: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
+const HIDDEN: CSSProperties = {
+  top: 0,
+  left: 0,
+  opacity: 0,
+  pointerEvents: "none",
+};
 
-function step(options: readonly UiSelectOption[], from: number, delta: 1 | -1): number {
+function step(
+  options: readonly UiSelectOption[],
+  from: number,
+  delta: 1 | -1,
+): number {
   for (let i = 1; i <= options.length; i++) {
     const at = (from + delta * i + options.length * 2) % options.length;
     if (!options[at]?.disabled) return at;
@@ -39,39 +60,53 @@ function edge(options: readonly UiSelectOption[], last: boolean): number {
   return order.find((i) => !options[i]?.disabled) ?? -1;
 }
 
-function typeahead(options: readonly UiSelectOption[], from: number, query: string): number {
+function typeahead(
+  options: readonly UiSelectOption[],
+  from: number,
+  query: string,
+): number {
   const q = query.toLowerCase();
   for (let i = 1; i <= options.length; i++) {
     const at = (from + i) % options.length;
     const option = options[at];
-    if (option && !option.disabled && option.label.toLowerCase().startsWith(q)) return at;
+    if (option && !option.disabled && option.label.toLowerCase().startsWith(q))
+      return at;
   }
   return -1;
 }
 
-function useOutsideClose(open: boolean, close: () => void, root: RefObject<HTMLElement | null>) {
+function useOutsideClose(
+  open: boolean,
+  close: () => void,
+  root: RefObject<HTMLElement | null>,
+  panel: RefObject<HTMLElement | null>,
+) {
   useEffect(() => {
     if (!open) return;
-    const inside = (target: EventTarget | null) => target instanceof Node && !!root.current?.contains(target);
+    const inside = (target: EventTarget | null) =>
+      target instanceof Node &&
+      (!!root.current?.contains(target) || !!panel.current?.contains(target));
     const onDown = (e: MouseEvent) => {
       if (!inside(e.target)) close();
     };
     const onScroll = (e: Event) => {
       if (!inside(e.target)) close();
     };
-    document.addEventListener('mousedown', onDown, true);
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', close);
+    document.addEventListener("mousedown", onDown, true);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", close);
     return () => {
-      document.removeEventListener('mousedown', onDown, true);
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', close);
+      document.removeEventListener("mousedown", onDown, true);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", close);
     };
-  }, [open, close, root]);
+  }, [open, close, root, panel]);
 }
 
 function openKey(key: string): boolean {
-  return key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter' || key === ' ';
+  return (
+    key === "ArrowDown" || key === "ArrowUp" || key === "Enter" || key === " "
+  );
 }
 
 export function UiSelect<V extends string>(p: Props<V>) {
@@ -81,28 +116,39 @@ export function UiSelect<V extends string>(p: Props<V>) {
   const root = useRef<HTMLSpanElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const typed = useRef({ text: '', at: 0 });
+  const typed = useRef({ text: "", at: 0 });
   const listId = useId();
   const current = p.options.findIndex((o) => o.value === p.value);
   const close = useCallback(() => {
     setOpen(false);
     setStyle(HIDDEN);
   }, []);
-  useOutsideClose(open, close, root);
+  useOutsideClose(open, close, root, panel);
 
   useLayoutEffect(() => {
     if (!open || !button.current || !panel.current) return;
-    const placed = placeFixed(button.current, panel.current, { align: 'start' });
+    const placed = placeFixed(button.current, panel.current, {
+      align: "start",
+    });
     setStyle({ ...placed, minWidth: button.current.offsetWidth });
-    panel.current.querySelector('[data-active]')?.scrollIntoView({ block: 'nearest' });
+    panel.current
+      .querySelector("[data-active]")
+      ?.scrollIntoView({ block: "nearest" });
   }, [open]);
 
   useEffect(() => {
-    if (open) panel.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: 'nearest' });
+    if (open)
+      panel.current
+        ?.querySelector(`[data-index="${active}"]`)
+        ?.scrollIntoView({ block: "nearest" });
   }, [open, active]);
 
   const show = () => {
-    setActive(current >= 0 && !p.options[current]?.disabled ? current : edge(p.options, false));
+    setActive(
+      current >= 0 && !p.options[current]?.disabled
+        ? current
+        : edge(p.options, false),
+    );
     setOpen(true);
   };
 
@@ -122,19 +168,19 @@ export function UiSelect<V extends string>(p: Props<V>) {
   };
 
   const moveFor = (key: string): number | null => {
-    if (key === 'ArrowDown') return step(p.options, active, 1);
-    if (key === 'ArrowUp') return step(p.options, active, -1);
-    if (key === 'Home' || key === 'PageUp') return edge(p.options, false);
-    if (key === 'End' || key === 'PageDown') return edge(p.options, true);
+    if (key === "ArrowDown") return step(p.options, active, 1);
+    if (key === "ArrowUp") return step(p.options, active, -1);
+    if (key === "Home" || key === "PageUp") return edge(p.options, false);
+    if (key === "End" || key === "PageDown") return edge(p.options, true);
     return null;
   };
 
   const onOpenKey = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       close();
       return;
     }
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       pick(active);
       return;
     }
@@ -143,7 +189,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === 'Tab') {
+    if (e.key === "Tab") {
       if (open) close();
       return;
     }
@@ -161,49 +207,63 @@ export function UiSelect<V extends string>(p: Props<V>) {
   const label = current >= 0 ? p.options[current]?.label : p.placeholder;
   const activeId = open && active >= 0 ? `${listId}-${active}` : undefined;
   return (
-    <span ref={root} className={`ui-select-root ${p.className ?? ''}`}>
+    <span ref={root} className={`ui-select-root ${p.className ?? ""}`}>
       <button
         ref={button}
         id={p.id}
         type="button"
         role="combobox"
-        className={`ui-select${p.size === 'sm' ? ' sm' : ''}`}
+        className={`ui-select${p.size === "sm" ? " sm" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-activedescendant={activeId}
-        aria-label={p['aria-label']}
-        aria-labelledby={p['aria-labelledby']}
+        aria-label={p["aria-label"]}
+        aria-labelledby={p["aria-labelledby"]}
         disabled={p.disabled}
         data-tip={open ? undefined : p.tip}
         onClick={() => (open ? close() : show())}
         onKeyDown={onKeyDown}
       >
         {p.icon}
-        <span className={`ui-select-value truncate${current < 0 ? ' placeholder' : ''}`}>{label ?? ''}</span>
+        <span
+          className={`ui-select-value truncate${current < 0 ? " placeholder" : ""}`}
+        >
+          {label ?? ""}
+        </span>
         <Icon name="chevronDown" size={12} />
       </button>
-      {open && (
-        <div ref={panel} id={listId} className="ui-menu ui-select-menu" role="listbox" aria-label={p['aria-label']} aria-labelledby={p['aria-labelledby']} style={style}>
-          {p.options.map((option, index) => (
-            <div
-              key={option.value}
-              id={`${listId}-${index}`}
-              data-index={index}
-              data-active={index === active ? '' : undefined}
-              role="option"
-              aria-selected={option.value === p.value}
-              aria-disabled={option.disabled || undefined}
-              className="ui-menu-item"
-              onMouseDown={(e) => e.preventDefault()}
-              onMouseEnter={() => !option.disabled && setActive(index)}
-              onClick={() => pick(index)}
-            >
-              <span className="truncate">{option.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={panel}
+            id={listId}
+            className="ui-menu ui-select-menu"
+            role="listbox"
+            aria-label={p["aria-label"]}
+            aria-labelledby={p["aria-labelledby"]}
+            style={style}
+          >
+            {p.options.map((option, index) => (
+              <div
+                key={option.value}
+                id={`${listId}-${index}`}
+                data-index={index}
+                data-active={index === active ? "" : undefined}
+                role="option"
+                aria-selected={option.value === p.value}
+                aria-disabled={option.disabled || undefined}
+                className="ui-menu-item"
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => !option.disabled && setActive(index)}
+                onClick={() => pick(index)}
+              >
+                <span className="truncate">{option.label}</span>
+              </div>
+            ))}
+          </div>,
+          button.current?.closest("dialog") ?? document.body,
+        )}
     </span>
   );
 }

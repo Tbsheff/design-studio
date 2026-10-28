@@ -4,6 +4,8 @@ import { errorText } from '../api';
 import { shipApi } from '../shipApi';
 import { useModalDialog } from '../usePopover';
 import { Icon } from './Icon';
+import { CopyButton } from './CopyButton';
+import { UiSelect } from './UiSelect';
 import '../styles/ship.css';
 
 interface Props {
@@ -255,6 +257,24 @@ function ShipFields({ plan, draft, fields, patch }: { plan: ShipPrepare; draft: 
   );
 }
 
+const FIRST_COMMIT = 'git init && git add -A && git commit -m "First commit"';
+
+function ShipEmpty({ text }: { text: string | null }) {
+  return (
+    <div className="ship-empty" role="status">
+      <span className="ship-empty-icon" aria-hidden="true">
+        <Icon name="branch" size={16} />
+      </span>
+      <p className="ship-empty-title">{text ?? 'There is nothing to ship yet.'}</p>
+      <p className="ship-empty-text">Run this in the app folder, then open Ship again:</p>
+      <div className="ship-empty-command">
+        <code>{FIRST_COMMIT}</code>
+        <CopyButton text={FIRST_COMMIT} label="Copy command" />
+      </div>
+    </div>
+  );
+}
+
 function PlanView({ plan, draft, fields, focus, onFocus, onBase, setDraft }: { plan: ShipPrepare; draft: Draft | null; fields: Fields | null; focus: string | null; onFocus: (path: string) => void; onBase: (id: string) => void; setDraft: Dispatch<SetStateAction<Draft | null>> }) {
   const patch = (next: Partial<Draft>) => setDraft((prev) => (prev ? { ...prev, ...next } : prev));
   const toggle = (file: string) =>
@@ -264,18 +284,14 @@ function PlanView({ plan, draft, fields, focus, onFocus, onBase, setDraft }: { p
       if (!files.delete(file)) files.add(file);
       return { ...prev, files };
     });
+  if (plan.bases.length === 0) return <ShipEmpty text={plan.blocked} />;
+  const bases = plan.bases.map((b) => ({ value: b.versionId, label: b.title }));
   return (
     <>
-      <label className="field ship-base">
-        <span>Changes since</span>
-        <select value={plan.base?.versionId ?? ''} onChange={(e) => onBase(e.target.value)} disabled={plan.bases.length === 0}>
-          {plan.bases.map((b) => (
-            <option key={b.versionId} value={b.versionId}>
-              {b.title}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="field ship-base">
+        <span id="ship-base-label">Changes since</span>
+        <UiSelect aria-labelledby="ship-base-label" value={plan.base?.versionId ?? ''} options={bases} onChange={onBase} />
+      </div>
       {plan.blocked && (
         <div className="alert small" role="status">
           {plan.blocked}
@@ -318,11 +334,11 @@ export default function ShipDialog({ projectId, onClose }: Props) {
 
   const shown = error ?? loadError;
   return (
-    <dialog ref={dialog.ref} className="modal ship-dialog" aria-label="Ship as branch and PR" onMouseDown={dialog.onMouseDown}>
+    <dialog ref={dialog.ref} className="modal ship-dialog" aria-label="Ship as a pull request" onMouseDown={dialog.onMouseDown}>
       <form className="modal-form" onSubmit={(e) => void submit(e)} noValidate>
         <div className="modal-head">
           <div className="titles">
-            <h2>Ship as branch and PR</h2>
+            <h2>Ship as a pull request</h2>
             <p>{leadText(plan)}</p>
           </div>
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose} disabled={busy}>

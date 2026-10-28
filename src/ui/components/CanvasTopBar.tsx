@@ -73,10 +73,8 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
 function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null }): MenuGroup[] {
   const exportItem: MenuEntry = { id: 'export', label: 'Export…', icon: 'download', meta: 'PNG, PDF, HTML, handoff', disabled: !p.canExport, run: p.onExport, ...(p.canExport ? {} : { tip: 'Save a version to export' }) };
   const ship = p.onShip;
-  return [
-    { items: [exportItem, ...(ship ? [{ id: 'ship', label: 'Ship as a pull request…', icon: 'branch' as const, run: ship }] : [])] },
-    { items: [], note: 'No share links yet. Designs stay on this computer.' },
-  ];
+  const shipItem: MenuEntry[] = ship ? [{ id: 'ship', label: 'Ship as a pull request…', icon: 'branch', meta: 'Branch and PR', run: ship }] : [];
+  return [{ items: [exportItem, ...shipItem] }, { items: [], note: 'No share links yet. Designs stay on this computer.' }];
 }
 
 export function DropMenu({ label, groups, className, align = 'start', tip, children, onOpen }: { label: string; groups: () => MenuGroup[]; className: string; align?: 'start' | 'end'; tip?: string; children: ReactNode; onOpen?: () => void }) {
@@ -96,6 +94,7 @@ export function DropMenu({ label, groups, className, align = 'start', tip, child
         aria-haspopup="menu"
         aria-expanded={open}
         data-tip={open ? undefined : tip}
+        data-tip-align={align === 'end' ? 'end' : undefined}
         onClick={() => {
           if (!open) onOpen?.();
           setOpen((v) => !v);
@@ -224,21 +223,12 @@ export function CanvasTopBar(p: Props) {
         <span>Present</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
-      {p.onShip && (
-        <button type="button" className="btn ghost topbar-ship" data-tip="Commit studio changes to a new branch and open a PR" data-tip-align="end" onClick={p.onShip}>
-          <Icon name="branch" size={14} />
-          Ship
-        </button>
-      )}
-      <button type="button" className="icon-btn topbar-icon" aria-label="Export" disabled={!p.canExport} data-tip={p.canExport ? 'Export, handoff and Claude Code' : 'Save a version to export'} data-tip-align="end" onClick={p.onExport}>
-        <Icon name="download" size={14} />
-      </button>
-      <DropMenu label="Share" className="btn strong topbar-share" groups={() => shareGroups(p)} align="end" tip={p.onShip ? 'Export or ship as a pull request' : 'Export files or a handoff'}>
+      <DropMenu label="Share" className="btn strong topbar-share" groups={() => shareGroups(p)} align="end" tip={p.onShip ? 'Export, or ship as a pull request' : 'Export images, files or a handoff'}>
         <Icon name="share" size={14} />
         Share
         <Icon name="chevronDown" size={12} />
       </DropMenu>
-      <span className="topbar-avatar" aria-hidden="true">Y</span>
+      <span className="topbar-avatar" role="img" aria-label="You, on this computer" data-tip="You, on this computer" data-tip-align="end">Y</span>
     </div>
   );
 }

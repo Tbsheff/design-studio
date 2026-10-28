@@ -254,6 +254,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
       await editControl.current?.settle();
       refreshSelection(false);
       port.current?.post({ type: 'preview-reset' });
+      port.current?.post({ type: 'optimistic-drop' });
     },
     onStepped: () => {
       refreshSelection(true);
@@ -333,6 +334,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     withDid(async (id) => {
       await editControl.current?.settle();
       port.current?.post({ type: 'preview-reset' });
+      port.current?.post({ type: 'optimistic-drop' });
       setSelection([]);
       return refreshAfter(() => api.undo(projectId, id));
     });

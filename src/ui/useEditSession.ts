@@ -95,7 +95,10 @@ export function useEditSession(o: Options) {
       setError(null);
       try {
         await cur.control.current?.settle();
-        if (action === 'discard') cur.port.current?.post({ type: 'preview-reset' });
+        if (action === 'discard') {
+          cur.port.current?.post({ type: 'preview-reset' });
+          cur.port.current?.post({ type: 'optimistic-drop' });
+        }
         const result = await api.endEditSession(cur.projectId, cur.directionId, action, base);
         setView({ base: result.headVersionId, count: 0, dirty: false, blocked: null });
         cur.onEnded?.(action, result);

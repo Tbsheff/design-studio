@@ -275,6 +275,7 @@ export interface SelectionContext {
   styles: Record<string, string>;
   rect: { x: number; y: number; width: number; height: number };
   source: SourceLoc | null;
+  usedAt?: SourceLoc | null;
   ancestors: string[];
   path?: string[];
 }
@@ -714,7 +715,7 @@ export const API_ROUTES = {
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
-  importProject: 'POST /api/projects/import {path, appDir?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches)',
+  importProject: 'POST /api/projects/import {path, appDir?, skipApp?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches; skipApp imports the folder without the app, for example only its tokens)',
   attachApp: 'POST /api/projects/attach AttachAppRequest -> {project} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied)',
   appStatus: 'GET /api/projects/:pid/app -> {app, status, logs} (404 when the project is not an attached app)',
   appControl: 'POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus',
@@ -784,7 +785,7 @@ export const BRIDGE_SCRIPT_PATH = '/__studio/bridge.js';
 export const BRIDGE_CHANGES_PATH = '/__studio/changes';
 
 export type BridgeToParent =
-  | { ns: 'studio'; token: string; type: 'ready'; url: string }
+  | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
   | { ns: 'studio'; token: string; type: 'hover'; rect: SelectionContext['rect'] | null; label?: string; altKey?: boolean; node?: number; source?: 'tree' }
   | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }

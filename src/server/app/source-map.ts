@@ -1,6 +1,7 @@
 import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SourceMapConsumer, type RawSourceMap } from 'source-map-js';
 
 export interface SourceTarget {
   upstream: string;
@@ -30,6 +31,9 @@ const MAX_STACK_LENGTH = 16 * 1024;
 const CACHE_LIMIT = 5000;
 const SOURCE_EXT = /\.(tsx|ts|jsx|js|mjs|cjs|mdx)$/;
 const cache = new Map<string, string | null>();
+const MAP_TTL_MS = 30_000;
+const MAX_MAPS = 200;
+const chunkMaps = new Map<string, { consumer: Promise<SourceMapConsumer | null>; at: number }>();
 
 export function parseStack(stack: string): StackFrame[] {
   const frames: StackFrame[] = [];
@@ -83,12 +87,12 @@ export function workTreeRelative(target: SourceTarget, raw: string): string | nu
   return null;
 }
 
-async function originalFrames(target: SourceTarget, frames: StackFrame[], isServer: boolean): Promise<(OriginalFrame | null)[]> {
+async function serverFrames(target: SourceTarget, frames: StackFrame[]): Promise<(OriginalFrame | null)[]> {
   if (frames.length === 0) return [];
   const response = await fetch(new URL('/__nextjs_original-stack-frames', target.upstream), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ frames: frames.map((frame) => ({ ...frame, arguments: [] })), isServer, isEdgeServer: false, isAppDirectory: true }),
+    body: JSON.stringify({ frames: frames.map((frame) => ({ ...frame, arguments: [] })), isServer: true, isEdgeServer: false, isAppDirectory: true }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error(`original stack frames: ${response.status}`);
@@ -97,6 +101,37 @@ async function originalFrames(target: SourceTarget, frames: StackFrame[], isServ
     const result = results[index];
     return result?.status === 'fulfilled' ? (result.value?.originalStackFrame ?? null) : null;
   });
+}
+
+async function loadChunkMap(chunkUrl: string): Promise<SourceMapConsumer | null> {
+  const response = await fetch(`${chunkUrl.split('?')[0]}.map`, { signal: AbortSignal.timeout(10_000) });
+  if (!response.ok) return null;
+  return new SourceMapConsumer((await response.json()) as RawSourceMap);
+}
+
+function chunkMap(chunkUrl: string): Promise<SourceMapConsumer | null> {
+  const cached = chunkMaps.get(chunkUrl);
+  if (cached && Date.now() - cached.at < MAP_TTL_MS) return cached.consumer;
+  if (chunkMaps.size >= MAX_MAPS) chunkMaps.delete(chunkMaps.keys().next().value as string);
+  const consumer = loadChunkMap(chunkUrl).catch(() => null);
+  chunkMaps.set(chunkUrl, { consumer, at: Date.now() });
+  return consumer;
+}
+
+async function clientFrames(frames: StackFrame[]): Promise<(OriginalFrame | null)[]> {
+  return Promise.all(
+    frames.map(async (frame) => {
+      if (!/^https?:\/\//.test(frame.file)) return null;
+      const consumer = await chunkMap(frame.file);
+      const position = consumer?.originalPositionFor({ line: frame.line1, column: frame.column1 - 1 });
+      if (!position?.source || position.line === null) return null;
+      return { file: position.source, line1: position.line, column1: (position.column ?? 0) + 1, ignored: position.source.includes('node_modules') };
+    }),
+  );
+}
+
+function originalFrames(target: SourceTarget, frames: StackFrame[], isServer: boolean): Promise<(OriginalFrame | null)[]> {
+  return isServer ? serverFrames(target, frames) : clientFrames(frames);
 }
 
 function keyOf(frame: StackFrame): string {

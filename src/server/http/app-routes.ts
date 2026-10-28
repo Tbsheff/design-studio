@@ -11,7 +11,7 @@ import type { PreviewService, VersionStore } from '../types.js';
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
 
-interface AppRouteDeps {
+export interface AppRouteDeps {
   projects: StudioProjectStore;
   versions: VersionStore;
   preview: PreviewService;
@@ -77,19 +77,22 @@ export async function resolveSourceFile(workTree: string, source: string): Promi
   return { relative: relative.split(path.sep).join('/'), absolute, line: Number(match[2]), col: Number(match[3]) };
 }
 
+export async function finishAttach(deps: AppRouteDeps, attached: Project): Promise<Project> {
+  const fresh = attached.directions[0]?.headVersionId === null;
+  deps.preview.apps?.forget(attached.id);
+  deps.watch(attached, deps.projects.mainDirection(attached));
+  void deps.preview.apps?.ensure(attached).catch(() => undefined);
+  if (fresh) {
+    await deps.versions.ensureRepo(attached);
+    void deps.commitInit(attached).catch((error: unknown) => console.error(`[app] first version of ${attached.id} failed`, error));
+  }
+  return attached;
+}
+
 export function registerAppRoutes(app: Hono, deps: AppRouteDeps): void {
   const { projects, preview } = deps;
 
-  app.post('/api/projects/attach', async (c) => {
-    const attached = await projects.attachApp(attachRequest(await deps.readBody(c)));
-    const fresh = attached.directions[0]?.headVersionId === null;
-    if (fresh) await deps.versions.ensureRepo(attached);
-    const project = fresh ? await deps.commitInit(attached) : attached;
-    preview.apps?.forget(project.id);
-    deps.watch(project, projects.mainDirection(project));
-    void preview.apps?.ensure(project).catch(() => undefined);
-    return c.json({ project });
-  });
+  app.post('/api/projects/attach', async (c) => c.json({ project: await finishAttach(deps, await projects.attachApp(attachRequest(await deps.readBody(c)))) }));
 
   app.get('/api/projects/:pid/app', async (c) => {
     const project = await appProject(projects, c.req.param('pid'));

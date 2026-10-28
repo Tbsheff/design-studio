@@ -45,7 +45,7 @@ export interface ProjectStore {
   list(): Promise<Project[]>;
   get(projectId: string): Promise<Project>;
   create(input: { name: string; kind: ProjectKind; settings?: Partial<ProjectSettings> }): Promise<Project>;
-  importFolder(sourcePath: string, appDir?: string): Promise<Project>;
+  importFolder(sourcePath: string, options?: { appDir?: string; skipApp?: boolean }): Promise<Project>;
   save(project: Project): Promise<void>;
   addDirection(projectId: string, input: { name: string; fromVersionId: string | null }): Promise<Direction>;
   updateDirection(projectId: string, directionId: string, patch: Partial<Direction>): Promise<Direction>;

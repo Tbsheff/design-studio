@@ -61,6 +61,11 @@ export interface StudioProjectStore extends ProjectStore {
   attachApp(input: AttachAppRequest): Promise<Project>;
 }
 
+export interface ImportOptions {
+  appDir?: string;
+  skipApp?: boolean;
+}
+
 const ENV_KEY = /^[A-Z_][A-Z0-9_]{0,63}$/;
 const BLOCKED_ENV_KEY = /^(STUDIO_|ANTHROPIC_|CLAUDE_|NODE_OPTIONS$|PATH$|HOME$)/;
 const MAX_ENV_KEYS = 64;
@@ -394,10 +399,10 @@ export function createProjectStore(
       return project;
     },
 
-    async importFolder(sourcePath: string, appDir?: string): Promise<Project> {
+    async importFolder(sourcePath: string, options: ImportOptions = {}): Promise<Project> {
       const folder = await resolveUserFolder(sourcePath);
-      const detection = await detectApp(folder);
-      if (appDir || detection.framework === 'next') return this.attachApp({ folder, ...(appDir ? { appDir } : {}) });
+      if (options.appDir) return this.attachApp({ folder, appDir: options.appDir });
+      if (!options.skipApp && (await detectApp(folder)).framework === 'next') return this.attachApp({ folder });
       const packageFile = path.join(folder, 'package.json');
       const hasPackage = existsSync(packageFile);
       const isVite = hasPackage && hasViteDependency(await readJson(packageFile).catch(() => null));

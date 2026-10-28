@@ -73,7 +73,7 @@ import { captureReferencePage, parseReferenceUrls } from '../reference-page.js';
 import { createProjectLibrary } from '../store/project-library.js';
 import { createThumbnailService, type ThumbnailService } from '../thumbnails.js';
 import { registerHomeRoutes } from './home-routes.js';
-import { registerAppRoutes } from './app-routes.js';
+import { finishAttach, registerAppRoutes } from './app-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames } from '../store/version-names.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
@@ -510,15 +510,14 @@ export function createApp(deps: AppDeps): Hono {
     return c.json({ project, runId });
   });
 
-  registerAppRoutes(app, { projects, versions, preview, readBody, commitInit: (project) => commitInit(project), watch: (project, direction) => watchDirection(project, direction) });
+  const appRouteDeps = { projects, versions, preview, readBody, commitInit: (project: Project) => commitInit(project), watch: (project: Project, direction: Direction) => watchDirection(project, direction) };
+  registerAppRoutes(app, appRouteDeps);
 
   app.post('/api/projects/import', async (c) => {
     const body = await readBody(c);
-    const imported = await projects.importFolder(requireString(body, 'path'), optionalString(body, 'appDir'));
-    if (imported.app && imported.directions[0]?.headVersionId) {
-      watchDirection(imported, projects.mainDirection(imported));
-      return c.json({ project: imported });
-    }
+    const appDir = optionalString(body, 'appDir');
+    const imported = await projects.importFolder(requireString(body, 'path'), { ...(appDir ? { appDir } : {}), skipApp: body.skipApp === true });
+    if (imported.app) return c.json({ project: await finishAttach(appRouteDeps, imported) });
     await versions.ensureRepo(imported);
     const project = await commitInit(imported);
     watchDirection(project, projects.mainDirection(project));

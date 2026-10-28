@@ -1,4 +1,5 @@
-import { SOURCE_LOC_ATTR, type SelectionContext, type SourceLoc } from '../../shared/contracts.js';
+import { APP_SOURCE_PATH } from '../../shared/app.js';
+import { SOURCE_LOC_ATTR, type ComponentUse, type SelectionContext, type SourceLoc } from '../../shared/contracts.js';
 import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
 
@@ -11,6 +12,8 @@ interface RawElement {
   styles: Record<string, string>;
   rect: { x: number; y: number; width: number; height: number };
   loc: string | null;
+  usedAt: string | null;
+  usedBy: ComponentUse | null;
   ancestors: string[];
 }
 
@@ -18,8 +21,34 @@ function probe(selector: string): string {
   return `(${probeBody()})(${JSON.stringify(selector)})`;
 }
 
+function appSourceBody(): string {
+  return `async (el) => {
+    const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
+    const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
+    const fiber = fiberOf(el);
+    if (!fiber) return null;
+    const owner = fiber._debugOwner || null;
+    const type = owner?.type;
+    const name = typeof owner?.name === 'string' ? owner.name : type?.displayName || type?.render?.displayName || type?.render?.name || type?.type?.displayName || type?.type?.name || type?.name || null;
+    let parent = el.parentElement;
+    while (parent && !fiberOf(parent)) parent = parent.parentElement;
+    const root = !parent || (fiberOf(parent)._debugOwner || null) !== owner;
+    const stacks = [stackOf(fiber), stackOf(owner)];
+    if (stacks.every((stack) => stack === '')) return null;
+    try {
+      const res = await fetch(${JSON.stringify(APP_SOURCE_PATH)}, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stacks }), cache: 'no-store' });
+      const body = res.ok ? await res.json() : null;
+      const [own, used] = Array.isArray(body?.sources) ? body.sources : [];
+      const loc = own || used || null;
+      const file = (value) => String(value).replace(/:\\d+:\\d+$/, '');
+      const usedAt = own && used && file(own) !== file(used) ? used : null;
+      return loc ? { loc, usedAt, usedBy: usedAt && name ? { name, root } : null } : null;
+    } catch { return null; }
+  }`;
+}
+
 function probeBody(): string {
-  return `((selector) => {
+  return `(async (selector) => {
     let el;
     try { el = document.querySelector(selector); } catch { return null; }
     if (!el) return null;
@@ -29,12 +58,14 @@ function probeBody(): string {
     for (const key of ${JSON.stringify(STYLE_KEYS)}) styles[key] = cs.getPropertyValue(key);
     const ancestors = [];
     for (let p = el.parentElement; p && ancestors.length < 6; p = p.parentElement) ancestors.push(p.tagName.toLowerCase() + (p.id ? '#' + p.id : ''));
-    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)}), ancestors };
+    const tagged = el.getAttribute(${JSON.stringify(SOURCE_LOC_ATTR)});
+    const app = tagged ? null : await (${appSourceBody()})(el);
+    return { tag: el.tagName.toLowerCase(), text: (el.textContent || '').trim().slice(0, 2000), outerHTML: el.outerHTML.slice(0, 10000), styles, rect: { x: Math.round(r.x), y: Math.round(r.y + scrollY), width: Math.round(r.width), height: Math.round(r.height) }, loc: tagged || app?.loc || null, usedAt: app?.usedAt ?? null, usedBy: app?.usedBy ?? null, ancestors };
   })`;
 }
 
 function probeAll(selectors: string[]): string {
-  return `(${JSON.stringify(selectors)}).map(${probeBody()})`;
+  return `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
 }
 
 function parseLoc(raw: string | null): SourceLoc | null {
@@ -43,7 +74,7 @@ function parseLoc(raw: string | null): SourceLoc | null {
 }
 
 function contextOf(selector: string, raw: RawElement): SelectionContext {
-  return { selector, tag: raw.tag, text: raw.text, outerHTML: raw.outerHTML, styles: raw.styles, rect: raw.rect, source: parseLoc(raw.loc), ancestors: raw.ancestors };
+  return { selector, tag: raw.tag, text: raw.text, outerHTML: raw.outerHTML, styles: raw.styles, rect: raw.rect, source: parseLoc(raw.loc), usedAt: parseLoc(raw.usedAt), usedBy: raw.usedBy, ancestors: raw.ancestors };
 }
 
 export async function describeElements(preview: PreviewService, url: string, selectors: string[]): Promise<(SelectionContext | null)[]> {

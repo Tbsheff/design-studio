@@ -276,8 +276,27 @@ export interface SelectionContext {
   rect: { x: number; y: number; width: number; height: number };
   source: SourceLoc | null;
   usedAt?: SourceLoc | null;
+  usedBy?: ComponentUse | null;
+  component?: string;
   ancestors: string[];
   path?: string[];
+}
+
+export interface ComponentUse {
+  name: string;
+  root: boolean;
+}
+
+export interface TextFromData {
+  expression: string;
+  file: string;
+  line: number;
+}
+
+export interface ElementSourceInfo {
+  component: string | null;
+  forwardsClassName: boolean;
+  textFromData: TextFromData | null;
 }
 
 export interface Attachment {
@@ -766,7 +785,7 @@ export const API_ROUTES = {
   reorderComments: 'POST /api/projects/:pid/d/:did/comments/reorder {ids} -> DesignComment[]',
   sendComments: 'POST /api/projects/:pid/d/:did/comments/send {ids?, contexts?, level?} -> {runId, comments} (409 run_in_progress: comments stay queued)',
   directEdit: 'POST /api/projects/:pid/d/:did/direct-edit DirectEditRequest {style?, text?, classes? {add?, remove?}} -> DirectEditResult with tailwind? (409 while a run is active, 422 when the source cannot be patched); also takes DirectEditBatch {edits} (1-50 style/text edits) -> DirectEditBatchResult with one version, and StructureEditRequest {op: delete|duplicate|wrap|unwrap|move, targets, into?|before?|after?} -> StructureEditResult with one version',
-  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null} (the class list of the element and whether style edits write classes or inline style)',
+  elementClasses: 'GET /api/projects/:pid/d/:did/classes?file&line&col -> {tailwind: TailwindOutcome | null, element: ElementSourceInfo | null} (the class list of the element, whether style edits write classes or inline style, the component name when the JSX element is a component use, whether its className reads the className prop, and the data expression its text comes from)',
   versionPreview: 'GET /api/projects/:pid/versions/:vid/preview -> {url}',
   exportVersion: 'GET /api/projects/:pid/versions/:vid/export -> application/zip',
   renameVersion: 'PATCH /api/projects/:pid/versions/:vid {name: string|null} -> {id, name} (trimmed, max 80, empty or null removes)',
@@ -959,6 +978,7 @@ export interface DirectEditRequest {
   move?: ReorderMove;
   insert?: InsertKind;
   classes?: ClassChange;
+  component?: string;
 }
 
 export interface ClassChange {

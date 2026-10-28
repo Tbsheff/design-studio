@@ -26,7 +26,7 @@ export function useInspectorTokens(input: ScopeInput) {
   const [creating, setCreating] = useState<CreateRequest | null>(null);
   const { tokens } = input;
   const ui = useMemo<TokenUi | null>(
-    () => (tokens ? { entries: tokens.entries, mode: tokens.mode, snap: snapOn, setSnap, requestCreate: setCreating } : null),
+    () => (tokens ? { entries: tokens.entries, mode: tokens.mode, snap: snapOn, setSnap, requestCreate: tokens.source ? null : setCreating } : null),
     [tokens, snapOn, setSnap],
   );
   return { ui, snap, creating, closeCreate: useCallback(() => setCreating(null), []) };

@@ -33,6 +33,18 @@
   padding: 0 var(--s-2);
 }
 
+.tkp-source {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0 var(--s-4) var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
 .tkp-search {
   flex: none;
   padding: 0 var(--s-4);

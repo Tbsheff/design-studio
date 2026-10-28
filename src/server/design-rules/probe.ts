@@ -66,28 +66,32 @@ const RULES_PROBE = String.raw`async (input) => {
   host.setAttribute('aria-hidden', 'true');
   host.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none;';
   document.body.appendChild(host);
-  const blank = document.createElement('div');
-  host.appendChild(blank);
-  const blankStyle = getComputedStyle(blank);
-  const base = Object.fromEntries(PROPS.map((p) => [p, blankStyle.getPropertyValue(p)]));
+  const sentinelCss = document.createElement('style');
+  sentinelCss.textContent = '@layer base { :where([data-rules-sentinel]) { border-style: solid; border-width: 7px; border-color: rgb(1, 2, 3); border-radius: 7.7px; height: 7.7px; width: 7.7px; min-height: 7.7px; min-width: 7.7px; padding: 7.7px; margin: 7.7px; gap: 7.7px; font-size: 7.7px; font-weight: 100; line-height: 7.7px; letter-spacing: 0.7px; color: rgb(1, 2, 3); background-color: rgb(1, 2, 3); box-shadow: 1px 1px rgb(1, 2, 3); } }';
+  host.appendChild(sentinelCss);
+  const made = (cls, sentinel) => {
+    const el = document.createElement('div');
+    if (cls) el.className = cls;
+    if (sentinel) el.setAttribute('data-rules-sentinel', '');
+    el.style.position = 'absolute';
+    el.style.boxSizing = 'content-box';
+    host.appendChild(el);
+    return getComputedStyle(el);
+  };
+  const values = (cs) => Object.fromEntries(PROPS.map((p) => [p, cs.getPropertyValue(p)]));
+  const base = values(made('', false));
+  const sentinelBase = values(made('', true));
   const refs = new Map();
+  const measure = (cls) => {
+    const plain = values(made(cls, false));
+    const marked = values(made(cls, true));
+    const changed = {};
+    for (const p of PROPS) if (plain[p] !== base[p] || marked[p] !== sentinelBase[p]) changed[p] = plain[p];
+    return Object.keys(changed).length > 0 ? changed : null;
+  };
   const reference = (cls) => {
-    if (refs.has(cls)) return refs.get(cls);
-    let out = null;
-    if (!cls.includes(':')) {
-      const probe = document.createElement('div');
-      probe.className = cls;
-      host.appendChild(probe);
-      const cs = getComputedStyle(probe);
-      const changed = {};
-      for (const p of PROPS) {
-        const v = cs.getPropertyValue(p);
-        if (v !== base[p]) changed[p] = v;
-      }
-      out = Object.keys(changed).length > 0 ? changed : null;
-    }
-    refs.set(cls, out);
-    return out;
+    if (!refs.has(cls)) refs.set(cls, cls.includes(':') ? null : measure(cls));
+    return refs.get(cls);
   };
   const same = (a, b) => {
     if (a === b) return true;

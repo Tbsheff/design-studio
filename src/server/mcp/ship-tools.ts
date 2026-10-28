@@ -60,6 +60,7 @@ const ship = defineTool(
     const branch = input.branch ?? plan.defaults.branch;
     const title = input.title ?? plan.defaults.title;
     const doing = input.mode === 'pr' ? `push it to ${plan.repo.remote ?? 'the remote'} and open a pull request “${oneLine(title, 80)}”` : input.mode === 'push' ? `push it to ${plan.repo.remote ?? 'the remote'}` : 'keep it local (no push)';
+    if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this ship. Ask the user to open the project in Design Studio, or to click Ship there.');
     await approve(deps, {
       tool: 'ship',
       action: 'Commit studio changes to a new branch in your repo',

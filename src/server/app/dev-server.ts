@@ -4,6 +4,7 @@ import net from 'node:net';
 import path from 'node:path';
 import type { AppLogLine, AppServerStatus, Project } from '../../shared/contracts.js';
 import type { EventBus } from '../types.js';
+import { DevServerPids } from './dev-server-pids.js';
 import { installHint } from './install-hint.js';
 
 const MAX_LOG_LINES = 400;
@@ -26,6 +27,7 @@ interface AppServer {
 export interface AppServerDeps {
   bus: EventBus;
   portBase: number;
+  dataDir?: string;
 }
 
 function freePort(start: number): Promise<number> {
@@ -89,12 +91,17 @@ function childEnv(extra: Record<string, string> | undefined, port: number): Node
 
 export class AppServers {
   private readonly servers = new Map<string, AppServer>();
+  private readonly pids: DevServerPids | null;
+  private readonly reaped: Promise<void>;
   private readonly onExit = (): void => {
     for (const server of this.servers.values()) this.killGroup(server.child, 'SIGKILL');
+    this.pids?.clearSync();
   };
 
   constructor(private readonly deps: AppServerDeps) {
     process.once('exit', this.onExit);
+    this.pids = deps.dataDir ? new DevServerPids(deps.dataDir) : null;
+    this.reaped = this.pids ? this.pids.reapAll((line) => console.log(`[studio] ${line}`)).catch(() => undefined) : Promise.resolve();
   }
 
   private entry(project: Project): AppServer {
@@ -194,6 +201,8 @@ export class AppServers {
     const appRoot = path.join(server.workTree, app.appDir);
     const binary = nextBinary(server.workTree, app.appDir);
     if (!binary) throw new Error(missingNextMessage(server.workTree, app.appDir));
+    await this.reaped;
+    await this.pids?.reap(project.id, (line) => this.log(server, 'studio', line));
     const port = await freePort(this.deps.portBase);
     const args = ['dev', '-p', String(port), '-H', '127.0.0.1'];
     const command = `next ${args.join(' ')}`;
@@ -201,6 +210,7 @@ export class AppServers {
     this.log(server, 'studio', `Starting ${command} in ${appRoot}`);
     const child = spawn(binary, args, { cwd: appRoot, env: childEnv(app.env, port), detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     server.child = child;
+    if (child.pid) void this.pids?.record(project.id, { pid: child.pid, port, appRoot, startedAt: Date.now() });
     child.stdout?.setEncoding('utf8').on('data', (chunk: string) => this.log(server, 'stdout', chunk));
     child.stderr?.setEncoding('utf8').on('data', (chunk: string) => this.log(server, 'stderr', chunk));
     const exited = new Promise<never>((_, reject) => {
@@ -208,6 +218,7 @@ export class AppServers {
       child.once('exit', (code, signal) => {
         const current = server.child === child;
         if (current) server.child = null;
+        if (child.pid) void this.pids?.forget(project.id, child.pid);
         const message = exitMessage(server.logs, `next dev exited (${signal ?? `code ${code ?? 0}`})`);
         this.log(server, 'studio', message);
         if (current && server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' && (code === 0 || signal !== null) ? 'stopped' : 'failed', message, upstream: null });
@@ -260,6 +271,7 @@ export class AppServers {
 
   async stopAll(): Promise<void> {
     await Promise.all([...this.servers.keys()].map((id) => this.stop(id)));
+    this.pids?.clearSync();
     process.removeListener('exit', this.onExit);
   }
 }

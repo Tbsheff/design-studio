@@ -26,7 +26,10 @@ const pending = new WeakMap<Element, Promise<string | null>>();
 
 export function appSourceMode(): string | null {
   const script = document.currentScript;
-  return script instanceof HTMLScriptElement ? (script.dataset.studioApp ?? null) : null;
+  if (!(script instanceof HTMLScriptElement)) return null;
+  const state = script.dataset.studioState;
+  if (state) (window as unknown as { __STUDIO_STATE__?: { id: string } }).__STUDIO_STATE__ = { id: state };
+  return script.dataset.studioApp ?? null;
 }
 
 function fiberOf(element: Element): DebugFiber | null {

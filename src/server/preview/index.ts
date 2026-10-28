@@ -12,6 +12,7 @@ import { startHtmlServer } from './html-server.js';
 import type { HtmlServer, RootKind } from './html-server.js';
 import type { ViteManager, ViteTarget } from './vite-manager.js';
 import { WatcherManager } from './watcher.js';
+import { resolveFrameState } from '../app/frame-state.js';
 import { AppServers } from '../app/dev-server.js';
 import { createAppProxy, type AppTarget } from '../app/proxy.js';
 import { sourcesShifted } from '../app/source-map.js';
@@ -115,7 +116,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return new Pool(config.previewOrigin);
   });
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
-  const apps = new AppServers({ bus, portBase: config.vitePortBase + 400 });
+  const apps = new AppServers({ bus, portBase: config.vitePortBase + 400, dataDir: config.dataDir });
   const appCache = new Map<string, { project: Project | null; at: number }>();
   const appProjectOf = async (projectId: string): Promise<Project | null> => {
     const cached = appCache.get(projectId);
@@ -138,6 +139,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     bridgeScript: loadBridgeScript,
     targetFor: appTarget,
     isApp: async (projectId) => (await appProjectOf(projectId)) !== null,
+    stateFor: async (projectId, stateId) => {
+      const project = await appProjectOf(projectId);
+      const resolved = project ? await resolveFrameState(projects.projectDir(project.id), stateId) : null;
+      return resolved ? { resolved, env: project?.app?.env } : null;
+    },
   });
   const appUrl = (project: Project): string => `${projectPreviewOrigin(project.id, config.previewPort)}/`;
   let htmlServer: HtmlServer | null = null;

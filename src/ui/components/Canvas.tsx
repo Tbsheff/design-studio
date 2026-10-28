@@ -36,6 +36,7 @@ import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
 import { appRoutePages, useAppCanvas } from './AppCanvas';
 import { usePrototype } from '../usePrototype';
+import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameStates';
 
 interface Props {
   projectId: string;
@@ -255,8 +256,8 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register }:
     });
 }
 
-function livePageUrl(baseUrl: string | null, active: CanvasFrame): string | null {
-  return baseUrl ? withFramePath(baseUrl, active.path) : null;
+function livePageUrl(baseUrl: string | null, active: CanvasFrame, states: FrameStatesRead): string | null {
+  return baseUrl ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id) : null;
 }
 
 function knownList(directions: CanvasDirections | undefined): Direction[] | undefined {
@@ -417,7 +418,8 @@ export function Canvas(props: Props) {
   const preview = usePreviewUrl(projectId, directionId, source, headVersionId);
   const urlError = preview.urlError;
   const baseUrl = withElementMark(preview.baseUrl, markOf(knownList(props.directions), directionId));
-  const liveUrl = livePageUrl(baseUrl, active);
+  const frameStates = useFrameStates(projectId, Boolean(props.app));
+  const liveUrl = livePageUrl(baseUrl, active, frameStates);
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
   const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
@@ -459,6 +461,7 @@ export function Canvas(props: Props) {
     lastChange: props.lastChange,
     hold: frames.slots.length > 1,
     directions: knownList(props.directions),
+    frameStates,
   });
   const theme = useCanvasTheme();
   useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);

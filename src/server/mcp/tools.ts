@@ -1,3 +1,5 @@
+import { withFrameStateHost } from '../../shared/frame-state.js';
+import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
 import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { SOURCE_LOC_ATTR, type Project } from '../../shared/contracts.js';
@@ -213,6 +215,7 @@ interface FrameShot {
   width?: number;
   height?: number;
   path?: string;
+  state?: string;
 }
 
 async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
@@ -224,7 +227,8 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
   const frame = findFrame(frames, ref);
   if (!frame) throw new ToolError(`no frame ${ref} on the canvas`);
   const withDirection = frame.directionId && args.directionId === undefined && args.versionId === undefined ? { ...args, directionId: frame.directionId } : args;
-  return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) };
+  const state = project.app ? stateOfFrame(await frameStatesView(deps.projects.projectDir(project.id)), frame.id) : undefined;
+  return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}), ...(state ? { state } : {}) };
 }
 
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
@@ -235,7 +239,7 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const frame: ExportFrame = { name: 'Screenshot', width: picked.width ?? int(args, 'width', 320, 2560, 1440), height: picked.height ?? int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
   const opened = await src.open();
   try {
-    const shot = await captureFrame(deps.preview, opened.url, frame, 1, args.fullPage === true ? 'page' : 'frame', undefined, MAX_SHOT_HEIGHT);
+    const shot = await captureFrame(deps.preview, withFrameStateHost(opened.url, picked.state), frame, 1, args.fullPage === true ? 'page' : 'frame', undefined, MAX_SHOT_HEIGHT);
     const note = shot.cropped ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.` : '';
     return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${shot.width} × ${shot.height} px of version ${src.version.id}.${note}` }] };
   } finally {

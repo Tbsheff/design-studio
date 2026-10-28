@@ -1,3 +1,4 @@
+import { FRAME_STATES_NOTE, applyFrameSession, applyFrameState, configuredFrameStates, describeFrameStates, readFrameStates, type FrameStateDeps, type FrameStateInput } from '../app/frame-state-service.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { McpSdkServerConfigWithInstance, query } from '@anthropic-ai/claude-agent-sdk';
@@ -89,6 +90,31 @@ export function runListLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'prev
 
 export function runEditLinks(deps: Pick<StudioToolDeps, 'ctx' | 'canvas' | 'preview'>, args: EditLinksArgs) {
   return withCanvas(deps, 'edit_links', (ctx) => editLinks(ctx, args, agentLinkProbe(deps)));
+}
+
+async function withFrameStates(deps: Pick<StudioToolDeps, 'ctx'>, name: string, run: (stateDeps: FrameStateDeps) => Promise<string>) {
+  const stateDeps = configuredFrameStates();
+  if (!stateDeps) return errorText('Frame states are not available in this run.');
+  try {
+    return { content: [{ type: 'text' as const, text: await run(stateDeps) }] };
+  } catch (error) {
+    return errorText(`${name} failed: ${describeError(error)}`);
+  }
+}
+
+export function runListFrameStates(deps: Pick<StudioToolDeps, 'ctx'>) {
+  return withFrameStates(deps, 'list_frame_states', async (stateDeps) => describeFrameStates(deps.ctx.project, await readFrameStates(stateDeps, deps.ctx.project)));
+}
+
+export function runSetFrameState(deps: Pick<StudioToolDeps, 'ctx'>, args: FrameStateInput) {
+  return withFrameStates(deps, 'set_frame_state', async (stateDeps) => {
+    const done = await applyFrameState(stateDeps, deps.ctx.project, args);
+    return `Frame ${done.frameId} now shows ${done.state.name} (${done.state.id}).\n${describeFrameStates(deps.ctx.project, done.view)}`;
+  });
+}
+
+export function runSetFrameSession(deps: Pick<StudioToolDeps, 'ctx'>, args: { user?: { name: string; email: string }; forgetCookies?: boolean }) {
+  return withFrameStates(deps, 'set_frame_session', async (stateDeps) => describeFrameStates(deps.ctx.project, await applyFrameSession(stateDeps, deps.ctx.project, { ...(args.user ? { user: args.user } : {}), ...(args.forgetCookies ? { forget: true } : {}) })));
 }
 
 function errorText(message: string) {
@@ -310,6 +336,32 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runEditLinks(deps, args),
   );
 
+  const listFrameStatesTool = tool(
+    'list_frame_states',
+    `Attached apps only. Read only. List the frame preview states (signed in, empty, loading, error, mock), which frame shows which, and the session in use. ${FRAME_STATES_NOTE}`,
+    {},
+    () => runListFrameStates(deps),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const setFrameStateTool = tool(
+    'set_frame_state',
+    `Attached apps only. Show one canvas frame in a preview state with the same code as the frame state menu: state is default, session, empty, loading, error, a mock state id, or mock with mock {name?, rules: [{path, method?, status?, body?, delayMs?}], signedIn?} to make one. Changes no file. ${FRAME_STATES_NOTE}`,
+    {
+      frame: frameRef.describe('Frame id or @label.'),
+      state: z.string().regex(/^[a-z][a-z0-9-]{0,23}$/),
+      mock: z.object({ name: z.string().max(40).optional(), rules: z.array(z.record(z.string(), z.unknown())).max(40).optional(), signedIn: z.boolean().optional() }).optional(),
+    },
+    (args) => runSetFrameState(deps, args),
+  );
+
+  const setFrameSessionTool = tool(
+    'set_frame_session',
+    `Attached apps only. Change the session that signed-in frame states use, with the same code as the frame state menu: user {name, email} sets the mock user; forgetCookies drops the cookies the app set in signed-in frames. Changes no file. ${FRAME_STATES_NOTE}`,
+    { user: z.object({ name: z.string().max(80), email: z.string().max(120) }).optional(), forgetCookies: z.boolean().optional() },
+    (args) => runSetFrameSession(deps, args),
+  );
+
   const editElementTool = tool(
     'edit_element',
     'Change one element found by CSS selector on the live page, with the same code as the studio inspector: style (CSS properties, null removes; in a Tailwind project they become theme classes such as p-6, bg-primary, rounded-lg, and an arbitrary value only when no theme step fits), the text of a leaf element, or Tailwind classes {add, remove} on a plain className string or the string arguments of cn(), clsx() or twMerge(). Or pass op alone: delete, duplicate, wrap (in a flex column frame), unwrap, or move into targetSelector. It patches only that element in the source file (HTML, JSX or TSX) and leaves every other byte as it was. Elements made by .map(), a condition or a function call are refused; edit the file for those. Use it for small, exact changes to one element; use Edit or Write for new markup, new rules in a stylesheet, or many changes at once.',
@@ -369,5 +421,5 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     (args) => runInsertComponent(deps, args),
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool] });
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool] });
 }

@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { createAgentRunner } from './agent/index.js';
+import { createCommentStore } from './store/comments.js';
 import { loadConfig } from './config.js';
 import { createApp } from './http/app.js';
 import { createCanvasService } from './canvas/service.js';
@@ -60,13 +61,14 @@ async function main(): Promise<void> {
   const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
   const canvas = createCanvasService(bus, (projectId) => projects.projectDir(projectId));
-  const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas });
+  const comments = createCommentStore(config.dataDir, bus);
+  const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas, comments });
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
     if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
   });
 
-  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails, canvas });
+  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails, canvas, comments });
   const server = serve({ fetch: app.fetch, port: config.studioPort, hostname: '127.0.0.1' }, () => {
     console.log(`Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`);
   });

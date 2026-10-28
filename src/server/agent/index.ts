@@ -6,6 +6,7 @@ import { packRegistry, type PackRegistry } from '../design-system/packs.js';
 import { buildErrorMessage, syncDesignSystem } from '../design-system/sync.js';
 import type { AgentRunner, EventBus, PreviewService, ProjectStore, ServerConfig, VersionStore } from '../types.js';
 import type { CanvasService } from '../canvas/service.js';
+import type { CommentStore } from '../store/comments.js';
 import { createRunLifecycle } from './lifecycle.js';
 import { createMockDriver } from './mock.js';
 import { createSdkDriver } from './sdk-driver.js';
@@ -17,6 +18,7 @@ interface AgentRunnerDeps {
   versions: VersionStore;
   preview: PreviewService;
   canvas?: CanvasService;
+  comments?: CommentStore;
 }
 
 function claudeExecutableOption(): { claudeExecutable?: string } {
@@ -26,7 +28,7 @@ function claudeExecutableOption(): { claudeExecutable?: string } {
 
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
-  const driver = deps.config.agentMode === 'mock' ? createMockDriver({ ...canvas, preview: deps.preview }) : createSdkDriver({ preview: deps.preview, ...canvas, skillsRoot: path.join(deps.config.dataDir, 'skills-plugins'), ...claudeExecutableOption() });
+  const driver = deps.config.agentMode === 'mock' ? createMockDriver({ ...canvas, preview: deps.preview }) : createSdkDriver({ preview: deps.preview, ...canvas, ...(deps.comments ? { comments: deps.comments } : {}), skillsRoot: path.join(deps.config.dataDir, 'skills-plugins'), ...claudeExecutableOption() });
   const registry = packRegistry(undefined, { userDir: path.join(deps.config.dataDir, 'packs') });
   return createRunLifecycle({ ...deps, beforeCommit: designSystemBeforeCommit(deps.bus, registry) }, driver);
 }

@@ -1,4 +1,4 @@
-import type { AnchorMatch, AnchorQuery, CommentStatus, CommentTarget, DesignComment, DrawStroke, SelectionContext, SourceLoc } from './contracts.js';
+import type { AnchorMatch, AnchorQuery, CommentFrame, CommentStatus, CommentTarget, DesignComment, DrawStroke, SelectionContext, SourceLoc } from './contracts.js';
 
 export const COMMENT_TEXT_MAX = 2000;
 export const COMMENT_REPLIES_MAX = 50;
@@ -189,4 +189,78 @@ export function strokesBox(strokes: DrawStroke[]): SelectionContext['rect'] | nu
 
 export function drawingTarget(box: SelectionContext['rect']): CommentTarget {
   return { selector: 'body', sourceLoc: null, tag: 'body', textSnippet: '', rectHint: box };
+}
+
+export const CHAT_IMAGE_MAX = 4;
+
+export function canPickForChat(status: CommentStatus): boolean {
+  return status === 'draft' || status === 'queued' || status === 'orphaned';
+}
+
+export function frameText(frame: CommentFrame | undefined): string {
+  if (!frame) return 'entry page (/)';
+  const page = `/${frame.path.replace(/^\/+/, '')}`;
+  return frame.label ? `${frame.label} (${page})` : page;
+}
+
+function elementWhere(comment: Pick<DesignComment, 'target' | 'context'>): string[] {
+  const context = comment.context;
+  const loc = context?.source ?? comment.target.sourceLoc ?? null;
+  const parts = [`selector ${context?.selector ?? comment.target.selector}`];
+  if (loc) parts.push(`source ${loc.file}:${loc.line}`);
+  const component = context?.usedBy?.name ?? context?.component;
+  if (component) parts.push(`component <${component}>`);
+  if (context?.usedAt) parts.push(`used at ${context.usedAt.file}:${context.usedAt.line}`);
+  return parts;
+}
+
+function drawingWhere(drawing: NonNullable<DesignComment['drawing']>): string[] {
+  const { box } = drawing;
+  return [`drawing ${box.width} × ${box.height} at ${box.x}, ${box.y}`];
+}
+
+export function describeComment(comment: DesignComment): string {
+  const head = `#${comment.n}${comment.author ? ` (from ${comment.author})` : ''}: ${normalizeText(comment.text)}`;
+  const where = comment.drawing ? drawingWhere(comment.drawing) : elementWhere(comment);
+  const snippet = comment.target.textSnippet ? ` "${comment.target.textSnippet}"` : '';
+  const lines = [head, `   ${comment.target.tag}${snippet} · ${where.join(' · ')}`, `   frame ${frameText(comment.frame)}`];
+  for (const reply of comment.replies ?? []) lines.push(`   reply${reply.author ? ` from ${reply.author}` : ''}: ${normalizeText(reply.text)}`);
+  return lines.join('\n');
+}
+
+export function chatPrompt(comments: DesignComment[], notes: string[] = []): string {
+  const noun = comments.length === 1 ? 'this comment' : `these ${comments.length} comments`;
+  return [`Fix ${noun}. Change only what each one asks for.`, ...comments.map(describeComment), ...notes].join('\n');
+}
+
+function normPath(value: string): string {
+  return value.replace(/^\/+/, '').replace(/\/+$/, '');
+}
+
+function isEntry(ref: string): boolean {
+  const path = normPath(ref);
+  return path === '' || /^index\.html?$/i.test(path);
+}
+
+export function matchesFrame(comment: Pick<DesignComment, 'frame'>, ref: string): boolean {
+  const want = ref.trim();
+  const frame = comment.frame;
+  if (want.startsWith('@')) return frame?.label?.toLowerCase() === want.slice(1).toLowerCase();
+  if (!frame) return isEntry(want);
+  return frame.id === want || normPath(frame.path) === normPath(want) || (isEntry(want) && isEntry(frame.path));
+}
+
+export type CommentFilter = 'open' | 'all' | CommentStatus;
+
+export function filterComments(comments: DesignComment[], status: CommentFilter = 'open', frame?: string): DesignComment[] {
+  return comments.filter((comment) => {
+    const statusOk = status === 'all' || (status === 'open' ? comment.status !== 'resolved' : comment.status === status);
+    return statusOk && (!frame || matchesFrame(comment, frame));
+  });
+}
+
+export function commentsDone(text: string): number[] {
+  const match = /Done:\s*((?:#\d+(?:\s*,\s*|\s+and\s+|\s*))+)/i.exec(text);
+  if (!match?.[1]) return [];
+  return [...new Set([...match[1].matchAll(/#(\d+)/g)].map((m) => Number(m[1])))];
 }

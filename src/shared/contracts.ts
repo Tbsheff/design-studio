@@ -391,6 +391,7 @@ export interface RunRequest {
   selection?: SelectionContext[];
   attachmentIds?: string[];
   comments?: RunComment[];
+  commentIds?: string[];
   task?: RunTask;
   referencePages?: ReferencePage[];
   states?: StatesRequest;
@@ -423,6 +424,19 @@ export interface DesignComment {
   mentions?: RunMention[];
   drawing?: CommentDrawing;
   author?: string;
+  frame?: CommentFrame;
+}
+
+export interface CommentFrame {
+  id?: string;
+  label?: string;
+  path: string;
+}
+
+export interface CommentPrefill {
+  text: string;
+  commentIds: string[];
+  attachments: { id: string; name: string; dataUrl: string }[];
 }
 
 export interface CommentReply {

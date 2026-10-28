@@ -20,6 +20,7 @@ import { loadTasteRules, type TasteRule } from './taste.js';
 import { recommendedSkillsBlock, recommendSkills } from './skill-match.js';
 import { prepareSkills, type PreparedSkills } from './skills.js';
 import { createStudioMcpServer } from './tools.js';
+import type { CommentStore } from '../store/comments.js';
 import type { CanvasService } from '../canvas/service.js';
 import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './user-message.js';
 
@@ -31,6 +32,7 @@ type UserMessage = Extract<SDKMessage, { type: 'user' }>;
 interface SdkDriverOptions {
   preview: PreviewService;
   canvas?: CanvasService;
+  comments?: CommentStore;
   queryFn?: QueryFn;
   onMessage?: (message: SDKMessage) => void;
   onPermission?: (toolName: string, result: PermissionResult) => void;
@@ -479,6 +481,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
   const studio = await createStudioMcpServer({
     preview: options.preview,
     ...(options.canvas ? { canvas: options.canvas } : {}),
+    ...(options.comments ? { comments: options.comments } : {}),
     ctx,
     runsDir: input.runsDir,
     runId: input.runId,

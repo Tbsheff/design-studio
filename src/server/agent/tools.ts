@@ -25,6 +25,8 @@ import { insertComponentShape, runInsertComponent } from './insert-tool.js';
 import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } from './run-target.js';
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
+import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
+import type { CommentStore } from '../store/comments.js';
 
 const VIEWPORTS = {
   desktop: { width: 1440, height: 900 },
@@ -58,6 +60,7 @@ export interface StudioToolDeps {
   queryFn?: QueryFn;
   env?: Record<string, string | undefined>;
   canvas?: CanvasService;
+  comments?: CommentStore;
 }
 
 const CANVAS_OFF = 'The canvas is not available in this run.';
@@ -492,5 +495,20 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
     { annotations: { readOnlyHint: true } },
   );
 
-  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool] });
+  const listCommentsTool = tool(
+    'list_comments',
+    'Read only. List the comments pinned on this direction with the same server code as the studio Comments pane and the MCP list_comments tool: number, author (an outside agent or the user), text, replies, element (selector, source file:line, component), frame and status. status: open (default), all or one status; frame: frame id, @label or page path.',
+    listCommentsShape,
+    (args) => runListComments(deps, args),
+    { annotations: { readOnlyHint: true } },
+  );
+
+  const resolveCommentTool = tool(
+    'resolve_comment',
+    'Mark one pinned comment resolved, with the same code as Resolve in the studio Comments pane. Use it only when the user asks you to resolve a comment; after a run the user resolves the comments you fixed with the Resolve button. comment: id or number.',
+    resolveCommentShape,
+    (args) => runResolveComment(deps, args),
+  );
+
+  return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool] });
 }

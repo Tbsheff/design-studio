@@ -9,7 +9,7 @@ import { layoutProbeExpression, type LayoutProbeResult } from '../preview/layout
 import type { RenderPage } from '../preview/render-backend.js';
 import type { PreviewService } from '../types.js';
 import { BadRequestError } from '../store/errors.js';
-import { axeDrafts, axeSelector, layoutDrafts, REVIEW_AXE_RULES, tapDrafts, tokenDrafts, type AxeViolation, type Draft } from './checks.js';
+import { axeDrafts, axeSelector, groupKitTokens, layoutDrafts, REVIEW_AXE_RULES, tapDrafts, tokenDrafts, type AxeViolation, type Draft } from './checks.js';
 import { verifyFixes } from './fixes.js';
 import { markShared, pageOwnDir } from './shared-files.js';
 import { reviewProbeExpression, type ProbeResult } from './probe.js';
@@ -153,7 +153,7 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
   const drafts = project.app ? keepSharedAsk(all.filter(fromAppSource), project.app.appDir) : all;
   await verifyFixes(project, direction, drafts);
   markShared(drafts, await pageOwnDir(project, direction, frame.path));
-  const findings = ordered(grouped(unique(drafts.map((draft) => toFinding(draft, frame)))));
+  const findings = ordered(groupKitTokens(grouped(unique(drafts.map((draft) => toFinding(draft, frame)))), project.app ? project.app.appDir : null));
   const notes = [
     ...(entries.length === 0 ? [noTokensNote(facts.probe)] : []),
     ...(frame.selector ? [selectorNote(frame.selector, facts.matched)] : []),

@@ -1,4 +1,5 @@
 import { LAYER_LABEL_MAX, LAYER_TREE_MAX, SOURCE_LOC_ATTR, type LayerNode, type SelectMove } from '../shared/contracts.js';
+import { layerKey, layerRef } from '../shared/layer-ref.js';
 
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEMPLATE', 'NOSCRIPT', 'LINK', 'META', 'BASE', 'TITLE']);
 const TEXT_MAX = 40;
@@ -29,9 +30,22 @@ function textOf(element: Element): string {
   return clip(element.textContent ?? '', TEXT_MAX);
 }
 
-function locOf(element: Element): { loc?: string } {
+function locOf(element: Element, refs: Map<Element, string>): { loc?: string; ref?: string } {
   const loc = element.getAttribute(SOURCE_LOC_ATTR);
-  return loc ? { loc } : {};
+  const ref = refs.get(element);
+  return loc ? { loc, ...(ref ? { ref } : {}) } : {};
+}
+
+function sourceRefs(): Map<Element, string> {
+  const refs = new Map<Element, string>();
+  const counts = new Map<string, number>();
+  for (const element of document.body.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)) {
+    const loc = element.getAttribute(SOURCE_LOC_ATTR) as string;
+    const nth = counts.get(loc) ?? 0;
+    counts.set(loc, nth + 1);
+    refs.set(element, layerRef(layerKey(loc, null, nth)));
+  }
+  return refs;
 }
 
 export interface LayerIndex {
@@ -58,6 +72,7 @@ export function createLayerIndex(): LayerIndex {
 
   const build = (): { nodes: LayerNode[]; truncated: boolean } => {
     byId = new Map();
+    const refs = sourceRefs();
     const nodes: LayerNode[] = [];
     const stack: { element: Element; depth: number }[] = layerChildren(document.body)
       .reverse()
@@ -73,7 +88,7 @@ export function createLayerIndex(): LayerIndex {
         text: textOf(element),
         childCount: children.length,
         hidden: element.getClientRects().length === 0,
-        ...locOf(element),
+        ...locOf(element, refs),
       });
       for (let i = children.length - 1; i >= 0; i -= 1) stack.push({ element: children[i] as Element, depth: depth + 1 });
     }

@@ -14,6 +14,7 @@ import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { listAppRoutes } from '../app/routes.js';
 import { listElementVariants } from '../variations/routes.js';
+import { isLayerRef, LayerRefError, resolveLayerRef, scopeOf } from './layer-ref.js';
 
 export interface ToolContent {
   type: 'text' | 'image';
@@ -58,15 +59,22 @@ export const TOOLS: ToolDef[] = [
   def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
   def('get_tokens', 'Get design tokens', 'Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('get_design_md', 'Get DESIGN.md', 'Get the DESIGN.md rules of the project.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the size and the direction).', {
+  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the size and the direction), or of one element on it (element: layer id or CSS selector).', {
     projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE,
     frameId: { type: 'string', description: 'Canvas frame id or @label from canvas_list. Leave out to use path, width and height.' },
     width: { type: 'integer', minimum: 320, maximum: 2560, description: 'Viewport width in px. Default 1440.' },
     height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900.' },
     fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
+    element: { type: 'string', maxLength: 300, description: 'Layer id from get_layers (such as "e0k3pz") or a CSS selector: crop the shot to this element plus padding.' },
+    padding: { type: 'integer', minimum: 0, maximum: 200, description: 'Space around the element crop in px. Default 16.' },
   }, ['projectId']),
   def('list_variants', 'List element variants', 'List the element variants of a project ("Try variants" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.', { projectId: PROJECT }, ['projectId']),
-  def('list_routes', 'List app routes', 'List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group.', { projectId: PROJECT }, ['projectId']),
+  def('list_routes', 'List app routes', 'List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.', {
+    projectId: PROJECT,
+    query: { type: 'string', maxLength: 100, description: 'Search text matched against the route, page file and route group, for example "f2f" or "admin/users".' },
+    limit: { type: 'integer', minimum: 1, maximum: 500, description: 'Routes per page. Default 50.' },
+    cursor: { type: 'string', description: 'nextCursor from the previous page.' },
+  }, ['projectId']),
   def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
 ];
@@ -155,6 +163,16 @@ function summary(project: Project): unknown {
 
 const RENDERED_DOM = `(() => { const doc = document.documentElement.cloneNode(true); for (const node of doc.querySelectorAll('script, link[rel="modulepreload"], style[id^="studio-"]')) node.remove(); for (const node of doc.querySelectorAll('[${SOURCE_LOC_ATTR}]')) node.removeAttribute('${SOURCE_LOC_ATTR}'); return '<!doctype html>\\n' + doc.outerHTML; })()`;
 
+function pageOf<T extends { route: string; file: string; group?: string | null }>(routes: T[], args: Args): { routes: T[]; total: number; nextCursor: string | null } {
+  const query = str(args, 'query')?.toLowerCase();
+  const found = query ? routes.filter((r) => `${r.route} ${r.file} ${r.group ?? ''}`.toLowerCase().includes(query)) : routes;
+  const cursor = str(args, 'cursor');
+  const offset = cursor && /^\d{1,6}$/.test(cursor) ? Number(cursor) : 0;
+  const limit = int(args, 'limit', 1, 500, 50);
+  const next = offset + limit;
+  return { routes: found.slice(offset, next), total: found.length, nextCursor: next < found.length ? String(next) : null };
+}
+
 async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
   const page = pagePath(args);
@@ -231,17 +249,31 @@ async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
   return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}), ...(state ? { state } : {}) };
 }
 
+async function elementSelector(deps: ExportDeps, src: ExportSource, url: string, frame: ExportFrame, element: string): Promise<string> {
+  if (!isLayerRef(element)) return element;
+  try {
+    return await resolveLayerRef(deps.preview, url, { width: frame.width, height: frame.height }, scopeOf(src.project.id, src.direction.id), element.trim());
+  } catch (error) {
+    if (error instanceof LayerRefError) throw new ToolError(error.message);
+    throw error;
+  }
+}
+
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const picked = await frameShot(deps, raw);
   const args = picked.args;
   const src = await source(deps, args);
   const page = pagePath(args) ?? picked.path;
   const frame: ExportFrame = { name: 'Screenshot', width: picked.width ?? int(args, 'width', 320, 2560, 1440), height: picked.height ?? int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
+  const element = str(args, 'element');
   const opened = await src.open();
   try {
-    const shot = await captureFrame(deps.preview, withFrameStateHost(opened.url, picked.state), frame, 1, args.fullPage === true ? 'page' : 'frame', undefined, MAX_SHOT_HEIGHT);
+    const url = withFrameStateHost(opened.url, picked.state);
+    const selector = element ? await elementSelector(deps, src, withPagePath(url, page), frame, element) : undefined;
+    const shot = await captureFrame(deps.preview, url, frame, 1, args.fullPage === true ? 'page' : 'frame', selector, MAX_SHOT_HEIGHT, int(args, 'padding', 0, 200, 16));
     const note = shot.cropped ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.` : '';
-    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${shot.width} × ${shot.height} px of version ${src.version.id}.${note}` }] };
+    const what = element ? `element ${element} (${shot.cssWidth} × ${shot.cssHeight} CSS px with padding) on a ${frame.width} px wide page` : `${shot.width} × ${shot.height} px`;
+    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${what} of version ${src.version.id}.${note}` }] };
   } finally {
     await opened.release().catch(() => undefined);
   }
@@ -279,7 +311,7 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
       if (!project.app) throw new ToolError('this project is not an attached app');
       const main = project.directions[0];
       if (!main) throw new ToolError('project has no direction');
-      return json({ appDir: project.app.appDir, framework: project.app.framework, routes: await listAppRoutes(main.workTree, project.app.appDir) });
+      return json({ appDir: project.app.appDir, framework: project.app.framework, ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args) });
     }
     case 'list_files': {
       const src = await source(deps, args);

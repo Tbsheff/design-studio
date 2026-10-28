@@ -2,14 +2,13 @@ import { existsSync } from 'node:fs';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
-import type { ComponentInstance, ComponentSchemaList, InstanceQuery } from '../../shared/props.js';
+import type { ComponentInstance, ComponentListQuery, ComponentSchemaList, InstanceQuery } from '../../shared/props.js';
 import type { PreviewService } from '../types.js';
 import { listFiles } from './inventory.js';
 import { warmProgram } from './props-program.js';
-import { componentSchemas, declaredComponents, loadTypeScript, readModule, type ComponentRef } from './props-schema.js';
+import { searchComponents } from './component-search.js';
+import { loadTypeScript } from './props-schema.js';
 import { countUses, resolveInstance } from './use-site.js';
-
-const LIST_MAX = 40;
 
 export async function sourceFiles(workTree: string): Promise<string[]> {
   const root = await realpath(workTree);
@@ -29,19 +28,8 @@ export function usesIn(files: string[]): (name: string) => Promise<number> {
   };
 }
 
-export async function listComponentSchemas(workTree: string): Promise<ComponentSchemaList> {
-  const files = await sourceFiles(workTree);
-  const refs: ComponentRef[] = [];
-  for (const file of files) {
-    const parsed = await readModule(file);
-    if (!parsed) continue;
-    for (const item of declaredComponents(parsed.ast)) if (item.name !== 'App') refs.push({ file, name: item.name });
-  }
-  const uses = usesIn(files);
-  const schemas = await componentSchemas(workTree, refs);
-  const listed = await Promise.all(schemas.flatMap((schema) => (schema ? [uses(schema.name).then((count) => ({ ...schema, uses: count }))] : [])));
-  listed.sort((a, b) => b.uses - a.uses || a.name.localeCompare(b.name));
-  return { components: listed.slice(0, LIST_MAX), truncated: listed.length > LIST_MAX };
+export function listComponentSchemas(project: Project, workTree: string, query: ComponentListQuery = {}): Promise<ComponentSchemaList> {
+  return searchComponents(project, workTree, query);
 }
 
 export async function previewOrigin(preview: PreviewService, project: Project, direction: Direction): Promise<string | null> {

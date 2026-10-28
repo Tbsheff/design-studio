@@ -1,7 +1,7 @@
 import { readFile, realpath } from 'node:fs/promises';
 import type { Direction, DirectEditBatchResult, DirectEditRequest, Project, TextSourceInfo, Version, VersionMeta } from '../../shared/contracts.js';
 import { DirectEditError } from './errors.js';
-import { assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, themeForFile, writeAtomic } from './index.js';
+import { assertCanEdit, editSummary, patchSource, planDirectEdit, publishVersion, saveDeferred, themeForFile, writeAtomic } from './index.js';
 import type { DirectEditDeps, EditScope, PlannedEdit, ResolvedSource } from './index.js';
 import type { TailwindTheme } from './tailwind/theme.js';
 import { knownTokenVars } from './tokens.js';
@@ -174,13 +174,11 @@ export async function writeAndCommitAll(
       written.push(group);
       await writeAtomic(group.target.file, group.code);
     }
-    const version = await deps.versions.commitFile(project, direction, changed.map((group) => group.target.relative), title, meta);
-    if (version === null) throw new DirectEditError('no_change', 'The edits did not change any tracked file');
-    return version;
   } catch (error) {
     await restoreOriginals(written);
     throw error;
   }
+  return saveDeferred(deps, project, direction, changed.map((group) => group.target.relative), title, meta);
 }
 
 export async function applyDirectEditBatch(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<DirectEditBatchResult> {

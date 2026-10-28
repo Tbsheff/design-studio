@@ -9,7 +9,7 @@ import { cvaCalls, parseModuleFile } from '../components/props-schema.js';
 import { sourceFiles, usesIn } from '../components/props-service.js';
 import { elementAt, readInstance } from '../components/use-site.js';
 import { DirectEditError } from './errors.js';
-import { assertCanEdit, publishVersion, resolveSource, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
+import { assertCanEdit, publishVersion, resolveSource, saveDeferred, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
 import { parseSource } from './jsx.js';
 import { applySplices } from './splice.js';
 import { decideClassEdit } from './tailwind/index.js';
@@ -207,17 +207,7 @@ function propsTitle(tag: string, plan: PropsPlan, props: Record<string, PropValu
 
 async function commitChange(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, before: string, after: string, title: string, prompt: string): Promise<Version> {
   await writeAtomic(target.file, after);
-  let version: Version | null;
-  try {
-    version = await deps.versions.commitFile(project, direction, target.relative, title, { kind: 'manual', prompt });
-  } catch (error) {
-    await writeAtomic(target.file, before);
-    throw error;
-  }
-  if (version === null) {
-    await writeAtomic(target.file, before);
-    throw new DirectEditError('no_change', 'The edit did not change any tracked file');
-  }
+  const version = saveDeferred(deps, project, direction, [target.relative], title, { kind: 'manual', prompt });
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file: target.file, relative: target.relative, before, after }] });
   await publishVersion(deps, project, direction, version);
   return version;

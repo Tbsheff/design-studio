@@ -14,6 +14,7 @@ import { createProjectStore } from './store/projects.js';
 import { watchParent } from './parent-watch.js';
 import { desktopSender, linkDesktop } from './desktop-link.js';
 import { createVersionStore } from './store/versions.js';
+import { withSaveQueue } from './direct-edit/save-queue.js';
 import { createThumbnailService, observeBus, wantsThumbnail } from './thumbnails.js';
 
 async function watchExisting(
@@ -53,7 +54,7 @@ async function main(): Promise<void> {
   const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
   process.on('exit', releaseLock);
 
-  const versions = createVersionStore(config);
+  const versions = withSaveQueue(createVersionStore(config));
   const projects = createProjectStore(config, versions);
   const desktop = desktopSender();
   const baseBus = createEventBus(config.dataDir);

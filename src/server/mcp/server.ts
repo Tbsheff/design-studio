@@ -13,6 +13,7 @@ import { EditError, type EditDeps } from './edit-deps.js';
 import { withLayerSelectors } from './layer-tools.js';
 import { withMcpOrigin } from '../edit-origin.js';
 import { newToken, readMcpSettings, writeMcpSettings, type McpSettings } from './settings.js';
+import { takeSaveFailures } from '../direct-edit/save-queue.js';
 
 const PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const MAX_BODY = 1024 * 1024;
@@ -103,6 +104,13 @@ async function withRender(result: unknown, projectId: unknown, started: number):
 
 const FIRST_VERSION_WAIT_MS = 20_000;
 
+function withSaveFailures(result: unknown, projectId: unknown): unknown {
+  const notes = typeof projectId === 'string' ? takeSaveFailures(projectId) : [];
+  const content = (result as { content?: unknown[] }).content;
+  if (notes.length === 0 || !Array.isArray(content)) return result;
+  return { ...(result as object), content: [...content, { type: 'text', text: `An earlier edit could not be saved as a version: ${notes.join(' ')}` }] };
+}
+
 async function firstVersionRefusal(edits: EditDeps, name: string, projectId: unknown): Promise<string | null> {
   if (!RENDER_WAIT_TOOLS.has(name) || typeof projectId !== 'string') return null;
   const project = await edits.projects.get(projectId).catch(() => null);
@@ -117,7 +125,8 @@ async function runEdit(edits: EditDeps, name: string, raw: unknown, client: stri
     if (blocked) return { content: [{ type: 'text', text: blocked }], isError: true };
     const result = await withMcpOrigin(client, async () => callEditTool(edits, name, await withLayerSelectors(edits, args, TAKES_PATH.has(name)), client));
     const failed = (result as { isError?: boolean }).isError === true;
-    return wait && !failed ? await withRender(result, args.projectId, started) : result;
+    const done = wait && !failed ? await withRender(result, args.projectId, started) : result;
+    return withSaveFailures(done, args.projectId);
   } catch (error) {
     const known = error instanceof EditError || (error instanceof Error && 'status' in error);
     if (!known) console.error('[mcp] edit tool failed', name, error);

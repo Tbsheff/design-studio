@@ -146,6 +146,55 @@ export interface Project {
   settingsVersion?: number;
   directions: Direction[];
   thumbnail?: ProjectThumbnail | null;
+  app?: AttachedApp | null;
+}
+
+export type AppFramework = 'next' | 'vite';
+
+export interface AttachedApp {
+  framework: AppFramework;
+  appDir: string;
+  mode: 'managed' | 'url';
+  url?: string;
+  env?: Record<string, string>;
+}
+
+export type AppServerState = 'idle' | 'starting' | 'ready' | 'failed' | 'stopped';
+
+export interface AppServerStatus {
+  state: AppServerState;
+  mode: 'managed' | 'url';
+  upstream: string | null;
+  command: string | null;
+  message: string | null;
+  startedAt: number | null;
+}
+
+export interface AppLogLine {
+  at: number;
+  stream: 'stdout' | 'stderr' | 'studio';
+  text: string;
+}
+
+export interface AppRoute {
+  route: string;
+  file: string;
+  dynamic: boolean;
+  group: string | null;
+}
+
+export interface AppCandidate {
+  appDir: string;
+  name: string;
+  framework: AppFramework;
+}
+
+export interface AttachAppRequest {
+  folder?: string;
+  url?: string;
+  appDir?: string;
+  name?: string;
+  env?: Record<string, string>;
 }
 
 export interface ProjectThumbnail {
@@ -511,7 +560,8 @@ export type StudioEventBody =
   | { type: 'mcp.approval.resolved'; approvalId: string; outcome: McpApprovalOutcome }
   | { type: 'mcp.activity'; activity: McpActivity }
   | { type: 'mcp.point'; point: McpPoint }
-  | { type: 'design-system.sources'; sources: DraftSourcesState };
+  | { type: 'design-system.sources'; sources: DraftSourcesState }
+  | { type: 'app.status'; status: AppServerStatus };
 
 export interface McpActivity {
   id: string;
@@ -664,7 +714,12 @@ export const API_ROUTES = {
   previewTokens: 'POST /api/projects/:pid/d/:did/design-system/preview {changes: TokenChange[]} -> TokenPreviewResult (no files written)',
   updateTokens: 'POST /api/projects/:pid/d/:did/design-system/tokens/update {changes: TokenChange[]} -> UpdateTokensResult (one version; 409 run active, 422 invalid, 404 unknown path)',
   createToken: 'POST /api/projects/:pid/d/:did/design-system/tokens CreateTokenRequest -> CreateTokenResult (409 run active, 409 token_exists, 422 invalid, 404 no design system)',
-  importProject: 'POST /api/projects/import {path} -> {project}',
+  importProject: 'POST /api/projects/import {path, appDir?} -> {project} (a Next.js app or a workspace with Next.js apps under apps/* attaches as an app project; 409 pick_app {candidates} when more than one app matches)',
+  attachApp: 'POST /api/projects/attach AttachAppRequest -> {project} (folder: managed dev server, or url: a dev server the user runs; the project points at the folder, nothing is copied)',
+  appStatus: 'GET /api/projects/:pid/app -> {app, status, logs} (404 when the project is not an attached app)',
+  appControl: 'POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus',
+  appRoutes: 'GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)',
+  openSource: 'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
   createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself. 400 no source, blocked URL, unknown base pack',
   getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',

@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { cp, lstat, mkdir, readFile, realpath, rename, rm, symlink, unlink, writeFile } from 'node:fs/promises';
+import { cp, lstat, mkdir, readFile, realpath, rename, rm, stat, symlink, unlink, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
@@ -11,9 +11,11 @@ import type { ServerConfig, SessionEndResult, SessionSpan, VersionStore } from '
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
 import { createKeyedMutex } from './mutex.js';
 
-export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.studio/*', `!${CANVAS_FILE}`, '.DS_Store'];
+export const GIT_EXCLUDES = ['node_modules', 'node_modules/', 'dist/', '.vite/', '.next/', '.turbo/', '.studio/*', `!${CANVAS_FILE}`, '.DS_Store'];
 const NEVER_TRACKED = ['node_modules'];
 const MAX_SCOPED_PATHS = 500;
+const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
+const APP_EXCLUDES = ['*.onnx', '*.mlmodelc/', '*.mlpackage/', '*.sqlite', '*.db', '*.m4a', '*.mp3', '*.wav', '*.mp4', '*.mov', '*.zip', '*.tar', '*.tgz', '*.gz', '.env', '.env.*', '!.env.example', '*.pem', '*.key'];
 
 const META_PREFIX = 'studio-meta: ';
 const MAX_ORIGIN_DEPTH = 64;
@@ -180,10 +182,27 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const lock = createKeyedMutex();
   const freshExcludes = new Set<string>();
 
+  const largeUntracked = async (project: Project): Promise<string[]> => {
+    const main = project.directions[0];
+    if (!main) return [];
+    const { stdout } = await runGit(directionScope(project, main), ['ls-files', '--others', '--exclude-standard', '-z']);
+    const large: string[] = [];
+    for (const relative of splitNul(stdout)) {
+      const info = await stat(path.join(main.workTree, relative)).catch(() => null);
+      if (info && info.size > APP_MAX_TRACKED_BYTES) large.push(`/${relative.replace(/([*?[\]\\!#])/g, '\\$1')}`);
+    }
+    return large;
+  };
+
   const writeExclude = async (project: Project): Promise<void> => {
     const infoDir = path.join(gitDirOf(project), 'info');
     await mkdir(infoDir, { recursive: true });
-    await writeFile(path.join(infoDir, 'exclude'), `${GIT_EXCLUDES.join('\n')}\n`);
+    const base = project.app ? [...GIT_EXCLUDES, ...APP_EXCLUDES] : GIT_EXCLUDES;
+    await writeFile(path.join(infoDir, 'exclude'), `${base.join('\n')}\n`);
+    if (project.app) {
+      const large = await largeUntracked(project);
+      if (large.length > 0) await writeFile(path.join(infoDir, 'exclude'), `${[...base, ...large].join('\n')}\n`);
+    }
     freshExcludes.add(project.id);
   };
 

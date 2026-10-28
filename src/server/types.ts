@@ -1,6 +1,8 @@
 import type { InspectResult, RenderCheckOptions, TileRequest, TileResult } from './preview/browser.js';
 import type { RenderPage } from './preview/render-backend.js';
 import type {
+  AppLogLine,
+  AppServerStatus,
   Attachment,
   CheckViewport,
   Direction,
@@ -43,7 +45,7 @@ export interface ProjectStore {
   list(): Promise<Project[]>;
   get(projectId: string): Promise<Project>;
   create(input: { name: string; kind: ProjectKind; settings?: Partial<ProjectSettings> }): Promise<Project>;
-  importFolder(sourcePath: string): Promise<Project>;
+  importFolder(sourcePath: string, appDir?: string): Promise<Project>;
   save(project: Project): Promise<void>;
   addDirection(projectId: string, input: { name: string; fromVersionId: string | null }): Promise<Direction>;
   updateDirection(projectId: string, directionId: string, patch: Partial<Direction>): Promise<Direction>;
@@ -117,6 +119,15 @@ export interface AgentRunner {
   stopping?(projectId: string, directionId: string): Promise<unknown> | null;
 }
 
+export interface AppControl {
+  status(project: Project): AppServerStatus;
+  logs(projectId: string): AppLogLine[];
+  ensure(project: Project): Promise<string>;
+  stop(projectId: string): Promise<void>;
+  restart(project: Project): Promise<string>;
+  forget(projectId: string): void;
+}
+
 export interface PreviewService {
   start(): Promise<void>;
   stop(): Promise<void>;
@@ -127,6 +138,7 @@ export interface PreviewService {
   unwatch(directionId: string): void;
   release(project: Project, direction: Direction): Promise<void>;
   renderCheck(project: Project, direction: Direction, options?: RenderCheckOptions): Promise<RenderCheckResult[]>;
+  apps?: AppControl;
   inspect(url: string, viewport: CheckViewport, outPath: string, selectionLocs: string[]): Promise<InspectResult>;
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;
   screenshotTiles(url: string, request: TileRequest): Promise<TileResult>;

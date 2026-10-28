@@ -34,7 +34,7 @@ type Args = Record<string, unknown>;
 const MAX_TEXT = 256 * 1024;
 const MAX_FILES = 2000;
 const MAX_SHOT_HEIGHT = 6000;
-const SKIP = new Set(['node_modules', '.git', '.studio', 'dist', '.vite', '.DS_Store']);
+const SKIP = new Set(['node_modules', '.git', '.studio', 'dist', '.vite', '.next', '.turbo', '.DS_Store']);
 const TEXT_EXT = new Set(['.html', '.htm', '.css', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.json', '.md', '.txt', '.svg', '.xml', '.yml', '.yaml', '.toml']);
 
 const PROJECT = { type: 'string', description: 'Project id from list_projects' };

@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { serve } from '@hono/node-server';
-import type { ServerType } from '@hono/node-server';
+import { getRequestListener } from '@hono/node-server';
+import http from 'node:http';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { BRIDGE_SCRIPT_PATH, projectPreviewHost } from '../../shared/contracts.js';
 import { injectForPreview } from '../design-system/html-link.js';
 import { annotateHtml } from './annotate.js';
+import type { AppProxy } from '../app/proxy.js';
 
 export type RootKind = 'direction' | 'snapshot';
 
@@ -16,6 +17,7 @@ interface HtmlServerOptions {
   hostname?: string;
   bridgeScript: () => Promise<string>;
   resolveRoot: (kind: RootKind, projectId: string, key: string) => Promise<string | null>;
+  appProxy?: AppProxy;
 }
 
 export interface HtmlServer {
@@ -114,17 +116,39 @@ async function resolveFile(root: string, relative: string): Promise<{ file: stri
   }
 }
 
-function listenOn(app: Hono, port: number, hostname: string): Promise<ServerType> {
-  return new Promise<ServerType>((resolve, reject) => {
-    const instance = serve({ fetch: app.fetch, port, hostname }, () => resolve(instance));
+function listenOn(app: Hono, port: number, hostname: string, appProxy: AppProxy | undefined): Promise<http.Server> {
+  const honoListener = getRequestListener(app.fetch);
+  const appProjectOf = async (req: http.IncomingMessage): Promise<string | null> => {
+    const projectId = appProxy?.projectOf(req) ?? null;
+    if (!projectId || !SAFE_ID.test(projectId)) return null;
+    return (await appProxy?.isApp(projectId).catch(() => false)) ? projectId : null;
+  };
+  return new Promise<http.Server>((resolve, reject) => {
+    const instance = http.createServer((req, res) => {
+      void appProjectOf(req).then((projectId) => {
+        if (projectId && appProxy) return appProxy.handle(req, res, projectId);
+        return honoListener(req, res);
+      }).catch(() => {
+        if (!res.headersSent) res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end('Preview error');
+      });
+    });
+    instance.on('upgrade', (req: http.IncomingMessage, socket, head: Buffer) => {
+      void appProjectOf(req)
+        .then(async (projectId) => {
+          if (projectId && appProxy) await appProxy.upgrade(req, socket, head, projectId);
+          else socket.destroy();
+        })
+        .catch(() => socket.destroy());
+    });
     instance.once('error', reject);
+    instance.listen(port, hostname, () => resolve(instance));
   });
 }
 
-function closeServer(server: ServerType): Promise<void> {
+function closeServer(server: http.Server): Promise<void> {
   return new Promise<void>((resolve) => {
-    const closable = server as ServerType & { closeAllConnections?: () => void };
-    closable.closeAllConnections?.();
+    server.closeAllConnections();
     server.close(() => resolve());
   });
 }
@@ -185,9 +209,9 @@ export async function startHtmlServer(options: HtmlServerOptions): Promise<HtmlS
   app.notFound((c) => c.text('Not found', 404, securityHeaders));
   app.onError((_error, c) => c.text('Preview error', 500, securityHeaders));
 
-  const primary = await listenOn(app, options.port, options.hostname ?? '127.0.0.1');
+  const primary = await listenOn(app, options.port, options.hostname ?? '127.0.0.1', options.appProxy);
   const port = (primary.address() as { port?: number } | null)?.port ?? options.port;
-  const loopbackV6 = await listenOn(app, port, '::1').catch(() => null);
+  const loopbackV6 = await listenOn(app, port, '::1', options.appProxy).catch(() => null);
   const servers = loopbackV6 ? [primary, loopbackV6] : [primary];
 
   return {

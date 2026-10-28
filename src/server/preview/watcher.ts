@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
 import type { EventBus, ProjectStore, VersionStore } from '../types.js';
 
-const IGNORED_SEGMENTS = new Set(['node_modules', '.git', 'dist', '.vite', 'vite-cache', '.DS_Store', '.studio']);
+const IGNORED_SEGMENTS = new Set(['node_modules', '.git', 'dist', '.vite', 'vite-cache', '.DS_Store', '.studio', '.next', '.turbo']);
 const COALESCE_MS = 20;
 const STATUS_INTERVAL_MS = 500;
 

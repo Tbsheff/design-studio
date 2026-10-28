@@ -23,14 +23,14 @@ export async function resolveSource(deps: ExportDeps, projectId: string, version
   const version = await deps.versions.get(project, assertSafeId(versionId, 'versionId'));
   const direction = project.directions.find((d) => d.id === version.directionId) ?? project.directions[0];
   if (!direction) throw new NotFoundError('project has no direction');
-  const live = direction.headVersionId === version.id && !(await deps.versions.status(project, direction)).dirty;
+  const live = Boolean(project.app) || (direction.headVersionId === version.id && !(await deps.versions.status(project, direction)).dirty);
   if (live) {
     return {
       project,
       direction,
       version,
       root: direction.workTree,
-      files: () => deps.versions.snapshot(project, version.id),
+      files: async () => (project.app ? direction.workTree : deps.versions.snapshot(project, version.id)),
       open: async () => ({ url: await deps.preview.directionUrl(project, direction), release: async () => undefined }),
     };
   }

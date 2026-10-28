@@ -5,9 +5,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { customAlphabet, nanoid } from 'nanoid';
 import { DEFAULT_SETTINGS, LEGACY_DEFAULT_BUDGET_USD, SETTINGS_VERSION } from '../../shared/contracts.js';
-import type { Attachment, Direction, Project, ProjectKind, ProjectSettings, ProjectThumbnail } from '../../shared/contracts.js';
+import type { AttachAppRequest, AttachedApp, Attachment, Direction, Project, ProjectKind, ProjectSettings, ProjectThumbnail } from '../../shared/contracts.js';
 import type { ProjectStore, ServerConfig, VersionStore } from '../types.js';
-import { BadRequestError, ConflictError, NotFoundError, assertSafeId, isNodeError } from './errors.js';
+import { BadRequestError, ConflictError, NotFoundError, PickAppError, assertSafeId, isNodeError } from './errors.js';
+import { cleanAppDir, detectApp, frameworkOf } from '../app/detect.js';
 import { MAX_SLUG_SUFFIX, slugCandidate, slugify } from '../../shared/folders.js';
 import { createKeyedMutex } from './mutex.js';
 import { packagedResource, resourcePath } from '../resources.js';
@@ -56,6 +57,39 @@ export interface StudioProjectStore extends ProjectStore {
   linkModules(workTree: string, sourceModules: string): Promise<void>;
   reserveFolder(parentPath: string, name: string): Promise<string>;
   writeRaw(project: Project): Promise<void>;
+  attachApp(input: AttachAppRequest): Promise<Project>;
+}
+
+const ENV_KEY = /^[A-Z_][A-Z0-9_]{0,63}$/;
+const BLOCKED_ENV_KEY = /^(STUDIO_|ANTHROPIC_|CLAUDE_|NODE_OPTIONS$|PATH$|HOME$)/;
+const MAX_ENV_KEYS = 64;
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+export function cleanAppUrl(raw: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    throw new BadRequestError('url must be a full http URL, for example http://localhost:3000');
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new BadRequestError('url must use http or https');
+  if (!LOOPBACK_HOSTS.has(url.hostname)) throw new BadRequestError('url must point at a dev server on this computer (localhost or 127.0.0.1)');
+  if (url.username || url.password) throw new BadRequestError('url must not hold a user name or password');
+  return url.origin;
+}
+
+function cleanAppEnv(raw: unknown): Record<string, string> | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (typeof raw !== 'object' || Array.isArray(raw)) throw new BadRequestError('env must be an object of strings');
+  const entries = Object.entries(raw as Record<string, unknown>);
+  if (entries.length > MAX_ENV_KEYS) throw new BadRequestError(`env takes at most ${MAX_ENV_KEYS} keys`);
+  const env: Record<string, string> = {};
+  for (const [key, value] of entries) {
+    if (!ENV_KEY.test(key) || BLOCKED_ENV_KEY.test(key)) throw new BadRequestError(`env key ${key} is not allowed`);
+    if (typeof value !== 'string' || value.length > 4000 || value.includes('\0')) throw new BadRequestError(`env ${key} must be a short string`);
+    env[key] = value;
+  }
+  return env;
 }
 
 function migrateSettings(project: Pick<Project, 'settings' | 'settingsVersion'>): ProjectSettings {
@@ -133,6 +167,24 @@ function hasViteDependency(pkg: unknown): boolean {
     const deps = record[field];
     return typeof deps === 'object' && deps !== null && 'vite' in deps;
   });
+}
+
+async function pickAppDir(folder: string, requested: string | undefined): Promise<string> {
+  let appDir: string | null;
+  if (typeof requested === 'string' && requested.trim() !== '') {
+    appDir = cleanAppDir(requested);
+    if (appDir === null) throw new BadRequestError('appDir must be a folder inside the attached folder');
+  } else {
+    const detection = await detectApp(folder);
+    if (detection.appDir === null && detection.candidates.length > 1) throw new PickAppError(detection.candidates);
+    appDir = detection.framework === 'next' ? detection.appDir : null;
+  }
+  if (appDir === null) throw new BadRequestError('no Next.js app found: the folder or one of its apps/* folders needs a package.json with a next dependency and an app/ folder');
+  const appRoot = await realpath(path.join(folder, appDir)).catch(() => null);
+  if (!appRoot || (appRoot !== folder && !appRoot.startsWith(folder + path.sep))) throw new BadRequestError(`appDir ${appDir} is not a folder inside ${folder}`);
+  const pkg = (await readJson(path.join(appRoot, 'package.json')).catch(() => null)) as Record<string, unknown> | null;
+  if (frameworkOf(pkg) !== 'next') throw new BadRequestError(`${appDir} has no next dependency in its package.json`);
+  return appDir;
 }
 
 export function createProjectStore(
@@ -270,6 +322,15 @@ export function createProjectStore(
     return project;
   };
 
+  const updateApp = (projectId: string, app: AttachedApp, keepEnv: boolean): Promise<Project> =>
+    lock(projectId, async () => {
+      const project = await readProject(projectId);
+      project.app = keepEnv && project.app?.env ? { ...app, env: project.app.env } : app;
+      project.updatedAt = Date.now();
+      await writeProject(project);
+      return project;
+    });
+
   return {
     projectDir,
     directionOf,
@@ -314,8 +375,28 @@ export function createProjectStore(
       return project;
     },
 
-    async importFolder(sourcePath: string): Promise<Project> {
+    async attachApp(input: AttachAppRequest): Promise<Project> {
+      if (typeof input.folder !== 'string' || input.folder.trim() === '') throw new BadRequestError('folder is required: the app code must be on this computer so routes and click-to-source can read it');
+      const folder = await resolveUserFolder(input.folder);
+      const url = typeof input.url === 'string' && input.url.trim() !== '' ? cleanAppUrl(input.url) : undefined;
+      const env = cleanAppEnv(input.env);
+      const appDir = await pickAppDir(folder, input.appDir);
+      const app: AttachedApp = { framework: 'next', appDir, mode: url ? 'url' : 'managed', ...(url ? { url } : {}), ...(env ? { env } : {}) };
+      const existing = (await this.list()).find((project) => project.app && project.imported?.sourcePath === folder && project.app.appDir === appDir);
+      if (existing) return updateApp(existing.id, app, env === undefined);
+      const fallbackName = appDir === '.' ? path.basename(folder) : `${path.basename(folder)} ${path.basename(appDir)}`;
+      const name = (typeof input.name === 'string' && input.name.trim() !== '' ? input.name.trim() : fallbackName).slice(0, 120);
+      const project = await registerFolder(folder, { name, kind: 'react', created: false });
+      project.app = app;
+      project.entry = '/';
+      await writeProject(project);
+      return project;
+    },
+
+    async importFolder(sourcePath: string, appDir?: string): Promise<Project> {
       const folder = await resolveUserFolder(sourcePath);
+      const detection = await detectApp(folder);
+      if (appDir || detection.framework === 'next') return this.attachApp({ folder, ...(appDir ? { appDir } : {}) });
       const packageFile = path.join(folder, 'package.json');
       const hasPackage = existsSync(packageFile);
       const isVite = hasPackage && hasViteDependency(await readJson(packageFile).catch(() => null));
@@ -392,6 +473,7 @@ export function createProjectStore(
 
     async addDirection(projectId: string, input: { name: string; fromVersionId: string | null }): Promise<Direction> {
       const project = await readProject(projectId);
+      if (project.app) throw new BadRequestError('An attached app has one direction: the app folder itself. Directions and variations copy the folder, so they are off for attached apps.');
       const id = directionId();
       const workTree = path.join(projectDir(projectId), 'directions', id);
       const direction = newDirection(id, input.name.trim() || `Direction ${project.directions.length + 1}`, workTree, Date.now());

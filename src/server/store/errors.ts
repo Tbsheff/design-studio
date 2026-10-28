@@ -1,3 +1,5 @@
+import type { AppCandidate } from '../../shared/contracts.js';
+
 export class NotFoundError extends Error {
   readonly status = 404;
 }
@@ -8,6 +10,12 @@ export class BadRequestError extends Error {
 
 export class ConflictError extends Error {
   readonly status = 409;
+}
+
+export class PickAppError extends ConflictError {
+  constructor(readonly candidates: AppCandidate[]) {
+    super(`This folder has ${candidates.length} Next.js apps. Pick one: ${candidates.map((candidate) => candidate.appDir).join(', ')}.`);
+  }
 }
 
 const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;

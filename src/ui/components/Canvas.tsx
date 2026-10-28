@@ -40,6 +40,7 @@ import { McpPointBadge } from './McpPointBadge';
 import { appRoutePages, useAppCanvas } from './AppCanvas';
 import { usePrototype } from '../usePrototype';
 import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameStates';
+import { useClickThrough } from '../useClickThrough';
 
 interface Props {
   projectId: string;
@@ -63,6 +64,7 @@ interface Props {
   directions?: CanvasDirections;
   shell?: CanvasShell;
   app?: AttachedApp | null;
+  onFrameChange?: () => void;
 }
 
 export interface CanvasCommentTools {
@@ -367,6 +369,17 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, 
 
 }
 
+function useFrameChange(key: string, onChange: (() => void) | undefined) {
+  const last = useRef(key);
+  const latest = useRef(onChange);
+  latest.current = onChange;
+  useEffect(() => {
+    if (last.current === key) return;
+    last.current = key;
+    latest.current?.();
+  }, [key]);
+}
+
 function canvasClass(editing: boolean): string {
   return editing ? 'canvas text-editing' : 'canvas';
 }
@@ -512,7 +525,12 @@ export function Canvas(props: Props) {
   const darkSwitch = themeSwitch(props.darkPreview, theme);
 
   const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
-  const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef);
+  const clickThrough = useClickThrough(frames, picking);
+  useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
+    props.setSelection((prev) => (prev.length > 0 ? [] : prev));
+    props.onFrameChange?.();
+  });
+  const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
   const frameActions = (frame: CanvasFrame, did: string | null): FrameMenuItem[] => {
     const make = props.onMakeStates;
     if (!make) return [];

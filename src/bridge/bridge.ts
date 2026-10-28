@@ -1051,6 +1051,17 @@ function startBridge(session: BridgeSession): void {
       };
       attempt(SELECT_RETRIES);
     },
+    'select-at': (message) => {
+      if (typeof message.x !== 'number' || typeof message.y !== 'number') return;
+      const { x, y } = message;
+      const attempt = (left: number): void => {
+        const element = dropElement(x, y);
+        const ready = element && (APP_MODE !== 'next' || appHydrated(element));
+        if (element && (ready || left === 0)) postSelect(element, false);
+        else if (left > 0) window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+      };
+      attempt(SELECT_RETRIES);
+    },
     'find-styles': (message) => findStyles(message, { selectorOf: selectorFor, select: postSelect, reply: (requestId, result, selected) => post({ type: 'styles-found', requestId, result, selected }) }),
     'select-source': (message) => {
       const element = elementBySource(message, textOf);

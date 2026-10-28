@@ -119,7 +119,7 @@ export function LeftPane(props: Props) {
         )}
         {sheet && <Sheet {...props} tab={tab} />}
       </div>
-      <ErrorsPanel {...props.errors} />
+      <ErrorsPanel {...props.errors} pane={tab} />
       {comments && tab !== 'comments' && <QueuedComposerBar control={comments.control} onShow={() => props.onTab('comments')} />}
       {props.todos && chat && <TodoPanel {...props.todos} />}
       <div className="pane-composer" hidden={!chat}>

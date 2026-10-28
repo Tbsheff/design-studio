@@ -7,9 +7,11 @@ import { uiStore, useUi } from './storage';
 import { blocksZoomKey, type PanZoom } from './usePanZoom';
 import type { FilesChange } from './useStudioData';
 import { frameSnapStore, otherFrames, useFrameResize } from './useFrameResize';
+import type { ClickThrough } from './useClickThrough';
 
 const ZOOM_ECHO_MS = 150;
 const DRAG_THRESHOLD = 3;
+const TITLE_DOUBLE_MS = 400;
 
 type ZoomSource = 'key' | 'frame' | 'menu';
 
@@ -134,7 +136,12 @@ function placeDrag(state: DragState, artboard: HTMLDivElement | null, dx: number
   }
 }
 
-export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: RefObject<HTMLDivElement | null>) {
+function pointIn(target: HTMLElement, clientX: number, clientY: number, zoom: number): { x: number; y: number } {
+  const rect = target.getBoundingClientRect();
+  return { x: (clientX - rect.left) / zoom, y: (clientY - rect.top) / zoom };
+}
+
+export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: RefObject<HTMLDivElement | null>, clickThrough?: ClickThrough) {
   const { layout } = frames;
   const passiveRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const registerPassive = useCallback((id: string, el: HTMLDivElement | null) => {
@@ -168,11 +175,12 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     frames.update((l) => moveFrame(l, frame.id, dx, dy));
   };
 
-  const onFramePointerDown = (e: ReactPointerEvent, frame: CanvasFrame) => {
+  const onFramePointerDown = (e: ReactPointerEvent, frame: CanvasFrame, body?: boolean) => {
     if (e.button !== 0 || pz.spaceHeld || pz.zoomHeld) return;
     e.preventDefault();
     e.stopPropagation();
     const target = e.currentTarget as HTMLElement;
+    const point = body ? pointIn(target, e.clientX, e.clientY, pz.zoom) : null;
     target.setPointerCapture(e.pointerId);
     const state: DragState = {
       frame,
@@ -204,6 +212,7 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
       placeDrag(state, artboardRef.current, 0, 0);
       if (!moved) {
         frames.activate(frame);
+        if (point) clickThrough?.(point);
         return;
       }
       pz.freeze();
@@ -214,13 +223,27 @@ export function useFrameActions(frames: CanvasFrames, pz: PanZoom, artboardRef: 
     target.addEventListener('pointercancel', end);
   };
 
+  const lastTitle = useRef<{ id: string; at: number } | null>(null);
+  const onTitlePointerDown = (e: ReactPointerEvent, frame: CanvasFrame) => {
+    const last = lastTitle.current;
+    const now = performance.now();
+    lastTitle.current = { id: frame.id, at: now };
+    if (e.button !== 0 || !last || last.id !== frame.id || now - last.at > TITLE_DOUBLE_MS) return onFramePointerDown(e, frame);
+    e.preventDefault();
+    e.stopPropagation();
+    lastTitle.current = null;
+    frames.activate(frame);
+    pz.zoomToActive();
+  };
+
   const onResizeStart = useFrameResize(frames, pz, artboardRef, passiveRefs);
   const labelProps = (frame: CanvasFrame) => ({
     frame,
     active: frame.id === layout.activeId,
     removable: layout.frames.length > 1,
     directionId: null as string | null,
-    onPointerDown: onFramePointerDown,
+    onPointerDown: onTitlePointerDown,
+    onBodyPointerDown: onFramePointerDown,
     onActivate: frames.activate,
     onRemove: removeFrameAt,
     onNudge: nudge,

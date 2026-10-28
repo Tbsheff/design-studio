@@ -1018,6 +1018,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'select-source'; sourceLoc: string; tag: string; text: string }
   | { ns: 'studio'; token: string; type: 'select-selector'; selector: string }
+  | { ns: 'studio'; token: string; type: 'select-at'; x: number; y: number }
   | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
   | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string };
 

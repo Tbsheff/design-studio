@@ -1,7 +1,7 @@
 import { converter, formatHex, parse, wcagContrast, type Color } from 'culori';
 import type { CompiledTokenEntry, DirectStyleProperty, LayoutFinding, SourceLoc, TokenMatch } from '../../shared/contracts.js';
 import { DIRECT_STYLE_PROPERTIES } from '../../shared/contracts.js';
-import type { ReviewFix, ReviewKind, ReviewSeverity } from '../../shared/review.js';
+import type { ReviewFinding, ReviewFix, ReviewKind, ReviewSeverity } from '../../shared/review.js';
 import { isSnappable, lengthToPx, matchDimension, matchForProperty, modeValue, resolveTokenValue, tokenFieldState } from '../../shared/token-match.js';
 import { keepsHue } from './hue.js';
 import type { ProbeElement, TokenHit } from './probe.js';
@@ -363,4 +363,48 @@ export function tokenDrafts(hits: TokenHit[], elements: Record<string, ProbeElem
     .map((hit) => tokenDraft(hit, elements[hit.selector], entries, true))
     .filter((draft): draft is Draft => draft !== null)
     .slice(0, cap);
+}
+
+export function kitFile(source: string | null, appDir: string | null): string | null {
+  const file = parseLoc(source)?.file ?? null;
+  if (!file || appDir === null) return null;
+  const dir = appDir.replace(/^\.\/?/, '').replace(/\/+$/, '');
+  if (file.startsWith('../')) return file.replace(/^(\.\.\/)+/, '');
+  return dir && !file.startsWith(`${dir}/`) ? file : null;
+}
+
+function usesText(count: number): string {
+  return count === 1 ? '1 use' : `${count} uses`;
+}
+
+function kitRow(first: ReviewFinding, file: string, uses: number): ReviewFinding {
+  const note = `This class is in the shared file ${file}; ${usesText(uses)} on this page come from it. Change it there once.`;
+  return { ...first, element: `in ${file}, ${usesText(uses)}`, copies: uses, shared: file, message: `${first.message} ${note}`, ask: `${first.ask}\n${note}` };
+}
+
+export function groupKitTokens(findings: ReviewFinding[], appDir: string | null): ReviewFinding[] {
+  const groups = new Map<string, { file: string; list: ReviewFinding[] }>();
+  const out: (ReviewFinding | string)[] = [];
+  for (const finding of findings) {
+    const file = finding.kind === 'off-token' ? kitFile(finding.source, appDir) : null;
+    if (!file) {
+      out.push(finding);
+      continue;
+    }
+    const key = `${file}|${finding.message}`;
+    const group = groups.get(key);
+    if (group) group.list.push(finding);
+    else {
+      groups.set(key, { file, list: [finding] });
+      out.push(key);
+    }
+  }
+  return out.map((item) => {
+    if (typeof item !== 'string') return item;
+    const group = groups.get(item) as { file: string; list: ReviewFinding[] };
+    const uses = group.list.reduce((sum, finding) => sum + (finding.copies ?? 1), 0);
+    const first = group.list[0] as ReviewFinding;
+    const oneLine = group.list.every((finding) => finding.source === first.source);
+    return kitRow(oneLine ? first : { ...first, fix: null }, group.file, uses);
+  });
 }

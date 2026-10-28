@@ -218,6 +218,33 @@ UI inspector → preview-style / preview-text to the bridge (live, not saved)
 - Keys (`shared/structure-keys.ts`): ⌫/Delete, ⌘D, ⌥⌘G, ⇧⌘G, ⌘X then ⌘V (cut marks the selection; paste moves it into the selected element as one move, and refuses when the head version changed after the cut). They work with focus on the studio, in the layers tree, and in the preview (bridge `structure-key`). The canvas right-click menu and the layers row menu list the same actions; the layers header has Duplicate, Wrap, Unwrap and Delete buttons. Layers drag: the middle half of a container row (it has child elements, or it is an empty div, section, list and so on) moves into it; the top and bottom quarters move before or after it (`layerDrop`, rows carry `loc` from `data-studio-loc`). A drop next to the adjacent sibling stays the old up/down swap.
 - Explicit commits (Enter, blur, clicks, pointerup) write at once; only arrow steps and the color drag keep the 250 ms debounce.
 
+### Tailwind edits
+
+```
+direct edit (inspector, batch, MCP edit_element, agent edit_element) → planDirectEdit / batch groupByFile
+  → tailwind/theme.ts tailwindThemeFor(workTree, file, projectKind)   (null = not Tailwind: old inline path)
+       detect: a CSS file with @import "tailwindcss" (v4) or @tailwind (v3), else package.json tailwindcss / @tailwindcss/vite|postcss, else tailwind.config.*
+       HTML file: @tailwindcss/browser (v4), cdn.tailwindcss.com (v3), <style type="text/tailwindcss">; a static HTML project needs one of these
+       theme = defaults (project node_modules/tailwindcss/theme.css > the studio's copy > built-in table; v3: built-in v3 scales) + the project CSS @theme
+               (+ :root color vars for v3); var aliases (@theme inline --color-primary: var(--primary)) map --primary to primary
+  → jsx-site.ts / html-site.ts: the class segments of the element
+       className="…", {'…'}, {`…`} quasis, cn/clsx/classnames/cx/twMerge/twJoin string args = editable
+       strings under && ?: {key: cond} = read-only (a note when one sets the same utility)
+       a class glued to ${} in the same group, a call such as cva(), a variable = unsafe
+  → map.ts cssEdits: CSS value → utility: nearest theme step within 0.5px (spacing, text, radius), named leading/tracking/weight,
+       colors by OKLab distance ≤ 0.02 (project > default, var alias of a :root var > other alias > raw, then the short name), alpha as /NN,
+       var(--color-x) → x, else arbitrary (p-[22px], bg-(--x) in v4, bg-[var(--x)] in v3)
+  → plan.ts: per variant group (base edits never touch md:, hover:, dark:) expand p/px/pt…, rounded/rounded-t…, gap/gap-x, w/h/size to sides,
+       apply, compact (p-6, px-4 py-2, pt-6 pb-4), replace in place, remove the same props from a literal inline style
+  → result.tailwind {mode: classes | inline | none, classes, dynamic, note}
+```
+
+- Unsafe className with a style edit: the old inline style path, and the note says why. With `classes {add, remove}` it is refused (`classes_not_editable`).
+- Hide and show (`display: none` / `display: null` alone) stay inline, so Show never deletes `flex`.
+- `classes.add` uses the same grouping: `p-6` replaces `p-4`, `md:p-8` replaces `md:p-6`; an unknown class is appended once.
+- `GET /api/projects/:pid/d/:did/classes?file&line&col` → `{tailwind}`; the inspector shows it as a read-only Classes line under the meta row (`InspectorClasses.tsx`), with the note of the last edit.
+- Copy as Tailwind (`export/copy-code.ts`) runs the computed styles through the same mapper (`tailwind/copy.ts`) with the project theme, or the default v4 theme.
+
 ### Edit history (Round 4)
 
 ```

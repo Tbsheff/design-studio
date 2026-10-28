@@ -32,7 +32,7 @@ export type CriticIssue = z.infer<typeof CriticIssueSchema>;
 
 const CriticReplySchema = z.union([z.array(CriticIssueSchema), z.object({ issues: z.array(CriticIssueSchema) }).transform((value) => value.issues)]);
 
-const SCREEN_RULE = `- The images can show several screens of one flow (views of one page, canvas frames or app routes). Review EVERY screen, not only the first, and set "screen" in each issue to the screen name from the image label.`;
+const SCREEN_RULE = `- The images can show several screens of one flow (views of one page, canvas frames or app routes). Review EVERY screen, not only the first, and set "screen" in each issue to the screen name from the image label. A screen marked "opened by the studio without its click path" can have empty text that a script fills in the real flow: do not file empty dynamic text on it.`;
 
 const CRITIC_SYSTEM = `You are a senior product design critic. You did not build this design and you owe its builder nothing. Judge it with fresh eyes from the screenshots, the automatic check findings and the request.
 ${SCREEN_RULE}
@@ -75,6 +75,7 @@ const SYSTEMS: Record<CriticKind, string> = { full: CRITIC_SYSTEM, quick: QUICK_
 export interface CriticImage {
   label: string;
   data: string;
+  key?: string;
   screen?: string;
   viewport?: 'desktop' | 'mobile';
   path?: string;
@@ -231,7 +232,7 @@ async function screenImages(preview: PreviewService, screen: RunScreen, title: s
     const tile = plan[name];
     const tiles = await preview.screenshotTiles(screen.url, { viewport: { width: tile.width, height: tile.height }, tileHeight: tile.tileHeight, maxTiles: tile.maxTiles, from: 0, outPrefix: `${outPrefix}-${name}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) });
     for (const [index, file] of tiles.paths.entries()) {
-      images.push({ label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`, data: (await readFile(file)).toString('base64'), screen: screen.label, viewport: name, path: file });
+      images.push({ label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`, data: (await readFile(file)).toString('base64'), ...(screen.key ? { key: screen.key } : {}), screen: screen.label, viewport: name, path: file });
     }
   }
   return images;
@@ -270,7 +271,7 @@ export async function changedSourceFor(workTree: string, appDir: string, since: 
 function firstDesktop(images: readonly CriticImage[]): CriticImage[] {
   const seen = new Set<string>();
   return images.filter((image) => {
-    const key = image.screen ?? '';
+    const key = image.key ?? image.screen ?? '';
     if (image.viewport !== 'desktop' || !image.path || seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -285,7 +286,7 @@ async function changedPct(beforePath: string, afterPath: string): Promise<number
 export async function regressionPairs(preview: PreviewService, before: readonly CriticImage[], screens: readonly RunScreen[], outPrefix: string): Promise<{ before: CriticImage; after: CriticImage }[]> {
   const pairs: { before: CriticImage; after: CriticImage }[] = [];
   for (const [index, shot] of firstDesktop(before).entries()) {
-    const screen = screens.find((candidate) => candidate.label === shot.screen) ?? (before.length && screens.length === 1 ? screens[0] : undefined);
+    const screen = screens.find((candidate) => shot.key !== undefined && candidate.key === shot.key) ?? screens.find((candidate) => candidate.label === shot.screen) ?? (screens.length === 1 ? screens[0] : undefined);
     if (!screen || !shot.path) continue;
     const tile = SCREEN_TILES.desktop;
     const tileHeight = (await readPng(shot.path).catch(() => null))?.height ?? tile.tileHeight;

@@ -73,7 +73,7 @@ export const LEVEL_PRESETS: Record<RunLevel, LevelPreset> = {
     tasteAreas: 'all',
     checks: { viewports: ['desktop', 'tablet', 'mobile'], quality: true, navCheck: true, placeholder: 'high', screenshots: true, critic: true, fixLoops: 3 },
     criticModel: CRITIC_MODEL,
-    criticBudgetUsd: 0.15,
+    criticBudgetUsd: 0.1,
     criticMaxCalls: 2,
     regressionCheck: true,
     screens: { maxScreens: 6, maxImages: 14, checkScreens: 5 },

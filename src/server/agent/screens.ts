@@ -13,6 +13,7 @@ import { exploreScreens, replayExpression } from '../preview/screens.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 
 export interface RunScreen {
+  key?: string;
   label: string;
   url: string;
   pagePath: string;
@@ -138,6 +139,7 @@ async function explorePage(deps: ScreenDeps, page: PageRef, room: number, single
   const found = await withPage(page.url, DESKTOP, (rendered) => exploreScreens(rendered, { maxScreens: room, maxClicks: EXPLORE_CLICKS, deadlineMs: EXPLORE_MS })).catch(() => []);
   if (found.length === 0) return [{ label: page.label, url: page.url, pagePath: page.pagePath }];
   return found.map((screen) => ({
+    key: `${page.url}|${screen.signature}`,
     label: screenName(page, screen.label, single && found.length > 1),
     url: page.url,
     pagePath: page.pagePath,
@@ -160,7 +162,7 @@ async function htmlScreens(deps: ScreenDeps, pages: PageRef[], plan: ScreenPlan)
 export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<RunScreen[]> {
   if (!deps.ctx.previewUrl) return [];
   const { pages, hash } = await canvasPages(deps);
-  if (deps.ctx.project.app) return pages.slice(0, plan.maxScreens).map((page) => ({ label: page.label, url: page.url, pagePath: page.pagePath, ...(page.touched ? { touched: true } : {}) }));
+  if (deps.ctx.project.app) return pages.slice(0, plan.maxScreens).map((page) => ({ key: page.url, label: page.label, url: page.url, pagePath: page.pagePath, ...(page.touched ? { touched: true } : {}) }));
   const stamp = `${hash}#${plan.maxScreens}#${await fileStamp(deps.ctx.direction.workTree)}`;
   if (deps.cache?.stamp === stamp) return deps.cache.screens;
   const screens = await htmlScreens(deps, pages, plan);

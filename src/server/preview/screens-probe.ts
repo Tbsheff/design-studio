@@ -106,6 +106,38 @@ const force = (index) => {
     }
   });
 };
+const sampleValue = (input) => {
+  const hint = [input.autocomplete, input.name, input.id, input.type, input.placeholder].join(' ');
+  if (/cc-number|card/i.test(hint)) return '4242 4242 4242 4242';
+  if (/cc-exp|expir|mm ?\/ ?yy/i.test(hint)) return '12 / 30';
+  if (/cc-csc|cvc|cvv/i.test(hint)) return '123';
+  if (/email/i.test(hint)) return 'alex@example.com';
+  if (/tel|phone/i.test(hint)) return '555 555 0123';
+  if (/zip|postal/i.test(hint)) return '97201';
+  if (input.type === 'number') return '1';
+  if (input.type === 'date') return '2026-11-02';
+  return 'Alex Kim';
+};
+const setValue = (input, value) => {
+  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value');
+  if (setter && setter.set) setter.set.call(input, value);
+  else input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+};
+const SKIP_INPUTS = new Set(['radio', 'hidden', 'submit', 'button', 'reset', 'file', 'image', 'range', 'color']);
+const fillForm = (el) => {
+  const form = el.form || el.closest('form');
+  if (!form) return;
+  for (const input of form.querySelectorAll('input, textarea, select')) {
+    if (input.disabled || input.readOnly || SKIP_INPUTS.has(input.type)) continue;
+    if (input.type === 'checkbox') {
+      if (input.required && !input.checked) input.click();
+    } else if (input.tagName === 'SELECT') {
+      if (!input.value && input.options.length > 1) setValue(input, input.options[1].value);
+    } else if (!input.value) setValue(input, sampleValue(input));
+  }
+};
 const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 60))));
 `;
 
@@ -128,6 +160,7 @@ export function replayExpression(steps: readonly ScreenStep[]): string {
     else if (step.click) {
       const el = document.querySelector(step.click);
       if (!el) return false;
+      fillForm(el);
       el.click();
     }
     await settle();

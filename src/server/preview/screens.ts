@@ -5,11 +5,10 @@ export interface PageScreen {
   label: string;
   steps: ScreenStep[];
   forced: boolean;
-}
-
-interface Found extends PageScreen {
   signature: string;
 }
+
+type Found = PageScreen;
 
 interface ExploreLimits {
   maxScreens: number;
@@ -83,7 +82,7 @@ function forcedScreens(members: ViewMember[], found: Found[], room: number): Fou
 export async function exploreScreens(page: RenderPage, limits: ExploreLimits): Promise<PageScreen[]> {
   const href = await page.evaluate<string>('location.href');
   const first = await signatureOf(page);
-  if (!first) return [{ label: '', steps: [], forced: false }];
+  if (!first) return [{ label: '', steps: [], forced: false, signature: '' }];
   const members = await page.evaluate<ViewMember[]>(viewMembersExpression()).catch(() => []);
   const state: Explorer = { page, href, limits, clicks: 0, started: Date.now(), members: members.length, found: [{ label: first.label, steps: [], forced: false, signature: first.signature }] };
   let frontier = [...state.found];
@@ -95,8 +94,7 @@ export async function exploreScreens(page: RenderPage, limits: ExploreLimits): P
     }
     frontier = next;
   }
-  const all = [...state.found, ...forcedScreens(members, state.found, limits.maxScreens - state.found.length)];
-  return all.map(({ label, steps, forced }) => ({ label, steps, forced }));
+  return [...state.found, ...forcedScreens(members, state.found, limits.maxScreens - state.found.length)];
 }
 
 export { replayExpression };

@@ -8,6 +8,7 @@ import { readDesignSystemState } from '../design-system/state.js';
 import { invalidateTokenSource } from '../design-system/token-preview.js';
 import { plannedTokensText, writeTokensText } from '../design-system/update-tokens.js';
 import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic } from '../direct-edit/index.js';
+import { chooseEditSite, EDIT_TARGETS, siteNote, siteRequest, type EditSite } from '../direct-edit/edit-site.js';
 import { planStructureEdit } from '../direct-edit/structure-apply.js';
 import { knownTokenVars } from '../direct-edit/tokens.js';
 import { withPagePath } from '../export/source.js';
@@ -33,6 +34,7 @@ export const editElementShape = {
   text: z.string().max(5000).optional().describe('New text of a leaf element.'),
   classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge().'),
   variant: z.string().trim().max(60).optional().describe('Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'),
+  target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'),
   op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), unwrap or move (into targetSelector, as its last child).'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
 };
@@ -101,14 +103,46 @@ async function structureEdit(deps: DirectToolDeps, input: z.output<typeof editEl
   return text(`${plan.title} in ${plan.changed.map((file) => file.target.relative).join(', ')}.${select.length > 0 ? ` New location: ${select.join(', ')}.` : ''} ${RUN_NOTE}`);
 }
 
-async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElementSchema>): Promise<ToolText> {
+type EditInput = z.output<typeof editElementSchema>;
+type Sourced = SelectionContext & { source: NonNullable<SelectionContext['source']> };
+
+function directRequest(input: EditInput, element: Sourced, site: EditSite) {
+  const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
+  return parseDirectEditRequest({ ...siteRequest(site), selector: input.selector, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text, hints: textHintsOf(element) } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
+}
+
+function hasStyleOrClasses(input: EditInput): boolean {
+  return Object.values(input.style ?? {}).some((value) => value !== undefined) || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
+}
+
+async function planSite(deps: DirectToolDeps, input: EditInput, element: Sourced, site: EditSite) {
+  const workTree = deps.ctx.direction.workTree;
+  const origin = deps.ctx.previewUrl ? new URL(deps.ctx.previewUrl).origin : null;
+  const known = await knownTokenVars(workTree);
+  const planKnown = (chosen: EditSite) => planDirectEdit(workTree, directRequest(input, element, chosen), known, { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin }).then((planned) => ({ planned, site: chosen }));
+  try {
+    return await planKnown(site);
+  } catch (error) {
+    const textOnly = input.text !== undefined && !hasStyleOrClasses(input);
+    if (site.kind !== 'use' || site.explicit || !textOnly || !(error instanceof DirectEditError) || error.code !== 'text_not_editable') throw error;
+    return planKnown({ kind: 'component', source: element.source, tag: element.tag, shared: site.shared, explicit: false }).catch(() => {
+      throw error;
+    });
+  }
+}
+
+function siteText(site: EditSite): string {
+  const note = siteNote(site);
+  return note ? ` ${note}` : '';
+}
+
+async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolText> {
   const [element] = await findElements(deps, input.path, [input.selector]);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
-  const workTree = deps.ctx.direction.workTree;
-  const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
-  const request = parseDirectEditRequest({ source: element.source, selector: input.selector, tag: element.tag, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text, hints: textHintsOf(element) } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
-  const origin = deps.ctx.previewUrl ? new URL(deps.ctx.previewUrl).origin : null;
-  const plan = await planDirectEdit(workTree, request, await knownTokenVars(workTree), { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin });
+  const sourced = { ...element, source: element.source };
+  const chosen = await chooseEditSite({ workTree: deps.ctx.direction.workTree, project: deps.ctx.project }, sourced, { selector: input.selector, target: input.target, classes: hasStyleOrClasses(input) });
+  if ('error' in chosen) return failure(chosen.error);
+  const { planned: plan, site } = await planSite(deps, input, sourced, chosen);
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
   if (plan.patch.code === plan.original) return text(`${plan.target.relative}: the values were already set.`);
@@ -118,7 +152,7 @@ async function styleEdit(deps: DirectToolDeps, input: z.output<typeof editElemen
   const classNote = tailwind && tailwind.mode !== 'none' ? ` Classes now: ${tailwind.classes.join(' ') || '(none)'}.${tailwind.note ? ` ${tailwind.note}` : ''}` : '';
   const found = plan.patch.textSource;
   if (found) return text(`Edited ${found.what} in ${found.file}:${found.line}, where the text of ${input.selector} comes from.${found.shared ? ` ${found.shared}` : ''} ${RUN_NOTE}`);
-  return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${element.source.line}.${classNote} ${RUN_NOTE}`);
+  return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${site.source.line}.${classNote}${siteText(site)} ${RUN_NOTE}`);
 }
 
 export async function runEditElement(deps: DirectToolDeps, args: EditElementArgs): Promise<ToolText> {

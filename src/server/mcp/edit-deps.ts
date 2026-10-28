@@ -7,6 +7,7 @@ import type { ExportDeps } from '../export/source.js';
 import type { AgentRunner, EventBus } from '../types.js';
 import type { ActivityLog } from './activity.js';
 import type { ApprovalAsk, ApprovalQueue } from './approvals.js';
+import { mcpErrorText } from './error-copy.js';
 import { downloadsFolder, isInside, safeFolder } from './folders.js';
 
 export interface EditDeps extends ExportDeps {
@@ -21,7 +22,14 @@ export interface EditDeps extends ExportDeps {
   history?: EditRecorder;
 }
 
-export class EditError extends Error {}
+export class EditError extends Error {
+  constructor(
+    message: string,
+    readonly code: string | null = null,
+  ) {
+    super(message);
+  }
+}
 
 export const RUN_BUSY = 'A studio run is editing this design. Try again when it finishes.';
 
@@ -32,7 +40,7 @@ const REFUSALS: Record<string, string> = {
 async function failure(res: Response): Promise<EditError> {
   const parsed = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
   const code = parsed?.error ?? `${res.status}`;
-  return new EditError(REFUSALS[code] ?? parsed?.message ?? code);
+  return new EditError(REFUSALS[code] ?? mcpErrorText(parsed?.message ?? code), code);
 }
 
 export async function studioCall<T>(deps: EditDeps, method: string, url: string, body?: unknown): Promise<T> {

@@ -1,7 +1,6 @@
-import { APP_SOURCE_PATH } from '../../shared/app.js';
 import { SOURCE_LOC_ATTR, type ComponentUse, type SelectionContext, type SourceLoc, type TextSourceHints } from '../../shared/contracts.js';
 import type { ComponentOwner } from '../../shared/props.js';
-import { ownerWalk } from '../components/owner-probe.js';
+import { appSourceBody, ownerWalk, parseLoc } from '../components/owner-probe.js';
 import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
 
@@ -24,32 +23,6 @@ function probe(selector: string): string {
   return `(${probeBody()})(${JSON.stringify(selector)})`;
 }
 
-function appSourceBody(): string {
-  return `async (el) => {
-    const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
-    const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
-    const fiber = fiberOf(el);
-    if (!fiber) return null;
-    const owner = fiber._debugOwner || null;
-    const type = owner?.type;
-    const name = typeof owner?.name === 'string' ? owner.name : type?.displayName || type?.render?.displayName || type?.render?.name || type?.type?.displayName || type?.type?.name || type?.name || null;
-    let parent = el.parentElement;
-    while (parent && !fiberOf(parent)) parent = parent.parentElement;
-    const root = !parent || (fiberOf(parent)._debugOwner || null) !== owner;
-    const stacks = [stackOf(fiber), stackOf(owner)];
-    if (stacks.every((stack) => stack === '')) return null;
-    try {
-      const res = await fetch(${JSON.stringify(APP_SOURCE_PATH)}, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ stacks }), cache: 'no-store' });
-      const body = res.ok ? await res.json() : null;
-      const [own, used] = Array.isArray(body?.sources) ? body.sources : [];
-      const loc = own || used || null;
-      const file = (value) => String(value).replace(/:\\d+:\\d+$/, '');
-      const usedAt = own && used && file(own) !== file(used) ? used : null;
-      return loc ? { loc, usedAt, usedBy: usedAt && name ? { name, root } : null } : null;
-    } catch { return null; }
-  }`;
-}
-
 function probeBody(): string {
   return `(async (selector) => {
     let el;
@@ -69,11 +42,6 @@ function probeBody(): string {
 
 function probeAll(selectors: string[]): string {
   return `Promise.all((${JSON.stringify(selectors)}).map(${probeBody()}))`;
-}
-
-function parseLoc(raw: string | null): SourceLoc | null {
-  const match = raw ? /^(.+):(\d+):(\d+)$/.exec(raw) : null;
-  return match ? { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) } : null;
 }
 
 function contextOf(selector: string, raw: RawElement): SelectionContext {

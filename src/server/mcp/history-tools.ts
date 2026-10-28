@@ -1,7 +1,8 @@
 import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import type { DirectEditBatchResult, EditHistoryList, EditHistoryState, Project, Version } from '../../shared/contracts.js';
+import type { DirectEditBatchResult, EditHistoryList, EditHistoryState, Project, SelectionContext, Version } from '../../shared/contracts.js';
+import { chooseEditSite, EDIT_TARGETS, locText, siteRequest } from '../direct-edit/edit-site.js';
 import { publishVersion } from '../direct-edit/index.js';
 import { listWords } from './activity-text.js';
 import { EditError, loadTarget, oneLine, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
@@ -56,6 +57,7 @@ const batchEdit = z
     text: z.string().max(5000).optional(),
     classes: classes.optional(),
     variant: variant.optional(),
+    target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only, the same as edit_element target. Leave out to edit a shared component use (<Button>, <CardTitle>) where it is used; "component" edits the component file and changes every use.'),
   })
   .strict()
   .refine((edit) => edit.text !== undefined || hasClasses(edit) || Object.keys(edit.style ?? {}).length > 0, 'each edit needs style, text or classes');
@@ -72,28 +74,48 @@ const batchSchema = z
   .strict()
   .refine((input) => (input.edits === undefined) !== (input.files === undefined), 'pass edits or files, not both: style/text edits and file writes cannot share one version');
 
-async function batchElements(deps: EditDeps, project: Project, direction: Direction, edits: z.output<typeof batchEdit>[]): Promise<Done> {
+type BatchEdit = z.output<typeof batchEdit>;
+type Found = SelectionContext | null;
+
+async function findAll(deps: EditDeps, project: Project, direction: Direction, edits: BatchEdit[]): Promise<Found[]> {
   const pages = [...new Set(edits.map((edit) => edit.path ?? ''))];
-  const found = new Map<string, Awaited<ReturnType<typeof describeElements>>>();
+  const found = new Map<string, Found[]>();
   for (const page of pages) {
     const selectors = edits.filter((edit) => (edit.path ?? '') === page).map((edit) => edit.selector);
     found.set(page, await describeElements(deps.preview, await pageUrl(deps, project, direction, page || undefined), selectors));
   }
   const cursor = new Map<string, number>();
-  const requests = edits.map((edit, index) => {
+  return edits.map((edit) => {
     const page = edit.path ?? '';
     const at = cursor.get(page) ?? 0;
     cursor.set(page, at + 1);
-    const element = found.get(page)?.[at] ?? null;
-    if (!element) throw new EditError(`Edit ${index + 1}: no element matches ${edit.selector} on the page.`);
-    if (!element.source) throw new EditError(`Edit ${index + 1}: ${edit.selector} has no source location, so it cannot be edited directly.`);
-    return { source: element.source, selector: edit.selector, tag: element.tag, ...(edit.style && Object.keys(edit.style).length > 0 ? { style: edit.style } : {}), ...(edit.text !== undefined ? { text: edit.text, hints: textHintsOf(element) } : {}), ...(hasClasses(edit) ? { classes: edit.classes } : {}), ...(edit.variant ? { variant: edit.variant } : {}) };
+    return found.get(page)?.[at] ?? null;
   });
-  const result = await studioCall<DirectEditBatchResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, { edits: requests });
+}
+
+async function batchRequest(project: Project, direction: Direction, edit: BatchEdit, element: Found, index: number) {
+  if (!element) throw new EditError(`Edit ${index + 1}: no element matches ${edit.selector} on the page.`);
+  if (!element.source) throw new EditError(`Edit ${index + 1}: ${edit.selector} has no source location, so it cannot be edited directly. Use batch_edit files or write_file.`);
+  const sourced = { ...element, source: element.source };
+  const site = await chooseEditSite({ workTree: direction.workTree, project }, sourced, { selector: edit.selector, target: edit.target, classes: hasClasses(edit) || Object.keys(edit.style ?? {}).length > 0 });
+  if ('error' in site) throw new EditError(`Edit ${index + 1}: ${site.error}`);
+  const request = { ...siteRequest(site), selector: edit.selector, ...(edit.style && Object.keys(edit.style).length > 0 ? { style: edit.style } : {}), ...(edit.text !== undefined ? { text: edit.text, hints: textHintsOf(element) } : {}), ...(hasClasses(edit) ? { classes: edit.classes } : {}), ...(edit.variant ? { variant: edit.variant } : {}) };
+  return { request, site, tag: element.tag };
+}
+
+async function batchElements(deps: EditDeps, project: Project, direction: Direction, edits: BatchEdit[]): Promise<Done> {
+  const found = await findAll(deps, project, direction, edits);
+  const planned = await Promise.all(edits.map((edit, index) => batchRequest(project, direction, edit, found[index] ?? null, index)));
+  const result = await studioCall<DirectEditBatchResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, { edits: planned.map((item) => item.request) });
   if (result.files.length === 0) return { result: ok({ changed: false, versionId: result.version.id, note: 'Every value was already set.' }) };
   const parts = [...new Set(result.applied.flatMap((entry) => [...entry.style.map((prop) => prop.replace(/-/g, ' ')), ...(entry.classes ? ['classes'] : []), ...(entry.text ? ['text'] : [])]))];
-  const subject = edits.length === 1 ? (requests[0]?.tag ?? 'element') : `${edits.length} elements`;
-  const output = ok({ changed: true, files: result.files, versionId: result.version.id, title: result.version.title, applied: result.applied, note: 'All edits are one version and one undo step.' });
+  const subject = edits.length === 1 ? (planned[0]?.tag ?? 'element') : `${edits.length} elements`;
+  const applied = result.applied.map((entry, index) => {
+    const site = planned[index]?.site;
+    const at = entry.textSource ? `${entry.textSource.file}:${entry.textSource.line}` : site ? locText(site.source) : entry.file;
+    return { ...entry, at, editedAt: site?.kind === 'use' ? 'use' : 'component', ...(site?.kind === 'use' ? { component: site.component } : {}) };
+  });
+  const output = ok({ changed: true, files: result.files, versionId: result.version.id, title: result.version.title, applied, note: 'All edits are one version and one undo step. editedAt "use" means the page file changed at that line and the shared component file did not.' });
   return { result: output, activity: versionActivity(project, direction, `Edited ${subject} ${listWords(parts)} in one step`, result.version) };
 }
 
@@ -132,7 +154,7 @@ const batch = defineTool(
   batchSchema,
   {
     title: 'Batch edit',
-    description: 'Make several changes as ONE version and one undo step. Pass edits (style, text and class edits on elements found by CSS selector, on one or more pages; the same code path as a multi-select in the studio inspector) or files (whole files, the same path rules as write_file). Up to 50 edits or 20 files. Structure ops (delete, duplicate, wrap, unwrap, move) are not part of a batch; use edit_element with op.',
+    description: 'Make several changes as ONE version and one undo step. Pass edits (style, text and class edits on elements found by CSS selector, on one or more pages; the same code path as a multi-select in the studio inspector; a shared component use such as <Button> or <CardTitle> is edited where it is used unless the edit has target \"component\") or files (whole files, the same path rules as write_file). Up to 50 edits or 20 files. Structure ops (delete, duplicate, wrap, unwrap, move) are not part of a batch; use edit_element with op.',
   },
   async (deps, input, client) => {
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);

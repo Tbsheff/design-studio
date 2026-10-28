@@ -4,6 +4,7 @@ import net from 'node:net';
 import path from 'node:path';
 import type { AppLogLine, AppServerStatus, Project } from '../../shared/contracts.js';
 import type { EventBus } from '../types.js';
+import { installHint } from './install-hint.js';
 
 const MAX_LOG_LINES = 400;
 const READY_TIMEOUT_MS = 180_000;
@@ -11,6 +12,7 @@ const STOP_GRACE_MS = 4000;
 const MAX_LINE = 2000;
 const BLOCKED_ENV = /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
 const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
+const PROBE_TIMEOUT_MS = 3000;
 
 interface AppServer {
   projectId: string;
@@ -51,6 +53,22 @@ function canConnect(port: number): Promise<boolean> {
 export function nextBinary(workTree: string, appDir: string): string | null {
   const candidates = [path.join(workTree, appDir, 'node_modules', '.bin', 'next'), path.join(workTree, 'node_modules', '.bin', 'next')];
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
+}
+
+async function answers(upstream: string): Promise<boolean> {
+  try {
+    const res = await fetch(upstream, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
+    await res.body?.cancel().catch(() => undefined);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function missingNextMessage(workTree: string, appDir: string): string {
+  const appRoot = path.join(workTree, appDir);
+  const hint = installHint(workTree, appDir);
+  return `next is not installed in ${appRoot}. Run ${hint.command} in ${hint.dir}, then press Start. Or start the dev server yourself and use its URL.`;
 }
 
 function childEnv(extra: Record<string, string> | undefined, port: number): NodeJS.ProcessEnv {
@@ -103,7 +121,7 @@ export class AppServers {
     const server = this.servers.get(project.id);
     if (server) return server.status;
     const mode = project.app?.mode ?? 'managed';
-    return { state: mode === 'url' ? 'ready' : 'idle', mode, upstream: mode === 'url' ? (project.app?.url ?? null) : null, command: null, message: null, startedAt: null };
+    return { state: 'idle', mode, upstream: mode === 'url' ? (project.app?.url ?? null) : null, command: null, message: null, startedAt: null };
   }
 
   logs(projectId: string): AppLogLine[] {
@@ -119,11 +137,7 @@ export class AppServers {
     const app = project.app;
     if (!app) return Promise.reject(new Error('project is not an attached app'));
     const server = this.entry(project);
-    if (app.mode === 'url') {
-      const upstream = new URL(app.url ?? '').origin;
-      if (server.status.upstream !== upstream || server.status.state !== 'ready') this.setStatus(server, { state: 'ready', mode: 'url', upstream, message: null });
-      return Promise.resolve(upstream);
-    }
+    if (app.mode === 'url') return this.checkUrl(server, new URL(app.url ?? '').origin);
     if (server.ready && server.status.state !== 'failed' && server.status.state !== 'stopped') return server.ready;
     server.workTree = project.directions[0]?.workTree ?? server.workTree;
     server.ready = this.spawnNext(server, project).catch((error: unknown) => {
@@ -135,17 +149,34 @@ export class AppServers {
     return server.ready;
   }
 
+  private checkUrl(server: AppServer, upstream: string): Promise<string> {
+    if (server.status.upstream === upstream && server.status.state === 'ready') return Promise.resolve(upstream);
+    if (server.ready && server.status.state === 'starting' && server.status.upstream === upstream) return server.ready;
+    this.setStatus(server, { state: 'starting', mode: 'url', upstream, command: null, message: null, startedAt: Date.now() });
+    server.ready = answers(upstream).then((up) => {
+      if (up) {
+        this.setStatus(server, { state: 'ready', message: null });
+        return upstream;
+      }
+      const message = `Nothing answers at ${upstream}. Start your dev server there, or change the URL in the app settings.`;
+      this.log(server, 'studio', message);
+      this.setStatus(server, { state: 'failed', message });
+      throw new Error(message);
+    });
+    return server.ready;
+  }
+
   private async spawnNext(server: AppServer, project: Project): Promise<string> {
     const app = project.app;
     if (!app) throw new Error('project is not an attached app');
     const appRoot = path.join(server.workTree, app.appDir);
     const binary = nextBinary(server.workTree, app.appDir);
-    if (!binary) throw new Error(`next is not installed in ${app.appDir}. Install the app's dependencies (for example pnpm install), or start the dev server yourself and attach its URL.`);
+    if (!binary) throw new Error(missingNextMessage(server.workTree, app.appDir));
     const port = await freePort(this.deps.portBase);
     const args = ['dev', '-p', String(port), '-H', '127.0.0.1'];
     const command = `next ${args.join(' ')}`;
     this.setStatus(server, { state: 'starting', mode: 'managed', upstream: null, command, message: null, startedAt: Date.now() });
-    this.log(server, 'studio', `Starting ${command} in ${app.appDir}`);
+    this.log(server, 'studio', `Starting ${command} in ${appRoot}`);
     const child = spawn(binary, args, { cwd: appRoot, env: childEnv(app.env, port), detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     server.child = child;
     child.stdout?.setEncoding('utf8').on('data', (chunk: string) => this.log(server, 'stdout', chunk));

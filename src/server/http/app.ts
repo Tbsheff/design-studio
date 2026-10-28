@@ -34,6 +34,8 @@ import { createPackLibrary } from '../design-system/library.js';
 import { applyPack, packRegistry } from '../design-system/packs.js';
 import type { LoadedPack, PackRegistry } from '../design-system/packs.js';
 import { loadDesignSystemPromptContext, readDesignSystemState } from '../design-system/state.js';
+import { appTokensFor } from '../design-system/app-tokens/source.js';
+import { previewAppTokens, updateAppTokens } from '../design-system/app-tokens/write.js';
 import { invalidateTokenSource, invalidateTokenSourceOnChange, previewTokens } from '../design-system/token-preview.js';
 import { updateTokens } from '../design-system/update-tokens.js';
 import { commitTweaks } from '../tweaks/commit.js';
@@ -377,7 +379,7 @@ export function createApp(deps: AppDeps): Hono {
       (request.attachmentIds ?? []).map((id) => projects.getAttachment(project.id, id)),
     );
     const designMd = await projects.readDesignMd(project.id);
-    const designSystem = await loadDesignSystemPromptContext(direction.workTree).catch((error: unknown) => {
+    const designSystem = await loadDesignSystemPromptContext(direction.workTree, project).catch((error: unknown) => {
       console.error('[http] design system load failed', error);
       return null;
     });
@@ -792,7 +794,8 @@ export function createApp(deps: AppDeps): Hono {
     try {
       const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
       watchTokenSources(project);
-      return c.json(await previewTokens(direction.workTree, body));
+      const app = await appTokensFor(project, direction);
+      return c.json(app ? previewAppTokens(app, body) : await previewTokens(direction.workTree, body));
     } catch (error) {
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;
@@ -820,8 +823,8 @@ export function createApp(deps: AppDeps): Hono {
   app.post('/api/projects/:pid/d/:did/design-system/tokens/update', async (c) => {
     const body = await readBody(c);
     try {
-      const result = await withDirection(c.req.param('pid'), c.req.param('did'), (project, direction) =>
-        updateTokens(editDeps, project, direction, body),
+      const result = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) =>
+        (await updateAppTokens(editDeps, project, direction, body)) ?? updateTokens(editDeps, project, direction, body),
       );
       return c.json(result);
     } catch (error) {

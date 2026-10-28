@@ -334,6 +334,7 @@ function clearOne(source: string, node: StructNode): Splice[] {
     const keep = node.children.length === 0 || !lined ? '' : `\n${parentIndent}${last ? '' : indentUnit(source)}`;
     splices.push({ ...gap, text: keep, marks: [] });
   });
+  if (splices.length === 0 && node.root) throw refuse(`<${node.tag}> is the top element of a component, so its text comes from where the page uses it. Use clear_text with this selector to clear the text at that use`);
   if (splices.length === 0) throw refuse(`<${node.tag}> has no plain text to clear. Text from a prop or a { } expression stays; edit it at its source`);
   return [{ start: node.start, end: node.start, text: '', marks: [0] }, ...splices];
 }

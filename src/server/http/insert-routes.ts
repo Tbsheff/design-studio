@@ -2,7 +2,7 @@ import type { Context, Hono } from 'hono';
 import type { Direction, Project } from '../../shared/contracts.js';
 import { applyInsertComponent } from '../components/insert.js';
 import { listInsertable } from '../components/insert-list.js';
-import { applyInsertJsx } from '../direct-edit/jsx-insert.js';
+import { applyClearText, applyInsertJsx } from '../direct-edit/jsx-insert.js';
 import { DirectEditError, type DirectEditDeps } from '../direct-edit/index.js';
 import type { PreviewService } from '../types.js';
 
@@ -29,7 +29,7 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
     return c.json(await listInsertable(project, direction.workTree));
   });
 
-  const insertRoute = (route: string, apply: typeof applyInsertComponent | typeof applyInsertJsx) =>
+  const insertRoute = (route: string, apply: typeof applyInsertComponent | typeof applyInsertJsx | typeof applyClearText) =>
     app.post(route, async (c) => {
       const body = await deps.readBody(c);
       try {
@@ -44,4 +44,5 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
     });
   insertRoute('/api/projects/:pid/d/:did/insert', applyInsertComponent);
   insertRoute('/api/projects/:pid/d/:did/insert/jsx', applyInsertJsx);
+  insertRoute('/api/projects/:pid/d/:did/insert/clear-text', applyClearText);
 }

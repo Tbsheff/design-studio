@@ -3,7 +3,7 @@ import path from 'node:path';
 import type * as t from '@babel/types';
 import { z } from 'zod';
 import type { Direction, SourceLoc, VersionMeta } from '../../shared/contracts.js';
-import { JSX_IMPORTS_MAX, JSX_INSERT_POSITIONS, JSX_SNIPPET_MAX, type InsertJsxRequest, type InsertJsxResult } from '../../shared/insert.js';
+import { JSX_IMPORTS_MAX, JSX_INSERT_POSITIONS, JSX_SNIPPET_MAX, type ClearTextRequest, type InsertJsxRequest, type InsertJsxResult } from '../../shared/insert.js';
 import { OWNERS_MAX, OWNER_STACK_MAX } from '../../shared/props.js';
 import { resolveTarget, seenImports, type InsertScope, type ResolvedTarget } from '../components/insert.js';
 import { loadLibrary, type LibraryEntry } from '../components/insert-list.js';
@@ -14,7 +14,7 @@ import { planImports, type ImportItem, type ImportNeed } from './imports.js';
 import { assertCanEdit, publishVersion, resolveSource, type DirectEditDeps, type ResolvedSource } from './index.js';
 import { parseHtmlSnippet, parseJsxSnippet, type Snippet } from './jsx-snippet.js';
 import { structureDoc, type NodeRole } from './structure-docs.js';
-import { indentUnit, planInsert, positionAt, refuse, type Placement, type StructNode } from './structure-ops.js';
+import { indentUnit, planInsert, planStructure, positionAt, refuse, type Placement, type StructNode } from './structure-ops.js';
 
 export interface JsxInsertPlan {
   target: ResolvedSource;
@@ -28,9 +28,11 @@ export interface JsxInsertPlan {
 }
 
 const loc = z.object({ file: z.string().min(1).max(1000), line: z.number().int().min(1), col: z.number().int().min(1) }).strict();
+const targetSchema = z.object({ source: loc.nullable(), tag: z.string().max(100).optional(), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional() }).strict();
+const clearSchema = z.object({ target: targetSchema }).strict();
 const requestSchema = z
   .object({
-    target: z.object({ source: loc.nullable(), tag: z.string().max(100).optional(), selector: z.string().max(2000).optional(), owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) })).max(OWNERS_MAX).optional() }).strict(),
+    target: targetSchema,
     position: z.enum(JSX_INSERT_POSITIONS as [string, ...string[]]),
     jsx: z.string().trim().min(1, 'jsx is empty').max(JSX_SNIPPET_MAX),
     imports: z
@@ -57,7 +59,7 @@ function isHtml(file: string): boolean {
   return /\.html?$/i.test(file);
 }
 
-async function plainTarget(scope: InsertScope, request: InsertJsxRequest): Promise<ResolvedTarget> {
+async function plainTarget(scope: InsertScope, request: Pick<InsertJsxRequest, 'target'>): Promise<ResolvedTarget> {
   const source = request.target.source;
   if (!source) throw refuse('This element has no source location; pass targetSource');
   const target = await resolveSource(scope.workTree, source.file);
@@ -145,7 +147,7 @@ function titleOf(snippet: Snippet, position: InsertJsxRequest['position'], tag: 
   return `Insert ${what} ${position} ${tag}`;
 }
 
-async function resolveFor(scope: InsertScope, request: InsertJsxRequest): Promise<{ resolved: ResolvedTarget; library: Library | null }> {
+async function resolveFor(scope: InsertScope, request: Pick<InsertJsxRequest, 'target'>): Promise<{ resolved: ResolvedTarget; library: Library | null }> {
   if (scope.project.kind !== 'react') return { resolved: await plainTarget(scope, request), library: null };
   const library = await loadLibrary(scope.project, scope.workTree);
   return { resolved: await resolveTarget(scope, library.root, request, library.entries), library };
@@ -187,4 +189,43 @@ export async function applyInsertJsx(deps: DirectEditDeps, scope: InsertScope & 
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.code }] });
   await publishVersion(deps, project, direction, version);
   return { file: plan.target.relative, version, select: plan.select, imports: plan.imports, usedAt: plan.usedAt, title: plan.title };
+}
+
+export interface ClearTextPlan extends Omit<JsxInsertPlan, 'request' | 'imports'> {
+  request: ClearTextRequest;
+}
+
+export function parseClearTextRequest(raw: unknown): ClearTextRequest {
+  const parsed = clearSchema.safeParse(raw);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    throw new DirectEditError('invalid_request', issue ? `${issue.path.join('.') || 'request'}: ${issue.message}` : 'The clear request is not valid');
+  }
+  return parsed.data as ClearTextRequest;
+}
+
+export async function planClearText(scope: InsertScope, raw: unknown): Promise<ClearTextPlan> {
+  const request = parseClearTextRequest(raw);
+  const { resolved } = await resolveFor(scope, request);
+  const relative = resolved.target.relative;
+  const doc = structureDoc(relative, resolved.code);
+  const node = doc.node(resolved.at, 'target', resolved.tag);
+  const plan = planStructure(resolved.code, { op: 'clear', nodes: [node], place: {}, frame: doc.frame('0'), closeTag: doc.closeTag });
+  const positions = plan.select.map((offset) => positionAt(plan.code, offset));
+  doc.verify(plan.code, positions);
+  const select = positions.map((position) => ({ file: relative, ...position, tag: node.tag }));
+  return { target: resolved.target, original: resolved.code, code: plan.code, select, usedAt: resolved.usedAt, title: `Clear text in ${node.tag}`, request };
+}
+
+export async function applyClearText(deps: DirectEditDeps, scope: InsertScope & { direction: Direction }, raw: unknown): Promise<InsertJsxResult> {
+  const { project, direction } = scope;
+  parseClearTextRequest(raw);
+  assertCanEdit(deps, project, direction);
+  const plan = await planClearText(scope, raw);
+  const at = plan.select[0];
+  const meta: VersionMeta = { kind: 'manual', prompt: `Clear text: ${at ? `${at.file}:${at.line}:${at.col}` : plan.target.relative}` };
+  const version = await writeAndCommitAll(deps, project, direction, [plan], plan.title, meta);
+  deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file: plan.target.file, relative: plan.target.relative, before: plan.original, after: plan.code }] });
+  await publishVersion(deps, project, direction, version);
+  return { file: plan.target.relative, version, select: plan.select, imports: [], usedAt: plan.usedAt, title: plan.title };
 }

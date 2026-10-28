@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { JSX_IMPORTS_MAX, JSX_INSERT_POSITIONS, JSX_SNIPPET_MAX } from '../../shared/insert.js';
 import { writeAtomic } from '../direct-edit/index.js';
-import { planInsertJsx } from '../direct-edit/jsx-insert.js';
+import { planClearText, planInsertJsx } from '../direct-edit/jsx-insert.js';
 import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 import { targetOf } from './insert-tool.js';
 
@@ -48,5 +48,35 @@ export async function runInsertJsx(deps: DirectToolDeps, args: z.input<typeof sc
     return text(`${plan.title} at ${at}.${imported} The run saves this change in its version, like your file edits.`);
   } catch (error) {
     return text(`insert_jsx failed: ${error instanceof Error ? error.message : String(error)}`, true);
+  }
+}
+
+export const clearTextShape = {
+  targetSelector: insertJsxShape.targetSelector,
+  targetSource: insertJsxShape.targetSource,
+  path: insertJsxShape.path,
+};
+
+const clearSchema = z.object(clearTextShape).strict();
+
+export async function runClearText(deps: DirectToolDeps, args: z.input<typeof clearSchema>): Promise<ToolText> {
+  const blocked = refusal(deps.ctx, 'clear_text');
+  if (blocked) return text(blocked, true);
+  const parsed = clearSchema.safeParse(args);
+  if (!parsed.success) return text(`clear_text: ${parsed.error.issues.map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`).join('; ')}`, true);
+  if ((parsed.data.targetSelector === undefined) === (parsed.data.targetSource === undefined)) return text('Pass targetSelector or targetSource, not both.', true);
+  try {
+    const target = await targetOf(deps, parsed.data);
+    if (typeof target === 'string') return text(target, true);
+    const { project, direction, previewUrl } = deps.ctx;
+    const previewOrigin = previewUrl && project.kind === 'react' ? new URL(previewUrl).origin : null;
+    const plan = await planClearText({ project, workTree: direction.workTree, previewOrigin }, { target });
+    const problem = writeProblem(deps.ctx, plan.target.relative);
+    if (problem) return text(problem, true);
+    await writeAtomic(plan.target.file, plan.code);
+    const at = plan.select[0];
+    return text(`${plan.title} at ${plan.target.relative}:${at?.line ?? '?'}. The run saves this change in its version, like your file edits.`);
+  } catch (error) {
+    return text(`clear_text failed: ${error instanceof Error ? error.message : String(error)}`, true);
   }
 }

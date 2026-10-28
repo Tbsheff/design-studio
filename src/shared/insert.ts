@@ -74,3 +74,7 @@ export interface InsertJsxResult {
   usedAt: SourceLoc | null;
   title: string;
 }
+
+export interface ClearTextRequest {
+  target: InsertTarget;
+}

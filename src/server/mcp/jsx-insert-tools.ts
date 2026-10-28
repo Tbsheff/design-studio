@@ -5,7 +5,7 @@ import { base, defineTool, directionId, ok, pagePath, projectId, selector, versi
 import { targetOf } from './insert-tools.js';
 
 export const INSERT_JSX_DESCRIPTION =
-  'Build a group of elements in one call: insert a JSX snippet (or an HTML snippet in an HTML project) inside, before, after or in place of the target element. Use the app\'s own components and Tailwind token classes, for example <Card><CardHeader><CardTitle>Recent documents</CardTitle></CardHeader><CardContent>…<Badge variant="outline">Signed</Badge><Button size="sm">Open</Button></CardContent></Card>. Each component tag that the target file does not import is found in the project library and its import line is added or extended with the path the project uses (all parts of a module in one line). The snippet keeps your line breaks and gets the file\'s indent. Markup only: text, string props, numbers, style objects and plain references such as onClick={handleSave} to names the file has; functions, hook or other calls, conditions, .map() and {...spread} are refused with a reason. Targets made by .map() or shown by a condition are refused. One version and one undo step. To remove placeholder text next to child elements, use edit_element op "clear".';
+  'Build a group of elements in one call: insert a JSX snippet (or an HTML snippet in an HTML project) inside, before, after or in place of the target element. Use the app\'s own components and Tailwind token classes, for example <Card><CardHeader><CardTitle>Recent documents</CardTitle></CardHeader><CardContent>…<Badge variant="outline">Signed</Badge><Button size="sm">Open</Button></CardContent></Card>. Each component tag that the target file does not import is found in the project library and its import line is added or extended with the path the project uses (all parts of a module in one line). The snippet keeps your line breaks and gets the file\'s indent. Markup only: text, string props, numbers, style objects and plain references such as onClick={handleSave} to names the file has; functions, hook or other calls, conditions, .map() and {...spread} are refused with a reason. Targets made by .map() or shown by a condition are refused. One version and one undo step. To remove placeholder text next to child elements, use clear_text.';
 
 const schema = z
   .object({
@@ -41,4 +41,34 @@ const insertJsx = defineTool('insert_jsx', schema, { title: 'Insert JSX', descri
   return { result: output, activity: versionActivity(project, direction, result.title, result.version) };
 });
 
-export const JSX_INSERT_TOOLS = [insertJsx];
+const clearSchema = z
+  .object({
+    projectId,
+    directionId,
+    path: pagePath,
+    targetSelector: selector.optional().describe('CSS selector of the element whose text to clear, for example "[data-slot=card]".'),
+    targetSource: z.string().trim().max(1100).optional().describe('Or the element as file:line:col of its JSX tag (the at of insert_component).'),
+  })
+  .strict()
+  .refine((input) => (input.targetSelector === undefined) !== (input.targetSource === undefined), 'pass targetSelector or targetSource, not both');
+
+const clearText = defineTool(
+  'clear_text',
+  clearSchema,
+  { title: 'Clear text', description: 'Remove the plain text inside an element and keep its child elements, for example the placeholder "Card" that insert_component leaves next to the CardHeader you added. On a library component (Card, Button) it clears the text where the page uses it, not in the component file. Text from a prop or a { } expression stays. One version and one undo step. edit_element op "clear" does the same on an element in its own file.' },
+  async (deps, input): Promise<Done> => {
+    const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
+    refuseWhileRunning(deps, project, direction);
+    const target = await targetOf(deps, project, direction, input);
+    let result: InsertJsxResult;
+    try {
+      result = await studioCall<InsertJsxResult>(deps, 'POST', `${base(project, direction.id)}/insert/clear-text`, { target });
+    } catch (error) {
+      throw new EditError(error instanceof Error ? error.message : String(error));
+    }
+    const at = result.select.map((item) => `${item.file}:${item.line}:${item.col}`);
+    return { result: ok({ file: result.file, title: result.title, at, usedAt: result.usedAt, versionId: result.version?.id ?? null }), activity: versionActivity(project, direction, result.title, result.version) };
+  },
+);
+
+export const JSX_INSERT_TOOLS = [insertJsx, clearText];

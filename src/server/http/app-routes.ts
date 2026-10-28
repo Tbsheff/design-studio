@@ -10,6 +10,7 @@ import { userGit } from '../git/user-git.js';
 import { BadRequestError, ConflictError, NotFoundError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import type { PreviewService, VersionStore } from '../types.js';
+import { warmKit } from '../components/props-service.js';
 
 const SOURCE_PATTERN = /^(.+):(\d+):(\d+)$/;
 const EDITOR_TIMEOUT_MS = 5000;
@@ -109,6 +110,7 @@ export async function finishAttach(deps: AppRouteDeps, attached: Project): Promi
   const fresh = needsFirstVersion(attached);
   deps.preview.apps?.forget(attached.id);
   deps.watch(attached, deps.projects.mainDirection(attached));
+  warmKit(attached, deps.projects.mainDirection(attached));
   const starting = deps.preview.apps?.ensure(attached).catch(() => undefined);
   if (attached.app?.mode === 'url') await starting;
   if (!fresh) return { project: attached, firstVersion: null, legacyCanvas: null };

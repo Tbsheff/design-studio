@@ -2,9 +2,9 @@ import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from '../../shared/app.js';
 import { SOURCE_LOC_ATTR } from '../../shared/contracts.js';
 import { LAYER_REF, layerKey } from '../../shared/layer-ref.js';
 import { onSourceChange } from '../direct-edit/change-feed.js';
-import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
 import { refForKey, remapIds } from './layer-ids.js';
+import { onProbePage } from '../preview/probe-page.js';
 
 export interface Viewport {
   width: number;
@@ -211,11 +211,7 @@ function scanIn(page: ScanPage, input: ScanInput): Promise<ScanResult> {
 }
 
 async function onPage<T>(preview: PreviewService, url: string, viewport: Viewport, task: (page: ScanPage) => Promise<T>): Promise<T> {
-  if (!preview.withPage) throw new Error('rendering is not available');
-  return preview.withPage(url, viewport, async (page) => {
-    await waitForPage(page);
-    return task(page);
-  });
+  return onProbePage(preview, url, viewport, task);
 }
 
 function remember(scope: string, page: string | undefined, layers: Layer[]): void {

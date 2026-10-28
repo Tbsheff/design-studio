@@ -2,8 +2,8 @@ import type { MeasureRect } from '../../shared/arrange.js';
 import type { ArrangeFacts, ArrangeParentFacts, ArrangeTargetFacts } from '../../shared/arrange-plan.js';
 import { SOURCE_LOC_ATTR, type ComponentUse, type SourceLoc } from '../../shared/contracts.js';
 import { appSourceBody, parseLoc } from '../components/owner-probe.js';
-import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
+import { probeOnPage } from '../preview/probe-page.js';
 
 type Viewport = { width: number; height: number };
 
@@ -86,11 +86,7 @@ function sourceEntry(raw: RawSource & { tag: string }): ProbedSource {
 export class ArrangeProbeError extends Error {}
 
 export async function probeArrange(preview: PreviewService, url: string, viewport: Viewport, selectors: string[]): Promise<ArrangeProbe> {
-  if (!preview.withPage) throw new Error('rendering is not available');
-  const raw = await preview.withPage(url, viewport, async (page) => {
-    await waitForPage(page);
-    return page.evaluate<RawProbe>(probeExpression(selectors));
-  });
+  const raw = await probeOnPage<RawProbe>(preview, url, viewport, probeExpression(selectors));
   if ('error' in raw) throw new ArrangeProbeError(raw.error);
   const sources = new Map<string, ProbedSource>();
   const targets = raw.targets.map(({ loc, usedAt, usedBy, ...rest }) => {
@@ -117,9 +113,5 @@ function rectsExpression(selectors: string[]): string {
 }
 
 export async function probeRects(preview: PreviewService, url: string, viewport: Viewport, selectors: string[]): Promise<(MeasureRect | null)[]> {
-  if (!preview.withPage) throw new Error('rendering is not available');
-  return preview.withPage(url, viewport, async (page) => {
-    await waitForPage(page);
-    return page.evaluate<(MeasureRect | null)[]>(rectsExpression(selectors));
-  });
+  return probeOnPage<(MeasureRect | null)[]>(preview, url, viewport, rectsExpression(selectors));
 }

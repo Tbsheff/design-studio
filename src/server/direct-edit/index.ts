@@ -14,6 +14,7 @@ import { findTextSource } from './text-source.js';
 import { tailwindThemeFor, type TailwindTheme } from './tailwind/theme.js';
 import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
+import { isPendingVersion, saveLater, savesSettled } from './save-queue.js';
 
 export { DirectEditError } from './errors.js';
 export { parseDirectEditRequest } from './validate.js';
@@ -185,10 +186,12 @@ export function editSummary(request: DirectEditRequest): string {
   return `Direct edit of ${request.source.file}:${request.source.line}:${request.source.col}: ${parts.join('; ')}`;
 }
 
-export async function publishVersion(deps: DirectEditDeps, project: Project, direction: Direction, version: Version): Promise<void> {
+export async function publishVersion(deps: DirectEditDeps, project: Project, direction: Direction, version: Version, withStatus = true): Promise<void> {
+  if (isPendingVersion(version)) return;
   deps.bus.emit({ type: 'version.created', projectId: project.id, directionId: direction.id, version });
   const updated = await deps.projects.updateDirection(project.id, direction.id, { headVersionId: version.id });
   deps.bus.emit({ type: 'direction.updated', projectId: project.id, directionId: direction.id, direction: updated });
+  if (!withStatus) return;
   const status = await deps.versions.status(project, direction);
   deps.bus.emit({ type: 'status.changed', projectId: project.id, directionId: direction.id, status });
 }
@@ -204,29 +207,15 @@ async function unchangedResult(
   return { file: relative, version, applied: patch.applied, ...(patch.tailwind ? { tailwind: patch.tailwind } : {}) };
 }
 
-async function writeAndCommit(
-  deps: DirectEditDeps,
-  project: Project,
-  direction: Direction,
-  target: ResolvedSource,
-  original: string,
-  patch: PatchResult,
-  request: DirectEditRequest,
-): Promise<Version> {
+export function saveDeferred(deps: DirectEditDeps, project: Project, direction: Direction, relatives: string[], title: string, meta: VersionMeta): Version {
+  const failed = (p: Project, d: Direction, message: string) => deps.bus.emit({ type: 'preview.build-error', projectId: p.id, directionId: d.id, message: `Version not saved: ${message}` });
+  return saveLater({ versions: deps.versions, publish: (p, d, version, withStatus) => publishVersion(deps, p, d, version, withStatus), failed }, project, direction, relatives, title, meta);
+}
+
+async function writeAndCommit(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, patch: PatchResult, request: DirectEditRequest): Promise<Version> {
+  await savesSettled(project.id);
   await writeAtomic(target.file, patch.code);
-  const meta: VersionMeta = { kind: 'manual', prompt: editSummary(request) };
-  let version: Version | null;
-  try {
-    version = await deps.versions.commitFile(project, direction, target.relative, editTitle(patch.tag, patch.applied, request), meta);
-  } catch (error) {
-    await writeAtomic(target.file, original);
-    throw error;
-  }
-  if (version === null) {
-    await writeAtomic(target.file, original);
-    throw new DirectEditError('no_change', 'The edit did not change any tracked file');
-  }
-  return version;
+  return saveDeferred(deps, project, direction, [target.relative], editTitle(patch.tag, patch.applied, request), { kind: 'manual', prompt: editSummary(request) });
 }
 
 export function assertCanEdit(deps: Pick<DirectEditDeps, 'runner'>, project: Project, direction: Direction): string {
@@ -273,7 +262,7 @@ export async function applyDirectEdit(deps: DirectEditDeps, project: Project, di
   const plan = await planDirectEdit(direction.workTree, request, await knownTokenVars(direction.workTree), { projectKind: project.kind, ...(previewOrigin ? { previewOrigin } : {}) });
   const { target, original, patch } = plan;
   if (patch.code === original) return unchangedResult(deps, project, headVersionId, target.relative, patch);
-  const version = await writeAndCommit(deps, project, direction, target, original, patch, request);
+  const version = await writeAndCommit(deps, project, direction, target, patch, request);
   deps.history?.record({
     projectId: project.id,
     directionId: direction.id,

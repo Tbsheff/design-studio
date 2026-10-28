@@ -12,6 +12,8 @@ import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from 
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
 import { WarmPages } from './page-pool.js';
 import { renderSettled } from './render-wait.js';
+import { PeekPages } from './peek-pages.js';
+import { waitForPage } from '../export/capture.js';
 import type { RenderClip } from '../../shared/render-rpc.js';
 
 const SERVER_TOKEN = 'server';
@@ -221,6 +223,22 @@ export class BrowserPool {
   private backendPromise: Promise<RenderBackend> | null = null;
   private closed = false;
   private readonly pages = new WarmPages(() => this.backend());
+  private readonly peeks = new PeekPages(
+    async (url, viewport) => {
+      const page = await this.pages.hold(viewport);
+      try {
+        await page.goto(withServerBridgeParams(url, this.parentOrigin));
+        await settle(page);
+        await waitForPage(page);
+        await this.noteLanded(page, url);
+        return page;
+      } catch (error) {
+        await this.pages.release(page);
+        throw error;
+      }
+    },
+    (page) => this.pages.release(page),
+  );
   private readonly checks = new CaptureCache<CachedCheck>(path.join(CAPTURE_DIR, 'checks'));
   private readonly tiles = new CaptureCache<CachedTiles>(path.join(CAPTURE_DIR, 'tiles'));
   private readonly axeRuns = new Map<string, { stamp: string; run: Promise<AxeViolation[]> }>();
@@ -242,6 +260,14 @@ export class BrowserPool {
 
   run<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     return this.withPage(url, viewport, task);
+  }
+
+  peek<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+    return this.peeks.run(url, viewport, task);
+  }
+
+  sourcesChanged(at?: number): void {
+    this.peeks.markDirty(at);
   }
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
@@ -429,6 +455,7 @@ export class BrowserPool {
   }
 
   async close(): Promise<void> {
+    await this.peeks.close();
     this.closed = true;
     await this.pages.closeAll().catch(() => undefined);
     const pending = this.backendPromise;

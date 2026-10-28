@@ -5,6 +5,7 @@ import type * as t from '@babel/types';
 import type { Project } from '../../shared/contracts.js';
 import type { InsertableComponent, InsertableList } from '../../shared/insert.js';
 import type { ExportKind } from '../direct-edit/imports.js';
+import { treeChangesSince, treeStamp } from '../direct-edit/change-feed.js';
 import { listFiles } from './inventory.js';
 import { declaredComponents, parseModuleFile } from './props-schema.js';
 
@@ -174,9 +175,36 @@ function rankFiles(scan: string[]): (file: string) => number {
   };
 }
 
-export async function loadLibrary(project: Project, workTree: string): Promise<Library & { specifiers: Map<string, string[]> }> {
+type LoadedLibrary = Library & { specifiers: Map<string, string[]> };
+
+const LIBRARY_CACHE_MAX = 8;
+const LIBRARY_TTL_MS = 120_000;
+const libraries = new Map<string, { stamp: number; at: number; library: Promise<LoadedLibrary> }>();
+
+export function loadLibrary(project: Project, workTree: string): Promise<LoadedLibrary> {
+  const key = `${project.id}\u0000${project.app?.appDir ?? ''}\u0000${workTree}`;
+  const stamp = treeStamp(path.resolve(workTree));
+  const known = libraries.get(key);
+  const fresh = known !== undefined && Date.now() - known.at < LIBRARY_TTL_MS;
+  if (known && fresh && known.stamp === stamp) return known.library;
+  if (libraries.size >= LIBRARY_CACHE_MAX) libraries.clear();
+  const library = readLibrary(project, workTree, known && fresh ? sameFiles(known.library, treeChangesSince(path.resolve(workTree), known.stamp)) : null);
+  libraries.set(key, { stamp, at: Date.now(), library });
+  library.catch(() => libraries.get(key)?.library === library && libraries.delete(key));
+  return library;
+}
+
+async function sameFiles(previous: Promise<LoadedLibrary>, changed: string[] | null): Promise<string[] | null> {
+  const before = await previous.catch(() => null);
+  if (!before || changed === null) return null;
+  const known = new Set(before.files);
+  const listed = changed.every((file) => known.has(file) ? existsSync(file) : !acceptFile(path.basename(file)) && path.extname(file) !== '');
+  return listed ? before.files : null;
+}
+
+async function readLibrary(project: Project, workTree: string, reuse: Promise<string[] | null> | null): Promise<LoadedLibrary> {
   const { root, scan } = await libraryRoots(project, workTree);
-  const files = [...new Set((await Promise.all(scan.map((dir) => listFiles(dir, acceptFile)))).flat())];
+  const files = (await reuse) ?? [...new Set((await Promise.all(scan.map((dir) => listFiles(dir, acceptFile)))).flat())];
   const infos = await Promise.all(files.map(async (file) => ({ file, info: await fileInfo(file) })));
   const rank = rankFiles(scan);
   const entries: LibraryEntry[] = [];

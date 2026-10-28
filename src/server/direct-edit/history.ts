@@ -5,7 +5,8 @@ import { isNodeError } from '../store/errors.js';
 import type { EventBus } from '../types.js';
 import { emitSourceChange } from './change-feed.js';
 import { DirectEditError } from './errors.js';
-import { assertCanEdit, publishVersion, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
+import { savedVersionId, savesSettled } from './save-queue.js';
+import { assertCanEdit, publishVersion, saveDeferred, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
 
 export const HISTORY_LIMIT = 100;
 
@@ -113,7 +114,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
         .filter((record) => record.directionId === directionId)
         .slice(-max)
         .reverse()
-        .map((record) => ({ label: record.label, versionId: record.versionId, files: record.files.map((change) => change.relative) }));
+        .map((record) => ({ label: record.label, versionId: savedVersionId(record.versionId), files: record.files.map((change) => change.relative) }));
     return { undo: entries(stacks?.undo ?? []), redo: entries(stacks?.redo ?? []) };
   };
 
@@ -139,18 +140,16 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     const current = (change: EditFileChange) => (kind === 'undo' ? change.after : change.before);
     try {
       await writeInReverse(files, record.files.map(wanted));
-      const relatives = record.files.map((change) => change.relative);
-      const version = await deps.versions.commitFile(project, direction, relatives, `${STEP_WORD[kind]}: ${record.label}`, stepMeta(kind, record));
-      if (version === null) throw new DirectEditError('no_change', 'The undo did not change any tracked file');
-      return version;
     } catch (error) {
       await writeInReverse(files, record.files.map(current)).catch((restoreError: unknown) => console.error('[history] could not restore files', restoreError));
       throw error;
     }
+    return saveDeferred(deps, project, direction, record.files.map((change) => change.relative), `${STEP_WORD[kind]}: ${record.label}`, stepMeta(kind, record));
   };
 
   const step = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult> => {
     assertCanEdit(deps, project, direction);
+    await savesSettled(project.id);
     const stacks = stacksOf(project.id);
     const from = kind === 'undo' ? stacks.undo : stacks.redo;
     const index = lastFor(from, direction.id);

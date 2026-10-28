@@ -9,7 +9,8 @@ import { cvaCalls, parseModuleFile } from '../components/props-schema.js';
 import { sourceFiles, usesIn } from '../components/props-service.js';
 import { elementAt, readInstance } from '../components/use-site.js';
 import { DirectEditError } from './errors.js';
-import { assertCanEdit, publishVersion, resolveSource, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
+import { savesSettled } from './save-queue.js';
+import { assertCanEdit, publishVersion, resolveSource, saveDeferred, themeForFile, writeAtomic, type DirectEditDeps, type ResolvedSource } from './index.js';
 import { parseSource } from './jsx.js';
 import { applySplices } from './splice.js';
 import { decideClassEdit } from './tailwind/index.js';
@@ -206,18 +207,9 @@ function propsTitle(tag: string, plan: PropsPlan, props: Record<string, PropValu
 }
 
 async function commitChange(deps: DirectEditDeps, project: Project, direction: Direction, target: ResolvedSource, before: string, after: string, title: string, prompt: string): Promise<Version> {
+  await savesSettled(project.id);
   await writeAtomic(target.file, after);
-  let version: Version | null;
-  try {
-    version = await deps.versions.commitFile(project, direction, target.relative, title, { kind: 'manual', prompt });
-  } catch (error) {
-    await writeAtomic(target.file, before);
-    throw error;
-  }
-  if (version === null) {
-    await writeAtomic(target.file, before);
-    throw new DirectEditError('no_change', 'The edit did not change any tracked file');
-  }
+  const version = saveDeferred(deps, project, direction, [target.relative], title, { kind: 'manual', prompt });
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files: [{ file: target.file, relative: target.relative, before, after }] });
   await publishVersion(deps, project, direction, version);
   return version;
@@ -238,7 +230,7 @@ export async function applySetProps(deps: DirectEditDeps, project: Project, dire
   if (plan.code === original) return { file: target.relative, version: await deps.versions.get(project, head), changed: [], removed: [], instance };
   const summary = Object.entries(request.props).map(([name, value]) => (value === null ? `remove ${name}` : `${name}=${JSON.stringify(value)}`)).join('; ');
   const version = await commitChange(deps, project, direction, target, original, plan.code, propsTitle(instance.tag, plan, request.props), `Props of <${instance.tag}> at ${target.relative}:${instance.use.line}: ${summary}`);
-  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use, usesIn(await sourceFiles(direction.workTree))) };
+  return { file: target.relative, version, changed: plan.changed, removed: plan.removed, instance: await readInstance(direction.workTree, instance.use, usesIn(await sourceFiles(direction.workTree), direction.workTree)) };
 }
 
 function variantLiteral(ast: t.File, edit: VariantClassEdit): t.StringLiteral {

@@ -3,8 +3,8 @@ import { locKey, matchesOf, summarizeHits, unlocatedCount, type StyleHit, type S
 import { hexOf } from '../../shared/color-near.js';
 import { tokenFieldState } from '../../shared/token-match.js';
 import { readDesignSystemState } from '../design-system/state.js';
-import { waitForPage } from '../export/capture.js';
 import type { PreviewService } from '../types.js';
+import { onProbePage } from '../preview/probe-page.js';
 
 const HEADLESS_SCAN = 'window.__studioStyleScan';
 const ROWS_MAX = 60;
@@ -16,9 +16,7 @@ export interface PageViewport {
 }
 
 export async function scanPageStyles(preview: PreviewService, url: string, viewport: PageViewport, query: StyleQuery): Promise<StyleScanResult> {
-  if (!preview.withPage) throw new Error('rendering is not available');
-  return preview.withPage(url, viewport, async (page) => {
-    await waitForPage(page);
+  return onProbePage(preview, url, viewport, async (page) => {
     const ready = await page.evaluate<boolean>(`typeof ${HEADLESS_SCAN} === 'function'`);
     if (!ready) throw new Error('This page has no studio bridge script, so its styles cannot be scanned');
     return page.evaluate<StyleScanResult>(`${HEADLESS_SCAN}(${JSON.stringify(query)})`);

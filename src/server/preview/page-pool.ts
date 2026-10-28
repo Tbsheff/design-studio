@@ -25,6 +25,7 @@ export class WarmPages {
   private closed = false;
   private active = 0;
   private readonly queue: (() => void)[] = [];
+  private readonly held = new Set<RenderPage>();
 
   constructor(private readonly backend: () => Promise<RenderBackend>) {}
 
@@ -95,8 +96,24 @@ export class WarmPages {
     this.count += 1;
   }
 
+  async hold(size: PageSize): Promise<RenderPage> {
+    if (this.closed) throw new Error('Browser pool is closed');
+    const backend = await this.backend();
+    const page = this.take(sizeKey(size)) ?? (await backend.open(size));
+    this.held.add(page);
+    return page;
+  }
+
+  async release(page: RenderPage): Promise<void> {
+    if (!this.held.delete(page)) return;
+    await page.close();
+  }
+
   async closeAll(): Promise<void> {
     this.closed = true;
+    const held = [...this.held];
+    this.held.clear();
+    await Promise.all(held.map((page) => page.close().catch(() => undefined)));
     const pages = [...this.idle.values()].flat();
     this.idle.clear();
     this.count = 0;

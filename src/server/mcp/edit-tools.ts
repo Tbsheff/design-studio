@@ -14,6 +14,7 @@ import { editSummary, frameName, placedFrames, placeSummary, versionName } from 
 import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
 import { base, checkWritePath, classes, variant, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
 import { describeElement, textHintsOf } from './element.js';
+import { PENDING_VERSION, savedVersionId, savesSettled } from '../direct-edit/save-queue.js';
 import { mcpErrorText } from './error-copy.js';
 import { FolderError, safeFolder } from './folders.js';
 import { HISTORY_TOOLS } from './history-tools.js';
@@ -515,11 +516,17 @@ async function run(deps: EditDeps, name: string, args: Record<string, unknown>, 
   }
 }
 
+async function recordActivity(deps: EditDeps, name: string, client: string, draft: ActivityDraft): Promise<void> {
+  const save = (item: ActivityDraft) => deps.activity.record(name, client, item).then(() => undefined, (error: unknown) => console.error('[mcp] activity not saved', error));
+  if (!draft.versionId?.startsWith(PENDING_VERSION)) return save(draft);
+  void savesSettled(draft.projectId).then(() => save({ ...draft, versionId: savedVersionId(draft.versionId as string) }));
+}
+
 export async function callEditTool(deps: EditDeps, name: string, args: Record<string, unknown>, client: string): Promise<ToolResult> {
   if (!EDIT_NAMES.has(name)) throw new EditError(`unknown tool ${name}`);
   try {
     const done = await run(deps, name, args, client);
-    if (done.activity && !done.result.isError) await deps.activity.record(name, client, done.activity).catch((error: unknown) => console.error('[mcp] activity not saved', error));
+    if (done.activity && !done.result.isError) await recordActivity(deps, name, client, done.activity);
     return done.result;
   } catch (error) {
     if (error instanceof EditError || error instanceof FolderError || (error instanceof Error && 'status' in error)) return { content: [{ type: 'text', text: mcpErrorText(error.message) }], isError: true };

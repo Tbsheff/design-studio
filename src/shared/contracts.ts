@@ -1,6 +1,7 @@
 import type { CanvasFile } from './canvas-file';
 import type { LinkQuery, LinkRectReport, LinksFile } from './links';
 import type { StatesRequest } from './states';
+import type { ElementScope } from './element-variants';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -73,6 +74,9 @@ export interface DirectionVariation extends VariationBrief {
   index: number;
   count: number;
   prompt: string;
+  scope?: ElementScope | null;
+  rejected?: string | null;
+  settled?: 'kept' | 'discarded' | null;
 }
 
 export interface ReferenceElement {
@@ -90,6 +94,7 @@ export interface VariationBriefsRequest {
   prompt: string;
   count: number;
   fromDirectionId?: string | null;
+  element?: SelectionContext | null;
 }
 
 export interface VariationBriefsResult {
@@ -106,6 +111,7 @@ export interface VariationStartRequest {
   level?: RunLevel;
   fromDirectionId?: string | null;
   attachmentIds?: string[];
+  element?: SelectionContext | null;
 }
 
 export interface VariationStartItem {
@@ -318,6 +324,7 @@ export interface RunRequest {
   plan?: boolean;
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
+  scope?: ElementScope;
   reference?: ReferenceElement;
   selection?: SelectionContext[];
   attachmentIds?: string[];
@@ -784,6 +791,7 @@ export const STUDIO_TOKEN_HEADER = 'x-studio-token';
 export const BRIDGE_TOKEN_PARAM = '__studio_token';
 export const BRIDGE_PARENT_ORIGIN_PARAM = '__studio_parent';
 export const BRIDGE_PASSIVE_PARAM = '__studio_passive';
+export const ELEMENT_MARK_PARAM = '__studio_mark';
 export const SOURCE_LOC_ATTR = 'data-studio-loc';
 export const BRIDGE_SCRIPT_PATH = '/__studio/bridge.js';
 export const BRIDGE_CHANGES_PATH = '/__studio/changes';

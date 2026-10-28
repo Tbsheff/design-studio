@@ -1,6 +1,6 @@
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { RunComment, RunLevel, SelectionContext } from '../../shared/contracts.js';
+import type { RunComment, RunLevel, RunRequest, SelectionContext } from '../../shared/contracts.js';
 import { levelOf } from '../../shared/run-levels.js';
 import type { DriverInput, DriverOutcome, DriverSink, RunDriver } from './lifecycle.js';
 import { checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions.js';
@@ -577,6 +577,50 @@ async function runPlan(session: MockSession, workTree: string, text: string): Pr
   return plan;
 }
 
+const ELEMENT_LOOKS = [
+  { background: '#fef3c7', color: '#422006', radius: '6px', padding: '14px', border: '1px solid #f59e0b' },
+  { background: '#1e293b', color: '#f8fafc', radius: '18px', padding: '22px', border: '0' },
+  { background: '#ecfeff', color: '#083344', radius: '0', padding: '16px', border: '3px solid #0e7490' },
+  { background: '#fce7f3', color: '#500724', radius: '28px', padding: '18px 26px', border: '2px dashed #db2777' },
+] as const;
+
+function styleOpenTag(openTag: string, label: string, index: number, jsx: boolean): string {
+  const look = ELEMENT_LOOKS[index % ELEMENT_LOOKS.length] ?? ELEMENT_LOOKS[0];
+  const selfClosing = openTag.endsWith('/>');
+  let body = openTag.slice(0, selfClosing ? -2 : -1).replace(/\s+$/, '');
+  const close = selfClosing ? ' />' : '>';
+  if (jsx) {
+    const css = `background: '${look.background}', color: '${look.color}', borderRadius: '${look.radius}', padding: '${look.padding}', border: '${look.border}'`;
+    body = /style=\{\{/.test(body) ? body.replace(/style=\{\{/, `style={{ ${css}, `) : `${body} style={{ ${css} }}`;
+  } else {
+    const css = `background: ${look.background}; color: ${look.color}; border-radius: ${look.radius}; padding: ${look.padding}; border: ${look.border}`;
+    body = /\sstyle="/.test(body) ? body.replace(/\sstyle="/, ` style="${css}; `) : `${body} style="${css}"`;
+  }
+  return `${body} data-variant="${label}"${close}`;
+}
+
+async function runElementVariantMock(session: MockSession, workTree: string, request: RunRequest): Promise<string> {
+  const scope = request.scope;
+  const variation = request.variation;
+  if (!scope || !variation) throw new Error('runElementVariantMock needs a scope and a variation');
+  await session.say(`Trying option ${variation.label} of the ${scope.tag}: ${variation.title}.`);
+  const source = await readFile(path.join(workTree, scope.file), 'utf8');
+  const end = source.length - scope.suffixLength;
+  const element = source.slice(scope.start, end);
+  const openEnd = findOpenTagEnd(element, 0);
+  if (!element.startsWith('<') || openEnd === -1) throw new Error(`mock: no element at ${scope.file}:${scope.startLine}`);
+  const jsx = /\.(jsx|tsx)$/.test(scope.file);
+  const changed = styleOpenTag(element.slice(0, openEnd + 1), variation.label, variation.index, jsx) + element.slice(openEnd + 1);
+  let next = source.slice(0, scope.start) + changed + source.slice(end);
+  if (request.prompt.includes('[escape]') && variation.index === variation.count - 1) {
+    next += jsx ? `\n// mock variant ${variation.label} also edited outside the element\n` : `\n<!-- mock variant ${variation.label} also edited outside the element -->\n`;
+  }
+  await session.writeFileAsTool('Edit', scope.file, next);
+  const finalText = `Wrote option ${variation.label} of the ${scope.tag} (${variation.title}).`;
+  await session.say(finalText);
+  return finalText;
+}
+
 function runMockEdit(input: DriverInput, session: MockSession): Promise<string> {
   const { ctx } = input;
   const prompt = ctx.request.prompt;
@@ -584,6 +628,7 @@ function runMockEdit(input: DriverInput, session: MockSession): Promise<string> 
   const text = cleanPrompt(prompt) || 'Untitled';
   if (ctx.request.mode === 'critique') return runCritique(session);
   if (ctx.request.plan) return runPlan(session, workTree, text);
+  if (ctx.request.variation && ctx.request.scope) return runElementVariantMock(session, workTree, ctx.request);
   if (ctx.request.variation || ctx.request.reference) return runVariationMock(session, ctx.request, ctx.project.kind, workTree, text);
   if (ctx.request.comments?.length) return runCommentEdit(session, workTree, ctx.request.comments);
   const selection = ctx.request.selection;

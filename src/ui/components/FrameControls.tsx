@@ -127,7 +127,10 @@ export interface FrameVariation {
   status: RunStatus | null;
   costText: string;
   siblings: Sibling[];
-  onKeep: () => void;
+  scoped?: boolean;
+  error?: string | null;
+  keepBlocked?: string | null;
+  onKeep: () => void | Promise<void>;
   onMix: (toDirectionId: string, element: SelectionContext) => Promise<void>;
 }
 
@@ -177,10 +180,28 @@ function UseInMenu({ siblings, busy, onPick }: { siblings: Sibling[]; busy: bool
   );
 }
 
+function shortRejection(error: string): string {
+  if (!error.startsWith('Rejected:')) return error.length > 60 ? `${error.slice(0, 60)}…` : error;
+  return /another file|other files/.test(error) ? 'Rejected: changed another file' : 'Rejected: changed code outside the element';
+}
+
 export function VariationControls({ variation, active, element, onMixed }: { variation: FrameVariation; active: boolean; element: SelectionContext | null; onMixed: () => void }) {
   const [mixing, setMixing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [keeping, setKeeping] = useState(false);
   const status = variation.status;
+  const keep = async () => {
+    if (variation.keepBlocked || keeping) return;
+    setKeeping(true);
+    setError(null);
+    try {
+      await variation.onKeep();
+    } catch (err) {
+      setError(`Could not keep it. ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setKeeping(false);
+    }
+  };
   const mix = async (to: string) => {
     if (!element) return;
     setMixing(true);
@@ -196,13 +217,28 @@ export function VariationControls({ variation, active, element, onMixed }: { var
   };
   return (
     <>
-      <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" data-tip={variation.costText}>
-        {status ? STATUS_TEXT[status] : 'No run'}
-      </span>
-      {active && element && variation.siblings.length > 0 && <UseInMenu siblings={variation.siblings} busy={mixing} onPick={(id) => void mix(id)} />}
-      <button type="button" className="frame-chip keep" onPointerDown={stop} onClick={variation.onKeep}>
-        Keep this one
+      {!variation.error && (
+        <span className={`variation-status ${status ?? 'idle'}`} data-testid="variation-status" data-tip={variation.costText}>
+          {status ? STATUS_TEXT[status] : 'No run'}
+        </span>
+      )}
+      {active && element && !variation.scoped && variation.siblings.length > 0 && <UseInMenu siblings={variation.siblings} busy={mixing} onPick={(id) => void mix(id)} />}
+      <button
+        type="button"
+        className="frame-chip keep"
+        aria-disabled={variation.keepBlocked ? true : undefined}
+        data-tip={variation.keepBlocked ?? (variation.scoped ? 'Put this version of the element into the design' : undefined)}
+        data-testid="variation-keep"
+        onPointerDown={stop}
+        onClick={() => void keep()}
+      >
+        {keeping ? 'Keeping…' : 'Keep this one'}
       </button>
+      {variation.error && (
+        <span className="frame-error scope" role="status" aria-label={variation.error} data-testid="variation-error" data-tip={variation.error}>
+          {shortRejection(variation.error)}
+        </span>
+      )}
       {error && (
         <span className="frame-error" role="alert">
           {error}

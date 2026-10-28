@@ -1,12 +1,13 @@
 import type { Direction, Project, Version } from '../../shared/contracts.js';
 import { cleanExportPath, EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, EXPORT_SCALES, type ExportFrame, type ExportScale } from '../../shared/export.js';
 import { BadRequestError, NotFoundError, assertSafeId } from '../store/errors.js';
-import type { PreviewService, ProjectStore, VersionStore } from '../types.js';
+import type { AgentRunner, PreviewService, ProjectStore, VersionStore } from '../types.js';
 
 export interface ExportDeps {
   projects: ProjectStore;
   versions: VersionStore;
   preview: PreviewService;
+  runner?: Pick<AgentRunner, 'isRunning'>;
 }
 
 export interface ExportSource {

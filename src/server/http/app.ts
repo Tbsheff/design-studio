@@ -1091,7 +1091,7 @@ export function createApp(deps: AppDeps): Hono {
   } });
   registerCanvasRoutes(app, { projects, canvas, readBody });
 
-  registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection });
+  registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });
   const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
 

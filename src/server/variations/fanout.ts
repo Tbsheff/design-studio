@@ -1,4 +1,5 @@
 import type { Direction, DirectionVariation, Project, RunLevel, RunRequest, VariationBrief, VariationStartItem } from '../../shared/contracts.js';
+import type { ElementScope } from '../../shared/element-variants.js';
 
 interface FanOutDeps {
   createDirection(name: string, variation: DirectionVariation): Promise<Direction>;
@@ -12,6 +13,7 @@ interface FanOutInput {
   level: RunLevel;
   attachmentIds?: string[];
   takenNames: ReadonlySet<string>;
+  scope?: ElementScope;
 }
 
 function describe(error: unknown): string {
@@ -34,6 +36,7 @@ function variationRequest(input: FanOutInput, brief: VariationBrief, index: numb
     level: input.level,
     variation: { ...brief, index, count: input.briefs.length },
     ...(input.attachmentIds?.length ? { attachmentIds: input.attachmentIds } : {}),
+    ...(input.scope ? { scope: input.scope } : {}),
   };
 }
 
@@ -43,7 +46,7 @@ export async function fanOut(deps: FanOutDeps, input: FanOutInput): Promise<Vari
   for (const [index, brief] of input.briefs.entries()) {
     const name = variationName(brief.label, taken);
     taken.add(name);
-    const variation: DirectionVariation = { ...brief, groupId: input.groupId, index, count: input.briefs.length, prompt: input.prompt };
+    const variation: DirectionVariation = { ...brief, groupId: input.groupId, index, count: input.briefs.length, prompt: input.prompt, ...(input.scope ? { scope: input.scope } : {}) };
     try {
       created.push({ brief, index, direction: await deps.createDirection(name, variation), error: null });
     } catch (error) {

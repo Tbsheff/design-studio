@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
+import { markOf, withElementMark } from '../elementMark';
 import { useUi } from '../storage';
 import { isTypingTarget, usePanZoom } from '../usePanZoom';
 import { boundsOf, canHideFrame, canvasStore, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, useCanvasLofi, withFramePath, type CanvasFrame } from '../canvasFrames';
@@ -411,7 +412,9 @@ export function Canvas(props: Props) {
   };
   const draw = useCanvasDraw(comment, picking, setSelectMode);
 
-  const { baseUrl, urlError } = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const preview = usePreviewUrl(projectId, directionId, source, headVersionId);
+  const urlError = preview.urlError;
+  const baseUrl = withElementMark(preview.baseUrl, markOf(knownList(props.directions), directionId));
   const liveUrl = livePageUrl(baseUrl, active);
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });

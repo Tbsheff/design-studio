@@ -42,6 +42,7 @@ export const variationsApi = {
   start: (pid: string, req: VariationStartRequest) => post<VariationStartResult>(base(pid), req),
   cancel: (pid: string, groupId: string) => post<{ canceled: string[] }>(`${base(pid)}/${encodeURIComponent(groupId)}/cancel`),
   mix: (pid: string, req: VariationMixRequest) => post<{ runId: string }>(`${base(pid)}/mix`, req),
+  keep: (pid: string, groupId: string, directionId: string) => post<{ versionId: string; directionId: string; label: string }>(`${base(pid)}/${encodeURIComponent(groupId)}/keep`, { directionId }),
 };
 
 export function maxVariationsFor(kind: ProjectKind): number {

@@ -15,6 +15,7 @@ import type { PreviewPort } from '../bridge';
 import { inspectorEmptyReason, isDirectEditable, type InspectorTab } from './Inspector';
 import type { EditSessionHandle } from '../useEditSession';
 import { runCommand } from '../commands/registry';
+import { useTryVariants } from '../useTryVariants';
 import { usePanelTab } from '../usePanelTab';
 import { undoAllowed } from '../useUndoShortcut';
 import { mergeCommit, type DirectEditControl } from '../useDirectEdit';
@@ -260,6 +261,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const { trackSend, ...runControls } = useRunControls(activeRun, draft, act);
   const exporter = useExportTarget(projectId, direction, versions);
   const commandActions = useStudioCommands();
+  const tryVariants = useTryVariants(project, selection, variations);
   useEffect(() => {
     const id = window.setTimeout(prefetchCommandLayer, 1500);
     return () => window.clearTimeout(id);
@@ -429,7 +431,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             components: componentList.components,
             mentionRequest,
             waitReason: draftChrome.waitReason,
-            variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose },
+            variations: { count: variations.count, max: variations.max, onCount: variations.setCount, onSend: variations.propose, onElement: tryVariants },
           }}
           inspector={{
             projectId,

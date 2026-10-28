@@ -17,6 +17,7 @@ export interface BriefDraft {
   starting: boolean;
   autoStart: boolean;
   error: string | null;
+  element: SelectionContext | null;
 }
 
 interface Options {
@@ -52,6 +53,7 @@ export function useVariations(o: Options) {
   const [groupId, setGroupId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [kept, setKept] = useState<string | null>(null);
+  const [ask, setAsk] = useState<SelectionContext | null>(null);
   const opts = useRef(o);
   opts.current = o;
   const requestRef = useRef(0);
@@ -69,6 +71,7 @@ export function useVariations(o: Options) {
     setGroupId(null);
     setNotice(null);
     setKept(null);
+    setAsk(null);
   }, [o.projectId]);
 
   const startWith = useCallback(async (current: BriefDraft, briefs: VariationBrief[]) => {
@@ -81,6 +84,7 @@ export function useVariations(o: Options) {
         level: current.level,
         fromDirectionId: current.fromDirectionId,
         ...(current.attachmentIds.length ? { attachmentIds: current.attachmentIds } : {}),
+        ...(current.element ? { element: current.element } : {}),
       });
       result.items.forEach((item, index) => {
         const brief = briefs[index];
@@ -108,7 +112,7 @@ export function useVariations(o: Options) {
       const ticket = requestRef.current + 1;
       requestRef.current = ticket;
       autoStartRef.current = false;
-      const base: BriefDraft = { prompt, level, attachmentIds, count, fromDirectionId, briefs: null, result: null, loading: true, starting: false, autoStart: false, error: null };
+      const base: BriefDraft = { prompt, level, attachmentIds, count, fromDirectionId, briefs: null, result: null, loading: true, starting: false, autoStart: false, error: null, element: null };
       setDraft(base);
       try {
         const result = await variationsApi.briefs(projectId, { prompt, count, fromDirectionId });
@@ -122,6 +126,38 @@ export function useVariations(o: Options) {
     },
     [effectiveCount, startWith],
   );
+
+  const proposeElement = useCallback(
+    async (element: SelectionContext, note: string, requestedCount: number, level: RunLevel) => {
+      const { projectId, project, direction } = opts.current;
+      const count = Math.max(VARIATION_MIN, Math.min(requestedCount, project ? maxVariationsFor(project.kind) : requestedCount));
+      const prompt = note.trim() || `Try different versions of this ${element.tag}`;
+      const fromDirectionId = direction?.id ?? null;
+      const ticket = requestRef.current + 1;
+      requestRef.current = ticket;
+      autoStartRef.current = true;
+      setAsk(null);
+      const base: BriefDraft = { prompt, level, attachmentIds: [], count, fromDirectionId, briefs: null, result: null, loading: true, starting: false, autoStart: true, error: null, element };
+      setDraft(base);
+      try {
+        const result = await variationsApi.briefs(projectId, { prompt, count, fromDirectionId, element });
+        if (requestRef.current !== ticket) return;
+        const ready: BriefDraft = { ...base, briefs: result.briefs, result, loading: false };
+        if (autoStartRef.current) await startWith(ready, result.briefs);
+        else setDraft({ ...ready, autoStart: false });
+      } catch (err) {
+        if (requestRef.current === ticket) setDraft({ ...base, loading: false, autoStart: false, error: errorText(err) });
+      }
+    },
+    [startWith],
+  );
+
+  const keepElement = useCallback(async (groupId: string, directionId: string) => {
+    const { projectId, setDirectionId } = opts.current;
+    const kept = await variationsApi.keep(projectId, groupId, directionId);
+    setDirectionId(kept.directionId);
+    return kept;
+  }, []);
 
   const editBrief = useCallback((index: number, patch: Partial<Pick<VariationBrief, 'title' | 'brief'>>) => {
     setDraft((prev) => (prev?.briefs ? { ...prev, briefs: prev.briefs.map((brief, i) => (i === index ? { ...brief, ...patch } : brief)) } : prev));
@@ -162,6 +198,10 @@ export function useVariations(o: Options) {
     setCount,
     draft,
     propose,
+    proposeElement,
+    keepElement,
+    ask,
+    askElement: setAsk,
     editBrief,
     removeBrief,
     start,

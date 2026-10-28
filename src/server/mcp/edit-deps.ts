@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
 import type { CanvasService } from '../canvas/service.js';
+import type { EditRecorder } from '../direct-edit/index.js';
 import type { ExportDeps } from '../export/source.js';
 import type { AgentRunner, EventBus } from '../types.js';
 import type { ActivityLog } from './activity.js';
@@ -17,6 +18,7 @@ export interface EditDeps extends ExportDeps {
   activity: ActivityLog;
   dataDir: string;
   projectsFolder(): Promise<string>;
+  history?: EditRecorder;
 }
 
 export class EditError extends Error {}

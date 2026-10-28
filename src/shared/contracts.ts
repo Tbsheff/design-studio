@@ -949,6 +949,17 @@ export interface EditHistoryState {
   redoLabel: string | null;
 }
 
+export interface EditHistoryEntry {
+  label: string;
+  versionId: string;
+  files: string[];
+}
+
+export interface EditHistoryList {
+  undo: EditHistoryEntry[];
+  redo: EditHistoryEntry[];
+}
+
 export interface EditSessionState {
   baseVersionId: string;
   count: number;

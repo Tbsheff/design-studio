@@ -10,6 +10,7 @@ import { diffLines } from '../../shared/line-diff.js';
 import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js';
 import { createCommandRuleStore } from '../store/command-rules.js';
 import { BadRequestError } from '../store/errors.js';
+import { scopeProblem } from '../variations/scope-check.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
 
 export interface DriverSink {
@@ -525,6 +526,22 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       emitBody({ type: 'status.changed', status: workTreeStatus });
     }
 
+    async function guardScope(): Promise<string | null> {
+      const scope = ctx.request.scope;
+      if (!scope || ctx.request.mode !== 'edit') return null;
+      const project = await deps.projects.get(projectId);
+      const current = project.directions.find((candidate) => candidate.id === directionId) ?? direction;
+      const { changed } = await deps.versions.status(project, current);
+      const problem = await scopeProblem(current.workTree, changed, scope);
+      if (!problem) return null;
+      await deps.versions.discard(project, current);
+      if (current.variation) {
+        direction = await deps.projects.updateDirection(projectId, directionId, { variation: { ...current.variation, rejected: problem } });
+        emitBody({ type: 'direction.updated', direction });
+      }
+      return problem;
+    }
+
     async function recordSessionTotals(outcome: DriverOutcome | null): Promise<void> {
       const totals = outcome?.sessionTotals;
       if (!totals || sessionId === null) return;
@@ -552,6 +569,11 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
       try {
         await recordSessionTotals(outcome);
+        const rejected = status === 'completed' ? await guardScope() : null;
+        if (rejected) {
+          status = 'failed';
+          summary.error = rejected;
+        }
         await finalize(status);
       } catch (error) {
         status = status === 'completed' ? 'failed' : status;

@@ -107,7 +107,7 @@ function taskBlocks(ctx: Pick<AgentRunContext, 'request'> & { attachments?: read
 
 export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' | 'designSystem' | 'mentionFiles'> & { attachments?: readonly unknown[]; project?: { kind: ProjectKind } }): string {
   const blocks = [ctx.request.prompt.trim(), ...taskBlocks(ctx)];
-  const variation = variationBlock(ctx.request.variation);
+  const variation = variationBlock(ctx.request.variation, ctx.request.scope);
   if (variation) blocks.push(variation);
   const reference = referenceBlock(ctx.request.reference);
   if (reference) blocks.push(reference);

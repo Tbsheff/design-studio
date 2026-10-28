@@ -1,5 +1,6 @@
 import type { CanvasFile } from './canvas-file';
 import type { StatesRequest } from './states';
+import type { ElementScope } from './element-variants';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -72,6 +73,9 @@ export interface DirectionVariation extends VariationBrief {
   index: number;
   count: number;
   prompt: string;
+  scope?: ElementScope | null;
+  rejected?: string | null;
+  settled?: 'kept' | 'discarded' | null;
 }
 
 export interface ReferenceElement {
@@ -89,6 +93,7 @@ export interface VariationBriefsRequest {
   prompt: string;
   count: number;
   fromDirectionId?: string | null;
+  element?: SelectionContext | null;
 }
 
 export interface VariationBriefsResult {
@@ -105,6 +110,7 @@ export interface VariationStartRequest {
   level?: RunLevel;
   fromDirectionId?: string | null;
   attachmentIds?: string[];
+  element?: SelectionContext | null;
 }
 
 export interface VariationStartItem {
@@ -317,6 +323,7 @@ export interface RunRequest {
   plan?: boolean;
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
+  scope?: ElementScope;
   reference?: ReferenceElement;
   selection?: SelectionContext[];
   attachmentIds?: string[];

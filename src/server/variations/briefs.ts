@@ -28,6 +28,7 @@ export interface BriefInput {
   kind: ProjectKind;
   hasDesign: boolean;
   hasDesignSystem: boolean;
+  element?: { tag: string; text: string } | null;
 }
 
 export interface BriefGenerator {
@@ -131,8 +132,15 @@ const ARCHETYPES: { title: string; brief: string }[] = [
   { title: 'Photo-led dark', brief: 'Dark charcoal canvas, large framed image panels with captions, condensed uppercase headings, neon lime accent, slow vertical rhythm.' },
 ];
 
-export function fallbackBriefs(count: number): VariationBrief[] {
-  return labelBriefs(ARCHETYPES.slice(0, count));
+const ELEMENT_ARCHETYPES: { title: string; brief: string }[] = [
+  { title: 'Quiet and compact', brief: 'Tighter padding, smaller type, a thin neutral border and no shadow; one muted accent for the main action.' },
+  { title: 'Bold and roomy', brief: 'Larger heading, generous padding, a strong filled background in the accent color and high contrast text.' },
+  { title: 'Soft and rounded', brief: 'Large corner radius, soft shadow, pastel surface tint and friendly medium-weight type with relaxed spacing.' },
+  { title: 'Sharp editorial', brief: 'Square corners, a heavy rule on one side, serif heading, uppercase small label and a two-column inner layout.' },
+];
+
+export function fallbackBriefs(count: number, element = false): VariationBrief[] {
+  return labelBriefs((element ? ELEMENT_ARCHETYPES : ARCHETYPES).slice(0, count));
 }
 
 const BRIEF_SYSTEM = `You are an art director. For one design request you propose several design directions that a designer will build in parallel, so the user can compare them side by side.
@@ -143,6 +151,10 @@ const BRIEF_SYSTEM = `You are an art director. For one design request you propos
 - Answer with JSON only: an array of objects {"title": "2 to 4 words", "brief": "..."}.`;
 
 function briefUserText(input: BriefInput): string {
+  if (input.element) {
+    const text = input.element.text.replace(/\s+/g, ' ').trim().slice(0, 200);
+    return `<request>\n${input.prompt.trim()}\n</request>\n\nThe directions are for one element only: a <${input.element.tag}>${text ? ` with the text "${text}"` : ''}. Each direction reworks that element and its children; the rest of the page stays the same, so vary its layout, type, color and density, not the page. Keep its content.\n\nPropose exactly ${input.count} directions. Reply with the JSON array only.`;
+  }
   const context = [
     `Project kind: ${input.kind}.`,
     input.hasDesign ? 'There is already a design; each direction reworks it.' : 'The page starts empty.',
@@ -216,7 +228,7 @@ export function createSdkBriefGenerator(options: SdkBriefOptions = {}): BriefGen
           stream.close();
         }
       } catch (error) {
-        return { briefs: fallbackBriefs(input.count), source: 'fallback', model: BRIEF_MODEL, costUsd, error: `Brief call failed, using built-in directions: ${describe(error)}` };
+        return { briefs: fallbackBriefs(input.count, Boolean(input.element)), source: 'fallback', model: BRIEF_MODEL, costUsd, error: `Brief call failed, using built-in directions: ${describe(error)}` };
       }
     },
   };
@@ -225,7 +237,7 @@ export function createSdkBriefGenerator(options: SdkBriefOptions = {}): BriefGen
 export function createMockBriefGenerator(): BriefGenerator {
   return {
     async generate(input) {
-      return { briefs: fallbackBriefs(input.count), source: 'mock', model: null, costUsd: 0, error: null };
+      return { briefs: fallbackBriefs(input.count, Boolean(input.element)), source: 'mock', model: null, costUsd: 0, error: null };
     },
   };
 }

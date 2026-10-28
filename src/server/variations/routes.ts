@@ -3,6 +3,7 @@ import type { Hono } from 'hono';
 import { z } from 'zod';
 import { RUN_LEVELS, VARIATION_DEFAULT, type Direction, type DirectionVariation, type Project, type RunRequest, type VariationBriefsResult, type VariationStartResult } from '../../shared/contracts.js';
 import { levelOf, resolveRunConfig } from '../../shared/run-levels.js';
+import type { ElementVariantInfo } from '../../shared/element-variants.js';
 import { readDesignSystemState } from '../design-system/state.js';
 import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
@@ -10,6 +11,7 @@ import type { AgentRunner, ServerConfig } from '../types.js';
 import { countProblem, createMockBriefGenerator, createSdkBriefGenerator, validateUserBriefs, type BriefGenerator } from './briefs.js';
 import { createGroupRegistry, fanOut, groupDirections } from './fanout.js';
 import { buildReference, labelOf, mixPrompt } from './reference.js';
+import { buildScope, keepElementVariant, variantInfo, type KeepDeps } from './scope.js';
 
 interface VariationRouteDeps {
   config: ServerConfig;
@@ -19,24 +21,11 @@ interface VariationRouteDeps {
   withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   forkDirection: (pid: string, input: { name: string; fromVersionId: string | null; variation?: DirectionVariation }) => Promise<Direction>;
   briefs?: BriefGenerator;
+  edit: KeepDeps;
 }
 
 const PROMPT_MAX = 20_000;
 const LevelSchema = z.enum(RUN_LEVELS as unknown as [string, ...string[]]).optional();
-
-const BriefsBody = z.object({
-  prompt: z.string().trim().min(1).max(PROMPT_MAX),
-  count: z.number().int().default(VARIATION_DEFAULT),
-  fromDirectionId: z.string().nullish(),
-});
-
-const StartBody = z.object({
-  prompt: z.string().trim().min(1).max(PROMPT_MAX),
-  briefs: z.array(z.unknown()),
-  level: LevelSchema,
-  fromDirectionId: z.string().nullish(),
-  attachmentIds: z.array(z.string()).max(10).optional(),
-});
 
 const ElementSchema = z.object({
   selector: z.string().max(2000),
@@ -48,6 +37,25 @@ const ElementSchema = z.object({
   source: z.object({ file: z.string().max(1000), line: z.number().int(), col: z.number().int() }).nullable(),
   ancestors: z.array(z.string()),
 });
+
+const BriefsBody = z.object({
+  prompt: z.string().trim().min(1).max(PROMPT_MAX),
+  count: z.number().int().default(VARIATION_DEFAULT),
+  fromDirectionId: z.string().nullish(),
+  element: ElementSchema.nullish(),
+});
+
+const StartBody = z.object({
+  prompt: z.string().trim().min(1).max(PROMPT_MAX),
+  briefs: z.array(z.unknown()),
+  level: LevelSchema,
+  fromDirectionId: z.string().nullish(),
+  attachmentIds: z.array(z.string()).max(10).optional(),
+  element: ElementSchema.nullish(),
+});
+
+const KeepBody = z.object({ directionId: z.string() });
+
 
 const MixBody = z.object({
   fromDirectionId: z.string(),
@@ -96,6 +104,7 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
       kind: project.kind,
       hasDesign: Boolean(from?.headVersionId),
       hasDesignSystem: Boolean(designSystem?.tokens),
+      element: input.element ? { tag: input.element.tag, text: input.element.text } : null,
     });
     return c.json(result);
   });
@@ -111,6 +120,8 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
       throw new BadRequestError(error instanceof Error ? error.message : String(error));
     }
     const from = sourceDirection(project, input.fromDirectionId);
+    if (input.element && !from) throw new BadRequestError('fromDirectionId is required for element variants');
+    const scope = input.element && from ? await buildScope(project, from, deps.edit.versions, input.element) : undefined;
     const level = levelOf({ level: input.level as RunRequest['level'] }, project.settings);
     const groupId = nanoid(10);
     const items = await fanOut(
@@ -122,7 +133,7 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
             return deps.startRun(latestProject, latest, request);
           }),
       },
-      { groupId, prompt: input.prompt, briefs: validBriefs, level, attachmentIds: input.attachmentIds, takenNames: new Set(project.directions.map((direction) => direction.name)) },
+      { groupId, prompt: input.prompt, briefs: validBriefs, level, attachmentIds: input.attachmentIds, takenNames: new Set(project.directions.map((direction) => direction.name)), ...(scope ? { scope } : {}) },
     );
     groups.remember(groupId, items.flatMap((item) => (item.runId ? [item.runId] : [])));
     const perRunBudgetUsd = resolveRunConfig(project.settings, level).maxBudgetUsd;
@@ -152,6 +163,24 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
     return c.json({ runId });
   });
 
+  app.get('/api/projects/:pid/variations/elements', async (c) => {
+    const project = await projects.get(c.req.param('pid'));
+    return c.json(await listElementVariants(project, runner));
+  });
+
+  app.post('/api/projects/:pid/variations/:gid/keep', async (c) => {
+    const pid = c.req.param('pid');
+    const groupId = assertSafeId(c.req.param('gid'), 'groupId');
+    const input = parse(KeepBody, await body(c));
+    const project = await projects.get(pid);
+    const variant = groupDirections(project, groupId).find((direction) => direction.id === input.directionId);
+    if (!variant) throw new BadRequestError(`direction ${input.directionId} is not in variation group ${groupId}`);
+    const target = variant.variation?.scope?.sourceDirectionId;
+    if (!target) throw new BadRequestError('This is not an element variant');
+    const result = await deps.withDirection(pid, target, async (latest) => keepElementVariant(deps.edit, latest, variant.id));
+    return c.json(result);
+  });
+
   app.post('/api/projects/:pid/variations/:gid/cancel', async (c) => {
     const project = await projects.get(c.req.param('pid'));
     const groupId = assertSafeId(c.req.param('gid'), 'groupId');
@@ -166,4 +195,9 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
     }
     return c.json({ canceled });
   });
+}
+
+export async function listElementVariants(project: Project, runner: Pick<AgentRunner, 'isRunning'>): Promise<ElementVariantInfo[]> {
+  const items = await Promise.all(project.directions.map((direction) => variantInfo(project, direction, runner.isRunning(project.id, direction.id))));
+  return items.filter((item): item is ElementVariantInfo => item !== null);
 }

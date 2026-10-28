@@ -9,13 +9,21 @@ import { Icon } from './Icon';
 const AppBar = lazy(() => import('./AppBar'));
 
 export function addRouteFrame(layout: CanvasLayout, route: string, size: { width: number; height: number }): CanvasLayout {
+  const path = route.replace(/^\/+/, '');
+  const existing = layout.frames.find((f) => !f.directionId && (f.path ?? '') === path);
+  if (existing) return { ...layout, activeId: existing.id, frames: layout.frames.map((f) => (f.id === existing.id && f.hidden ? withoutHidden(f) : f)) };
   if (!canAddFrame(layout)) return layout;
   const added = addFrame(layout, size);
   const frame = added.frames[added.frames.length - 1];
   if (!frame) return layout;
-  const withPath = setFramePath(added, frame.id, route.replace(/^\/+/, ''));
+  const withPath = setFramePath(added, frame.id, path);
   const label = cleanFrameLabel(routeLabel(route));
   return { ...withPath, activeId: frame.id, frames: withPath.frames.map((f) => (f.id === frame.id && label ? { ...f, label } : f)) };
+}
+
+function withoutHidden(frame: CanvasLayout['frames'][number]): CanvasLayout['frames'][number] {
+  const { hidden: _hidden, ...rest } = frame;
+  return rest;
 }
 
 export function appRoutePages(projectId: string, app: AttachedApp | null | undefined): (() => Promise<string[]>) | null {
@@ -81,12 +89,14 @@ interface AppCanvasInput {
   resetKey: string;
   frames: { update: (fn: (layout: CanvasLayout) => CanvasLayout) => void };
   freeze: () => void;
+  center: () => void;
   size: { width: number; height: number };
 }
 
 export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNode } {
   const addRoute = (route: string) => {
     o.freeze();
+    o.center();
     o.frames.update((layout) => addRouteFrame(layout, route, o.size));
   };
   const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);

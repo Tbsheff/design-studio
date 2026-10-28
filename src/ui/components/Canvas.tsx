@@ -488,7 +488,7 @@ export function Canvas(props: Props) {
     return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
   };
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
-  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, size: viewport });
+  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, center: pz.centerActive, size: viewport });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;

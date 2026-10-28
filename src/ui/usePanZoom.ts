@@ -103,6 +103,7 @@ export interface PanZoom {
   zoomStep: (direction: 1 | -1) => void;
   fit: () => void;
   freeze: () => void;
+  centerActive: () => void;
   applyZoomKey: (key: ZoomKey) => void;
   frameWheel: (frame: HTMLIFrameElement | null, e: FrameWheel) => void;
 }
@@ -181,6 +182,17 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
   useLayoutEffect(() => {
     if (fitMode) offset.current = { x: 0, y: 0 };
   }, [fitMode, aw, ah, bx, by, bw, bh]);
+
+  const centerPending = useRef(false);
+  useLayoutEffect(() => {
+    if (!centerPending.current) return;
+    centerPending.current = false;
+    if (zoomOverride.current === null && live.current.setting === 'fit') return;
+    offset.current = { x: 0, y: 0 };
+  });
+  const centerActive = useCallback(() => {
+    centerPending.current = true;
+  }, []);
 
   useLayoutEffect(() => paint());
 
@@ -376,6 +388,7 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     zoomStep,
     fit,
     freeze,
+    centerActive,
     applyZoomKey,
     frameWheel,
   };

@@ -29,7 +29,7 @@ export interface RunLevelContext {
   appTokens?: boolean;
 }
 
-const PLAN_STEP = `Call \`TodoWrite\` first with your plan: one short todo per step below, and one per screen when the request is a flow. Mark each todo in_progress when you start it and completed when it is done, with a new TodoWrite call each time, so the user sees your progress.`;
+const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed.`;
 
 const BRIEF_STEP = `Brief: before your first edit, write a short design brief in the chat, four lines: audience, primary action, content (the sections or screens and the real facts in them) and density (airy, balanced or dense). In an app, add the target file and the section. When the message has "Answers to your questions:", use them. Ask before you build only when the request can be read two ways that give clearly different designs and nothing in the message settles it: then reply with at most 3 short questions, make no edit and stop. Otherwise state the reading you chose in the brief and build.`;
 

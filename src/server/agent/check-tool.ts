@@ -189,16 +189,17 @@ async function screenChecks(preview: PreviewService, ctx: AgentRunContext, confi
   if (extra.length === 0) return [];
   await warmScreens(preview, ctx.project, extra);
   const viewports = config.preset.checks.viewports.filter((viewport) => viewport !== 'tablet');
-  const out: RenderCheckResult[] = [];
-  for (const [index, screen] of extra.entries()) {
-    const options = { ...checkOptions(ctx, config), viewports, url: screen.url, filePrefix: `${ctx.direction.id}-screen-${index + 1}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) };
-    const results = await preview.renderCheck(ctx.project, ctx.direction, options).catch((error: unknown) => {
-      console.warn(`[agent] screen check failed for ${screen.label}: ${error instanceof Error ? error.message : String(error)}`);
-      return [];
-    });
-    out.push(...results.map((result) => tagScreen(result, screen.label)));
-  }
-  return out;
+  const checked = await Promise.all(
+    extra.map(async (screen, index) => {
+      const options = { ...checkOptions(ctx, config), viewports, url: screen.url, filePrefix: `${ctx.direction.id}-screen-${index + 1}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) };
+      const results = await preview.renderCheck(ctx.project, ctx.direction, options).catch((error: unknown) => {
+        console.warn(`[agent] screen check failed for ${screen.label}: ${error instanceof Error ? error.message : String(error)}`);
+        return [];
+      });
+      return results.map((result) => tagScreen(result, screen.label));
+    }),
+  );
+  return checked.flat();
 }
 
 export async function saveCheck(runsDir: string, runId: string, index: number | string, results: RenderCheckResult[]): Promise<void> {

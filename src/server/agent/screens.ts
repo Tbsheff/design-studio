@@ -1,7 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { CanvasFileFrame } from '../../shared/canvas-file.js';
-import type { Project } from '../../shared/contracts.js';
+import type { AppRoute, Project } from '../../shared/contracts.js';
 import { DEFAULT_FRAME_STATE, stateLabel, withFrameStateHost, type FrameStatesView } from '../../shared/frame-state.js';
 import type { ScreenPlan } from '../../shared/run-levels.js';
 import { stateOfFrame } from '../app/frame-state.js';
@@ -9,11 +9,14 @@ import { configuredFrameStates, readFrameStates } from '../app/frame-state-servi
 import { listAppRoutes } from '../app/routes.js';
 import type { CanvasService } from '../canvas/service.js';
 import { withPagePath } from '../export/source.js';
+import type { RenderPage } from '../preview/render-backend.js';
 import { exploreScreens, replayExpression } from '../preview/screens.js';
+import { screenSignatureExpression } from '../preview/screens-probe.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
 
 export interface RunScreen {
   key?: string;
+  signature?: string;
   label: string;
   url: string;
   pagePath: string;
@@ -71,7 +74,7 @@ export async function changedSince(workTree: string, dir: string, since: number)
 
 async function fileStamp(workTree: string): Promise<string> {
   const parts: string[] = [];
-  await walk(workTree, '', (file, size, mtimeMs) => parts.push(`${file}:${size}:${Math.floor(mtimeMs)}`), { left: 400 });
+  await walk(workTree, '', (file) => parts.push(file), { left: 400 });
   return parts.sort().join('|');
 }
 
@@ -96,10 +99,15 @@ async function touchedPaths(deps: ScreenDeps): Promise<Set<string>> {
   if (!app || deps.startedAt === undefined) return new Set();
   const workTree = deps.ctx.direction.workTree;
   const [routes, changed] = await Promise.all([listAppRoutes(workTree, app.appDir).catch(() => []), changedSince(workTree, app.appDir, deps.startedAt)]);
+  return touchedRoutes(routes, changed);
+}
+
+export function touchedRoutes(routes: readonly AppRoute[], changed: readonly string[]): Set<string> {
+  const dirs = routes.map((route) => ({ route: route.route.replace(/^\/+/, ''), dir: `${path.posix.dirname(route.file)}/` })).sort((a, b) => b.dir.length - a.dir.length);
   const touched = new Set<string>();
-  for (const route of routes) {
-    const dir = `${path.posix.dirname(route.file)}/`;
-    if (changed.some((file) => file.startsWith(dir))) touched.add(route.route.replace(/^\/+/, ''));
+  for (const file of changed) {
+    const owner = dirs.find((entry) => file.startsWith(entry.dir));
+    if (owner) touched.add(owner.route);
   }
   return touched;
 }
@@ -140,12 +148,34 @@ async function explorePage(deps: ScreenDeps, page: PageRef, room: number, single
   if (found.length === 0) return [{ label: page.label, url: page.url, pagePath: page.pagePath }];
   return found.map((screen) => ({
     key: `${page.url}|${screen.signature}`,
+    signature: screen.signature,
     label: screenName(page, screen.label, single && found.length > 1),
     url: page.url,
     pagePath: page.pagePath,
     ...(screen.steps.length ? { prepare: replayExpression(screen.steps) } : {}),
     ...(screen.forced ? { forced: true } : {}),
   }));
+}
+
+async function pageStillValid(page: RenderPage, screens: readonly RunScreen[]): Promise<boolean> {
+  const href = await page.evaluate<string>('location.href');
+  for (const [index, screen] of screens.entries()) {
+    if (index > 0) await page.goto(href);
+    if (screen.prepare && !(await page.evaluate<boolean>(screen.prepare).catch(() => false))) return false;
+    const now = await page.evaluate<{ signature: string }>(screenSignatureExpression()).catch(() => null);
+    if (screen.signature !== undefined && now?.signature !== screen.signature) return false;
+  }
+  return true;
+}
+
+async function stillValid(preview: PreviewService, screens: readonly RunScreen[]): Promise<boolean> {
+  const withPage = preview.withPage?.bind(preview);
+  if (!withPage) return true;
+  for (const url of new Set(screens.map((screen) => screen.url))) {
+    const group = screens.filter((screen) => screen.url === url && screen.signature !== undefined);
+    if (group.length > 1 && !(await withPage(url, DESKTOP, (page) => pageStillValid(page, group)).catch(() => false))) return false;
+  }
+  return true;
 }
 
 async function htmlScreens(deps: ScreenDeps, pages: PageRef[], plan: ScreenPlan): Promise<RunScreen[]> {
@@ -164,7 +194,7 @@ export async function planScreens(deps: ScreenDeps, plan: ScreenPlan): Promise<R
   const { pages, hash } = await canvasPages(deps);
   if (deps.ctx.project.app) return pages.slice(0, plan.maxScreens).map((page) => ({ key: page.url, label: page.label, url: page.url, pagePath: page.pagePath, ...(page.touched ? { touched: true } : {}) }));
   const stamp = `${hash}#${plan.maxScreens}#${await fileStamp(deps.ctx.direction.workTree)}`;
-  if (deps.cache?.stamp === stamp) return deps.cache.screens;
+  if (deps.cache?.stamp === stamp && (await stillValid(deps.preview, deps.cache.screens))) return deps.cache.screens;
   const screens = await htmlScreens(deps, pages, plan);
   if (deps.cache) Object.assign(deps.cache, { stamp, screens });
   return screens;

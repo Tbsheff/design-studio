@@ -11,6 +11,7 @@ import { structureKeyOf } from '../shared/structure-keys.js';
 import { isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import { USED_AT_ATTR, appSourceFor, appSourceMode } from './app-source.js';
+import { componentOwners } from './component-owner.js';
 import { APP_REDIRECT_PARAM } from '../shared/app.js';
 import {
   BRIDGE_CHANGES_PATH,
@@ -247,6 +248,7 @@ function selectionFor(element: Element): SelectionContext {
     rect: rectOf(element),
     source: sourceOf(element),
     ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element) } : {}),
+    owners: componentOwners(element),
     ancestors: ancestorsOf(element),
   };
 }

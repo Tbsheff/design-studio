@@ -34,7 +34,7 @@ function walk(node: AstNode, visit: (node: AstNode) => boolean | void): void {
   }
 }
 
-async function listFiles(root: string, accept: (name: string) => boolean): Promise<string[]> {
+export async function listFiles(root: string, accept: (name: string) => boolean): Promise<string[]> {
   const out: string[] = [];
   const visit = async (dir: string, depth: number): Promise<void> => {
     if (depth > MAX_DEPTH || out.length >= MAX_FILES) return;

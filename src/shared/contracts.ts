@@ -276,6 +276,7 @@ export interface SelectionContext {
   rect: { x: number; y: number; width: number; height: number };
   source: SourceLoc | null;
   usedAt?: SourceLoc | null;
+  owners?: { name: string; stack: string }[];
   ancestors: string[];
   path?: string[];
 }

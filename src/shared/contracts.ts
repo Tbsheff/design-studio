@@ -983,7 +983,7 @@ export const PACK_FILE = 'design-system/pack.json';
 export const DESIGN_MD_TOKENS_START = '<!-- studio:tokens:start -->';
 export const DESIGN_MD_TOKENS_END = '<!-- studio:tokens:end -->';
 
-export type TokenType = 'color' | 'dimension' | 'fontFamily' | 'fontWeight' | 'number' | 'shadow' | 'duration';
+export type TokenType = 'color' | 'dimension' | 'fontFamily' | 'fontWeight' | 'number' | 'shadow' | 'duration' | 'other';
 
 export interface DesignToken {
   $value: string;
@@ -1109,6 +1109,7 @@ export interface CoverageEntry {
   source: DraftSourceKind | 'derived' | 'base' | 'agent' | 'library';
   confidence: CoverageConfidence;
   evidence: string;
+  verified?: boolean;
 }
 
 export type CoverageGrade = 'excellent' | 'usable' | 'needs-review' | 'rebuild';
@@ -1197,6 +1198,15 @@ export interface SavePackResult {
   version: Version | null;
 }
 
+export interface TokenSourceLocation {
+  file: string;
+  line: number;
+  value: string;
+  darkLine: number | null;
+  darkValue: string | null;
+  lines: number[];
+}
+
 export interface CompiledTokenEntry {
   path: string;
   cssVar: string;
@@ -1204,6 +1214,16 @@ export interface CompiledTokenEntry {
   value: string;
   darkValue: string | null;
   description?: string;
+  source?: TokenSourceLocation;
+}
+
+export interface AppTokenSource {
+  kind: 'css';
+  file: string;
+  tailwind: boolean;
+  declarations: number;
+  tokens: number;
+  darkTokens: number;
 }
 
 export interface DesignSystemState {
@@ -1213,6 +1233,7 @@ export interface DesignSystemState {
   entries: CompiledTokenEntry[];
   css: string | null;
   errors: string[];
+  source?: AppTokenSource | null;
 }
 
 export type TokenGroupName = 'color' | 'font' | 'text' | 'space' | 'radius' | 'shadow';

@@ -132,6 +132,27 @@ export function matchName(raw: string, kind: ValueKind): NameMatch | null {
   return null;
 }
 
+const CANONICAL: Record<string, string[]> = {
+  'color.bg': ['bg', 'background'],
+  'color.surface': ['surface', 'card'],
+  'color.fg': ['fg', 'foreground'],
+  'color.fg-muted': ['fg-muted', 'muted-foreground'],
+  'color.border': ['border'],
+  'color.primary': ['primary'],
+  'color.primary-fg': ['primary-fg', 'primary-foreground'],
+  'color.accent': ['accent'],
+  'color.accent-fg': ['accent-fg', 'accent-foreground'],
+  'color.success': ['success'],
+  'color.warning': ['warning'],
+  'color.danger': ['danger', 'destructive'],
+  'color.ring': ['ring'],
+};
+
+export function isCanonicalName(raw: string, token: string): boolean {
+  const name = normalizeName(raw);
+  return CANONICAL[token]?.includes(name) ?? name === token.replace('.', '-');
+}
+
 export function requiredPaths(): string[] {
   return Object.entries(REQUIRED_TOKENS).flatMap(([group, names]) => names.map((name) => `${group}.${name}`));
 }

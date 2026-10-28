@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { CompiledTokenEntry } from '../../shared/contracts';
-import { aliasPath, type PendingToken, type RawToken, type TokenField } from '../tokenDraft';
+import { aliasPath, varTarget, type PendingToken, type RawToken, type TokenField } from '../tokenDraft';
 import { Icon } from './Icon';
 import { ColorValue, DimensionValue, TextValue } from './TokenInputs';
 
@@ -19,7 +19,7 @@ interface RowProps {
 const SHORT: Record<string, string> = { space: 'SP', radius: 'R', text: 'Aa' };
 
 function AliasChip({ value, swatch }: { value: string; swatch: string | null }) {
-  const target = aliasPath(value);
+  const target = aliasPath(value) ?? varTarget(value);
   if (!target) return null;
   return (
     <span className="tk-chip tkp-alias" data-tip={`Alias of ${target}`}>
@@ -61,6 +61,14 @@ function ValueEditor({ entry, shown, error, swatchFor, onEdit }: Pick<RowProps, 
   return <TextValue label={label} value={shown.value} invalid={invalid} mono={entry.type === 'shadow'} onChange={change} />;
 }
 
+function tokenTitle(entry: CompiledTokenEntry): string {
+  if (entry.source) {
+    const dark = entry.source.darkLine ? `, dark line ${entry.source.darkLine}` : '';
+    return `${entry.cssVar}: ${entry.source.file} line ${entry.source.line}${dark}`;
+  }
+  return `${entry.cssVar} (${entry.path})${entry.description ? `: ${entry.description}` : ''}`;
+}
+
 function rowChanged(pending: PendingToken | undefined): boolean {
   return pending !== undefined && (pending.value !== undefined || pending.darkValue !== undefined);
 }
@@ -74,7 +82,7 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
     <li className={`tkp-row ${changed ? 'changed' : ''} ${dark ? 'has-dark' : ''}`} data-token={entry.cssVar}>
       <div className="tkp-row-head">
         <span className={`tkp-mark ${changed ? 'on' : ''}`} aria-label={changed ? 'Changed, not committed' : undefined} role={changed ? 'img' : undefined} />
-        <code className="tkp-name truncate" title={`${entry.cssVar} (${entry.path})${entry.description ? `: ${entry.description}` : ''}`}>
+        <code className="tkp-name truncate" title={tokenTitle(entry)}>
           {entry.cssVar}
         </code>
         <AliasChip value={shown.value} swatch={color ? props.swatchFor(shown.value, false) : null} />

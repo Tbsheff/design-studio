@@ -21,7 +21,7 @@ export interface TokenUi {
   mode: TokenMode;
   snap: boolean;
   setSnap: (on: boolean) => void;
-  requestCreate: (req: CreateRequest) => void;
+  requestCreate: ((req: CreateRequest) => void) | null;
 }
 
 export const TokenUiContext = createContext<TokenUi | null>(null);

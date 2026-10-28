@@ -26,7 +26,10 @@ function ShadowRow({ edit, list, index }: { edit: DirectEdit; list: Shadow[]; in
   const n = index + 1;
   const replace = (patch: Partial<Shadow>) => ({ 'box-shadow': formatShadows(list.map((s, i) => (i === index ? { ...s, ...patch } : s))) });
   const ui = useTokenUi();
-  const colorUi = useMemo(() => (ui ? { ...ui, requestCreate: (req: Parameters<typeof ui.requestCreate>[0]) => ui.requestCreate({ ...req, targets: [] }) } : null), [ui]);
+  const colorUi = useMemo(() => {
+    const request = ui?.requestCreate;
+    return ui ? { ...ui, requestCreate: request ? (req: Parameters<typeof request>[0]) => request({ ...req, targets: [] }) : null } : null;
+  }, [ui]);
   const colorEdit = proxyEdit(edit, 'color', shadow.color, (color) => replace({ color }), ['box-shadow']);
   return (
     <li className="ins-shadow" aria-label={`Shadow ${n}`}>

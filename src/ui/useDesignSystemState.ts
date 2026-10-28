@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CompiledTokenEntry, DesignSystemState, Project, TokenFile } from '../shared/contracts';
+import type { AppTokenSource, CompiledTokenEntry, DesignSystemState, Project, TokenFile } from '../shared/contracts';
 import type { TokenMode } from '../shared/token-match';
 import { api } from './api';
 import type { FilesChange } from './useStudioData';
@@ -8,12 +8,13 @@ export interface DesignTokens {
   entries: CompiledTokenEntry[];
   mode: TokenMode;
   file: TokenFile | null;
+  source: AppTokenSource | null;
   replace: (state: DesignSystemState) => void;
 }
 
-function touchesDesignSystem(change: FilesChange | null, directionId: string | null): number {
+function touchesDesignSystem(change: FilesChange | null, directionId: string | null, sourceFile: string | null): number {
   if (!change || change.directionId !== directionId) return 0;
-  return change.paths.some((file) => file.startsWith('design-system/')) ? change.receivedAt : 0;
+  return change.paths.some((file) => file.startsWith('design-system/') || file === sourceFile) ? change.receivedAt : 0;
 }
 
 export interface DesignSystemView {
@@ -25,8 +26,9 @@ export function useDesignSystemState(projectId: string, project: Project | null,
   const [loaded, setLoaded] = useState<{ key: string; state: DesignSystemState } | null>(null);
   const packId = project?.packId ?? null;
   const headVersionId = project?.directions.find((x) => x.id === directionId)?.headVersionId ?? null;
-  const stamp = touchesDesignSystem(lastChange, directionId);
   const key = `${projectId}:${directionId}`;
+  const sourceFile = loaded?.key === key ? (loaded.state.source?.file ?? null) : null;
+  const stamp = touchesDesignSystem(lastChange, directionId, sourceFile);
   const live = useRef(key);
   live.current = key;
 
@@ -44,7 +46,7 @@ export function useDesignSystemState(projectId: string, project: Project | null,
   return useMemo(() => {
     const state = loaded?.key === key ? loaded.state : null;
     if (!state || state.entries.length === 0) return { tokens: null, state };
-    const tokens: DesignTokens = { entries: state.entries, mode: state.manifest?.mode === 'dark' ? 'dark' : 'light', file: state.tokens, replace };
+    const tokens: DesignTokens = { entries: state.entries, mode: state.manifest?.mode === 'dark' ? 'dark' : 'light', file: state.tokens, source: state.source ?? null, replace };
     return { tokens, state };
   }, [loaded, key, replace]);
 }

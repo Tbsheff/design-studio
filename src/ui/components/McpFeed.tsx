@@ -43,6 +43,7 @@ const TOOL_ICONS: Record<string, IconName> = {
   remove_frame: 'trash',
   restore_version: 'restore',
   apply_design_system: 'palette',
+  set_token: 'token',
   add_comment: 'comment',
   reply_comment: 'comment',
   resolve_comment: 'check',

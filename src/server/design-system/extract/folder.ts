@@ -6,7 +6,11 @@ import { matchName } from './names.js';
 import type { ValueKind } from './names.js';
 import { TokensFileError, harvestTokensFile } from './tokens-file.js';
 import type { Candidate, Harvest } from './types.js';
-import { candidate, candidatesFromVars } from './vars.js';
+import { candidate, harvestCssVars } from './vars.js';
+import { findTokenFile, safeFileInside } from '../app-tokens/detect.js';
+import { readCssTokens } from '../app-tokens/read-css.js';
+import { buildAppTokens } from '../app-tokens/tokens.js';
+import { harvestNextFonts, type NextFonts } from './next-font.js';
 import { normalizeColor } from './values.js';
 import { flattenJs, objectAfter } from './js-literal.js';
 
@@ -178,11 +182,56 @@ async function resolveRoot(folderPath: string): Promise<string> {
   return root;
 }
 
+interface TokenFileRead {
+  file: string;
+  relative: string;
+  tailwind: boolean;
+}
+
+async function absorbTokenFile(root: string, acc: ScanAccumulator): Promise<TokenFileRead | null> {
+  const relative = await findTokenFile(root).catch(() => null);
+  const file = relative ? await safeFileInside(root, relative) : null;
+  if (!relative || !file) return null;
+  const sheet = readCssTokens(await readFile(file, 'utf8'));
+  for (const token of buildAppTokens(sheet)) {
+    if (token.light) acc.props.root.set(token.name, token.light.value);
+    if (token.dark) acc.props.dark.set(token.name, token.dark.value);
+  }
+  acc.read.push(relative);
+  return { file, relative, tailwind: sheet.tailwind };
+}
+
+const TAILWIND_TEXT: Record<string, string> = { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' };
+const TAILWIND_RADIUS: Record<string, string> = { sm: '0.25rem', md: '0.375rem', lg: '0.5rem', pill: '9999px' };
+
+function remTimes(base: string, steps: number): string | null {
+  const match = /^(\d*\.?\d+)rem$/.exec(base.trim());
+  return match ? `${Math.round(Number(match[1]) * steps * 10000) / 10000}rem` : null;
+}
+
+function tailwindDefaults(props: CustomProperties, relative: string): Candidate[] {
+  const evidence = `${relative}: Tailwind v4 default`;
+  const make = (token: string, value: string | null): Candidate | null => (value ? candidate({ token, confidence: 'high' }, { value }, 'folder', evidence) : null);
+  const spacing = props.root.get('--spacing') ?? '0.25rem';
+  const out = [
+    ...Object.entries(TAILWIND_TEXT).map(([name, value]) => make(`text.${name}`, value)),
+    ...['1', '2', '3', '4', '5', '6', '8', '10', '12'].map((name) => make(`space.${name}`, remTimes(spacing, Number(name)))),
+    ...Object.entries(TAILWIND_RADIUS).map(([name, value]) => make(`radius.${name}`, value)),
+  ];
+  return out.filter((item): item is Candidate => item !== null);
+}
+
 export async function scanFolder(folderPath: string, limits: FolderLimits = FOLDER_LIMITS): Promise<FolderScan> {
   const root = await resolveRoot(folderPath);
   const { files, skipped } = await collect(root, limits);
   const acc: ScanAccumulator = { props: { root: new Map(), dark: new Map() }, candidates: [], read: [], skipped };
-  await readMatched(root, files, limits, acc);
-  const candidates = [...candidatesFromVars(acc.props, 'folder', path.basename(root)), ...acc.candidates];
-  return { harvest: { source: 'folder', label: root, candidates }, files: acc.read, skipped: acc.skipped };
+  const main = await absorbTokenFile(root, acc);
+  await readMatched(root, files.filter((item) => item.file !== main?.file), limits, acc);
+  const fonts = await harvestNextFonts(root).catch(() => ({ candidates: [], files: [] }) as NextFonts);
+  acc.read.push(...fonts.files);
+  const vars = harvestCssVars(acc.props, 'folder', path.basename(root));
+  const defaults = main?.tailwind ? tailwindDefaults(acc.props, main.relative) : [];
+  const candidates = [...fonts.candidates, ...vars.candidates, ...acc.candidates, ...defaults];
+  const harvest: Harvest = { source: 'folder', label: root, candidates, extras: vars.extras, ...(fonts.googleFontsUrl ? { googleFontsUrl: fonts.googleFontsUrl } : {}) };
+  return { harvest, files: acc.read, skipped: acc.skipped };
 }

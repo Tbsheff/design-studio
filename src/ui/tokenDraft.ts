@@ -24,12 +24,26 @@ export function aliasPath(value: string): string | null {
   return ALIAS_RE.exec(value.trim())?.[1] ?? null;
 }
 
+const VAR_RE = /^var\(\s*(--[A-Za-z0-9_-]+)\s*\)$/;
+
+export function varTarget(value: string): string | null {
+  return VAR_RE.exec(value.trim())?.[1] ?? null;
+}
+
+export function referencedEntry(value: string, entries: CompiledTokenEntry[]): CompiledTokenEntry | null {
+  const path = aliasPath(value);
+  if (path) return entries.find((item) => item.path === path) ?? null;
+  const cssVar = varTarget(value);
+  return cssVar ? (entries.find((item) => item.cssVar === cssVar) ?? null) : null;
+}
+
 function darkOf(node: Record<string, unknown>): string | null {
   const ext = isRecord(node.$extensions) ? node.$extensions['studio.modes'] : undefined;
   return isRecord(ext) && typeof ext.dark === 'string' ? ext.dark : null;
 }
 
 export function rawToken(file: TokenFile | null, entry: CompiledTokenEntry): RawToken {
+  if (entry.source) return { value: entry.source.value, darkValue: entry.source.darkValue };
   let node: unknown = file;
   for (const segment of entry.path.split('.')) node = isRecord(node) ? node[segment] : undefined;
   if (!isRecord(node) || typeof node.$value !== 'string') return { value: entry.value, darkValue: entry.darkValue };
@@ -78,9 +92,7 @@ export function errorPaths(messages: string[], changes: TokenChange[]): Record<s
 }
 
 function resolveCss(value: string, entries: CompiledTokenEntry[], dark: boolean): string {
-  const target = aliasPath(value);
-  if (!target) return value;
-  const entry = entries.find((item) => item.path === target);
+  const entry = referencedEntry(value, entries);
   if (!entry) return value;
   return dark && entry.darkValue ? entry.darkValue : entry.value;
 }

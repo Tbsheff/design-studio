@@ -1,6 +1,6 @@
 import type { CustomProperties } from './css.js';
 import { resolveVars } from './css.js';
-import { matchColorName, matchFontName, matchRadiusName, matchScaleName, matchShadowName } from './names.js';
+import { isCanonicalName, matchColorName, matchFontName, matchRadiusName, matchScaleName, matchShadowName } from './names.js';
 import type { NameMatch } from './names.js';
 import type { Candidate, CandidateConfidence, ExtraToken, SourceKind } from './types.js';
 import { fontStack, genericFor, lengthPx, normalizeColor, normalizeLength, normalizeShadow } from './values.js';
@@ -25,9 +25,19 @@ const VALIDATORS: Record<string, (token: string, text: string) => string | null>
   space: (_token, text) => scaleValue(text),
 };
 
+const SIMPLE_CALC = /^calc\(\s*(\d*\.?\d+)(rem|px)\s*([+-])\s*(\d*\.?\d+)(rem|px)\s*\)$/;
+
+function simpleCalc(text: string): string {
+  const match = SIMPLE_CALC.exec(text);
+  if (!match) return text;
+  const px = (value: string, unit: string) => Number(value) * (unit === 'rem' ? 16 : 1);
+  const total = px(match[1]!, match[2]!) + (match[3] === '-' ? -1 : 1) * px(match[4]!, match[5]!);
+  return total >= 0 ? `${Math.round(total * 100) / 100}px` : text;
+}
+
 export function validValue(token: string, raw: string): string | null {
   const validate = VALIDATORS[token.split('.')[0] ?? ''];
-  return validate ? validate(token, raw.trim()) : null;
+  return validate ? validate(token, simpleCalc(raw.trim())) : null;
 }
 
 export function matchVarName(name: string, value: string): NameMatch | null {
@@ -76,9 +86,9 @@ export function extraToken(varName: string, value: string, dark: string | undefi
   const bare = varName.replace(/^--/, '').toLowerCase();
   const color = normalizeColor(value);
   if (color) {
-    const name = extraName(varName, /^colou?r-/);
+    const name = extraName(varName, /^(?!)/);
     const darkColor = dark === undefined ? null : normalizeColor(dark);
-    return name ? { group: 'color', name, type: 'color', value: color, ...(darkColor ? { dark: darkColor } : {}), evidence } : null;
+    return name ? { group: 'color', name, type: 'color', value: color, ...(darkColor ? { dark: darkColor } : {}), evidence, sourceVar: varName } : null;
   }
   const shadow = /shadow|elevation/.test(bare) ? normalizeShadow(value) : null;
   if (shadow) {
@@ -99,19 +109,25 @@ export function extraToken(varName: string, value: string, dark: string | undefi
   return null;
 }
 
+function resolvedPair(props: CustomProperties, name: string): { value?: string; dark?: string } {
+  const rootRaw = props.root.get(name);
+  const darkRaw = props.dark.get(name);
+  const value = rootRaw === undefined ? undefined : resolveVars(rootRaw, [props.root]);
+  const followed = rootRaw === undefined && darkRaw === undefined ? undefined : resolveVars(darkRaw ?? rootRaw!, [props.dark, props.root]);
+  const dark = darkRaw !== undefined || (followed !== undefined && followed !== value) ? followed : undefined;
+  return { ...(value !== undefined ? { value } : {}), ...(dark !== undefined ? { dark } : {}) };
+}
+
 export function harvestCssVars(props: CustomProperties, source: SourceKind, label: string): { candidates: Candidate[]; extras: ExtraToken[] } {
   const candidates: Candidate[] = [];
   const extras: ExtraToken[] = [];
   for (const name of new Set([...props.root.keys(), ...props.dark.keys()])) {
-    const rootRaw = props.root.get(name);
-    const darkRaw = props.dark.get(name);
-    const value = rootRaw === undefined ? undefined : resolveVars(rootRaw, [props.root]);
-    const dark = darkRaw === undefined ? undefined : resolveVars(darkRaw, [props.dark, props.root]);
+    const { value, dark } = resolvedPair(props, name);
     const evidence = `${label}: ${name}`;
     const match = matchVarName(name, value ?? dark ?? '');
     const found = match ? candidate(match, { value, dark }, source, evidence) : null;
     if (found) {
-      candidates.push(found);
+      candidates.push({ ...found, sourceVar: name, ...(isCanonicalName(name, found.token) ? { canonical: true } : {}) });
       continue;
     }
     const extra = value === undefined ? null : extraToken(name, value, dark, evidence);

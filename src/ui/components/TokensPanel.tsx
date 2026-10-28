@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { CompiledTokenEntry } from '../../shared/contracts';
-import { aliasPath, rawToken, shownRaw, tokenSections, type RawToken } from '../tokenDraft';
+import { aliasPath, rawToken, referencedEntry, shownRaw, tokenSections, varTarget, type RawToken } from '../tokenDraft';
 import type { ThemeChoice } from '../tokenFrames';
 import type { DesignTokens } from '../useDesignSystemState';
 import type { TokenDraft } from '../useTokenDraft';
@@ -61,9 +61,8 @@ function Footer({ draft }: { draft: TokenDraft }) {
 function useSwatch(entries: CompiledTokenEntry[]) {
   return useCallback(
     (value: string, dark: boolean) => {
-      const target = aliasPath(value);
-      if (!target) return value;
-      const entry = entries.find((item) => item.path === target);
+      if (!aliasPath(value) && !varTarget(value)) return value;
+      const entry = referencedEntry(value, entries);
       if (!entry) return '';
       return dark && entry.darkValue ? entry.darkValue : entry.value;
     },
@@ -87,6 +86,12 @@ export function TokensPanel({ tokens, draft }: Props) {
           <ThemeToggle theme={draft.theme} onTheme={draft.setTheme} />
         </div>
       </PanelHead>
+      {tokens.source && (
+        <p className="tkp-source" title={`${tokens.source.declarations} declarations, ${tokens.source.tokens} tokens, ${tokens.source.darkTokens} with a dark value`}>
+          <Icon name="token" size={12} />
+          <span className="truncate">From {tokens.source.file}</span>
+        </p>
+      )}
       <div className="tk-search tkp-search">
         <Icon name="search" size={13} />
         <input type="search" aria-label="Filter tokens" placeholder="Filter tokens" value={query} spellCheck={false} onChange={(event) => setQuery(event.target.value)} />

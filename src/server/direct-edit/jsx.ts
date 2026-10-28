@@ -124,7 +124,7 @@ function escapeJsString(value: string, quote: string): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
-function stringLiteral(value: string, quote: string): string {
+export function stringLiteral(value: string, quote: string): string {
   return `${quote}${escapeJsString(value, quote)}${quote}`;
 }
 
@@ -291,6 +291,13 @@ export function textFromData(source: string, element: t.JSXElement, file: string
     return { expression: expressionText(source, child.expression), file, line: child.loc?.start.line ?? element.loc?.start.line ?? 1 };
   }
   return null;
+}
+
+export function dataExpression(element: t.JSXElement): t.Expression | null {
+  const meaningful = element.children.filter((child) => !isIgnorableText(child));
+  const [child] = meaningful;
+  if (meaningful.length !== 1 || child?.type !== 'JSXExpressionContainer' || child.expression.type === 'JSXEmptyExpression' || isStringExpression(child)) return null;
+  return containsJsx(child.expression) ? null : child.expression;
 }
 
 export function textFromDataMessage(data: TextFromData): string {

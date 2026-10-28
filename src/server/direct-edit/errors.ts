@@ -1,4 +1,4 @@
-import type { ClassChange, TailwindOutcome } from '../../shared/contracts.js';
+import type { ClassChange, TailwindOutcome, TextSourceInfo } from '../../shared/contracts.js';
 
 type DirectEditErrorCode =
   | 'invalid_request'
@@ -78,6 +78,7 @@ export interface PatchResult {
   title?: string;
   moved?: SourcePosition;
   tailwind?: TailwindOutcome;
+  textSource?: TextSourceInfo;
 }
 
 const STALE_SELECTION_MESSAGE = 'The page changed since you selected this element. Select it again.';

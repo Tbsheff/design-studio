@@ -1,10 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
-import type { Direction, EditSessionEnd, EditSessionState, Project, VersionMeta } from '../../shared/contracts.js';
+import type { Direction, EditSessionEnd, EditSessionState, Project, TextSourceAnswer, VersionMeta } from '../../shared/contracts.js';
 import { elementClassInfo } from '../direct-edit/class-info.js';
 import { htmlElementSpan } from '../direct-edit/html.js';
-import { DirectEditError, assertCanEdit, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
+import { DirectEditError, assertCanEdit, parseDirectEditRequest, publishVersion, resolveSource, type DirectEditDeps } from '../direct-edit/index.js';
+import { findTextSource } from '../direct-edit/text-source.js';
 import { jsxElementSpan } from '../direct-edit/jsx.js';
 import type { EditHistory, HistoryStep } from '../direct-edit/history.js';
 import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
@@ -165,6 +166,20 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
     try {
       const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
       return c.json(await elementClassInfo(direction.workTree, project.kind, { file, line, col }, c.req.query('variant') ?? ''));
+    } catch (error) {
+      if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
+  });
+
+  app.post('/api/projects/:pid/d/:did/text-source', async (c) => {
+    const raw = (await deps.readBody(c)) as { source?: unknown; hints?: { text?: unknown } } | null;
+    try {
+      const request = parseDirectEditRequest({ source: raw?.source, selector: '', text: raw?.hints?.text, hints: raw?.hints });
+      const { project, direction } = await deps.loadDirection(c.req.param('pid'), c.req.param('did'));
+      const origin = (await editDeps.previewOrigin?.(project, direction).catch(() => null)) ?? null;
+      const lookup = await findTextSource({ workTree: direction.workTree, previewOrigin: origin }, request.source, request.hints ?? null);
+      return c.json(('hit' in lookup ? { found: lookup.hit.info } : { reason: lookup.reason }) satisfies TextSourceAnswer);
     } catch (error) {
       if (error instanceof DirectEditError) return c.json({ error: error.code, message: error.message }, error.status);
       throw error;

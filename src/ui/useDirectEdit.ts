@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome } from '../shared/contracts';
+import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome, TextSourceHints } from '../shared/contracts';
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
@@ -67,7 +67,11 @@ export function buildEditRequest(selection: SelectionContext, style: Partial<Sty
   const wire = Object.fromEntries(Object.entries(style).map(([prop, value]) => [prop, value.trim() === '' ? null : value.trim()]));
   const target = selection.component ? { component: selection.component } : { tag: selection.tag.toLowerCase() };
   const variant = hasStyle ? editVariant : '';
-  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text } : {}), ...(variant ? { variant } : {}) };
+  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text, hints: textHints(selection) } : {}), ...(variant ? { variant } : {}) };
+}
+
+export function textHints(selection: SelectionContext): TextSourceHints {
+  return { text: selection.text, ...(selection.usedAt ? { usedAt: selection.usedAt } : {}), ...(selection.owners?.length ? { owners: selection.owners } : {}) };
 }
 
 export function useDirectEdit(o: Options) {
@@ -277,7 +281,8 @@ export function useDirectEdit(o: Options) {
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
-  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty };
+  const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
+  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

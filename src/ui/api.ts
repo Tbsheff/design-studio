@@ -1,5 +1,5 @@
 import type { StyleReplaceRequest, StyleReplaceResult } from '../shared/style-search';
-import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
+import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage, SourceLoc, TextSourceAnswer, TextSourceHints } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
   type Attachment,
@@ -225,6 +225,7 @@ export const api = {
   },
   elementClasses: (pid: string, did: string, loc: { file: string; line: number; col: number }, variant = '') =>
     json<{ tailwind: TailwindOutcome | null; element: ElementSourceInfo | null; variants?: VariantSupport }>('GET', `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${encodeURIComponent(variant)}` : ''}`),
+  textSource: (pid: string, did: string, source: SourceLoc, hints: TextSourceHints) => json<TextSourceAnswer>('POST', `${d(pid, did)}/text-source`, { source, hints }),
   elementSource: (pid: string, did: string, loc: { file: string; line: number; col: number }) =>
     json<{ file: string; line: number; code: string | null }>('GET', `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`),
   restore: (pid: string, did: string, versionId: string) =>

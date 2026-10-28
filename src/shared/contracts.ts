@@ -304,6 +304,21 @@ export interface TextFromData {
   line: number;
 }
 
+export interface TextSourceHints {
+  text: string;
+  usedAt?: SourceLoc | null;
+  owners?: { name: string; stack: string }[];
+}
+
+export interface TextSourceInfo {
+  file: string;
+  line: number;
+  what: string;
+  shared?: string;
+}
+
+export type TextSourceAnswer = { found: TextSourceInfo } | { reason: string };
+
 export interface ElementSourceInfo {
   component: string | null;
   forwardsClassName: boolean;
@@ -1006,6 +1021,7 @@ export interface DirectEditRequest {
   classes?: ClassChange;
   component?: string;
   variant?: string;
+  hints?: TextSourceHints;
 }
 
 export interface ClassChange {
@@ -1097,6 +1113,7 @@ export interface DirectEditResult {
   applied: { style: string[]; text: boolean; classes?: boolean };
   moved?: SourceLoc;
   tailwind?: TailwindOutcome;
+  textSource?: TextSourceInfo;
 }
 
 export interface DirectEditBatchResult {

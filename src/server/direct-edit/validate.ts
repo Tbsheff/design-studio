@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DIRECT_STYLE_PROPERTIES, INSERT_KINDS, STRUCTURE_OPS } from '../../shared/contracts.js';
 import type { DirectEditBatch, DirectEditRequest, StructureEditRequest } from '../../shared/contracts.js';
+import { OWNERS_MAX, OWNER_STACK_MAX } from '../../shared/props.js';
 import { normalizeVariant } from '../../shared/variants.js';
 import { CLASS_NAME, MAX_CLASS_NAME, MAX_CLASS_NAMES } from './classes.js';
 import { DirectEditError } from './errors.js';
@@ -38,6 +39,15 @@ const classList = z.array(z.string().min(1).max(MAX_CLASS_NAME).regex(CLASS_NAME
 const classesSchema = z.object({ add: classList.optional(), remove: classList.optional() }).strict();
 const hasClasses = (classes: { add?: string[]; remove?: string[] } | undefined) => (classes?.add?.length ?? 0) + (classes?.remove?.length ?? 0) > 0;
 
+const locSchema = z.object({ file: z.string().min(1).max(1024), line: z.number().int().min(1), col: z.number().int().min(1) }).strict();
+const hintsSchema = z
+  .object({
+    text: z.string().max(MAX_TEXT),
+    usedAt: locSchema.nullable().optional(),
+    owners: z.array(z.object({ name: z.string().max(64), stack: z.string().max(OWNER_STACK_MAX) }).strict()).max(OWNERS_MAX).optional(),
+  })
+  .strict();
+
 const requestSchema = z
   .object({
     source: z
@@ -57,6 +67,7 @@ const requestSchema = z
     classes: classesSchema.optional(),
     component: z.string().max(100).regex(COMPONENT_NAME, 'component must be a component name such as Button').optional(),
     variant: z.string().max(60).refine((value) => normalizeVariant(value) !== null, 'variant must be a breakpoint, dark and hover, focus or active, for example "md:hover:"').optional(),
+    hints: hintsSchema.optional(),
   })
   .strict()
   .refine((request) => request.component === undefined || (request.name === undefined && request.move === undefined && request.insert === undefined), 'a component use takes style, classes and text only')
@@ -95,6 +106,7 @@ export function parseDirectEditRequest(raw: unknown): DirectEditRequest {
   if (parsed.data.component !== undefined) request.component = parsed.data.component;
   const variant = normalizeVariant(parsed.data.variant);
   if (variant) request.variant = variant;
+  if (parsed.data.hints && request.text !== undefined) request.hints = parsed.data.hints;
   return request;
 }
 

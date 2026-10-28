@@ -7,11 +7,8 @@ export interface ProbedElement {
   owners: ComponentOwner[];
 }
 
-function probe(selector: string): string {
-  return `((selector) => {
-    let el;
-    try { el = document.querySelector(selector); } catch { return null; }
-    if (!el) return null;
+export function ownerWalk(): string {
+  return `((el) => {
     const tags = new Set([0, 1, 11, 14, 15]);
     const nameOf = (type) => {
       if (!type || (typeof type !== 'function' && typeof type !== 'object')) return '';
@@ -35,7 +32,16 @@ function probe(selector: string): string {
       const last = owners[owners.length - 1];
       if (/^[A-Z]/.test(name) && stack && (!last || last.stack !== stack)) owners.push({ name: name.slice(0, 64), stack });
     }
-    return { tag: el.tagName.toLowerCase(), owners };
+    return owners;
+  })`;
+}
+
+function probe(selector: string): string {
+  return `((selector) => {
+    let el;
+    try { el = document.querySelector(selector); } catch { return null; }
+    if (!el) return null;
+    return { tag: el.tagName.toLowerCase(), owners: ${ownerWalk()}(el) };
   })(${JSON.stringify(selector)})`;
 }
 

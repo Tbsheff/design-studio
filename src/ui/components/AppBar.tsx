@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp, FirstVersionState } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
@@ -7,6 +7,8 @@ import { AppFailure } from './AppFailure';
 import FlowTab from './FlowTab';
 import { Icon } from './Icon';
 import '../styles/attach-app.css';
+
+const DoctorCard = lazy(() => import('./DoctorCard'));
 
 interface AppBarProps {
   projectId: string;
@@ -26,6 +28,7 @@ const STATE_TEXT: Record<AppServerStatus['state'], string> = {
 
 function useAppState(projectId: string, open: boolean, initial: AppServerStatus | null = null) {
   const [status, setStatus] = useState<AppServerStatus | null>(initial);
+  const [current, setCurrent] = useState<AttachedApp | null>(null);
   const [logs, setLogs] = useState<AppLogLine[]>([]);
   const [firstVersion, setFirstVersion] = useState<FirstVersionState | null>(null);
   const [tick, setTick] = useState(0);
@@ -38,6 +41,7 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
         .then((state) => {
           if (!alive) return;
           setStatus(state.status);
+          setCurrent(state.app);
           setLogs(state.logs);
           setFirstVersion(state.firstVersion ?? null);
           publishAppStatus(projectId, state.status);
@@ -50,7 +54,7 @@ function useAppState(projectId: string, open: boolean, initial: AppServerStatus 
       window.clearInterval(timer);
     };
   }, [projectId, open, tick, settled]);
-  return { status, logs, firstVersion, refresh: () => setTick((n) => n + 1) };
+  return { status, app: current, logs, firstVersion, refresh: () => setTick((n) => n + 1) };
 }
 
 function useSecondsSince(startedAt: number | null): number {
@@ -155,7 +159,12 @@ function LogsTab({ logs, managed }: { logs: AppLogLine[]; managed: boolean }) {
   );
 }
 
-function SettingsTab({ projectId, app, onSaved }: { projectId: string; app: AttachedApp; onSaved: () => void }) {
+function envSuggestion(status: AppServerStatus | null): Record<string, string> | null {
+  const fix = status?.doctor?.causes.find((cause) => cause.fix?.kind === 'set-env')?.fix;
+  return fix?.kind === 'set-env' ? fix.env : null;
+}
+
+function SettingsTab({ projectId, app, suggested, onSaved }: { projectId: string; app: AttachedApp; suggested: Record<string, string> | null; onSaved: () => void }) {
   const [url, setUrl] = useState(app.url ?? '');
   const [env, setEnv] = useState(() => envText(app.env));
   const [note, setNote] = useState<string | null>(null);
@@ -186,9 +195,17 @@ function SettingsTab({ projectId, app, onSaved }: { projectId: string; app: Atta
       </label>
       <label className="field">
         <span>Environment for next dev</span>
-        <textarea className="mono" rows={5} value={env} placeholder="SKIP_ENV_VALIDATION=true" spellCheck={false} onChange={(e) => setEnv(e.target.value)} />
+        <textarea className="mono" rows={5} value={env} placeholder="No variables set" spellCheck={false} onChange={(e) => setEnv(e.target.value)} />
         <small className="field-help">One KEY=value per line. The studio keeps these in the project file, so do not paste secrets.</small>
       </label>
+      {suggested && !Object.keys(suggested).every((key) => parseEnvText(env).env[key] !== undefined) && (
+        <div className="app-env-suggest">
+          <span className="app-panel-sub grow">The doctor suggests <span className="mono">{envText(suggested)}</span></span>
+          <button type="button" className="btn small" onClick={() => setEnv((text) => [text.trim(), envText(suggested)].filter(Boolean).join('\n'))}>
+            Add
+          </button>
+        </div>
+      )}
       <div className="app-settings-foot">
         {note && <span className="app-panel-sub" role="status">{note}</span>}
         <button type="submit" className="btn small primary" disabled={busy}>
@@ -245,10 +262,16 @@ function ServerButtons({ state, managed, control }: { state: AppServerStatus['st
 }
 
 function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }: AppBarProps & { onClose: () => void; tab: Tab; setTab: (tab: Tab) => void; initial: AppServerStatus | null }) {
-  const { status, logs, refresh } = useAppState(projectId, true, initial);
+  const { status, app: fresh, logs, refresh } = useAppState(projectId, true, initial);
   const state = status?.state ?? 'idle';
   const managed = (status?.mode ?? app.mode) === 'managed';
   const control = (action: 'start' | 'stop' | 'restart') => void api.appControl(projectId, action).then(refresh).catch(() => undefined);
+  const settingsApp = fresh ?? app;
+  const addRoute = (route: string) => {
+    onAddRoute(route);
+    onClose();
+  };
+  useEscape(onClose);
   return (
     <div className="app-panel" role="dialog" aria-label="App">
       <div className="app-panel-head">
@@ -270,12 +293,27 @@ function AppPanel({ projectId, app, onAddRoute, onClose, tab, setTab, initial }:
           </button>
         ))}
       </div>
-      {tab === 'routes' && <RoutesTab projectId={projectId} onAddRoute={onAddRoute} />}
+      {tab === 'routes' && <RoutesTab projectId={projectId} onAddRoute={addRoute} />}
       {tab === 'flow' && <FlowTab projectId={projectId} />}
       {tab === 'logs' && <LogsTab logs={logs} managed={managed} />}
-      {tab === 'settings' && <SettingsTab projectId={projectId} app={app} onSaved={refresh} />}
+      {tab === 'settings' && <SettingsTab key={envText(settingsApp.env)} projectId={projectId} app={settingsApp} suggested={envSuggestion(status)} onSaved={refresh} />}
     </div>
   );
+}
+
+function useEscape(onClose: () => void): void {
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      close.current();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, []);
 }
 
 function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void): void {
@@ -290,16 +328,24 @@ function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) =>
   }, [setTab, setOpen]);
 }
 
+function useAlerts(status: AppServerStatus | null, open: boolean) {
+  const [hidden, setHidden] = useState<string | null>(null);
+  const cause = status?.doctor?.causes.find((item) => item.severity === 'error') ?? null;
+  const doctorKey = cause ? `doctor|${status?.startedAt ?? 0}|${cause.kind}|${cause.title}` : null;
+  const showDoctor = doctorKey !== null && doctorKey !== hidden && !open;
+  const failKey = status?.state === 'failed' ? `${status.startedAt ?? 0}|${status.message ?? ''}` : null;
+  const failed = failKey !== null && failKey !== hidden && !open && !showDoctor;
+  return { cause, doctorKey, showDoctor, failKey, failed, setHidden };
+}
+
 export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('routes');
-  const [hidden, setHidden] = useState<string | null>(null);
   const { status, firstVersion, refresh } = useAppState(projectId, false);
   const state = status?.state ?? 'idle';
   const managed = (status?.mode ?? app.mode) === 'managed';
   useOpenRequests(setTab, setOpen);
-  const failKey = status?.state === 'failed' ? `${status.startedAt ?? 0}|${status.message ?? ''}` : null;
-  const failed = failKey !== null && failKey !== hidden && !open;
+  const { cause, doctorKey, showDoctor, failKey, failed, setHidden } = useAlerts(status, open);
   const retry = () => void api.appControl(projectId, managed ? 'restart' : 'start').then(refresh).catch(() => undefined);
   const showLog = () => {
     setTab('logs');
@@ -307,6 +353,11 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   };
   return (
     <div className="app-bar-root">
+      {showDoctor && cause && (
+        <Suspense fallback={null}>
+          <DoctorCard projectId={projectId} cause={cause} onFixed={refresh} onLog={showLog} onClose={() => setHidden(doctorKey)} />
+        </Suspense>
+      )}
       {failed && status && <AppFailure projectId={projectId} app={app} status={status} onRetry={retry} onLog={showLog} onClose={() => setHidden(failKey)} onSaved={refresh} />}
       <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((v) => !v)} data-tip="Routes, dev server and log">
         <span className="app-status-dot" data-state={state} />

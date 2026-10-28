@@ -50,6 +50,7 @@ import {
 } from '../shared/contracts';
 import type { WorkspaceFolder, WorkspaceList } from '../shared/folders';
 import type { VariantSupport } from '../shared/variants';
+import type { AppFixResult, DoctorCauseKind } from '../shared/app-doctor';
 import type { CanvasFile } from '../shared/canvas-file';
 import type { FolderInspection } from '../shared/open-app';
 
@@ -262,6 +263,7 @@ export const api = {
   getTelemetry: (pid: string) => json<TelemetrySample[]>('GET', `/api/telemetry?projectId=${encodeURIComponent(pid)}`),
   review: (pid: string, did: string, body: ReviewRequest) => json<ReviewResult>('POST', `${d(pid, did)}/review`, body),
   reviewFix: (pid: string, did: string, findingIds: string[]) => json<ReviewFixResult>('POST', `${d(pid, did)}/review/fix`, { findingIds, allowShared: true }),
+  appFix: (pid: string, kind: DoctorCauseKind) => json<AppFixResult>('POST', `${p(pid)}/app/doctor/fix`, { kind }),
 };
 
 function editKind(req: DirectEditRequest): string {

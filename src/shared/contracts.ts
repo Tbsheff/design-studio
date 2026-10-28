@@ -873,6 +873,8 @@ export const API_ROUTES = {
   cancelRun: 'POST /api/runs/:runId/cancel -> {ok}',
   postTelemetry: 'POST /api/telemetry TelemetrySample -> {ok}',
   getTelemetry: 'GET /api/telemetry?projectId= -> TelemetrySample[]',
+  appDoctor: 'GET /api/projects/:pid/app/doctor?fresh=1 -> {status, doctor: AppDoctorResult} (classifies the dev log of the current start and one request to the app root; fresh=1 requests the root again)',
+  appFix: 'POST /api/projects/:pid/app/doctor/fix {kind} -> AppFixResult (runs the doctor again and applies only the fix it computed, then restarts the dev server; 409 when the doctor no longer sees that problem)',
 } as const;
 
 export const STUDIO_TOKEN_HEADER = 'x-studio-token';

@@ -23,11 +23,6 @@ function frameKey(frame: CanvasFrame): string {
   return `${frame.id}|${frame.path ?? ''}`;
 }
 
-function pageName(frame: CanvasFrame, project: Pick<Project, 'kind' | 'entry'> | null): string {
-  const html = project?.kind === 'html';
-  if (frame.path) return html ? frame.path : `/${frame.path}`;
-  return html ? project?.entry || 'index.html' : '/';
-}
 
 function elementName(selection: readonly SelectionContext[]): string | null {
   const first = selection[0];
@@ -53,6 +48,6 @@ export function useRunCanvas(projectId: string, project: Project | null, selecti
   const off = removed === key;
   const chip = off
     ? null
-    : { frameId: frame.id, page: pageName(frame, project), element: elementName(selection), state: stateLabel(states ?? null, frameStateOf(states ?? null, frame.id)), onRemove: () => setRemoved(key) };
+    : { frameId: frame.id, page: `/${frame.path ?? ''}`, element: elementName(selection), state: stateLabel(states ?? null, frameStateOf(states ?? null, frame.id)), onRemove: () => setRemoved(key) };
   return { chip, current: () => (off ? undefined : refOf(frame)) };
 }

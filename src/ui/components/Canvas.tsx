@@ -318,7 +318,7 @@ function useFrameLabels(o: LabelInput) {
       extras: (
         <>
           {variation && <VariationControls variation={variation} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => o.setSelection(() => [])} />}
-          <FramePageMenu path={frame.path ?? ''} listPages={o.appPages ?? (o.kind === 'html' && did ? listPages(did) : null)} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
+          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={o.appPages ?? (o.kind === 'html' && did ? listPages(did) : null)} onPath={(path) => o.frames.update((l) => setFramePath(l, frame.id, path))} />
           <FrameMoreMenu name={frame.label ?? frameName(frame)} items={frameMenuItems(o, frame, did)} />
         </>
       ),

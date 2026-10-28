@@ -148,7 +148,7 @@
 
 .stage-message {
   position: absolute;
-  top: var(--s-6);
+  top: calc(var(--s-6) + var(--viewrow-h, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;

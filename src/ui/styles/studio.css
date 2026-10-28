@@ -394,6 +394,10 @@
   font: var(--w-medium) var(--t-2xs) / 1 var(--font);
 }
 
+.pane-canvas:has(.canvas-viewrow) {
+  --viewrow-h: 48px;
+}
+
 .pane-canvas .canvas-viewrow {
   position: absolute;
   z-index: 30;
@@ -424,7 +428,7 @@
 .tweak-prompt {
   position: absolute;
   z-index: 40;
-  top: calc(var(--bar-h) + var(--s-2));
+  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px));
   left: 40px;
   display: flex;
   align-items: center;

@@ -51,11 +51,11 @@
 
 .review-panel {
   position: absolute;
-  top: calc(var(--bar-h) + 8px);
+  top: calc(var(--bar-h) + 8px + var(--viewrow-h, 0px));
   right: var(--s-3);
   z-index: 40;
   width: 400px;
-  max-height: min(640px, calc(100% - var(--bar-h) - 24px));
+  max-height: min(640px, calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px)));
   display: flex;
   flex-direction: column;
   background: var(--surface-raised);

@@ -9,6 +9,7 @@ import { canPolishRun } from '../polish';
 import type { RunView, ToolRow } from '../runState';
 import { AssistantText, PlanCard, PolishThis, RunError, RunNotice, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
 import { RunFeedbackRow } from './ChatFeedback';
+import { RunCommentsCard } from './RunComments';
 import { UserTurn, type TurnActions } from './ChatRewind';
 import { ChatSearch } from './ChatSearch';
 import { Icon } from './Icon';
@@ -141,6 +142,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
+          <RunCommentsCard run={run} />
           <RunFeedbackRow run={run} onDetails={details} />
           {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}

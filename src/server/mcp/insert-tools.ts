@@ -6,10 +6,10 @@ import { probeOwners } from '../components/owner-probe.js';
 import { EditError, loadTarget, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, versionActivity, type Done } from './edit-kit.js';
 import { describeElement } from './element.js';
+import { scopeOf } from './layer-ref.js';
+import { resolveSourceLoc } from './source-loc.js';
 
 type Direction = Project['directions'][number];
-
-const LOC = /^(.+):(\d+):(\d+)$/;
 
 const insertSchema = z
   .object({
@@ -19,7 +19,7 @@ const insertSchema = z
     name: z.string().regex(/^[A-Z][A-Za-z0-9_$]{0,63}$/).describe('Component name, for example "Button". The studio finds it in the project component library (exported React components in src, or in the app and its workspace packages such as @workspace/ui).'),
     file: z.string().trim().max(1000).optional().describe('File of the component, relative to the project, when two components have the same name.'),
     targetSelector: selector.optional().describe('CSS selector of the element on the page to insert inside or after, for example "main" or "[data-name=\'Hero\'] h2".'),
-    targetSource: z.string().trim().max(1100).optional().describe('Or the target element as file:line:col of its JSX tag, for example "src/App.tsx:12:7". Use this or targetSelector.'),
+    targetSource: z.string().trim().max(1100).optional().describe('Or the target element as file:line:col of its JSX tag as get_layers prints it, for example "src/App.tsx:12:7". file:line works when one JSX tag starts on that line. Use this or targetSelector.'),
     position: z.enum(['inside', 'after']).default('inside').describe('inside adds the component as the last child of the target; after adds it as the next sibling.'),
     props: z
       .record(z.string().regex(PROP_NAME), z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean()]))
@@ -31,12 +31,6 @@ const insertSchema = z
   .strict()
   .refine((input) => (input.targetSelector === undefined) !== (input.targetSource === undefined), 'pass targetSelector or targetSource, not both');
 
-export function parseLoc(raw: string): InsertTarget['source'] {
-  const match = LOC.exec(raw);
-  if (!match) throw new EditError('targetSource must be file:line:col, for example src/App.tsx:12:7');
-  return { file: match[1] as string, line: Number(match[2]), col: Number(match[3]) };
-}
-
 export interface TargetInput {
   targetSelector?: string | undefined;
   targetSource?: string | undefined;
@@ -44,7 +38,7 @@ export interface TargetInput {
 }
 
 export async function targetOf(deps: EditDeps, project: Project, direction: Direction, input: TargetInput): Promise<InsertTarget> {
-  if (input.targetSource) return { source: parseLoc(input.targetSource) };
+  if (input.targetSource) return { source: await resolveSourceLoc(direction.workTree, scopeOf(project.id, direction.id), input.targetSource) };
   const sel = input.targetSelector ?? '';
   const url = await pageUrl(deps, project, direction, input.path);
   const element = await describeElement(deps.preview, url, sel);

@@ -1,8 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
-import type { CompiledTokenEntry, Project, RunCanvasRef, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
+import type { CommentPrefill, CompiledTokenEntry, Project, RunCanvasRef, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import { useRunCanvas } from '../useRunCanvas';
+import type { PrefillRequest } from '../useCommentPrefill';
+import { RunCommentsContext } from './RunComments';
 import { statesPrompt } from '../../shared/states';
 import { activeFrame, canvasStore, defaultLayout, type CanvasFrame } from '../canvasFrames';
 import type { ComposerMode } from './RunSettings';
@@ -116,6 +118,10 @@ function composeRequest(input: ComposeInput): RunRequest {
     attachmentIds: input.attachmentIds.length > 0 ? input.attachmentIds : undefined,
     ...(input.canvas ? { canvas: input.canvas } : {}),
   };
+}
+
+function withCommentIds(request: RunRequest, commentIds: string[]): RunRequest {
+  return commentIds.length > 0 && request.mode === 'edit' ? { ...request, commentIds } : request;
 }
 
 function buildPlanRequest(run: RunView): RunRequest {
@@ -233,7 +239,10 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const canUndo = undoAllowed(directionId, busy || activeRun !== null, versions.length);
   useDesktopContext({ projectId, directionId, running: activeRun !== null });
   const undoRef = useRef<() => void>(() => undefined);
-  const comments = useComments(projectId, directionId, composerActive, activeRun !== null);
+  const [prefill, setPrefill] = useState<PrefillRequest | null>(null);
+  const prefillChat = useRef<(next: CommentPrefill) => void>(() => undefined);
+  const onPrefill = useCallback((next: CommentPrefill) => prefillChat.current(next), []);
+  const comments = useComments(projectId, directionId, composerActive, activeRun !== null, onPrefill);
   const refreshSelection = useSelectionRefresh(selection, setSelection, comments.describeRef);
   const editHistory = useEditHistory({
     projectId,
@@ -354,8 +363,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     showChatAfterRun();
   };
 
-  const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[]) =>
-    startRun(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection, canvas: runCanvas.current() }), true);
+  const send = (prompt: string, mode: ComposerMode, attachmentIds: string[], level: RunLevel, effort: RunEffort | null, mentions: RunMention[], commentIds: string[] = []) =>
+    startRun(withCommentIds(composeRequest({ prompt, mode, attachmentIds, level, effort, mentions, selection, canvas: runCanvas.current() }), commentIds), true);
 
   const withCanvas = (request: RunRequest): RunRequest => {
     const canvas = runCanvas.current();
@@ -371,6 +380,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     if (panel.tab === 'design' && tab !== 'design' && session && !(await session.requestExit())) return false;
     panel.choose(tab);
     return true;
+  };
+  prefillChat.current = (next) => {
+    void showPane('chat').then((shown) => {
+      if (shown) setPrefill({ ...next, seq: Date.now() });
+    });
   };
   const makeStates = (frame?: CanvasFrame) => {
     const f = frame ?? activeFrame(canvasStore.get(projectId) ?? defaultLayout(uiStore.get().viewport));
@@ -411,6 +425,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   return (
     <div className="studio" data-pane={paneAttr(paneCollapsed)}>
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
+        <RunCommentsContext.Provider value={comments}>
         <LeftPane
           collapsed={paneCollapsed}
           columnsRef={columnsRef}
@@ -464,6 +479,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             running: activeRun !== null,
             disabled: !did,
             onSend: send,
+            prefill,
             ...runControls,
             history: chatState.history,
             contextTokens: chatState.contextTokens,
@@ -560,6 +576,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               act(() => renameVersion(projectId, v.id, name).finally(data.refreshVersions)),
           }}
         />
+        </RunCommentsContext.Provider>
         <main className="center pane-canvas ui-inset">
           <DraftBar
             project={project}

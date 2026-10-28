@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import type { CommentsControl } from '../useComments';
+import { canPickForChat } from '../../shared/comments';
 import { CommentAuthor } from './CommentAvatar';
 import { CommentReplies } from './CommentPopover';
 import { Icon } from './Icon';
@@ -23,6 +24,60 @@ function targetLabel(comment: DesignComment): string {
   const where = loc ? `${loc.file.split('/').pop()}:${loc.line}` : comment.target.selector;
   const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet.slice(0, 32)}”` : '';
   return `${comment.target.tag}${snippet} · ${where}`;
+}
+
+function PickNum({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
+  if (!canPickForChat(comment.status)) return <span className={`comment-num ${comment.status}`}>{comment.n}</span>;
+  const on = control.picked.includes(comment.id);
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={on}
+      aria-label={`Select comment ${comment.n} for the chat`}
+      data-tip={on ? 'Selected for the chat' : 'Select for the chat'}
+      className={`comment-num ${comment.status} pick${on ? ' picked' : ''}`}
+      data-testid="comment-pick"
+      onClick={() => control.togglePick(comment.id)}
+    >
+      {on ? <Icon name="check" size={12} /> : comment.n}
+    </button>
+  );
+}
+
+function FixButton({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
+  if (!canPickForChat(comment.status)) return null;
+  return (
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label={`Fix comment ${comment.n} with the agent`}
+      data-tip="Fix with agent"
+      data-testid="comment-fix"
+      disabled={control.preparing}
+      onClick={() => void control.toChat([comment.id])}
+    >
+      <Icon name="sparkle" />
+    </button>
+  );
+}
+
+export function ChatPickBar({ control, className }: { control: CommentsControl; className?: string }) {
+  const count = control.picked.length;
+  if (count === 0) return null;
+  return (
+    <div className={`comments-pick-bar ${className ?? ''}`} role="toolbar" aria-label="Selected comments" data-testid="comments-pick-bar">
+      <span className="label">{count} selected</span>
+      <button type="button" className="btn small ghost" onClick={control.clearPicked}>
+        Clear
+      </button>
+      <span className="spacer" />
+      <button type="button" className="btn small primary" data-testid="send-to-chat" disabled={control.preparing} onClick={() => void control.toChat(control.picked)}>
+        <Icon name="chat" size={14} />
+        {control.preparing ? 'Preparing…' : `Send ${count} to chat`}
+      </button>
+    </div>
+  );
 }
 
 function Section({ title, count, action, children }: { title: string; count: number; action?: ReactNode; children: ReactNode }) {
@@ -50,7 +105,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
   };
   return (
     <li className={`comment-row ${control.openId === comment.id ? 'open' : ''}`} data-testid="comment-row" data-status="queued">
-      <span className="comment-num">{comment.n}</span>
+      <PickNum comment={comment} control={control} />
       <div className="comment-row-body">
         <CommentAuthor author={comment.author} />
         {editing ? (
@@ -99,6 +154,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
             >
               <Icon name="chevronDown" />
             </button>
+            <FixButton comment={comment} control={control} />
             <button type="button" className="icon-btn small" aria-label={`Edit comment ${comment.n}`} onClick={() => setEditing(true)}>
               <Icon name="pencil" />
             </button>
@@ -140,7 +196,7 @@ function DoneRow({
   const versionId = comment.versionId;
   return (
     <li className="comment-row" data-testid="comment-row" data-status={comment.status}>
-      <span className={`comment-num ${comment.status}`}>{comment.n}</span>
+      <PickNum comment={comment} control={control} />
       <div className="comment-row-body">
         <CommentAuthor author={comment.author} />
         <span className="comment-row-text">{comment.text}</span>
@@ -167,6 +223,7 @@ function DoneRow({
             )}
           </span>
           <div className="comment-row-actions">
+            <FixButton comment={comment} control={control} />
             {comment.status === 'draft' && (
               <button type="button" className="btn small ghost" aria-label={`Resolve comment ${comment.n}`} onClick={() => void control.update(comment.id, { status: 'resolved' })}>
                 <Icon name="check" size={14} />
@@ -198,13 +255,14 @@ function OrphanRow({ comment, control }: { comment: DesignComment; control: Comm
   const active = control.repinId === comment.id;
   return (
     <li className="comment-row" data-testid="comment-row" data-status="orphaned">
-      <span className="comment-num orphaned">{comment.n}</span>
+      <PickNum comment={comment} control={control} />
       <div className="comment-row-body">
         <span className="comment-row-text">{comment.text}</span>
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">Element not found: {targetLabel(comment)}</span>
           <div className="comment-row-actions">
+            <FixButton comment={comment} control={control} />
             <button type="button" className="btn small" aria-pressed={active} onClick={() => control.setRepinId(active ? null : comment.id)}>
               {active ? 'Pick an element…' : 'Re-pin'}
             </button>
@@ -298,8 +356,9 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
           </button>
         </div>
       )}
+      <ChatPickBar control={control} />
       {empty && (
-        <p className="comments-empty">No comments yet. Click an element on the canvas to pin one. Queue several, then send them to Claude in one run.</p>
+        <p className="comments-empty">No comments yet. Click an element on the canvas to pin one. Select several by their numbers, then send them to the chat.</p>
       )}
       {resolved.length > 0 && (
         <div className="comments-filter">
@@ -322,6 +381,11 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
       <Section title="Queued" count={queued.length}>
         {queued.map((comment, index) => (
           <QueuedRow key={comment.id} comment={comment} index={index} total={queued.length} control={control} />
+        ))}
+      </Section>
+      <Section title="In chat" count={control.inChat.length}>
+        {control.inChat.map((comment, index) => (
+          <QueuedRow key={comment.id} comment={comment} index={index} total={control.inChat.length} control={control} />
         ))}
       </Section>
       {running && queued.length > 0 && <p className="comments-empty">The agent is running. Queued comments wait until it finishes.</p>}

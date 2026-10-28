@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import type { AnchorQuery, AnchorReport, CommentDrawing, DesignComment, ProjectKind, SelectionContext } from '../../shared/contracts';
-import { anchorQueryOf, createOrphanTracker, hasPin } from '../../shared/comments';
+import { anchorQueryOf, canPickForChat, createOrphanTracker, hasPin } from '../../shared/comments';
+import { ChatPickBar } from './CommentsPanel';
 import { reviewReport } from '../commentAnchors';
 import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
 import { isTypingTarget } from '../typingTarget';
@@ -85,13 +86,13 @@ function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment:
     <div className={`comment-pin-wrap${place.flip ? ' flip' : ''}`} style={{ left: place.left, top: place.top, transform: `scale(${1 / zoom})` }}>
       <button
         type="button"
-        className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}`}
+        className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}${control.picked.includes(comment.id) ? ' picked' : ''}`}
         data-testid="comment-pin"
         data-comment-id={comment.id}
         aria-label={`Comment ${comment.n}${comment.author ? ` by ${comment.author}` : ''}${repliesLabel}: ${comment.text}`}
         aria-expanded={false}
         onPointerDown={(event) => event.stopPropagation()}
-        onClick={() => control.setOpenId(comment.id)}
+        onClick={(event) => pinClick(control, comment, event)}
       >
         <AvatarFace initial={initial} flip={place.flip} tone={comment.status} count={replies} author={comment.author} />
         {comment.drawing && (
@@ -105,6 +106,12 @@ function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment:
       </span>
     </div>
   );
+}
+
+function pinClick(control: CommentsControl, comment: DesignComment, event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }): void {
+  const multi = event.shiftKey || event.metaKey || event.ctrlKey;
+  if (multi && canPickForChat(comment.status)) control.togglePick(comment.id);
+  else control.setOpenId(comment.id);
 }
 
 function drawingCrumb(pageName: string) {
@@ -133,6 +140,14 @@ function OpenComment({ comment: open, rect: openRect, zoom, frame, control, init
           control.setOpenId(null);
           void control.send([open.id]);
         }}
+        onFix={
+          canPickForChat(open.status)
+            ? () => {
+                control.setOpenId(null);
+                void control.toChat([open.id]);
+              }
+            : undefined
+        }
         onSave={(text) => void control.update(open.id, { text })}
         onResolve={() => {
           control.setOpenId(null);
@@ -159,9 +174,12 @@ export function CommentModePill({ mode, control }: { mode: { on: boolean; availa
   if (!mode.on || !mode.available) return null;
   const repin = control?.repinId ? control.comments.find((comment) => comment.id === control.repinId) : undefined;
   return (
-    <div className="comment-mode-pill" role="status" data-testid="comment-mode-pill">
-      {repin ? `Click an element to move comment #${repin.n}` : 'Click to comment, press P to draw'}
-    </div>
+    <>
+      <div className="comment-mode-pill" role="status" data-testid="comment-mode-pill">
+        {repin ? `Click an element to move comment #${repin.n}` : 'Click to comment, Shift-click pins to select, P to draw'}
+      </div>
+      {control && <ChatPickBar control={control} className="floating" />}
+    </>
   );
 }
 

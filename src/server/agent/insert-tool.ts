@@ -4,7 +4,7 @@ import { PROP_NAME, PROP_TEXT_MAX, PROPS_MAX } from '../../shared/props.js';
 import { planInsertComponent } from '../components/insert.js';
 import { probeOwners } from '../components/owner-probe.js';
 import { writeAtomic } from '../direct-edit/index.js';
-import { withPagePath } from '../export/source.js';
+import { editPageUrl } from './run-target.js';
 import { describeElements } from '../mcp/element.js';
 import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 
@@ -17,7 +17,7 @@ export const insertComponentShape = {
   file: z.string().trim().max(1000).optional().describe('File of the component when two components have the same name.'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of the element on the live page to insert inside or after.'),
   targetSource: z.string().trim().max(1100).optional().describe('Or the target as file:line:col of its JSX tag, for example "src/App.tsx:12:7".'),
-  path: z.string().trim().max(300).optional().describe('Page path. Leave out for the entry page.'),
+  path: z.string().trim().max(300).optional().describe('Page path. Leave out for the page of the frame in <canvas-context> (or the entry page).'),
   position: z.enum(['inside', 'after']).default('inside').describe('inside: last child of the target. after: next sibling.'),
   props: z.record(z.string().regex(PROP_NAME), z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean()])).optional().describe(`Up to ${PROPS_MAX} props, for example {"variant": "outline"}.`),
   text: z.string().max(INSERT_TEXT_MAX).optional().describe('Child text, for example "Save".'),
@@ -36,7 +36,7 @@ export async function targetOf(deps: DirectToolDeps, input: { targetSelector?: s
   }
   if (!input.targetSelector) return 'Pass targetSelector or targetSource.';
   if (!deps.ctx.previewUrl) return 'Preview is not running for this direction. Pass targetSource instead.';
-  const url = withPagePath(deps.ctx.previewUrl, input.path || undefined);
+  const url = editPageUrl(deps.ctx, input.path);
   const [element] = await describeElements(deps.preview, url, [input.targetSelector]);
   if (!element) return `No element matches ${input.targetSelector} on the page.`;
   const probed = await probeOwners(deps.preview, url, input.targetSelector).catch(() => null);

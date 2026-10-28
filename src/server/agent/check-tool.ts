@@ -7,7 +7,10 @@ import { capFindings, countSeverities, navFindings, sortFindings } from '../prev
 import type { ProbeRect } from '../preview/quality-probe.js';
 import { readScanFiles, scanTokenUse } from '../preview/token-scan.js';
 import { diffFinding, diffImages, readPng } from '../preview/visual-diff.js';
+import type { CanvasService } from '../canvas/service.js';
 import type { AgentRunContext, PreviewService } from '../types.js';
+import type { CriticImage } from './critic.js';
+import { describeScreens, planScreens, samePage, warmScreens, type RunScreen } from './screens.js';
 import { isBlocking, loopsDone, MAX_FIX_LOOPS, missingShots, recordCheck, type LoopLog } from './polish-loop.js';
 import { defaultShotTarget, type ShotTarget } from './run-target.js';
 
@@ -31,6 +34,13 @@ export interface RunToolState {
   lastFindings: QualityFinding[];
   lastChecks: RenderCheckResult[];
   baseline: Promise<BaselineShot[]> | null;
+  canvas?: CanvasService;
+  startedAt?: number;
+  screenCache?: { stamp: string; screens: RunScreen[] };
+  lastScreens?: RunScreen[];
+  reviewShots?: CriticImage[];
+  regressionDone?: boolean;
+  regressionNote?: string;
 }
 
 function selectionLocs(selection: SelectionContext[] | undefined): string[] {
@@ -89,6 +99,7 @@ function attachGlobal(results: RenderCheckResult[], global: QualityFinding[]): R
 
 function viewportView(result: RenderCheckResult) {
   return {
+    ...(result.screen ? { screen: result.screen } : {}),
     viewport: result.viewport,
     width: result.width,
     ok: result.ok,
@@ -101,10 +112,11 @@ function viewportView(result: RenderCheckResult) {
   };
 }
 
-function reportText(results: RenderCheckResult[], findings: QualityFinding[], timingsMs: Record<string, number>, budget: string | null, page: string | null): string {
+function reportText(results: RenderCheckResult[], findings: QualityFinding[], timingsMs: Record<string, number>, budget: string | null, page: string | null, screens: RunScreen[]): string {
   const capped = capFindings(findings);
   const body = {
     ...(page ? { page } : {}),
+    ...(screens.length > 1 ? { screens: `Checked ${screens.length} screens (findings name their screen; screenshot takes screen=<number>):\n${describeScreens(screens)}` } : {}),
     viewports: results.map(viewportView),
     quality: capped.findings,
     qualityOmitted: capped.omitted,
@@ -135,6 +147,7 @@ function nextStepLine(state: Pick<RunToolState, 'config' | 'criticCalls' | 'shot
   const checks = state.config.preset.checks;
   if (checks.screenshots && !state.shots) return 'Required next: call mcp__studio__screenshot with viewport mobile from=0, then the other sizes, and look at every image before you finish.';
   if (checks.critic && state.criticCalls === 0) return 'Required next: call mcp__studio__design_review for a fresh-eyes review before you finish.';
+  if (state.config.preset.quickCritic && state.config.criticModel && state.criticCalls === 0) return 'Required next: call mcp__studio__design_review once (a quick fresh-eyes critic of every screen), then fix its high issues in your one fix loop.';
   return loopLine(state, blocking);
 }
 
@@ -143,16 +156,55 @@ export async function buildCheckReport(preview: PreviewService, ctx: AgentRunCon
   const started = Date.now();
   const target = picked ?? defaultShotTarget(ctx);
   const raw = await timedStep(timings, 'render', () => preview.renderCheck(ctx.project, ctx.direction, { ...checkOptions(ctx, config), ...(target ? { url: target.url } : {}) }));
+  const screens = state ? await timedStep(timings, 'screens', () => runScreens(preview, ctx, config, state).catch(() => [])) : [];
+  const mainUrl = target?.url ?? ctx.previewUrl;
+  const extra = await timedStep(timings, 'screenChecks', () => screenChecks(preview, ctx, config, screens, mainUrl));
   const tokens = await timedStep(timings, 'tokens', () => tokenFindings(ctx, config).catch(() => []));
   const targeted = (ctx.request.selection ?? []).length > 0;
   const diff = config.preset.checks.quality ? await timedStep(timings, 'diff', () => diffFindings(state, raw, targeted, target?.url ?? null)) : [];
   const global = [...(config.preset.checks.navCheck ? navFindings(raw) : []), ...tokens, ...diff];
-  const results = attachGlobal(raw, global);
+  const main = attachGlobal(raw, global);
+  const entry = screens.find((screen) => isMain(screen, mainUrl))?.label ?? null;
+  const results = [...(entry ? main.map((result) => tagScreen(result, entry)) : main), ...extra];
   const findings = sortFindings(results.flatMap((result) => result.quality ?? []));
   timings['total'] = Date.now() - started;
   if (state?.log) recordCheck(state.log, findings);
   const tail = state ? [budgetLine(state), nextStepLine(state, findings.filter(isBlocking).length)].filter(Boolean).join('\n') : null;
-  return { results, findings, text: reportText(results, findings, timings, tail, target?.label ?? null) };
+  return { results, findings, text: reportText(results, findings, timings, tail, target?.label ?? null, screens) };
+}
+
+export async function runScreens(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, state: RunToolState, maxScreens?: number): Promise<RunScreen[]> {
+  const plan = config.preset.screens;
+  if (!plan) return [];
+  const screens = await planScreens({ preview, ctx, ...(state.canvas ? { canvas: state.canvas } : {}), ...(state.startedAt !== undefined ? { startedAt: state.startedAt } : {}), ...(state.screenCache ? { cache: state.screenCache } : {}) }, { ...plan, maxScreens: maxScreens ?? plan.maxScreens });
+  state.lastScreens = screens;
+  return screens;
+}
+
+function isMain(screen: RunScreen, mainUrl: string | null): boolean {
+  return !screen.prepare && samePage(screen.url, mainUrl);
+}
+
+function tagScreen(result: RenderCheckResult, screen: string): RenderCheckResult {
+  return { ...result, screen, quality: (result.quality ?? []).map((finding) => ({ ...finding, screen })) };
+}
+
+async function screenChecks(preview: PreviewService, ctx: AgentRunContext, config: ResolvedRunConfig, screens: RunScreen[], mainUrl: string | null): Promise<RenderCheckResult[]> {
+  const extra = screens.filter((screen) => !isMain(screen, mainUrl)).slice(0, config.preset.screens?.checkScreens ?? 0);
+  if (extra.length === 0) return [];
+  await warmScreens(preview, ctx.project, extra);
+  const viewports = config.preset.checks.viewports.filter((viewport) => viewport !== 'tablet');
+  const checked = await Promise.all(
+    extra.map(async (screen, index) => {
+      const options = { ...checkOptions(ctx, config), viewports, url: screen.url, filePrefix: `${ctx.direction.id}-screen-${index + 1}`, ...(screen.prepare ? { prepare: screen.prepare } : {}) };
+      const results = await preview.renderCheck(ctx.project, ctx.direction, options).catch((error: unknown) => {
+        console.warn(`[agent] screen check failed for ${screen.label}: ${error instanceof Error ? error.message : String(error)}`);
+        return [];
+      });
+      return results.map((result) => tagScreen(result, screen.label));
+    }),
+  );
+  return checked.flat();
 }
 
 export async function saveCheck(runsDir: string, runId: string, index: number | string, results: RenderCheckResult[]): Promise<void> {

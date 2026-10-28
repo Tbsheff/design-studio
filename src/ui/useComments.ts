@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { AnchorQuery, CommentDrawing, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../shared/contracts';
-import { anchorQueryOf, drawingTarget, targetFromSelection } from '../shared/comments';
+import type { AnchorQuery, CommentDrawing, CommentFrame, CommentPrefill, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../shared/contracts';
+import { anchorQueryOf, canPickForChat, drawingTarget, targetFromSelection } from '../shared/comments';
 import { ApiError, api, errorText, json } from './api';
 import { useProjectEvents } from './events';
 
@@ -24,6 +24,7 @@ export interface CommentsControl {
   running: boolean;
   comments: DesignComment[];
   queued: DesignComment[];
+  inChat: DesignComment[];
   notice: string | null;
   sending: boolean;
   openId: string | null;
@@ -43,7 +44,15 @@ export interface CommentsControl {
   removeReply: (id: string, replyId: string) => Promise<void>;
   showResolved: boolean;
   setShowResolved: (on: boolean) => void;
+  frameRef: MutableRefObject<CommentFrame | null>;
+  picked: string[];
+  togglePick: (id: string) => void;
+  clearPicked: () => void;
+  toChat: (ids: string[]) => Promise<void>;
+  preparing: boolean;
 }
+
+export type OnPrefill = (prefill: CommentPrefill) => void;
 
 const SHOW_RESOLVED_KEY = 'studio.comments.showResolved';
 
@@ -78,7 +87,24 @@ async function describeWithTimeout(describe: DescribeAnchors | null, comments: D
   return out;
 }
 
-export function useComments(projectId: string, directionId: string | null, composerActive = false, running = false): CommentsControl {
+function frameField(ref: MutableRefObject<CommentFrame | null>): { frame?: CommentFrame } {
+  return ref.current ? { frame: ref.current } : {};
+}
+
+function usePicks(comments: DesignComment[]) {
+  const [picked, setPicked] = useState<string[]>([]);
+  useEffect(() => {
+    setPicked((prev) => {
+      const next = prev.filter((id) => comments.some((comment) => comment.id === id && canPickForChat(comment.status)));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [comments]);
+  const togglePick = useCallback((id: string) => setPicked((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id])), []);
+  const clearPicked = useCallback(() => setPicked([]), []);
+  return { picked, togglePick, clearPicked };
+}
+
+export function useComments(projectId: string, directionId: string | null, composerActive = false, running = false, onPrefill?: OnPrefill): CommentsControl {
   const [comments, setComments] = useState<DesignComment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -86,6 +112,10 @@ export function useComments(projectId: string, directionId: string | null, compo
   const [repinId, setRepinId] = useState<string | null>(null);
   const [showResolved, setShowResolvedState] = useState(readShowResolved);
   const describeRef = useRef<DescribeAnchors | null>(null);
+  const frameRef = useRef<CommentFrame | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const prefillRef = useRef(onPrefill);
+  prefillRef.current = onPrefill;
   const didRef = useRef(directionId);
   didRef.current = directionId;
   const listRef = useRef(comments);
@@ -93,6 +123,9 @@ export function useComments(projectId: string, directionId: string | null, compo
   const runningRef = useRef(running);
   runningRef.current = running;
   const afterRun = useRef(new Set<string>());
+  const [chatIds, setChatIds] = useState<string[]>([]);
+  const chatRef = useRef(chatIds);
+  chatRef.current = chatIds;
 
   useEffect(() => {
     setComments([]);
@@ -125,7 +158,7 @@ export function useComments(projectId: string, directionId: string | null, compo
 
   const send = useCallback(
     async (ids?: string[]) => {
-      const chosen = ids ? listRef.current.filter((comment) => ids.includes(comment.id)) : queuedOf(listRef.current);
+      const chosen = ids ? listRef.current.filter((comment) => ids.includes(comment.id)) : queuedOf(listRef.current).filter((comment) => !chatRef.current.includes(comment.id));
       if (chosen.length === 0) return;
       setSending(true);
       try {
@@ -168,6 +201,7 @@ export function useComments(projectId: string, directionId: string | null, compo
             target: targetFromSelection(selection),
             context: selection,
             status: now ? 'draft' : 'queued',
+            ...frameField(frameRef),
             ...(extras.mentions?.length ? { mentions: extras.mentions } : {}),
             ...(extras.attachmentIds?.length ? { attachmentIds: extras.attachmentIds } : {}),
           });
@@ -267,6 +301,7 @@ export function useComments(projectId: string, directionId: string | null, compo
           attachmentIds: [attachment.id, ...(input.extras?.attachmentIds ?? [])].slice(0, 4),
           ...(input.extras?.mentions?.length ? { mentions: input.extras.mentions } : {}),
           drawing: input.drawing,
+          ...frameField(frameRef),
         });
         if (!comment) return false;
         merge(comment);
@@ -317,7 +352,31 @@ export function useComments(projectId: string, directionId: string | null, compo
     }
   }, []);
 
-  const queued = useMemo(() => queuedOf(comments), [comments]);
+  const queued = useMemo(() => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)), [comments, chatIds]);
+  const inChat = useMemo(() => comments.filter((comment) => chatIds.includes(comment.id) && comment.status === 'queued'), [comments, chatIds]);
+  const picks = usePicks(comments);
+  const clearPicks = picks.clearPicked;
+
+  const toChat = useCallback(
+    async (ids: string[]) => {
+      if (ids.length === 0) return;
+      setPreparing(true);
+      try {
+        const prefill = await call<CommentPrefill>('POST', '/prefill', { ids });
+        if (prefill) {
+          prefillRef.current?.(prefill);
+          setChatIds((prev) => [...new Set([...prev, ...prefill.commentIds])]);
+        }
+        clearPicks();
+        setNotice(null);
+      } catch (err) {
+        setNotice(errorText(err));
+      } finally {
+        setPreparing(false);
+      }
+    },
+    [call, clearPicks],
+  );
 
   return {
     directionId,
@@ -325,6 +384,7 @@ export function useComments(projectId: string, directionId: string | null, compo
     running,
     comments,
     queued,
+    inChat,
     notice,
     sending,
     openId,
@@ -344,5 +404,9 @@ export function useComments(projectId: string, directionId: string | null, compo
     removeReply,
     showResolved,
     setShowResolved,
+    frameRef,
+    ...picks,
+    toChat,
+    preparing,
   };
 }

@@ -4,7 +4,7 @@ import { probeOwners } from '../components/owner-probe.js';
 import { resolveInstance } from '../components/use-site.js';
 import { writeAtomic } from '../direct-edit/index.js';
 import { parseSetProps, planSetProps } from '../direct-edit/props.js';
-import { withPagePath } from '../export/source.js';
+import { editPageUrl } from './run-target.js';
 import { refusal, writeProblem, type DirectToolDeps } from './direct-tools.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
@@ -13,7 +13,7 @@ const LOC = /^(.+):(\d+):(\d+)$/;
 
 export const setPropsShape = {
   selector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of an element inside the component instance on the live page. The nearest component with props (such as <Button>) is changed.'),
-  path: z.string().trim().max(300).optional().describe('Page path. Leave out for the entry page.'),
+  path: z.string().trim().max(300).optional().describe('Page path. Leave out for the page of the frame in <canvas-context> (or the entry page).'),
   source: z.string().trim().max(1100).optional().describe('Or the use site as file:line:col of the JSX tag, for example "src/App.tsx:14:9".'),
   props: z.record(z.string().regex(PROP_NAME), z.union([z.string().max(PROP_TEXT_MAX), z.number(), z.boolean(), z.null()])).describe(`1 to ${PROPS_MAX} props. null removes a prop; a value equal to the default removes the attribute.`),
 };
@@ -31,7 +31,7 @@ async function useSite(deps: DirectToolDeps, input: z.output<typeof schema>): Pr
   }
   if (!input.selector) return 'Pass selector or source.';
   if (!deps.ctx.previewUrl) return 'Preview is not running for this direction. Pass source instead.';
-  const probed = await probeOwners(deps.preview, withPagePath(deps.ctx.previewUrl, input.path || undefined), input.selector);
+  const probed = await probeOwners(deps.preview, editPageUrl(deps.ctx, input.path), input.selector);
   if (!probed) return `No element matches ${input.selector} on the page.`;
   const instance = await resolveInstance({ workTree: deps.ctx.direction.workTree, previewOrigin: new URL(deps.ctx.previewUrl).origin }, { owners: probed.owners, usedAt: probed.usedAt });
   return instance ? instance.use : `${input.selector} is not inside a component instance with props. Pass source (file:line:col of the JSX tag) or edit the JSX instead.`;

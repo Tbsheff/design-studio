@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Direction, EditHistoryEntry, EditHistoryList, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
 import type { EventBus } from '../types.js';
+import { emitSourceChange } from './change-feed.js';
 import { DirectEditError } from './errors.js';
 import { assertCanEdit, publishVersion, writeAtomic, type DirectEditDeps, type EditFileChange, type EditRecord, type EditRecorder } from './index.js';
 
@@ -163,6 +164,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
       throw stale();
     }
     const version = await commitStep(kind, deps, project, direction, record, files);
+    emitSourceChange({ projectId: project.id, directionId: direction.id, files: record.files.map((change) => (kind === 'undo' ? { relative: change.relative, before: change.after, after: change.before } : change)) });
     from.splice(index, 1);
     push(kind === 'undo' ? stacks.redo : stacks.undo, { ...record, versionId: version.id });
     options.onRestored?.(direction.workTree, record.files.map((change) => change.relative));
@@ -174,6 +176,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
   const record = (entry: EditRecord): void => {
     const files = entry.files.filter((change) => change.before !== change.after);
     if (files.length === 0) return;
+    emitSourceChange({ projectId: entry.projectId, directionId: entry.directionId, files });
     const stacks = stacksOf(entry.projectId);
     push(stacks.undo, { ...entry, files });
     for (let index = stacks.redo.length - 1; index >= 0; index -= 1) if (stacks.redo[index]?.directionId === entry.directionId) stacks.redo.splice(index, 1);

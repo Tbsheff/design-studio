@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { Context, Hono } from 'hono';
-import { SHIP_MODES, type ShipMode, type ShipRequest } from '../../shared/ship.js';
+import { SHIP_MODES, SHIP_TEXT_MAX, type ShipMode, type ShipRequest } from '../../shared/ship.js';
 import { prepareShip } from '../git/ship-prepare.js';
 import { readShipState, saveShipSettings, shipSettingsSchema } from '../git/ship-store.js';
 import { ship } from '../git/ship.js';
@@ -37,7 +37,7 @@ export function registerShipRoutes(app: Hono, deps: ShipRouteDeps): void {
 
   app.get('/api/projects/:pid/ship', async (c) => {
     const project = await deps.projects.get(c.req.param('pid'));
-    return c.json(await prepareShip({ projectDir: projectDir(project.id), project }, c.req.query('base') || undefined));
+    return c.json(await prepareShip({ projectDir: projectDir(project.id), project }, c.req.query('base') || undefined, { title: c.req.query('title')?.slice(0, SHIP_TEXT_MAX.title) }));
   });
 
   app.post('/api/projects/:pid/ship', async (c) => {

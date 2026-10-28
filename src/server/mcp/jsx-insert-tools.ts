@@ -13,7 +13,7 @@ const schema = z
     directionId,
     path: pagePath,
     targetSelector: selector.optional().describe('CSS selector of the target element on the page, for example "main" or "[data-name=\'Hero\'] h2".'),
-    targetSource: z.string().trim().max(1100).optional().describe('Or the target element as file:line:col of its JSX tag, for example "src/App.tsx:12:7" (the at of an earlier insert). Use this or targetSelector.'),
+    targetSource: z.string().trim().max(1100).optional().describe('Or the target element as file:line:col of its JSX tag, for example "src/App.tsx:12:7" (as get_layers prints it, or the at of an earlier insert). file:line works when one JSX tag starts on that line. Use this or targetSelector.'),
     position: z.enum(JSX_INSERT_POSITIONS as ['inside', 'before', 'after', 'replace']).default('inside').describe('inside: after the last child of the target. before / after: a sibling of the target. replace: the snippet takes the place of the target element.'),
     jsx: z.string().min(1).max(JSX_SNIPPET_MAX).describe('The snippet: one or more elements, with line breaks and any indent.'),
     imports: z
@@ -47,7 +47,7 @@ const clearSchema = z
     directionId,
     path: pagePath,
     targetSelector: selector.optional().describe('CSS selector of the element whose text to clear, for example "[data-slot=card]".'),
-    targetSource: z.string().trim().max(1100).optional().describe('Or the element as file:line:col of its JSX tag (the at of insert_component).'),
+    targetSource: z.string().trim().max(1100).optional().describe('Or the element as file:line:col of its JSX tag (as get_layers prints it, or the at of insert_component). file:line works when one JSX tag starts on that line.'),
   })
   .strict()
   .refine((input) => (input.targetSelector === undefined) !== (input.targetSource === undefined), 'pass targetSelector or targetSource, not both');

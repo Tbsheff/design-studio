@@ -62,6 +62,7 @@ import type { CommitTweaksResult, TweaksState, TweakValue } from '../shared/twea
 import { getSession } from './session';
 import type { ReviewFixResult, ReviewRequest, ReviewResult } from '../shared/review';
 import type { DesignRulesState, DesignRulesTestResult } from '../shared/design-rules';
+import type { FlowInput, FlowResult } from '../shared/route-flow';
 
 export class ApiError extends Error {
   constructor(
@@ -184,6 +185,8 @@ export const api = {
   appControl: (pid: string, action: 'start' | 'stop' | 'restart') => json<AppServerStatus>('POST', `${p(pid)}/app/${action}`),
   appConfig: (pid: string, input: { url?: string; env?: Record<string, string> }) => json<{ app: AttachedApp }>('POST', `${p(pid)}/app/config`, input),
   appRoutes: (pid: string) => json<{ routes: AppRoute[] }>('GET', `${p(pid)}/app/routes`),
+  flowParams: (pid: string) => json<{ params: Record<string, string> }>('GET', `${p(pid)}/flow/params`),
+  buildFlow: (pid: string, input: FlowInput) => json<FlowResult>('POST', `${p(pid)}/flow`, input),
   openSource: (pid: string, did: string, source: string) => json<{ opened: boolean; path: string }>('POST', `${d(pid, did)}/open-source`, { source }),
   listWorkspaces: () => json<WorkspaceList>('GET', '/api/workspaces'),
   addWorkspace: (path: string, label?: string) => json<WorkspaceFolder>('POST', '/api/workspaces', { path, ...(label ? { label } : {}) }),

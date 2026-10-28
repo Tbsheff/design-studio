@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { COMPONENT_LIST_MAX, COMPONENT_SOURCES } from '../../shared/props.js';
-import { canvasOwner, readCanvasAt } from '../canvas/service.js';
 import { findFrame, frameRef } from '../canvas/tools.js';
 import { listComponentSchemas } from '../components/props-service.js';
-import { withPagePath } from '../export/source.js';
 import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, scopeOf, type Viewport } from '../mcp/layer-ref.js';
 import { layerTreeText } from '../mcp/layer-tools.js';
-import type { DirectToolDeps } from './direct-tools.js';
+import { canvasFrames, type DirectToolDeps } from './direct-tools.js';
+import { editPage, editPageUrl, isContextFrame, pageUrl } from './run-target.js';
+import { DEFAULT_FRAME_STATE } from '../../shared/frame-state.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
@@ -21,8 +21,8 @@ export const listComponentsShape = {
 };
 
 export const getLayersShape = {
-  frame: frameRef.optional().describe('Canvas frame id or @label from canvas_list. It sets the page and the size.'),
-  path: z.string().trim().max(300).optional().describe('Page path instead of the frame page. Leave out for the entry page.'),
+  frame: frameRef.optional().describe('Canvas frame id or @label from canvas_list. It sets the page and the size. Leave out for the frame in <canvas-context>.'),
+  path: z.string().trim().max(300).optional().describe('Page path instead of the frame page. Leave out for the page of the frame in <canvas-context> (or the entry page).'),
   root: z.string().trim().min(1).max(2000).optional().describe('Layer id from an earlier get_layers or a CSS selector: list only this element and what is inside it.'),
   depth: z.number().int().min(0).max(30).default(8).describe('Levels below the root to list. Default 8. Deeper children show as "+N inside".'),
 };
@@ -56,12 +56,14 @@ export async function runListComponents(deps: DirectToolDeps, args: z.input<type
   }
 }
 
-async function framePage(deps: DirectToolDeps, ref: string | undefined): Promise<{ path?: string; viewport: Viewport }> {
-  if (!ref) return { viewport: EDIT_VIEWPORT };
-  const frames = (await readCanvasAt(canvasOwner(deps.ctx.project).workTree)).canvas?.frames ?? [];
+async function framePage(deps: DirectToolDeps, ref: string | undefined): Promise<{ path?: string; viewport: Viewport; state: string }> {
+  const target = deps.ctx.target;
+  if (!ref || isContextFrame(deps.ctx, ref)) return target ? { viewport: { width: target.width, height: target.height }, state: target.state, ...(target.path ? { path: target.path } : {}) } : { viewport: EDIT_VIEWPORT, state: DEFAULT_FRAME_STATE };
+  const frames = await canvasFrames(deps);
   const frame = findFrame(frames, ref);
   if (!frame) throw new LayerRefError(`No frame ${ref} on the canvas. Call canvas_list for the frame ids.`);
-  return { viewport: { width: frame.width, height: frame.height }, ...(frame.path ? { path: frame.path } : {}) };
+  const state = frame.id === target?.id ? target.state : DEFAULT_FRAME_STATE;
+  return { viewport: { width: frame.width, height: frame.height }, state, ...(frame.path ? { path: frame.path } : {}) };
 }
 
 export async function runGetLayers(deps: DirectToolDeps, args: z.input<typeof layersSchema>): Promise<ToolText> {
@@ -71,7 +73,7 @@ export async function runGetLayers(deps: DirectToolDeps, args: z.input<typeof la
   try {
     const frame = await framePage(deps, parsed.data.frame);
     const page = parsed.data.path ?? frame.path;
-    const url = withPagePath(deps.ctx.previewUrl, page || undefined);
+    const url = pageUrl(deps.ctx.previewUrl, page ?? '', frame.state);
     const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
     const tree = await layerTreeText(deps.preview, { url, viewport: frame.viewport, scope, page, root: parsed.data.root, depth: parsed.data.depth });
     return tree === null ? text(`No element matches ${parsed.data.root} on the page.`, true) : text(tree);
@@ -89,8 +91,8 @@ async function resolveSelectors<A extends LayerArgs>(deps: DirectToolDeps, args:
   const out: A = { ...args };
   for (const key of keys) {
     const ref = String(args[key]).trim();
-    const page = args.path ?? memoPage(scope, ref);
-    out[key] = (await resolveLayerRef(deps.preview, withPagePath(deps.ctx.previewUrl, page || undefined), EDIT_VIEWPORT, scope, ref)) as A[typeof key];
+    const page = args.path ?? memoPage(scope, ref) ?? editPage(deps.ctx, undefined)?.path;
+    out[key] = (await resolveLayerRef(deps.preview, editPageUrl(deps.ctx, page), EDIT_VIEWPORT, scope, ref)) as A[typeof key];
     if (out.path === undefined && page !== undefined) out.path = page;
   }
   return out;

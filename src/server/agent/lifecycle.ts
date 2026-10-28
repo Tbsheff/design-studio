@@ -10,6 +10,8 @@ import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js'
 import { createCommandRuleStore } from '../store/command-rules.js';
 import { BadRequestError } from '../store/errors.js';
 import { scopeProblem } from '../variations/scope-check.js';
+import { createTodoTracker, evidenceOf, type TodoEvidence } from './todo-tracker.js';
+import { EDIT_TOOL_NAMES } from './permissions.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
 
 export interface DriverSink {
@@ -18,7 +20,7 @@ export interface DriverSink {
   thinkingDelta(text: string): void;
   thinking(text: string): void;
   toolStarted(toolUseId: string, name: string, input: unknown): void;
-  toolFinished(toolUseId: string, isError: boolean, summary: string): void;
+  toolFinished(toolUseId: string, isError: boolean, summary: string, resultText?: string): void;
   beforeWrite(toolUseId: string, name: string, input: unknown): void | Promise<void>;
   bashFinished?(toolUseId: string, check: BashWriteCheck): Promise<BashEditResult>;
   usage(contextTokens: number): void;
@@ -167,6 +169,10 @@ function writeTarget(input: unknown, workTree: string): { relative: string; abso
   return { relative, absolute: path.join(workTree, relative) };
 }
 
+function hunkText(hunk: ToolDiff['hunks'][number]): string[] {
+  return hunk.lines.filter((line) => line.kind === 'add').map((line) => line.text);
+}
+
 export function toolDiff(before: Before): ToolDiff | null {
   return fileDiff(before.relative, before.content, readFileText(before.absolute));
 }
@@ -300,8 +306,19 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       }
     }
 
+    function publishTodos(todos: TodoItem[] | null): void {
+      if (!todos) return;
+      summary.todos = todos;
+      emitRun({ type: 'run.todos', todos });
+    }
+
+    function recordTodo(event: TodoEvidence | null): void {
+      if (event) publishTodos(todoTracker.record(event));
+    }
+
     function attachBashDiffs(toolUseId: string, diffs: ToolDiff[]): void {
       bashDiffs.set(toolUseId, diffs);
+      recordTodo({ kind: 'write', paths: diffs.map((diff) => diff.path), text: diffs.flatMap((diff) => diff.hunks.flatMap((hunk) => hunkText(hunk))).join('\n') });
       const record = toolIndex.get(toolUseId);
       if (!record || record.finishedAt === null) return;
       record.diffs = diffs;
@@ -343,6 +360,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       headFile: async (relative) => (await deps.versions.headFile?.(ctx.project, direction, relative)) ?? null,
     });
     const bashDiffs = new Map<string, ToolDiff[]>();
+    const todoTracker = createTodoTracker();
+    const contextFiles = [ctx.target?.routeFile, ctx.target?.path].filter((file): file is string => typeof file === 'string' && file !== '');
     if (ctx.request.mode === 'edit') bashEdits.prepare();
 
     const summary: RunSummary = {
@@ -393,12 +412,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         toolIndex.set(toolUseId, record);
         emitRun({ type: 'run.tool.started', toolUseId, name, input });
         const todos = name === TODO_TOOL ? parseTodos(input) : null;
-        if (todos) {
-          summary.todos = todos;
-          emitRun({ type: 'run.todos', todos });
-        }
+        if (todos) publishTodos(todoTracker.setAgent(todos));
       },
-      toolFinished(toolUseId, isError, resultSummary) {
+      toolFinished(toolUseId, isError, resultSummary, resultText) {
         const record = toolIndex.get(toolUseId);
         const finishedAt = Date.now();
         const durationMs = record ? finishedAt - record.startedAt : 0;
@@ -419,6 +435,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         }
         toolMs += durationMs;
         emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}), ...(diffs ? { diffs } : {}), ...(denied ? { denied: true } : {}) });
+        if (record) recordTodo(evidenceOf({ name: record.name, input: record.input, isError, resultText, filePath: toolFilePath(record.input, ctx.direction.workTree), isEditTool: EDIT_TOOL_NAMES.has(record.name), contextFiles }));
       },
       usage(contextTokens) {
         if (!Number.isFinite(contextTokens) || contextTokens <= 0 || contextTokens === summary.contextTokens) return;
@@ -573,6 +590,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let status: RunStatus = canceled ? 'canceled' : outcome ? outcome.status : 'failed';
       summary.error = canceled ? null : (outcome?.error ?? failure);
       if (outcome) copyOutcome(summary, outcome);
+      if (outcome?.finalCheck) recordTodo({ kind: 'review', by: 'The final check' });
 
       try {
         await recordSessionTotals(outcome);
@@ -587,6 +605,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         summary.error = `Finishing the run failed: ${describeError(error)}`;
       }
 
+      publishTodos(todoTracker.close(status, ctx.request.mode === 'edit' && !ctx.request.plan));
       const finishedAt = Date.now();
       summary.status = status;
       summary.finishedAt = finishedAt;

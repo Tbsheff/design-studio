@@ -391,6 +391,7 @@ export interface RunRequest {
   selection?: SelectionContext[];
   attachmentIds?: string[];
   comments?: RunComment[];
+  commentIds?: string[];
   task?: RunTask;
   referencePages?: ReferencePage[];
   states?: StatesRequest;
@@ -423,6 +424,19 @@ export interface DesignComment {
   mentions?: RunMention[];
   drawing?: CommentDrawing;
   author?: string;
+  frame?: CommentFrame;
+}
+
+export interface CommentFrame {
+  id?: string;
+  label?: string;
+  path: string;
+}
+
+export interface CommentPrefill {
+  text: string;
+  commentIds: string[];
+  attachments: { id: string; name: string; dataUrl: string }[];
 }
 
 export interface CommentReply {
@@ -562,6 +576,9 @@ export interface TodoItem {
   content: string;
   activeForm?: string;
   status: TodoStatus;
+  by?: 'studio' | 'run';
+  note?: string;
+  skipped?: boolean;
 }
 
 export interface RunSummary {
@@ -741,6 +758,7 @@ export interface QualityFinding {
   source: string | null;
   message: string;
   fix?: string;
+  screen?: string;
 }
 
 export interface NavSummary {
@@ -766,6 +784,7 @@ export interface RenderCheckResult {
   selectionRects?: { x: number; y: number; width: number; height: number }[];
   timingsMs?: Record<string, number>;
   backend?: 'playwright' | 'electron';
+  screen?: string;
 }
 
 export const API_ROUTES = {
@@ -795,6 +814,9 @@ export const API_ROUTES = {
   appControl: 'POST /api/projects/:pid/app/start | stop | restart -> AppServerStatus',
   appConfig: 'POST /api/projects/:pid/app/config {url?, env?} -> {app} (empty url = the studio starts next dev; then the dev server restarts)',
   appRoutes: 'GET /api/projects/:pid/app/routes -> {routes: AppRoute[]} (app router page files under the app dir)',
+  routeLinks: 'GET /api/projects/:pid/flow/links?route= -> RouteLinksResult (links found in the route source: <Link href>, router.push, redirect and form actions)',
+  flowParams: 'GET /api/projects/:pid/flow/params -> {params} (sample values for dynamic segments, kept in the studio data dir)',
+  buildFlow: 'POST /api/projects/:pid/flow {routes?|from?, depth?, params?} -> FlowResult (route frames laid out left to right, prototype links from the source links)',
   openSource: 'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
   createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped). 400 no source, blocked URL, unknown base pack',
   getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',

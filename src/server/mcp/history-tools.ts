@@ -2,7 +2,7 @@ import { readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import type { DirectEditBatchResult, EditHistoryList, EditHistoryState, Project, SelectionContext, Version } from '../../shared/contracts.js';
-import { chooseEditSite, EDIT_TARGETS, locText, siteRequest } from '../direct-edit/edit-site.js';
+import { chooseEditSite, EDIT_TARGETS, editedAtLabel, locText, siteRequest } from '../direct-edit/edit-site.js';
 import { publishVersion } from '../direct-edit/index.js';
 import { listWords } from './activity-text.js';
 import { EditError, loadTarget, oneLine, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
@@ -53,7 +53,7 @@ const batchEdit = z
   .object({
     path: pagePath,
     selector: selector.describe('CSS selector of one element on the page.'),
-    style: style.optional().describe('CSS properties to set. null removes the property.'),
+    style: style.optional().describe('CSS properties to set, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property.'),
     text: z.string().max(5000).optional(),
     classes: classes.optional(),
     variant: variant.optional(),
@@ -113,9 +113,9 @@ async function batchElements(deps: EditDeps, project: Project, direction: Direct
   const applied = result.applied.map((entry, index) => {
     const site = planned[index]?.site;
     const at = entry.textSource ? `${entry.textSource.file}:${entry.textSource.line}` : site ? locText(site.source) : entry.file;
-    return { ...entry, at, editedAt: site?.kind === 'use' ? 'use' : 'component', ...(site?.kind === 'use' ? { component: site.component } : {}) };
+    return { ...entry, at, editedAt: editedAtLabel(site), ...(site?.kind === 'use' ? { component: site.component } : {}) };
   });
-  const output = ok({ changed: true, files: result.files, versionId: result.version.id, title: result.version.title, applied, note: 'All edits are one version and one undo step. editedAt "use" means the page file changed at that line and the shared component file did not.' });
+  const output = ok({ changed: true, files: result.files, versionId: result.version.id, title: result.version.title, applied, note: 'All edits are one version and one undo step. editedAt "use": the page file changed where it uses a shared component and the component file did not; "element": the JSX of the element changed in its own file; "component": a shared component file changed, so every use changes.' });
   return { result: output, activity: versionActivity(project, direction, `Edited ${subject} ${listWords(parts)} in one step`, result.version) };
 }
 

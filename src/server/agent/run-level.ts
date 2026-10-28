@@ -29,13 +29,13 @@ export interface RunLevelContext {
   appTokens?: boolean;
 }
 
-const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed.`;
+const PLAN_STEP = `Call \`TodoWrite\` first with your plan: 3 to 6 short todos (brief, build each screen, checks, fixes). The user sees this list. Call TodoWrite again to mark todos completed as you go: at least once after the build, once after the checks and once before your final reply, when every todo must be completed or removed. The studio also marks a todo done when the file or screen it names is written and its render_check passes, so name the file or screen in each build todo.`;
 
 const BRIEF_STEP = `Brief: before your first edit, write a short design brief in the chat, four lines: audience, primary action, content (the sections or screens and the real facts in them) and density (airy, balanced or dense). In an app, add the target file and the section. When the message has "Answers to your questions:", use them. Ask before you build only when the request can be read two ways that give clearly different designs and nothing in the message settles it: then reply with at most 3 short questions, make no edit and stop. Otherwise state the reading you chose in the brief and build.`;
 
 const FLOW_STEP = `Flows: when the request has 2 or more screens or steps (a booking flow, onboarding, checkout), make one page per step, never one long file that switches views with script. In HTML that is one self-contained file per step (\`index.html\` for the first step, then for example \`detail.html\`, \`checkout.html\`, \`done.html\`); in React or an app, one route per step. Link the steps with real links or buttons so each page works alone. Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to give each step its own labelled frame in flow order (each one rightOf the step before it), so the canvas shows every step.`;
 
-const FLOW_CHECK = `For a flow, also call \`mcp__studio__review_frame\` on each step frame (screenshots and render_check show only the entry page) and fix its high findings.`;
+const FLOW_CHECK = `When render_check lists more than one screen (each view of a page, each step frame, each changed route), also take a desktop and a mobile screenshot of each with screen=<number>; for a flow, \`mcp__studio__review_frame\` on a step frame gives element-level fixes.`;
 
 const APP_STEP = `App work: use the app's real components and tokens. Call \`mcp__studio__list_components\` with a query for each part you need (for example card, badge, button, table) before you write markup, and use the import line it returns. Never build a lookalike of a kit component from plain elements, and never use inline styles or raw colors and sizes where a token class exists. Find the target with \`mcp__studio__get_layers\` and add the markup with \`mcp__studio__insert_jsx\` (Edit only for logic or data wiring). Put new UI inside the section it belongs to, match the width of the cards next to it, wire it to the data the page already loads before you add sample data, and do not repeat data the page already shows. No code comments and no unused imports.`;
 
@@ -72,11 +72,12 @@ REQUIRED steps, in this order. Do not skip one:
 1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before you write any file.
 2. ${BRIEF_STEP}
 3. Write the design. ${FLOW_STEP}
-4. Call \`mcp__studio__render_check\`. It returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity.
+4. Call \`mcp__studio__render_check\`. It returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff), each with a severity, for every screen it lists.
 5. Call \`mcp__studio__screenshot\` mobile from=0, then desktop from=0. Look at every image against the checklist. ${FLOW_CHECK}
-6. Fix all errors and every HIGH finding from the check and from what you saw, with Edit. Do 1 fix loop.
-7. ${finishStep(context)}
-8. After your LAST edit, run render_check once more. This final check is mandatory.`;
+6. Call \`mcp__studio__design_review\` once: a quick critic that has not seen your work reviews every screen.
+7. Fix all errors and every HIGH finding from the check, the critic and what you saw, with Edit. Do 1 fix loop.
+8. ${finishStep(context)}
+9. After your LAST edit, run render_check once more. This final check is mandatory.`;
 }
 
 const POLISH_BUDGET_STOP = ', or when less than 20% of the budget is left';
@@ -91,7 +92,7 @@ REQUIRED steps, in this order. Do not skip one:
 1. Call the Skill tool for each fitting skill in the <recommended-skills> block, before your first edit.
 2. Call \`mcp__studio__render_check\`. It runs at 390, 768 and 1440 px and returns errors, layout findings and \`quality\` findings (a11y, tap-target, placeholder, tokens, nav-mobile, visual-diff, generic-layout) with severities.
 3. Call \`mcp__studio__screenshot\` mobile from=0, tablet from=0 and desktop from=0. Look at every image. ${FLOW_CHECK}
-4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work). Call it at most twice per run.
+4. Call \`mcp__studio__design_review\` (a separate critic that has not seen your work; it reviews every screen). Call it at most twice per run. A second call also compares desktop with the first and files regressions; when you stop, the studio runs that desktop comparison itself if you did not.
 5. Fix round: fix every HIGH and MEDIUM finding from the checks and the critic with Edit (a \`duplicate-content\` finding means a fact shows twice: merge it), plus the one layout change if the layout is generic.
 6. After each fix round: run render_check AND take screenshots from=0 at mobile, tablet and desktop again. Then start the next fix round.
 7. Stop only when render_check has no high and no medium findings, or after 3 fix rounds${POLISH_BUDGET_STOP}. If you stop early, the studio continues the run and lists what is left.
@@ -101,7 +102,7 @@ REQUIRED steps, in this order. Do not skip one:
 
 const CRITIQUE_SCOPE: Record<RunLevel, string> = {
   wireframe: 'Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.',
-  prototype: 'Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0. Report the three to six most important issues.',
+  prototype: 'Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.',
   polish: 'Level: POLISH critique. Call render_check (390, 768, 1440 px), screenshot mobile, tablet and desktop from=0, and design_review. Report every high and medium issue with a concrete fix.',
 };
 

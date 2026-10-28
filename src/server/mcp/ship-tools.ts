@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { SHIP_TEXT_MAX, type ShipPrepare, type ShipResult } from '../../shared/ship.js';
+import { SHIP_TEXT_MAX, type ShipMode, type ShipPrepare, type ShipRepoInfo, type ShipResult } from '../../shared/ship.js';
 import { approve, EditError, loadTarget, oneLine, short, studioCall, type EditDeps } from './edit-deps.js';
 import { defineTool, ok, projectId } from './edit-kit.js';
 
-const SHIP_NOTE = 'Ship works on an attached app project whose folder is in a git repository. The studio makes a new branch from the repo HEAD in a separate git worktree, so the checked-out branch, the working tree and the index of the user stay as they are. It never force pushes, and it never commits .env files, secrets or node_modules.';
+const SHIP_NOTE = 'Ship works on an attached app project whose folder is in a git repository. The studio makes a new branch from the repo HEAD in a separate git worktree, so the checked-out branch, the working tree and the index of the user stay as they are. It never force pushes, and it never commits .env files, secrets or node_modules. Repo commit hooks do not run; when the repo has a biome or prettier config, the studio formats the shipped files with it in that worktree first (format says which, and the ship result lists the files it reformatted with their diffs).';
 
 const versionId = z.string().regex(/^[0-9a-f]{40,64}$/, 'must be a version id from prepare_ship').optional();
 
@@ -37,6 +37,7 @@ function describe(plan: ShipPrepare): unknown {
     versions: plan.versions.map((v) => v.title),
     defaults: plan.defaults,
     files: plan.files.map((f) => ({ path: f.path, status: f.status, additions: f.additions, deletions: f.deletions, refused: f.refused, conflict: f.conflict, diff: short(f.diff, 6000) + (f.diffCut ? '\n[diff cut]' : '') })),
+    format: plan.format ?? null,
     note: SHIP_NOTE,
   };
 }
@@ -47,6 +48,12 @@ const prepareShip = defineTool(
   { title: 'Prepare ship', description: `List the files the studio changed since a base version, with diffs, refused files, conflicts with the user's own changes, and the default branch name, commit message and pull request text. Read only. ${SHIP_NOTE}`, readOnly: true, idempotent: true },
   async (deps, input) => ({ result: ok(describe(await prepared(deps, input.projectId, input.baseVersionId))) }),
 );
+
+function approvalDetail(plan: ShipPrepare, repo: ShipRepoInfo, mode: ShipMode, title: string, files: string[]): string {
+  const remote = repo.remote ?? 'the remote';
+  const doing = mode === 'pr' ? `push it to ${remote} and open a pull request “${oneLine(title, 80)}”` : mode === 'push' ? `push it to ${remote}` : 'keep it local (no push)';
+  return `Commit on a new branch from ${repo.branch ?? repo.head.slice(0, 7)} and ${doing}. Your checked-out branch and files do not change. ${plan.format?.note ?? 'Git hooks do not run.'} Files: ${oneLine(files.join(', '), 300)}`;
+}
 
 const ship = defineTool(
   'ship',
@@ -59,7 +66,6 @@ const ship = defineTool(
     if (files.length === 0) throw new EditError('No file can be shipped. Call prepare_ship to see the refused files and conflicts.');
     const branch = input.branch ?? plan.defaults.branch;
     const title = input.title ?? plan.defaults.title;
-    const doing = input.mode === 'pr' ? `push it to ${plan.repo.remote ?? 'the remote'} and open a pull request “${oneLine(title, 80)}”` : input.mode === 'push' ? `push it to ${plan.repo.remote ?? 'the remote'}` : 'keep it local (no push)';
     if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this ship. Ask the user to open the project in Design Studio, or to click Ship there.');
     await approve(deps, {
       tool: 'ship',
@@ -67,7 +73,7 @@ const ship = defineTool(
       projectId: plan.projectId,
       client,
       title: `${client} wants to ship ${files.length} file${files.length === 1 ? '' : 's'} as branch ${oneLine(branch, 80)}`,
-      detail: `Commit on a new branch from ${plan.repo.branch ?? plan.repo.head.slice(0, 7)} and ${doing}. Your checked-out branch and files do not change. Files: ${oneLine(files.join(', '), 300)}`,
+      detail: approvalDetail(plan, plan.repo, input.mode, title, files),
     });
     const result = await studioCall<ShipResult>(deps, 'POST', `/api/projects/${encodeURIComponent(plan.projectId)}/ship`, {
       baseVersionId: plan.base.versionId,

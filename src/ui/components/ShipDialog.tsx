@@ -69,6 +69,19 @@ function DiffView({ file }: { file: ShipFile | null }) {
   );
 }
 
+function footNote(plan: ShipPrepare | null): string {
+  const format = plan?.format;
+  const hooks = format && format.skipped.length > 0 ? `Repo hooks skipped (${format.skipped.join(', ')}).` : 'Git hooks do not run.';
+  if (!format) return `${hooks} .env files, secrets and node_modules never ship.`;
+  return format.tool ? `Formats with ${format.tool} first. ${hooks}` : `No formatter found, so files ship unformatted. ${hooks}`;
+}
+
+function formatFact(format: NonNullable<ShipResult['format']>): string {
+  if (!format.tool) return 'Not formatted (no biome or prettier config)';
+  const count = format.formatted.length;
+  return count === 0 ? `${format.tool}: no change needed` : `${format.tool} reformatted ${count === 1 ? '1 file' : `${count} files`}`;
+}
+
 function ResultView({ result, onClose }: { result: ShipResult; onClose: () => void }) {
   return (
     <>
@@ -83,6 +96,12 @@ function ResultView({ result, onClose }: { result: ShipResult; onClose: () => vo
           <dd className="mono">{result.sha.slice(0, 12)}</dd>
           <dt>Files</dt>
           <dd>{result.files.length}</dd>
+          {result.format && (
+            <>
+              <dt>Format</dt>
+              <dd data-tip={result.format.note}>{formatFact(result.format)}</dd>
+            </>
+          )}
           {result.pushed && (
             <>
               <dt>Pushed to</dt>
@@ -100,6 +119,11 @@ function ResultView({ result, onClose }: { result: ShipResult; onClose: () => vo
             </>
           )}
         </dl>
+        {result.format && result.format.errors.length > 0 && (
+          <div className="alert warn small" role="alert">
+            {result.format.tool} could not format {result.format.errors.map((item) => item.path).join(', ')}, so {result.format.errors.length === 1 ? 'it ships' : 'they ship'} as the studio wrote {result.format.errors.length === 1 ? 'it' : 'them'}.
+          </div>
+        )}
         {result.prError && (
           <div className="alert warn small" role="alert">
             {result.prError}
@@ -359,7 +383,9 @@ export default function ShipDialog({ projectId, onClose }: Props) {
               )}
             </div>
             <div className="modal-foot">
-              <span className="ship-foot-note">Git hooks do not run. .env files, secrets and node_modules never ship.</span>
+              <span className="ship-foot-note" data-tip={`${plan?.format?.note ?? 'Git hooks do not run.'} .env files, secrets and node_modules never ship.`}>
+                {footNote(plan)}
+              </span>
               <span className="ship-spacer" />
               <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
                 Cancel

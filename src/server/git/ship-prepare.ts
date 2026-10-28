@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { Direction, Project, RunSummary } from '../../shared/contracts.js';
 import { PRIVATE_KEY_PATTERN, refusedPath, renderBranchName, renderShipTemplate, type ShipBaseOption, type ShipFile, type ShipFileStatus, type ShipPrepare, type ShipRecord, type ShipRepoInfo, type ShipSettings, type ShipTemplateVars } from '../../shared/ship.js';
 import { runGit, runGitBuffer, type GitScope } from '../store/versions.js';
+import { detectShipFormat } from './ship-format.js';
 import { readShipState } from './ship-store.js';
 import { findOnPath, userGit } from './user-git.js';
 
@@ -275,6 +276,7 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string): Pro
   const title = span[0]?.title ?? project.name;
   const vars: ShipTemplateVars = { user: settings.user || (await defaultUser(repo.root)), issue: settings.issueId, title, summary, versions: titles, files: files.filter((f) => !f.refused).map((f) => f.path) };
   const commitMessage = titles.length > 1 ? `${title}\n\n${titles.map((t) => `- ${t}`).join('\n')}` : title;
+  const { binary: _binary, ...format } = await detectShipFormat(repo.root, repo.prefix);
   return {
     projectId: project.id,
     repo,
@@ -289,6 +291,7 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string): Pro
     defaults: { branch: renderBranchName(settings.branchTemplate, vars), title, commitMessage, body: renderShipTemplate(settings.bodyTemplate, vars) },
     vars,
     history,
+    format,
   };
 }
 

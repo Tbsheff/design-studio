@@ -1,3 +1,4 @@
+import type { StyleReplaceRequest, StyleReplaceResult } from '../shared/style-search';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachAppRequest, AttachedApp, CanvasPresence, PermissionDecision, QueuedMessage } from '../shared/contracts';
 import {
   STUDIO_TOKEN_HEADER,
@@ -282,4 +283,8 @@ export function errorText(err: unknown): string {
 export function eventsUrl(pid: string, after: number): string {
   const token = encodeURIComponent(getSession().token);
   return `${p(pid)}/events?token=${token}&after=${after}`;
+}
+
+export function replaceStyle(pid: string, did: string, req: StyleReplaceRequest): Promise<StyleReplaceResult> {
+  return timedEdit(pid, did, 'replace-style', req.matches.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, { replaceStyle: req }, pickMessage)).json()) as StyleReplaceResult);
 }

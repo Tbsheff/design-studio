@@ -5,6 +5,7 @@ import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
 import { LOFI_STYLE_ID } from '../shared/lofi.js';
 import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
+import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
@@ -993,6 +994,7 @@ function startBridge(session: BridgeSession): void {
         postSelect(element, false);
       }
     },
+    'find-styles': (message) => findStyles(message, { selectorOf: selectorFor, select: postSelect, reply: (requestId, result, selected) => post({ type: 'styles-found', requestId, result, selected }) }),
     'select-source': (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);
@@ -1082,6 +1084,7 @@ const marker = '__studioBridgeStarted';
 const globalScope = window as unknown as Record<string, unknown>;
 if (!globalScope[marker]) {
   globalScope[marker] = true;
+  exposeHeadlessScan(selectorFor);
   markScopedElement();
   const session = readSession();
   if (session) startBridge(session);

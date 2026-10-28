@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { Suspense, lazy, useCallback, useMemo, useState, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import type { DirectStyleProperty, SelectionContext } from '../../shared/contracts';
 import { colorHex, cssVarFor, varName } from '../../shared/token-match';
 import type { AuthoredCss } from '../authoredCss';
+import type { PreviewPort } from '../bridge';
 import { lintValues, type LintIssue } from '../tokenLint';
 import { api } from '../api';
 import type { StyleValues } from '../cssValues';
@@ -231,5 +232,17 @@ export function FontField({ ui, edit }: { ui: TokenUi | null; edit: DirectEdit }
       />
       <TokenControl prop={prop} label="Font family" edit={edit} />
     </div>
+  );
+}
+
+const InspectorMatch = lazy(() => import('./InspectorMatch'));
+
+export function MatchSection(props: { projectId: string; directionId: string | null; selection: SelectionContext[]; port: MutableRefObject<PreviewPort | null>; tokens: DesignTokens | null; edit: DirectEdit }) {
+  const { directionId, edit } = props;
+  if (!directionId || props.selection.length === 0) return null;
+  return (
+    <Suspense fallback={null}>
+      <InspectorMatch projectId={props.projectId} directionId={directionId} selection={props.selection} port={props.port} tokens={props.tokens} drain={edit.drain} />
+    </Suspense>
   );
 }

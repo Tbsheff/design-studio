@@ -11,6 +11,9 @@ export interface Candidate {
   source: SourceKind;
   confidence: CandidateConfidence;
   evidence: string;
+  canonical?: boolean;
+  verified?: boolean;
+  sourceVar?: string;
 }
 
 export interface ExtraToken {
@@ -20,6 +23,7 @@ export interface ExtraToken {
   value: string;
   dark?: string;
   evidence: string;
+  sourceVar?: string;
 }
 
 export interface Harvest {

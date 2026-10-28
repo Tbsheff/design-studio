@@ -1109,6 +1109,7 @@ export interface CoverageEntry {
   source: DraftSourceKind | 'derived' | 'base' | 'agent' | 'library';
   confidence: CoverageConfidence;
   evidence: string;
+  verified?: boolean;
 }
 
 export type CoverageGrade = 'excellent' | 'usable' | 'needs-review' | 'rebuild';

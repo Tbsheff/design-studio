@@ -4,6 +4,8 @@ import { requiredPaths } from './names.js';
 import type { Candidate, Coverage, CoverageEntry, CoverageGrade, ExtraToken, Harvest, SourceKind, SourceReport } from './types.js';
 import { contrast, googleFontsUrlFor, lightnessOf, primaryFamily, readableOn, shiftLightness } from './values.js';
 
+export const APP_VAR_EXTENSION = 'studio.appVar';
+
 export const SOURCE_ORDER: SourceKind[] = ['tokens-file', 'folder', 'url', 'design-md', 'brief'];
 
 const GROUP_WEIGHTS: Record<string, number> = { color: 0.5, font: 0.2, radius: 0.1, shadow: 0.08, text: 0.06, space: 0.06 };
@@ -16,7 +18,11 @@ export interface Pick {
   value: string;
   dark?: string;
   entry: CoverageEntry;
+  sourceVar?: string;
 }
+
+const KEY_TOKENS = ['color.bg', 'color.fg', 'color.primary', 'font.body'];
+const NAMED_SOURCES = new Set<CoverageEntry['source']>(['folder', 'tokens-file']);
 
 export interface MappedDraft {
   tokens: Record<string, unknown>;
@@ -38,7 +44,7 @@ function choose(candidates: Candidate[], token: string, mode: 'light' | 'dark'):
   const usable = candidates
     .map((candidate, order) => ({ candidate, order }))
     .filter(({ candidate }) => candidate.token === token && (mode === 'dark' ? (candidate.dark ?? candidate.value) : candidate.value) !== undefined);
-  usable.sort((a, b) => rank(a.candidate) - rank(b.candidate) || a.order - b.order);
+  usable.sort((a, b) => rank(a.candidate) - rank(b.candidate) || Number(b.candidate.canonical === true) - Number(a.candidate.canonical === true) || a.order - b.order);
   return usable[0]?.candidate ?? null;
 }
 
@@ -84,7 +90,9 @@ function darkFor(base: LoadedPack, candidate: Candidate, value: string): string 
 function extracted(base: LoadedPack, candidate: Candidate, mode: 'light' | 'dark'): Pick {
   const value = mode === 'dark' ? (candidate.dark ?? candidate.value)! : candidate.value!;
   const dark = mode === 'light' ? darkFor(base, candidate, value) : undefined;
-  return { value, ...(dark ? { dark } : {}), entry: { token: candidate.token, source: candidate.source, confidence: candidate.confidence, evidence: candidate.evidence } };
+  const verified = candidate.canonical === true || candidate.verified === true;
+  const entry: CoverageEntry = { token: candidate.token, source: candidate.source, confidence: candidate.confidence, evidence: candidate.evidence, ...(verified ? { verified } : {}) };
+  return { value, ...(dark ? { dark } : {}), entry, ...(candidate.sourceVar ? { sourceVar: candidate.sourceVar } : {}) };
 }
 
 type Picks = Map<string, Pick>;
@@ -145,7 +153,22 @@ function guardContrast(picks: Picks): void {
   fix('color.accent', 'color.accent-fg', 4.5, 0);
 }
 
+function checkable(entries: CoverageEntry[]): boolean {
+  return entries.some((entry) => NAMED_SOURCES.has(entry.source));
+}
+
+function entryValue(entry: CoverageEntry, strict: boolean): number {
+  const value = entry.source === 'derived' ? CONFIDENCE_SCORE.derived : CONFIDENCE_SCORE[entry.confidence];
+  return strict && KEY_TOKENS.includes(entry.token) && entry.verified !== true ? Math.min(value, CONFIDENCE_SCORE.derived) : value;
+}
+
+export function unverifiedKeys(entries: CoverageEntry[]): string[] {
+  if (!checkable(entries)) return [];
+  return KEY_TOKENS.filter((token) => entries.find((entry) => entry.token === token)?.verified !== true);
+}
+
 export function scoreOf(entries: CoverageEntry[]): number {
+  const strict = checkable(entries);
   let total = 0;
   for (const [group, weight] of Object.entries(GROUP_WEIGHTS)) {
     const inGroup = entries.filter((entry) => entry.token.startsWith(`${group}.`));
@@ -153,8 +176,7 @@ export function scoreOf(entries: CoverageEntry[]): number {
     let weights = 0;
     for (const entry of inGroup) {
       const tokenWeight = TOKEN_WEIGHTS[entry.token] ?? 1;
-      const value = entry.source === 'derived' ? CONFIDENCE_SCORE.derived : CONFIDENCE_SCORE[entry.confidence];
-      sum += tokenWeight * value;
+      sum += tokenWeight * entryValue(entry, strict);
       weights += tokenWeight;
     }
     total += weights === 0 ? 0 : (weight * sum) / weights;
@@ -162,8 +184,8 @@ export function scoreOf(entries: CoverageEntry[]): number {
   return Math.round(total * 100);
 }
 
-export function gradeOf(score: number): CoverageGrade {
-  if (score >= 80) return 'excellent';
+export function gradeOf(score: number, entries: CoverageEntry[] = []): CoverageGrade {
+  if (score >= 80 && unverifiedKeys(entries).length === 0) return 'excellent';
   if (score >= 60) return 'usable';
   if (score >= 40) return 'needs-review';
   return 'rebuild';
@@ -176,6 +198,8 @@ function writeToken(tokens: Record<string, unknown>, token: string, pick: Pick):
   const extensions = { ...(node.$extensions ?? {}) };
   if (pick.dark) extensions['studio.modes'] = { dark: pick.dark };
   else delete extensions['studio.modes'];
+  if (pick.sourceVar) extensions[APP_VAR_EXTENSION] = { cssVar: pick.sourceVar };
+  else delete extensions[APP_VAR_EXTENSION];
   if (Object.keys(extensions).length > 0) node.$extensions = extensions;
   else delete node.$extensions;
 }
@@ -288,7 +312,7 @@ export function mapDraft(base: LoadedPack, harvests: Harvest[], mode: 'light' | 
     coverage: {
       version: 1,
       score,
-      grade: gradeOf(score),
+      grade: gradeOf(score, entries),
       basePackId: base.manifest.id,
       mode,
       tokens: entries,

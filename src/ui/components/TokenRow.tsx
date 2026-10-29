@@ -80,11 +80,11 @@ export const TokenRow = memo(function TokenRow(props: RowProps) {
   const dark = color && props.showDark;
   return (
     <li className={`tkp-row ${changed ? 'changed' : ''} ${dark ? 'has-dark' : ''}`} data-token={entry.cssVar}>
-      <div className="tkp-row-head" data-tip={tokenTitle(entry)} data-tip-align="start">
+      <div className="tkp-row-head">
         <span className={`tkp-mark ${changed ? 'on' : ''}`} aria-label={changed ? 'Changed, not committed' : undefined} role={changed ? 'img' : undefined} />
-        <code className="tkp-name truncate">
-          {entry.cssVar}
-        </code>
+        <span className="tkp-name-tip" data-tip={tokenTitle(entry)} data-tip-side="top" data-tip-align="start">
+          <code className="tkp-name truncate">{entry.cssVar}</code>
+        </span>
         <AliasChip value={shown.value} swatch={color ? props.swatchFor(shown.value, false) : null} />
         {changed && (
           <button type="button" className="icon-btn small tkp-revert" aria-label={`Revert ${entry.cssVar}`} data-tip={`Revert to ${props.base.value}`} data-tip-align="end" onClick={() => props.onRevert(entry.path)}>

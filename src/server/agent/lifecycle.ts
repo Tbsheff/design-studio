@@ -12,6 +12,7 @@ import { BadRequestError } from '../store/errors.js';
 import { scopeProblem } from '../variations/scope-check.js';
 import { createTodoTracker, evidenceOf, type TodoEvidence } from './todo-tracker.js';
 import { EDIT_TOOL_NAMES } from './permissions.js';
+import { isLeanRun } from './lean-run.js';
 import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
 
 export interface DriverSink {
@@ -178,6 +179,14 @@ export function toolDiff(before: Before): ToolDiff | null {
   return fileDiff(before.relative, before.content, readFileText(before.absolute));
 }
 
+async function priorSessionFor(lean: boolean, runsDir: string, direction: Direction): Promise<PriorSession | null> {
+  return lean ? null : loadPriorSession(runsDir, direction);
+}
+
+function leanDriverContext(ctx: AgentRunContext): AgentRunContext {
+  return { ...ctx, designMd: null, direction: { ...ctx.direction, sessionId: null } };
+}
+
 function sessionNoteOf(direction: Direction): { sessionNote?: string } {
   if (direction.sessionId || !direction.sessionResetReason) return {};
   return { sessionNote: `New agent session after ${direction.sessionResetReason}` };
@@ -227,6 +236,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     let canceled = false;
     let driverSettled = false;
     const runsDir = path.join(deps.projects.projectDir(projectId), 'runs');
+    const lean = isLeanRun(ctx.request);
+    const driverCtx = lean ? leanDriverContext(ctx) : ctx;
     const eventsPath = path.join(runsDir, `${runId}.jsonl`);
     const summaryPath = path.join(runsDir, `${runId}.json`);
     const telemetryPath = path.join(deps.projects.projectDir(projectId), 'telemetry.jsonl');
@@ -350,7 +361,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     const befores = new Map<string, Before>();
     let toolMs = 0;
     let lastText = '';
-    let sessionId: string | null = ctx.direction.sessionId;
+    let sessionId: string | null = lean ? null : ctx.direction.sessionId;
     let direction: Direction = ctx.direction;
     const bashEdits = createBashEditTracker({
       workTree: ctx.direction.workTree,
@@ -468,7 +479,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       async sessionStarted(id) {
         sessionId = id;
         summary.sessionId = id;
-        if (direction.sessionId === id) return;
+        if (lean || direction.sessionId === id) return;
         direction = await deps.projects.updateDirection(projectId, directionId, { sessionId: id, sessionResetReason: null });
         emitBody({ type: 'direction.updated', direction });
       },
@@ -573,6 +584,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       if (!totals || sessionId === null) return;
       await mkdir(sessionsDirOf(runsDir), { recursive: true });
       await writeFile(sessionLedgerPath(runsDir, sessionId), `${JSON.stringify({ sessionId, ...totals, updatedAt: Date.now() })}\n`);
+      if (lean) return;
       direction = await deps.projects.updateDirection(projectId, directionId, { sessionCostUsd: totals.costUsd });
       emitBody({ type: 'direction.updated', direction });
     }
@@ -581,8 +593,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let outcome: DriverOutcome | null = null;
       let failure: string | null = null;
       try {
-        const prior = await loadPriorSession(runsDir, ctx.direction);
-        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules, baseFile });
+        const prior = await priorSessionFor(lean, runsDir, ctx.direction);
+        outcome = await driver({ ctx: driverCtx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules, baseFile });
       } catch (error) {
         failure = describeError(error);
       }

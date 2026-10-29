@@ -35,6 +35,7 @@ export interface ShareStore {
   add(id: string, input: NewShare): Promise<{ record: ShareRecord; token: string }>;
   list(projectId?: string): Promise<ShareRecord[]>;
   byToken(token: string): Promise<ShareRecord | null>;
+  endedByToken(token: string): Promise<'revoked' | 'expired' | null>;
   revoke(id: string): Promise<ShareRecord | null>;
   addComment(id: string, commentId: string): Promise<void>;
   activeCount(): Promise<number>;
@@ -117,6 +118,13 @@ export function createShareStore(dataDir: string): ShareStore {
       const hash = hashToken(token);
       const found = (await read()).find((r) => r.tokenHash === hash);
       return found && isLive(found) ? found : null;
+    },
+    async endedByToken(token) {
+      if (!TOKEN_RE.test(token)) return null;
+      const hash = hashToken(token);
+      const found = (await read()).find((r) => r.tokenHash === hash);
+      if (!found || isLive(found)) return null;
+      return found.revokedAt !== null ? 'revoked' : 'expired';
     },
     revoke(id) {
       return mutate((records) => {

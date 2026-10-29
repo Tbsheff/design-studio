@@ -15,6 +15,7 @@ import { cutLine, mobileCuts, type CutElement } from './mobile-cut.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
 import type { ImagePart } from './user-message.js';
 import type { FinalCheckWithReference, ReferenceRecord } from '../../shared/reference.js';
+import { baselineFindingsFile, checkItems, levelCounts, splitByBaseline, type BaselineFindings, type FinalCheckWithBaseline } from '../../shared/final-check-baseline.js';
 
 const CHECK_TOOL = 'mcp__studio__render_check';
 
@@ -48,17 +49,42 @@ function wantsFinalCheck(input: Pick<FinalCheckInput, 'ctx' | 'run' | 'toolOrder
   return input.toolOrder.some((name) => EDIT_TOOLS.has(name));
 }
 
-export async function runFinalCheck(input: FinalCheckInput): Promise<FinalCheck | null> {
-  if (!wantsFinalCheck(input)) return null;
-  if (verifiedAfterLastEdit(input.toolOrder)) return summarizeCheck(input.run.lastChecks, 'agent');
+async function readBaselineFindings(runsDir: string, runId: string): Promise<BaselineFindings | null> {
+  const text = await readFile(path.join(runsDir, baselineFindingsFile(runId)), 'utf8').catch(() => null);
+  if (text === null) return null;
+  try {
+    const parsed = JSON.parse(text) as Partial<BaselineFindings>;
+    return Array.isArray(parsed.items) ? (parsed as BaselineFindings) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function judgeChange(results: RenderCheckResult[], ranBy: FinalCheck['ranBy'], baseline: BaselineFindings | null): FinalCheckWithBaseline {
+  if (!baseline) return summarizeCheck(results, ranBy);
+  const { fresh, old } = splitByBaseline(checkItems(results), baseline.items);
+  const now = levelCounts(fresh);
+  const was = levelCounts(old);
+  return { ranBy, errors: now.error, high: now.high, medium: now.medium, low: now.low, baseline: { errors: was.error, high: was.high, medium: was.medium, low: was.low, keys: old.map((item) => `${item.level}|${item.key}`) } };
+}
+
+async function finalResults(input: FinalCheckInput): Promise<{ results: RenderCheckResult[]; ranBy: FinalCheck['ranBy'] } | null> {
+  if (verifiedAfterLastEdit(input.toolOrder)) return { results: input.run.lastChecks, ranBy: 'agent' };
   try {
     const report = await buildCheckReport(input.preview, input.ctx, input.run.config, input.run);
     await saveCheck(input.runsDir, input.runId, 'final', report.results);
-    return summarizeCheck(report.results, 'studio');
+    return { results: report.results, ranBy: 'studio' };
   } catch (error) {
     console.warn(`[agent] studio final check failed: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
+}
+
+export async function runFinalCheck(input: FinalCheckInput): Promise<FinalCheckWithBaseline | null> {
+  if (!wantsFinalCheck(input)) return null;
+  const checked = await finalResults(input);
+  if (!checked) return null;
+  return judgeChange(checked.results, checked.ranBy, await readBaselineFindings(input.runsDir, input.runId));
 }
 
 export interface ReviewNote {

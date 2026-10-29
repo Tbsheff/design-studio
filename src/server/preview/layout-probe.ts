@@ -1,4 +1,5 @@
 import type { LayoutFinding } from '../../shared/contracts.js';
+import { devChromeExpression } from '../../shared/app.js';
 
 const MAX_LAYOUT_FINDINGS = 10;
 
@@ -7,7 +8,7 @@ export interface LayoutProbeResult {
   total: number;
 }
 
-const LAYOUT_PROBE_SOURCE = String.raw`(cap) => {
+const LAYOUT_PROBE_SOURCE = String.raw`(cap, isDevChrome) => {
   const vw = window.innerWidth;
   const found = [];
   const reported = new Set();
@@ -105,7 +106,7 @@ const LAYOUT_PROBE_SOURCE = String.raw`(cap) => {
     if (SKIP.has(el.tagName) || (el.closest('svg') && el.tagName.toLowerCase() !== 'svg')) continue;
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
-    if (!isShown(el, rect, style)) continue;
+    if (!isShown(el, rect, style) || isDevChrome(el)) continue;
     checkClip(el, rect, style);
     checkViewport(el, rect, style);
   }
@@ -115,5 +116,5 @@ const LAYOUT_PROBE_SOURCE = String.raw`(cap) => {
 }`;
 
 export function layoutProbeExpression(cap = MAX_LAYOUT_FINDINGS): string {
-  return `(${LAYOUT_PROBE_SOURCE})(${Number(cap)})`;
+  return `(${LAYOUT_PROBE_SOURCE})(${Number(cap)}, ${devChromeExpression()})`;
 }

@@ -1,4 +1,4 @@
-import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from '../../shared/app.js';
+import { APP_SOURCE_PATH, devChromeExpression } from '../../shared/app.js';
 import type { RenderPage } from './render-backend.js';
 
 const MAX_ANCESTORS = 40;
@@ -7,6 +7,9 @@ export function outsideAppExpression(selectors: readonly string[]): string {
   return `(async (selectors) => {
     const fiberOf = (node) => { const key = Object.keys(node).find((k) => k.startsWith('__reactFiber$')); return key ? node[key] : null; };
     const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
+    const isDevChrome = ${devChromeExpression()};
+    const pinnedOf = (el) => { for (let node = el; node && node !== document.body && node !== document.documentElement; node = node.parentElement) { const p = getComputedStyle(node).position; if (p === 'fixed' || p === 'sticky') return node; } return null; };
+    const pinned = [];
     const chains = selectors.map((selector) => {
       let el = null;
       const parts = selector.split(' > ');
@@ -14,8 +17,11 @@ export function outsideAppExpression(selectors: readonly string[]): string {
         try { el = document.querySelector(parts.slice(0, n).join(' > ')); } catch { el = null; }
       }
       if (!el) return null;
-      if (el.closest(${JSON.stringify(DEV_CHROME_SELECTOR)})) return 'chrome';
-      const stacks = [];
+      if (isDevChrome(el)) return 'chrome';
+      const pin = pinnedOf(el);
+      const own = pin ? stackOf(fiberOf(pin)) : '';
+      if (own) pinned.push(own);
+      const stacks = Object.assign([], { pin: own });
       for (let node = el, n = 0; node && node !== document.body && node !== document.documentElement && n < ${MAX_ANCESTORS}; node = node.parentElement, n += 1) {
         const fiber = fiberOf(node);
         if (!fiber) continue;
@@ -23,7 +29,8 @@ export function outsideAppExpression(selectors: readonly string[]): string {
       }
       return stacks;
     });
-    const unique = [...new Set(chains.flatMap((c) => Array.isArray(c) ? c : []))];
+    const control = [...document.querySelectorAll('main *, body > div *')].slice(0, 400).filter((node) => !pinnedOf(node)).map((node) => stackOf(fiberOf(node))).filter(Boolean).slice(0, 8);
+    const unique = [...new Set([...chains.flatMap((c) => Array.isArray(c) ? c : []), ...pinned, ...control])];
     const found = new Map();
     for (let i = 0; i < unique.length; i += 20) {
       const part = unique.slice(i, i + 20);
@@ -35,7 +42,7 @@ export function outsideAppExpression(selectors: readonly string[]): string {
       } catch { return selectors.map(() => false); }
     }
     if (![...found.values()].some(Boolean)) return chains.map((chain) => chain === 'chrome');
-    return chains.map((chain) => chain === 'chrome' || (Array.isArray(chain) && !chain.some((stack) => found.get(stack))));
+    return chains.map((chain) => chain === 'chrome' || (Array.isArray(chain) && ((chain.pin && found.get(chain.pin) === false) || !chain.some((stack) => found.get(stack)))));
   })(${JSON.stringify(selectors)})`;
 }
 

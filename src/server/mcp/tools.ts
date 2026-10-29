@@ -61,11 +61,11 @@ export const TOOLS: ToolDef[] = [
   def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
   def('get_tokens', 'Get design tokens', 'Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('get_design_md', 'Get DESIGN.md', 'Get the DESIGN.md rules of the project.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the size and the direction), or of one element on it (element: layer id or CSS selector).', {
+  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector).', {
     projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE,
-    frameId: { type: 'string', description: 'Canvas frame id or @label from canvas_list. Leave out to use path, width and height.' },
-    width: { type: 'integer', minimum: 320, maximum: 2560, description: 'Viewport width in px. Default 1440.' },
-    height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900.' },
+    frameId: { type: 'string', description: 'Canvas frame id or @label from canvas_list. It sets the page, the direction, the frame state (signed in, empty …) and the size; width or height given with it render that frame at the other size, for example width 390 for a mobile shot. Leave out to use path, width and height.' },
+    width: { type: 'integer', minimum: 320, maximum: 2560, description: 'Viewport width in px. Default 1440, or the frame width with frameId.' },
+    height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900, or the frame height with frameId.' },
     fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
     element: { type: 'string', maxLength: 300, description: 'Layer id from get_layers (such as "e0k3pz") or a CSS selector: crop the shot to this element plus padding.' },
     padding: { type: 'integer', minimum: 0, maximum: 200, description: 'Space around the element crop in px. Default 16.' },
@@ -310,7 +310,7 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const args = picked.args;
   const src = await source(deps, args);
   const page = pagePath(args) ?? picked.path;
-  const frame: ExportFrame = { name: 'Screenshot', width: picked.width ?? int(args, 'width', 320, 2560, 1440), height: picked.height ?? int(args, 'height', 320, 2000, 900), ...(page ? { path: page } : {}) };
+  const frame: ExportFrame = { name: 'Screenshot', width: args.width !== undefined ? int(args, 'width', 320, 2560, 1440) : (picked.width ?? 1440), height: args.height !== undefined ? int(args, 'height', 320, 2000, 900) : (picked.height ?? 900), ...(page ? { path: page } : {}) };
   const element = str(args, 'element');
   await warmAppPage(deps, src.project, page);
   const opened = await src.open();
@@ -320,7 +320,8 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
     const shot = await captureFrame(deps.preview, url, frame, 1, args.fullPage === true ? 'page' : 'frame', selector, MAX_SHOT_HEIGHT, int(args, 'padding', 0, 200, 16));
     const note = shot.cropped ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.` : '';
     const what = element ? `element ${element} (${shot.cssWidth} × ${shot.cssHeight} CSS px with padding) on a ${frame.width} px wide page` : `${shot.width} × ${shot.height} px`;
-    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${what} of ${versionLabel(src)}.${note}` }] };
+    const sized = picked.width !== undefined && (frame.width !== picked.width || frame.height !== picked.height) ? ` Frame ${str(args, 'frameId')} (page, direction and state) at ${frame.width} × ${frame.height} instead of its ${picked.width} × ${picked.height}.` : '';
+    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${what} of ${versionLabel(src)}.${sized}${note}` }] };
   } finally {
     await opened.release().catch(() => undefined);
   }

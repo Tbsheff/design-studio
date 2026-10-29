@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { parse, type DefaultTreeAdapterMap } from 'parse5';
 import { z } from 'zod';
 import type { Direction, VersionMeta } from '../../shared/contracts.js';
 import type { InsertTarget } from '../../shared/insert.js';
@@ -14,6 +15,8 @@ import { planBoolean } from './vector-boolean.js';
 import { boxOfPoints, pathRings, round, translatePath } from './vector-geometry.js';
 import { elementText, jsxAttrName, svgText } from './vector-snippet.js';
 import { isHtmlFile, vectorDoc, type VNode } from './vector-source.js';
+
+type Element = DefaultTreeAdapterMap['element'];
 
 export interface VectorPlan {
   target: ResolvedSource;
@@ -31,7 +34,7 @@ const size = z.number().finite().min(0).max(100000);
 const box = z.object({ x: coord, y: coord, width: size, height: size }).strict();
 const color = z.string().trim().max(100).regex(VECTOR_COLOR, 'must be a color such as #1e1e1e, rgb(…), a CSS color name, none or var(--token)');
 const paint = { fill: color.nullable().optional(), stroke: color.nullable().optional(), strokeWidth: z.number().finite().min(0).max(1000).nullable().optional() };
-const place = { target, relativeParent: z.boolean().optional() };
+const place = { target, relativeParent: z.boolean().optional(), page: z.string().trim().max(300).optional() };
 
 const schema = z.discriminatedUnion('op', [
   z.object({ op: z.literal('shape'), shape: z.enum(VECTOR_SHAPES), box, ...place, ...paint }).strict(),
@@ -88,14 +91,33 @@ function relativeTo(plan: { target: ResolvedSource; code: string }, request: { t
   return patched.code;
 }
 
-async function planPlaced(scope: InsertScope, request: Extract<VectorRequest, { op: 'shape' | 'path' }>): Promise<VectorPlan> {
+function pageFile(scope: InsertScope, page: string | undefined): string {
+  const clean = (page ?? '').split(/[?#]/)[0]?.replace(/^\/+/, '') ?? '';
+  if (clean === '') return scope.project.entry ?? 'index.html';
+  if (clean.endsWith('/')) return `${clean}index.html`;
+  return /\.[a-z0-9]+$/i.test(clean) ? clean : `${clean}.html`;
+}
+
+async function bodyTarget(scope: InsertScope, request: Extract<VectorRequest, { op: 'shape' | 'path' }>): Promise<Extract<VectorRequest, { op: 'shape' | 'path' }>> {
+  if (request.target.source || request.target.tag !== 'body' || scope.project.kind === 'react') return request;
+  const resolved = await resolveSource(scope.workTree, pageFile(scope, request.page));
+  const doc = parse(await readFile(resolved.file, 'utf8'), { sourceCodeLocationInfo: true });
+  const html = doc.childNodes.find((node): node is Element => 'tagName' in node && node.tagName === 'html');
+  const body = html?.childNodes.find((node): node is Element => 'tagName' in node && node.tagName === 'body');
+  const start = body?.sourceCodeLocation?.startTag;
+  if (!start) throw new DirectEditError('invalid_request', `${resolved.relative} has no <body> tag to draw into`);
+  return { ...request, target: { ...request.target, source: { file: resolved.relative, line: start.startLine, col: start.startCol } } };
+}
+
+async function planPlaced(scope: InsertScope, raw: Extract<VectorRequest, { op: 'shape' | 'path' }>): Promise<VectorPlan> {
+  const request = await bodyTarget(scope, raw);
   const file = request.target.source?.file ?? '';
   const html = isHtmlFile(file);
   const jsx = request.op === 'shape' ? shapeSnippet(request, html) : pathSnippet(request, html);
   const plan = await planInsertJsx(scope, { target: request.target, position: 'inside', jsx });
   const code = relativeTo(plan, request);
   const what = request.op === 'shape' ? (request.shape === 'rect' ? 'rectangle' : 'ellipse') : 'vector path';
-  return { target: plan.target, original: plan.original, code, select: plan.select, title: `Draw ${what} in ${plan.select[0] ? `<${request.target.tag ?? 'element'}>` : plan.target.relative}` };
+  return { target: plan.target, original: plan.original, code, select: plan.select, title: `Draw ${what} in ${request.target.tag ? `<${request.target.tag}>` : plan.target.relative}` };
 }
 
 async function sourceOf(scope: InsertScope, item: InsertTarget): Promise<{ resolved: ResolvedSource; code: string; at: { line: number; col: number } }> {

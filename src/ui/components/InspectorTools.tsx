@@ -7,6 +7,7 @@ import { TRY_VARIANTS_COMMAND } from '../../shared/element-variants';
 import type { DirectEditControl } from '../useDirectEdit';
 import { PREVIEW_HISTORY_EVENT } from '../useUndoShortcut';
 import { Icon } from './Icon';
+import { VECTOR_TOOLS, useVectorTool, vectorTool } from '../vectorTool';
 
 interface Props {
   projectId: string;
@@ -32,16 +33,12 @@ const GLYPHS = {
   directSelect: 'M4 2.5l7.5 4-3.25 1L6.5 11zM9.75 9.75l3 3',
   text: 'M3.5 3.5h9M8 3.5v9M6.25 12.5h3.5',
   frame: 'M5 2v12M11 2v12M2 5h12M2 11h12',
-  rect: 'M2.75 3.75h10.5v8.5H2.75z',
-  ellipse: 'M8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z',
   redo: 'M10.5 4l3 3-3 3M13.25 7H6a3.25 3.25 0 0 0 0 6.5h2.5',
 };
 
 const INSERTS: { kind: InsertKind; label: string; glyph: string }[] = [
   { kind: 'text', label: 'Text', glyph: GLYPHS.text },
   { kind: 'frame', label: 'Frame', glyph: GLYPHS.frame },
-  { kind: 'rect', label: 'Rectangle', glyph: GLYPHS.rect },
-  { kind: 'ellipse', label: 'Ellipse', glyph: GLYPHS.ellipse },
 ];
 
 function isHtmlFile(file: string | undefined): boolean {
@@ -74,6 +71,19 @@ function VariantsButton() {
     >
       <Icon name="compare" size={14} />
     </button>
+  );
+}
+
+function VectorButtons() {
+  const { tool, available } = useVectorTool();
+  return (
+    <>
+      {VECTOR_TOOLS.map((item) => (
+        <ToolButton key={item.id} label={item.label} pressed={tool === item.id} disabled={!available} tip={available ? `${item.label} ${item.keyLabel}: draw on the canvas` : `${item.label}: open the live preview to draw`} onClick={() => vectorTool.toggle(item.id)}>
+          <Glyph d={item.glyph} />
+        </ToolButton>
+      ))}
+    </>
   );
 }
 
@@ -122,6 +132,7 @@ export function InspectorTools(props: Props) {
             <Glyph d={item.glyph} />
           </ToolButton>
         ))}
+        <VectorButtons />
         <span className="ins-tools-sep" aria-hidden="true" />
         <VariantsButton />
         <span className="ins-tools-end" />

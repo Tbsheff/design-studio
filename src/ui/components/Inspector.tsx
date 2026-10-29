@@ -16,10 +16,12 @@ import { InspectorTools } from './InspectorTools';
 import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import { resetEditVariant, useEditVariant } from '../editVariant';
 import { imageKindOf } from '../../shared/image';
+import { isSvgShapeTag } from '../../shared/vector';
 import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
 const InspectorImage = lazy(() => import('./InspectorImage'));
+const InspectorVector = lazy(() => import('./InspectorVector'));
 
 export type InspectorTab = 'simple' | 'pro' | 'components' | 'code' | 'tweaks';
 
@@ -240,6 +242,10 @@ function SimpleTab(props: InspectorProps) {
   );
 }
 
+function vectorShown(selection: SelectionContext[]): boolean {
+  return selection.length > 0 && selection.length <= 2 && selection.every((item) => isSvgShapeTag(item.tag));
+}
+
 function ProTab(props: InspectorProps) {
   return (
     <div className="edit-pro">
@@ -305,6 +311,11 @@ export function Inspector(props: InspectorProps) {
         <Tabs tab={tab} onTab={onTab} />
         {(tab === 'simple' || tab === 'pro') && <InspectorTools {...props} />}
         <InspectorArrange {...props} showBar={tab === 'simple'} />
+        {tab === 'simple' && vectorShown(props.selection) && (
+          <Suspense fallback={null}>
+            <InspectorVector projectId={props.projectId} directionId={props.directionId} selection={props.selection} editable={props.editable} />
+          </Suspense>
+        )}
         <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
           {tab === 'simple' && <SimpleTab {...props} />}
           {tab === 'pro' && <ProTab {...props} />}

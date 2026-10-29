@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
@@ -28,6 +28,7 @@ import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
 import { FrameSnapLayer, MarqueeLayer } from './CanvasOverlays';
 
 const CanvasRulers = lazy(() => import('./CanvasRulers'));
+const VectorLayer = lazy(() => import('./VectorLayer'));
 import { RenderCheckPanel } from './RenderCheckPanel';
 import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
@@ -35,6 +36,7 @@ import type { CommentsControl } from '../useComments';
 import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
 import { DrawBar, DrawSurface } from './DrawLayer';
+import { useVectorTool, useVectorToolGuards, useVectorToolKeys } from '../vectorTool';
 import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
 import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
@@ -435,6 +437,26 @@ function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control
   );
 }
 
+function useCanvasVectorTools(editsEnabled: boolean, protoOn: boolean, draw: DrawTool, comment: { on: boolean; setOn: (on: boolean) => void }) {
+  const { tool } = useVectorTool();
+  useVectorToolKeys(editsEnabled && !protoOn);
+  useVectorToolGuards(tool, draw.on || comment.on, () => {
+    draw.setOn(false);
+    comment.setOn(false);
+  });
+}
+
+function VectorSlot(p: Omit<ComponentProps<typeof VectorLayer>, 'directionId'> & { directionId: string | null }) {
+  const { available } = useVectorTool();
+  const { directionId } = p;
+  if (!available || !directionId) return null;
+  return (
+    <Suspense fallback={null}>
+      <VectorLayer {...p} directionId={directionId} />
+    </Suspense>
+  );
+}
+
 function marqueeAllowed(picking: boolean, prototype: boolean, comment: boolean): boolean {
   return picking && !prototype && !comment;
 }
@@ -547,6 +569,7 @@ export function Canvas(props: Props) {
   const editsEnabled = live && !props.running && directionId !== null;
   const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode: picking, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
   useComponentInsert({ projectId, directionId, kind, enabled: editsEnabled, frames, selection: props.selection, notify: layerEdits.notify });
+  useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
   useImageDrop({ projectId, directionId, kind, enabled: editsEnabled, frames, notify: layerEdits.notify });
   const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits, ids: { projectId, directionId, kind } });
   openMenu.current = previewMenu.onContextMenu;
@@ -664,6 +687,7 @@ export function Canvas(props: Props) {
             }
           />
           <MarqueeLayer listen={frames.listen} />
+          <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} step={props.runStep} />

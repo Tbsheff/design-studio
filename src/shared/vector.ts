@@ -29,6 +29,7 @@ export interface VectorPaint {
 interface PlaceFields {
   target: InsertTarget;
   relativeParent?: boolean;
+  page?: string;
 }
 
 export type VectorRequest =

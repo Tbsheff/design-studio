@@ -1,9 +1,10 @@
-import { readdir, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { CanvasFileFrame } from '../../shared/canvas-file.js';
 import type { AppRoute, Project } from '../../shared/contracts.js';
 import { DEFAULT_FRAME_STATE, stateLabel, withFrameStateHost, type FrameStatesView } from '../../shared/frame-state.js';
 import type { ScreenPlan } from '../../shared/run-levels.js';
+import { changedLineRanges } from '../../shared/line-diff.js';
 import { stateOfFrame } from '../app/frame-state.js';
 import { configuredFrameStates, readFrameStates } from '../app/frame-state-service.js';
 import { listAppRoutes } from '../app/routes.js';
@@ -83,6 +84,25 @@ export async function changedSince(workTree: string, dir: string, since: number)
   const changed: string[] = [];
   await walk(workTree, dir.replace(/^\/+|\/+$/g, ''), (file, _size, mtimeMs) => mtimeMs >= since && changed.push(file), { left: WALK_CAP });
   return changed.sort();
+}
+
+export interface ChangedFile {
+  file: string;
+  lines: [number, number][] | null;
+}
+
+export type BaseFile = (relative: string) => Promise<Uint8Array | null>;
+
+async function changedLines(workTree: string, file: string, baseFile: BaseFile): Promise<ChangedFile> {
+  const [before, after] = await Promise.all([baseFile(file).catch(() => null), readFile(path.join(workTree, file), 'utf8').catch(() => null)]);
+  if (before === null || after === null) return { file, lines: null };
+  return { file, lines: changedLineRanges(Buffer.from(before).toString('utf8'), after) };
+}
+
+export async function changedLinesSince(workTree: string, dir: string, since: number, baseFile: BaseFile | undefined): Promise<ChangedFile[]> {
+  const files = await changedSince(workTree, dir, since);
+  if (!baseFile) return files.map((file) => ({ file, lines: null }));
+  return Promise.all(files.map((file) => changedLines(workTree, file, baseFile)));
 }
 
 async function fileStamp(workTree: string): Promise<string> {

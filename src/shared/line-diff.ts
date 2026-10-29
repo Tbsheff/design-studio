@@ -91,9 +91,7 @@ function capLines(hunks: DiffHunk[]): { hunks: DiffHunk[]; truncated: boolean } 
   return { hunks: out, truncated: left < 0 };
 }
 
-export function diffLines(before: string, after: string): LineDiff {
-  const a = splitLines(before);
-  const b = splitLines(after);
+function sameEnds(a: string[], b: string[]): { start: number; endA: number; endB: number } {
   let start = 0;
   while (start < a.length && start < b.length && a[start] === b[start]) start += 1;
   let endA = a.length;
@@ -102,6 +100,35 @@ export function diffLines(before: string, after: string): LineDiff {
     endA -= 1;
     endB -= 1;
   }
+  return { start, endA, endB };
+}
+
+function addRange(ranges: [number, number][], from: number, to: number): void {
+  const last = ranges.at(-1);
+  if (last && last[1] >= from - 1) last[1] = Math.max(last[1], to);
+  else ranges.push([from, to]);
+}
+
+export function changedLineRanges(before: string, after: string): [number, number][] | null {
+  const a = splitLines(before);
+  const b = splitLines(after);
+  const { start, endA, endB } = sameEnds(a, b);
+  const middle = middleOps(a.slice(start, endA), b.slice(start, endB));
+  if (!middle) return null;
+  const ranges: [number, number][] = [];
+  let line = start + 1;
+  for (const op of middle) {
+    if (op.kind === 'add') addRange(ranges, line, line);
+    else if (op.kind === 'del') addRange(ranges, Math.max(1, line - 1), line);
+    if (op.kind !== 'del') line += 1;
+  }
+  return ranges;
+}
+
+export function diffLines(before: string, after: string): LineDiff {
+  const a = splitLines(before);
+  const b = splitLines(after);
+  const { start, endA, endB } = sameEnds(a, b);
   const middle = middleOps(a.slice(start, endA), b.slice(start, endB));
   if (!middle) {
     return { added: endB - start, removed: endA - start, hunks: [], truncated: true };

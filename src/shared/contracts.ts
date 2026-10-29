@@ -500,11 +500,21 @@ export interface LoopSummary {
   steps: LoopStep[];
 }
 
+export interface AppReviewPass {
+  mobileShot: 'agent' | 'studio' | 'failed';
+  review: 'agent' | 'studio';
+  findings: number;
+  oldCode: number;
+  fixLoop: boolean;
+}
+
 export interface AppReviewRecord {
   mobileShot: 'agent' | 'studio' | 'failed';
   review: 'agent' | 'studio';
   findings: number;
   fixLoop: boolean;
+  oldCode?: number;
+  passes?: AppReviewPass[];
 }
 
 export interface FinalCheck {

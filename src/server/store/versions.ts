@@ -834,6 +834,14 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       }
     },
 
+    async fileAt(project: Project, versionId: string, relativePath: string): Promise<Uint8Array | null> {
+      try {
+        return await runGitBuffer(repoScope(project), ['cat-file', 'blob', `${versionId}:${relativePath}`]);
+      } catch {
+        return null;
+      }
+    },
+
     async discard(project: Project, direction: Direction): Promise<WorkTreeStatus> {
       await warm.settled(project, direction);
       return locked(project, direction, async () => {

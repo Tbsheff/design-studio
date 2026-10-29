@@ -9,7 +9,7 @@ import { EDIT_TOOL_NAMES as EDIT_TOOLS, REVIEW_FRAME_TOOL } from './permissions.
 import { defaultShotTarget, isContextFrame } from './run-target.js';
 import { probeLayout } from './layout-region.js';
 import { regionFindings } from './fit-check.js';
-import { changedSince } from './screens.js';
+import { changedLinesSince, type BaseFile, type ChangedFile } from './screens.js';
 import { recordShot } from './polish-loop.js';
 import { cutLine, mobileCuts, type CutElement } from './mobile-cut.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
@@ -102,6 +102,7 @@ export interface StudioReviewInput {
   run: RunToolState;
   runsDir: string;
   runId: string;
+  baseFile?: BaseFile;
 }
 
 export interface StudioReview {
@@ -121,9 +122,26 @@ async function mobileImage(input: StudioReviewInput): Promise<ImagePart | null> 
   return { mime: 'image/png', data: (await readFile(out)).toString('base64'), name: 'studio-mobile.png' };
 }
 
-function inChanged(source: string | null, changed: readonly string[]): boolean {
-  const file = source?.replace(/:\d+(:\d+)?$/, '');
-  return Boolean(file) && changed.some((entry) => entry === file || entry.endsWith(`/${file}`) || (file as string).endsWith(`/${entry}`));
+const NEAR_LINES = 3;
+
+function changedEntry(source: string | null, changed: readonly ChangedFile[]): { entry: ChangedFile; line: number | null } | null {
+  const match = source?.match(/^(.*?)(?::(\d+))?(?::\d+)?$/);
+  const file = match?.[1];
+  if (!file) return null;
+  const entry = changed.find((item) => item.file === file || item.file.endsWith(`/${file}`) || file.endsWith(`/${item.file}`));
+  return entry ? { entry, line: match?.[2] ? Number(match[2]) : null } : null;
+}
+
+function inChangedFile(source: string | null, changed: readonly ChangedFile[]): boolean {
+  return changedEntry(source, changed) !== null;
+}
+
+function inChanged(source: string | null, changed: readonly ChangedFile[]): boolean {
+  const hit = changedEntry(source, changed);
+  if (!hit) return false;
+  const { entry, line } = hit;
+  if (entry.lines === null || line === null) return true;
+  return entry.lines.some(([from, to]) => line >= from - NEAR_LINES && line <= to);
 }
 
 async function reviewAt(input: StudioReviewInput, viewport: 'mobile' | null): Promise<ReviewItem[]> {
@@ -134,9 +152,9 @@ async function reviewAt(input: StudioReviewInput, viewport: 'mobile' | null): Pr
   return viewport ? findings.map((item) => ({ ...item, element: `${item.element} at 390 px` })) : findings;
 }
 
-async function changedFiles(input: StudioReviewInput): Promise<string[]> {
+async function changedFiles(input: StudioReviewInput): Promise<ChangedFile[]> {
   const app = input.ctx.project.app;
-  return app && input.run.startedAt !== undefined ? changedSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt) : [];
+  return app && input.run.startedAt !== undefined ? changedLinesSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt, input.baseFile) : [];
 }
 
 async function cutsNow(input: StudioReviewInput): Promise<CutElement[]> {
@@ -146,13 +164,22 @@ async function cutsNow(input: StudioReviewInput): Promise<CutElement[]> {
   return cuts.filter((cut) => inChanged(cut.usedAt, changed) || inChanged(cut.source, changed));
 }
 
-async function reviewItems(input: StudioReviewInput): Promise<ReviewItem[]> {
+interface ReviewItems {
+  items: ReviewItem[];
+  oldCode: number;
+}
+
+async function reviewItems(input: StudioReviewInput): Promise<ReviewItems> {
   const [frame, mobile] = await Promise.all([reviewAt(input, null), reviewAt(input, 'mobile').catch(() => [])]);
   const changed = await changedFiles(input);
   const seen = new Set(frame.map((item) => `${item.kind}|${item.selector ?? item.element}`));
   const extra = mobile.filter((item) => !seen.has(`${item.kind}|${item.selector ?? item.element}`));
-  return [...frame, ...extra].filter((item) => item.severity !== 'low' && inChanged(item.source, changed));
+  const inFiles = [...frame, ...extra].filter((item) => item.severity !== 'low' && inChangedFile(item.source, changed));
+  const items = inFiles.filter((item) => inChanged(item.source, changed));
+  return { items, oldCode: inFiles.length - items.length };
 }
+
+const NO_ITEMS: ReviewItems = { items: [], oldCode: 0 };
 
 function reviewLine(item: ReviewItem): string {
   const fix = item.directFix?.style ? ` directFix.style: ${JSON.stringify(item.directFix.style)}` : '';
@@ -171,9 +198,9 @@ async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {
 }
 
 export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewGaps): Promise<StudioReview> {
-  const [image, items, outside, cuts] = await Promise.all([
+  const [image, { items, oldCode }, outside, cuts] = await Promise.all([
     gaps.mobile ? mobileImage(input).catch(() => null) : Promise.resolve(null),
-    gaps.review ? reviewItems(input).catch((error: unknown) => (console.warn(`[agent] studio review_frame failed: ${error instanceof Error ? error.message : String(error)}`), [])) : Promise.resolve([]),
+    gaps.review ? reviewItems(input).catch((error: unknown) => (console.warn(`[agent] studio review_frame failed: ${error instanceof Error ? error.message : String(error)}`), NO_ITEMS)) : Promise.resolve(NO_ITEMS),
     layoutNow(input).catch(() => []),
     gaps.mobile ? cutsNow(input).catch(() => []) : Promise.resolve([]),
   ]);
@@ -181,7 +208,7 @@ export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewG
   if (image && log) recordShot(log, 'mobile');
   if (gaps.review) (input.run.reviews ??= []).push({ at: log?.toolOrder.length ?? 0, frame: null });
   const lines = [...outside.map(outsideLine), ...cuts.slice(0, LISTED).map(cutLine), ...items.slice(0, LISTED).map(reviewLine)];
-  const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false };
+  const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false, oldCode };
   return { record, images: image ? [image] : [], lines };
 }
 
@@ -189,7 +216,7 @@ export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps, pass 
   if (review.lines.length === 0 && review.images.length === 0) return null;
   const ran = [gaps.mobile ? 'a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)' : null, gaps.review ? 'review_frame on the context frame at its size and at 390 px' : null].filter(Boolean).join(' and ');
   const opening = pass > 1 ? `You edited again after the studio checks, so the studio ran ${ran} once more.` : `You finished an app run without ${ran}, so the studio ran them.`;
-  const body = review.lines.length ? ['Findings in the files you changed:', ...review.lines] : ['review_frame found nothing high or medium in the files you changed.'];
+  const body = review.lines.length ? ['Findings on the lines you changed:', ...review.lines] : ['review_frame found nothing high or medium on the lines you changed.'];
   return [
     '<studio-continue>',
     opening,
@@ -201,7 +228,8 @@ export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps, pass 
 }
 
 function passText(record: AppReviewRecord, index: number): string {
-  return `pass ${index + 1}: ${record.findings} finding(s) in changed files, ${record.fixLoop ? 'a fix loop ran' : 'no fix loop'}`;
+  const old = record.oldCode ? ` (${record.oldCode} on old code not counted)` : '';
+  return `pass ${index + 1}: ${record.findings} finding(s) on changed lines${old}, ${record.fixLoop ? 'a fix loop ran' : 'no fix loop'}`;
 }
 
 export function appReviewNote(records: readonly AppReviewRecord[]): string {
@@ -215,5 +243,6 @@ export function mergeAppReviews(records: readonly AppReviewRecord[]): AppReviewR
   const first = records[0];
   const last = records.at(-1);
   if (!first || !last) return null;
-  return { ...first, mobileShot: records.some((record) => record.mobileShot === 'failed') ? 'failed' : first.mobileShot, findings: last.findings, fixLoop: records.some((record) => record.fixLoop) };
+  const passes = records.map((record) => ({ mobileShot: record.mobileShot, review: record.review, findings: record.findings, oldCode: record.oldCode ?? 0, fixLoop: record.fixLoop }));
+  return { ...first, mobileShot: records.some((record) => record.mobileShot === 'failed') ? 'failed' : first.mobileShot, findings: last.findings, oldCode: last.oldCode ?? 0, fixLoop: records.some((record) => record.fixLoop), passes };
 }

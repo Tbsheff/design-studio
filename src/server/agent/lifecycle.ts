@@ -62,6 +62,7 @@ export interface DriverInput {
   inbox?: RunInbox;
   ask?: (request: PermissionAsk) => Promise<PermissionDecision>;
   commandRules?: CommandRules;
+  baseFile?: (relative: string) => Promise<Uint8Array | null>;
 }
 
 export function queuedText(items: readonly QueuedMessage[]): string {
@@ -363,6 +364,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     const todoTracker = createTodoTracker();
     const contextFiles = [ctx.target?.routeFile, ctx.target?.path].filter((file): file is string => typeof file === 'string' && file !== '');
     if (ctx.request.mode === 'edit') bashEdits.prepare();
+    const baseVersionId = ctx.direction.headVersionId;
+    const baseFile = async (relative: string): Promise<Uint8Array | null> => (baseVersionId && deps.versions.fileAt ? deps.versions.fileAt(ctx.project, baseVersionId, relative) : ((await deps.versions.headFile?.(ctx.project, ctx.direction, relative)) ?? null));
 
     const summary: RunSummary = {
       id: runId,
@@ -579,7 +582,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let failure: string | null = null;
       try {
         const prior = await loadPriorSession(runsDir, ctx.direction);
-        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules });
+        outcome = await driver({ ctx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules, baseFile });
       } catch (error) {
         failure = describeError(error);
       }

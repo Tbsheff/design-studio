@@ -449,7 +449,7 @@
 .tweak-prompt {
   position: absolute;
   z-index: 40;
-  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px));
+  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px));
   left: 40px;
   display: flex;
   align-items: center;

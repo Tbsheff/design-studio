@@ -710,7 +710,7 @@ export function Canvas(props: Props) {
                 kind={kind}
                 zoom={pz.zoom}
                 frame={viewport}
-                selectMode={pane.picking}
+                selectMode={picking}
                 editing={inEditPane(props.shell)}
                 selection={props.selection}
                 tools={commentToolsOf(props, active.path)}

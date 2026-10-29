@@ -350,7 +350,16 @@ body.element-resizing .frame {
 }
 
 .canvas > .check-panel {
-  top: 56px;
+  top: calc(56px + var(--banner-h, 0px));
+}
+
+.pane-canvas:has(> .banner) .review-panel {
+  top: calc(var(--bar-h) + 8px + var(--viewrow-h, 0px) + var(--banner-h));
+  max-height: min(640px, calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px) - var(--banner-h)));
+}
+
+.pane-canvas:has(> .banner) .draw-bar {
+  top: calc(var(--s-3) + var(--viewrow-h, 0px) + var(--banner-h));
 }
 
 .compare {

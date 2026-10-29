@@ -157,11 +157,20 @@ async function changedFiles(input: StudioReviewInput): Promise<ChangedFile[]> {
   return app && input.run.startedAt !== undefined ? changedLinesSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt, input.baseFile) : [];
 }
 
-async function cutsNow(input: StudioReviewInput): Promise<CutElement[]> {
+interface Cuts {
+  cuts: CutElement[];
+  oldCode: number;
+}
+
+const NO_CUTS: Cuts = { cuts: [], oldCode: 0 };
+
+async function cutsNow(input: StudioReviewInput): Promise<Cuts> {
   const url = defaultShotTarget(input.ctx)?.url;
-  if (!url) return [];
-  const [cuts, changed] = await Promise.all([mobileCuts(input.preview, url), changedFiles(input)]);
-  return cuts.filter((cut) => inChanged(cut.usedAt, changed) || inChanged(cut.source, changed));
+  if (!url) return NO_CUTS;
+  const [all, changed] = await Promise.all([mobileCuts(input.preview, url), changedFiles(input)]);
+  const inFiles = all.filter((cut) => inChangedFile(cut.usedAt, changed) || inChangedFile(cut.source, changed));
+  const cuts = inFiles.filter((cut) => inChanged(cut.usedAt, changed) || inChanged(cut.source, changed));
+  return { cuts, oldCode: inFiles.length - cuts.length };
 }
 
 interface ReviewItems {
@@ -198,16 +207,17 @@ async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {
 }
 
 export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewGaps): Promise<StudioReview> {
-  const [image, { items, oldCode }, outside, cuts] = await Promise.all([
+  const [image, review, outside, { cuts, oldCode: oldCuts }] = await Promise.all([
     gaps.mobile ? mobileImage(input).catch(() => null) : Promise.resolve(null),
     gaps.review ? reviewItems(input).catch((error: unknown) => (console.warn(`[agent] studio review_frame failed: ${error instanceof Error ? error.message : String(error)}`), NO_ITEMS)) : Promise.resolve(NO_ITEMS),
     layoutNow(input).catch(() => []),
-    gaps.mobile ? cutsNow(input).catch(() => []) : Promise.resolve([]),
+    gaps.mobile ? cutsNow(input).catch(() => NO_CUTS) : Promise.resolve(NO_CUTS),
   ]);
   const log = input.run.log;
   if (image && log) recordShot(log, 'mobile');
   if (gaps.review) (input.run.reviews ??= []).push({ at: log?.toolOrder.length ?? 0, frame: null });
-  const lines = [...outside.map(outsideLine), ...cuts.slice(0, LISTED).map(cutLine), ...items.slice(0, LISTED).map(reviewLine)];
+  const lines = [...outside.map(outsideLine), ...cuts.slice(0, LISTED).map(cutLine), ...review.items.slice(0, LISTED).map(reviewLine)];
+  const oldCode = review.oldCode + oldCuts;
   const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false, oldCode };
   return { record, images: image ? [image] : [], lines };
 }

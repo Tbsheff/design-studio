@@ -38,6 +38,10 @@ export function refForKey(scope: string, key: string): string {
   return ref;
 }
 
+export function isGoneRef(scope: string, ref: string): boolean {
+  return registries.get(scope)?.keyByRef.get(ref) === GONE;
+}
+
 function movedKey(key: string, maps: Map<string, LineMap>): string | null {
   let gone = false;
   const next = key.replace(LOC_IN_KEY, (whole, lead: string, file: string, line: string, col: string) => {

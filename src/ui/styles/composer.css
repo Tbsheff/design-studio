@@ -227,6 +227,12 @@
   }
 }
 
+.prompt-foot .disclosure-toggle {
+  min-width: 52px;
+  justify-content: flex-start;
+  text-align: start;
+}
+
 .prompt-foot.disclosure-line.open {
   position: static;
   align-items: center;

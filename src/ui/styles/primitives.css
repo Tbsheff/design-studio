@@ -511,6 +511,7 @@
   font-variant-numeric: tabular-nums;
 }
 
+:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked]::before,
 :is(.ui-menu, .project-menu, .theme-menu):has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked]) :is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])::before,
 .ui-menu:has(.ui-menu-item > svg:first-child):not(:has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked])) .ui-menu-item:not(:has(> svg:first-child))::before {
   content: '';

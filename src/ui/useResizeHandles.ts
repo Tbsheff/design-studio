@@ -6,6 +6,7 @@ import type { ParentMessageBody } from './bridge';
 import { snapOff, snapRect, type Rect, type SnapGuide } from './snap';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 import { startOptimistic } from './optimisticEdit';
+import { createLiveStore, useLive, type LiveStore } from './liveStore';
 
 export type ResizeEdge = 'e' | 's' | 'se';
 
@@ -54,6 +55,28 @@ export interface ResizeControl {
   target: SelectionContext | null;
   live: ResizeLive | null;
   onHandleDown: (edge: ResizeEdge, e: ReactPointerEvent<HTMLElement>) => void;
+}
+
+interface LiveSize {
+  size: Size;
+  base: Size;
+  rect: Rect;
+  guides: SnapGuide[];
+}
+
+export interface ResizeHandles {
+  target: SelectionContext | null;
+  sizes: LiveStore<LiveSize | null>;
+  onHandleDown: ResizeControl['onHandleDown'];
+}
+
+export function useResizeLive({ target, sizes, onHandleDown }: ResizeHandles): ResizeControl {
+  const size = useLive(sizes);
+  const live =
+    size && target
+      ? { width: size.size.w, height: size.size.h, boxWidth: size.rect.width + size.size.w - size.base.w, boxHeight: size.rect.height + size.size.h - size.base.h, guides: size.guides }
+      : null;
+  return { target, live, onHandleDown };
 }
 
 function pxOf(value: string | undefined, fallback: number): number {
@@ -118,11 +141,12 @@ function styleFor(size: Size, base: Size): Record<string, string> {
   return style;
 }
 
-export function useResizeHandles(o: Options): ResizeControl {
+export function useResizeHandles(o: Options): ResizeHandles {
   const live = useRef(o);
   live.current = o;
   const drag = useRef<Drag | null>(null);
-  const [size, setSize] = useState<{ size: Size; base: Size; rect: Rect; guides: SnapGuide[] } | null>(null);
+  const [sizes] = useState(() => createLiveStore<LiveSize | null>(null));
+  const setSize = sizes.set;
   const target = o.enabled && o.selection.length === 1 && o.selection[0]?.source ? (o.selection[0] ?? null) : null;
 
   const preview = useCallback((d: Drag, next: Size, keepRatio: boolean) => {
@@ -224,9 +248,5 @@ export function useResizeHandles(o: Options): ResizeControl {
 
   useEffect(() => () => cancel(), [cancel]);
 
-  const liveBox =
-    size && target
-      ? { width: size.size.w, height: size.size.h, boxWidth: size.rect.width + size.size.w - size.base.w, boxHeight: size.rect.height + size.size.h - size.base.h, guides: size.guides }
-      : null;
-  return { target, live: liveBox, onHandleDown };
+  return { target, sizes, onHandleDown };
 }

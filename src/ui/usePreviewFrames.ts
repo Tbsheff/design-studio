@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { runCommand } from './commands/registry';
 import type { AppKey, BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
 import { parseLayerTree, type LayerTree } from './layersTree';
@@ -10,6 +10,7 @@ import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
 import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import { textEditability } from './cssValues';
+import { createLiveStore, type LiveStore } from './liveStore';
 import type { BuildError, FilesChange } from './useStudioData';
 import { openLayer } from './commands/registry';
 import { moveRegion } from './commands/useStudioCommands';
@@ -141,7 +142,10 @@ function applyRects(
 export function usePreviewFrames(o: Options) {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [frontToken, setFrontToken] = useState<string | null>(null);
-  const [hover, setHover] = useState<HoverBox | null>(null);
+  const [hover] = useState<LiveStore<HoverBox | null>>(() => createLiveStore<HoverBox | null>(null));
+  const setHover = hover.set;
+  const [picked] = useState<LiveStore<SelectionContext[] | null>>(() => createLiveStore<SelectionContext[] | null>(null));
+  const heldRects = useRef<Extract<BridgeToParent, { type: 'rects' }> | null>(null);
   const [tree, setTree] = useState<LayerTree | null>(null);
   const [selectedNode, setSelectedNode] = useState<number | null>(null);
   const treeWanted = useRef(false);
@@ -327,6 +331,8 @@ export function usePreviewFrames(o: Options) {
     requestRects(frontFrame());
   }, [selectorKey, frontToken, requestRects, frontFrame]);
 
+  useLayoutEffect(() => picked.set(null), [o.selection, picked]);
+
   useLayoutEffect(() => {
     const at = pendingSelectAt.current;
     if (at === null) return;
@@ -402,16 +408,20 @@ export function usePreviewFrames(o: Options) {
     if (msg.type === 'select-many') {
       setSelectedNode(typeof msg.node === 'number' ? msg.node : null);
       if (msg.selections.length > 0) pendingSelectAt.current = msg.at;
-      cur.setSelection((prev) => manySelection(prev, msg.selections, msg.additive));
+      picked.set(manySelection(cur.selection, msg.selections, msg.additive));
+      startTransition(() => cur.setSelection((prev) => manySelection(prev, msg.selections, msg.additive)));
       return;
     }
     setSelectedNode(nodeAfterSelect(msg, cur.selection));
-    cur.setSelection((prev) => {
-      const next = nextSelection(prev, msg.selection, msg.additive);
-      if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
-      return next;
-    });
-  }, []);
+    picked.set(nextSelection(cur.selection, msg.selection, msg.additive));
+    startTransition(() =>
+      cur.setSelection((prev) => {
+        const next = nextSelection(prev, msg.selection, msg.additive);
+        if (next.includes(msg.selection)) pendingSelectAt.current = msg.at;
+        return next;
+      }),
+    );
+  }, [picked]);
 
   const onFrontMessage = useCallback(
     (frame: BridgeFrame, msg: BridgeToParent) => {
@@ -433,7 +443,8 @@ export function usePreviewFrames(o: Options) {
           setTree(parseLayerTree(msg));
           break;
         case 'rects':
-          cur.setSelection((prev) => applyRects(prev, msg.selectors, msg.rects));
+          if (dragHold.current) heldRects.current = msg;
+          else cur.setSelection((prev) => applyRects(prev, msg.selectors, msg.rects));
           break;
         case 'scroll':
           setHover(null);
@@ -523,6 +534,11 @@ export function usePreviewFrames(o: Options) {
   const holdSwap = useCallback(
     (held: boolean, settle: boolean) => {
       dragHold.current = held;
+      const rects = heldRects.current;
+      if (!held && rects) {
+        heldRects.current = null;
+        opts.current.setSelection((prev) => applyRects(prev, rects.selectors, rects.rects));
+      }
       const swap = pendingSwap.current;
       if (held || !swap) return;
       const release = () => {
@@ -540,6 +556,7 @@ export function usePreviewFrames(o: Options) {
     frontToken,
     holdSwap,
     hover,
+    picked,
     elements,
     onFrameLoad,
     clearSelection,

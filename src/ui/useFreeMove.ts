@@ -6,6 +6,7 @@ import { startOptimistic } from './optimisticEdit';
 import { snapRect, type Rect, type SnapGuide, type SpacingBadge } from './snap';
 import { selectionTargets } from './structureEdits';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
+import { createLiveStore, type LiveStore } from './liveStore';
 
 export interface FreeMoveView {
   box: Rect;
@@ -70,11 +71,12 @@ function absoluteStyle(s: Session, dx: number, dy: number): Record<string, strin
   return style;
 }
 
-export function useFreeMove(o: Options): FreeMoveView | null {
+export function useFreeMove(o: Options): LiveStore<FreeMoveView | null> {
   const live = useRef(o);
   live.current = o;
   const session = useRef<Session | null>(null);
-  const [view, setView] = useState<FreeMoveView | null>(null);
+  const [view] = useState(() => createLiveStore<FreeMoveView | null>(null));
+  const setView = view.set;
 
   useEffect(() => {
     const end = (committing: boolean) => {

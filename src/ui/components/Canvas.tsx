@@ -15,8 +15,10 @@ import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from
 import { useLayerEdits } from '../useLayerEdits';
 import { useComponentInsert } from '../useComponentInsert';
 import { useImageDrop } from '../useImageDrop';
-import { useResizeHandles } from '../useResizeHandles';
-import { useFreeMove } from '../useFreeMove';
+import { useResizeHandles, useResizeLive, type ResizeHandles } from '../useResizeHandles';
+import { createLiveStore, useLive, type LiveStore } from '../liveStore';
+import type { HoverBox } from '../usePreviewFrames';
+import { useFreeMove, type FreeMoveView } from '../useFreeMove';
 import { FreeMoveLayer } from './FreeMoveLayer';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { usePreviewMenu } from '../usePreviewMenu';
@@ -385,6 +387,26 @@ function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking
   return picking || hover?.fromTree ? hover : null;
 }
 
+interface LiveOverlayProps extends Omit<ComponentProps<typeof ArtboardOverlay>, 'hover' | 'resize'> {
+  hover: LiveStore<HoverBox | null>;
+  picked: LiveStore<SelectionContext[] | null>;
+  commenting: boolean;
+  picking: boolean;
+  resize: ResizeHandles;
+}
+
+const NO_PICK = createLiveStore<SelectionContext[] | null>(null);
+
+function LiveOverlay({ hover, picked, commenting, picking, resize, selection, ...rest }: LiveOverlayProps) {
+  const box = useLive(hover);
+  const early = useLive(commenting ? NO_PICK : picked);
+  return <ArtboardOverlay {...rest} selection={early ?? selection} hover={overlayHover(box, picking)} resize={useResizeLive(resize)} />;
+}
+
+function FreeMoveSlot({ view }: { view: LiveStore<FreeMoveView | null> }) {
+  return <FreeMoveLayer view={useLive(view)} />;
+}
+
 function CheckResults({ projectId, check }: { projectId: string; check: ReturnType<typeof useRenderCheck> }) {
   if (!check.results && !check.error) return null;
   return <RenderCheckPanel projectId={projectId} results={check.results} error={check.error} onClose={check.close} />;
@@ -696,8 +718,11 @@ export function Canvas(props: Props) {
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
           <FirstBuildCover covered={covered} wait={firstBuild.wait} step={props.runStep} path={active.path} />
           {appCanvas.note}
-          <ArtboardOverlay
-            hover={overlayHover(frames.hover, picking || commentMode)}
+          <LiveOverlay
+            hover={frames.hover}
+            picked={frames.picked}
+            commenting={commentMode}
+            picking={picking || commentMode}
             selection={props.selection}
             zoom={pz.zoom}
             resize={resize}
@@ -720,7 +745,7 @@ export function Canvas(props: Props) {
           <InlinePromptSlot view={inlinePrompt} zoom={pz.zoom} frame={viewport} />
           <MarqueeLayer listen={frames.listen} />
           <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
-          <FreeMoveLayer view={freeMove} />
+          <FreeMoveSlot view={freeMove} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} step={props.runStep} />

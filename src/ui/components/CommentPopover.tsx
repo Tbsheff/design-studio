@@ -232,7 +232,7 @@ export function OpenCommentPopover(props: OpenProps) {
           </button>
         </div>
         {props.breadcrumb && (
-          <p className="comment-card-crumb" title={props.breadcrumb.full}>
+          <p className="comment-card-crumb" data-tip={props.breadcrumb.full} data-tip-align="start">
             {props.breadcrumb.short}
           </p>
         )}

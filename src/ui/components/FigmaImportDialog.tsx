@@ -4,6 +4,7 @@ import { looksLikeFigmaLink } from '../../shared/figma-nodes';
 import type { InsertTarget, JsxInsertPosition } from '../../shared/insert';
 import { ApiError, json } from '../api';
 import { useModalDialog } from '../usePopover';
+import { Icon } from './Icon';
 import { UiSelect } from './UiSelect';
 import '../styles/figma-import.css';
 
@@ -65,6 +66,42 @@ function usePreview(ids: Props['ids'], base: FigmaImportSource, target: InsertTa
   return { preview, failure, loading, setFailure };
 }
 
+interface PlainFailure {
+  text: string;
+  fix: string | null;
+  details: string | null;
+}
+
+function plainFailure(raw: string): PlainFailure {
+  if (/Figma API, which is off/.test(raw)) return { text: 'Design Studio cannot open Figma links here.', fix: 'Paste the frame JSON instead of the link.', details: raw };
+  const status = /Figma API answered (\d+)/.exec(raw);
+  if (status) return { text: `Figma refused to share this file (error ${status[1]}).`, fix: 'Check that your Figma token can open this file.', details: raw };
+  if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) return { text: 'The Figma frame did not load.', fix: null, details: raw };
+  return { text: raw, fix: null, details: null };
+}
+
+function FailureNote({ failure }: { failure: string }) {
+  const [open, setOpen] = useState(false);
+  const plain = plainFailure(failure);
+  return (
+    <div className="alert error small fgi-error" role="alert">
+      <p>
+        {plain.text}
+        {plain.fix && ` ${plain.fix}`}
+      </p>
+      {plain.details && (
+        <>
+          <button type="button" className="fgi-details-toggle" aria-expanded={open} onClick={() => setOpen(!open)}>
+            <Icon name={open ? 'chevronDown' : 'chevronRight'} size={12} />
+            Details
+          </button>
+          {open && <p className="fgi-details">{plain.details}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
 function Summary({ preview }: { preview: FigmaImportPreview }) {
   const { frame, stats } = preview;
   return (
@@ -91,9 +128,11 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
           ))}
         </ul>
       )}
-      <pre className="fgi-code" tabIndex={0} aria-label="Markup">
-        {preview.markup}
-      </pre>
+      <div className="fgi-code-wrap">
+        <pre className="fgi-code" tabIndex={0} aria-label="Markup">
+          {preview.markup}
+        </pre>
+      </div>
     </div>
   );
 }
@@ -153,11 +192,7 @@ export default function FigmaImportDialog({ ids, target, text, canNest, onDone, 
           </div>
           {preview && <Summary preview={preview} />}
           {loading && !preview && !failure && <div className="fgi-loading">Reading the Figma frame…</div>}
-          {failure && (
-            <div className="alert error small" role="alert">
-              {failure}
-            </div>
-          )}
+          {failure && <FailureNote failure={failure} />}
         </div>
         <div className="modal-foot">
           <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>

@@ -56,9 +56,13 @@ function LinkUrls({ token, server }: { token: string; server: ShareServerState }
   );
 }
 
-function offNote(link: ShareLink, server: ShareServerState): string {
-  const what = link.revokedAt !== null ? 'Turned off.' : 'Ended.';
-  return server.running ? `${what} Viewers see a page that says the link no longer works.` : `${what} No link is live, so the share server is off and the address does not answer.`;
+function offNote(links: ShareLink[], server: ShareServerState): string | null {
+  if (!links.some((l) => !l.active)) return null;
+  return server.running ? 'Viewers of a link that is off see a page that says it no longer works.' : 'No link is on, so the share server is off and old addresses do not answer.';
+}
+
+function hiddenNote(links: ShareLink[]): string | null {
+  return links.some((l) => l.active && !sessionTokens.has(l.id)) ? 'A link shows its address only when you make it. To copy it again, make a new link.' : null;
 }
 
 function Switch({ on, label, disabled, onChange }: { on: boolean; label: string; disabled?: boolean; onChange: (on: boolean) => void }) {
@@ -92,19 +96,36 @@ function LinkRow({ link, server, now, onRevoke, onCursor, busy }: { link: ShareL
   return (
     <li className={`share-link${link.active ? '' : ' off'}`} data-testid="share-link">
       <div className="share-link-head">
-        <span className="share-link-title truncate">{link.title}</span>
-        <span className="share-link-meta">{linkMeta(link, now)}</span>
+        <span className="share-link-title truncate" data-tip={link.title} data-tip-align="start">{link.title}</span>
+        <span className="share-link-meta truncate">{linkMeta(link, now)}</span>
         {link.active && (
-          <button type="button" className="btn ghost small" disabled={busy} onClick={() => onRevoke(link.id)} data-tip={link.live ? 'The link stops working at once, open viewers are cut off and its images are deleted' : 'The link stops working at once and its images are deleted'}>
+          <button type="button" className="btn ghost small danger" disabled={busy} onClick={() => onRevoke(link.id)} data-tip={link.live ? 'The link stops working at once, open viewers are cut off and its images are deleted' : 'The link stops working at once and its images are deleted'}>
             Revoke
           </button>
         )}
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
       {link.active && link.live && <CursorSwitch link={link} busy={busy} onCursor={onCursor} />}
-      {link.active && !token && <p className="share-link-note">The link was shown when it was made. Make a new link to copy it again.</p>}
-      {!link.active && <p className="share-link-note">{offNote(link, server)}</p>}
     </li>
+  );
+}
+
+function LinkList({ links, ...rest }: { links: ShareLink[]; server: ShareServerState; now: number; onRevoke: (id: string) => void; onCursor: (id: string, on: boolean) => void; busy: boolean }) {
+  if (links.length === 0) return null;
+  const notes = [hiddenNote(links), offNote(links, rest.server)].filter((note): note is string => note !== null);
+  return (
+    <div className="share-links-group">
+      <ul className="share-links" aria-label="Share links">
+        {links.map((link) => (
+          <LinkRow key={link.id} link={link} {...rest} />
+        ))}
+      </ul>
+      {notes.map((note) => (
+        <p key={note} className="share-link-note">
+          {note}
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -254,25 +275,18 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
               {shares.error}
             </div>
           )}
-          {shown.length > 0 && (
-            <ul className="share-links" aria-label="Share links">
-              {shown.map((link) => (
-                <LinkRow
-                  key={link.id}
-                  link={link}
-                  server={shares.server}
-                  now={now}
-                  busy={shares.busy}
-                  onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
-                  onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
-                />
-              ))}
-            </ul>
-          )}
+          <LinkList
+            links={shown}
+            server={shares.server}
+            now={now}
+            busy={shares.busy}
+            onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
+            onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
+          />
           <LanSwitch server={shares.server} hasLive={live.length > 0} busy={shares.busy} onChange={(on) => void shares.act(() => shareApi.setLan(on))} />
         </div>
         <div className="modal-foot">
-          <span className="share-foot-note">No upload and no tunnel. Links serve from this computer while Design Studio is open. To reach people off your network, run your own tunnel to the link address.</span>
+          <span className="share-foot-note">No upload: links work only while Design Studio is open on this computer.</span>
           <span className="share-spacer" />
           <button type="button" className="btn ghost" onClick={onClose}>
             Close

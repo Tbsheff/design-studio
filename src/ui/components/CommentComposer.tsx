@@ -173,20 +173,20 @@ function useLeadWidth(leadRef: RefObject<HTMLSpanElement | null>, card: RefObjec
 function Pill({
   icon,
   label,
-  title,
+  full,
   tip,
   tone,
   onRemove,
 }: {
   icon?: Parameters<typeof Icon>[0]['name'];
   label: string;
-  title?: string;
+  full?: string;
   tip?: string;
   tone?: string;
   onRemove: () => void;
 }) {
   return (
-    <span className={`comment-pill ${tone ?? ''}`} title={title} data-tip={tip} data-tip-side="top" data-testid="comment-pill">
+    <span className={`comment-pill ${tone ?? ''}`} data-tip={tip ?? full} data-tip-side="top" data-testid="comment-pill">
       {icon && <Icon name={icon} size={12} />}
       <span className="comment-pill-label">{label}</span>
       <button type="button" tabIndex={-1} aria-label={`Remove ${label}`} onClick={onRemove}>
@@ -428,7 +428,7 @@ export function CommentComposer(props: ComposerProps) {
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
-        <p className="comment-card-crumb" id={`${props.testId}-crumb`} title={props.breadcrumb.full}>
+        <p className="comment-card-crumb" id={`${props.testId}-crumb`} data-tip={props.breadcrumb.full} data-tip-align="start">
           {props.breadcrumb.short}
         </p>
         <div className={`comment-field${leadBox.inline ? ' inline' : ''}`} onPointerDown={focusField}>
@@ -440,7 +440,7 @@ export function CommentComposer(props: ComposerProps) {
                   key={mentionKey(mention)}
                   icon={mentionIcon(mention)}
                   label={mentionLabel(mention)}
-                  title={mentionTitle(mention)}
+                  full={mentionTitle(mention)}
                   onRemove={() => mentions.remove(mentionKey(mention))}
                 />
               ))}
@@ -448,7 +448,8 @@ export function CommentComposer(props: ComposerProps) {
                 <span
                   key={image.key}
                   className={`comment-thumb${image.id ? '' : ' loading'}${image.failed ? ' failed' : ''}`}
-                  title={image.failed ? `${image.name} did not upload` : image.name}
+                  data-tip={image.failed ? `${image.name} did not upload` : image.name}
+                  data-tip-side="top"
                   data-testid="comment-image"
                 >
                   <img src={image.url} alt="" />

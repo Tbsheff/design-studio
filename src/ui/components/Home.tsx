@@ -114,7 +114,7 @@ function PromptArea({ value, onChange, onSubmit, onPaste, describedBy, menuKeys 
       onPaste={onPaste}
       onKeyDown={(e) => {
         if (menuKeys.current?.(e)) return;
-        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) onSubmit(e);
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) onSubmit(e);
       }}
       placeholder={example}
     />
@@ -138,15 +138,13 @@ function focusIn(selector: string): void {
   }, 60);
 }
 
-const MOD_KEY = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
-
 const HOME_REASON_ID = 'home-send-reason';
 const EMPTY_PROMPT = 'Describe the design first';
 
 function SendButton({ busy, disabled, reason }: { busy: Busy; disabled: boolean; reason: string | null }) {
   const working = busy === 'create' || busy === 'ask';
   return (
-    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-busy={working || undefined} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end" data-tip-side="top">
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-busy={working || undefined} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : 'Create  ↩'} data-tip-align="end" data-tip-side="top">
       <span key={working ? 'busy' : 'idle'} className="home-send-glyph">
         {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
       </span>

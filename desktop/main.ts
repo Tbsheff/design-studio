@@ -53,6 +53,16 @@ interface Runtime {
   claudePath: string | null;
 }
 
+let earlyLoginPath: Promise<string[]> | null = null;
+
+function startLoginShell(): Promise<string[]> {
+  earlyLoginPath ??= loginShellPath(process.env).then((dirs) => {
+    markBoot('loginShell');
+    return dirs;
+  });
+  return earlyLoginPath;
+}
+
 let prepared: Prepared | null = null;
 let runtime: Runtime | null = null;
 let serverStopped = false;
@@ -102,7 +112,7 @@ async function prepare(): Promise<Prepared | null> {
     return null;
   }
   const git = await chooseGit(dugiteDir(layout), process.env[FORCE_GIT_ENV]);
-  return { dataDir: choice.dir, git, knownPath: knownPath(), loginPath: loginShellPath(process.env) };
+  return { dataDir: choice.dir, git, knownPath: knownPath(), loginPath: startLoginShell() };
 }
 
 async function searchPath(current: Prepared): Promise<string[]> {
@@ -310,6 +320,7 @@ function startApp(): void {
   if (app.requestSingleInstanceLock()) {
     native.registerEarly();
     registerLifecycle();
+    void startLoginShell();
     boot().catch(failBoot);
   } else {
     app.quit();

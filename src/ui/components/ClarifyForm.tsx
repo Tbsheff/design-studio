@@ -47,6 +47,8 @@ function ClarifyQuestionField({ item, answer, onAnswer, first }: { item: Clarify
   );
 }
 
+const MOD = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+
 export function ClarifyForm({ questions, busy, onBuild, onSkip, onCancel }: { questions: ClarifyQuestion[]; busy: boolean; onBuild: (answers: Array<{ question: string; answer: string }>) => void; onSkip: () => void; onCancel: () => void }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const submit = (event: FormEvent) => {
@@ -59,6 +61,9 @@ export function ClarifyForm({ questions, busy, onBuild, onSkip, onCancel }: { qu
       if (event.key === 'Escape') {
         event.preventDefault();
         onCancel();
+      } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !busy) {
+        event.preventDefault();
+        event.currentTarget.requestSubmit();
       }
     }}>
       <div className="clarify-head">
@@ -73,7 +78,7 @@ export function ClarifyForm({ questions, busy, onBuild, onSkip, onCancel }: { qu
         <button type="button" className="btn ghost small" onClick={onSkip} disabled={busy}>
           Skip questions
         </button>
-        <button type="submit" className="btn primary small has-icon" disabled={busy}>
+        <button type="submit" className="btn primary small has-icon" disabled={busy} data-tip={`Build  ${MOD}↩`} data-tip-side="top" aria-keyshortcuts="Meta+Enter Control+Enter">
           {busy ? <span className="spinner" /> : <Icon name="arrowUp" size={14} />}
           {busy ? 'Creating…' : 'Build with answers'}
         </button>

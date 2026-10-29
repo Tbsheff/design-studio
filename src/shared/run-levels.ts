@@ -1,4 +1,5 @@
 import type { CheckViewport, ProjectSettings, QualitySeverity, RunLevel, RunTask } from './contracts';
+import { PORT_LEVEL_LABEL, PORT_TASK, type PortTask } from './port';
 
 export type PlaceholderMode = 'off' | QualitySeverity;
 
@@ -88,7 +89,7 @@ export interface ResolvedRunConfig {
   maxTurns: number;
   criticModel: string | null;
   preset: LevelPreset;
-  task?: RunTask;
+  task?: RunTask | PortTask;
 }
 
 function levelModel(preset: LevelPreset, settings: Pick<ProjectSettings, 'model'>): string {
@@ -130,7 +131,23 @@ function designSystemTask(config: ResolvedRunConfig): ResolvedRunConfig {
   return { ...config, agentBudgetUsd: config.maxBudgetUsd, criticModel: null, preset: { ...config.preset, skills: false, checks, criticModel: null, criticBudgetUsd: 0, criticMaxCalls: 0, quickCritic: false, regressionCheck: false }, task: 'design-system' };
 }
 
-export function withRunTask(config: ResolvedRunConfig, task: RunTask | undefined): ResolvedRunConfig {
+const PORT_TASK_TURNS = 40;
+const PORT_HINT = 'Moves a prototype page into the app as one route with kit components and token classes, then checks it once with a review and a fix loop.';
+
+function portTask(config: ResolvedRunConfig): ResolvedRunConfig {
+  const checks: LevelChecks = { ...config.preset.checks, viewports: ['desktop', 'mobile'], quality: true, navCheck: true, screenshots: true, critic: false, fixLoops: 1 };
+  return {
+    ...config,
+    agentBudgetUsd: config.maxBudgetUsd,
+    maxTurns: Math.min(PORT_TASK_TURNS, config.maxTurns),
+    criticModel: null,
+    preset: { ...config.preset, label: PORT_LEVEL_LABEL, hint: PORT_HINT, skills: false, checks, criticModel: null, criticBudgetUsd: 0, criticMaxCalls: 0, quickCritic: false, regressionCheck: false },
+    task: PORT_TASK,
+  };
+}
+
+export function withRunTask(config: ResolvedRunConfig, task: RunTask | PortTask | undefined): ResolvedRunConfig {
+  if (task === PORT_TASK) return portTask(config);
   if (task === 'design-system') return designSystemTask(config);
   if (task !== 'tweaks') return config;
   const maxBudgetUsd = config.maxBudgetUsd === null ? null : Math.min(TWEAKS_TASK_BUDGET_USD, config.maxBudgetUsd);

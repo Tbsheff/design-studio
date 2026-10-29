@@ -60,7 +60,7 @@ function disabledBy(reason: string | null): { disabled?: string } {
 
 function menuItems(o: Options, target: SelectionContext, openCreate: () => void): PreviewMenuItem[] {
   return [
-    { id: 'ask', label: 'Ask the agent about this', icon: 'chat', run: () => void runCommand('panel.focus-composer') },
+    { id: 'ask', label: 'Ask the agent about this', icon: 'chat', run: () => void (runCommand('selection.ask-inline') || runCommand('panel.focus-composer')) },
     { id: 'variants', label: 'Try variants…', icon: 'compare', run: () => void runCommand(TRY_VARIANTS_COMMAND), ...disabledBy(commandBlocker(TRY_VARIANTS_COMMAND)) },
     { id: 'parent', label: 'Select parent', icon: 'pointer', keyId: 'select-parent', run: () => o.selectRelative(target.selector, 'parent') },
     { id: 'child', label: 'Select child', icon: 'pointer', keyId: 'select-child', run: () => o.selectRelative(target.selector, 'child') },

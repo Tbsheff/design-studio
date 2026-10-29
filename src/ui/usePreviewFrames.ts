@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { runCommand } from './commands/registry';
 import type { AppKey, BridgeToParent, ProjectKind, SelectMove, SelectionContext, ZoomKey } from '../shared/contracts';
 import { parseLayerTree, type LayerTree } from './layersTree';
 import { sendTelemetry } from './api';
@@ -26,7 +27,8 @@ function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
 }
 
 function forwardAppKey(id: AppKey): void {
-  if (id === 'palette' || id === 'shortcuts') openLayer(id);
+  if (id === 'ask-inline') void runCommand('selection.ask-inline');
+  else if (id === 'palette' || id === 'shortcuts') openLayer(id);
   else moveRegion(id === 'next-region' ? 1 : -1);
 }
 

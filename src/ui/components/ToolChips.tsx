@@ -50,9 +50,20 @@ const STATE_TONE: Record<ToolState, string> = {
 
 const STATE_WORD: Partial<Record<ToolState, string>> = { error: 'Error', stopped: 'Stopped', denied: 'Denied' };
 
+const CANCEL_NOTE = /\bRun canceled\.?$/;
+
+function canceled(tool: ToolRow): boolean {
+  return tool.isError && CANCEL_NOTE.test(tool.summary);
+}
+
+function failed(tool: ToolRow): boolean {
+  return tool.isError && !tool.denied && !canceled(tool);
+}
+
 function toolState(tool: ToolRow, running = true): ToolState {
   if (tool.durationMs === null) return running ? 'pending' : 'stopped';
   if (tool.denied) return 'denied';
+  if (canceled(tool)) return 'stopped';
   return tool.isError ? 'error' : 'done';
 }
 
@@ -222,7 +233,7 @@ function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: str
 }
 
 function GroupSummary({ tools }: { tools: ToolRow[] }) {
-  const errors = tools.filter((t) => t.isError).length;
+  const errors = tools.filter(failed).length;
   const total = tools.reduce((sum, t) => sum + (t.durationMs ?? 0), 0);
   return (
     <>
@@ -248,7 +259,7 @@ export function ToolChips({ tools, running, workTree, flat = false }: { tools: T
     </div>
   );
   if (flat || tools.length < COLLAPSE_AFTER) return <div className="tools tool-chips">{rows}</div>;
-  const expanded = open ?? (running || tools.some((t) => t.isError));
+  const expanded = open ?? (running || tools.some(failed));
   return (
     <ChainOfThought className="tools -ml-2" open={expanded} onOpenChange={(next) => setOpen(next)}>
       <ChainOfThoughtHeader className="tools-toggle text-xs">
@@ -293,7 +304,7 @@ export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: R
   const parts = useMemo(() => toolTally(tools.map((tool) => (shellEdits(tool).length > 0 ? 'Edit' : tool.name))).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)), [tools]);
   const full = parts.join(', ');
   const label = parts.length > SUMMARY_GROUPS ? `${parts.slice(0, SUMMARY_GROUPS - 1).join(', ')} +${parts.length - SUMMARY_GROUPS + 1} more` : full;
-  const failed = useMemo(() => tools.filter((tool) => tool.isError && !tool.denied).length, [tools]);
+  const failedCount = useMemo(() => tools.filter(failed).length, [tools]);
   if (tools.length === 0) return null;
   return (
     <div className="tool-summary" data-open={open || undefined} data-testid="tool-summary">
@@ -304,7 +315,7 @@ export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: R
         <span className="tool-summary-label">
           {label}
         </span>
-        {failed > 0 && <span className="tool-summary-failed">{failed} failed</span>}
+        {failedCount > 0 && <span className="tool-summary-failed">{failedCount} failed</span>}
         <Icon name="chevronDown" size={14} className="tool-summary-caret" />
       </button>
       {open && <div className="tool-summary-body">{children}</div>}

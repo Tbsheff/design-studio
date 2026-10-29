@@ -1,3 +1,4 @@
+import { useComposerFocus } from './ComposerFocus';
 import { lazy, Suspense, useId, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type ReactNode } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, Project, ProjectSettings, QueuedMessage, RunEffort, RunLevel, RunMention, RunMode, SelectionContext } from '../../shared/contracts';
 import { elementVariantsIntent } from '../../shared/element-variants';
@@ -236,6 +237,7 @@ export function PromptBox(props: Props) {
   const draft = useDraft(props.draft);
   const setDraft = props.draft.set;
 
+  useComposerFocus(props.running, !props.disabled);
   const focusInput = () => window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('.prompt [data-slot="composer-input"]')?.focus());
   useCommands(() => composerCommands({ mode, setMode, level: runLevel.level, setLevel: runLevel.choose, variations: props.variations, focus: focusInput }));
   const slashSource = useSlashSections({

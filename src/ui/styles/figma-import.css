@@ -81,7 +81,27 @@
   text-wrap: pretty;
 }
 
+@property --fgi-fade {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes fgi-fade-out {
+  0%,
+  92% {
+    --fgi-fade: 40px;
+  }
+
+  100% {
+    --fgi-fade: 0px;
+  }
+}
+
 .fgi-code {
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--fgi-fade)), transparent);
+  animation: fgi-fade-out linear both;
+  animation-timeline: scroll(self inline);
   max-height: 180px;
   margin: 0;
   padding: var(--s-2);
@@ -93,12 +113,53 @@
   white-space: pre;
 }
 
+.fgi-code-wrap {
+  border-radius: var(--r-sm);
+}
+
 .fgi-code:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
+  outline: none;
+}
+
+.fgi-code-wrap:has(.fgi-code:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .fgi-loading {
   color: var(--text-3);
   font-size: var(--t-sm);
+}
+
+.fgi-error {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+}
+
+.fgi-error p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.fgi-details-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 24px;
+  margin-left: -2px;
+  padding: 0 var(--s-1) 0 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--w-medium);
+  cursor: pointer;
+}
+
+.fgi-error .fgi-details {
+  color: var(--text-2);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
 }

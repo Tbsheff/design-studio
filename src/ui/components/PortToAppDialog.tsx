@@ -221,7 +221,7 @@ function AppField({ form }: { form: PortForm }) {
     <div className="field">
       <span id="port-app-label">Target app</span>
       {apps?.length === 0 ? (
-        <p className="port-note">{error ?? 'No attached app yet. On Home, use Open app to attach your repository, then come back.'}</p>
+        <p className="port-note">{error ?? 'No app is attached. On Home, choose Open your app and pick your repository, then come back.'}</p>
       ) : (
         <UiSelect aria-labelledby="port-app-label" value={form.chosenApp} options={options} onChange={form.setAppId} placeholder="Loading apps…" disabled={!apps} />
       )}
@@ -283,6 +283,39 @@ function FormBody({ form, error }: { form: PortForm; error: string | null }) {
   );
 }
 
+function FormFoot({ form, busy, count, appName, onClose }: { form: PortForm; busy: boolean; count: number; appName: string; onClose: () => void }) {
+  const noApp = form.targets.apps?.length === 0;
+  return (
+    <div className="modal-foot">
+      {!noApp && form.chosenApp && (
+        <span className="port-foot-note">
+          Writes {count > 1 ? `${count} new route files` : 'one new route file'} in {appName}.
+        </span>
+      )}
+      <span className="port-spacer" />
+      <button type="button" className="btn ghost" onClick={onClose}>
+        Cancel
+      </button>
+      {noApp ? (
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => {
+            onClose();
+            uiStore.set({ activeProjectId: null });
+          }}
+        >
+          Go to Home
+        </button>
+      ) : (
+        <button type="submit" className="btn primary" disabled={!form.ready || busy}>
+          {busy ? 'Starting…' : 'Start run'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function startPaths(form: PortForm): string[] | undefined {
   const paths = form.pages.picked.map((page) => page.path);
   return paths.length === 1 && paths[0] === form.path ? undefined : paths;
@@ -327,18 +360,7 @@ export default function PortToAppDialog({ target, onClose }: { target: PortDialo
         ) : (
           <>
             <FormBody form={form} error={error} />
-            <div className="modal-foot">
-              <span className="port-foot-note">
-                Runs at the {PORT_LEVEL_LABEL} level in the target app and writes {count > 1 ? `${count} new route files` : 'one new route file'}.
-              </span>
-              <span className="port-spacer" />
-              <button type="button" className="btn ghost" onClick={onClose}>
-                Cancel
-              </button>
-              <button type="submit" className="btn primary" disabled={!form.ready || busy}>
-                {busy ? 'Starting…' : 'Start run'}
-              </button>
-            </div>
+            <FormFoot form={form} busy={busy} count={count} appName={appName} onClose={onClose} />
           </>
         )}
       </form>

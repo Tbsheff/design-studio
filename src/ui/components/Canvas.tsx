@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
@@ -17,6 +17,7 @@ import { useComponentInsert } from '../useComponentInsert';
 import { useImageDrop } from '../useImageDrop';
 import { useResizeHandles, useResizeLive, type ResizeHandles } from '../useResizeHandles';
 import { createLiveStore, useLive, type LiveStore } from '../liveStore';
+import { useStableProps } from '../stableProps';
 import type { HoverBox } from '../usePreviewFrames';
 import { useFreeMove, type FreeMoveView } from '../useFreeMove';
 import { FreeMoveLayer } from './FreeMoveLayer';
@@ -249,7 +250,7 @@ function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   return { dark, onToggle: () => broadcastTheme(dark ? null : 'dark') };
 }
 
-function OtherFrames({ frames, active, passive, sandbox, labelProps, register, waiting, step }: {
+function OtherFrames({ frames, active, passive, sandbox, labelProps, register, waiting, steps }: {
   frames: CanvasFrame[];
   active: CanvasFrame;
   passive: DirectionFrames;
@@ -257,8 +258,9 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register, w
   labelProps: ReturnType<typeof useFrameLabels>;
   register: (id: string, el: HTMLDivElement | null) => void;
   waiting: (path: string | undefined, directionId: string | null) => PageWait;
-  step: string | null | undefined;
+  steps: LiveStore<string | null>;
 }) {
+  const step = useLive(steps);
   const entries = useRef(new Map<string, PassiveEntry>());
   const live = entries.current;
   live.clear();
@@ -403,6 +405,10 @@ function LiveOverlay({ hover, picked, commenting, picking, resize, selection, ..
   return <ArtboardOverlay {...rest} selection={early ?? selection} hover={overlayHover(box, picking)} resize={useResizeLive(resize)} />;
 }
 
+function StepCover({ steps, ...rest }: Omit<ComponentProps<typeof FirstBuildCover>, 'step'> & { steps: LiveStore<string | null> }) {
+  return <FirstBuildCover {...rest} step={useLive(steps)} />;
+}
+
 function FreeMoveSlot({ view }: { view: LiveStore<FreeMoveView | null> }) {
   return <FreeMoveLayer view={useLive(view)} />;
 }
@@ -497,7 +503,7 @@ function marqueeAllowed(picking: boolean, prototype: boolean, comment: boolean):
   return picking && !prototype && !comment;
 }
 
-export function Canvas(props: Props) {
+function CanvasView(props: ViewProps) {
   const { projectId, directionId, kind, source, headVersionId } = props;
   const ui = useUi();
   useResetPassiveGateInFirstRender();
@@ -716,7 +722,7 @@ export function Canvas(props: Props) {
           }}
         >
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
-          <FirstBuildCover covered={covered} wait={firstBuild.wait} step={props.runStep} path={active.path} />
+          <StepCover steps={props.steps} covered={covered} wait={firstBuild.wait} path={active.path} />
           {appCanvas.note}
           <LiveOverlay
             hover={frames.hover}
@@ -748,7 +754,7 @@ export function Canvas(props: Props) {
           <FreeMoveSlot view={freeMove} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
-          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} step={props.runStep} />
+          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} steps={props.steps} />
           <FrameSnapLayer origin={active} />
           {proto.artboard}
         </div>
@@ -768,4 +774,19 @@ export function Canvas(props: Props) {
       </div>
     </div>
   );
+}
+
+const MemoCanvas = memo(CanvasView);
+const NESTED = new Set(['shell', 'commentTools', 'comments', 'directions']);
+const NESTED_LIVE_DIRECTIONS = new Set(['shell', 'commentTools', 'comments']);
+
+interface ViewProps extends Omit<Props, 'runStep'> {
+  steps: LiveStore<string | null>;
+}
+
+export function Canvas({ runStep, ...props }: Props) {
+  const variations = props.directions?.list.some((d) => d.variation) === true;
+  const [steps] = useState(() => createLiveStore<string | null>(null));
+  useLayoutEffect(() => steps.set(runStep ?? null), [steps, runStep]);
+  return <MemoCanvas {...useStableProps({ ...props, steps }, variations ? NESTED_LIVE_DIRECTIONS : NESTED)} />;
 }

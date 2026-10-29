@@ -1220,3 +1220,33 @@ body.element-resizing .frame {
   bottom: auto;
   transform: translate(-50%, -50%);
 }
+
+.box.move-ghost {
+  border: var(--stroke) solid var(--select);
+}
+
+.box.move-ghost.copy {
+  border-style: dashed;
+}
+
+.move-insert {
+  position: absolute;
+  background: var(--select);
+  border-radius: var(--stroke);
+}
+
+.move-insert.x {
+  width: calc(var(--stroke) * 2);
+  translate: calc(var(--stroke) * -1) 0;
+}
+
+.move-insert.y {
+  height: calc(var(--stroke) * 2);
+  translate: 0 calc(var(--stroke) * -1);
+}
+
+.element-moving .box.selected,
+.element-moving .box.hover,
+.element-moving .resize-frame {
+  display: none;
+}

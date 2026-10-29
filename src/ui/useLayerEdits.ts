@@ -74,6 +74,7 @@ export interface LayerEdits {
   moveSelected: (move: ReorderMove) => void;
   structureKey: (key: StructureKey) => void;
   dropNode: (id: number, drop: LayerDrop) => void;
+  applyStructure: (request: StructureEditRequest) => Promise<void>;
   canPaste: boolean;
 }
 
@@ -418,6 +419,7 @@ export function useLayerEdits(o: Options): LayerEdits {
     moveSelected,
     structureKey,
     dropNode,
+    applyStructure,
     canPaste: cut !== null,
   };
 }

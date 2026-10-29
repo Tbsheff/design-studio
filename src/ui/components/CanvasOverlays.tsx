@@ -89,7 +89,7 @@ export function TweakPrompt({ scope, onSend, onClose }: { scope: string | null; 
 }
 
 
-function gapStyle(b: SpacingBadge) {
+export function gapStyle(b: SpacingBadge) {
   return b.axis === 'x' ? { left: b.from, top: b.at, width: b.to - b.from } : { left: b.at, top: b.from, height: b.to - b.from };
 }
 

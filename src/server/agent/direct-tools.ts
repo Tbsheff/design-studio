@@ -47,6 +47,8 @@ export const editElementShape = {
   target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'),
   op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'),
   targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
+  beforeSelector: z.string().trim().min(1).max(2000).optional().describe('For op move or duplicate: put the element (or the copy) just before this sibling, like a drag on the canvas. Use instead of targetSelector.'),
+  afterSelector: z.string().trim().min(1).max(2000).optional().describe('For op move or duplicate: put the element (or the copy) just after this sibling. Use instead of targetSelector.'),
   also: z.array(z.string().trim().min(1).max(2000)).min(1).max(49).optional().describe('With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here.'),
 };
 
@@ -109,14 +111,21 @@ async function alsoSelectors(deps: DirectToolDeps, input: z.output<typeof editEl
   return list.map((item) => (isLayerRef(item) ? (paths.get(item.trim()) ?? item) : item));
 }
 
+function placeOf(input: z.output<typeof editElementSchema>): { key: 'into' | 'before' | 'after'; selector: string } | null {
+  if (input.targetSelector) return { key: 'into', selector: input.targetSelector };
+  if (input.beforeSelector) return { key: 'before', selector: input.beforeSelector };
+  return input.afterSelector ? { key: 'after', selector: input.afterSelector } : null;
+}
+
 async function structureEdit(deps: DirectToolDeps, input: z.output<typeof editElementSchema>, op: StructureOp): Promise<ToolText> {
   const also = await alsoSelectors(deps, input);
-  const selectors = op === 'move' && input.targetSelector ? [input.selector, input.targetSelector] : [input.selector];
+  const place = placeOf(input);
+  const selectors = place ? [input.selector, place.selector] : [input.selector];
   const [element, parent] = await findElements(deps, input.path, selectors);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
   const more = also.length > 0 ? await findElements(deps, input.path, also) : [];
   const targets = [element, ...more].map((found, index) => ({ source: found.source as NonNullable<SelectionContext['source']>, selector: [input.selector, ...also][index] as string, tag: found.tag }));
-  const raw = { op, targets, ...(parent?.source ? { into: { source: parent.source, selector: input.targetSelector, tag: parent.tag } } : {}) };
+  const raw = { op, targets, ...(place && parent?.source ? { [place.key]: { source: parent.source, selector: place.selector, tag: parent.tag } } : {}) };
   const plan = await planStructureEdit(deps.ctx.direction.workTree, raw);
   if (plan.changed.length === 0) return text('Nothing changed.');
   for (const file of plan.changed) {
@@ -192,11 +201,17 @@ async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolTe
   return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${site.source.line}.${classNote}${siteText(site)} ${RUN_NOTE}`);
 }
 
+function placesFit(input: z.output<typeof editElementSchema>): boolean {
+  const places = [input.targetSelector, input.beforeSelector, input.afterSelector].filter((value) => value !== undefined).length;
+  if (input.op === 'move') return places === 1;
+  return places <= (input.op === 'duplicate' && input.targetSelector === undefined ? 1 : 0);
+}
+
 function editShapeError(input: z.output<typeof editElementSchema>): string | null {
   const hasChange = input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
   if (input.op === undefined && !hasChange) return 'edit_element needs style, text or classes, or op.';
   if (input.op !== undefined && (hasChange || input.variant !== undefined)) return 'Pass op alone, or style/text/classes without op.';
-  if ((input.op === 'move') !== (input.targetSelector !== undefined)) return 'op move needs targetSelector; other ops take none.';
+  if (!placesFit(input)) return 'op move needs one of targetSelector, beforeSelector or afterSelector; duplicate takes at most beforeSelector or afterSelector; other ops take none.';
   if (input.also !== undefined && input.op === undefined) return 'also needs op.';
   return null;
 }

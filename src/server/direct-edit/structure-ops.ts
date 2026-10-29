@@ -272,13 +272,20 @@ function placeRef(place: Placement): StructNode {
   return ref;
 }
 
-function moveOp(source: string, nodes: StructNode[], place: Placement, closeTag: (node: StructNode) => string): Splice[] {
+function placedSplice(source: string, nodes: StructNode[], place: Placement, closeTag: (node: StructNode) => string): Splice {
   nodes.forEach(assertMovable);
   const ref = placeRef(place);
   if (nodes.some((node) => contains(node, ref))) throw refuse('An element cannot move into itself or next to its own child');
   const texts = (indent: string | null) => movedTexts(source, nodes, indent);
-  const insert = place.into ? intoSplice(source, texts, place.into, closeTag(place.into)) : besideSplice(source, texts, ref, place.after !== undefined);
-  return [insert, ...nodes.map((node) => removal(source, node))];
+  return place.into ? intoSplice(source, texts, place.into, closeTag(place.into)) : besideSplice(source, texts, ref, place.after !== undefined);
+}
+
+function moveOp(source: string, nodes: StructNode[], place: Placement, closeTag: (node: StructNode) => string): Splice[] {
+  return [placedSplice(source, nodes, place, closeTag), ...nodes.map((node) => removal(source, node))];
+}
+
+function hasPlace(place: Placement): boolean {
+  return Boolean(place.into ?? place.before ?? place.after);
 }
 
 export interface InsertInput {
@@ -351,7 +358,7 @@ export function outermost(nodes: StructNode[]): StructNode[] {
 export function planStructure(source: string, input: OpInput): OpPlan {
   const nodes = input.op === 'wrap' || input.op === 'group' ? [...input.nodes].sort((a, b) => a.start - b.start) : outermost(input.nodes);
   if (input.op === 'delete') return applyTracked(source, deleteOp(source, nodes));
-  if (input.op === 'duplicate') return applyTracked(source, duplicateOp(source, nodes));
+  if (input.op === 'duplicate') return applyTracked(source, hasPlace(input.place) ? [placedSplice(source, nodes, input.place, input.closeTag)] : duplicateOp(source, nodes));
   if (input.op === 'wrap' || input.op === 'group') return applyTracked(source, wrapOp(source, nodes, input.frame));
   if (input.op === 'unwrap') return applyTracked(source, unwrapOp(source, nodes));
   if (input.op === 'clear') return applyTracked(source, clearOp(source, nodes));

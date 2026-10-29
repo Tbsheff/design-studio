@@ -292,9 +292,9 @@ export function ReferenceBoard(props: BoardProps) {
                 <span className="truncate" data-tip={picture.name}>Reference: {picture.name}</span>
                 <input type="range" className="compare-opacity" aria-label="Reference opacity" min={10} max={100} step={5} value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} />
                 <span className="compare-opacity-value">{opacity}%</span>
+                <PicturePicker onPick={setPicture} compact />
               </>
             )}
-            <PicturePicker onPick={setPicture} compact />
           </div>
         </>
       }

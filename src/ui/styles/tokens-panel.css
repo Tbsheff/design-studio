@@ -125,6 +125,8 @@
   align-items: center;
   gap: 6px;
   min-height: 20px;
+  justify-self: start;
+  max-width: 100%;
 }
 
 .tkp-mark {
@@ -145,7 +147,8 @@
   flex: 0 1 auto;
   color: var(--text);
   font-family: var(--mono);
-  font-size: var(--t-xs);
+  font-size: var(--t-sm);
+  font-weight: 600;
 }
 
 .tkp-alias {
@@ -498,4 +501,8 @@
 .cmp-thumb.cmp-preview img {
   justify-self: center;
   align-self: center;
+}
+
+.tkp-field .ins-input:not(:focus) {
+  color: var(--text-2);
 }

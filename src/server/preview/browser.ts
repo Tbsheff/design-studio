@@ -378,6 +378,10 @@ export class BrowserPool {
       state.pageErrors.push(`layout probe failed: ${errorText(error)}`);
       return EMPTY_PROBE;
     });
+    if (options.appOnly && state.probe.findings.length) {
+      const kept = await dropOutsideApp(page, state.probe.findings);
+      state.probe = { ...state.probe, findings: kept, total: Math.max(kept.length, state.probe.total - (state.probe.findings.length - kept.length)) };
+    }
     const shared = () => this.sharedAxe(page, state.url, spec, options.prepare ?? '', state.stamp);
     state.inspection = await inspectQuality(page, spec, options, state.timings, shared).catch((error: unknown) => {
       state.pageErrors.push(`quality probe failed: ${errorText(error)}`);

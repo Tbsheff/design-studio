@@ -1,5 +1,4 @@
 import { APP_SOURCE_PATH, DEV_CHROME_SELECTOR } from '../../shared/app.js';
-import type { QualityFinding } from '../../shared/contracts.js';
 import type { RenderPage } from './render-backend.js';
 
 const MAX_ANCESTORS = 40;
@@ -37,7 +36,7 @@ export function outsideAppExpression(selectors: readonly string[]): string {
   })(${JSON.stringify(selectors)})`;
 }
 
-export async function dropOutsideApp(page: Pick<RenderPage, 'evaluate'>, findings: QualityFinding[]): Promise<QualityFinding[]> {
+export async function dropOutsideApp<T extends { selector: string | null }>(page: Pick<RenderPage, 'evaluate'>, findings: T[]): Promise<T[]> {
   const selectors = [...new Set(findings.flatMap((finding) => (finding.selector ? [finding.selector] : [])))];
   if (selectors.length === 0) return findings;
   const outside = await page.evaluate<boolean[]>(outsideAppExpression(selectors)).catch(() => selectors.map(() => false));

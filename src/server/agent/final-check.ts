@@ -10,6 +10,7 @@ import { defaultShotTarget, isContextFrame } from './run-target.js';
 import { probeLayout } from './layout-region.js';
 import { regionFindings } from './fit-check.js';
 import { changedSince } from './screens.js';
+import { recordShot } from './polish-loop.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
 import type { ImagePart } from './user-message.js';
 
@@ -163,6 +164,9 @@ export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewG
     gaps.review ? reviewItems(input).catch((error: unknown) => (console.warn(`[agent] studio review_frame failed: ${error instanceof Error ? error.message : String(error)}`), [])) : Promise.resolve([]),
     layoutNow(input).catch(() => []),
   ]);
+  const log = input.run.log;
+  if (image && log) recordShot(log, 'mobile');
+  if (gaps.review) (input.run.reviews ??= []).push({ at: log?.toolOrder.length ?? 0, frame: null });
   const lines = [...outside.map(outsideLine), ...items.slice(0, LISTED).map(reviewLine)];
   const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false };
   return { record, images: image ? [image] : [], lines };

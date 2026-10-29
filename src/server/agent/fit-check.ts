@@ -83,10 +83,13 @@ function words(text: string): string[] {
   return text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 }
 
-function namesContent(request: string, repeated: readonly string[]): boolean {
+function namesContent(request: string, card: LayoutCard, repeated: readonly string[], baseline: LayoutRegion): boolean {
   const asked = new Set(words(request).filter((word) => word.length >= 3 && !GENERIC_WORDS.has(word)));
   if (asked.size === 0) return false;
-  return repeated.some((row) => words(row).some((word) => asked.has(word)));
+  const hits = (rows: readonly string[]) => new Set(rows.flatMap(words).filter((word) => asked.has(word)));
+  if (hits(repeated).size > 0) return true;
+  const onPage = hits(baseline.rows ?? []);
+  return [...hits(card.rows.slice(0, 1))].some((word) => onPage.has(word));
 }
 
 function addsSomething(card: LayoutCard, baseline: LayoutRegion): boolean {
@@ -97,7 +100,7 @@ function addsSomething(card: LayoutCard, baseline: LayoutRegion): boolean {
 function duplicateFinding(card: LayoutCard, repeated: string[], baseline: LayoutRegion, request: string): QualityFinding | null {
   const enough = repeated.length >= 2 || (repeated.length === 1 && card.rows.filter(meaningful).length <= 2);
   if (!enough) return null;
-  const named = namesContent(request, repeated);
+  const named = namesContent(request, card, repeated, baseline);
   if (named && addsSomething(card, baseline)) return null;
   const listed = repeated.slice(0, LISTED).map((row) => `"${row}"`).join(', ');
   const more = repeated.length > LISTED ? ` and ${repeated.length - LISTED} more` : '';

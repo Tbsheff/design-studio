@@ -994,7 +994,7 @@ export function createApp(deps: AppDeps): Hono {
 
   app.post('/api/projects/:pid/d/:did/check', async (c) => {
     const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json(await preview.renderCheck(project, direction));
+    return c.json(await preview.renderCheck(project, direction, project.app ? { appOnly: true } : undefined));
   });
 
   app.get('/api/projects/:pid/versions/:vid/preview', async (c) => {

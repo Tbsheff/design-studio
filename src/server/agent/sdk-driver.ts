@@ -1,3 +1,4 @@
+import { captureBaselineFindings } from './baseline-findings.js';
 import { appendFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -710,6 +711,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
       ...(options.canvas ? { canvas: options.canvas } : {}),
       baseline: config.preset.checks.quality ? captureBaseline(options.preview, input.ctx, input.runsDir, input.runId).catch(() => []) : null,
     };
+    captureBaselineFindings(options.preview, input.ctx, run, input.runsDir, input.runId);
     void prewarmChecks(options.preview, input.ctx, run).catch(() => undefined);
     const skills = await loadSkills(options, input);
     return { skills, config, run, tasteRules: loadTasteRules(options.tasteHome), runSkills: runSkillIds(skills, input, config), ...(input.ask && !input.ctx.project.settings.autoApprove ? { bashGate: createBashGate(input.ask, undefined, input.commandRules) } : {}) };

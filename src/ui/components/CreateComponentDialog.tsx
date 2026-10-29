@@ -23,6 +23,7 @@ function suggestName(selection: SelectionContext[]): string {
 }
 
 function targetOf(selection: SelectionContext): InsertTarget {
+  if (selection.usedAt && selection.usedBy?.root) return { source: selection.usedAt, tag: selection.usedBy.name.toLowerCase(), selector: selection.selector };
   return { source: selection.source, tag: selection.tag.toLowerCase(), selector: selection.selector, ...(selection.owners?.length ? { owners: selection.owners } : {}) };
 }
 

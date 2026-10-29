@@ -14,6 +14,7 @@ import { recordShot } from './polish-loop.js';
 import { cutLine, mobileCuts, type CutElement } from './mobile-cut.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
 import type { ImagePart } from './user-message.js';
+import type { FinalCheckWithReference, ReferenceRecord } from '../../shared/reference.js';
 
 const CHECK_TOOL = 'mcp__studio__render_check';
 
@@ -255,4 +256,19 @@ export function mergeAppReviews(records: readonly AppReviewRecord[]): AppReviewR
   if (!first || !last) return null;
   const passes = records.map((record) => ({ mobileShot: record.mobileShot, review: record.review, findings: record.findings, oldCode: record.oldCode ?? 0, fixLoop: record.fixLoop }));
   return { ...first, mobileShot: records.some((record) => record.mobileShot === 'failed') ? 'failed' : first.mobileShot, findings: last.findings, oldCode: last.oldCode ?? 0, fixLoop: records.some((record) => record.fixLoop), passes };
+}
+
+const EMPTY_CHECK: FinalCheck = { ranBy: 'studio', errors: 0, high: 0, medium: 0, low: 0 };
+
+export function withReference(check: FinalCheck | null | undefined, reference: ReferenceRecord | null): FinalCheck | undefined {
+  if (!reference) return check ?? undefined;
+  const merged: FinalCheckWithReference = { ...(check ?? EMPTY_CHECK), reference };
+  return merged;
+}
+
+export function referenceNote(record: ReferenceRecord | null): string {
+  if (!record) return '';
+  if (record.score === null) return `Studio reference check: could not compare with ${record.name ?? 'the reference'} (${record.error ?? 'unknown error'}).`;
+  const loop = record.fixLoop ? `; one fix loop ran (score before it: ${record.before ?? '?'})` : '';
+  return `Studio reference check: the frame matches ${record.name ?? 'the reference picture'} at ${record.score}/100${loop}.`;
 }

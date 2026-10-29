@@ -1,4 +1,9 @@
+import { useState } from 'react';
 import type { Attachment as UploadedAttachment, SelectionContext } from '../../shared/contracts';
+import { asReferenceName, isReferenceName } from '../../shared/reference';
+import { api } from '../api';
+import { projectFromPath } from '../route';
+import '../styles/reference.css';
 import { Attachment, AttachmentMedia, AttachmentOverlay, AttachmentProgress } from '../ai/components/ai/attachment';
 import { Chip } from '../ai/components/ai/chip';
 import { Icon } from './Icon';
@@ -53,16 +58,74 @@ function shortName(name: string): string {
   return `${name.slice(0, NAME_ROOM - tail.length - 1)}…${tail}`;
 }
 
+const plainUploads = new WeakMap<PendingAttachment, UploadedAttachment>();
+
+function unmark(file: PendingAttachment): void {
+  const plain = plainUploads.get(file);
+  if (plain) file.attachment = plain;
+}
+
+async function markAsReference(file: PendingAttachment): Promise<void> {
+  const projectId = projectFromPath(window.location.pathname);
+  if (!projectId || !file.attachment) throw new Error('Open a project first');
+  const blob = await (await fetch(file.previewUrl)).blob();
+  const uploaded = await api.uploadAttachment(projectId, new File([blob], asReferenceName(file.name), { type: blob.type || file.attachment.mime }));
+  if (!plainUploads.has(file)) plainUploads.set(file, file.attachment);
+  file.attachment = uploaded;
+}
+
+function useReferenceToggle(files: PendingAttachment[]) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [, setTick] = useState(0);
+  const toggle = async (file: PendingAttachment) => {
+    if (busy || !file.attachment) return;
+    const on = isReferenceName(file.attachment.name);
+    files.forEach(unmark);
+    if (on) return setTick((n) => n + 1);
+    setBusy(file.localId);
+    try {
+      await markAsReference(file);
+    } catch (error) {
+      file.error = error instanceof Error ? error.message : String(error);
+    } finally {
+      setBusy(null);
+      setTick((n) => n + 1);
+    }
+  };
+  return { busy, toggle };
+}
+
+function ReferenceToggle({ file, busy, onToggle }: { file: PendingAttachment; busy: boolean; onToggle: () => void }) {
+  if (!file.attachment || file.error) return null;
+  const on = isReferenceName(file.attachment.name);
+  return (
+    <button
+      type="button"
+      className={`thumb-ref ${on ? 'on' : ''}`}
+      aria-pressed={on}
+      aria-label={on ? `Stop using ${file.name} as the reference` : `Use ${file.name} as reference`}
+      data-tip={on ? 'Reference: the studio scores the frame against this picture. Click to stop.' : 'Use as reference: the agent rebuilds this picture and the studio scores the match'}
+      data-tip-side="top"
+      disabled={busy}
+      onClick={onToggle}
+    >
+      {busy ? '…' : 'Ref'}
+    </button>
+  );
+}
+
 export function AttachmentThumbs({ files, onRemove }: { files: PendingAttachment[]; onRemove: (localId: string) => void }) {
+  const reference = useReferenceToggle(files);
   if (files.length === 0) return null;
   return (
     <div className="thumbs flex flex-wrap gap-2 px-2 pt-2">
       {files.map((f, index) => (
-        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className="thumb size-13" data-tip={f.error ?? shortName(f.name)} data-tip-side="top" data-tip-align={index < 2 ? 'start' : 'end'}>
+        <Attachment key={f.localId} layout="card" state={f.error ? 'error' : 'default'} className={`thumb size-13 ${f.attachment && isReferenceName(f.attachment.name) ? 'is-reference' : ''}`} data-tip={f.error ?? shortName(f.name)} data-tip-side="top" data-tip-align={index < 2 ? 'start' : 'end'}>
           <AttachmentMedia>
             <img data-slot="attachment-media-img" src={f.previewUrl} alt={f.name} className={f.error ? 'opacity-35' : ''} />
           </AttachmentMedia>
           <ThumbState file={f} />
+          <ReferenceToggle file={f} busy={reference.busy === f.localId} onToggle={() => void reference.toggle(f)} />
           <button
             type="button"
             aria-label={`Remove ${f.name}`}

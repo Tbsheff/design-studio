@@ -17,7 +17,12 @@ export interface ShareRecord {
   expiresAt: number;
   revokedAt: number | null;
   commentIds: string[];
+  live?: boolean;
+  studioCursor?: boolean;
+  rev?: number;
 }
+
+export type SharePatch = Partial<Pick<ShareRecord, 'versionId' | 'frames' | 'rev' | 'studioCursor'>>;
 
 export interface NewShare {
   projectId: string;
@@ -26,6 +31,7 @@ export interface NewShare {
   title: string;
   frames: ShareFrame[];
   expiresAt: number;
+  live: boolean;
 }
 
 export interface ShareStore {
@@ -38,6 +44,7 @@ export interface ShareStore {
   endedByToken(token: string): Promise<'revoked' | 'expired' | null>;
   revoke(id: string): Promise<ShareRecord | null>;
   addComment(id: string, commentId: string): Promise<void>;
+  update(id: string, patch: SharePatch): Promise<ShareRecord | null>;
   activeCount(): Promise<number>;
   nextExpiry(): Promise<number | null>;
 }
@@ -53,7 +60,7 @@ export function isLive(record: ShareRecord, now = Date.now()): boolean {
   return record.revokedAt === null && record.expiresAt > now;
 }
 
-export function toLink(record: ShareRecord, now = Date.now()): ShareLink {
+export function toLink(record: ShareRecord, now = Date.now(), viewers = 0): ShareLink {
   return {
     id: record.id,
     projectId: record.projectId,
@@ -66,6 +73,10 @@ export function toLink(record: ShareRecord, now = Date.now()): ShareLink {
     revokedAt: record.revokedAt,
     comments: record.commentIds.length,
     active: isLive(record, now),
+    live: record.live === true,
+    studioCursor: record.studioCursor === true,
+    rev: record.rev ?? 0,
+    viewers,
   };
 }
 
@@ -141,6 +152,14 @@ export function createShareStore(dataDir: string): ShareStore {
       await mutate((records) => {
         const found = records.find((r) => r.id === id);
         if (found) found.commentIds.push(commentId);
+      });
+    },
+    update(id, patch) {
+      return mutate((records) => {
+        const found = records.find((r) => r.id === id);
+        if (!found || !isLive(found)) return null;
+        Object.assign(found, patch);
+        return { ...found };
       });
     },
     async activeCount() {

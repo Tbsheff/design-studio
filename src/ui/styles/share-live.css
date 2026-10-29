@@ -1,0 +1,54 @@
+.share-cursors {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.share-cursor {
+  --cursor-color: oklch(0.62 0.19 var(--cursor-hue, 260));
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--cursor-color);
+  transition: transform 80ms linear;
+  will-change: transform;
+}
+
+.share-cursor[hidden] {
+  display: none;
+}
+
+.share-cursor svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: -2px 0 0 -2px;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.3));
+}
+
+.share-cursor span {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-sm);
+  background: var(--cursor-color);
+  color: white;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-xs);
+}
+
+.share-cursor.below span::after {
+  content: ' ↓';
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-cursor {
+    transition: none;
+  }
+}

@@ -6,7 +6,7 @@ import { findFrame } from '../canvas/tools.js';
 import { approve, EditError, loadTarget, oneLine, studioCall, type EditDeps } from './edit-deps.js';
 import { defineTool, directionId, ok, projectId } from './edit-kit.js';
 
-const SHARE_NOTE = 'A share link is a read-only PNG snapshot of canvas frames, served on a separate listener on this computer (127.0.0.1) unless the user turns on Allow on local network in the Share dialog. Viewers can only see the images and add comments with a name they type; those comments land as drafts in the studio Comments pane, marked as from a viewer, and never go to the studio agent unless the user sends them. The link has a random token, ends after its expiry and can be revoked. Links are off until someone creates one.';
+const SHARE_NOTE = 'A share link is a read-only PNG snapshot of canvas frames, served on a separate listener on this computer (127.0.0.1) unless the user turns on Allow on local network in the Share dialog. Viewers can only see the images and add comments with a name they type; those comments land as drafts in the studio Comments pane, marked as from a viewer, and never go to the studio agent unless the user sends them. The link has a random token, ends after its expiry and can be revoked. Links are off until someone creates one. A live link (live: true) swaps in new snapshots after each saved version and shows viewer cursors in the studio; viewers still get only PNGs, never the design code or a studio API.';
 
 const createInput = z
   .object({
@@ -15,21 +15,23 @@ const createInput = z
     frames: z.array(z.string().trim().min(1).max(80)).min(1).max(SHARE_MAX_FRAMES).optional().describe('Frame ids or @labels from canvas_list. Leave out for every visible frame of the direction.'),
     expiresInHours: z.union([z.literal(1), z.literal(24), z.literal(168)]).default(SHARE_DEFAULT_EXPIRY_HOURS).describe(`Hours until the link ends: ${SHARE_EXPIRY_HOURS.join(', ')}.`),
     title: z.string().trim().max(120).optional().describe('Title on the shared page. Leave out for the project name.'),
+    live: z.boolean().default(false).describe('Live link: viewers get new PNG snapshots each time a version is saved, and their cursors show on the studio canvas. The studio cursor shows to viewers only if the user turns it on in Share.'),
   })
   .strict();
 
 const listInput = z.object({ projectId }).strict();
 const revokeInput = z.object({ projectId, shareId: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).describe('Share link id from list_share_links or create_share_link.') }).strict();
 
-async function pickFrames(deps: EditDeps, input: z.output<typeof createInput>): Promise<ExportFrame[] | undefined> {
+async function pickFrames(deps: EditDeps, input: z.output<typeof createInput>): Promise<{ frames: ExportFrame[]; ids: string[] } | undefined> {
   if (!input.frames) return undefined;
   const { project } = await loadTarget(deps, input.projectId, input.directionId);
   const all = (await readProjectCanvas(project, (id) => deps.projects.projectDir(id)).catch(() => null))?.canvas?.frames ?? [];
-  return input.frames.map((ref) => {
+  const picked = input.frames.map((ref) => {
     const found = findFrame(all, ref);
     if (!found) throw new EditError(`No frame ${ref} on the canvas. Call canvas_list for frame ids.`);
-    return { name: found.label?.trim() || `${found.width} × ${found.height}`, width: found.width, height: found.height, ...(found.path ? { path: found.path } : {}) };
+    return found;
   });
+  return { frames: picked.map((found) => ({ name: found.label?.trim() || `${found.width} × ${found.height}`, width: found.width, height: found.height, ...(found.path ? { path: found.path } : {}) })), ids: picked.map((f) => f.id) };
 }
 
 const createShare = defineTool(
@@ -39,7 +41,8 @@ const createShare = defineTool(
   async (deps, input, client) => {
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
     if (!direction.headVersionId) throw new EditError('This direction has no saved version to share yet.');
-    const frames = await pickFrames(deps, input);
+    const picked = await pickFrames(deps, input);
+    const frames = picked?.frames;
     if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this share link. Ask the user to open the project in Design Studio, or to click Share there.');
     const names = frames ? frames.map((f) => f.name).join(', ') : 'every visible frame';
     const before = await studioCall<ShareList>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/shares`);
@@ -50,12 +53,13 @@ const createShare = defineTool(
       projectId: project.id,
       client,
       title: `${client} wants to share “${oneLine(input.title || project.name, 80)}” as a read-only link`,
-      detail: `Anyone with the link can see PNG snapshots of ${oneLine(names, 200)} and add comments for ${input.expiresInHours} h. ${reach} You can revoke it from Share.`,
+      detail: `Anyone with the link can see ${input.live ? 'live PNG snapshots (new ones after each saved version, with their cursors on your canvas)' : 'PNG snapshots'} of ${oneLine(names, 200)} and add comments for ${input.expiresInHours} h. ${reach} You can revoke it from Share.`,
     });
     const created = await studioCall<ShareCreated>(deps, 'POST', `/api/projects/${encodeURIComponent(project.id)}/shares`, {
       directionId: direction.id,
       expiresInHours: input.expiresInHours,
-      ...(frames ? { frames } : {}),
+      live: input.live,
+      ...(picked ? { frames: picked.frames, frameIds: picked.ids } : {}),
       ...(input.title ? { title: input.title } : {}),
     });
     const base = created.server.localUrl;
@@ -70,7 +74,7 @@ const listShares = defineTool(
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
     const list = await studioCall<ShareList>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/shares`);
-    return { result: ok({ links: list.links.map((l) => ({ id: l.id, title: l.title, active: l.active, expiresAt: new Date(l.expiresAt).toISOString(), revoked: l.revokedAt !== null, frames: l.frames.map((f) => f.name), comments: l.comments })), server: { running: list.server.running, localNetwork: list.server.lan } }) };
+    return { result: ok({ links: list.links.map((l) => ({ id: l.id, title: l.title, active: l.active, live: l.live, viewers: l.viewers, expiresAt: new Date(l.expiresAt).toISOString(), revoked: l.revokedAt !== null, frames: l.frames.map((f) => f.name), comments: l.comments })), server: { running: list.server.running, localNetwork: list.server.lan } }) };
   },
 );
 

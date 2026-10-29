@@ -149,10 +149,10 @@ export const LAYER_TOOLS = [getLayers];
 
 function selectorSlots(args: Args): { holder: Args; key: string }[] {
   const slots: { holder: Args; key: string }[] = [];
-  const visit = (holder: Args) => {
-    for (const key of ['selector', 'targetSelector']) if (isLayerRef(holder[key])) slots.push({ holder, key });
+  const visit = (holder: Args, keys = ['selector', 'targetSelector']) => {
+    for (const key of keys) if (isLayerRef(holder[key])) slots.push({ holder, key });
   };
-  visit(args);
+  visit(args, ['selector', 'targetSelector', 'before', 'after']);
   for (const value of Object.values(args)) {
     if (value && typeof value === 'object' && !Array.isArray(value)) visit(value as Args);
     if (!Array.isArray(value)) continue;

@@ -952,6 +952,7 @@ function startBridge(session: BridgeSession): void {
       return { own: value ? parseLoc(value) : null, usedAt: APP_MODE === 'next' && componentUseOf(element)?.root ? usedAtOf(element) : null };
     },
     post,
+    promote: (element) => postSelect(element, false),
   });
 
   const onPointerDown = (event: PointerEvent): void => {

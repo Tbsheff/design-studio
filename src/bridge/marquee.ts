@@ -48,18 +48,20 @@ function inside(box: Rect, rect: DOMRect): boolean {
   return rect.left >= box.x - EDGE_SLACK && rect.top >= box.y - EDGE_SLACK && rect.right <= box.x + box.width + EDGE_SLACK && rect.bottom <= box.y + box.height + EDGE_SLACK;
 }
 
+function touches(box: Rect, rect: DOMRect): boolean {
+  return rect.right >= box.x && rect.left <= box.x + box.width && rect.bottom >= box.y && rect.top <= box.y + box.height;
+}
+
 export function coveredElements(scope: Element, box: Rect, locked: (element: Element) => boolean): Element[] {
-  const picked: Element[] = [];
-  const walk = (parent: Element): void => {
-    for (const child of Array.from(parent.children)) {
-      if (picked.length >= MATCH_SELECT_MAX) return;
-      if (!isLayer(child) || locked(child)) continue;
-      if (inside(box, child.getBoundingClientRect())) picked.push(child);
-      else if (child.tagName.toLowerCase() !== 'svg') walk(child);
-    }
-  };
-  walk(scope);
-  return picked;
+  let parents: Element[] = [scope];
+  while (parents.length > 0) {
+    const level = parents.flatMap((parent) => Array.from(parent.children)).filter((child) => isLayer(child) && !locked(child));
+    const rects = new Map(level.map((child) => [child, child.getBoundingClientRect()]));
+    const picked = level.filter((child) => inside(box, rects.get(child) as DOMRect));
+    if (picked.length > 0) return picked.slice(0, MATCH_SELECT_MAX);
+    parents = level.filter((child) => child.tagName.toLowerCase() !== 'svg' && touches(box, rects.get(child) as DOMRect));
+  }
+  return [];
 }
 
 export function createMarquee(ports: MarqueePorts): Marquee {

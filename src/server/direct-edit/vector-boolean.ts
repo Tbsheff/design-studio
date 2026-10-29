@@ -4,7 +4,7 @@ import { DEFAULT_SHAPE_FILL } from '../../shared/vector.js';
 import { DirectEditError } from './errors.js';
 import { applySplices, type Splice } from './splice.js';
 import { positionAt } from './structure-ops.js';
-import { allPoints, boxOfPoints, combine, ellipseRing, pathRings, rectRing, regionOf, regionPath, type Box } from './vector-geometry.js';
+import { allPoints, boxOfPoints, combine, ellipseRing, pathRings, rectRing, regionOf, regionPath, round, type Box } from './vector-geometry.js';
 import { elementText } from './vector-snippet.js';
 import type { VectorDoc, VNode } from './vector-source.js';
 
@@ -148,14 +148,42 @@ function removedNode(a: Operand, b: Operand): VNode {
   return b.svg;
 }
 
-function slotSplice(code: string, a: Operand, path: string): { splice: Splice; offset: number; extra: Splice | null } {
+function slotSplice(code: string, a: Operand, path: string, open: Splice | null): { splice: Splice; offset: number; extra: Splice | null } {
   if (a.node.tag !== 'svg') return { splice: { start: a.node.start, end: a.node.end, text: path }, offset: 0, extra: null };
   const inner = a.svg.inner;
   if (!inner) throw refuse('The first SVG has no closing tag');
   const indent = /^[ \t]*/.exec(code.slice(lineStartOf(code, a.svg.start)))?.[0] ?? '';
   const lead = `\n${indent}  `;
-  const extra = a.svg.attrs.overflow ? null : { start: a.svg.start + 4, end: a.svg.start + 4, text: ' overflow="visible"' };
+  const extra = open ?? (a.svg.attrs.overflow ? null : { start: a.svg.start + 4, end: a.svg.start + 4, text: ' overflow="visible"' });
   return { splice: { start: inner.start, end: inner.end, text: `${lead}${path}\n${indent}` }, offset: lead.length, extra };
+}
+
+interface Rebox {
+  box: Box;
+  open: Splice;
+}
+
+function setAttr(tag: string, name: string, value: number | string): string {
+  const pattern = new RegExp(`(\\s${name}=)("[^"]*"|\\{[^}]*\\})`, 'i');
+  return pattern.test(tag) ? tag.replace(pattern, `$1"${value}"`) : tag.replace(/^<svg/, `<svg ${name}="${value}"`);
+}
+
+function setPlace(tag: string, name: 'left' | 'top', value: number): string {
+  return tag.replace(new RegExp(`(\\b${name}:\\s*['"]?)(-?\\d*\\.?\\d+)`), `$1${value}`);
+}
+
+function reboxOf(code: string, a: Operand, sameSvg: boolean, target: VectorBox, result: MultiPolygon): Rebox | null {
+  if (sameSvg || a.node.tag !== 'svg' || a.svg.dynamic.length > 0) return null;
+  const left = px(a.svg.style.left);
+  const top = px(a.svg.style.top);
+  const box = boxOfPoints(allPoints(result));
+  if (left === null || top === null || !box) return null;
+  const width = round(box.width);
+  const height = round(box.height);
+  let tag = code.slice(a.svg.start, a.svg.openEnd);
+  tag = setAttr(setAttr(setAttr(tag, 'width', width), 'height', height), 'viewBox', `0 0 ${width} ${height}`);
+  tag = setPlace(setPlace(tag, 'left', round(left + box.x - target.x)), 'top', round(top + box.y - target.y));
+  return { box, open: { start: a.svg.start, end: a.svg.openEnd, text: tag } };
 }
 
 function overlaps(x: Splice, y: Splice): boolean {
@@ -170,10 +198,12 @@ export function planBoolean(code: string, doc: VectorDoc, nodes: [VNode, VNode],
   const [mapA, mapB] = maps(a, b, rects);
   const result = combine(op, apply(a.region, mapA), apply(b.region, mapB));
   if (result.length === 0) throw refuse(`The ${op} of these shapes is empty`);
-  const back = ([x, y]: Pair): Pair => [(x - mapA.tx) / mapA.sx, (y - mapA.ty) / mapA.sy];
+  const sameSvg = a.svg.start === b.svg.start;
+  const rebox = sameSvg ? null : reboxOf(code, a, sameSvg, rects?.[0] ?? placedBox(a.svg), result);
+  const back = rebox ? ([x, y]: Pair): Pair => [x - rebox.box.x, y - rebox.box.y] : ([x, y]: Pair): Pair => [(x - mapA.tx) / mapA.sx, (y - mapA.ty) / mapA.sy];
   const d = regionPath(result, back);
   const path = elementText('path', { 'data-name': NAMES[op], d, 'fill-rule': 'evenodd', ...paintOf(a) }, doc.html);
-  const slot = slotSplice(code, a, path);
+  const slot = slotSplice(code, a, path, rebox?.open ?? null);
   const remove = removal(code, removedNode(a, b));
   if (overlaps(remove, slot.splice) || (slot.extra && overlaps(remove, slot.extra))) throw refuse('These two shapes overlap in the source. Select two separate shapes');
   const splices = [slot.splice, remove, ...(slot.extra ? [slot.extra] : [])];

@@ -81,10 +81,11 @@ const drawVector = defineTool(
     refuseWhileRunning(deps, project, direction);
     const target = await targetOf(deps, project, direction, input);
     const common = { target, relativeParent: input.makeParentRelative, ...paintOf(input) };
+    const named = input.name ? { name: input.name } : {};
     const body: VectorRequest =
       input.shape === 'path'
-        ? { op: 'path', d: input.d ?? '', ...(input.name ? { name: input.name } : {}), ...common }
-        : { op: 'shape', shape: input.shape, box: { x: input.x, y: input.y, width: input.width ?? 1, height: input.height ?? 1 }, ...common };
+        ? { op: 'path', d: input.d ?? '', ...named, ...common }
+        : { op: 'shape', shape: input.shape, box: { x: input.x, y: input.y, width: input.width ?? 1, height: input.height ?? 1 }, ...named, ...common };
     return callVector(deps, project, direction, body);
   },
 );

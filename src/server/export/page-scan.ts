@@ -72,6 +72,7 @@ export interface ScanSvg extends ScanRect {
   clip: number;
   id?: number;
   shapes?: ScanShape[] | null;
+  spill?: boolean;
 }
 
 export interface ScanPaint {
@@ -362,9 +363,10 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     return out;
   };
 
-  const svgNative = (element: SVGSVGElement, style: CSSStyleDeclaration): { id?: number; shapes?: ScanShape[] | null } => {
+  const svgNative = (element: SVGSVGElement, style: CSSStyleDeclaration): { id?: number; shapes?: ScanShape[] | null; spill?: boolean } => {
     if (!options.native) return {};
-    return { id: tag(element), shapes: effects(style) || style.transform !== 'none' ? null : svgShapes(element) };
+    const spill = style.overflowX === 'visible' && style.overflowY === 'visible';
+    return { id: tag(element), shapes: effects(style) || style.transform !== 'none' ? null : svgShapes(element), ...(spill ? { spill } : {}) };
   };
 
   const pushSvg = (element: SVGSVGElement, style: CSSStyleDeclaration, opacity: number, clip: number): void => {

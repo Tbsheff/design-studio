@@ -21,6 +21,7 @@ export interface FreeMovePorts {
   rectOf: (element: Element) => Rect;
   ownSource: (element: Element) => Promise<{ own: SourceLoc | null; usedAt: SourceLoc | null }>;
   post: (body: FreeMoveMessage) => void;
+  promote: (element: Element) => void;
 }
 
 export interface FreeMove {
@@ -51,6 +52,10 @@ interface Drag {
   y: number;
   pointer: number;
   session: Session | null;
+  promoted: boolean;
+  started: Promise<void>;
+  ready: boolean;
+  cancelled: boolean;
 }
 
 const num = (value: string): number => {
@@ -87,6 +92,15 @@ function isFrameSized(element: Element): boolean {
 
 function marqueeFirst(selected: Element, hit: Element): boolean {
   return hit === selected && Array.from(selected.children).some(isLayer) && isFrameSized(selected);
+}
+
+const PROMOTE_WAIT_MS = 80;
+
+function outerSvg(element: Element): SVGSVGElement | null {
+  if (!(element instanceof SVGElement) || element instanceof SVGSVGElement) return null;
+  let svg = element.ownerSVGElement;
+  while (svg?.ownerSVGElement) svg = svg.ownerSVGElement;
+  return svg;
 }
 
 function visible(rect: Rect): boolean {
@@ -237,7 +251,16 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
     } catch {
       void 0;
     }
-    ports.post({ type: 'move-start', move: session.start });
+    const announce = () => {
+      if (d.cancelled) return;
+      d.ready = true;
+      ports.post({ type: 'move-start', move: session.start });
+    };
+    if (!d.promoted) announce();
+    else {
+      ports.promote(d.element);
+      d.started = new Promise((done) => setTimeout(() => done(announce()), PROMOTE_WAIT_MS));
+    }
     return session;
   };
 
@@ -247,20 +270,22 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
       drag = null;
       const selected = ports.selected();
       if (event.button !== 0 || event.shiftKey || !ports.enabled() || !selected?.isConnected || !hit || !selected.contains(hit) || marqueeFirst(selected, hit)) return false;
-      drag = { element: selected, x: event.clientX, y: event.clientY, pointer: event.pointerId, session: null };
+      const svg = outerSvg(selected);
+      drag = { element: svg ?? selected, x: event.clientX, y: event.clientY, pointer: event.pointerId, session: null, promoted: svg !== null, started: Promise.resolve(), ready: false, cancelled: false };
       return true;
     },
     move(event) {
       const d = drag;
       if (!d) return false;
       if ((event.buttons & 1) === 0) {
+        d.cancelled = true;
         if (d.session) ports.post({ type: 'move-cancel' });
         finish();
         return false;
       }
       if (!d.session && Math.hypot(event.clientX - d.x, event.clientY - d.y) < START_PX) return true;
       const session = d.session ?? activate(d, event);
-      ports.post({ type: 'move-live', drag: dragOf(d, session, event).drag });
+      if (d.ready) ports.post({ type: 'move-live', drag: dragOf(d, session, event).drag });
       return true;
     },
     up(event) {
@@ -270,11 +295,13 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
       if (!d.session) return false;
       swallow = true;
       const session = d.session;
-      void resolveDrop(session, dragOf(d, session, event)).then((result) => ports.post({ type: 'move-drop', drag: result }));
+      const picked = dragOf(d, session, event);
+      void d.started.then(() => resolveDrop(session, picked)).then((result) => ports.post({ type: 'move-drop', drag: result }));
       return true;
     },
     cancel() {
       const was = drag?.session != null;
+      if (drag) drag.cancelled = true;
       if (was) ports.post({ type: 'move-cancel' });
       finish();
       return was;

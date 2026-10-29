@@ -76,10 +76,10 @@ export interface AppReviewGaps {
 
 export function appReviewGaps(ctx: Pick<AgentRunContext, 'project' | 'target' | 'request' | 'previewUrl'>, run: RunToolState, toolOrder: readonly string[]): AppReviewGaps | null {
   if (!ctx.project.app || !ctx.target || !ctx.previewUrl || ctx.request.mode !== 'edit') return null;
-  const firstEdit = toolOrder.findIndex((name) => EDIT_TOOLS.has(name));
-  if (firstEdit === -1) return null;
-  const mobile = !(run.log?.shots ?? []).some((shot) => shot.viewport === 'mobile' && shot.at > firstEdit);
-  const review = !(run.reviews ?? []).some((note) => note.at > firstEdit && (note.frame === null || isContextFrame(ctx, note.frame)));
+  const lastEdit = toolOrder.findLastIndex((name) => EDIT_TOOLS.has(name));
+  if (lastEdit === -1) return null;
+  const mobile = !(run.log?.shots ?? []).some((shot) => shot.viewport === 'mobile' && shot.at > lastEdit);
+  const review = !(run.reviews ?? []).some((note) => note.at > lastEdit && (note.frame === null || isContextFrame(ctx, note.frame)));
   return mobile || review ? { mobile, review } : null;
 }
 
@@ -124,14 +124,21 @@ function inChanged(source: string | null, changed: readonly string[]): boolean {
   return Boolean(file) && changed.some((entry) => entry === file || entry.endsWith(`/${file}`) || (file as string).endsWith(`/${entry}`));
 }
 
-async function reviewItems(input: StudioReviewInput): Promise<ReviewItem[]> {
-  const result = await runReviewFrameTool({ preview: input.preview, ctx: input.ctx, ...(input.canvas ? { canvas: input.canvas } : {}) }, {});
+async function reviewAt(input: StudioReviewInput, viewport: 'mobile' | null): Promise<ReviewItem[]> {
+  const result = await runReviewFrameTool({ preview: input.preview, ctx: input.ctx, ...(input.canvas ? { canvas: input.canvas } : {}) }, viewport ? { viewport } : {});
   const text = result.content[0]?.text ?? '';
   if (result.isError) throw new Error(text);
+  const findings = (JSON.parse(text) as { findings?: ReviewItem[] }).findings ?? [];
+  return viewport ? findings.map((item) => ({ ...item, element: `${item.element} at 390 px` })) : findings;
+}
+
+async function reviewItems(input: StudioReviewInput): Promise<ReviewItem[]> {
+  const [frame, mobile] = await Promise.all([reviewAt(input, null), reviewAt(input, 'mobile').catch(() => [])]);
   const app = input.ctx.project.app;
   const changed = app && input.run.startedAt !== undefined ? await changedSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt) : [];
-  const findings = (JSON.parse(text) as { findings?: ReviewItem[] }).findings ?? [];
-  return findings.filter((item) => item.severity !== 'low' && inChanged(item.source, changed));
+  const seen = new Set(frame.map((item) => `${item.kind}|${item.selector ?? item.element}`));
+  const extra = mobile.filter((item) => !seen.has(`${item.kind}|${item.selector ?? item.element}`));
+  return [...frame, ...extra].filter((item) => item.severity !== 'low' && inChanged(item.source, changed));
 }
 
 function reviewLine(item: ReviewItem): string {
@@ -161,13 +168,14 @@ export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewG
   return { record, images: image ? [image] : [], lines };
 }
 
-export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps): string | null {
+export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps, pass = 1): string | null {
   if (review.lines.length === 0 && review.images.length === 0) return null;
-  const ran = [gaps.mobile ? 'a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)' : null, gaps.review ? 'review_frame on the context frame' : null].filter(Boolean).join(' and ');
+  const ran = [gaps.mobile ? 'a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)' : null, gaps.review ? 'review_frame on the context frame at its size and at 390 px' : null].filter(Boolean).join(' and ');
+  const opening = pass > 1 ? `You edited again after the studio checks, so the studio ran ${ran} once more.` : `You finished an app run without ${ran}, so the studio ran them.`;
   const body = review.lines.length ? ['Findings in the files you changed:', ...review.lines] : ['review_frame found nothing high or medium in the files you changed.'];
   return [
     '<studio-continue>',
-    `You finished an app run without ${ran}, so the studio ran them.`,
+    opening,
     ...body,
     review.images.length ? 'Look at the mobile image: the new UI must sit inside the page content and fit 390 px without overlap or sideways scroll.' : '',
     'Do one fix loop: fix these findings and what you see in your new UI only, with edit_element or Edit. Then run mcp__studio__render_check once. Do not edit code you did not touch. Then reply in one or two sentences with what you fixed and what is left.',
@@ -175,7 +183,20 @@ export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps): stri
   ].filter(Boolean).join('\n');
 }
 
-export function appReviewNote(record: AppReviewRecord): string {
-  const ran = [record.mobileShot === 'studio' ? 'mobile screenshot' : null, record.review === 'studio' ? 'review_frame' : null].filter(Boolean).join(' and ');
-  return `Studio app check: the agent skipped the ${ran || 'app checks'}, so the studio ran them; ${record.findings} finding(s) in changed files; ${record.fixLoop ? 'one fix loop ran' : 'no fix loop ran'}.`;
+function passText(record: AppReviewRecord, index: number): string {
+  return `pass ${index + 1}: ${record.findings} finding(s) in changed files, ${record.fixLoop ? 'a fix loop ran' : 'no fix loop'}`;
+}
+
+export function appReviewNote(records: readonly AppReviewRecord[]): string {
+  const first = records[0];
+  if (!first) return '';
+  const ran = [first.mobileShot === 'studio' ? 'mobile screenshot' : null, first.review === 'studio' ? 'review_frame' : null].filter(Boolean).join(' and ');
+  return `Studio app check: the agent skipped the ${ran || 'app checks'} after its last edit, so the studio ran them (desktop and 390 px); ${records.map(passText).join('; ')}.`;
+}
+
+export function mergeAppReviews(records: readonly AppReviewRecord[]): AppReviewRecord | null {
+  const first = records[0];
+  const last = records.at(-1);
+  if (!first || !last) return null;
+  return { ...first, mobileShot: records.some((record) => record.mobileShot === 'failed') ? 'failed' : first.mobileShot, findings: last.findings, fixLoop: records.some((record) => record.fixLoop) };
 }

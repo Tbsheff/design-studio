@@ -10,7 +10,7 @@ import { BASH_EDIT_TOOL, bashWriteProblem, builtinToolNames, createCanUseTool, c
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import { captureBaseline, prewarmChecks, type RunToolState } from './check-tool.js';
-import { appReviewGaps, appReviewNote, appReviewPrompt, noteReview, runFinalCheck, studioAppReview } from './final-check.js';
+import { appReviewGaps, appReviewNote, appReviewPrompt, mergeAppReviews, noteReview, runFinalCheck, studioAppReview } from './final-check.js';
 import type { AppReviewRecord } from '../../shared/contracts.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
@@ -245,6 +245,7 @@ async function attachFinalCheck(outcome: DriverOutcome, input: Parameters<typeof
 }
 
 const APP_REVIEW_MIN_LEFT = 0.15;
+const APP_REVIEW_PASSES = 3;
 
 function roomForFixLoop(outcome: DriverOutcome, segment: AttemptSegment): boolean {
   if (outcome.status !== 'completed') return false;
@@ -770,21 +771,33 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     });
   }
 
-  async function continueAppReview(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<{ outcome: DriverOutcome; record: AppReviewRecord | null }> {
+  async function appReviewPass(input: DriverInput, segment: AttemptSegment, total: DriverOutcome, pass: number): Promise<{ outcome: DriverOutcome; record: AppReviewRecord } | null> {
     const run = segment.setup.run;
     const gaps = input.signal.aborted || total.status === 'failed' ? null : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
-    if (!gaps) return { outcome: total, record: null };
+    if (!gaps) return null;
     const review = await studioAppReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId }, gaps);
-    const text = appReviewPrompt(review, gaps);
+    const text = appReviewPrompt(review, gaps, pass);
     const sessionId = segment.sessionId;
-    if (!text || !sessionId || !roomForFixLoop(total, segment) || input.signal.aborted) return { outcome: { ...total, finalText: `${total.finalText}\n\n${appReviewNote(review.record)}` }, record: review.record };
-    input.sink.sent({ text, imageCount: review.images.length, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: (total.loop?.continuations ?? 0) + 1 });
+    if (!text || !sessionId || pass >= APP_REVIEW_PASSES || !roomForFixLoop(total, segment) || input.signal.aborted) return { outcome: total, record: review.record };
+    input.sink.sent({ text, imageCount: review.images.length, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: (total.loop?.continuations ?? 0) + pass });
     segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
     const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };
     const next = await runSegment(input, segment, { text, images: review.images }, prior);
-    const record = { ...review.record, fixLoop: true };
-    const merged = mergeOutcomes(total, next.outcome);
-    return { outcome: { ...merged, finalText: `${merged.finalText}\n\n${appReviewNote(record)}` }, record };
+    return { outcome: mergeOutcomes(total, next.outcome), record: { ...review.record, fixLoop: true } };
+  }
+
+  async function continueAppReview(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<{ outcome: DriverOutcome; record: AppReviewRecord | null }> {
+    const records: AppReviewRecord[] = [];
+    let outcome = total;
+    for (let pass = 1; pass <= APP_REVIEW_PASSES; pass += 1) {
+      const step = await appReviewPass(input, segment, outcome, pass);
+      if (!step) break;
+      outcome = step.outcome;
+      records.push(step.record);
+      if (!step.record.fixLoop) break;
+    }
+    if (records.length === 0) return { outcome, record: null };
+    return { outcome: { ...outcome, finalText: `${outcome.finalText}\n\n${appReviewNote(records)}` }, record: mergeAppReviews(records) };
   }
 
   async function attempt(input: DriverInput, parts: UserMessageParts, resume: string | null): Promise<AttemptResult> {

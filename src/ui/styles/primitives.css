@@ -78,9 +78,6 @@
   background: var(--brand-press);
 }
 
-.icon-btn.send:disabled {
-  opacity: 0.45;
-}
 
 .ui-pill-select {
   display: inline-grid;
@@ -514,16 +511,19 @@
   font-variant-numeric: tabular-nums;
 }
 
-:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked]:not(:has(> svg:first-child))::before,
-.ui-menu:has(.ui-menu-item > svg:first-child, .ui-menu-item[aria-checked]) .ui-menu-item:not([aria-checked], :has(> svg:first-child))::before {
+:is(.ui-menu, .project-menu, .theme-menu):has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked]) :is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])::before,
+.ui-menu:has(.ui-menu-item > svg:first-child):not(:has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked])) .ui-menu-item:not(:has(> svg:first-child))::before {
   content: '';
   flex: none;
   width: 16px;
   height: 16px;
 }
 
-:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked='true']:not(:has(> svg:first-child))::before,
-:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked='true']:has(> svg:first-child)::after {
+:is(.ui-menu, .project-menu, .theme-menu):has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked]):has(:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem']) > svg:first-child) :is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem']):not(:has(> svg:first-child)) {
+  padding-left: calc(var(--s-2) * 2 + 16px);
+}
+
+:is(.ui-menu-item, .project-menu [role^='menuitem'], .theme-menu [role^='menuitem'])[aria-checked='true']::before {
   content: '';
   flex: none;
   width: 16px;

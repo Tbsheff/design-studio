@@ -55,6 +55,7 @@ export interface ReviewResult {
   findings: ReviewFinding[];
   counts: Record<ReviewSeverity, number>;
   notes: string[];
+  matched?: { count: number; note: string };
 }
 
 export interface ReviewRequest {

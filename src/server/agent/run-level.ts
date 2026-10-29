@@ -122,13 +122,13 @@ function editBody(level: RunLevel, limited: boolean, context: RunLevelContext): 
   return `${prototypeEdit(context)}\n- ${limited ? STOP_RULE : STOP_RULE_NO_LIMIT}\n- ${REPLY_RULE}`;
 }
 
-const PORT_STEPS = `Level: ${PORT_LEVEL_LABEL.toUpperCase()}. Task: move the prototype page in <prototype-source> into this app as the one route the <port-plan> names. Do not redesign it.
+const PORT_STEPS = `Level: ${PORT_LEVEL_LABEL.toUpperCase()}. Task: move the prototype page in <prototype-source> into this app as the routes the <port-plan> or <port-flow> names. Do not redesign it.
 ${PORT_RULES}
 REQUIRED steps, in this order:
-0. Call \`TodoWrite\` with 4 todos: read the plan, write the route file, check, fix. Name the route file in the write todo.
+0. Call \`TodoWrite\` with 4 todos: read the plan, write the route files, check, fix. Name the route files in the write todo.
 1. Read the <port-plan> and the prototype. Call \`mcp__studio__list_components\` once for each kit component the plan names, and use the import line it returns.
-2. Write the route file with Write (it is a new file). Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to add a frame for the new route when none shows it.
-3. Call \`mcp__studio__render_check\`. Then take a desktop and a mobile screenshot of the new route.
+2. Write each route file with Write (each is a new file), and rewrite links with the link map. Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to add a frame for each new route when none shows it.
+3. Call \`mcp__studio__render_check\`. Then take a desktop and a mobile screenshot of each new route.
 4. ${APP_REVIEW_STEP}
 5. Fix all errors and every HIGH finding with Edit. Do 1 fix loop, then run render_check once more.
 6. Reply in two to four sentences: the route and file, the kit components you used, and any prototype part you could not port.`;

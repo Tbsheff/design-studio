@@ -80,6 +80,24 @@ function fitBase(stage: Stage, layout: PanZoomLayout, z: number): { x: number; y
   };
 }
 
+const SCREEN_SIZE_CHROME = '.frame-label, .frame-resize, .frame-size-readout, .overlay, .link-layer';
+
+function setZoomVars(el: HTMLElement, zoom: number): void {
+  el.style.setProperty('--stroke', `${1 / zoom}px`);
+  el.style.setProperty('--inv-zoom', String(1 / zoom));
+}
+
+function paintScreenSizeChrome(artboard: HTMLElement, zoom: number): void {
+  for (const el of artboard.querySelectorAll<HTMLElement>(SCREEN_SIZE_CHROME)) {
+    if (!el.classList.contains('frame-label')) {
+      setZoomVars(el, zoom);
+      continue;
+    }
+    el.style.transform = `scale(${1 / zoom})`;
+    el.style.maxWidth = `calc(var(--frame-w, 100000px) * ${zoom})`;
+  }
+}
+
 export function blocksZoomKey(event: KeyboardEvent): boolean {
   if (!isTypingTarget(event.target)) return false;
   return !(isModZoomKey(event) && event.target instanceof HTMLSelectElement);
@@ -149,8 +167,8 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     if (!el) return;
     const v = view();
     el.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`;
-    el.style.setProperty('--stroke', `${1 / v.zoom}px`);
-    el.style.setProperty('--inv-zoom', String(1 / v.zoom));
+    if (painted.current?.zoom !== v.zoom) paintScreenSizeChrome(el, v.zoom);
+    if (zoomOverride.current === null && el.style.getPropertyValue('--inv-zoom') !== String(1 / v.zoom)) setZoomVars(el, v.zoom);
     painted.current = v;
     zoomPercent.set(Math.round(v.zoom * 100));
   }, [artboardRef, view, zoomPercent]);

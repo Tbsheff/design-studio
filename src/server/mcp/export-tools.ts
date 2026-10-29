@@ -8,7 +8,7 @@ import { defineTool, directionId, id, ok, pageUrl, projectId, selector } from '.
 import { isLayerRef, LayerRefError, resolveLayerRef, scopeOf } from './layer-ref.js';
 
 export const EXPORT_FRAME_TEXT =
-  'Export canvas frames as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio. SVG: one vector file per frame (a zip for several), with boxes, borders and inline SVG as shapes, text as <text> with its font names (web fonts embedded when the page loads them), and pictures, gradients and canvas kept as embedded images; selector exports one element. PPTX: one slide per frame (a page with two or more .slide or [data-slide] sections gives one slide per section), each with native, editable text boxes on a full-slide picture of the frame without its text. Returns the path of the file in the Design Studio data folder. Changes no design file.';
+  'Export canvas frames as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio. SVG: one vector file per frame (a zip for several), with boxes, borders and inline SVG as shapes, text as <text> with its font names (web fonts embedded when the page loads them), and pictures, gradients and canvas kept as embedded images; selector exports one element. PPTX: one slide per frame (a page with two or more .slide or [data-slide] sections gives one slide per section), each with native, editable text boxes, solid boxes and rounded boxes, rules as lines, simple inline SVG shapes and images as pictures, on a full-slide picture of the rest (gradients, shadows, filters) with those parts left out. Returns the path of the file in the Design Studio data folder. Changes no design file.';
 
 const schema = z
   .object({

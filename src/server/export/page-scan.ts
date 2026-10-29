@@ -33,6 +33,9 @@ export interface ScanBox extends ScanRect {
   raster: boolean;
   opacity: number;
   clip: number;
+  id?: number;
+  complex?: boolean;
+  image?: boolean;
 }
 
 export interface ScanLine extends ScanRect {
@@ -67,7 +70,22 @@ export interface ScanSvg extends ScanRect {
   markup: string;
   opacity: number;
   clip: number;
+  id?: number;
+  shapes?: ScanShape[] | null;
 }
+
+export interface ScanPaint {
+  fill: ScanColor | null;
+  stroke: ScanColor | null;
+  strokeWidth: number;
+  opacity: number;
+}
+
+export type ScanShape =
+  | (ScanPaint & ScanRect & { kind: 'rect'; radius: number })
+  | (ScanPaint & ScanRect & { kind: 'ellipse' })
+  | (ScanPaint & { kind: 'line'; x1: number; y1: number; x2: number; y2: number })
+  | (ScanPaint & { kind: 'path'; d: string; matrix: [number, number, number, number, number, number] });
 
 export type ScanItem = ScanBox | ScanText | ScanSvg;
 
@@ -92,6 +110,7 @@ export interface ScanOptions {
   maxItems: number;
   maxFontBytes: number;
   embedFonts: boolean;
+  native?: boolean;
 }
 
 export async function scanPage(options: ScanOptions): Promise<ScanResult> {
@@ -201,6 +220,34 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
 
   const REPLACED = new Set(['IMG', 'CANVAS', 'VIDEO', 'PICTURE', 'IFRAME', 'INPUT', 'TEXTAREA', 'SELECT', 'OBJECT', 'EMBED']);
 
+  const tag = (element: Element): number => {
+    const known = element.getAttribute('data-ds-i');
+    if (known) return Number(known);
+    const holder = window as unknown as { __dsNext?: number };
+    const next = holder.__dsNext ?? 0;
+    holder.__dsNext = next + 1;
+    element.setAttribute('data-ds-i', String(next));
+    return next;
+  };
+
+  const effects = (style: CSSStyleDeclaration): boolean => {
+    const set = (prop: string, none = 'none'): boolean => {
+      const value = style.getPropertyValue(prop);
+      return value !== '' && value !== none;
+    };
+    return set('filter') || set('backdrop-filter') || set('clip-path') || set('mask-image') || set('-webkit-mask-image') || set('mix-blend-mode', 'normal');
+  };
+
+  const complexOf = (element: Element, style: CSSStyleDeclaration, box: ScanRect): boolean => {
+    if (effects(style) || style.transform !== 'none') return true;
+    return element instanceof HTMLElement && (Math.abs(element.offsetWidth - box.width) > 1 || Math.abs(element.offsetHeight - box.height) > 1);
+  };
+
+  const nativeOf = (element: Element, style: CSSStyleDeclaration, box: ScanRect): { id?: number; complex?: boolean; image?: boolean } => {
+    if (!options.native) return {};
+    return { id: tag(element), complex: complexOf(element, style, box), image: element.tagName === 'IMG' };
+  };
+
   const pushBox = (element: Element, style: CSSStyleDeclaration, opacity: number, clip: number): void => {
     const box = local(element.getBoundingClientRect());
     if (box.width < 0.5 || box.height < 0.5 || outside(box)) return;
@@ -211,14 +258,119 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     const shadow = shadowOf(style.boxShadow);
     if (!replaced && !image && !fill && !edge.border && edge.sides.length === 0 && !shadow) return;
     if (image && !replaced) note('background images and gradients kept as pictures');
-    items.push({ kind: 'box', ...box, fill: replaced ? null : fill, radius: radii(style, box), ...edge, shadow, raster: replaced || image, opacity, clip });
+    items.push({ kind: 'box', ...box, fill: replaced ? null : fill, radius: radii(style, box), ...edge, shadow, raster: replaced || image, opacity, clip, ...nativeOf(element, style, box) });
   };
 
   const SVG_PAINT = ['fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width', 'stroke-opacity', 'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray', 'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor', 'dominant-baseline', 'stop-color', 'stop-opacity', 'visibility'];
 
-  const pushSvg = (element: SVGSVGElement, opacity: number, clip: number): void => {
+  const SVG_SKIP = new Set(['defs', 'clipPath', 'mask', 'pattern', 'symbol', 'marker', 'linearGradient', 'radialGradient', 'filter', 'title', 'desc', 'style', 'metadata', 'script']);
+  const SVG_GROUP = new Set(['g', 'a']);
+  type Matrix = [number, number, number, number, number, number];
+  type Geometry = ScanRect & { kind: 'rect'; radius: number } | ScanRect & { kind: 'ellipse' } | { kind: 'line'; x1: number; y1: number; x2: number; y2: number } | { kind: 'path'; d: string; matrix: Matrix };
+
+  const hiddenIn = (node: Element, root: Element): boolean => {
+    for (let at: Element | null = node; at && at !== root; at = at.parentElement) {
+      if (SVG_SKIP.has(at.tagName) || getComputedStyle(at).display === 'none') return true;
+    }
+    return getComputedStyle(node).visibility === 'hidden';
+  };
+
+  const opacityIn = (node: Element, root: Element): number => {
+    let out = 1;
+    for (let at: Element | null = node; at && at !== root; at = at.parentElement) out *= parseFloat(getComputedStyle(at).opacity) || 0;
+    return out;
+  };
+
+  const paintOf = (style: CSSStyleDeclaration, which: 'fill' | 'stroke'): ScanColor | null | false => {
+    const raw = style.getPropertyValue(which);
+    if (raw.includes('url(')) return false;
+    const base = color(raw);
+    if (!base) return null;
+    const alpha = base.alpha * (parseFloat(style.getPropertyValue(`${which}-opacity`)) || 0);
+    return alpha < 0.01 ? null : { hex: base.hex, alpha: round(alpha) };
+  };
+
+  const svgPaint = (style: CSSStyleDeclaration, scale: number, opacity: number): ScanPaint | null => {
+    const markers = ['marker-start', 'marker-mid', 'marker-end'].some((prop) => !['', 'none'].includes(style.getPropertyValue(prop)));
+    if (markers || !['', 'none'].includes(style.getPropertyValue('stroke-dasharray'))) return null;
+    const fill = paintOf(style, 'fill');
+    const stroke = paintOf(style, 'stroke');
+    if (fill === false || stroke === false) return null;
+    const strokeWidth = round((parseFloat(style.getPropertyValue('stroke-width')) || 0) * scale);
+    return { fill, stroke: strokeWidth > 0 ? stroke : null, strokeWidth, opacity: round(opacity) };
+  };
+
+  const pointsPath = (node: SVGPolylineElement | SVGPolygonElement, close: boolean): string => {
+    const list = Array.from(node.points).map((point, index) => `${index === 0 ? 'M' : 'L'}${point.x} ${point.y}`);
+    return list.length > 0 ? `${list.join(' ')}${close ? 'Z' : ''}` : '';
+  };
+
+  type Span = (x: number, y: number, w: number, h: number) => ScanRect;
+
+  const rectGeometry = (node: SVGRectElement, m: DOMMatrix, span: Span): Geometry | null | undefined => {
+    const w = node.width.baseVal.value;
+    const h = node.height.baseVal.value;
+    if (w <= 0 || h <= 0) return undefined;
+    const rx = node.rx.baseVal.value || node.ry.baseVal.value;
+    const ry = node.ry.baseVal.value || rx;
+    if (Math.abs(rx * Math.abs(m.a) - ry * Math.abs(m.d)) > 0.5) return null;
+    return { kind: 'rect', ...span(node.x.baseVal.value, node.y.baseVal.value, w, h), radius: round(Math.min(rx * Math.abs(m.a), Math.abs(m.a * w) / 2, Math.abs(m.d * h) / 2)) };
+  };
+
+  const ellipseGeometry = (node: SVGCircleElement | SVGEllipseElement, span: Span): Geometry | undefined => {
+    const rx = node instanceof SVGCircleElement ? node.r.baseVal.value : node.rx.baseVal.value;
+    const ry = node instanceof SVGCircleElement ? rx : node.ry.baseVal.value;
+    if (rx <= 0 || ry <= 0) return undefined;
+    return { kind: 'ellipse', ...span(node.cx.baseVal.value - rx, node.cy.baseVal.value - ry, rx * 2, ry * 2) };
+  };
+
+  const geometryOf = (node: SVGElement, m: DOMMatrix, ox: number, oy: number): Geometry | null | undefined => {
+    const tx = (x: number): number => round(m.a * x + m.e + ox);
+    const ty = (y: number): number => round(m.d * y + m.f + oy);
+    const span: Span = (x, y, w, h) => ({ x: Math.min(tx(x), tx(x + w)), y: Math.min(ty(y), ty(y + h)), width: round(Math.abs(m.a * w)), height: round(Math.abs(m.d * h)) });
+    const matrix: Matrix = [m.a, m.b, m.c, m.d, m.e + ox, m.f + oy];
+    if (node instanceof SVGRectElement) return rectGeometry(node, m, span);
+    if (node instanceof SVGCircleElement || node instanceof SVGEllipseElement) return ellipseGeometry(node, span);
+    if (node instanceof SVGLineElement) return { kind: 'line', x1: tx(node.x1.baseVal.value), y1: ty(node.y1.baseVal.value), x2: tx(node.x2.baseVal.value), y2: ty(node.y2.baseVal.value) };
+    if (node instanceof SVGPolylineElement || node instanceof SVGPolygonElement) return { kind: 'path', d: pointsPath(node, node instanceof SVGPolygonElement), matrix };
+    if (node instanceof SVGPathElement) return { kind: 'path', d: node.getAttribute('d') ?? '', matrix };
+    return null;
+  };
+
+  const svgShape = (node: SVGElement, root: SVGSVGElement, style: CSSStyleDeclaration): ScanShape | null | undefined => {
+    const m = node instanceof SVGGraphicsElement ? node.getScreenCTM() : null;
+    if (!m || Math.abs(m.b) > 1e-6 || Math.abs(m.c) > 1e-6) return null;
+    const paint = svgPaint(style, Math.sqrt(Math.abs(m.a * m.d)), opacityIn(node, root));
+    if (!paint) return null;
+    if (!paint.fill && !paint.stroke) return undefined;
+    const geometry = geometryOf(node, m, window.scrollX - region.x, window.scrollY - region.y);
+    return geometry ? ({ ...geometry, ...paint } as ScanShape) : geometry;
+  };
+
+  const svgShapes = (root: SVGSVGElement): ScanShape[] | null => {
+    const out: ScanShape[] = [];
+    for (const node of Array.from(root.querySelectorAll('*'))) {
+      if (!(node instanceof SVGElement) || node instanceof SVGSVGElement) return null;
+      if (hiddenIn(node, root)) continue;
+      const style = getComputedStyle(node);
+      if (effects(style)) return null;
+      if (SVG_GROUP.has(node.tagName)) continue;
+      const shape = svgShape(node, root, style);
+      if (shape === null) return null;
+      if (shape) out.push(shape);
+    }
+    return out;
+  };
+
+  const svgNative = (element: SVGSVGElement, style: CSSStyleDeclaration): { id?: number; shapes?: ScanShape[] | null } => {
+    if (!options.native) return {};
+    return { id: tag(element), shapes: effects(style) || style.transform !== 'none' ? null : svgShapes(element) };
+  };
+
+  const pushSvg = (element: SVGSVGElement, style: CSSStyleDeclaration, opacity: number, clip: number): void => {
     const box = local(element.getBoundingClientRect());
     if (box.width < 0.5 || box.height < 0.5 || outside(box)) return;
+    const native = svgNative(element, style);
     const clone = element.cloneNode(true) as SVGSVGElement;
     const source = [element, ...Array.from(element.querySelectorAll('*'))];
     const target = [clone, ...Array.from(clone.querySelectorAll('*'))];
@@ -232,7 +384,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     if (!clone.getAttribute('viewBox')) clone.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
     for (const attr of ['x', 'y', 'width', 'height']) clone.setAttribute(attr, String(box[attr as 'x']));
     clone.removeAttribute('xmlns');
-    items.push({ kind: 'svg', ...box, markup: new XMLSerializer().serializeToString(clone), opacity, clip });
+    items.push({ kind: 'svg', ...box, markup: new XMLSerializer().serializeToString(clone), opacity, clip, ...native });
   };
 
   const transformText = (text: string, mode: string): string => {
@@ -360,7 +512,7 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     const opacity = round(parentOpacity * (parseFloat(style.opacity) || 0));
     if (opacity < 0.01) return;
     if (element instanceof SVGSVGElement) {
-      if (style.visibility !== 'hidden') pushSvg(element, opacity, clip);
+      if (style.visibility !== 'hidden') pushSvg(element, style, opacity, clip);
       return;
     }
     if (element instanceof SVGElement) return;

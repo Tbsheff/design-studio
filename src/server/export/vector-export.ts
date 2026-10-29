@@ -33,11 +33,11 @@ function noteOf(notes: string[]): string | null {
 
 export async function exportVector(preview: PreviewService, url: string, request: VectorRequest): Promise<VectorFile> {
   const slides = request.format === 'pptx' && !request.selector;
-  const regions = await captureVector(preview, url, { frames: request.frames, scope: request.format === 'pptx' ? 'frame' : request.scope, selector: request.selector, slides });
+  const regions = await captureVector(preview, url, { frames: request.frames, scope: request.format === 'pptx' ? 'frame' : request.scope, selector: request.selector, slides, native: request.format === 'pptx' });
   const notes = regions.flatMap((region) => region.scan.notes);
   if (request.format === 'pptx') {
     const deck = await buildPptx(regions, request.name);
-    if (deck.textBoxes === 0) notes.push('no text was found, so slides are pictures only');
+    if (deck.textBoxes + deck.shapes + deck.pictures === 0) notes.push('no text or simple shapes were found, so slides are pictures only');
     return { bytes: deck.bytes, type: PPTX_TYPE, name: `${request.stem}.pptx`, note: noteOf(notes), count: deck.slides };
   }
   const files = regions.map((region, index) => ({

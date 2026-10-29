@@ -8,6 +8,7 @@ import { BadRequestError } from '../store/errors.js';
 import type { PreviewService } from '../types.js';
 import { hideDevChrome, selectorClipExpression, waitForPage } from './capture.js';
 import { scanExpression, type ScanRect, type ScanResult } from './page-scan.js';
+import { planNative, type NativePlan } from './pptx-plan.js';
 import { withPagePath } from './source.js';
 
 export interface VectorRegion {
@@ -15,6 +16,8 @@ export interface VectorRegion {
   scan: ScanResult;
   png: Buffer;
   scale: number;
+  under?: Buffer;
+  native?: NativePlan;
 }
 
 export interface VectorJob {
@@ -22,6 +25,7 @@ export interface VectorJob {
   scope: ExportScope;
   selector?: string | undefined;
   slides: boolean;
+  native?: boolean;
 }
 
 const MAX_ITEMS = 20_000;
@@ -44,6 +48,15 @@ function slidesExpression(width: number, height: number): string {
     return sections.length >= 2 ? sections : [];
   })()`;
 }
+
+function hideExpression(plan: NativePlan): string {
+  const rule = (ids: number[], body: string): string => (ids.length > 0 ? `${ids.map((id) => `[data-ds-i="${id}"]`).join(',')}{${body}}` : '');
+  const css = `${rule(plan.paint, 'background-color:transparent!important;border-color:transparent!important')}${rule(plan.gone, 'opacity:0!important')}`;
+  return `(() => { const style = document.createElement('style'); style.id = 'ds-native-hide'; style.textContent = ${JSON.stringify(css)}; document.head.append(style); return true; })()`;
+}
+
+const UNHIDE = `(() => { document.getElementById('ds-native-hide')?.remove(); return true; })()`;
+const NEXT_FRAME = 'new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))';
 
 const PAGE_SIZE = '[Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0), Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)]';
 
@@ -68,21 +81,37 @@ function snap(rect: ScanRect): ScanRect {
   return { x, y, width: Math.max(1, Math.ceil(rect.x + rect.width) - x), height: Math.max(1, Math.ceil(rect.y + rect.height) - y) };
 }
 
+async function shoot(page: RenderPage, dir: string, name: string, region: ScanRect): Promise<Buffer> {
+  const file = path.join(dir, `${name}.png`);
+  await page.screenshot(file, region);
+  return readFile(file);
+}
+
+async function nativeRegion(page: RenderPage, dir: string, index: number, region: ScanRect, base: VectorRegion): Promise<VectorRegion> {
+  const native = planNative(base.scan);
+  if (native.shapes.length === 0) return base;
+  await page.evaluate(hideExpression(native));
+  await page.evaluate(NEXT_FRAME).catch(() => undefined);
+  const png = await shoot(page, dir, `back-${index}`, region);
+  await page.evaluate(UNHIDE);
+  return { ...base, png, under: base.png, native };
+}
+
 async function scanFrame(page: RenderPage, frame: ExportFrame, job: VectorJob, scale: number, dir: string): Promise<VectorRegion[]> {
   await waitForPage(page);
   await hideDevChrome(page);
   const regions = (await regionsFor(page, frame, job)).map(snap);
   const root = job.selector ?? null;
   const scans: ScanResult[] = [];
-  for (const region of regions) scans.push(await page.evaluate<ScanResult>(scanExpression({ region, root, maxItems: MAX_ITEMS, maxFontBytes: MAX_FONT_BYTES, embedFonts: true })));
+  for (const region of regions) scans.push(await page.evaluate<ScanResult>(scanExpression({ region, root, maxItems: MAX_ITEMS, maxFontBytes: MAX_FONT_BYTES, embedFonts: true, ...(job.native ? { native: true } : {}) })));
   await page.evaluate(HIDE_TEXT);
-  await page.evaluate('new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)))').catch(() => undefined);
+  await page.evaluate(NEXT_FRAME).catch(() => undefined);
   const out: VectorRegion[] = [];
   for (const [index, region] of regions.entries()) {
-    const file = path.join(dir, `region-${out.length}.png`);
-    await page.screenshot(file, region);
     const scan = scans[index];
-    if (scan) out.push({ frame, scan, png: await readFile(file), scale });
+    if (!scan) continue;
+    const base: VectorRegion = { frame, scan, png: await shoot(page, dir, `region-${index}`, region), scale };
+    out.push(job.native ? await nativeRegion(page, dir, index, region, base) : base);
   }
   return out;
 }

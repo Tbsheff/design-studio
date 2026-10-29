@@ -7,7 +7,7 @@ import { exportVector } from '../export/vector-export.js';
 import { canvasFrames, type DirectToolDeps } from './direct-tools.js';
 
 export const EXPORT_FRAME_AGENT_DESCRIPTION =
-  'Export canvas frames of this direction as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio and the MCP export_frame tool. SVG: vector boxes, <text> with font names and embedded pictures; selector exports one element. PPTX: one slide per frame (or per .slide / [data-slide] section) with native text boxes on a picture of the frame without its text. Returns the file path in the Design Studio data folder. It changes no design file; use it only when the user asks for an SVG or a deck file.';
+  'Export canvas frames of this direction as SVG or PPTX with the same server code as Export > SVG and Export > PPTX in the studio and the MCP export_frame tool. SVG: vector boxes, <text> with font names and embedded pictures; selector exports one element. PPTX: one slide per frame (or per .slide / [data-slide] section) with native text boxes, solid and rounded boxes, lines, simple SVG shapes and images over a picture of the rest. Returns the file path in the Design Studio data folder. It changes no design file; use it only when the user asks for an SVG or a deck file.';
 
 export const exportFrameShape = {
   format: z.enum(['svg', 'pptx']).describe('svg: vector file. pptx: slide deck.'),

@@ -25,6 +25,7 @@ const POLL_MS = 25;
 const QUIET_MS = 120;
 const REBUILD_WAIT_MS = 900;
 const REFRESH_MAX_MS = 4000;
+const GONE = /has been closed|Execution context was destroyed|Target closed|navigat/i;
 
 const HOOK = `(() => {
   if (window.__studioWarm) return true;
@@ -72,13 +73,15 @@ export class PeekPages {
 
   async run<T>(url: string, viewport: Viewport, task: (page: RenderPage) => Promise<T>): Promise<T> {
     const key = keyOf(url, viewport);
-    const warm = await this.fresh(key, url, viewport);
-    warm.usedAt = Date.now();
-    try {
-      return await task(warm.page);
-    } catch (error) {
-      this.drop(key);
-      throw error;
+    for (let attempt = 0; ; attempt += 1) {
+      const warm = await this.fresh(key, url, viewport);
+      warm.usedAt = Date.now();
+      try {
+        return await task(warm.page);
+      } catch (error) {
+        if (this.pages.get(key) === warm) this.drop(key);
+        if (attempt > 0 || !GONE.test(error instanceof Error ? error.message : String(error))) throw error;
+      }
     }
   }
 

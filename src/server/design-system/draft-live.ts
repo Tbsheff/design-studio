@@ -115,7 +115,22 @@ function countDetail(harvest: Harvest): { detail: string; total: number } {
   return { detail: parts.join(', '), total: harvest.candidates.length + extras };
 }
 
+const UNMAPPED_SHOWN = 8;
+
+function unmappedNote(unmapped: string[] | undefined): string | undefined {
+  if (!unmapped || unmapped.length === 0) return undefined;
+  const shown = unmapped.slice(0, UNMAPPED_SHOWN).join(', ');
+  const more = unmapped.length > UNMAPPED_SHOWN ? `, and ${unmapped.length - UNMAPPED_SHOWN} more` : '';
+  return `Not mapped (${unmapped.length}): ${shown}${more}.`;
+}
+
 function harvested(harvest: Harvest, kind: DraftSourceStatus['kind'], label: string, thinText: string): SourceResult {
+  const result = harvestedState(harvest, kind, label, thinText);
+  const note = unmappedNote(harvest.unmapped);
+  return note ? { ...result, note } : result;
+}
+
+function harvestedState(harvest: Harvest, kind: DraftSourceStatus['kind'], label: string, thinText: string): SourceResult {
   const { detail, total } = countDetail(harvest);
   const report: SourceReport = { kind: harvest.source, label, ok: true, found: total };
   if (total >= THIN_VALUES) return { state: 'read', detail, harvest, report };
@@ -164,7 +179,7 @@ async function readSource(source: Planned, request: DraftRequest, fetcher: Fetch
     try {
       return harvested(harvestTokensFile(request.tokensFile.text, source.label), 'tokens-file', source.label, 'The base pack fills the rest.');
     } catch (error) {
-      if (error instanceof TokensFileError) return failed(`The studio could not read this tokens file: ${error.message}. Export it again as DTCG JSON or CSS.`, error, 'tokens-file');
+      if (error instanceof TokensFileError) return failed(`The studio could not read this tokens file: ${error.message}. Export it again from Figma (Variables JSON), Tokens Studio or as DTCG JSON or CSS.`, error, 'tokens-file');
       throw error;
     }
   }

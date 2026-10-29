@@ -154,7 +154,7 @@ function DropZone({ form, set }: { form: DraftForm; set: (patch: Patch) => void 
       </span>
       <div className="nds-dropzone-text">
         <strong>Drop screenshots, a logo, a tokens file or a DESIGN.md</strong>
-        <span>The AI step looks at images. Tokens files and DESIGN.md are read at once.</span>
+        <span>The AI step looks at images. Tokens files (Figma variables, DTCG, Tokens Studio) and DESIGN.md are read at once.</span>
       </div>
       <button type="button" className="btn small" onClick={() => input.current?.click()}>
         Choose files…
@@ -325,7 +325,8 @@ function Advanced({ form, set }: { form: DraftForm; set: (patch: Patch) => void 
       <div className="nds-advanced-body">
         <div className="nds-field">
           <span className="nds-field-label">Tokens file</span>
-          <span className="nds-field-hint">DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.</span>
+          <span className="nds-field-hint">Figma variables JSON (with Light and Dark modes), DTCG or Tokens Studio JSON, or CSS custom properties. It wins over every other source.</span>
+          <span className="nds-field-hint">From Figma: export the variables yourself (a plugin or the REST /variables/local answer) and choose the file here. The studio does not ask for a Figma token and does not connect to Figma.</span>
           <TokensField file={form.tokensFile} onChange={(tokensFile) => set({ tokensFile })} />
         </div>
         <div className="nds-field">

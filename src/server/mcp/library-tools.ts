@@ -5,6 +5,7 @@ import { IMPROVE_IN_APP } from '../design-system/draft-live.js';
 import { approve, EditError, loadTarget, oneLine, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, defineTool, ok, packId, projectId, versionActivity, type Done } from './edit-kit.js';
 import { isInside, safeFolder } from './folders.js';
+import { readTokensFileInput } from './tokens-file-input.js';
 import { sameFolderOrRoot, workspaceFields, workspaceOf } from './workspace-tools.js';
 
 const MAX_URLS = 3;
@@ -50,20 +51,28 @@ const createSchema = z
     brief: z.string().max(4000).optional().describe('A short text brief: brand, mood, audience.'),
     designMd: z.string().max(512 * 1024).optional().describe('DESIGN.md text to start from.'),
     folderPath: z.string().trim().min(1).max(4096).optional().describe('Absolute path of a code folder to read tokens from (CSS variables, Tailwind theme, next/font). A folder outside the projects folder waits for the user to approve it.'),
+    tokensFile: z
+      .string()
+      .trim()
+      .min(1)
+      .max(4096)
+      .optional()
+      .describe('Absolute path of a tokens file (.json or .css, at most 2 MB): Figma variables JSON (REST /variables/local answer or a plugin export, Light and Dark modes), W3C DTCG, Tokens Studio, or CSS custom properties. Aliases stay token references. The studio does not connect to Figma and needs no Figma token. A file outside the projects folder waits for the user to approve it.'),
   })
   .strict()
-  .refine((input) => (input.urls?.length ?? 0) > 0 || Boolean(input.brief?.trim()) || Boolean(input.designMd?.trim()) || Boolean(input.folderPath), 'pass at least one source: urls, brief, designMd or folderPath');
+  .refine((input) => (input.urls?.length ?? 0) > 0 || Boolean(input.brief?.trim()) || Boolean(input.designMd?.trim()) || Boolean(input.folderPath) || Boolean(input.tokensFile), 'pass at least one source: urls, brief, designMd, folderPath or tokensFile');
 
 const createDesignSystem = defineTool(
   'create_design_system',
   createSchema,
   {
     title: 'Create design system draft',
-    description: `Start a new design system draft from sources (websites, a brief, a DESIGN.md, a code folder), the same as New design system in the studio. It answers at once with the draft project; the sources are read in the background. Poll design_system_status until sources.done is true, then fix problems with set_token and write_file in that project and save it with save_design_system. The AI step (Improve with AI) is a studio run, so it does not start from here: ${IMPROVE_IN_APP}`,
+    description: `Start a new design system draft from sources (websites, a brief, a DESIGN.md, a code folder, a tokens file such as a Figma variables export), the same as New design system in the studio. It answers at once with the draft project; the sources are read in the background. Poll design_system_status until sources.done is true, then fix problems with set_token and write_file in that project and save it with save_design_system. The AI step (Improve with AI) is a studio run, so it does not start from here: ${IMPROVE_IN_APP}`,
   },
   async (deps, input, client): Promise<Done> => {
     const folderPath = input.folderPath ? await trustedFolder(deps, input.folderPath, client, { tool: 'create_design_system', action: 'Read a code folder for a design system', title: `${client} wants to read {folder} for a design system`, detail: 'The studio copies token files from this folder into the draft project, where outside agents can read them.' }) : undefined;
-    const body = { mode: input.mode, ...(input.name ? { name: input.name } : {}), ...(input.basePackId ? { basePackId: input.basePackId } : {}), urls: input.urls ?? [], ...(input.brief ? { brief: input.brief } : {}), ...(input.designMd ? { designMd: input.designMd } : {}), ...(folderPath ? { folderPath } : {}) };
+    const tokensFile = input.tokensFile ? await readTokensFileInput(deps, input.tokensFile, client) : undefined;
+    const body = { ...(tokensFile ? { tokensFile } : {}), mode: input.mode, ...(input.name ? { name: input.name } : {}), ...(input.basePackId ? { basePackId: input.basePackId } : {}), urls: input.urls ?? [], ...(input.brief ? { brief: input.brief } : {}), ...(input.designMd ? { designMd: input.designMd } : {}), ...(folderPath ? { folderPath } : {}) };
     const draft = await studioCall<DesignSystemDraftResult>(deps, 'POST', '/api/design-systems/draft?improve=off', body);
     const main = mainOf(draft.project);
     const result = ok({ projectId: draft.project.id, directionId: main?.id ?? null, packId: draft.pack.id, name: draft.pack.name, grade: draft.coverage.grade, next: 'Call design_system_status with this projectId until sources.done is true.', improve: IMPROVE_IN_APP });

@@ -34,6 +34,7 @@ function fileHint(folder: string, name: string): string {
 function useFolders(ids: Props['ids']) {
   const [folders, setFolders] = useState<ComponentFolder[] | null>(null);
   const [folder, setFolder] = useState('');
+  const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     componentCreateApi
@@ -41,19 +42,20 @@ function useFolders(ids: Props['ids']) {
       .then((list) => {
         if (!live) return;
         setFolders(list.folders);
-        setFolder(list.folders.find((item) => item.kind === 'app')?.folder ?? list.folders[0]?.folder ?? 'src/components');
+        setNote(list.folders.length ? null : (list.note ?? null));
+        setFolder(list.folders.find((item) => item.kind === 'app')?.folder ?? list.folders[0]?.folder ?? (list.note ? '' : 'src/components'));
       })
       .catch(() => live && setFolders([]));
     return () => {
       live = false;
     };
   }, [ids.projectId, ids.directionId]);
-  return { folders, folder, setFolder };
+  return { folders, folder, setFolder, note };
 }
 
 export default function CreateComponentDialog({ ids, selection, onDone, onClose }: Props) {
   const [name, setName] = useState(() => suggestName(selection));
-  const { folders, folder, setFolder } = useFolders(ids);
+  const { folders, folder, setFolder, note } = useFolders(ids);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const nameProblem = COMPONENT_NAME.test(name) ? null : 'Use a PascalCase name such as StatRow';
@@ -104,9 +106,9 @@ export default function CreateComponentDialog({ ids, selection, onDone, onClose 
             <span id="cc-folder-label">Folder</span>
             <UiSelect className="ins-select cc-folder" aria-label="Folder" value={folder} placeholder={folders === null ? 'Loading…' : 'No folder'} disabled={!folders?.length} options={(folders ?? []).map((item) => ({ value: item.folder, label: `${item.label} · ${item.folder}` }))} onChange={setFolder} />
           </div>
-          {failure && (
+          {(failure ?? note) && (
             <div className="alert error small" role="alert">
-              {failure}
+              {failure ?? note}
             </div>
           )}
         </div>

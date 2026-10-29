@@ -88,8 +88,17 @@ export interface FrameChoice {
   active: boolean;
 }
 
-function toExport(frame: CanvasFrame): ExportFrame {
-  return { name: frameName(frame), width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) };
+function toExport(frame: CanvasFrame, name = frame.label?.trim() || frameName(frame)): ExportFrame {
+  return { name, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}) };
+}
+
+export function frameRoute(frame: ExportFrame): string {
+  return `/${(frame.path ?? '').replace(/^\/+/, '')}`;
+}
+
+function choiceNames(frames: CanvasFrame[]): string[] {
+  const names = frames.map((frame) => toExport(frame).name);
+  return names.map((name, index) => (names.filter((other) => other === name).length < 2 ? name : `Frame ${index + 1}`));
 }
 
 export function canvasFrameChoices(projectId: string, directionId: string | null): FrameChoice[] {
@@ -97,7 +106,8 @@ export function canvasFrameChoices(projectId: string, directionId: string | null
   const active = activeFrame(layout);
   const own = layout.frames.filter((frame) => !frame.directionId || frame.directionId === directionId);
   const list = own.length > 0 ? own : [active];
-  return list.map((frame) => ({ id: frame.id, frame: toExport(frame), active: frame.id === active.id }));
+  const names = choiceNames(list);
+  return list.map((frame, index) => ({ id: frame.id, frame: toExport(frame, names[index]), active: frame.id === active.id }));
 }
 
 export function activeExportFrame(projectId: string): ExportFrame {

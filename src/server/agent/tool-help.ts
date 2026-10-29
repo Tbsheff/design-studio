@@ -1,3 +1,4 @@
+import { VECTOR_BOOLEAN_SHORT, VECTOR_DRAW_SHORT, VECTOR_PAINT_SHORT } from './vector-tool.js';
 import { FRAME_STATES_NOTE } from '../app/frame-state-service.js';
 import { FLOW_NOTE } from '../app/route-flow.js';
 import { APP_DOCTOR_DESCRIPTION } from './doctor-tool.js';
@@ -48,6 +49,9 @@ export const TOOL_SHORT = {
   swap_instance: 'Replace one component instance with another library component, keeping matching props.',
   export_frame: 'Export canvas frames as SVG or PPTX into the studio data folder. Changes no design file. Only when the user asks for an SVG or a deck.',
   set_image: 'Place or replace an image (project file, attached image or https url) with src, alt, fit and focal point; copies the file into the project assets.',
+  draw_vector: VECTOR_DRAW_SHORT,
+  boolean_shapes: VECTOR_BOOLEAN_SHORT,
+  paint_shape: VECTOR_PAINT_SHORT,
   studio_help: 'Full description of one studio tool: when to use it, what it refuses, and the fields of its result.',
 } as const;
 
@@ -94,4 +98,7 @@ export const TOOL_HELP: Record<Exclude<StudioToolName, 'studio_help'>, string> =
   swap_instance: SWAP_INSTANCE_AGENT_DESCRIPTION,
   export_frame: EXPORT_FRAME_AGENT_DESCRIPTION,
   set_image: SET_IMAGE_AGENT_DESCRIPTION,
+  draw_vector: VECTOR_DRAW_SHORT,
+  boolean_shapes: VECTOR_BOOLEAN_SHORT,
+  paint_shape: VECTOR_PAINT_SHORT,
 };

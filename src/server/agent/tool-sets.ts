@@ -3,7 +3,7 @@ import { blockedInCritique } from './permissions.js';
 
 export const HELP_TOOL = 'studio_help';
 
-const CORE_TOOLS = ['screenshot', 'render_check', 'design_review', 'canvas_list', 'canvas_place', 'canvas_point', 'list_links', 'edit_links', 'get_layers', 'review_frame', 'edit_element', 'set_token', 'find_styles', 'replace_style', 'arrange', 'measure', 'select_matching', 'insert_jsx', 'clear_text', 'diff_versions', 'list_comments', 'resolve_comment', 'set_image', 'export_frame', HELP_TOOL];
+const CORE_TOOLS = ['screenshot', 'render_check', 'design_review', 'canvas_list', 'canvas_place', 'canvas_point', 'list_links', 'edit_links', 'get_layers', 'review_frame', 'edit_element', 'set_token', 'find_styles', 'replace_style', 'arrange', 'measure', 'select_matching', 'insert_jsx', 'clear_text', 'diff_versions', 'list_comments', 'resolve_comment', 'set_image', 'export_frame', 'draw_vector', 'boolean_shapes', 'paint_shape', HELP_TOOL];
 const TWEAK_TOOLS = ['define_tweaks'];
 const DESIGN_SYSTEM_TOOLS = ['design_system_check'];
 const KIT_TOOLS = ['list_components', 'component_preview', 'insert_component', 'set_props', 'create_component', 'swap_instance'];

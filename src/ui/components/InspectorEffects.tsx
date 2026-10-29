@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { proxyEdit } from '../proxyEdit';
 import { NEW_SHADOW, blurOf, formatShadows, parseShadows, withBlur, type Shadow } from '../shadows';
 import type { DirectEdit } from '../useDirectEdit';
 import { TokenUiContext, useTokenUi } from '../useTokenSnap';
 import { Icon } from './Icon';
 import { ColorField, InspectorSection } from './InspectorFields';
+import { AddButton } from './InspectorShared';
 import { NumberField } from './NumberField';
 
 type Part = 'x' | 'y' | 'blur' | 'spread';
@@ -85,22 +86,20 @@ function LayerBlur({ edit }: { edit: DirectEdit }) {
   return <NumberField id="ins-layer-blur" short="Blur" tokens={false} spec={{ prop: 'width', label: 'Layer blur', edit: blur, min: 0 }} />;
 }
 
-export function EffectsSection({ edit }: { edit: DirectEdit }) {
+function useScrollInOnMount(on: boolean) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (on) ref.current?.closest('section')?.scrollIntoView({ block: 'nearest' });
+  }, []);
+  return ref;
+}
+
+export function EffectsSection({ edit, revealed = false }: { edit: DirectEdit; revealed?: boolean }) {
   const list = edit.mixed.has('box-shadow') ? null : parseShadows(edit.values['box-shadow']);
-  const add = (
-    <button
-      type="button"
-      className="icon-btn small"
-      aria-label="Add shadow"
-      data-tip="Add shadow"
-      data-tip-align="end"
-      onClick={() => writeShadows(edit, [...(list ?? []), NEW_SHADOW])}
-    >
-      <Icon name="plus" size={14} />
-    </button>
-  );
+  const anchor = useScrollInOnMount(revealed);
   return (
-    <InspectorSection title="Effects" aside={add}>
+    <InspectorSection title="Effects">
+      <span ref={anchor} hidden />
       {list === null ? (
         <div className="ins-custom">
           <code className="ins-custom-value" data-tip={edit.values['box-shadow']}>
@@ -118,6 +117,11 @@ export function EffectsSection({ edit }: { edit: DirectEdit }) {
             ))}
           </ul>
         )
+      )}
+      {list !== null && (
+        <div className="ins-add-row">
+          <AddButton label="Shadow" onClick={() => writeShadows(edit, [...list, NEW_SHADOW])} />
+        </div>
       )}
       <div className="ins-grid">
         <LayerBlur edit={edit} />

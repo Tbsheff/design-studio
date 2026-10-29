@@ -230,10 +230,11 @@ function SimpleTab(props: InspectorProps) {
     );
   }
   if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
-  if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} />;
+  if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} component={<VectorSection {...props} />} />;
   return (
     <SimpleEditor key={`${target.selector}|${variant}${site.editingUse ? '|use' : ''}`} {...props} target={site.effective ?? target} sharedEditing={site.sharedEditing} component={
         <>
+          <VectorSection {...props} />
           <ImageSection {...props} />
           <ComponentSection {...props} />
         </>
@@ -244,6 +245,15 @@ function SimpleTab(props: InspectorProps) {
 
 function vectorShown(selection: SelectionContext[]): boolean {
   return selection.length > 0 && selection.length <= 2 && selection.every((item) => isSvgShapeTag(item.tag));
+}
+
+function VectorSection(props: InspectorProps) {
+  if (!vectorShown(props.selection)) return null;
+  return (
+    <Suspense fallback={null}>
+      <InspectorVector projectId={props.projectId} directionId={props.directionId} selection={props.selection} editable={props.editable} />
+    </Suspense>
+  );
 }
 
 function ProTab(props: InspectorProps) {
@@ -311,11 +321,6 @@ export function Inspector(props: InspectorProps) {
         <Tabs tab={tab} onTab={onTab} />
         {(tab === 'simple' || tab === 'pro') && <InspectorTools {...props} />}
         <InspectorArrange {...props} showBar={tab === 'simple'} />
-        {tab === 'simple' && vectorShown(props.selection) && (
-          <Suspense fallback={null}>
-            <InspectorVector projectId={props.projectId} directionId={props.directionId} selection={props.selection} editable={props.editable} />
-          </Suspense>
-        )}
         <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
           {tab === 'simple' && <SimpleTab {...props} />}
           {tab === 'pro' && <ProTab {...props} />}

@@ -12,13 +12,8 @@
   min-width: 0;
   margin: 0;
   padding: 0;
-  overflow-x: auto;
+  overflow: hidden;
   list-style: none;
-  scrollbar-width: none;
-}
-
-.ins-crumbs ol[data-clipped] {
-  mask-image: linear-gradient(to right, transparent, #000 24px);
 }
 
 .ins-crumbs li {
@@ -27,12 +22,8 @@
   flex: none;
 }
 
-.ins-crumbs li:last-child {
-  flex: none;
-}
-
 .ins-crumbs li:last-child .ins-crumb {
-  max-width: 100%;
+  max-width: 200px;
 }
 
 .ins-crumbs li.ins-crumb-sep {

@@ -138,3 +138,12 @@ export function SharedSourceNote({ shared, editingUse, canUse, onToggle }: { sha
     </div>
   );
 }
+
+export function AddButton({ label, tip, shortcut, onClick }: { label: string; tip?: string; shortcut?: string; onClick: () => void }) {
+  return (
+    <button type="button" className="ins-add" aria-label={`Add ${label.toLowerCase()}`} aria-keyshortcuts={shortcut} data-tip={tip} data-tip-align={tip ? 'start' : undefined} onClick={onClick}>
+      <Icon name="plus" size={12} />
+      {label}
+    </button>
+  );
+}

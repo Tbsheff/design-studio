@@ -1,6 +1,6 @@
-import { Fragment, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
-import { collapseCrumbs, parseSelectionPath, pathCrumbs, type Crumb } from '../authoredCss';
+import { parseSelectionPath, pathCrumbs, type PathCrumb } from '../authoredCss';
 import type { PreviewPort } from '../bridge';
 import { Icon } from './Icon';
 
@@ -14,47 +14,72 @@ function elementLabel(selection: SelectionContext): string {
   return firstClass ? `${selection.tag}.${firstClass}` : selection.tag;
 }
 
-export function InspectorBreadcrumb({ selection, port }: Props) {
-  const [expanded, setExpanded] = useState(false);
-  const list = useRef<HTMLOListElement>(null);
+function useFitCount(list: MutableRefObject<HTMLOListElement | null>, total: number): number {
+  const [shown, setShown] = useState(total);
   useLayoutEffect(() => {
     const el = list.current;
+    if (el && shown > 0 && el.scrollWidth > el.clientWidth + 1) setShown(shown - 1);
+  }, [list, shown]);
+  useEffect(() => {
+    const el = list.current;
     if (!el) return;
-    el.scrollLeft = el.scrollWidth;
-    el.toggleAttribute('data-clipped', el.scrollLeft > 0);
-  }, [expanded, selection.selector]);
+    let width = el.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth === width) return;
+      width = el.clientWidth;
+      setShown(total);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [list, total]);
+  return Math.min(shown, total);
+}
+
+function Separator() {
+  return (
+    <li aria-hidden="true" className="ins-crumb-sep">
+      <Icon name="chevronRight" size={12} />
+    </li>
+  );
+}
+
+function HiddenCrumbs({ hidden, onSelect }: { hidden: PathCrumb[]; onSelect: (levels: number) => void }) {
+  const nearest = hidden.at(-1);
+  if (!nearest) return null;
+  return (
+    <>
+      <li>
+        <button type="button" className="ins-crumb gap" aria-label={`Select ${nearest.label}`} data-tip={hidden.map((entry) => entry.label).join(' › ')} data-tip-align="start" onClick={() => onSelect(nearest.levels)}>
+          …
+        </button>
+      </li>
+      <Separator />
+    </>
+  );
+}
+
+export function InspectorBreadcrumb({ selection, port }: Props) {
+  const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
+  const count = useFitCount(list, path.length);
   if (path.length === 0) return null;
-  const crumbs: Crumb[] = expanded ? path.map((crumb) => ({ kind: 'node', ...crumb })) : collapseCrumbs(path);
   const select = (levels: number) => {
     for (let step = 0; step < levels; step += 1) port.current?.post({ type: 'select-relative', selector: selection.selector, move: 'parent' });
   };
+  const cut = path.length - count;
   const current = elementLabel(selection);
   return (
     <nav className="ins-crumbs" aria-label="Element path">
-      <ol ref={list} onScroll={(event) => event.currentTarget.toggleAttribute('data-clipped', event.currentTarget.scrollLeft > 0)}>
-        {crumbs.map((crumb, index) => (
-          <Fragment key={crumb.kind === 'node' ? crumb.levels : `gap-${index}`}>
+      <ol ref={list}>
+        <HiddenCrumbs hidden={path.slice(0, cut)} onSelect={select} />
+        {path.slice(cut).map((crumb) => (
+          <Fragment key={crumb.levels}>
             <li>
-              {crumb.kind === 'node' ? (
-                <button type="button" className="ins-crumb" data-tip={`Select ${crumb.label}`} onClick={() => select(crumb.levels)}>
-                  {crumb.label}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="ins-crumb gap"
-                  aria-label={`Show ${crumb.hidden.length} more`}
-                  data-tip={crumb.hidden.map((entry) => entry.label).join(' › ')}
-                  onClick={() => setExpanded(true)}
-                >
-                  …
-                </button>
-              )}
+              <button type="button" className="ins-crumb" data-tip={`Select ${crumb.label}`} onClick={() => select(crumb.levels)}>
+                {crumb.label}
+              </button>
             </li>
-            <li aria-hidden="true" className="ins-crumb-sep">
-              <Icon name="chevronRight" size={12} />
-            </li>
+            <Separator />
           </Fragment>
         ))}
         <li>

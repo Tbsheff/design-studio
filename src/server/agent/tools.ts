@@ -22,6 +22,7 @@ import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksA
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
 import { runSetImage, setImageShape } from './image-tool.js';
+import { LAYER_STATE_TOOL, LIST_LOCKS_TOOL, layerStateShape, listLocksShape, runListLockedLayers, runSetLayerState } from './layer-state-tool.js';
 import { booleanShapesShape, drawVectorShape, paintShapeShape, runBooleanShapes, runDrawVector, runPaintShape } from './vector-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
 import { arrangeShape, measureShape, runArrange, runMeasure } from './arrange-tool.js';
@@ -688,11 +689,13 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
   const setImageTool = tool('set_image', TOOL_SHORT.set_image, setImageShape, (args) => runSetImage(deps, args));
   const drawVectorTool = tool('draw_vector', TOOL_SHORT.draw_vector, drawVectorShape, (args) => runDrawVector(deps, args));
   const booleanShapesTool = tool('boolean_shapes', TOOL_SHORT.boolean_shapes, booleanShapesShape, (args) => runBooleanShapes(deps, args));
+  const setLayerStateTool = tool(LAYER_STATE_TOOL, TOOL_SHORT.set_layer_state, layerStateShape, (args) => runSetLayerState(deps, args));
+  const listLockedLayersTool = tool(LIST_LOCKS_TOOL, TOOL_SHORT.list_locked_layers, listLocksShape, (args) => runListLockedLayers(deps, args), { annotations: { readOnlyHint: true } });
   const paintShapeTool = tool('paint_shape', TOOL_SHORT.paint_shape, paintShapeShape, (args) => runPaintShape(deps, args));
 
   const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode);
   const helpTool = tool(HELP_TOOL, TOOL_SHORT.studio_help, { tool: z.string().trim().max(40).describe('Tool name without the mcp__studio__ prefix.') }, async (args) => ({ content: [{ type: 'text' as const, text: studioHelp(args.tool, allowed) }] }), { annotations: { readOnlyHint: true } });
-  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, drawVectorTool, booleanShapesTool, paintShapeTool, helpTool];
+  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, drawVectorTool, booleanShapesTool, paintShapeTool, setLayerStateTool, listLockedLayersTool, helpTool];
   return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: all.filter((entry) => allowed.has(entry.name)) });
 }
 

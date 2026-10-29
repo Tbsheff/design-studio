@@ -52,6 +52,8 @@ export const TOOL_SHORT = {
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
   paint_shape: VECTOR_PAINT_SHORT,
+  set_layer_state: 'Lock or unlock, hide or show, or rename one layer. Locks live in the studio; hide and rename change the source.',
+  list_locked_layers: 'List the locked layers of the design with their page.',
   studio_help: 'Full description of one studio tool: when to use it, what it refuses, and the fields of its result.',
 } as const;
 
@@ -101,4 +103,6 @@ export const TOOL_HELP: Record<Exclude<StudioToolName, 'studio_help'>, string> =
   draw_vector: VECTOR_DRAW_SHORT,
   boolean_shapes: VECTOR_BOOLEAN_SHORT,
   paint_shape: VECTOR_PAINT_SHORT,
+  set_layer_state: 'Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.',
+  list_locked_layers: 'List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.',
 };

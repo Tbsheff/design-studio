@@ -1,5 +1,6 @@
 import { IMAGE_TOOLS } from './image-tools.js';
 import { VECTOR_TOOLS } from './vector-tools.js';
+import { LAYER_STATE_TOOLS } from './layer-state-tools.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { FRAME_STATE_TOOLS } from './frame-state-tools.js';
 import { COMMENT_TOOLS } from './comment-tools.js';
@@ -156,7 +157,7 @@ const schemas = {
         .max(EXPORT_MAX_FRAMES)
         .optional()
         .describe('Frames to capture. Default one 1440x900 frame (handoff: desktop and mobile).'),
-      folder: z.string().min(1).max(4096).optional().describe('Absolute path of an existing folder. Leave out for ~/Downloads. Another folder outside the projects folder waits for the user to approve it in Design Studio.'),
+      folder: z.string().min(1).max(4096).optional().describe('Absolute path of an existing folder. Leave out for the Design Studio data folder (exports/<projectId>). Another folder outside the projects folder waits for the user to approve it in Design Studio.'),
     })
     .strict(),
 };
@@ -181,7 +182,7 @@ const META: Record<Name, Meta> = {
   restore_version: { title: 'Restore version', description: 'Make an older version the current design of a direction. Saved as a new version.', destructive: true },
   apply_design_system: { title: 'Apply design system', description: 'Apply a design system to a direction. This overwrites the tokens, tokens.css and DESIGN.md (project notes stay) as one new version.', destructive: true },
   set_token: { title: 'Set token', description: 'Change one design token value with the same code path as the studio Tokens panel. In a studio design system it edits tokens.json. In an imported app folder it rewrites only that declaration in the app CSS file (for example the Tailwind @theme, :root or .dark block). A version is saved.' },
-  export: { title: 'Export', description: 'Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder ~/Downloads. A folder outside Downloads and the projects folder waits for the user to approve it in Design Studio.' },
+  export: { title: 'Export', description: 'Export a version as PNG, HTML, PDF, a handoff zip or a source zip and write the files to a folder. Returns the file paths. Default folder: the Design Studio data folder, exports/<projectId>. A folder outside Downloads and the projects folder waits for the user to approve it in Design Studio.' },
 };
 
 function jsonSchema(schema: z.ZodType): Record<string, unknown> {
@@ -189,7 +190,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS, ...SELECT_TOOLS, ...VERSION_DIFF_TOOLS, ...TWEAK_TOOLS, ...EXPORT_TOOLS, ...IMAGE_TOOLS, ...VECTOR_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS, ...SELECT_TOOLS, ...VERSION_DIFF_TOOLS, ...TWEAK_TOOLS, ...EXPORT_TOOLS, ...IMAGE_TOOLS, ...VECTOR_TOOLS, ...LAYER_STATE_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 

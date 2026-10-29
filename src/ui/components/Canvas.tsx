@@ -16,6 +16,8 @@ import { useLayerEdits } from '../useLayerEdits';
 import { useComponentInsert } from '../useComponentInsert';
 import { useImageDrop } from '../useImageDrop';
 import { useResizeHandles } from '../useResizeHandles';
+import { useFreeMove } from '../useFreeMove';
+import { FreeMoveLayer } from './FreeMoveLayer';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { usePreviewMenu } from '../usePreviewMenu';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
@@ -573,17 +575,33 @@ export function Canvas(props: Props) {
   useImageDrop({ projectId, directionId, kind, enabled: editsEnabled, frames, notify: layerEdits.notify });
   const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits, ids: { projectId, directionId, kind } });
   openMenu.current = previewMenu.onContextMenu;
+  const handlesOn = editsEnabled && !commentMode;
   const resize = useResizeHandles({
     projectId,
     directionId,
     selection: props.selection,
-    enabled: editsEnabled && !commentMode,
+    enabled: handlesOn,
     post: frames.post,
     listen: frames.listen,
     holdSwap: frames.holdSwap,
     setSelection: props.setSelection,
     refreshRects: frames.refreshRects,
     onError: layerEdits.notify,
+  });
+  const freeMove = useFreeMove({
+    projectId,
+    directionId,
+    selection: props.selection,
+    enabled: handlesOn,
+    busy: layerEdits.busy,
+    zoom: pz.zoom,
+    post: frames.post,
+    listen: frames.listen,
+    holdSwap: frames.holdSwap,
+    setSelection: props.setSelection,
+    refreshRects: frames.refreshRects,
+    onError: layerEdits.notify,
+    applyStructure: layerEdits.applyStructure,
   });
 
   useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
@@ -688,6 +706,7 @@ export function Canvas(props: Props) {
           />
           <MarqueeLayer listen={frames.listen} />
           <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
+          <FreeMoveLayer view={freeMove} />
           <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} step={props.runStep} />

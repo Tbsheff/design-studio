@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import type { Direction, Project, StructureEditRequest, StructureEditResult, StructureOp, StructureTarget, VersionMeta } from '../../shared/contracts.js';
 import { writeAndCommitAll, type WrittenFile } from './batch.js';
-import { assertCanEdit, publishVersion, resolveSource } from './index.js';
+import { assertCanEdit, patchSource, publishVersion, resolveSource, themeForFile, type EditScope } from './index.js';
 import type { DirectEditDeps, ResolvedSource } from './index.js';
 import { structureDoc, type StructureDoc } from './structure-docs.js';
 import { planStructure, positionAt, refuse, type Frame, type Placement, type StructNode } from './structure-ops.js';
@@ -40,9 +40,9 @@ async function groupTargets(workTree: string, request: StructureEditRequest): Pr
 }
 
 async function assertSameFile(workTree: string, request: StructureEditRequest, groups: FileWork[]): Promise<void> {
-  if (!ONE_FILE_OPS.has(request.op)) return;
-  if (groups.length > 1) throw refuse(`${VERB[request.op]} works on elements in one file`);
   const place = request.into ?? request.before ?? request.after;
+  if (!ONE_FILE_OPS.has(request.op) && !(request.op === 'duplicate' && place)) return;
+  if (groups.length > 1) throw refuse(`${VERB[request.op]} works on elements in one file`);
   if (!place) return;
   const resolved = await resolveSource(workTree, place.source.file);
   if (resolved.file !== groups[0]?.target.file) throw refuse('Elements can move only inside the same file');
@@ -101,19 +101,32 @@ function frameFor(work: FileWork, request: StructureEditRequest, doc: StructureD
   return listFrame(work.target.relative, listTag(source, nodes), request.op === 'group' ? 'Group' : 'Frame');
 }
 
-async function planFile(work: FileWork, request: StructureEditRequest, gap: string): Promise<FileResult> {
+interface PlanContext {
+  gap: string;
+  workTree: string;
+  scope: EditScope | undefined;
+}
+
+async function styledCopy(work: FileWork, request: StructureEditRequest, code: string, at: { line: number; col: number } | undefined, ctx: PlanContext): Promise<string> {
+  if (!request.style || !at) return code;
+  const theme = await themeForFile(ctx.workTree, work.target.relative, code, ctx.scope);
+  return patchSource(work.target.relative, code, { source: { file: work.file, ...at }, selector: '', style: request.style }, theme).code;
+}
+
+async function planFile(work: FileWork, request: StructureEditRequest, ctx: PlanContext): Promise<FileResult> {
   const original = await readFile(work.target.file, 'utf8');
   const doc = structureDoc(work.target.relative, original);
   const locate = (target: StructureTarget, role: 'target' | 'into' | 'ref') => doc.node(target.source, role, target.tag);
   const nodes = work.targets.map((target) => unwrapTarget(request, doc, original, locate(target, 'target')));
   const place = placement(request, locate);
-  const plan = planStructure(original, { op: request.op, nodes, place, frame: frameFor(work, request, doc, nodes, original, gap), closeTag: doc.closeTag });
+  const plan = planStructure(original, { op: request.op, nodes, place, frame: frameFor(work, request, doc, nodes, original, ctx.gap), closeTag: doc.closeTag });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
+  const code = await styledCopy(work, request, plan.code, positions[0], ctx);
   const selectTag = (offset: number) => /^<([A-Za-z][\w.-]*)/.exec(plan.code.slice(offset, offset + 80))?.[1]?.toLowerCase() ?? '';
   const select = positions.map((position, index) => ({ file: work.file, ...position, tag: selectTag(plan.select[index] ?? 0) }));
   const placeTag = (place.into ?? place.before ?? place.after)?.tag ?? null;
-  return { target: work.target, original, code: plan.code, select, tags: nodes.map((node) => node.tag), placeTag };
+  return { target: work.target, original, code, select, tags: nodes.map((node) => node.tag), placeTag };
 }
 
 function subject(tags: string[]): string {
@@ -140,12 +153,12 @@ export interface StructurePlan {
   title: string;
 }
 
-export async function planStructureEdit(workTree: string, raw: unknown): Promise<StructurePlan> {
+export async function planStructureEdit(workTree: string, raw: unknown, scope?: EditScope): Promise<StructurePlan> {
   const request = parseStructureEdit(raw);
   const groups = await groupTargets(workTree, request);
   await assertSameFile(workTree, request, groups);
   const gap = await frameGap(workTree);
-  const results = await Promise.all(groups.map((group) => planFile(group, request, gap)));
+  const results = await Promise.all(groups.map((group) => planFile(group, request, { gap, workTree, scope })));
   const changed = results.filter((result) => result.code !== result.original);
   return { request, changed, title: structureTitle(request, results.flatMap((result) => result.tags), results[0]?.placeTag ?? null) };
 }
@@ -153,7 +166,7 @@ export async function planStructureEdit(workTree: string, raw: unknown): Promise
 export async function applyStructureEdit(deps: DirectEditDeps, project: Project, direction: Direction, raw: unknown): Promise<StructureEditResult> {
   const parsed = parseStructureEdit(raw);
   const headVersionId = assertCanEdit(deps, project, direction);
-  const { request, changed, title } = await planStructureEdit(direction.workTree, parsed);
+  const { request, changed, title } = await planStructureEdit(direction.workTree, parsed, { projectKind: project.kind });
   if (changed.length === 0) return { files: [], version: await deps.versions.get(project, headVersionId), select: [] };
   const meta: VersionMeta = { kind: 'manual', prompt: structurePrompt(request) };
   const version = await writeAndCommitAll(deps, project, direction, changed, title, meta);

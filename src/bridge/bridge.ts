@@ -7,6 +7,7 @@ import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { createLockSet } from './locks.js';
 import { createMarquee } from './marquee.js';
+import { createFreeMove } from './free-move.js';
 import { exposeHeadlessMatch, isMatchKind, matchingElements } from './select-match.js';
 import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
@@ -869,7 +870,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (mode !== 'select' || textEditor.editing() || marquee.move(event)) return;
+    if (mode !== 'select' || textEditor.editing() || freeMove.move(event) || marquee.move(event)) return;
     altHeld = event.altKey;
     pendingHover = hitOf(event);
     if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
@@ -932,19 +933,32 @@ function startBridge(session: BridgeSession): void {
     pick: (elements, additive) => void postSelectMany(elements, additive),
   });
 
+  const freeMove = createFreeMove({
+    enabled: () => mode === 'select' && !textEditor.editing(),
+    selected: () => selected,
+    selectorFor,
+    rectOf,
+    ownSource: async (element) => {
+      const value = APP_MODE === 'next' ? await appSourceFor(element) : element.getAttribute(SOURCE_LOC_ATTR);
+      return { own: value ? parseLoc(value) : null, usedAt: APP_MODE === 'next' && componentUseOf(element)?.root ? usedAtOf(element) : null };
+    },
+    post,
+  });
+
   const onPointerDown = (event: PointerEvent): void => {
     block(event);
-    if (!textEditor.owns(eventElement(event))) marquee.down(event, hitOf(event));
+    if (textEditor.owns(eventElement(event))) return;
+    if (!freeMove.down(event, hitOf(event))) marquee.down(event, hitOf(event));
   };
 
   const onPointerUp = (event: PointerEvent): void => {
-    marquee.up(event);
+    if (!freeMove.up(event)) marquee.up(event);
     block(event);
   };
 
   const onClick = (event: MouseEvent): void => {
     if (mode !== 'select' && links.onClick(event)) return;
-    if (mode !== 'select' || textEditor.owns(eventElement(event)) || marquee.takeClick()) return block(event);
+    if (mode !== 'select' || textEditor.owns(eventElement(event)) || freeMove.takeClick() || marquee.takeClick()) return block(event);
     block(event);
     const element = hitOf(event);
     if (!element) return;
@@ -987,7 +1001,7 @@ function startBridge(session: BridgeSession): void {
   };
 
   const cancelMarquee = (event: KeyboardEvent): boolean => {
-    if (event.key !== 'Escape' || !marquee.cancel()) return false;
+    if (event.key !== 'Escape' || !(freeMove.cancel() || marquee.cancel())) return false;
     event.preventDefault();
     event.stopImmediatePropagation();
     return true;
@@ -1197,6 +1211,7 @@ function startBridge(session: BridgeSession): void {
       });
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
     },
+    'move-cancel': () => void freeMove.cancel(),
     'request-neighbors': (message) => {
       if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });
     },

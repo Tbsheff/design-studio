@@ -153,9 +153,16 @@ const structureSchema = z
     into: structureTargetSchema.optional(),
     before: structureTargetSchema.optional(),
     after: structureTargetSchema.optional(),
+    style: styleSchema.optional(),
   })
   .strict()
-  .refine((request) => [request.into, request.before, request.after].filter(Boolean).length === (request.op === 'move' ? 1 : 0), 'move needs exactly one of into, before or after; other ops take none');
+  .refine((request) => placeCountOk(request.op, [request.into, request.before, request.after].filter(Boolean).length), 'move needs exactly one of into, before or after; duplicate takes at most one; other ops take none')
+  .refine((request) => request.style === undefined || (request.op === 'duplicate' && request.targets.length === 1), 'style works only with duplicate of one target (it styles the copy)');
+
+function placeCountOk(op: StructureEditRequest['op'], count: number): boolean {
+  if (op === 'move') return count === 1;
+  return count <= (op === 'duplicate' ? 1 : 0);
+}
 
 export function isStructureEdit(raw: unknown): boolean {
   return typeof raw === 'object' && raw !== null && 'op' in raw;

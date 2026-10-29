@@ -776,7 +776,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const run = segment.setup.run;
     const gaps = input.signal.aborted || total.status === 'failed' ? null : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
     if (!gaps) return null;
-    const review = await studioAppReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId }, gaps);
+    const review = await studioAppReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId, ...(input.baseFile ? { baseFile: input.baseFile } : {}) }, gaps);
     const text = appReviewPrompt(review, gaps, pass);
     const sessionId = segment.sessionId;
     if (!text || !sessionId || pass >= APP_REVIEW_PASSES || !roomForFixLoop(total, segment) || input.signal.aborted) return { outcome: total, record: review.record };

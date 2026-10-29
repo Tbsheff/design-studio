@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import type { Project, ProjectKind, Version } from '../../shared/contracts';
+import type { Project, ProjectKind, RunStatus, Version } from '../../shared/contracts';
 import { Canvas } from './Canvas';
 import { CompareView } from './CompareView';
 import { DesignMdModal } from './DesignMdModal';
@@ -25,9 +25,16 @@ export function CenterView(props: CenterProps) {
   return <Canvas {...props.canvas} />;
 }
 
-export function UnfinishedSlot(props: { visible: boolean; count: number; busy: boolean; onKeep: () => void; onDiscard: () => void }) {
+const STOPPED: ReadonlySet<RunStatus> = new Set(['canceled', 'failed', 'budget_exceeded']);
+
+export function runStoppedUnsaved(runs: readonly { startedAt: number; status: RunStatus }[], versions: readonly Version[]): boolean {
+  const head = versions.reduce((latest, version) => Math.max(latest, version.createdAt), 0);
+  return runs.some((run) => run.startedAt > head && STOPPED.has(run.status));
+}
+
+export function UnfinishedSlot(props: { visible: boolean; count: number; busy: boolean; runStopped: boolean; onKeep: () => void; onDiscard: () => void }) {
   if (!props.visible) return null;
-  return <UnfinishedBanner count={props.count} busy={props.busy} onKeep={props.onKeep} onDiscard={props.onDiscard} />;
+  return <UnfinishedBanner count={props.count} busy={props.busy} runStopped={props.runStopped} onKeep={props.onKeep} onDiscard={props.onDiscard} />;
 }
 
 interface ModalsProps {

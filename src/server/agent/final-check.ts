@@ -11,6 +11,7 @@ import { probeLayout } from './layout-region.js';
 import { regionFindings } from './fit-check.js';
 import { changedSince } from './screens.js';
 import { recordShot } from './polish-loop.js';
+import { cutLine, mobileCuts, type CutElement } from './mobile-cut.js';
 import { runReviewFrameTool } from '../review/agent-tool.js';
 import type { ImagePart } from './user-message.js';
 
@@ -133,10 +134,21 @@ async function reviewAt(input: StudioReviewInput, viewport: 'mobile' | null): Pr
   return viewport ? findings.map((item) => ({ ...item, element: `${item.element} at 390 px` })) : findings;
 }
 
+async function changedFiles(input: StudioReviewInput): Promise<string[]> {
+  const app = input.ctx.project.app;
+  return app && input.run.startedAt !== undefined ? changedSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt) : [];
+}
+
+async function cutsNow(input: StudioReviewInput): Promise<CutElement[]> {
+  const url = defaultShotTarget(input.ctx)?.url;
+  if (!url) return [];
+  const [cuts, changed] = await Promise.all([mobileCuts(input.preview, url), changedFiles(input)]);
+  return cuts.filter((cut) => inChanged(cut.usedAt, changed) || inChanged(cut.source, changed));
+}
+
 async function reviewItems(input: StudioReviewInput): Promise<ReviewItem[]> {
   const [frame, mobile] = await Promise.all([reviewAt(input, null), reviewAt(input, 'mobile').catch(() => [])]);
-  const app = input.ctx.project.app;
-  const changed = app && input.run.startedAt !== undefined ? await changedSince(input.ctx.direction.workTree, app.appDir, input.run.startedAt) : [];
+  const changed = await changedFiles(input);
   const seen = new Set(frame.map((item) => `${item.kind}|${item.selector ?? item.element}`));
   const extra = mobile.filter((item) => !seen.has(`${item.kind}|${item.selector ?? item.element}`));
   return [...frame, ...extra].filter((item) => item.severity !== 'low' && inChanged(item.source, changed));
@@ -159,15 +171,16 @@ async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {
 }
 
 export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewGaps): Promise<StudioReview> {
-  const [image, items, outside] = await Promise.all([
+  const [image, items, outside, cuts] = await Promise.all([
     gaps.mobile ? mobileImage(input).catch(() => null) : Promise.resolve(null),
     gaps.review ? reviewItems(input).catch((error: unknown) => (console.warn(`[agent] studio review_frame failed: ${error instanceof Error ? error.message : String(error)}`), [])) : Promise.resolve([]),
     layoutNow(input).catch(() => []),
+    gaps.mobile ? cutsNow(input).catch(() => []) : Promise.resolve([]),
   ]);
   const log = input.run.log;
   if (image && log) recordShot(log, 'mobile');
   if (gaps.review) (input.run.reviews ??= []).push({ at: log?.toolOrder.length ?? 0, frame: null });
-  const lines = [...outside.map(outsideLine), ...items.slice(0, LISTED).map(reviewLine)];
+  const lines = [...outside.map(outsideLine), ...cuts.slice(0, LISTED).map(cutLine), ...items.slice(0, LISTED).map(reviewLine)];
   const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false };
   return { record, images: image ? [image] : [], lines };
 }

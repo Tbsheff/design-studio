@@ -37,8 +37,16 @@ function inside(box: ScanRect, area: ScanRect, slack = EPS): boolean {
   return box.x >= area.x - slack && box.y >= area.y - slack && box.x + box.width <= area.x + area.width + slack && box.y + box.height <= area.y + area.height + slack;
 }
 
+function spillReach(item: ScanSvg): ScanRect {
+  const boxes = [item, ...(item.shapes ?? []).map((shape) => svgShape(shape, 1)).filter((shape): shape is NativeShape => shape !== null).map(boundsOf)];
+  const x = Math.min(...boxes.map((box) => box.x));
+  const y = Math.min(...boxes.map((box) => box.y));
+  return { x, y, width: Math.max(...boxes.map((box) => box.x + box.width)) - x, height: Math.max(...boxes.map((box) => box.y + box.height)) - y };
+}
+
 function reach(item: ScanBox | ScanSvg): ScanRect {
-  if (item.kind !== 'box' || !item.shadow) return item;
+  if (item.kind === 'svg') return item.spill ? spillReach(item) : item;
+  if (!item.shadow) return item;
   const { dx, dy, blur } = item.shadow;
   return { x: item.x + Math.min(0, dx) - blur, y: item.y + Math.min(0, dy) - blur, width: item.width + Math.abs(dx) + blur * 2, height: item.height + Math.abs(dy) + blur * 2 };
 }
@@ -96,20 +104,46 @@ function imageShapes(box: ScanBox, later: ScanRect[]): NativeShape[] | null {
   return later.some((rect) => overlaps(rect, box)) ? null : [{ kind: 'image', box }];
 }
 
+function extrema(p0: number, p1: number, p2: number, p3: number | null): number[] {
+  const at = (t: number) => (p3 === null ? (1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t * t * p2 : (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t * t * p2 + t ** 3 * p3);
+  if (p3 === null) {
+    const den = p0 - 2 * p1 + p2;
+    return Math.abs(den) < 1e-9 ? [] : [(p0 - p1) / den].filter((t) => t > 0 && t < 1).map(at);
+  }
+  const a = -p0 + 3 * p1 - 3 * p2 + p3;
+  const b = 2 * (p0 - 2 * p1 + p2);
+  const c = p1 - p0;
+  if (Math.abs(a) < 1e-9) return Math.abs(b) < 1e-9 ? [] : [-c / b].filter((t) => t > 0 && t < 1).map(at);
+  const disc = b * b - 4 * a * c;
+  if (disc < 0) return [];
+  const root = Math.sqrt(disc);
+  return [(-b + root) / (2 * a), (-b - root) / (2 * a)].filter((t) => t > 0 && t < 1).map(at);
+}
+
+type Curved = Extract<PathPoint, { curve: unknown }>;
+
+function curveExtrema(from: { x: number; y: number }, point: Curved): { xs: number[]; ys: number[] } {
+  const cubic = point.curve.type === 'cubic' ? point.curve : null;
+  return {
+    xs: extrema(from.x, point.curve.x1, cubic ? cubic.x2 : point.x, cubic ? point.x : null),
+    ys: extrema(from.y, point.curve.y1, cubic ? cubic.y2 : point.y, cubic ? point.y : null),
+  };
+}
+
 function pathBox(points: PathPoint[]): ScanRect {
   const xs: number[] = [];
   const ys: number[] = [];
+  let last: { x: number; y: number } | null = null;
   for (const point of points) {
     if ('close' in point) continue;
     xs.push(point.x);
     ys.push(point.y);
-    if (!('curve' in point)) continue;
-    xs.push(point.curve.x1);
-    ys.push(point.curve.y1);
-    if (point.curve.type === 'cubic') {
-      xs.push(point.curve.x2);
-      ys.push(point.curve.y2);
+    if ('curve' in point && last) {
+      const more = curveExtrema(last, point);
+      xs.push(...more.xs);
+      ys.push(...more.ys);
     }
+    last = point;
   }
   const x = Math.min(...xs);
   const y = Math.min(...ys);
@@ -133,12 +167,13 @@ function boundsOf(shape: NativeShape): ScanRect {
   return { x: box.x - half, y: box.y - half, width: box.width + half * 2, height: box.height + half * 2 };
 }
 
-function svgShapes(item: ScanSvg): NativeShape[] | null {
+function svgShapes(item: ScanSvg, scan: ScanResult): NativeShape[] | null {
   if (!item.shapes) return null;
   const out: NativeShape[] = [];
+  const area = item.spill ? { x: 0, y: 0, width: scan.width, height: scan.height } : item;
   for (const shape of item.shapes) {
     const native = svgShape(shape, item.opacity);
-    if (!native || !inside(boundsOf(native), item, 1)) return null;
+    if (!native || !inside(boundsOf(native), area, 1)) return null;
     out.push(native);
   }
   return out;
@@ -170,7 +205,7 @@ function clipToRegion(box: ScanBox, scan: ScanResult): ScanBox | null {
 
 function convert(item: ScanBox | ScanSvg, scan: ScanResult, later: ScanRect[]): NativeShape[] | null {
   if (item.id === undefined || !clipOk(item, item.kind === 'box' ? (item.radius[0] ?? 0) : 0, scan.clips[item.clip])) return null;
-  if (item.kind === 'svg') return inRegion(item, scan) ? svgShapes(item) : null;
+  if (item.kind === 'svg') return inRegion(item, scan) ? svgShapes(item, scan) : null;
   if (item.complex) return null;
   if (item.image) return inRegion(item, scan) ? imageShapes(item, later) : null;
   if (item.raster) return null;

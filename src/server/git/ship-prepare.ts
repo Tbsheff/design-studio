@@ -32,7 +32,10 @@ interface ShadowVersion {
   parentId: string | null;
   title: string;
   at: number;
+  restoredFrom: string | null;
 }
+
+const META_PREFIX = 'studio-meta: ';
 
 export const literal = (file: string) => `:(literal)${file}`;
 
@@ -89,8 +92,65 @@ export async function shadowBlob(ctx: ShipContext, sha: string): Promise<Uint8Ar
   return runGitBuffer(scopeOf(ctx), ['cat-file', 'blob', sha]);
 }
 
+function restoredFromOf(body: string): string | null {
+  const line = body.split('\n').find((item) => item.startsWith(META_PREFIX));
+  if (!line) return null;
+  try {
+    const meta = JSON.parse(line.slice(META_PREFIX.length)) as { kind?: unknown; restoredFrom?: unknown };
+    return (meta.kind === 'restore' || meta.kind === 'undo') && typeof meta.restoredFrom === 'string' ? meta.restoredFrom : null;
+  } catch {
+    return null;
+  }
+}
+
+export function liveVersions(span: readonly ShadowVersion[]): ShadowVersion[] {
+  const index = new Map(span.map((version, at) => [version.id, at]));
+  const live: ShadowVersion[] = [];
+  for (let at = 0; at < span.length; ) {
+    const version = span[at] as ShadowVersion;
+    if (!version.restoredFrom) {
+      live.push(version);
+      at += 1;
+      continue;
+    }
+    const jump = index.get(version.restoredFrom);
+    if (jump === undefined || jump <= at) break;
+    at = jump;
+  }
+  return live;
+}
+
+async function versionFiles(ctx: ShipContext, version: ShadowVersion): Promise<string[]> {
+  if (!version.parentId) return [];
+  const { stdout } = await runGit(scopeOf(ctx), ['diff-tree', '-r', '--no-renames', '--name-only', '-z', version.parentId, version.id]);
+  return splitNul(stdout);
+}
+
+async function versionsInDiff(ctx: ShipContext, span: readonly ShadowVersion[], files: readonly string[]): Promise<ShadowVersion[]> {
+  const changed = new Set(files);
+  const live = liveVersions(span);
+  const touched = await Promise.all(live.map(async (version) => (await versionFiles(ctx, version)).some((file) => changed.has(file))));
+  return live.filter((_, at) => touched[at]);
+}
+
+function diffTitle(files: readonly ShipFile[], fallback: string): string {
+  const shown = files.filter((file) => !file.refused);
+  if (shown.length === 0) return fallback;
+  if (shown.length === 1) return `Update ${path.posix.basename((shown[0] as ShipFile).path)}`;
+  return `Update ${shown.length} files`;
+}
+
+function diffSummary(files: readonly ShipFile[]): string {
+  const shown = files.filter((file) => !file.refused);
+  if (shown.length === 0) return '';
+  const count = (value: number | null) => (value === null ? 'binary' : String(value));
+  const lines = shown.slice(0, 12).map((file) => `- ${file.path} (${file.status}, +${count(file.additions)} −${count(file.deletions)})`);
+  const more = shown.length > 12 ? [`- and ${shown.length - 12} more`] : [];
+  return [`Changes ${shown.length} file${shown.length === 1 ? '' : 's'}:`, ...lines, ...more].join('\n');
+}
+
 async function shadowVersions(ctx: ShipContext, head: string): Promise<ShadowVersion[]> {
-  const { stdout } = await runGit(scopeOf(ctx), ['log', '--first-parent', '--format=%H%x1f%P%x1f%ct%x1f%s%x1e', head]);
+  const { stdout } = await runGit(scopeOf(ctx), ['log', '--first-parent', '--format=%H%x1f%P%x1f%ct%x1f%s%x1f%b%x1e', head]);
   const names = await readFile(path.join(ctx.projectDir, 'version-names.json'), 'utf8')
     .then((text) => JSON.parse(text) as Record<string, string>)
     .catch(() => ({}) as Record<string, string>);
@@ -99,9 +159,9 @@ async function shadowVersions(ctx: ShipContext, head: string): Promise<ShadowVer
     .map((record) => record.trim())
     .filter(Boolean)
     .map((record) => {
-      const [id = '', parents = '', at = '0', title = ''] = record.split('\x1f');
+      const [id = '', parents = '', at = '0', title = '', body = ''] = record.split('\x1f');
       const named = names[id];
-      return { id, parentId: parents.split(' ').filter(Boolean)[0] ?? null, title: typeof named === 'string' ? named : title, at: Number(at) * 1000 };
+      return { id, parentId: parents.split(' ').filter(Boolean)[0] ?? null, title: typeof named === 'string' ? named : title, at: Number(at) * 1000, restoredFrom: restoredFromOf(body) };
     });
 }
 
@@ -282,9 +342,10 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string, opti
   if (!base) return { ...emptyPrepare(project, settings, history, baseVersionId ? 'That base version is not in the history of this project.' : 'There is no older version to compare with.', repo), bases, headVersionId: head };
   const span = versions.slice(0, versions.findIndex((v) => v.id === base.versionId));
   const files = await shipFiles(ctx, repo, main.workTree, base.versionId, head);
-  const titles = [...new Set(span.map((v) => v.title).reverse())];
-  const summary = await chatSummary(ctx, new Set(span.map((v) => v.id)));
-  const title = options.title?.trim() || sessionTitle(titles, project.name);
+  const live = await versionsInDiff(ctx, span, files.map((file) => file.path.slice(repo.prefix.length)));
+  const titles = [...new Set(live.map((v) => v.title).reverse())];
+  const summary = (await chatSummary(ctx, new Set(live.map((v) => v.id)))) || diffSummary(files);
+  const title = options.title?.trim() || (titles.length > 0 ? sessionTitle(titles, project.name) : diffTitle(files, project.name));
   const vars: ShipTemplateVars = { user: settings.user || (await defaultUser(repo.root)), issue: settings.issueId, title, summary, versions: titles, files: files.filter((f) => !f.refused).map((f) => f.path) };
   const commitMessage = titles.length > 1 ? `${title}\n\n${titles.map((t) => `- ${t}`).join('\n')}` : title;
   const { binary: _binary, ...format } = await detectShipFormat(repo.root, repo.prefix);
@@ -296,7 +357,7 @@ export async function prepareShip(ctx: ShipContext, baseVersionId?: string, opti
     bases,
     headVersionId: head,
     files,
-    versions: span.map((v) => ({ id: v.id, title: v.title })),
+    versions: live.map((v) => ({ id: v.id, title: v.title })),
     summary,
     settings,
     defaults: { branch: renderBranchName(settings.branchTemplate, vars), title, commitMessage, body: renderShipTemplate(settings.bodyTemplate, vars) },

@@ -219,18 +219,18 @@ export async function studioAppReview(input: StudioReviewInput, gaps: AppReviewG
   const lines = [...outside.map(outsideLine), ...cuts.slice(0, LISTED).map(cutLine), ...review.items.slice(0, LISTED).map(reviewLine)];
   const oldCode = review.oldCode + oldCuts;
   const record: AppReviewRecord = { mobileShot: gaps.mobile ? (image ? 'studio' : 'failed') : 'agent', review: gaps.review ? 'studio' : 'agent', findings: lines.length, fixLoop: false, oldCode };
-  return { record, images: image ? [image] : [], lines };
+  return { record, images: image && lines.length > 0 ? [image] : [], lines };
 }
 
 export function appReviewPrompt(review: StudioReview, gaps: AppReviewGaps, pass = 1): string | null {
-  if (review.lines.length === 0 && review.images.length === 0) return null;
+  if (review.lines.length === 0) return null;
   const ran = [gaps.mobile ? 'a mobile screenshot at 390 px wide, 2400 px tall so content in inner scroll areas shows (attached)' : null, gaps.review ? 'review_frame on the context frame at its size and at 390 px' : null].filter(Boolean).join(' and ');
   const opening = pass > 1 ? `You edited again after the studio checks, so the studio ran ${ran} once more.` : `You finished an app run without ${ran}, so the studio ran them.`;
-  const body = review.lines.length ? ['Findings on the lines you changed:', ...review.lines] : ['review_frame found nothing high or medium on the lines you changed.'];
   return [
     '<studio-continue>',
     opening,
-    ...body,
+    'Findings on the lines you changed:',
+    ...review.lines,
     review.images.length ? 'Look at the mobile image: the new UI must sit inside the page content and fit 390 px without overlap or sideways scroll.' : '',
     'Do one fix loop: fix these findings and what you see in your new UI only, with edit_element or Edit. Then run mcp__studio__render_check once. Do not edit code you did not touch. Then reply in one or two sentences with what you fixed and what is left.',
     '</studio-continue>',

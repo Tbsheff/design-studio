@@ -1,4 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
+import type { LiveStore } from '../liveStore';
+import type { HoverBox } from '../usePreviewFrames';
 import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shared/contracts';
 import { isTypingTarget } from '../typingTarget';
 import type { LayerTree } from '../layersTree';
@@ -12,10 +14,17 @@ interface TreeFrames {
   selectedNode: number | null;
   hoverNode: (id: number | null) => void;
   selectNode: (id: number, additive: boolean) => void;
+  hover: LiveStore<HoverBox | null>;
+}
+
+function useHoveredNode(hover: LiveStore<HoverBox | null>): number | null {
+  const read = () => hover.get()?.node ?? null;
+  return useSyncExternalStore(hover.subscribe, read, read);
 }
 
 export function CanvasLayersPanel({ frames, edits, frameName, selection, onSelectMode, onClose }: { frames: TreeFrames; edits: LayerEdits; frameName: string; selection: SelectionContext[]; onSelectMode: () => void; onClose?: () => void }) {
   const hasSelection = selection.length > 0;
+  const hoveredNode = useHoveredNode(frames.hover);
   const menuState = { count: selection.length, hasSource: selectionTargets(selection) !== null, canPaste: edits.canPaste, busy: edits.busy };
   const actions = edits.enabled
     ? {
@@ -37,6 +46,7 @@ export function CanvasLayersPanel({ frames, edits, frameName, selection, onSelec
       frameName={frameName}
       selectedNode={hasSelection ? frames.selectedNode : null}
       onHover={frames.hoverNode}
+      hoveredNode={hoveredNode}
       onSelect={(id, additive) => {
         onSelectMode();
         frames.selectNode(id, additive);

@@ -3,6 +3,7 @@ import { isModZoomKey, zoomKeyOf, type ZoomKey } from '../shared/contracts';
 import type { Box } from './canvasFrames';
 import { uiStore, type ZoomSetting } from './storage';
 import { isTypingTarget } from './typingTarget';
+import { createLiveStore, type LiveStore } from './liveStore';
 
 export { isTypingTarget };
 
@@ -51,7 +52,7 @@ function wheelPixels(e: WheelInput, pageHeight: number): { dx: number; dy: numbe
 }
 
 function wheelZoomFactor(dy: number): number {
-  return Math.min(2, Math.max(0.5, Math.exp(-dy * WHEEL_RATE)));
+  return Math.min(ZOOM_STEP, Math.max(1 / ZOOM_STEP, Math.exp(-dy * WHEEL_RATE)));
 }
 
 function clampZoom(z: number): number {
@@ -94,6 +95,7 @@ interface Options {
 
 export interface PanZoom {
   zoom: number;
+  zoomPercent: LiveStore<number>;
   panning: boolean;
   spaceHeld: boolean;
   zoomHeld: boolean;
@@ -119,6 +121,7 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
   const wheelTimer = useRef<number | null>(null);
   const paintFrame = useRef(0);
   const painted = useRef<View | null>(null);
+  const [zoomPercent] = useState(() => createLiveStore(100));
 
   useLayoutEffect(() => {
     const el = stageRef.current;
@@ -149,7 +152,8 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
     el.style.setProperty('--stroke', `${1 / v.zoom}px`);
     el.style.setProperty('--inv-zoom', String(1 / v.zoom));
     painted.current = v;
-  }, [artboardRef, view]);
+    zoomPercent.set(Math.round(v.zoom * 100));
+  }, [artboardRef, view, zoomPercent]);
 
   const schedulePaint = useCallback(() => {
     if (paintFrame.current) return;
@@ -396,6 +400,7 @@ export function usePanZoom({ stageRef, artboardRef, layout, setting, selectionRe
 
   return {
     zoom: zoomOverride.current ?? committedZoom,
+    zoomPercent,
     panning,
     spaceHeld,
     zoomHeld,

@@ -347,7 +347,8 @@
 
 .topbar-zoom {
   height: 28px;
-  min-width: 48px;
+  width: 48px;
+  contain: layout paint;
   padding: 0 var(--s-2);
   border: 0;
   border-radius: var(--r-sm);

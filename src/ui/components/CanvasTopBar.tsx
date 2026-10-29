@@ -7,6 +7,7 @@ import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { shortcutLabel } from '../../shared/keymap';
+import { useLive, type LiveStore } from '../liveStore';
 
 export type CanvasTool = 'select' | 'comment' | 'edit' | 'prototype' | null;
 export type PresentMode = 'window' | 'fullscreen' | 'new-window' | 'play';
@@ -139,7 +140,7 @@ export function DropMenu({ label, groups, className, align = 'start', tip, child
 
 const ZOOMS = [0.5, 0.75, 1, 1.25, 2];
 
-function ZoomPill({ zoom, setting, onZoomTo, onFit, onStep }: { zoom: number; setting: ZoomSetting; onZoomTo: (z: number) => void; onFit: () => void; onStep: (d: 1 | -1) => void }) {
+function ZoomPill({ zoom, setting, onZoomTo, onFit, onStep }: { zoom: LiveStore<number>; setting: ZoomSetting; onZoomTo: (z: number) => void; onFit: () => void; onStep: (d: 1 | -1) => void }) {
   const groups = (): MenuGroup[] => [
     {
       items: [
@@ -154,9 +155,10 @@ function ZoomPill({ zoom, setting, onZoomTo, onFit, onStep }: { zoom: number; se
       ],
     },
   ];
+  const percent = useLive(zoom);
   return (
-    <DropMenu label={`Zoom ${Math.round(zoom * 100)}%`} className="topbar-zoom" groups={groups} align="end" tip={tipWithKey('Zoom', 'zoom-fit')}>
-      {Math.round(zoom * 100)}%
+    <DropMenu label={`Zoom ${percent}%`} className="topbar-zoom" groups={groups} align="end" tip={tipWithKey('Zoom', 'zoom-fit')}>
+      {percent}%
     </DropMenu>
   );
 }
@@ -172,7 +174,7 @@ interface Props {
   fileName: string;
   fileMenu: () => MenuGroup[];
   onFileMenuOpen: () => void;
-  zoom: number;
+  zoom: LiveStore<number>;
   zoomSetting: ZoomSetting;
   onZoomTo: (z: number) => void;
   onZoomStep: (d: 1 | -1) => void;

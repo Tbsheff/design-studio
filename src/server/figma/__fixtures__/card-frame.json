@@ -1,0 +1,200 @@
+{
+  "name": "Fern & Ember classes",
+  "lastModified": "2026-10-28T18:20:00Z",
+  "version": "2148830201",
+  "nodes": {
+    "12:340": {
+      "document": {
+        "id": "12:340",
+        "name": "Class card",
+        "type": "INSTANCE",
+        "componentId": "40:1",
+        "absoluteBoundingBox": { "x": 100, "y": 200, "width": 360, "height": 386 },
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 12,
+        "paddingTop": 20,
+        "paddingBottom": 20,
+        "paddingLeft": 24,
+        "paddingRight": 24,
+        "primaryAxisAlignItems": "MIN",
+        "counterAxisAlignItems": "MIN",
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED",
+        "layoutSizingHorizontal": "FIXED",
+        "layoutSizingVertical": "HUG",
+        "cornerRadius": 20,
+        "clipsContent": true,
+        "fills": [{ "type": "SOLID", "color": { "r": 0.9953, "g": 0.9888, "b": 0.9782, "a": 1 } }],
+        "strokes": [{ "type": "SOLID", "color": { "r": 0.8785, "g": 0.8529, "b": 0.8251, "a": 1 } }],
+        "strokeWeight": 1,
+        "effects": [{ "type": "DROP_SHADOW", "visible": true, "color": { "r": 0, "g": 0, "b": 0, "a": 0.06 }, "offset": { "x": 0, "y": 2 }, "radius": 8, "spread": 0 }],
+        "children": [
+          {
+            "id": "12:341",
+            "name": "Header",
+            "type": "FRAME",
+            "absoluteBoundingBox": { "x": 124, "y": 220, "width": 312, "height": 28 },
+            "layoutMode": "HORIZONTAL",
+            "itemSpacing": 8,
+            "primaryAxisAlignItems": "SPACE_BETWEEN",
+            "counterAxisAlignItems": "CENTER",
+            "layoutSizingHorizontal": "FILL",
+            "layoutSizingVertical": "HUG",
+            "fills": [],
+            "children": [
+              {
+                "id": "12:342",
+                "name": "Title",
+                "type": "TEXT",
+                "absoluteBoundingBox": { "x": 124, "y": 220, "width": 140, "height": 28 },
+                "characters": "Sunrise Flow",
+                "textAutoResize": "WIDTH_AND_HEIGHT",
+                "layoutSizingHorizontal": "HUG",
+                "layoutSizingVertical": "HUG",
+                "style": { "fontFamily": "Fraunces", "fontWeight": 600, "fontSize": 22, "lineHeightPx": 28, "lineHeightUnit": "PIXELS", "letterSpacing": -0.22, "textAlignHorizontal": "LEFT" },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.1539, "g": 0.1121, "b": 0.0893, "a": 1 } }]
+              },
+              {
+                "id": "12:343",
+                "name": "Badge",
+                "type": "INSTANCE",
+                "componentId": "21:5",
+                "componentProperties": { "Variant": { "type": "VARIANT", "value": "Secondary" } },
+                "absoluteBoundingBox": { "x": 390, "y": 224, "width": 46, "height": 20 },
+                "layoutMode": "HORIZONTAL",
+                "paddingTop": 2,
+                "paddingBottom": 2,
+                "paddingLeft": 10,
+                "paddingRight": 10,
+                "counterAxisAlignItems": "CENTER",
+                "layoutSizingHorizontal": "HUG",
+                "layoutSizingVertical": "HUG",
+                "cornerRadius": 999,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.8785, "g": 0.8529, "b": 0.8251, "a": 1 } }],
+                "children": [
+                  {
+                    "id": "I12:343;21:6",
+                    "name": "Label",
+                    "type": "TEXT",
+                    "absoluteBoundingBox": { "x": 400, "y": 226, "width": 26, "height": 16 },
+                    "characters": "New",
+                    "textAutoResize": "WIDTH_AND_HEIGHT",
+                    "style": { "fontFamily": "DM Sans", "fontWeight": 600, "fontSize": 12, "lineHeightPx": 16, "lineHeightUnit": "PIXELS" },
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.1539, "g": 0.1121, "b": 0.0893, "a": 1 } }]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "12:344",
+            "name": "Description",
+            "type": "TEXT",
+            "absoluteBoundingBox": { "x": 124, "y": 260, "width": 312, "height": 44 },
+            "characters": "Gentle vinyasa to start the day.\nAll levels welcome.",
+            "textAutoResize": "HEIGHT",
+            "layoutSizingHorizontal": "FILL",
+            "layoutSizingVertical": "HUG",
+            "style": { "fontFamily": "DM Sans", "fontWeight": 400, "fontSize": 15, "lineHeightPx": 22, "lineHeightUnit": "PIXELS" },
+            "fills": [{ "type": "SOLID", "color": { "r": 0.3704, "g": 0.3238, "b": 0.2937, "a": 1 } }]
+          },
+          {
+            "id": "12:345",
+            "name": "Studio photo",
+            "type": "RECTANGLE",
+            "absoluteBoundingBox": { "x": 124, "y": 316, "width": 312, "height": 140 },
+            "layoutSizingHorizontal": "FILL",
+            "layoutSizingVertical": "FIXED",
+            "cornerRadius": 12,
+            "fills": [{ "type": "IMAGE", "scaleMode": "FILL", "imageRef": "8f1c2a7d0e4b" }]
+          },
+          {
+            "id": "12:346",
+            "name": "Meta",
+            "type": "FRAME",
+            "absoluteBoundingBox": { "x": 124, "y": 468, "width": 312, "height": 24 },
+            "layoutMode": "HORIZONTAL",
+            "itemSpacing": 16,
+            "counterAxisAlignItems": "CENTER",
+            "layoutSizingHorizontal": "FILL",
+            "layoutSizingVertical": "HUG",
+            "fills": [],
+            "children": [
+              {
+                "id": "12:347",
+                "name": "Duration",
+                "type": "TEXT",
+                "absoluteBoundingBox": { "x": 124, "y": 471, "width": 48, "height": 18 },
+                "characters": "45 min",
+                "textAutoResize": "WIDTH_AND_HEIGHT",
+                "style": { "fontFamily": "DM Sans", "fontWeight": 400, "fontSize": 14, "lineHeightPx": 18, "lineHeightUnit": "PIXELS" },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.3704, "g": 0.3238, "b": 0.2937, "a": 1 } }]
+              },
+              {
+                "id": "12:348",
+                "name": "Price",
+                "type": "TEXT",
+                "absoluteBoundingBox": { "x": 188, "y": 468, "width": 30, "height": 24 },
+                "characters": "$20",
+                "textAutoResize": "WIDTH_AND_HEIGHT",
+                "style": { "fontFamily": "DM Sans", "fontWeight": 600, "fontSize": 18, "lineHeightPx": 24, "lineHeightUnit": "PIXELS" },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.1539, "g": 0.1121, "b": 0.0893, "a": 1 } }]
+              },
+              {
+                "id": "12:349",
+                "name": "Spots left",
+                "type": "TEXT",
+                "visible": false,
+                "absoluteBoundingBox": { "x": 230, "y": 471, "width": 60, "height": 18 },
+                "characters": "3 spots left",
+                "style": { "fontFamily": "DM Sans", "fontWeight": 400, "fontSize": 14, "lineHeightPx": 18, "lineHeightUnit": "PIXELS" },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.6472, "g": 0.2886, "b": 0.1558, "a": 1 } }]
+              }
+            ]
+          },
+          {
+            "id": "12:350",
+            "name": "Button",
+            "type": "INSTANCE",
+            "componentId": "30:2",
+            "componentProperties": { "Variant": { "type": "VARIANT", "value": "Default" }, "Size": { "type": "VARIANT", "value": "Default" } },
+            "absoluteBoundingBox": { "x": 124, "y": 504, "width": 312, "height": 48 },
+            "layoutMode": "HORIZONTAL",
+            "paddingTop": 12,
+            "paddingBottom": 12,
+            "paddingLeft": 24,
+            "paddingRight": 24,
+            "primaryAxisAlignItems": "CENTER",
+            "counterAxisAlignItems": "CENTER",
+            "layoutSizingHorizontal": "FILL",
+            "layoutSizingVertical": "HUG",
+            "cornerRadius": 20,
+            "fills": [{ "type": "SOLID", "color": { "r": 0.6472, "g": 0.2886, "b": 0.1558, "a": 1 } }],
+            "children": [
+              {
+                "id": "I12:350;30:3",
+                "name": "Label",
+                "type": "TEXT",
+                "absoluteBoundingBox": { "x": 232, "y": 516, "width": 96, "height": 24 },
+                "characters": "Book a spot",
+                "textAutoResize": "WIDTH_AND_HEIGHT",
+                "style": { "fontFamily": "DM Sans", "fontWeight": 600, "fontSize": 16, "lineHeightPx": 24, "lineHeightUnit": "PIXELS" },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.9883, "g": 0.9719, "b": 0.9454, "a": 1 } }]
+              }
+            ]
+          }
+        ]
+      },
+      "components": {
+        "40:1": { "key": "d4e2", "name": "Card", "description": "" },
+        "21:5": { "key": "b7d1", "name": "Variant=Secondary", "description": "", "componentSetId": "21:1" },
+        "30:2": { "key": "c3a9", "name": "Variant=Default, Size=Default", "description": "", "componentSetId": "30:1" }
+      },
+      "componentSets": {
+        "21:1": { "key": "b7d0", "name": "Badge", "description": "" },
+        "30:1": { "key": "c3a8", "name": "Button", "description": "" }
+      },
+      "styles": {}
+    }
+  }
+}

@@ -13,10 +13,14 @@ import { refuse, type Frame, type StructNode } from './structure-ops.js';
 type HtmlElement = DefaultTreeAdapterMap['element'];
 type HtmlParent = DefaultTreeAdapterMap['parentNode'];
 
-export type NodeRole = 'target' | 'into' | 'ref';
+export type NodeRole = 'target' | 'into' | 'ref' | 'insert';
+
+export interface DocNode extends StructNode {
+  branch: boolean;
+}
 
 export interface StructureDoc {
-  node(loc: SourcePosition, role: NodeRole, tag?: string): StructNode;
+  node(loc: SourcePosition, role: NodeRole, tag?: string): DocNode;
   frame(gap: string): Frame;
   closeTag(node: StructNode): string;
   verify(code: string, at: SourcePosition[]): void;
@@ -62,7 +66,7 @@ function htmlDoc(source: string): StructureDoc {
       const element = findElementAt(document, loc);
       if (!element) throw notFound(loc);
       assertSameTag(tag, element.tagName);
-      const node = htmlNode(element);
+      const node = { ...htmlNode(element), branch: false };
       return role === 'into' ? { ...node, fixed: element.tagName !== 'body' && node.fixed } : node;
     },
     frame: (gap) => ({ open: `<div data-name="Frame" style="display: flex; flex-direction: column; gap: ${gap};">`, close: '</div>' }),
@@ -108,6 +112,26 @@ function assertStatic(element: t.JSXElement, ancestors: t.Node[]): void {
   }
 }
 
+function isBranch(element: t.JSXElement, parent: t.Node | undefined): boolean {
+  if (parent?.type === 'ConditionalExpression') return parent.consequent === element || parent.alternate === element;
+  return parent?.type === 'LogicalExpression' && parent.right === element;
+}
+
+function assertInsertable(element: t.JSXElement, ancestors: t.Node[]): boolean {
+  assertNotRepeated(element, ancestors);
+  if (isJsxParent(ancestors[0])) return false;
+  if (isBranch(element, ancestors[0])) return true;
+  assertStatic(element, ancestors);
+  return false;
+}
+
+function checkRole(element: t.JSXElement, ancestors: t.Node[], role: NodeRole): boolean {
+  if (role === 'insert') return assertInsertable(element, ancestors);
+  if (role === 'into') assertNotRepeated(element, ancestors);
+  else assertStatic(element, ancestors);
+  return false;
+}
+
 function jsxSelfClose(source: string, element: t.JSXElement): StructNode['selfClose'] {
   if (!element.openingElement.selfClosing || typeof element.openingElement.end !== 'number') return null;
   const end = element.openingElement.end;
@@ -138,9 +162,8 @@ function jsxDoc(source: string, typescript: boolean): StructureDoc {
       if (!element) throw notFound(loc);
       assertSameTag(tag, jsxTag(source, element));
       const ancestors = jsxAncestors(ast.program, element);
-      if (role === 'into') assertNotRepeated(element, ancestors);
-      else assertStatic(element, ancestors);
-      return jsxNode(source, element, ancestors);
+      const branch = checkRole(element, ancestors, role);
+      return { ...jsxNode(source, element, ancestors), branch };
     },
     frame: (gap) => ({ open: `<div data-name="Frame" style={{ display: 'flex', flexDirection: 'column', gap: '${gap}' }}>`, close: '</div>' }),
     closeTag: (node) => `</${node.tag}>`,

@@ -254,7 +254,19 @@ export async function canvasList(ctx: CanvasToolContext): Promise<ToolText> {
   });
 }
 
-export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceSpec[], options: { seed?: boolean } = {}): Promise<ToolText> {
+function withoutQuery(spec: PlaceSpec): { spec: PlaceSpec; note: string | null } {
+  const raw = spec.path;
+  const cut = raw === undefined ? -1 : raw.search(/[?#]/);
+  if (raw === undefined || cut < 0) return { spec, note: null };
+  const page = raw.slice(0, cut);
+  if (cleanFramePath(page) === null) return { spec, note: null };
+  return { spec: { ...spec, path: page }, note: `Path ${raw} is placed as ${page.trim() || 'the entry page'}: a frame loads its page without a query string or #hash, so ${raw.slice(cut)} is not kept. Show that state with its own page, or with set_frame_state in an attached app.` };
+}
+
+export async function canvasPlace(ctx: CanvasToolContext, input: readonly PlaceSpec[], options: { seed?: boolean } = {}): Promise<ToolText> {
+  const cleaned = input.map(withoutQuery);
+  const specs = cleaned.map((item) => item.spec);
+  const notes = cleaned.flatMap((item) => (item.note ? [item.note] : []));
   if (ctx.plan) return failure('Plan mode is on, so the canvas stays as it is. Describe the frames in the plan.');
   if (ctx.mode === 'critique') return failure('canvas_place is not available in critique runs. Use canvas_point to show a frame.');
   if (specs.length === 0) return failure('Pass at least one frame to place.');
@@ -266,7 +278,7 @@ export async function canvasPlace(ctx: CanvasToolContext, specs: readonly PlaceS
       (file) => {
         const next = applyPlacement(options.seed === false ? file : seedDefault(file, ctx), specs, ctx.direction.id);
         placed = next.placed;
-        warnings = overlapWarnings(next.file.frames, placed.map((frame) => frame.id));
+        warnings = [...notes, ...overlapWarnings(next.file.frames, placed.map((frame) => frame.id))];
         return next.file;
       },
       { source: 'agent' },

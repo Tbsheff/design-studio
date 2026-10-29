@@ -15,7 +15,7 @@ const reviewSchema = z
     frame: frameRef.optional().describe('Frame id or @label from canvas_list. Leave out for the frame the user has live, or the first frame.'),
     path: pagePath,
     viewport: z.enum(['desktop', 'tablet', 'mobile']).optional().describe('Render size instead of the frame size.'),
-    selector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of one element, for example [data-slot="card"]. Only findings inside its subtree are returned. Canvas frames have no layer ids, so pass a selector.'),
+    selector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of one element, for example [data-slot="card"]. Only findings inside its subtree are returned. A layer id from get_layers works too.'),
   })
   .strict();
 
@@ -39,7 +39,7 @@ const reviewFrame = defineTool(
   reviewSchema,
   {
     title: 'Review a frame',
-    description: 'Run the studio Review panel checks on one canvas frame and return the findings: color contrast (with the nearest passing color token), tap target size, missing alt text and other axe-core accessibility rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values), clipped or overflowing content, and breaks of the project design rules (kind rule, with rule set to the rule text; see get_design_rules). Each finding has an id, severity, element, selector, source and message; copies counts the repeats of one source line (for example a .map() list), and one fix changes all of them; an off-token finding from a shared kit file outside the app folder is one row for every use on the page (element is "in <file>, N uses", copies is N); fix is the label of a direct fix that needs no judgment, or null when it needs judgment; shared names the file a fix edits when that file is outside the route folder of the page (a shared component). selector limits the findings to one element subtree. Read only. Apply a fix with apply_fix.',
+    description: 'Run the studio Review panel checks on one canvas frame and return the findings: color contrast (with the nearest passing color token), tap target size, missing alt text and other axe-core accessibility rules, off-token values (raw colors or spacing that are not project tokens, Tailwind arbitrary values), clipped or overflowing content, and breaks of the project design rules (kind rule, with rule set to the rule text; see get_design_rules). Each finding has an id, severity, element, selector, source and message; copies counts the repeats of one source line (for example a .map() list), and one fix changes all of them; an off-token finding from a shared kit file outside the app folder is one row for every use on the page (element is "in <file>, N uses", copies is N); fix is the label of a direct fix that needs no judgment, or null when it needs judgment; shared names the file a fix edits when that file is outside the route folder of the page (a shared component). selector limits the findings to one element subtree; matched (right after frame) gives how many elements the selector matched, and only the first one is reviewed. Read only. Apply a fix with apply_fix.',
     readOnly: true,
     idempotent: true,
   },
@@ -48,7 +48,7 @@ const reviewFrame = defineTool(
     const size = input.viewport ? VIEWPORTS[input.viewport] : {};
     const review = await studioCall<ReviewResult>(deps, 'POST', `${base(project, direction.id)}/review`, { ...(input.frame ? { frame: input.frame } : {}), ...(input.path ? { path: input.path } : {}), ...(input.selector ? { selector: input.selector } : {}), ...size });
     const fixable = review.findings.filter((finding) => finding.fix).length;
-    return { result: ok({ frame: review.frame, counts: review.counts, fixable, findings: review.findings.map(outline), notes: review.notes }) };
+    return { result: ok({ frame: review.frame, ...(review.matched ? { matched: review.matched } : {}), counts: review.counts, fixable, findings: review.findings.map(outline), notes: review.notes }) };
   },
 );
 

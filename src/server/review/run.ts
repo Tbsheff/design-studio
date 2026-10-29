@@ -163,7 +163,8 @@ export async function runReview(preview: PreviewService, target: ReviewTarget): 
     ...(frame.selector ? [selectorNote(frame.selector, facts.matched)] : []),
     ...(all.length > drafts.length ? [`${all.length - drafts.length} findings on elements outside the app source (for example dev tool overlays) are not shown.`] : []),
   ];
-  return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes };
+  const matched = frame.selector ? { matched: { count: facts.matched, note: selectorNote(frame.selector, facts.matched) } } : {};
+  return { projectId: project.id, directionId: direction.id, frame, versionId: direction.headVersionId, ranAt: Date.now(), findings, counts: counts(findings), notes, ...matched };
 }
 
 const cache = new Map<string, ReviewResult>();

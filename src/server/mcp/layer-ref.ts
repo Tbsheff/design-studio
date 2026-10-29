@@ -3,7 +3,7 @@ import { SOURCE_LOC_ATTR } from '../../shared/contracts.js';
 import { LAYER_REF, layerKey } from '../../shared/layer-ref.js';
 import { onSourceChange } from '../direct-edit/change-feed.js';
 import type { PreviewService } from '../types.js';
-import { refForKey, remapIds } from './layer-ids.js';
+import { isGoneRef, refForKey, remapIds } from './layer-ids.js';
 import { onProbePage } from '../preview/probe-page.js';
 
 export interface Viewport {
@@ -259,13 +259,14 @@ function refError(ref: string, count: number, page: string | undefined): LayerRe
   return new LayerRefError(`No element with layer id ${ref} on this page${page ? ` (${page})` : ''}. It was removed, or it is on another page, or the file changed outside the studio: call get_layers again for fresh ids.`);
 }
 
-export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[]): Promise<Map<string, string>> {
-  const wanted = [...new Set(refs)];
-  const known = wanted.map((ref) => memo.get(`${scope}|${ref}`));
+class StalePage extends Error {}
+
+function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope: string, wanted: string[], known: (Memo | undefined)[], last: boolean): Promise<Map<string, string>> {
   return onPage(preview, url, viewport, async (page) => {
     const hits = quickHits(scope, wanted, await scanIn(page, { root: null, depth: 0, max: 0, paths: known.map((item) => item?.path ?? ''), all: false }));
     const missing = wanted.filter((ref) => !hits.has(ref));
     if (missing.length === 0) return hits;
+    if (!last && missing.some((ref) => !isGoneRef(scope, ref))) throw new StalePage();
     const all = keyed((await scanIn(page, { root: null, depth: 0, max: 0, paths: null, all: true })).layers, scope);
     for (const ref of missing) {
       const found = all.filter((layer) => layer.ref === ref);
@@ -276,6 +277,17 @@ export async function resolveLayerRefs(preview: PreviewService, url: string, vie
     }
     return hits;
   });
+}
+
+export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[]): Promise<Map<string, string>> {
+  const wanted = [...new Set(refs)];
+  const known = wanted.map((ref) => memo.get(`${scope}|${ref}`));
+  try {
+    return await lookUp(preview, url, viewport, scope, wanted, known, false);
+  } catch (error) {
+    if (!(error instanceof StalePage)) throw error;
+    return lookUp(preview, url, viewport, scope, wanted, known, true);
+  }
 }
 
 export async function resolveLayerRef(preview: PreviewService, url: string, viewport: Viewport, scope: string, ref: string): Promise<string> {

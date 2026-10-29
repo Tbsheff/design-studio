@@ -33,7 +33,7 @@ import { useDraftChrome } from './DraftSources';
 import { LeftPane } from './LeftPane';
 import { StudioPaneHeader } from './StudioPaneHeader';
 import { DesignSystemChip, designSystemRef } from './DesignSystemChip';
-import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot } from './StudioParts';
+import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot, runStoppedUnsaved } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
 import { useComponents } from '../useComponents';
 import { componentMention, type MentionRequest } from '../useMentions';
@@ -611,6 +611,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             visible={draftChrome.unfinished(Boolean(status?.dirty) && !activeRun)}
             count={status?.changed.length ?? 0}
             busy={busy}
+            runStopped={runStoppedUnsaved(directionRuns, versions)}
             onKeep={() => withDid((id) => refreshAfter(async () => {
               await api.keep(projectId, id);
               data.setStatus({ dirty: false, changed: [] });

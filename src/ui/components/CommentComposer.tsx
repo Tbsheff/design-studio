@@ -80,9 +80,9 @@ const CLAUDE_OPTION: MentionOption = {
 
 function readSend(): boolean {
   try {
-    return window.localStorage.getItem(SEND_KEY) !== '0';
+    return window.localStorage.getItem(SEND_KEY) === '1';
   } catch {
-    return true;
+    return false;
   }
 }
 

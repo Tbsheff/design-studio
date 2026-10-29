@@ -67,11 +67,24 @@ const EDGES: { edge: ResizeEdge; label: string }[] = [
   { edge: 'corner', label: 'Resize' },
 ];
 
+function elementHandleAt(e: ReactPointerEvent): Element | null {
+  return document.elementsFromPoint(e.clientX, e.clientY).find((el) => el.classList.contains('resize-handle')) ?? null;
+}
+
+function passToElementHandle(e: ReactPointerEvent): boolean {
+  const handle = elementHandleAt(e);
+  if (!handle) return false;
+  e.stopPropagation();
+  const { clientX, clientY, screenX, screenY, pointerId, pointerType, isPrimary, button, buttons, shiftKey, altKey, metaKey, ctrlKey } = e;
+  handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, composed: true, clientX, clientY, screenX, screenY, pointerId, pointerType, isPrimary, button, buttons, shiftKey, altKey, metaKey, ctrlKey }));
+  return true;
+}
+
 export function FrameResizeHandles({ onPointerDown }: { onPointerDown: (e: ReactPointerEvent, edge: ResizeEdge) => void }) {
   return (
     <>
       {EDGES.map(({ edge, label }) => (
-        <div key={edge} className={`frame-resize ${edge}`} aria-hidden="true" data-edge={edge} onPointerDown={(e) => onPointerDown(e, edge)} />
+        <div key={edge} className={`frame-resize ${edge}`} aria-hidden="true" data-edge={edge} onPointerDown={(e) => passToElementHandle(e) || onPointerDown(e, edge)} />
       ))}
       <span className="frame-size-readout" aria-hidden="true" />
     </>

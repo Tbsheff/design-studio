@@ -2,7 +2,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { watchLongFrames } from './perfTelemetry';
-import { installTipGuard } from './tipGuard';
 import './styles/tokens.css';
 import './styles/controls.css';
 import './styles/forms.css';
@@ -35,7 +34,7 @@ const desktop = (window as unknown as { studioDesktop?: { platform: string } }).
 if (desktop?.platform === 'darwin') document.documentElement.dataset.shell = 'mac';
 
 watchLongFrames();
-installTipGuard();
+void import('./tipGuard').then((m) => m.installTipGuard());
 
 const root = document.getElementById('root');
 if (root) {

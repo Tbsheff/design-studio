@@ -37,7 +37,7 @@ const paint = { fill: color.nullable().optional(), stroke: color.nullable().opti
 const place = { target, relativeParent: z.boolean().optional(), page: z.string().trim().max(300).optional() };
 
 const schema = z.discriminatedUnion('op', [
-  z.object({ op: z.literal('shape'), shape: z.enum(VECTOR_SHAPES), box, ...place, ...paint }).strict(),
+  z.object({ op: z.literal('shape'), shape: z.enum(VECTOR_SHAPES), box, name: z.string().trim().min(1).max(60).optional(), ...place, ...paint }).strict(),
   z.object({ op: z.literal('path'), d: z.string().trim().min(1).max(VECTOR_PATH_MAX), name: z.string().trim().min(1).max(60).optional(), ...place, ...paint }).strict(),
   z.object({ op: z.literal('boolean'), boolean: z.enum(BOOLEAN_OPS), targets: z.tuple([target, target]), rects: z.tuple([box, box]).optional() }).strict(),
   z.object({ op: z.literal('paint'), target, ...paint }).strict(),
@@ -65,7 +65,7 @@ function shapeSnippet(request: Extract<VectorRequest, { op: 'shape' }>, html: bo
   const child = request.shape === 'rect'
     ? elementText('rect', { width, height, ...colors }, html)
     : elementText('ellipse', { cx: round(width / 2), cy: round(height / 2), rx: round(width / 2), ry: round(height / 2), ...colors }, html);
-  return svgText(request.shape === 'rect' ? 'Rectangle' : 'Ellipse', { x: request.box.x, y: request.box.y, width, height }, child, html);
+  return svgText(request.name ?? (request.shape === 'rect' ? 'Rectangle' : 'Ellipse'), { x: request.box.x, y: request.box.y, width, height }, child, html);
 }
 
 function pathSnippet(request: Extract<VectorRequest, { op: 'path' }>, html: boolean): string {

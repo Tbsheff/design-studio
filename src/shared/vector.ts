@@ -42,7 +42,7 @@ interface PlaceFields {
 }
 
 export type VectorRequest =
-  | ({ op: 'shape'; shape: VectorShape; box: VectorBox } & PlaceFields & VectorPaint)
+  | ({ op: 'shape'; shape: VectorShape; box: VectorBox; name?: string } & PlaceFields & VectorPaint)
   | ({ op: 'path'; d: string; name?: string } & PlaceFields & VectorPaint)
   | { op: 'boolean'; boolean: BooleanOpName; targets: [InsertTarget, InsertTarget]; rects?: [VectorBox, VectorBox] }
   | ({ op: 'paint'; target: InsertTarget } & VectorPaint);

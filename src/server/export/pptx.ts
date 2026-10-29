@@ -1,5 +1,6 @@
 import type PptxGenJS from 'pptxgenjs';
 import type { ScanClip, ScanLine, ScanText } from './page-scan.js';
+import { addShapes } from './pptx-shapes.js';
 import type { VectorRegion } from './vector.js';
 
 type Slide = ReturnType<PptxGenJS['addSlide']>;
@@ -131,6 +132,8 @@ export interface PptxResult {
   bytes: Buffer;
   slides: number;
   textBoxes: number;
+  shapes: number;
+  pictures: number;
 }
 
 export async function buildPptx(regions: VectorRegion[], title: string): Promise<PptxResult> {
@@ -146,6 +149,8 @@ export async function buildPptx(regions: VectorRegion[], title: string): Promise
   pptx.title = title;
   pptx.company = 'Design Studio';
   let textBoxes = 0;
+  let shapes = 0;
+  let pictures = 0;
   for (const region of regions) {
     const slide = pptx.addSlide();
     const k = (width * PX_PER_IN) / region.scan.width;
@@ -154,8 +159,11 @@ export async function buildPptx(regions: VectorRegion[], title: string): Promise
     if (region.scan.background) slide.background = { color: region.scan.background.hex.toUpperCase() };
     if (Math.abs(imageHeight - height) / height < 0.01) slide.background = { data };
     else slide.addImage({ data, x: 0, y: 0, w: width, h: imageHeight });
+    const count = addShapes(slide, region, k);
+    shapes += count.shapes;
+    pictures += count.pictures;
     textBoxes += addTexts(slide, region, k);
   }
   const bytes = (await pptx.write({ outputType: 'nodebuffer' })) as Buffer;
-  return { bytes, slides: regions.length, textBoxes };
+  return { bytes, slides: regions.length, textBoxes, shapes, pictures };
 }

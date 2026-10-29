@@ -158,7 +158,7 @@ function BorderSection({ edit }: { edit: DirectEdit }) {
   const on = hasBorder(edit);
   const aside = on ? (
     <button type="button" className="icon-btn small" aria-label="Remove border" data-tip="Remove border" data-tip-align="end" onClick={() => write(edit, { 'border-width': '0px', 'border-style': 'none' })}>
-      <Icon name="minus" size={14} />
+      <Icon name="close" size={12} />
     </button>
   ) : undefined;
   return (

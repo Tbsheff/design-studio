@@ -125,8 +125,6 @@
   align-items: center;
   gap: 6px;
   min-height: 20px;
-  justify-self: start;
-  max-width: 100%;
 }
 
 .tkp-mark {

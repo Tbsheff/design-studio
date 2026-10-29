@@ -214,7 +214,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
   );
   const remove = (
     <button type="button" className="icon-btn small" aria-label="Remove auto layout" aria-keyshortcuts="Alt+Shift+A" data-tip="Remove auto layout ⌥⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
-      <Icon name="minus" size={14} />
+      <Icon name="close" size={12} />
     </button>
   );
   return (

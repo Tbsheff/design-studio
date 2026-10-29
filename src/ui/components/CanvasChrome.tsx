@@ -5,6 +5,7 @@ import { api } from '../api';
 import { canAddFrame, FRAME_PRESETS, frameName, setFrameHidden, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
 import { uiStore, type UiState } from '../storage';
 import { isTypingTarget } from '../usePanZoom';
+import type { LiveStore } from '../liveStore';
 import type { PanelTab } from '../usePanelTab';
 import { CanvasViewRow, VectorToolButtons } from './CanvasToolbar';
 import { CanvasTopBar, type CanvasTool, type MenuGroup, type PresentMode } from './CanvasTopBar';
@@ -103,7 +104,7 @@ interface ChromeProps {
   directionId: string | null;
   live: boolean;
   ui: UiState;
-  zoom: { zoom: number; zoomTo: (z: number) => void; zoomStep: (d: 1 | -1) => void; fit: () => void };
+  zoom: { zoomPercent: LiveStore<number>; zoomTo: (z: number) => void; zoomStep: (d: 1 | -1) => void; fit: () => void };
   comment: CommentTool;
   selectMode: boolean;
   setSelectMode: SetSelectMode;
@@ -213,7 +214,7 @@ export function CanvasChrome(p: ChromeProps) {
         fileName={fileNameOf(p.active, p.kind, bar.directionName)}
         fileMenu={file.groups}
         onFileMenuOpen={file.load}
-        zoom={p.zoom.zoom}
+        zoom={p.zoom.zoomPercent}
         zoomSetting={p.ui.zoom}
         onZoomTo={p.zoom.zoomTo}
         onZoomStep={p.zoom.zoomStep}

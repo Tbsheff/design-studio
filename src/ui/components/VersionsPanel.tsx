@@ -22,6 +22,7 @@ interface Props {
   onToggleCompare: (v: Version) => void;
   onCompare: () => void;
   onPolish: () => void;
+  onReview?: (v: Version) => void;
   active?: boolean;
   onRename?: (v: Version, name: string | null) => Promise<void>;
 }
@@ -231,6 +232,7 @@ export function VersionsPanel(props: Props) {
               onExport={() => props.onExport(v)}
               onBranch={() => fork.start(v.id)}
               onPolish={props.onPolish}
+              onReview={props.onReview ? () => props.onReview?.(v) : undefined}
               onRename={(name) => rename(v, name)}
             />
           ))}

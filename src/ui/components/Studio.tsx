@@ -589,6 +589,13 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             onToggleCompare: (v) =>
               setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
             onCompare: () => setCompareOpen(true),
+            onReview: (v) => {
+              const parent = versions.find((x) => x.id === v.parentId);
+              if (!parent) return;
+              setCompareOpen(false);
+              setCompare([parent, v]);
+              requestAnimationFrame(() => setCompareOpen(true));
+            },
             onPolish: polish,
             active: panel.tab === 'versions',
             onRename: (v, name) =>

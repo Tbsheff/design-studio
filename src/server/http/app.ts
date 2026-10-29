@@ -46,6 +46,7 @@ import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
 import { onPlannedEdit } from '../direct-edit/planned-feed.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
+import { registerHunkRoutes } from './hunk-routes.js';
 import { previewOrigin, warmPropsTypes } from '../components/props-service.js';
 import { isDirectEditBatch, isStructureEdit } from '../direct-edit/validate.js';
 import { applyStructureEdit } from '../direct-edit/structure-apply.js';
@@ -1174,6 +1175,7 @@ export function createApp(deps: AppDeps): Hono {
     invalidateTokenSource(workTree);
     if (relatives.includes(CANVAS_FILE)) void announceCanvasAt(workTree);
   }, onRemapped: (projectId, remapped) => void mcpRoutes.activity.remap(projectId, remapped) });
+  registerHunkRoutes(app, { editDeps, withDirection, readBody });
   registerCanvasRoutes(app, { projects, canvas, readBody, preview });
   registerFrameStateRoutes(app, { projects, canvas, bus, readBody });
   registerFlowRoutes(app, { projects, canvas, readBody });

@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import type { Version } from '../../shared/contracts';
 import { formatRelative, formatTime } from '../format';
+import { openCompareInCode } from '../versionsApi';
 import { autoTitle, displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
 import { Icon, type IconName } from './Icon';
 import { levelLabel } from './LevelControl';
@@ -27,6 +28,7 @@ interface VersionRowProps {
   onBranch: () => void;
   onPolish: () => void;
   onRename: (name: string | null) => void;
+  onReview?: () => void;
 }
 
 function RenameField({ initial, fallback, onDone }: { initial: string; fallback: string; onDone: (name: string | null | undefined) => void }) {
@@ -238,6 +240,18 @@ function VersionActions(props: VersionRowProps) {
         pressed={picked}
         onClick={props.onToggleCompare}
       />
+      {props.onReview && v.parentId !== null && (
+        <RowAction
+          label="Review changes"
+          icon="code"
+          tip="Review the changes of this version in Compare > Code"
+          testId="version-review-changes"
+          onClick={() => {
+            openCompareInCode();
+            props.onReview?.();
+          }}
+        />
+      )}
       <RowAction label="Export" icon="download" tip="Export, handoff or source zip" onClick={props.onExport} />
       <RowAction label="Branch" icon="branch" tip="New direction from here" onClick={props.onBranch} />
       {isHead && v.meta.level !== 'polish' && (

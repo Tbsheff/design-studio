@@ -1,45 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Version, VersionChanges, VersionFileDiff } from '../../shared/contracts';
 import { errorText, json } from '../api';
+import { splitHunks, type PatchHunk } from '../../shared/hunk';
+import { revertHunk } from '../versionsApi';
 import { Icon } from './Icon';
 import '../styles/compare-code.css';
+import '../styles/compare-hunk.css';
 
 interface Line {
-  kind: 'add' | 'del' | 'ctx' | 'gap';
+  kind: 'add' | 'del' | 'ctx';
   oldNo: number | null;
   newNo: number | null;
   text: string;
 }
 
-const HUNK = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)$/;
 const OPEN_ALL_MAX = 8;
 
-function hunkLine(raw: string, at: { old: number; new: number }): Line | null {
-  const sign = raw.charAt(0);
-  const text = raw.slice(1);
-  if (sign === '+') return { kind: 'add', oldNo: null, newNo: at.new++, text };
-  if (sign === '-') return { kind: 'del', oldNo: at.old++, newNo: null, text };
-  if (sign === ' ') return { kind: 'ctx', oldNo: at.old++, newNo: at.new++, text };
-  return null;
-}
-
-function patchLines(patch: string): Line[] {
-  const lines: Line[] = [];
-  const at = { old: 0, new: 0 };
-  let inHunk = false;
-  for (const raw of patch.split('\n')) {
-    const hunk = HUNK.exec(raw);
-    if (hunk) {
-      at.old = Number(hunk[1]);
-      at.new = Number(hunk[2]);
-      inHunk = true;
-      lines.push({ kind: 'gap', oldNo: null, newNo: null, text: raw });
-      continue;
-    }
-    const line = inHunk ? hunkLine(raw, at) : null;
-    if (line) lines.push(line);
-  }
-  return lines;
+function hunkRows(hunk: PatchHunk): Line[] {
+  const at = { old: hunk.oldStart, new: hunk.newStart };
+  return hunk.lines.map((line) => {
+    if (line.sign === '+') return { kind: 'add', oldNo: null, newNo: at.new++, text: line.text };
+    if (line.sign === '-') return { kind: 'del', oldNo: at.old++, newNo: null, text: line.text };
+    return { kind: 'ctx', oldNo: at.old++, newNo: at.new++, text: line.text };
+  });
 }
 
 const STATUS_WORD: Record<VersionFileDiff['status'], string> = {
@@ -49,32 +32,141 @@ const STATUS_WORD: Record<VersionFileDiff['status'], string> = {
   renamed: 'Renamed',
 };
 
-function FilePatch({ file }: { file: VersionFileDiff }) {
+type HunkState = { kind: 'kept' } | { kind: 'busy' } | { kind: 'undone'; title: string } | { kind: 'error'; message: string };
+
+interface HunkReview {
+  states: Record<string, HunkState | undefined>;
+  keep: (key: string) => void;
+  undo: (key: string, file: string, hunk: number) => void;
+}
+
+const hunkKey = (file: string, index: number) => `${file}#${index}`;
+
+function useHunkReview(projectId: string, directionId: string, from: string, to: string): HunkReview {
+  const pair = `${projectId}/${directionId}/${from}/${to}`;
+  const [store, setStore] = useState<{ pair: string; states: Record<string, HunkState | undefined> }>({ pair, states: {} });
+  const update = useCallback(
+    (key: string, next: (prev: HunkState | undefined) => HunkState | undefined) =>
+      setStore((prev) => {
+        const states = prev.pair === pair ? prev.states : {};
+        return { pair, states: { ...states, [key]: next(states[key]) } };
+      }),
+    [pair],
+  );
+  const put = useCallback((key: string, next: HunkState | undefined) => update(key, () => next), [update]);
+  const keep = useCallback((key: string) => update(key, (prev) => (prev?.kind === 'kept' ? undefined : { kind: 'kept' })), [update]);
+  const undo = useCallback(
+    (key: string, file: string, hunk: number) => {
+      put(key, { kind: 'busy' });
+      revertHunk(projectId, directionId, { from, to, file, hunk }).then(
+        (result) => put(key, { kind: 'undone', title: result.version.title }),
+        (error: unknown) => put(key, { kind: 'error', message: errorText(error) }),
+      );
+    },
+    [projectId, directionId, from, to, put],
+  );
+  return { states: store.pair === pair ? store.states : {}, keep, undo };
+}
+
+function HunkStatus({ state }: { state: HunkState | undefined }) {
+  if (state?.kind === 'kept')
+    return (
+      <span className="hunk-status kept">
+        <Icon name="check" size={12} />
+        Kept
+      </span>
+    );
+  if (state?.kind === 'undone')
+    return (
+      <span className="hunk-status undone" data-tip={`Saved as “${state.title}”. Cmd+Z brings it back.`}>
+        <Icon name="undo" size={12} />
+        Undone
+      </span>
+    );
+  return null;
+}
+
+function HunkHead(props: { header: string; index: number; state: HunkState | undefined; reviewable: boolean; onKeep: () => void; onUndo: () => void }) {
+  const { state } = props;
+  const settled = state?.kind === 'undone' || state?.kind === 'busy';
+  return (
+    <div className="hunk-head diff-gap" role="row">
+      <span className="hunk-range truncate">{props.header}</span>
+      <HunkStatus state={state} />
+      {props.reviewable && !settled && (
+        <span className="hunk-actions" role="group" aria-label={`Change ${props.index}`}>
+          <button type="button" className="hunk-btn" aria-pressed={state?.kind === 'kept'} data-tip={state?.kind === 'kept' ? 'Mark as not reviewed' : 'Keep this change'} onClick={props.onKeep}>
+            Keep
+          </button>
+          <button type="button" className="hunk-btn" data-tip="Undo only this change in the head, as a new version" onClick={props.onUndo}>
+            Undo this change
+          </button>
+        </span>
+      )}
+      {state?.kind === 'busy' && (
+        <span className="hunk-status" role="status">
+          Undoing…
+        </span>
+      )}
+    </div>
+  );
+}
+
+function DiffRow({ line }: { line: Line }) {
+  return (
+    <div className={`diff-line ${line.kind === 'ctx' ? '' : line.kind}`} role="row">
+      <span className="diff-no">{line.oldNo ?? ''}</span>
+      <span className="diff-no">{line.newNo ?? ''}</span>
+      <span className="diff-sign">{line.kind === 'add' ? '+' : line.kind === 'del' ? '−' : ''}</span>
+      <span className="diff-text">{line.text}</span>
+    </div>
+  );
+}
+
+function canReview(file: VersionFileDiff, hunk: PatchHunk): boolean {
+  return hunk.complete && file.status !== 'removed';
+}
+
+function HunkBlock({ file, hunk, review }: { file: VersionFileDiff; hunk: PatchHunk; review: HunkReview }) {
+  const key = hunkKey(file.path, hunk.index);
+  const state = review.states[key];
+  return (
+    <div className={`hunk ${state?.kind ?? ''}`} role="rowgroup" data-hunk={hunk.index}>
+      <HunkHead
+        header={hunk.header}
+        index={hunk.index}
+        state={state}
+        reviewable={canReview(file, hunk)}
+        onKeep={() => review.keep(key)}
+        onUndo={() => review.undo(key, file.path, hunk.index)}
+      />
+      {state?.kind === 'error' && (
+        <div className="hunk-error" role="alert">
+          {state.message}
+        </div>
+      )}
+      {hunkRows(hunk).map((line, index) => (
+        <DiffRow key={index} line={line} />
+      ))}
+    </div>
+  );
+}
+
+function FilePatch({ file, review }: { file: VersionFileDiff; review: HunkReview }) {
   if (file.binary) return <div className="diff-view compare-code-note">Binary file. No text diff.</div>;
-  const lines = patchLines(file.patch);
-  if (lines.length === 0) return <div className="diff-view compare-code-note">No line changes.</div>;
+  const hunks = splitHunks(file.patch);
+  if (hunks.length === 0) return <div className="diff-view compare-code-note">No line changes.</div>;
   return (
     <div className="diff-view compare-code-view" role="table" aria-label={`Diff of ${file.path}`}>
-      {lines.map((line, index) =>
-        line.kind === 'gap' ? (
-          <div key={index} className="diff-gap" role="row">
-            {line.text}
-          </div>
-        ) : (
-          <div key={index} className={`diff-line ${line.kind === 'ctx' ? '' : line.kind}`} role="row">
-            <span className="diff-no">{line.oldNo ?? ''}</span>
-            <span className="diff-no">{line.newNo ?? ''}</span>
-            <span className="diff-sign">{line.kind === 'add' ? '+' : line.kind === 'del' ? '−' : ''}</span>
-            <span className="diff-text">{line.text}</span>
-          </div>
-        ),
-      )}
+      {hunks.map((hunk) => (
+        <HunkBlock key={hunk.index} file={file} hunk={hunk} review={review} />
+      ))}
       {file.truncated && <div className="diff-gap">The diff is longer. The rest is cut.</div>}
     </div>
   );
 }
 
-function FileSection({ file, open, onToggle }: { file: VersionFileDiff; open: boolean; onToggle: () => void }) {
+function FileSection({ file, open, onToggle, review }: { file: VersionFileDiff; open: boolean; onToggle: () => void; review: HunkReview }) {
   const name = file.oldPath ? `${file.oldPath} → ${file.path}` : file.path;
   return (
     <li className="compare-code-file">
@@ -87,7 +179,7 @@ function FileSection({ file, open, onToggle }: { file: VersionFileDiff; open: bo
           <span className="diff-minus">−{file.deletions}</span>
         </span>
       </button>
-      {open && <FilePatch file={file} />}
+      {open && <FilePatch file={file} review={review} />}
     </li>
   );
 }
@@ -132,6 +224,7 @@ function Summary({ changes }: { changes: VersionChanges }) {
 
 export default function CompareCode({ projectId, older, newer }: { projectId: string; older: Version; newer: Version }) {
   const state = useChanges(projectId, older.id, newer.id);
+  const review = useHunkReview(projectId, newer.directionId, older.id, newer.id);
   const [toggled, setToggled] = useState<Set<string>>(() => new Set());
   if (!state)
     return (
@@ -159,7 +252,7 @@ export default function CompareCode({ projectId, older, newer }: { projectId: st
       <Summary changes={changes} />
       <ul className="compare-code-files">
         {changes.files.map((file) => (
-          <FileSection key={file.path} file={file} open={openByDefault !== toggled.has(file.path)} onToggle={() => toggle(file.path)} />
+          <FileSection key={file.path} file={file} open={openByDefault !== toggled.has(file.path)} onToggle={() => toggle(file.path)} review={review} />
         ))}
       </ul>
     </div>

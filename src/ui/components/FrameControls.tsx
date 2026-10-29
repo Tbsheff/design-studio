@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import type { RunStatus, SelectionContext } from '../../shared/contracts';
 import { cleanFramePath } from '../canvasFrames';
+import { openPortDialog, portAvailable } from '../portApi';
 import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 
@@ -12,12 +13,20 @@ export interface FrameMenuItem {
   run: () => void;
 }
 
-export function FrameMoreMenu({ name, items }: { name: string; items: FrameMenuItem[] }) {
+function portItem(root: HTMLElement | null): FrameMenuItem[] {
+  if (!portAvailable()) return [];
+  const frame = root?.closest<HTMLElement>('[data-frame-id]') ?? null;
+  const run = () => openPortDialog({ frameId: frame?.dataset.frameId ?? null, directionId: frame?.dataset.directionId ?? null });
+  return [{ id: 'port-to-app', label: 'Move to app…', icon: 'react', run }];
+}
+
+export function FrameMoreMenu({ name, items: own }: { name: string; items: FrameMenuItem[] }) {
   const menu = useMenu();
   useEffect(() => {
     if (menu.open) menu.root.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus();
   }, [menu.open, menu.root]);
-  if (items.length === 0) return null;
+  const items = menu.open ? [...portItem(menu.root.current), ...own] : own;
+  if (items.length === 0 && !portAvailable()) return null;
   return (
     <div className="frame-menu-root" ref={menu.root}>
       <button

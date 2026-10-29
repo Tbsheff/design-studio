@@ -1,5 +1,7 @@
 import type { RunLevel, RunMode } from '../../shared/contracts.js';
+import { PORT_LEVEL_LABEL, PORT_TASK } from '../../shared/port.js';
 import type { ResolvedRunConfig } from '../../shared/run-levels.js';
+import { PORT_RULES } from './prompt.js';
 import type { UserMessageParts } from './user-message.js';
 
 const TWEAKS_STEP = `Tweaks: call \`mcp__studio__define_tweaks\` with 3 to 8 controls for the most useful knobs of this design (spacing scale, accent hue, corner radius, density, base font size, a layout toggle). Each cssVar must be declared once in a top-level \`:root\` rule with its default value (design-system tokens are already declared in tokens.css) and used with var() by the rules it changes; add the declarations and var() uses with Edit first. Keep controls that already exist unless they no longer fit.`;
@@ -120,7 +122,19 @@ function editBody(level: RunLevel, limited: boolean, context: RunLevelContext): 
   return `${prototypeEdit(context)}\n- ${limited ? STOP_RULE : STOP_RULE_NO_LIMIT}\n- ${REPLY_RULE}`;
 }
 
+const PORT_STEPS = `Level: ${PORT_LEVEL_LABEL.toUpperCase()}. Task: move the prototype page in <prototype-source> into this app as the one route the <port-plan> names. Do not redesign it.
+${PORT_RULES}
+REQUIRED steps, in this order:
+0. Call \`TodoWrite\` with 4 todos: read the plan, write the route file, check, fix. Name the route file in the write todo.
+1. Read the <port-plan> and the prototype. Call \`mcp__studio__list_components\` once for each kit component the plan names, and use the import line it returns.
+2. Write the route file with Write (it is a new file). Then call \`mcp__studio__canvas_list\` and \`mcp__studio__canvas_place\` to add a frame for the new route when none shows it.
+3. Call \`mcp__studio__render_check\`. Then take a desktop and a mobile screenshot of the new route.
+4. ${APP_REVIEW_STEP}
+5. Fix all errors and every HIGH finding with Edit. Do 1 fix loop, then run render_check once more.
+6. Reply in two to four sentences: the route and file, the kit components you used, and any prototype part you could not port.`;
+
 function taskBody(config: ResolvedRunConfig): string | null {
+  if (config.task === PORT_TASK) return PORT_STEPS;
   if (config.task === 'tweaks') return TWEAKS_TASK;
   if (config.task === 'design-system') return DESIGN_SYSTEM_TASK;
   return null;

@@ -1,5 +1,8 @@
-import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import type { ZoomSetting } from '../storage';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { PORT_OPEN_EVENT } from '../../shared/port';
+import { setPortAvailable, type PortOpenDetail } from '../portApi';
+import { uiStore, type ZoomSetting } from '../storage';
+import type { PortDialogTarget } from './PortToAppDialog';
 import { usePopover } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 import { IS_MAC, tipWithKey } from '../commands/keys';
@@ -70,13 +73,38 @@ function MenuPopover({ groups, label, align, onClose, trigger }: { groups: MenuG
   );
 }
 
-function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null; onShareLink?: (() => void) | null }): MenuGroup[] {
+function shareGroups(p: { canExport: boolean; onExport: () => void; onShip?: (() => void) | null; onShareLink?: (() => void) | null }, onPort: (() => void) | null): MenuGroup[] {
   const exportItem: MenuEntry = { id: 'export', label: 'Export…', icon: 'download', meta: 'PNG, PDF, HTML, handoff', disabled: !p.canExport, run: p.onExport, ...(p.canExport ? {} : { tip: 'Save a version to export' }) };
   const ship = p.onShip;
   const shipItem: MenuEntry[] = ship ? [{ id: 'ship', label: 'Ship as a pull request…', icon: 'branch', meta: 'Branch and PR', run: ship }] : [];
+  const portItem: MenuEntry[] = onPort ? [{ id: 'port', label: 'Move to app…', icon: 'react', meta: 'Route in your app', run: onPort, tip: 'The agent rebuilds a page as a route in an attached app, with its kit components' }] : [];
   const link = p.onShareLink;
   const linkItem: MenuEntry[] = link ? [{ id: 'share-link', label: 'Share a read-only link…', icon: 'link', meta: 'View and comment', disabled: !p.canExport, run: link, tip: p.canExport ? 'Others see still images of the frames and can comment' : 'Save a version to share' }] : [];
-  return [{ items: [exportItem, ...shipItem] }, { items: linkItem, note: 'Links are off until you make one. Nothing leaves this computer.' }];
+  return [{ items: [exportItem, ...shipItem, ...portItem] }, { items: linkItem, note: 'Links are off until you make one. Nothing leaves this computer.' }];
+}
+
+const PortToAppDialog = lazy(() => import('./PortToAppDialog'));
+
+function usePortDialog(available: boolean): { target: PortDialogTarget | null; open: (frameId: string | null, directionId?: string | null) => void; close: () => void } {
+  const [target, setTarget] = useState<PortDialogTarget | null>(null);
+  const open = useCallback((frameId: string | null, directionId?: string | null) => {
+    const { activeProjectId, directionByProject } = uiStore.get();
+    if (!activeProjectId) return;
+    setTarget({ projectId: activeProjectId, directionId: directionId ?? directionByProject[activeProjectId] ?? null, frameId });
+  }, []);
+  useEffect(() => {
+    setPortAvailable(available);
+    return () => setPortAvailable(false);
+  }, [available]);
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      const detail = (event as CustomEvent<PortOpenDetail>).detail;
+      open(detail?.frameId ?? null, detail?.directionId ?? null);
+    };
+    window.addEventListener(PORT_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(PORT_OPEN_EVENT, onOpen);
+  }, [open]);
+  return { target, open, close: useCallback(() => setTarget(null), []) };
 }
 
 export function DropMenu({ label, groups, className, align = 'start', tip, children, onOpen }: { label: string; groups: () => MenuGroup[]; className: string; align?: 'start' | 'end'; tip?: string; children: ReactNode; onOpen?: () => void }) {
@@ -163,6 +191,8 @@ interface Props {
 }
 
 export function CanvasTopBar(p: Props) {
+  const port = usePortDialog(!p.onShip);
+  const onPort = p.onShip ? null : () => port.open(null);
   const presentGroups = (): MenuGroup[] => [
     {
       items: [
@@ -228,12 +258,17 @@ export function CanvasTopBar(p: Props) {
         <span>Present</span>
         <Icon name="chevronDown" size={12} />
       </DropMenu>
-      <DropMenu label="Share" className="btn strong topbar-share" groups={() => shareGroups(p)} align="end" tip={p.onShip ? 'Export, or ship as a pull request' : 'Export images, files or a handoff'}>
+      <DropMenu label="Share" className="btn strong topbar-share" groups={() => shareGroups(p, onPort)} align="end" tip={p.onShip ? 'Export, or ship as a pull request' : 'Export images, files or a handoff'}>
         <Icon name="share" size={14} />
         Share
         <Icon name="chevronDown" size={12} />
       </DropMenu>
       <span className="topbar-avatar" role="img" aria-label="You, on this computer" data-tip="You, on this computer" data-tip-align="end">Y</span>
+      {port.target && (
+        <Suspense fallback={null}>
+          <PortToAppDialog target={port.target} onClose={port.close} />
+        </Suspense>
+      )}
     </div>
   );
 }

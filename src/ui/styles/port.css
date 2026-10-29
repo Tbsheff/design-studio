@@ -1,0 +1,87 @@
+.port-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.port-body {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.port-spacer {
+  flex: 1;
+}
+
+.port-note,
+.port-foot-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  line-height: var(--lh-xs);
+}
+
+.port-note.error {
+  color: var(--danger);
+}
+
+.port-plan {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.port-plan[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.port-plan-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: var(--s-2);
+  align-items: center;
+  min-height: 28px;
+  font-size: var(--t-sm);
+}
+
+.port-plan-key {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.port-plan-value {
+  color: var(--text);
+}
+
+.port-kit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.port-kit-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 var(--s-2);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-full);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+}
+
+.port-done {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--text);
+}
+
+.port-done .icon {
+  color: var(--ok);
+}

@@ -258,6 +258,12 @@
   color: var(--text);
 }
 
+body.ins-scrubbing,
+body.ins-scrubbing * {
+  cursor: ew-resize !important;
+  user-select: none;
+}
+
 .ins-input {
   flex: 1;
   min-width: 0;

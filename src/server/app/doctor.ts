@@ -188,7 +188,7 @@ function missingPackage(lines: string[]): string | null {
   for (const line of lines) {
     const match = MODULE_MISSING.exec(line);
     const name = match?.[1] ?? match?.[2];
-    if (name && !/^[./~]|^@\//.test(name)) return name;
+    if (name && !/^[./~]|^@\//.test(name)) return name.split('/').slice(0, name.startsWith('@') ? 2 : 1).join('/');
   }
   return null;
 }

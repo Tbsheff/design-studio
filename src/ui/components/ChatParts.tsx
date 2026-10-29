@@ -196,6 +196,19 @@ export function SentWhileRunning({ text }: { text: string }) {
   );
 }
 
+const ERROR_HINTS: [RegExp, string][] = [
+  [/rate.?limit|\b429\b|overloaded|\b529\b/i, 'The model is busy. Wait a minute, then retry.'],
+  [/\b401\b|\b403\b|auth|api key|log ?in|credential/i, 'Sign in again or check your API key in Settings, then retry.'],
+  [/credit|billing|quota/i, 'Check your plan or credits, then retry.'],
+  [/prompt is too long|context (window|length)|too many tokens/i, 'Start a new direction, or send a shorter message.'],
+  [/network|fetch failed|econn|etimedout|socket|offline/i, 'Check your connection, then retry.'],
+];
+
+export function errorHint(error: string): string {
+  const hit = ERROR_HINTS.find(([pattern]) => pattern.test(error));
+  return hit ? hit[1] : 'Retry, or change your message and send it again. Details has the full log.';
+}
+
 export function RunError({ run, latest, onRetry }: { run: RunView; latest: boolean; onRetry?: () => void }) {
   const error = run.summary?.error;
   const ref = useRef<HTMLDivElement | null>(null);
@@ -214,6 +227,7 @@ export function RunError({ run, latest, onRetry }: { run: RunView; latest: boole
           </button>
         )}
       </ExceptionHeader>
+      {run.status !== 'canceled' && <p className="run-error-hint">{errorHint(error)}</p>}
     </Exception>
   );
 }

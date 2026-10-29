@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
 import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contracts';
 import { reorderMoveOf } from '../../shared/reorder';
 import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
 import { IS_MAC, tipWithKey } from '../commands/keys';
-import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
+import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, layerKeys, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
 import type { LayerDrop } from '../structureEdits';
 import { Icon, type IconName } from './Icon';
 import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
@@ -47,46 +47,94 @@ interface Props {
   edits?: LayerEditActions | null;
   onToggleLocked?: (id: number, locked: boolean) => void;
   busy?: boolean;
+  hoveredNode?: number | null;
 }
 
-function useCollapsed(nodes: LayerNode[], selectedNode: number | null) {
-  const known = useRef(new Set<number>());
-  const [collapsed, setCollapsed] = useState<Set<number>>(() => new Set());
-  useLayoutEffect(() => {
-    const fresh = nodes.filter((n) => !known.current.has(n.id));
-    if (fresh.length === 0) return;
-    for (const n of fresh) known.current.add(n.id);
-    const closed = fresh.filter((n) => n.childCount > 0 && n.depth >= OPEN_DEPTH).map((n) => n.id);
-    if (closed.length > 0) setCollapsed((prev) => new Set([...prev, ...closed]));
-  }, [nodes]);
+interface OpenState {
+  collapsed: Set<string>;
+  known: Set<string>;
+  scrollTop: number;
+}
+
+const openStates = new Map<string, OpenState>();
+
+function openStateFor(scope: string): OpenState {
+  let state = openStates.get(scope);
+  if (!state) {
+    state = { collapsed: new Set(), known: new Set(), scrollTop: 0 };
+    openStates.set(scope, state);
+  }
+  return state;
+}
+
+function idsOf(nodes: LayerNode[], keys: Map<number, string>, collapsed: ReadonlySet<string>): Set<number> {
+  const out = new Set<number>();
+  for (const node of nodes) {
+    const key = keys.get(node.id);
+    if (key !== undefined && collapsed.has(key)) out.add(node.id);
+  }
+  return out;
+}
+
+function addDefaults(nodes: LayerNode[], keys: Map<number, string>, state: OpenState): boolean {
+  let changed = false;
+  for (const node of nodes) {
+    const key = keys.get(node.id);
+    if (key === undefined || state.known.has(key)) continue;
+    state.known.add(key);
+    if (node.childCount > 0 && node.depth >= OPEN_DEPTH) {
+      state.collapsed.add(key);
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+function useCollapsed(nodes: LayerNode[], selectedNode: number | null, scope: string) {
+  const keys = useMemo(() => layerKeys(nodes), [nodes]);
+  const state = openStateFor(scope);
+  const [version, setVersion] = useState(0);
+  const bump = useCallback(() => setVersion((v) => v + 1), []);
+  if (addDefaults(nodes, keys, state)) state.collapsed = new Set(state.collapsed);
+  const collapsed = useMemo(() => idsOf(nodes, keys, state.collapsed), [nodes, keys, state.collapsed, version]);
   useLayoutEffect(() => {
     if (selectedNode === null) return;
-    const open = ancestorsOf(nodes, selectedNode);
-    if (!open.some((id) => collapsed.has(id))) return;
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      for (const id of open) next.delete(id);
-      return next;
-    });
-  }, [nodes, selectedNode, collapsed]);
-  const toggle = (id: number, open?: boolean) =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      const shouldOpen = open ?? next.has(id);
-      if (shouldOpen) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  return { collapsed, toggle };
+    const open = ancestorsOf(nodes, selectedNode).filter((id) => collapsed.has(id));
+    if (open.length === 0) return;
+    const next = new Set(state.collapsed);
+    for (const id of open) next.delete(keys.get(id) ?? '');
+    state.collapsed = next;
+    bump();
+  }, [nodes, keys, selectedNode, collapsed, state, bump]);
+  const toggle = useCallback(
+    (id: number, open?: boolean) => {
+      const key = keys.get(id);
+      if (key === undefined) return;
+      const next = new Set(state.collapsed);
+      const shouldOpen = open ?? next.has(key);
+      if (shouldOpen) next.delete(key);
+      else next.add(key);
+      state.collapsed = next;
+      bump();
+    },
+    [keys, state, bump],
+  );
+  return { collapsed, toggle, keys };
 }
 
-function RenameInput({ initial, onDone }: { initial: string; onDone: (value: string | null) => void }) {
+function useLatest<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+  const ref = useRef(fn);
+  ref.current = fn;
+  return useCallback((...args: A) => ref.current(...args), []);
+}
+
+function RenameInput({ initial, onDone }: { initial: string; onDone: (value: string | null, next?: 1 | -1) => void }) {
   const [value, setValue] = useState(initial);
   const done = useRef(false);
-  const finish = (next: string | null) => {
+  const finish = (next: string | null, step?: 1 | -1) => {
     if (done.current) return;
     done.current = true;
-    onDone(next);
+    onDone(next, step);
   };
   return (
     <input
@@ -105,6 +153,10 @@ function RenameInput({ initial, onDone }: { initial: string; onDone: (value: str
         e.stopPropagation();
         if (e.key === 'Enter') finish(value.trim());
         else if (e.key === 'Escape') finish(null);
+        else if (e.key === 'Tab') {
+          e.preventDefault();
+          finish(value.trim(), e.shiftKey ? -1 : 1);
+        }
       }}
       onBlur={() => finish(value.trim())}
     />
@@ -125,7 +177,8 @@ interface RowProps {
   onStartRename: (id: number) => void;
   onMenu: (node: LayerNode, at: { x: number; y: number }) => void;
   dropInto: boolean;
-  onRenameDone: (node: LayerNode, value: string | null) => void;
+  onRenameDone: (node: LayerNode, value: string | null, next?: 1 | -1) => void;
+  hovered: boolean;
   onToggleHidden: (node: LayerNode) => void;
   onToggleLocked: ((node: LayerNode) => void) | null;
 }
@@ -175,7 +228,7 @@ function EyeButton({ node, onToggleHidden }: { node: LayerNode; onToggleHidden: 
   );
 }
 
-function LayerRow(p: RowProps) {
+const LayerRow = memo(function LayerRow(p: RowProps) {
   const { node } = p;
   const full = [node.tag, node.name, node.text].filter(Boolean).join(' ');
   return (
@@ -185,7 +238,7 @@ function LayerRow(p: RowProps) {
       aria-level={node.depth + 1}
       aria-selected={p.selected}
       aria-expanded={node.childCount > 0 ? !p.collapsed : undefined}
-      className={`layers-row${p.selected ? ' selected' : ''}${node.hidden ? ' is-hidden' : ''}${node.locked ? ' is-locked' : ''}${p.dropInto ? ' drop-into' : ''}`}
+      className={`layers-row${p.selected ? ' selected' : ''}${p.hovered ? ' hovered' : ''}${node.hidden ? ' is-hidden' : ''}${node.locked ? ' is-locked' : ''}${p.dropInto ? ' drop-into' : ''}`}
       style={{ top: p.top, paddingLeft: 4 + node.depth * 12 }}
       data-tip={full}
       onPointerEnter={() => p.onHover(node.id)}
@@ -223,7 +276,7 @@ function LayerRow(p: RowProps) {
       </span>
       <span className="layers-tag">{node.tag}</span>
       {p.editing ? (
-        <RenameInput initial={editableName(node.name)} onDone={(value) => p.onRenameDone(node, value)} />
+        <RenameInput initial={editableName(node.name)} onDone={(value, next) => p.onRenameDone(node, value, next)} />
       ) : (
         <>
           {node.name && <span className="layers-name">{node.name}</span>}
@@ -234,7 +287,7 @@ function LayerRow(p: RowProps) {
       {p.editable && !p.editing ? <EyeButton node={node} onToggleHidden={p.onToggleHidden} /> : node.hidden && <span className="layers-flag">Hidden</span>}
     </div>
   );
-}
+});
 
 interface RowDrop {
   line: number | null;
@@ -323,24 +376,80 @@ function isLockKey(e: KeyboardEvent<HTMLDivElement>): boolean {
   return e.key.toLowerCase() === 'l' && e.shiftKey && (e.metaKey || e.ctrlKey) && !e.altKey;
 }
 
-export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, onClose, edits, onToggleLocked, busy = false }: Props) {
-  const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
-  const { collapsed, toggle } = useCollapsed(nodes, selectedNode);
-  const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
-  const listRef = useRef<HTMLDivElement>(null);
-  const rowsRef = useRef<HTMLDivElement>(null);
-  const [scroll, setScroll] = useState({ top: 0, height: 600 });
-  const [editing, setEditing] = useState<number | null>(null);
-  const drag = useRowDrag(rows, rowsRef, { onMove: edits?.onMove ?? null, onDrop: edits?.onDrop ?? null });
-  const rowMenu = useRowMenu(edits, selectedNode, onSelect);
+function scopeOf(frameName: string): string {
+  return `${typeof location === 'undefined' ? '' : location.pathname}|${frameName}`;
+}
 
+function sameWindow(a: { top: number; height: number }, b: { top: number; height: number }): boolean {
+  return Math.floor(a.top / ROW) === Math.floor(b.top / ROW) && Math.ceil((a.top + a.height) / ROW) === Math.ceil((b.top + b.height) / ROW);
+}
+
+function useListWindow(listRef: RefObject<HTMLDivElement | null>, state: OpenState, ready: boolean) {
+  const [scroll, setScrollState] = useState({ top: state.scrollTop, height: 600 });
+  const setScroll = useCallback((next: { top: number; height: number }) => setScrollState((prev) => (sameWindow(prev, next) ? prev : next)), []);
+  const restored = useRef(false);
   useLayoutEffect(() => {
     const el = listRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => setScroll({ top: el.scrollTop, height: el.clientHeight }));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [listRef, setScroll]);
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (!el || !ready || restored.current) return;
+    restored.current = true;
+    el.scrollTop = state.scrollTop;
+  }, [listRef, state, ready]);
+  const onScroll = (e: UIEvent<HTMLDivElement>) => {
+    state.scrollTop = e.currentTarget.scrollTop;
+    setScroll({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight });
+  };
+  return { scroll, onScroll };
+}
+
+const PENDING_MS = 1500;
+
+function usePendingSelect(selectedNode: number | null, onSelect: (id: number, additive: boolean) => void) {
+  const [pending, setPending] = useState<number | null>(null);
+  useEffect(() => setPending(null), [selectedNode]);
+  useEffect(() => {
+    if (pending === null) return;
+    const timer = window.setTimeout(() => setPending(null), PENDING_MS);
+    return () => window.clearTimeout(timer);
+  }, [pending]);
+  const select = useCallback(
+    (id: number, additive: boolean) => {
+      if (!additive) setPending(id);
+      onSelect(id, additive);
+    },
+    [onSelect],
+  );
+  return { shown: pending ?? selectedNode, select };
+}
+
+export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover, onSelect: onSelectProp, onClose, edits, onToggleLocked, busy = false, hoveredNode = null }: Props) {
+  const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
+  const latestSelect = useLatest(onSelectProp);
+  const { shown: selectedNode, select: onSelect } = usePendingSelect(confirmed, latestSelect);
+  const scope = scopeOf(frameName);
+  const { collapsed, toggle, keys } = useCollapsed(nodes, selectedNode, scope);
+  const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
+  const listRef = useRef<HTMLDivElement>(null);
+  const rowsRef = useRef<HTMLDivElement>(null);
+  const { scroll, onScroll } = useListWindow(listRef, openStateFor(scope), rows.length > 0);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const setEditing = useCallback((id: number | null) => setEditingKey(id === null ? null : (keys.get(id) ?? null)), [keys]);
+  const startRename = useLatest(setEditing);
+  const drag = useRowDrag(rows, rowsRef, { onMove: edits?.onMove ?? null, onDrop: edits?.onDrop ?? null });
+  const rowMenu = useRowMenu(edits, selectedNode, onSelect);
+  const rowHover = useLatest(onHover);
+  const rowSelect = useLatest(onSelect);
+  const rowToggle = useLatest(toggle);
+  const rowPress = useLatest(drag.onPress);
+  const rowMenuOpen = useLatest(rowMenu.open);
+  const rowHidden = useLatest((n: LayerNode) => edits?.onToggleHidden(n.id, !n.hidden));
+  const rowLocked = useLatest((n: LayerNode) => onToggleLocked?.(n.id, !n.locked));
 
   const selectedIndex = selectedNode === null ? -1 : rows.findIndex((r) => r.id === selectedNode);
   useEffect(() => {
@@ -395,12 +504,15 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
     else toggle(action.toggle, action.open);
   };
 
-  const finishRename = (node: LayerNode, value: string | null) => {
-    setEditing(null);
-    listRef.current?.focus();
+  const finishRename = useLatest((node: LayerNode, value: string | null, step?: 1 | -1) => {
+    const at = rows.findIndex((r) => r.id === node.id);
+    const next = step && at >= 0 ? rows[at + step] : undefined;
+    setEditing(next ? next.id : null);
+    if (next) onSelect(next.id, false);
+    else listRef.current?.focus();
     if (value === null || !edits || value === editableName(node.name)) return;
     edits.onRename(node.id, value === '' ? null : value);
-  };
+  });
 
   return (
     <aside className="layers" aria-label="Layers">
@@ -428,7 +540,7 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
         onPointerMove={drag.onPointerMove}
         onPointerUp={drag.onPointerUp}
         onPointerCancel={drag.onPointerCancel}
-        onScroll={(e: UIEvent<HTMLDivElement>) => setScroll({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight })}
+        onScroll={onScroll}
       >
         {tree === null ? (
           <div className="layers-empty" role="status">
@@ -446,18 +558,19 @@ export function LayersPanel({ tree, frameName, selectedNode, onHover, onSelect, 
                 top={(first + i) * ROW}
                 selected={node.id === selectedNode}
                 collapsed={collapsed.has(node.id)}
-                editing={editing === node.id}
+                editing={editingKey !== null && keys.get(node.id) === editingKey}
                 editable={Boolean(edits)}
-                onToggle={toggle}
-                onHover={onHover}
-                onSelect={onSelect}
-                onPress={drag.onPress}
-                onStartRename={setEditing}
-                onMenu={rowMenu.open}
+                hovered={node.id === hoveredNode}
+                onToggle={rowToggle}
+                onHover={rowHover}
+                onSelect={rowSelect}
+                onPress={rowPress}
+                onStartRename={startRename}
+                onMenu={rowMenuOpen}
                 dropInto={drag.drop?.into === node.id}
                 onRenameDone={finishRename}
-                onToggleHidden={(n) => edits?.onToggleHidden(n.id, !n.hidden)}
-                onToggleLocked={onToggleLocked ? (n) => onToggleLocked(n.id, !n.locked) : null}
+                onToggleHidden={rowHidden}
+                onToggleLocked={onToggleLocked ? rowLocked : null}
               />
             ))}
             {drag.drop && drag.drop.line !== null && <div className="layers-drop" data-testid="layers-drop" style={{ top: drag.drop.line }} />}

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { Direction, Project, Version } from '../../shared/contracts';
 import { displayTitle, indexVersions, type VersionIndex } from '../versionLabels';
 import { Icon } from './Icon';
@@ -181,6 +181,18 @@ function VersionsEmpty({ count, loading }: { count: number; loading: boolean }) 
   return <div className="empty-note">No versions yet. Send a prompt and the first run saves one here.</div>;
 }
 
+function useHeadFocus(headVersionId: string | null) {
+  const ref = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      const lost = !document.activeElement || document.activeElement === document.body;
+      if (lost) ref.current?.querySelector<HTMLElement>('.version.head .version-toggle')?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [headVersionId]);
+  return ref;
+}
+
 export function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
   const direction = project.directions.find((x) => x.id === directionId) ?? null;
@@ -204,6 +216,7 @@ export function VersionsPanel(props: Props) {
   };
   const locked = props.busy || props.running;
   const headVersionId = direction?.headVersionId ?? null;
+  const listRef = useHeadFocus(sorted.some((v) => v.id === headVersionId) ? headVersionId : null);
 
   return (
     <div className="versions-pane">
@@ -211,7 +224,7 @@ export function VersionsPanel(props: Props) {
       <section className="panel-section grow" aria-label="Version list">
         <VersionsHead count={sorted.length} comparing={props.compare.length === 2} canUndo={!locked && sorted.length >= 2} onCompare={props.onCompare} onUndo={props.onUndo} />
         <VersionsEmpty count={sorted.length} loading={headVersionId !== null} />
-        <ul className="list versions">
+        <ul className="list versions" ref={listRef}>
           {sorted.map((v) => (
             <VersionRow
               key={v.id}

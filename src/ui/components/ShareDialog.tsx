@@ -4,7 +4,7 @@ import { errorText } from '../api';
 import { canvasFrameChoices, frameRoute } from '../exportApi';
 import { shareApi, sharesChanged } from '../shareApi';
 import { useModalDialog } from '../usePopover';
-import { CopyButton } from './CopyButton';
+import { CopyButton, copyText } from './CopyButton';
 import { Icon } from './Icon';
 import '../styles/export.css';
 import '../styles/share.css';
@@ -91,10 +91,12 @@ function linkMeta(link: ShareLink, now: number): string {
   return [...parts, endsText(link, now)].join(' · ');
 }
 
-function LinkRow({ link, server, now, onRevoke, onCursor, busy }: { link: ShareLink; server: ShareServerState; now: number; onRevoke: (id: string) => void; onCursor: (id: string, on: boolean) => void; busy: boolean }) {
+type RowProps = { server: ShareServerState; now: number; onRevoke: (id: string) => void; onCursor: (id: string, on: boolean) => void; busy: boolean; copied: string | null };
+
+function LinkRow({ link, server, now, onRevoke, onCursor, busy, copied }: RowProps & { link: ShareLink }) {
   const token = sessionTokens.get(link.id);
   return (
-    <li className={`share-link${link.active ? '' : ' off'}`} data-testid="share-link">
+    <li className={`share-link${link.active ? '' : ' off'}`} data-testid="share-link" data-link-id={link.id}>
       <div className="share-link-head">
         <span className="share-link-title truncate" data-tip={link.title} data-tip-align="start">{link.title}</span>
         <span className="share-link-meta truncate">{linkMeta(link, now)}</span>
@@ -105,12 +107,13 @@ function LinkRow({ link, server, now, onRevoke, onCursor, busy }: { link: ShareL
         )}
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
+      {copied === link.id && <p className="share-link-note" role="status">Link copied. Paste it to share.</p>}
       {link.active && link.live && <CursorSwitch link={link} busy={busy} onCursor={onCursor} />}
     </li>
   );
 }
 
-function LinkList({ links, ...rest }: { links: ShareLink[]; server: ShareServerState; now: number; onRevoke: (id: string) => void; onCursor: (id: string, on: boolean) => void; busy: boolean }) {
+function LinkList({ links, ...rest }: RowProps & { links: ShareLink[] }) {
   if (links.length === 0) return null;
   const notes = [hiddenNote(links), offNote(links, rest.server)].filter((note): note is string => note !== null);
   return (
@@ -188,6 +191,19 @@ function useShares(projectId: string) {
   return { links, server, error, busy, act };
 }
 
+function useCopyNew(links: ShareLink[], server: ShareServerState) {
+  const [pending, setPending] = useState<string | null>(null);
+  const [id, setId] = useState<string | null>(null);
+  useEffect(() => {
+    const token = pending ? sessionTokens.get(pending) : undefined;
+    if (!pending || !token || !server.localUrl || !links.some((l) => l.id === pending)) return;
+    setPending(null);
+    document.querySelector<HTMLElement>(`[data-link-id="${pending}"] .copy-btn`)?.focus();
+    void copyText(shareUrl(server.localUrl, token)).then((ok) => setId(ok ? pending : null));
+  }, [pending, links, server.localUrl]);
+  return { id, made: setPending };
+}
+
 function ExpiryPicker({ value, onChange }: { value: ShareExpiryHours; onChange: (v: ShareExpiryHours) => void }) {
   return (
     <div className="segmented export-seg" role="radiogroup" aria-label="Link ends after">
@@ -214,6 +230,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
   const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
   const versionId = target.versionId;
   const canCreate = Boolean(versionId) && chosen.length > 0 && chosen.length <= SHARE_MAX_FRAMES && !shares.busy;
+  const copied = useCopyNew(shares.links, shares.server);
 
   const toggle = (id: string) =>
     setPicked((prev) => {
@@ -229,6 +246,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
     void shares.act(async () => {
       const made = await shareApi.create(target.projectId, { directionId: target.directionId, versionId, frames: chosen, frameIds: chosenChoices.map((f) => f.id), expiresInHours: expiry, live: liveView });
       sessionTokens.set(made.link.id, made.token);
+      copied.made(made.link.id);
     });
   };
 
@@ -280,6 +298,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
             server={shares.server}
             now={now}
             busy={shares.busy}
+            copied={copied.id}
             onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
             onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
           />
@@ -291,7 +310,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
           <button type="button" className="btn ghost" onClick={onClose}>
             Close
           </button>
-          <button type="submit" className="btn primary" disabled={!canCreate}>
+          <button type="submit" className="btn primary" disabled={!canCreate} data-autofocus>
             {shares.busy ? 'Working…' : 'Create link'}
           </button>
         </div>

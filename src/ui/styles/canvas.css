@@ -679,7 +679,8 @@ body.element-resizing .frame {
   user-select: none;
 }
 
-.layers-row:hover {
+.layers-row:hover,
+.layers-row.hovered {
   background: var(--surface-hover);
 }
 

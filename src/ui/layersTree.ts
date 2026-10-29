@@ -50,6 +50,21 @@ export function visibleRows(nodes: LayerNode[], collapsed: ReadonlySet<number>):
   return rows;
 }
 
+export function layerKeys(nodes: LayerNode[]): Map<number, string> {
+  const keys = new Map<number, string>();
+  const stack: { key: string; counts: Map<string, number> }[] = [{ key: '', counts: new Map() }];
+  for (const node of nodes) {
+    stack.length = Math.min(stack.length, node.depth + 1);
+    const parent = stack[stack.length - 1] as { key: string; counts: Map<string, number> };
+    const index = parent.counts.get(node.tag) ?? 0;
+    parent.counts.set(node.tag, index + 1);
+    const key = `${parent.key}/${node.tag}${index}`;
+    keys.set(node.id, key);
+    stack.push({ key, counts: new Map() });
+  }
+  return keys;
+}
+
 export function ancestorsOf(nodes: LayerNode[], id: number): number[] {
   const index = nodes.findIndex((n) => n.id === id);
   if (index < 0) return [];

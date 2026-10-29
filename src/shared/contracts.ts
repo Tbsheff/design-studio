@@ -956,6 +956,8 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'element-at'; requestId: string; selection: SelectionContext | null; inside: boolean; label: string }
   | { ns: 'studio'; token: string; type: 'neighbors'; requestId: string; parent: SelectionContext['rect'] | null; siblings: SelectionContext['rect'][] }
   | { ns: 'studio'; token: string; type: 'arrange-key'; key: string }
+  | { ns: 'studio'; token: string; type: 'tool-key'; tool: 'rect' | 'ellipse' | 'pen' }
+  | { ns: 'studio'; token: string; type: 'share-pointer'; x: number; y: number; inside: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-result'; id: string; outcome: OptimisticOutcome; reason?: string; ms: number }
   | { ns: 'studio'; token: string; type: 'play-layers'; layers: Record<string, LinkRect> }
   | { ns: 'studio'; token: string; type: 'marquee'; rect: SelectionContext['rect'] | null }
@@ -1104,6 +1106,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
   | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string }
   | { ns: 'studio'; token: string; type: 'move-cancel' }
+  | { ns: 'studio'; token: string; type: 'share-pointer'; on: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-apply'; id: string; patch: DomPatch; written: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-settle'; id: string; ok: boolean; classes?: ClassDelta; reason?: string }
   | { ns: 'studio'; token: string; type: 'optimistic-drop' }

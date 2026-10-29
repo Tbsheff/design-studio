@@ -16,16 +16,19 @@ interface Props {
 }
 
 const EDGES: ResizeEdge[] = ['e', 's', 'se'];
+const COMPACT_EDGES: ResizeEdge[] = ['se'];
+const COMPACT_PX = 40;
 
-function ResizeHandles({ control, rect }: { control: ResizeControl; rect: SelectionContext['rect'] }) {
+function ResizeHandles({ control, rect, zoom }: { control: ResizeControl; rect: SelectionContext['rect']; zoom: number }) {
   const live = control.live;
+  const compact = Math.min(rect.width, rect.height) * zoom < COMPACT_PX;
   return (
     <div
-      className={`resize-frame${live ? ' active' : ''}`}
+      className={`resize-frame${live ? ' active' : ''}${compact ? ' compact' : ''}`}
       data-testid="resize-frame"
       style={{ left: rect.x, top: rect.y, width: live?.boxWidth ?? rect.width, height: live?.boxHeight ?? rect.height }}
     >
-      {EDGES.map((edge) => (
+      {(compact ? COMPACT_EDGES : EDGES).map((edge) => (
         <div key={edge} className={`resize-handle ${edge}`} aria-hidden="true" onPointerDown={(e) => control.onHandleDown(edge, e)} />
       ))}
       {live && (
@@ -95,7 +98,7 @@ export function ArtboardOverlay({ hover, selection, comments, zoom, resize }: Pr
         const live = resize?.target?.selector === s.selector ? resize.live : null;
         return <div key={s.selector} className="box selected" data-selector={s.selector} style={{ left: s.rect.x, top: s.rect.y, width: live?.boxWidth ?? s.rect.width, height: live?.boxHeight ?? s.rect.height }} />;
       })}
-      {resize?.target && <ResizeHandles control={resize} rect={resize.target.rect} />}
+      {resize?.target && <ResizeHandles control={resize} rect={resize.target.rect} zoom={zoom} />}
       {resize?.live && <SnapGuides guides={resize.live.guides} full />}
       {measuring && hover && anchor && <Measurements from={anchor} to={hover.rect} />}
       {comments}

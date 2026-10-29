@@ -6,6 +6,7 @@ type Rect = SelectionContext['rect'];
 type FlowAxis = 'x' | 'y' | 'grid';
 
 const START_PX = 4;
+const FRAME_SIZED = 0.9;
 const SIBLING_MAX = 200;
 const MAPPED = 'This element is one of several copies made by one line of code (a .map() loop, or a component used more than once), so it cannot move on its own. Change the order of the data, or move the component use in the code.';
 const NO_SOURCE = 'This element has no source location, so it cannot move here.';
@@ -76,6 +77,16 @@ function siblingsOf(element: Element): Element[] {
   return Array.from(parent.children)
     .filter((child) => child !== element && isLayer(child))
     .slice(0, SIBLING_MAX);
+}
+
+function isFrameSized(element: Element): boolean {
+  if (element.parentElement === document.body) return true;
+  const rect = element.getBoundingClientRect();
+  return rect.width >= document.documentElement.clientWidth * FRAME_SIZED;
+}
+
+function marqueeFirst(selected: Element, hit: Element): boolean {
+  return hit === selected && Array.from(selected.children).some(isLayer) && isFrameSized(selected);
 }
 
 function visible(rect: Rect): boolean {
@@ -235,7 +246,7 @@ export function createFreeMove(ports: FreeMovePorts): FreeMove {
       swallow = false;
       drag = null;
       const selected = ports.selected();
-      if (event.button !== 0 || event.shiftKey || !ports.enabled() || !selected?.isConnected || !hit || !selected.contains(hit)) return false;
+      if (event.button !== 0 || event.shiftKey || !ports.enabled() || !selected?.isConnected || !hit || !selected.contains(hit) || marqueeFirst(selected, hit)) return false;
       drag = { element: selected, x: event.clientX, y: event.clientY, pointer: event.pointerId, session: null };
       return true;
     },

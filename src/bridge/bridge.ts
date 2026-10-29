@@ -8,10 +8,12 @@ import { createLayerIndex, moveSelection } from './layers.js';
 import { createLockSet } from './locks.js';
 import { createMarquee } from './marquee.js';
 import { createFreeMove } from './free-move.js';
+import { createSharePointer } from './share-pointer.js';
 import { exposeHeadlessMatch, isMatchKind, matchingElements } from './select-match.js';
 import { exposeHeadlessScan, findStyles } from './style-scan.js';
 import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
+import { vectorToolKeyOf } from '../shared/vector.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
 import { createForceState, type ForcedState } from './force-state.js';
 import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
@@ -367,6 +369,11 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
     if (chord && !isTypingElement(eventElement(event))) {
       event.preventDefault();
       post({ type: 'arrange-key', key: chord });
+      return;
+    }
+    const tool = vectorToolKeyOf(event);
+    if (tool && !isTypingElement(eventElement(event))) {
+      post({ type: 'tool-key', tool });
       return;
     }
     const key = zoomKeyOf(event);
@@ -933,6 +940,8 @@ function startBridge(session: BridgeSession): void {
     pick: (elements, additive) => void postSelectMany(elements, additive),
   });
 
+  const sharePointer = createSharePointer(post);
+
   const freeMove = createFreeMove({
     enabled: () => mode === 'select' && !textEditor.editing(),
     selected: () => selected,
@@ -1212,6 +1221,7 @@ function startBridge(session: BridgeSession): void {
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
     },
     'move-cancel': () => void freeMove.cancel(),
+    'share-pointer': (message) => sharePointer.set(message.on === true),
     'request-neighbors': (message) => {
       if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });
     },

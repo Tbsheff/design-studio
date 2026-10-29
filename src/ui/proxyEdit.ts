@@ -17,6 +17,7 @@ export function proxyEdit(
       const next = patch[slot];
       if (next !== undefined) edit.preview(write(next));
     },
+    shift: () => undefined,
     revert: () => edit.revert(real),
   };
 }

@@ -49,6 +49,10 @@ function patchFor(spec: NumberSpec, value: string): Partial<Record<DirectStylePr
   return Object.fromEntries(targets.map((prop) => [prop, value]));
 }
 
+function shiftMixed(spec: NumberSpec, delta: number): void {
+  spec.edit.shift(spec.targets ?? [spec.prop], delta, { min: spec.min, max: spec.max });
+}
+
 function stepOf(event: { shiftKey: boolean; altKey?: boolean }, spec: NumberSpec): number {
   const base = spec.step ?? 1;
   if (event.shiftKey) return base * 10;
@@ -139,8 +143,13 @@ function NumberInputView({ spec, id, className }: InputProps) {
     const input = event.currentTarget;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       event.preventDefault();
-      if (field.mixed) return;
-      field.nudge(stepOf(event, spec) * (event.key === 'ArrowUp' ? 1 : -1), shown);
+      const delta = stepOf(event, spec) * (event.key === 'ArrowUp' ? 1 : -1);
+      if (field.mixed) {
+        shiftMixed(spec, delta);
+        spec.edit.commitSoon();
+        return;
+      }
+      field.nudge(delta, shown);
       selectSoon(input);
     } else if (event.key === 'Enter') {
       event.preventDefault();
@@ -194,12 +203,13 @@ interface Scrub {
   value: number;
   unit: string;
   moved: boolean;
+  mixed: boolean;
 }
 
 function scrubStart(spec: NumberSpec, ui: TokenUi | null, x: number): Scrub {
   const unit = spec.unit ?? 'px';
   const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? { value: 0, unit };
-  return { x, value: parsed.value, unit: parsed.unit || unit, moved: false };
+  return { x, value: parsed.value, unit: parsed.unit || unit, moved: false, mixed: spec.edit.mixed.has(spec.prop) };
 }
 
 function useScrub(spec: NumberSpec) {
@@ -209,7 +219,6 @@ function useScrub(spec: NumberSpec) {
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
     event.preventDefault();
-    if (spec.edit.mixed.has(spec.prop)) return;
     scrub.current = scrubStart(spec, ui, event.clientX);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -219,9 +228,10 @@ function useScrub(spec: NumberSpec) {
     const steps = Math.trunc((event.clientX - s.x) / SCRUB_PX_PER_STEP);
     if (steps === 0) return;
     s.x += steps * SCRUB_PX_PER_STEP;
-    s.value = parseNumber(clamp(formatNumber(s.value + steps * stepOf(event, spec), s.unit), spec))?.value ?? s.value;
     s.moved = true;
     document.body.classList.add('ins-scrubbing');
+    if (s.mixed) return shiftMixed(spec, steps * stepOf(event, spec));
+    s.value = parseNumber(clamp(formatNumber(s.value + steps * stepOf(event, spec), s.unit), spec))?.value ?? s.value;
     spec.edit.preview(patchFor(spec, formatNumber(s.value, s.unit)));
   };
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {

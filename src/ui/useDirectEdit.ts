@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome, TextSourceHints } from '../shared/contracts';
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
-import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
+import { changedProps, shiftedValue, valuesFromStyles, type Shift, type StyleValues } from './cssValues';
 import { editVariantStore } from './editVariant';
 import { startOptimistic } from './optimisticEdit';
 
@@ -222,6 +222,18 @@ export function useDirectEdit(o: Options) {
     [post, setDraft],
   );
 
+  const shift = useCallback(
+    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}) => {
+      const patch: Partial<StyleValues> = {};
+      for (const prop of props) {
+        const next = shiftedValue(draftRef.current[prop] ?? baseRef.current[prop], { ...bounds, delta });
+        if (next !== null) patch[prop] = next;
+      }
+      if (Object.keys(patch).length > 0) preview(patch);
+    },
+    [preview],
+  );
+
   const revert = useCallback(
     (props: DirectStyleProperty[]) => {
       const next = { ...draftRef.current };
@@ -293,7 +305,7 @@ export function useDirectEdit(o: Options) {
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
   const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
+  return { values, mixed: NO_MIXED, text, status, tailwind, preview, shift, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

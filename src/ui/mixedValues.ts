@@ -1,5 +1,5 @@
 import type { DirectEditRequest, DirectStyleProperty, SelectionContext } from '../shared/contracts';
-import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
+import { changedProps, shiftedValue, valuesFromStyles, type Shift, type StyleValues } from './cssValues';
 import { resolveNumberInput } from './mathInput';
 import { buildEditRequest } from './useDirectEdit';
 
@@ -38,14 +38,54 @@ export function multiBlockReason(selections: SelectionContext[]): string | null 
   return null;
 }
 
-export function batchEdits(selections: SelectionContext[], bases: StyleValues[], style: Partial<StyleValues>): DirectEditRequest[] {
-  const edits: DirectEditRequest[] = [];
+export type { Shift };
+
+export type Shifts = Partial<Record<DirectStyleProperty, Shift>>;
+
+export function shiftedStyle(base: StyleValues, shifts: Shifts): Partial<StyleValues> {
+  const style: Partial<StyleValues> = {};
+  for (const [prop, shift] of Object.entries(shifts) as [DirectStyleProperty, Shift][]) {
+    const next = shiftedValue(base[prop], shift);
+    if (next !== null) style[prop] = next;
+  }
+  return changedProps(style, base);
+}
+
+export function addShift(shifts: Shifts, props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'>): Shifts {
+  const next = { ...shifts };
+  for (const prop of props) next[prop] = { ...bounds, delta: (next[prop]?.delta ?? 0) + delta };
+  return next;
+}
+
+export function withoutShifts(shifts: Shifts, props: readonly string[], sent?: Shifts): Shifts {
+  const next = { ...shifts };
+  for (const prop of props as DirectStyleProperty[]) delete next[prop];
+  for (const [prop, done] of Object.entries(sent ?? {}) as [DirectStyleProperty, Shift][]) {
+    const left = (next[prop]?.delta ?? 0) - done.delta;
+    if (next[prop] && left !== 0) next[prop] = { ...next[prop], delta: left };
+    else delete next[prop];
+  }
+  return next;
+}
+
+export interface OwnEdit {
+  edit: DirectEditRequest;
+  style: Partial<StyleValues>;
+}
+
+export function ownEdits(selections: SelectionContext[], bases: StyleValues[], style: Partial<StyleValues>, shifts: Shifts = {}): OwnEdit[] {
+  const out: OwnEdit[] = [];
   selections.forEach((selection, i) => {
-    const own = changedProps(style, bases[i] ?? valuesFromStyles(selection.styles));
-    const req = buildEditRequest(selection, own);
-    if (req) edits.push(req);
+    const base = bases[i] ?? valuesFromStyles(selection.styles);
+    const own = { ...changedProps(style, base), ...shiftedStyle(base, shifts) };
+    const edit = buildEditRequest(selection, own);
+    if (edit) out.push({ edit, style: own });
   });
-  return edits;
+  return out;
+}
+
+export function batchEdits(selections: SelectionContext[], bases: StyleValues[], style: Partial<StyleValues>): DirectEditRequest[] {
+  return ownEdits(selections, bases, style).map((item) => item.edit);
 }
 
 export function dependsOnCurrent(raw: string, unit: string): boolean {

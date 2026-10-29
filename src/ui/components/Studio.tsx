@@ -648,6 +648,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               noRuns: neverRan(data.runsLoaded, directionRuns),
               darkPreview: hasDarkMode(tokens),
               onMakeStates: did ? makeStates : undefined,
+              onInlinePrompt: whenDirection(did, tweak),
               directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
               shell: {
                 pane: panel.tab,

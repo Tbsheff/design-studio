@@ -1,4 +1,5 @@
 import type { SelectionContext } from '../shared/contracts';
+import { looksLikeFigmaLink, looksLikeFigmaNodes } from '../shared/figma-nodes';
 import type { InsertTarget, JsxInsertPosition } from '../shared/insert';
 import { insertApi, insertError } from './componentInsert';
 
@@ -16,10 +17,25 @@ async function clipboardText(): Promise<string | null> {
   }
 }
 
+async function openFigmaImport(ids: { projectId: string; directionId: string }, selection: SelectionContext, text: string, notify: (message: string) => void): Promise<void> {
+  const [{ createElement }, { createRoot }, dialog] = await Promise.all([import('react'), import('react-dom/client'), import('./components/FigmaImportDialog')]);
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = createRoot(host);
+  const close = () => {
+    queueMicrotask(() => {
+      root.unmount();
+      host.remove();
+    });
+  };
+  root.render(createElement(dialog.default, { ids, target: targetOf(selection), text, canNest: !VOID.has(selection.tag.toLowerCase()), onDone: notify, onClose: close }));
+}
+
 export async function pasteJsx(ids: { projectId: string; directionId: string }, selection: SelectionContext, notify: (message: string) => void): Promise<void> {
   const jsx = (await clipboardText())?.trim();
   if (jsx === undefined) return notify('The studio cannot read the clipboard. Allow clipboard access, then try again.');
-  if (!jsx.startsWith('<')) return notify('The clipboard has no JSX. Copy a snippet such as <Card>…</Card>, then try again.');
+  if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx)) return openFigmaImport(ids, selection, jsx, notify);
+  if (!jsx.startsWith('<')) return notify('The clipboard has no JSX. Copy a snippet such as <Card>…</Card> or Figma nodes JSON, then try again.');
   const position: JsxInsertPosition = VOID.has(selection.tag.toLowerCase()) ? 'after' : 'inside';
   try {
     const result = await insertApi.insertJsx(ids.projectId, ids.directionId, { target: targetOf(selection), position, jsx });

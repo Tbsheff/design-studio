@@ -235,19 +235,19 @@ export function CanvasTopBar(p: Props) {
       <div className="spacer" />
       <ZoomPill zoom={p.zoom} setting={p.zoomSetting} onZoomTo={p.onZoomTo} onFit={p.onFit} onStep={p.onZoomStep} />
       <div className="ui-tools topbar-tools" role="group" aria-label="Tool">
-        <button type="button" aria-pressed={p.tool === 'select'} aria-keyshortcuts="V" data-tip={tipWithKey('Select elements', 'tool-select')} onClick={() => p.onTool('select')}>
+        <button type="button" aria-label="Select" aria-pressed={p.tool === 'select'} aria-keyshortcuts="V" data-tip={tipWithKey('Select elements', 'tool-select')} onClick={() => p.onTool('select')}>
           <Icon name="pointer" size={14} />
           <span>Select</span>
         </button>
-        <button type="button" aria-pressed={p.tool === 'comment'} aria-keyshortcuts="C" disabled={!p.commentAvailable} data-tip={p.commentAvailable ? tipWithKey('Comment', 'tool-comment') : 'Comments work on the live preview'} onClick={() => p.onTool('comment')}>
+        <button type="button" aria-label="Comment" aria-pressed={p.tool === 'comment'} aria-keyshortcuts="C" disabled={!p.commentAvailable} data-tip={p.commentAvailable ? tipWithKey('Comment', 'tool-comment') : 'Comments work on the live preview'} onClick={() => p.onTool('comment')}>
           <Icon name="comment" size={14} />
           <span>Comment</span>
         </button>
-        <button type="button" aria-pressed={p.tool === 'edit'} aria-keyshortcuts="Alt+1" data-tip={tipWithKey('Edit and layers', 'layers')} onClick={() => p.onTool('edit')}>
+        <button type="button" aria-label="Edit" aria-pressed={p.tool === 'edit'} aria-keyshortcuts="Alt+1" data-tip={tipWithKey('Edit and layers', 'layers')} onClick={() => p.onTool('edit')}>
           <Icon name="edit" size={14} />
           <span>Edit</span>
         </button>
-        <button type="button" aria-pressed={p.tool === 'prototype'} data-tip="Link elements to frames, then Play" onClick={() => p.onTool('prototype')}>
+        <button type="button" aria-label="Prototype" aria-pressed={p.tool === 'prototype'} data-tip="Link elements to frames, then Play" onClick={() => p.onTool('prototype')}>
           <Icon name="link" size={14} />
           <span>Prototype</span>
         </button>

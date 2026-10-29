@@ -185,9 +185,10 @@ function parseLevel(raw: unknown): RunLevel | undefined {
   return raw;
 }
 
-function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'mentions'> {
-  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'mentions'> = {};
+function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'mentions'> {
+  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'mentions'> = {};
   if (body.plan === true) extras.plan = true;
+  if (body.lean === true) extras.lean = true;
   if (body.effort !== undefined) {
     if (!RUN_EFFORTS.includes(body.effort as RunEffort)) throw new BadRequestError('effort must be low, medium or high');
     extras.effort = body.effort as RunEffort;

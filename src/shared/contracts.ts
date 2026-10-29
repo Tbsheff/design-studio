@@ -385,6 +385,7 @@ export interface RunRequest {
   effort?: RunEffort;
   retryOf?: string;
   plan?: boolean;
+  lean?: boolean;
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
   scope?: ElementScope;

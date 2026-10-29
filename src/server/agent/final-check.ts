@@ -140,7 +140,7 @@ function reviewLine(item: ReviewItem): string {
 }
 
 function outsideLine(finding: QualityFinding): string {
-  return `- [high] ${finding.check}: ${finding.message} Fix: ${finding.fix ?? ''}`;
+  return `- [${finding.severity}] ${finding.check}: ${finding.message} Fix: ${finding.fix ?? ''}`;
 }
 
 async function layoutNow(input: StudioReviewInput): Promise<QualityFinding[]> {

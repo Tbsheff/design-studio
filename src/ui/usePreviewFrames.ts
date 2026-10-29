@@ -60,6 +60,7 @@ export interface HoverBox {
   label?: string;
   altKey?: boolean;
   fromTree?: boolean;
+  node?: number;
 }
 
 const TREE_REFRESH_MS = 400;
@@ -132,11 +133,26 @@ function applyRects(
   selectors: string[],
   rects: (SelectionContext['rect'] | null)[],
 ): SelectionContext[] {
-  return prev.map((s) => {
+  let changed = false;
+  const next = prev.map((s) => {
     const i = selectors.indexOf(s.selector);
     const r = i >= 0 ? rects[i] : undefined;
-    return r ? { ...s, rect: r } : s;
+    if (!r || sameRect(r, s.rect)) return s;
+    changed = true;
+    return { ...s, rect: r };
   });
+  return changed ? next : prev;
+}
+
+function hoverOf(msg: Extract<BridgeToParent, { type: 'hover' }>): HoverBox | null {
+  if (!msg.rect) return null;
+  const box: HoverBox = { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' };
+  if (typeof msg.node === 'number') box.node = msg.node;
+  return box;
+}
+
+function sameRect(a: SelectionContext['rect'], b: SelectionContext['rect']): boolean {
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }
 
 export function usePreviewFrames(o: Options) {
@@ -437,7 +453,7 @@ export function usePreviewFrames(o: Options) {
       }
       switch (msg.type) {
         case 'hover':
-          if (cur.selectMode || msg.source === 'tree') setHover(msg.rect ? { rect: msg.rect, label: msg.label, altKey: msg.altKey === true, fromTree: msg.source === 'tree' } : null);
+          if (cur.selectMode || msg.source === 'tree') setHover(hoverOf(msg));
           break;
         case 'tree':
           setTree(parseLayerTree(msg));

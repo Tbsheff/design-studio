@@ -22,6 +22,7 @@ import { editLinks, editLinksShape, listLinks, probeWithPreview, type EditLinksA
 import { prepareShip } from '../git/ship-prepare.js';
 import { runSetProps, setPropsShape } from './props-tool.js';
 import { runSetImage, setImageShape } from './image-tool.js';
+import { COMPARE_REFERENCE_DESCRIPTION, compareReferenceShape, runCompareToReference } from './reference-tool.js';
 import { LAYER_STATE_TOOL, LIST_LOCKS_TOOL, layerStateShape, listLocksShape, runListLockedLayers, runSetLayerState } from './layer-state-tool.js';
 import { booleanShapesShape, drawVectorShape, paintShapeShape, runBooleanShapes, runDrawVector, runPaintShape } from './vector-tool.js';
 import { findStylesShape, replaceStyleShape, runFindStyles, runReplaceStyle } from './style-tool.js';
@@ -691,11 +692,12 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
   const booleanShapesTool = tool('boolean_shapes', TOOL_SHORT.boolean_shapes, booleanShapesShape, (args) => runBooleanShapes(deps, args));
   const setLayerStateTool = tool(LAYER_STATE_TOOL, TOOL_SHORT.set_layer_state, layerStateShape, (args) => runSetLayerState(deps, args));
   const listLockedLayersTool = tool(LIST_LOCKS_TOOL, TOOL_SHORT.list_locked_layers, listLocksShape, (args) => runListLockedLayers(deps, args), { annotations: { readOnlyHint: true } });
+  const compareReferenceTool = tool('compare_to_reference', TOOL_SHORT.compare_to_reference, compareReferenceShape, (args) => runCompareToReference({ ...deps, targets: targetDeps(deps) }, args), { annotations: { readOnlyHint: true } });
   const paintShapeTool = tool('paint_shape', TOOL_SHORT.paint_shape, paintShapeShape, (args) => runPaintShape(deps, args));
 
   const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode);
   const helpTool = tool(HELP_TOOL, TOOL_SHORT.studio_help, { tool: z.string().trim().max(40).describe('Tool name without the mcp__studio__ prefix.') }, async (args) => ({ content: [{ type: 'text' as const, text: studioHelp(args.tool, allowed) }] }), { annotations: { readOnlyHint: true } });
-  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, drawVectorTool, booleanShapesTool, paintShapeTool, setLayerStateTool, listLockedLayersTool, helpTool];
+  const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, drawVectorTool, booleanShapesTool, paintShapeTool, setLayerStateTool, listLockedLayersTool, compareReferenceTool, helpTool];
   return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: all.filter((entry) => allowed.has(entry.name)) });
 }
 

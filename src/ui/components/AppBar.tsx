@@ -108,7 +108,21 @@ function RoutesTab({ projectId, onAddRoute }: { projectId: string; onAddRoute: (
   };
   return (
     <div className="app-routes">
-      <input className="app-routes-filter" value={filter} placeholder={routes ? `Filter ${routes.length} routes` : 'Loading routes…'} aria-label="Filter routes" onChange={(e) => setFilter(e.target.value)} />
+      <input
+        className="app-routes-filter"
+        autoFocus
+        value={filter}
+        placeholder={routes ? `Filter ${routes.length} routes · Enter adds the first` : 'Loading routes…'}
+        aria-label="Filter routes"
+        onChange={(e) => setFilter(e.target.value)}
+        onKeyDown={(e) => {
+          const first = shown[0];
+          if (e.key !== 'Enter' || !first || e.nativeEvent.isComposing) return;
+          e.preventDefault();
+          if (first.dynamic) setCustom(first.route);
+          else onAddRoute(first.route);
+        }}
+      />
       {error && <div className="alert error small">{error}</div>}
       <div role="list" aria-label="App routes">
         {shown.map((route) => (

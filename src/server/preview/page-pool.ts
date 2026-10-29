@@ -96,6 +96,14 @@ export class WarmPages {
     this.count += 1;
   }
 
+  async prewarm(size: PageSize): Promise<void> {
+    const backend = await this.backend();
+    await backend.warm?.();
+    const key = sizeKey(size);
+    if (this.closed || !backend.reusablePages || (this.idle.get(key)?.length ?? 0) > 0) return;
+    this.keep(key, await backend.open(size));
+  }
+
   async hold(size: PageSize): Promise<RenderPage> {
     if (this.closed) throw new Error('Browser pool is closed');
     const backend = await this.backend();

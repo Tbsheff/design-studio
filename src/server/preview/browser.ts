@@ -12,7 +12,7 @@ import { dropOutsideApp } from './app-source-filter.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
 import { WarmPages } from './page-pool.js';
-import { renderSettled } from './render-wait.js';
+import { renderSettledFor } from './render-wait.js';
 import { expandScrollRoot } from './scroll-root.js';
 import { PeekPages } from './peek-pages.js';
 import { waitForPage } from '../export/capture.js';
@@ -231,10 +231,7 @@ export class BrowserPool {
     async (url, viewport) => {
       const page = await this.pages.hold(viewport);
       try {
-        await page.goto(withServerBridgeParams(url, this.parentOrigin));
-        await settle(page);
-        await waitForPage(page);
-        await this.noteLanded(page, url);
+        await this.landPeek(page, url);
         return page;
       } catch (error) {
         await this.pages.release(page);
@@ -242,7 +239,15 @@ export class BrowserPool {
       }
     },
     (page) => this.pages.release(page),
+    (page, url) => this.landPeek(page, url),
   );
+
+  private async landPeek(page: RenderPage, url: string): Promise<void> {
+    await page.goto(withServerBridgeParams(url, this.parentOrigin));
+    await settle(page);
+    await waitForPage(page);
+    await this.noteLanded(page, url);
+  }
   private readonly checks = new CaptureCache<CachedCheck>(path.join(CAPTURE_DIR, 'checks'));
   private readonly tiles = new CaptureCache<CachedTiles>(path.join(CAPTURE_DIR, 'tiles'));
   private readonly axeRuns = new Map<string, { stamp: string; run: Promise<AxeViolation[]> }>();
@@ -262,6 +267,10 @@ export class BrowserPool {
     return this.backendPromise;
   }
 
+  warm(): Promise<void> {
+    return this.pages.prewarm({ width: 1440, height: 900 });
+  }
+
   run<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
     return this.withPage(url, viewport, task);
   }
@@ -270,12 +279,12 @@ export class BrowserPool {
     return this.peeks.run(url, viewport, task);
   }
 
-  sourcesChanged(at?: number): void {
-    this.peeks.markDirty(at);
+  sourcesChanged(at?: number, coldAt?: number): void {
+    this.peeks.markDirty(at, coldAt);
   }
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
-    await renderSettled();
+    await renderSettledFor(url);
     return this.pages.lease(viewport, async (page) => {
       const stamp = (await this.stamps.stampFor(url))?.key ?? null;
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
@@ -327,7 +336,7 @@ export class BrowserPool {
   }
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
-    await renderSettled();
+    await renderSettledFor(url);
     const key = tileKey(url, request);
     const ext = request.format === 'jpeg' ? '.jpg' : '.png';
     const started = Date.now();
@@ -394,7 +403,7 @@ export class BrowserPool {
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
-    await renderSettled();
+    await renderSettledFor(url);
     const started = Date.now();
     const key = checkKey(url, spec, options);
     const before = await this.stamps.stampFor(url);

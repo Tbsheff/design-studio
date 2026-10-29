@@ -1,6 +1,6 @@
 import { noteTreeChange, onSourceChange } from '../direct-edit/change-feed.js';
 import { existsSync } from 'node:fs';
-import { lstat, symlink } from 'node:fs/promises';
+import { lstat, stat, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import { TOKENS_FILE, projectPreviewOrigin } from '../../shared/contracts.js';
 import type { Direction, Project, RenderCheckResult } from '../../shared/contracts.js';
@@ -14,6 +14,7 @@ import type { HtmlServer, RootKind } from './html-server.js';
 import type { ViteManager, ViteTarget } from './vite-manager.js';
 import { SourceStamps, type SourceStamp } from './source-stamp.js';
 import { WatcherManager } from './watcher.js';
+import { warmComponentUsage } from '../agent/usage-scope.js';
 import { resolveFrameState } from '../app/frame-state.js';
 import { AppServers } from '../app/dev-server.js';
 import { createAppProxy, type AppTarget } from '../app/proxy.js';
@@ -93,15 +94,26 @@ export function withDesignSystemWarning(results: RenderCheckResult[], problem: s
 
 const APP_CACHE_MS = 1500;
 const WATCH_LAG_MS = 150;
+const MTIME_TRUST_MS = 2000;
+
+async function writtenAt(files: string[], fallback: number): Promise<number> {
+  const now = Date.now();
+  const times = await Promise.all(files.map((file) => stat(file).then((info) => info.mtimeMs, () => null)));
+  const trusted = times.every((time): time is number => time !== null && time >= now - MTIME_TRUST_MS && time <= now);
+  return trusted && times.length > 0 ? Math.max(...times) : fallback;
+}
 
 export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
   const { config, bus, projects, versions } = deps;
   const snapshotRoots = new Map<string, string>();
   const forwardToVite = (change: DirectionChange): void => {
-    noteTreeChange(change.root, change.paths.map((relative) => path.join(change.root, ...relative.split('/'))));
-    browsers.loaded()?.then((pool) => pool.sourcesChanged(Date.now() - WATCH_LAG_MS)).catch(() => undefined);
-    void recompileOnTokensChange(bus, change).catch((error: unknown) => console.error('[preview] tokens recompile failed', error));
     const files = change.paths.map((relative) => path.join(change.root, ...relative.split('/')));
+    noteTreeChange(change.root, files);
+    const seenAt = Date.now() - WATCH_LAG_MS;
+    void writtenAt(files, seenAt)
+      .then((coldAt) => browsers.loaded()?.then((pool) => pool.sourcesChanged(seenAt, coldAt)))
+      .catch(() => undefined);
+    void recompileOnTokensChange(bus, change).catch((error: unknown) => console.error('[preview] tokens recompile failed', error));
     void vite
       .loaded()
       ?.then((manager) => manager.notifyChanged(`d:${change.projectId}:${change.directionId}`, files))
@@ -192,12 +204,27 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return starting;
   };
 
+  const usageEdges = (workTree: string, roots: string[]) => stamps.edges(workTree, roots);
+  let browserWarm: Promise<void> | null = null;
+  const warmBrowser = (): void => {
+    browserWarm ??= browsers
+      .get()
+      .then((pool) => pool.warm())
+      .catch(() => {
+        browserWarm = null;
+      });
+  };
+
   const directionUrl = async (project: Project, direction: Direction): Promise<string> => {
     watchers.watch(project, direction);
+    warmBrowser();
     const key = `${project.id}:${direction.id}`;
     if (project.app) {
       appCache.delete(project.id);
-      void apps.ensure(project).catch(() => undefined);
+      void apps
+        .ensure(project)
+        .then(() => warmComponentUsage(project, direction.workTree, usageEdges))
+        .catch(() => undefined);
       stamps.register(appUrl(project), key, direction.workTree, project.app.appDir);
       return appUrl(project);
     }
@@ -305,7 +332,8 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
     peekPage: async (url, viewport, task) => (await browsers.get()).peek(url, viewport, task),
     sourceStamp: async (url) => (await stampFor(url))?.key ?? null,
-    warmBrowser: () => void browsers.get().then((pool) => pool.backend()).catch(() => undefined),
+    warmBrowser,
+    usageEdges,
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),
   };
 }

@@ -121,6 +121,9 @@ export function createPlaywrightBackend(): RenderBackend {
   return {
     name: 'playwright',
     reusablePages: true,
+    async warm() {
+      await browser();
+    },
     async open(viewport) {
       const { scale, ...size } = viewport;
       const context = await (await browser()).newContext({ viewport: size, ...(scale && scale !== 1 ? { deviceScaleFactor: scale } : {}) });

@@ -1198,7 +1198,7 @@ export function createApp(deps: AppDeps): Hono {
   registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   registerLayerStateRoutes(app, { projects, bus, readBody });
   registerPortRoutes(app, { projects, readBody, isRunning: (pid, did) => runner.isRunning(pid, did), startRun });
-  registerUsageRoutes(app, { projects });
+  registerUsageRoutes(app, { projects, preview });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

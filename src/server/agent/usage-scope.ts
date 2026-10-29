@@ -64,10 +64,10 @@ interface AppSnapshot {
   reverse: Map<string, string[]>;
 }
 
-function reverseOf(files: Map<string, { deps: string[] }>): Map<string, string[]> {
+function reverseOf(files: Iterable<[file: string, deps: string[]]>): Map<string, string[]> {
   const reverse = new Map<string, string[]>();
-  for (const [file, entry] of files) {
-    for (const dep of entry.deps) {
+  for (const [file, deps] of files) {
+    for (const dep of deps) {
       const list = reverse.get(dep);
       if (list) list.push(file);
       else reverse.set(dep, [file]);
@@ -98,18 +98,22 @@ async function componentName(file: string): Promise<string | null> {
   return /^[A-Z]/.test(pascal) ? pascal : null;
 }
 
-async function buildSnapshot(workTree: string, appDir: string): Promise<AppSnapshot> {
+export type UsageEdges = (workTree: string, roots: string[]) => Promise<[file: string, deps: string[]][]>;
+
+const inProcessEdges: UsageEdges = (workTree, roots) => graph.edges(workTree, roots);
+
+async function buildSnapshot(workTree: string, appDir: string, edges: UsageEdges): Promise<AppSnapshot> {
   const routerDir = appRouterDir(path.join(workTree, appDir));
   if (!routerDir) return { routes: [], roots: [], reverse: new Map() };
   const routes = await listAppRoutes(workTree, appDir);
   const segments = new Map<string, Promise<string[]>>();
   const roots = await Promise.all(routes.map((route) => rootsOf(workTree, routerDir, route, segments)));
-  await graph.stamp(workTree, [...new Set(roots.flat())]);
-  return { routes, roots, reverse: reverseOf(graph.files(workTree)) };
+  const files = await edges(workTree, [...new Set(roots.flat())]);
+  return { routes, roots, reverse: reverseOf(files) };
 }
 
-function refresh(key: string, workTree: string, appDir: string): Promise<AppSnapshot> {
-  const snapshot = buildSnapshot(workTree, appDir);
+function refresh(key: string, workTree: string, appDir: string, edges: UsageEdges): Promise<AppSnapshot> {
+  const snapshot = buildSnapshot(workTree, appDir, edges);
   const known = snapshots.get(key);
   if (known) known.next = snapshot;
   else snapshots.set(key, { at: null, snapshot, next: snapshot });
@@ -124,24 +128,29 @@ function refresh(key: string, workTree: string, appDir: string): Promise<AppSnap
   return snapshot;
 }
 
-function snapshotOf(workTree: string, appDir: string): Promise<AppSnapshot> {
+function snapshotOf(workTree: string, appDir: string, edges: UsageEdges): Promise<AppSnapshot> {
   const key = `${workTree}|${appDir}`;
   const known = snapshots.get(key);
-  if (!known) return refresh(key, workTree, appDir);
-  if (known.at !== null && !known.next && Date.now() - known.at >= SNAPSHOT_MS) void refresh(key, workTree, appDir).catch(() => undefined);
+  if (!known) return refresh(key, workTree, appDir, edges);
+  if (known.at !== null && !known.next && Date.now() - known.at >= SNAPSHOT_MS) void refresh(key, workTree, appDir, edges).catch(() => undefined);
   return known.snapshot;
 }
 
-async function appUsage(workTree: string, appDir: string, target: string): Promise<UsageRoute[]> {
-  const { routes, roots, reverse } = await snapshotOf(workTree, appDir);
+async function appUsage(workTree: string, appDir: string, target: string, edges: UsageEdges): Promise<UsageRoute[]> {
+  const { routes, roots, reverse } = await snapshotOf(workTree, appDir, edges);
   const users = usersOf(reverse, target);
   return routes.filter((_route, index) => roots[index]?.some((root) => users.has(root))).map((route) => ({ route: route.route, file: route.file }));
 }
 
-export async function componentUsage(project: Project, workTree: string, file: string): Promise<ComponentUsage> {
+export function warmComponentUsage(project: Project, workTree: string, edges: UsageEdges = inProcessEdges): void {
+  if (!project.app || snapshots.has(`${workTree}|${project.app.appDir}`)) return;
+  void snapshotOf(workTree, project.app.appDir, edges).catch(() => undefined);
+}
+
+export async function componentUsage(project: Project, workTree: string, file: string, edges: UsageEdges = inProcessEdges): Promise<ComponentUsage> {
   const target = resolveUsageFile(workTree, project.app?.appDir ?? null, file);
   const relative = posix(path.relative(workTree, target));
   if (!project.app) return { file: relative, component: null, routes: [] };
-  const [component, routes] = await Promise.all([componentName(target), appUsage(workTree, project.app.appDir, target)]);
+  const [component, routes] = await Promise.all([componentName(target), appUsage(workTree, project.app.appDir, target, edges)]);
   return { file: relative, component, routes };
 }

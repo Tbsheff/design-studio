@@ -24,25 +24,41 @@
   margin: 0;
 }
 
-.share-links {
+.share-links-group {
   display: grid;
-  gap: var(--s-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--s-1);
 }
 
-.share-link {
+.share-links {
   display: grid;
-  gap: var(--s-2);
-  padding: var(--s-2) var(--s-3);
+  margin: 0;
+  padding: 0;
+  max-height: 206px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   background: var(--surface-2);
 }
 
-.share-link.off {
-  opacity: 0.64;
+.share-link {
+  display: grid;
+  gap: var(--s-1);
+  padding: 0 var(--s-1) 0 var(--s-3);
+}
+
+.share-link + .share-link {
+  border-top: 1px solid var(--edge);
+}
+
+.share-link:has(.share-urls, .share-cursor-row) {
+  padding-bottom: var(--s-2);
+}
+
+.share-link.off .share-link-title,
+.share-link.off .share-link-meta {
+  color: var(--text-faint);
 }
 
 .share-link-head {
@@ -53,18 +69,20 @@
 }
 
 .share-link-title {
+  flex: 0 1 auto;
   min-width: 0;
-  font-weight: 600;
+  max-width: 45%;
+  font-weight: 500;
 }
 
 .share-link-meta {
   flex: 1;
   min-width: 0;
+  font-variant-numeric: tabular-nums;
 }
 
-.share-link-title {
-  flex: 0 1 auto;
-  max-width: 45%;
+.share-link:not(:has(.btn)) .share-link-head {
+  padding-right: var(--s-2);
 }
 
 .share-urls {

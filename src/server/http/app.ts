@@ -110,6 +110,7 @@ import { registerShipRoutes } from './ship-routes.js';
 import { registerShareRoutes } from './share-routes.js';
 import { registerComponentCreateRoutes } from './component-create-routes.js';
 import { registerLayerStateRoutes } from './layer-state-routes.js';
+import { isLeanRun, leanContext } from '../agent/lean-run.js';
 import { registerPortRoutes } from './port-routes.js';
 
 const STOP_WAIT_MS = 10_000;
@@ -457,7 +458,7 @@ export function createApp(deps: AppDeps): Hono {
       console.error('[http] design rules load failed', error);
       return [];
     });
-    const repoContext = await loadRepoContext(project, direction.workTree).then((state) => state.text).catch((error: unknown) => {
+    const repoContext = await (isLeanRun(request) ? leanContext(project, direction.workTree, request.selection) : loadRepoContext(project, direction.workTree).then((state) => state.text)).catch((error: unknown) => {
       console.error('[http] repo context load failed', error);
       return null;
     });

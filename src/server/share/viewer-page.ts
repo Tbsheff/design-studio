@@ -158,3 +158,28 @@ export function viewerHtml(data: ViewerData, nonce: string): string {
 </body>
 </html>`;
 }
+
+const GONE_STYLE = `:root { color-scheme: light dark; --bg: #f7f7f5; --fg: #1b1b1a; --muted: #6b6b66; --line: #e2e2de; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ededea; --muted: #9a9a94; --line: #2c2c2a; } }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, sans-serif; }
+main { max-width: 360px; padding: 24px; border: 1px solid var(--line); border-radius: 12px; text-align: center; }
+h1 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+p { margin: 0; color: var(--muted); }`;
+
+export function goneHtml(reason: 'revoked' | 'expired', nonce: string): string {
+  const title = reason === 'revoked' ? 'This link was turned off' : 'This link has ended';
+  const body = reason === 'revoked' ? 'The person who shared it turned it off. Ask them for a new link.' : 'Its time ran out. Ask the person who shared it for a new link.';
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>${title} · Design Studio</title>
+<style nonce="${nonce}">${GONE_STYLE}</style>
+</head>
+<body><main><h1>${title}</h1><p>${body}</p></main></body>
+</html>`;
+}

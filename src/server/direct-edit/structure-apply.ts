@@ -3,8 +3,8 @@ import type { Direction, Project, StructureEditRequest, StructureEditResult, Str
 import { writeAndCommitAll, type WrittenFile } from './batch.js';
 import { assertCanEdit, publishVersion, resolveSource } from './index.js';
 import type { DirectEditDeps, ResolvedSource } from './index.js';
-import { structureDoc } from './structure-docs.js';
-import { planStructure, positionAt, refuse, type Placement, type StructNode } from './structure-ops.js';
+import { structureDoc, type StructureDoc } from './structure-docs.js';
+import { planStructure, positionAt, refuse, type Frame, type Placement, type StructNode } from './structure-ops.js';
 import { knownTokenVars } from './tokens.js';
 import { parseStructureEdit } from './validate.js';
 
@@ -25,6 +25,8 @@ const ONE_FILE_OPS = new Set<StructureOp>(['wrap', 'move', 'group']);
 const GROUP_FRAME = { open: '<div data-name="Group">', close: '</div>' };
 const FALLBACK_GAP = '8px';
 const GAP_TOKEN = '--space-2';
+const LIST_TAGS = new Set(['ul', 'ol', 'menu']);
+const NO_WRAP_TAGS = new Set(['tr', 'td', 'th', 'thead', 'tbody', 'tfoot', 'caption', 'colgroup', 'col', 'option', 'optgroup']);
 
 async function groupTargets(workTree: string, request: StructureEditRequest): Promise<FileWork[]> {
   const groups = new Map<string, FileWork>();
@@ -58,13 +60,54 @@ async function frameGap(workTree: string): Promise<string> {
   return known?.has(GAP_TOKEN) ? `var(${GAP_TOKEN})` : FALLBACK_GAP;
 }
 
+function domTags(work: FileWork, nodes: StructNode[]): string[] {
+  return nodes.map((node, index) => (work.targets[index]?.tag ?? node.tag).toLowerCase());
+}
+
+function listTag(source: string, nodes: StructNode[]): string {
+  const parent = nodes[0]?.parent ?? -1;
+  const tag = parent >= 0 ? /^<([A-Za-z][\w-]*)/.exec(source.slice(parent, parent + 40))?.[1]?.toLowerCase() : undefined;
+  return tag && LIST_TAGS.has(tag) ? tag : 'ul';
+}
+
+function listFrame(relative: string, list: string, name: string): Frame {
+  const jsx = !/\.html?$/i.test(relative);
+  const item = jsx ? `style={{ display: 'block', gap: 'inherit' }}` : 'style="display: block; gap: inherit;"';
+  const inner = jsx ? `style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', margin: 0, padding: 0, listStyle: 'inherit' }}` : 'style="display: flex; flex-direction: column; gap: inherit; margin: 0; padding: 0; list-style: inherit;"';
+  return { open: `<li data-name="${name}" ${item}><${list} ${inner}>`, close: `</${list}></li>` };
+}
+
+function listGroupInner(doc: StructureDoc, source: string, node: StructNode): StructNode | null {
+  const child = node.children.length === 1 ? node.children[0] : undefined;
+  if (node.tag !== 'li' || !child || !/^<li\s[^>]*data-name=/.test(source.slice(node.start, node.start + 200))) return null;
+  const tag = /^<([A-Za-z][\w-]*)/.exec(source.slice(child.start, child.start + 20))?.[1]?.toLowerCase();
+  if (!tag || !LIST_TAGS.has(tag)) return null;
+  return doc.node(positionAt(source, child.start), 'target', tag);
+}
+
+function unwrapTarget(request: StructureEditRequest, doc: StructureDoc, source: string, node: StructNode): StructNode {
+  if (request.op !== 'unwrap') return node;
+  const list = listGroupInner(doc, source, node);
+  return list ? { ...node, inner: list.inner, children: list.children } : node;
+}
+
+function frameFor(work: FileWork, request: StructureEditRequest, doc: StructureDoc, nodes: StructNode[], source: string, gap: string): Frame {
+  const plain = request.op === 'group' ? GROUP_FRAME : doc.frame(gap);
+  if (request.op !== 'group' && request.op !== 'wrap') return plain;
+  const tags = domTags(work, nodes);
+  const fixed = tags.find((tag) => NO_WRAP_TAGS.has(tag));
+  if (fixed) throw refuse(`A <${fixed}> cannot sit inside a new ${request.op === 'group' ? 'group' : 'frame'}: its parent allows no other element there. Select the whole table or list instead`);
+  if (!tags.includes('li')) return plain;
+  return listFrame(work.target.relative, listTag(source, nodes), request.op === 'group' ? 'Group' : 'Frame');
+}
+
 async function planFile(work: FileWork, request: StructureEditRequest, gap: string): Promise<FileResult> {
   const original = await readFile(work.target.file, 'utf8');
   const doc = structureDoc(work.target.relative, original);
   const locate = (target: StructureTarget, role: 'target' | 'into' | 'ref') => doc.node(target.source, role, target.tag);
-  const nodes = work.targets.map((target) => locate(target, 'target'));
+  const nodes = work.targets.map((target) => unwrapTarget(request, doc, original, locate(target, 'target')));
   const place = placement(request, locate);
-  const plan = planStructure(original, { op: request.op, nodes, place, frame: request.op === 'group' ? GROUP_FRAME : doc.frame(gap), closeTag: doc.closeTag });
+  const plan = planStructure(original, { op: request.op, nodes, place, frame: frameFor(work, request, doc, nodes, original, gap), closeTag: doc.closeTag });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
   const selectTag = (offset: number) => /^<([A-Za-z][\w.-]*)/.exec(plan.code.slice(offset, offset + 80))?.[1]?.toLowerCase() ?? '';

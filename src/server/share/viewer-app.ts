@@ -9,7 +9,7 @@ import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from '../../shared/share.js';
 import type { CommentStore } from '../store/comments.js';
 import { frameFile } from './snapshot.js';
 import type { ShareRecord, ShareStore } from './store.js';
-import { viewerHtml } from './viewer-page.js';
+import { goneHtml, viewerHtml } from './viewer-page.js';
 
 const BODY_MAX = 8 * 1024;
 const RATE_WINDOW_MS = 60_000;
@@ -47,6 +47,13 @@ function csp(nonce: string): string {
 
 function notFound(c: Context): Response {
   return c.text('This link does not exist, has ended, or was turned off.', 404);
+}
+
+async function goneOrNotFound(c: Context, deps: ViewerAppDeps): Promise<Response> {
+  const ended = await deps.shares.endedByToken(c.req.param('token') ?? '');
+  if (!ended) return notFound(c);
+  const nonce = randomBytes(16).toString('base64');
+  return c.html(goneHtml(ended, nonce), 410, { 'content-security-policy': `default-src 'none'; style-src 'nonce-${nonce}'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'` });
 }
 
 function createLimiter(now = Date.now) {
@@ -130,7 +137,7 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
 
   app.get('/s/:token', async (c) => {
     const record = await deps.shares.byToken(c.req.param('token'));
-    if (!record) return notFound(c);
+    if (!record) return goneOrNotFound(c, deps);
     const nonce = randomBytes(16).toString('base64');
     const html = viewerHtml({ base: `/s/${c.req.param('token')}`, title: record.title, expiresAt: record.expiresAt, frames: record.frames }, nonce);
     return c.html(html, 200, { 'content-security-policy': csp(nonce) });

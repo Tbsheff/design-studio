@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useRef, useState, type MutableRefObject } from 'react';
-import type { SelectionContext, SelectMove, ZoomKey } from '../shared/contracts';
+import type { ProjectKind, SelectionContext, SelectMove, ZoomKey } from '../shared/contracts';
 import { formatCopyCss } from './authoredCss';
 import type { PreviewPort } from './bridge';
 import { commandBlocker, runCommand } from './commands/registry';
@@ -19,7 +19,7 @@ interface Options {
   selectRelative: (selector: string, move: SelectMove) => void;
   zoom: (key: ZoomKey) => void;
   edits: Pick<LayerEdits, 'enabled' | 'structureKey' | 'canPaste' | 'busy' | 'notify'>;
-  ids: { projectId: string; directionId: string | null };
+  ids: { projectId: string; directionId: string | null; kind: ProjectKind };
 }
 
 async function copyCss(port: PreviewPort | null, selector: string): Promise<void> {
@@ -43,10 +43,15 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
 
 function createItem(o: Options, open: () => void): PreviewMenuItem[] {
   if (!o.edits.enabled || !o.ids.directionId) return [];
-  const missing = o.selection.some((item) => !item.source && !item.owners?.length);
-  const blocked = missing ? 'An element has no source location' : o.edits.busy ? 'Wait for the last edit to finish' : null;
+  const blocked = createBlocker(o);
   const label = o.selection.length > 1 ? `Create component from ${o.selection.length}…` : 'Create component…';
   return [{ id: 'create-component', label, icon: 'component', run: open, ...disabledBy(blocked) }];
+}
+
+function createBlocker(o: Options): string | null {
+  if (o.ids.kind !== 'react') return 'Components need a React project. This is a plain HTML page';
+  if (o.selection.some((item) => !item.source && !item.owners?.length)) return 'An element has no source location';
+  return o.edits.busy ? 'Wait for the last edit to finish' : null;
 }
 
 function disabledBy(reason: string | null): { disabled?: string } {

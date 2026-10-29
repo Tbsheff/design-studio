@@ -73,8 +73,22 @@ function listTag(source: string, nodes: StructNode[]): string {
 function listFrame(relative: string, list: string, name: string): Frame {
   const jsx = !/\.html?$/i.test(relative);
   const item = jsx ? `style={{ display: 'block', gap: 'inherit' }}` : 'style="display: block; gap: inherit;"';
-  const inner = jsx ? `style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', margin: 0, padding: 0 }}` : 'style="display: flex; flex-direction: column; gap: inherit; margin: 0; padding: 0;"';
+  const inner = jsx ? `style={{ display: 'flex', flexDirection: 'column', gap: 'inherit', margin: 0, padding: 0, listStyle: 'inherit' }}` : 'style="display: flex; flex-direction: column; gap: inherit; margin: 0; padding: 0; list-style: inherit;"';
   return { open: `<li data-name="${name}" ${item}><${list} ${inner}>`, close: `</${list}></li>` };
+}
+
+function listGroupInner(doc: StructureDoc, source: string, node: StructNode): StructNode | null {
+  const child = node.children.length === 1 ? node.children[0] : undefined;
+  if (node.tag !== 'li' || !child || !/^<li\s[^>]*data-name=/.test(source.slice(node.start, node.start + 200))) return null;
+  const tag = /^<([A-Za-z][\w-]*)/.exec(source.slice(child.start, child.start + 20))?.[1]?.toLowerCase();
+  if (!tag || !LIST_TAGS.has(tag)) return null;
+  return doc.node(positionAt(source, child.start), 'target', tag);
+}
+
+function unwrapTarget(request: StructureEditRequest, doc: StructureDoc, source: string, node: StructNode): StructNode {
+  if (request.op !== 'unwrap') return node;
+  const list = listGroupInner(doc, source, node);
+  return list ? { ...node, inner: list.inner, children: list.children } : node;
 }
 
 function frameFor(work: FileWork, request: StructureEditRequest, doc: StructureDoc, nodes: StructNode[], source: string, gap: string): Frame {
@@ -91,7 +105,7 @@ async function planFile(work: FileWork, request: StructureEditRequest, gap: stri
   const original = await readFile(work.target.file, 'utf8');
   const doc = structureDoc(work.target.relative, original);
   const locate = (target: StructureTarget, role: 'target' | 'into' | 'ref') => doc.node(target.source, role, target.tag);
-  const nodes = work.targets.map((target) => locate(target, 'target'));
+  const nodes = work.targets.map((target) => unwrapTarget(request, doc, original, locate(target, 'target')));
   const place = placement(request, locate);
   const plan = planStructure(original, { op: request.op, nodes, place, frame: frameFor(work, request, doc, nodes, original, gap), closeTag: doc.closeTag });
   const positions = plan.select.map((offset) => positionAt(plan.code, offset));

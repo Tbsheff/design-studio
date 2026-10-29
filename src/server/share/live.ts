@@ -134,7 +134,7 @@ export function createLiveHub(): LiveHub {
       studioAt.set(projectId, now);
       for (const room of rooms.values()) {
         if (room.projectId !== projectId || !room.studioCursor) continue;
-        const frame = input?.frameId ? room.frames.findIndex((f) => f.id === input.frameId) : -1;
+        const frame = !input?.frameId ? -1 : room.frames.length === 1 && !room.frames[0]?.id ? 0 : room.frames.findIndex((f) => f.id === input.frameId);
         const data = frame >= 0 && input ? { frame, x: Math.round(input.x), y: Math.round(input.y) } : null;
         for (const viewer of room.viewers.values()) viewer.send('studio', data);
       }
@@ -163,6 +163,7 @@ export function createLiveHub(): LiveHub {
       });
       toStudio(room.projectId, stateOf(room.projectId));
       await Promise.race([Promise.all(closing), new Promise((resolve) => setTimeout(resolve, 500).unref())]);
+      if (closing.length > 0) await new Promise((resolve) => setTimeout(resolve, 50).unref());
     },
     count: (linkId) => rooms.get(linkId)?.viewers.size ?? 0,
     hasRoom: (linkId) => rooms.has(linkId),
@@ -178,6 +179,7 @@ export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: Li
   let timer: NodeJS.Timeout | null = null;
   let stopped = false;
   const busy = new Set<string>();
+  const failed = new Map<string, string>();
 
   const refresh = async (record: ShareRecord, head: string): Promise<void> => {
     busy.add(record.id);
@@ -190,6 +192,7 @@ export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: Li
       if (next) hub.update(next);
       else await rm(dir, { recursive: true, force: true });
     } catch (error) {
+      failed.set(record.id, head);
       console.error('[share] live refresh failed', error);
     } finally {
       busy.delete(record.id);
@@ -200,7 +203,7 @@ export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: Li
     if (busy.has(record.id)) return;
     const project = await deps.projects.get(record.projectId).catch(() => null);
     const head = project?.directions.find((d) => d.id === record.directionId)?.headVersionId;
-    if (head && head !== record.versionId) await refresh(record, head);
+    if (head && head !== record.versionId && failed.get(record.id) !== head) await refresh(record, head);
   };
 
   const tick = async (): Promise<void> => {

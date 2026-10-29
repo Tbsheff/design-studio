@@ -4,7 +4,7 @@ import { getSession } from './session';
 import { SHARES_CHANGED } from './shareApi';
 import './styles/share-live.css';
 
-const RETRY_MS = 30_000;
+const RETRY_MS = 5000;
 const SEND_MS = 50;
 const FRAME_SELECTOR = '.artboard[data-frame-id], .canvas-frame[data-frame-id]';
 
@@ -114,7 +114,7 @@ class CursorLayer {
   }
 
   private place(el: HTMLDivElement, cursor: SharePresenceCursor, stage: HTMLElement, box: DOMRect): void {
-    const frame = cursor.frameId ? frameEl(stage, cursor.frameId) : null;
+    const frame = cursor.frameId ? frameEl(stage, cursor.frameId) : cursor.frame === 0 ? stage.querySelector<HTMLElement>('.artboard[data-frame-id]') : null;
     if (!frame || frame.offsetWidth === 0) {
       el.hidden = true;
       return;

@@ -74,7 +74,7 @@ const listShares = defineTool(
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
     const list = await studioCall<ShareList>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/shares`);
-    return { result: ok({ links: list.links.map((l) => ({ id: l.id, title: l.title, active: l.active, expiresAt: new Date(l.expiresAt).toISOString(), revoked: l.revokedAt !== null, frames: l.frames.map((f) => f.name), comments: l.comments })), server: { running: list.server.running, localNetwork: list.server.lan } }) };
+    return { result: ok({ links: list.links.map((l) => ({ id: l.id, title: l.title, active: l.active, live: l.live, viewers: l.viewers, expiresAt: new Date(l.expiresAt).toISOString(), revoked: l.revokedAt !== null, frames: l.frames.map((f) => f.name), comments: l.comments })), server: { running: list.server.running, localNetwork: list.server.lan } }) };
   },
 );
 

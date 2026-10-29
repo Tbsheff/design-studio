@@ -74,7 +74,7 @@ function CursorSwitch({ link, busy, onCursor }: { link: ShareLink; busy: boolean
     <div className="share-lan-row share-cursor-row">
       <div className="share-lan-text">
         <span className="share-lan-title">Show my cursor to viewers</span>
-        <span className="share-lan-help">{link.studioCursor ? 'On: viewers see your pointer when it is over a frame on the canvas.' : 'Off: viewers do not see your pointer.'}</span>
+        <span className="share-lan-help">{link.studioCursor ? 'On: viewers see your pointer over the frames you do not edit now, and over the frame you edit while Comment is on.' : 'Off: viewers do not see your pointer.'}</span>
       </div>
       <Switch on={link.studioCursor} label="Show my cursor to viewers" disabled={busy} onChange={(on) => onCursor(link.id, on)} />
     </div>

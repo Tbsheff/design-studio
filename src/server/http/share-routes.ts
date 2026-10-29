@@ -33,17 +33,18 @@ function expiryOf(raw: unknown): ShareExpiryHours {
   return raw as ShareExpiryHours;
 }
 
-async function canvasFrames(deps: ShareRouteDeps, project: Project, direction: Direction): Promise<ExportFrame[]> {
+async function canvasFrames(deps: ShareRouteDeps, project: Project, direction: Direction): Promise<{ frames: ExportFrame[]; ids: string[] }> {
   const frames = (await readProjectCanvas(project, (id) => deps.projects.projectDir(id)).catch(() => null))?.canvas?.frames ?? [];
   const own = frames.filter((f) => !f.hidden && (!f.directionId || f.directionId === direction.id)).sort((a, b) => a.order - b.order);
-  return own.map((f) => ({ name: f.label?.trim() || `${f.width} × ${f.height}`, width: f.width, height: f.height, ...(f.path ? { path: f.path } : {}) }));
+  return { frames: own.map((f) => ({ name: f.label?.trim() || `${f.width} × ${f.height}`, width: f.width, height: f.height, ...(f.path ? { path: f.path } : {}) })), ids: own.map((f) => f.id) };
 }
 
-async function framesOf(deps: ShareRouteDeps, project: Project, direction: Direction, raw: unknown): Promise<ExportFrame[]> {
-  const picked = Array.isArray(raw) && raw.length > 0 ? parseFrames(raw) : await canvasFrames(deps, project, direction);
-  const frames = picked.length > 0 ? picked : parseFrames(undefined);
+async function framesOf(deps: ShareRouteDeps, project: Project, direction: Direction, raw: unknown, rawIds: unknown): Promise<{ frames: ExportFrame[]; ids: (string | undefined)[] }> {
+  const given = Array.isArray(raw) && raw.length > 0;
+  const picked = given ? { frames: parseFrames(raw), ids: [] as string[] } : await canvasFrames(deps, project, direction);
+  const frames = picked.frames.length > 0 ? picked.frames : parseFrames(undefined);
   if (frames.length > SHARE_MAX_FRAMES) throw new BadRequestError(`share at most ${SHARE_MAX_FRAMES} frames`);
-  return frames;
+  return { frames, ids: given ? frameIdsOf(rawIds, frames.length) : picked.ids.slice(0, frames.length) };
 }
 
 function titleOf(raw: unknown, project: Project): string {
@@ -67,11 +68,10 @@ async function createLink(deps: ShareRouteDeps, store: ShareStore, listener: Sha
   if (!versionId) throw new BadRequestError('Save a version before you share it.');
   const expiresAt = Date.now() + expiryOf(input.expiresInHours) * 3600_000;
   const source = await resolveSource(deps, project.id, versionId);
-  const frames = await framesOf(deps, project, direction, input.frames);
+  const { frames, ids } = await framesOf(deps, project, direction, input.frames, input.frameIds);
   const id = store.newId();
   const dir = store.framesDir(id);
   try {
-    const ids = Array.isArray(input.frames) && input.frames.length > 0 ? frameIdsOf(input.frameIds, frames.length) : [];
     const shots = await captureShare(deps.preview, source, frames, dir, ids);
     const { record, token } = await store.add(id, { projectId: project.id, directionId: direction.id, versionId: source.version.id, title: titleOf(input.title, project), frames: shots, expiresAt, live: input.live === true });
     return { link: toLink(record), token, server: await listener.sync() };

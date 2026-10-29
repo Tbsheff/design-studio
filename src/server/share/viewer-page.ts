@@ -123,18 +123,28 @@ const LIVE_SCRIPT = `
   source.addEventListener('hello', (e) => { const d = JSON.parse(e.data); key = d.key; badge.classList.remove('off'); badge.textContent = 'Live'; if (d.rev !== rev) location.reload(); });
   source.addEventListener('frames', (e) => swap(JSON.parse(e.data)));
   source.addEventListener('studio', (e) => drawStudio(JSON.parse(e.data)));
-  source.addEventListener('end', () => { source.close(); location.reload(); });
-  const stop = () => {
+  source.addEventListener('end', () => stop('This link was turned off. Ask the person who shared it for a new link.'));
+  let misses = 0;
+  const stop = (text) => {
     source.close();
+    badge.classList.add('off');
     badge.textContent = 'Off';
     const note = document.createElement('p');
     note.className = 'ended';
-    note.textContent = 'This link no longer answers. It was turned off, it ended, or Design Studio closed.';
+    note.textContent = text;
     document.querySelector('main').replaceChildren(note);
   };
+  const probe = () => fetch(base + '/comments', { credentials: 'omit' }).then((r) => {
+    misses = 0;
+    if (r.status === 404) location.reload();
+  }).catch(() => {
+    misses += 1;
+    if (misses >= 3) stop('This link no longer answers. It was turned off, it ended, or Design Studio closed.');
+    else setTimeout(probe, 1000);
+  });
   source.onerror = () => {
     key = null; badge.classList.add('off'); badge.textContent = 'Reconnecting'; drawStudio(null);
-    fetch(base + '/comments', { credentials: 'omit' }).then((r) => { if (r.status === 404) location.reload(); }).catch(stop);
+    if (misses === 0) probe();
   };
 })();
 `;

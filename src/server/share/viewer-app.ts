@@ -209,6 +209,7 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
       });
       if (!seat) return;
       stream.onAbort(() => done());
+      await stream.writeSSE({ data: '', retry: 1000 }).catch(() => done());
       send('hello', { key: seat.key, rev: record.rev ?? 0, studio: record.studioCursor === true });
       const ping = setInterval(() => send('ping', {}), PING_MS);
       try {

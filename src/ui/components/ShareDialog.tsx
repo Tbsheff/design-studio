@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { SHARE_DEFAULT_EXPIRY_HOURS, SHARE_MAX_FRAMES, shareUrl, type ShareExpiryHours, type ShareLink, type ShareServerState } from '../../shared/share';
 import { errorText } from '../api';
 import { canvasFrameChoices, frameRoute } from '../exportApi';
-import { shareApi } from '../shareApi';
+import { shareApi, sharesChanged } from '../shareApi';
 import { useModalDialog } from '../usePopover';
 import { CopyButton } from './CopyButton';
 import { Icon } from './Icon';
@@ -61,22 +61,47 @@ function offNote(link: ShareLink, server: ShareServerState): string {
   return server.running ? `${what} Viewers see a page that says the link no longer works.` : `${what} No link is live, so the share server is off and the address does not answer.`;
 }
 
-function LinkRow({ link, server, now, onRevoke, busy }: { link: ShareLink; server: ShareServerState; now: number; onRevoke: (id: string) => void; busy: boolean }) {
+function Switch({ on, label, disabled, onChange }: { on: boolean; label: string; disabled?: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`export-switch${on ? ' on' : ''}`} disabled={disabled} onClick={() => onChange(!on)}>
+      <span className="export-switch-knob" />
+    </button>
+  );
+}
+
+function CursorSwitch({ link, busy, onCursor }: { link: ShareLink; busy: boolean; onCursor: (id: string, on: boolean) => void }) {
+  return (
+    <div className="share-lan-row share-cursor-row">
+      <div className="share-lan-text">
+        <span className="share-lan-title">Show my cursor to viewers</span>
+        <span className="share-lan-help">{link.studioCursor ? 'On: viewers see your pointer when it is over a frame on the canvas.' : 'Off: viewers do not see your pointer.'}</span>
+      </div>
+      <Switch on={link.studioCursor} label="Show my cursor to viewers" disabled={busy} onChange={(on) => onCursor(link.id, on)} />
+    </div>
+  );
+}
+
+function linkMeta(link: ShareLink, now: number): string {
+  const parts = [`${link.frames.length} frame${link.frames.length === 1 ? '' : 's'}`, `${link.comments} comment${link.comments === 1 ? '' : 's'}`];
+  if (link.live && link.active) parts.unshift(`Live · ${link.viewers} viewer${link.viewers === 1 ? '' : 's'}`);
+  return [...parts, endsText(link, now)].join(' · ');
+}
+
+function LinkRow({ link, server, now, onRevoke, onCursor, busy }: { link: ShareLink; server: ShareServerState; now: number; onRevoke: (id: string) => void; onCursor: (id: string, on: boolean) => void; busy: boolean }) {
   const token = sessionTokens.get(link.id);
   return (
     <li className={`share-link${link.active ? '' : ' off'}`} data-testid="share-link">
       <div className="share-link-head">
         <span className="share-link-title truncate">{link.title}</span>
-        <span className="share-link-meta">
-          {link.frames.length} frame{link.frames.length === 1 ? '' : 's'} · {link.comments} comment{link.comments === 1 ? '' : 's'} · {endsText(link, now)}
-        </span>
+        <span className="share-link-meta">{linkMeta(link, now)}</span>
         {link.active && (
-          <button type="button" className="btn ghost small" disabled={busy} onClick={() => onRevoke(link.id)} data-tip="The link stops working at once and its images are deleted">
+          <button type="button" className="btn ghost small" disabled={busy} onClick={() => onRevoke(link.id)} data-tip={link.live ? 'The link stops working at once, open viewers are cut off and its images are deleted' : 'The link stops working at once and its images are deleted'}>
             Revoke
           </button>
         )}
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
+      {link.active && link.live && <CursorSwitch link={link} busy={busy} onCursor={onCursor} />}
       {link.active && !token && <p className="share-link-note">The link was shown when it was made. Make a new link to copy it again.</p>}
       {!link.active && <p className="share-link-note">{offNote(link, server)}</p>}
     </li>
@@ -91,18 +116,9 @@ function LanSwitch({ server, hasLive, busy, onChange }: { server: ShareServerSta
           <span className="share-lan-title">Allow on local network</span>
           <span className="share-lan-help">{server.lan && server.lanUrl ? `On: devices on this network can open links at ${server.lanUrl}.` : 'Off: only this computer can open links (127.0.0.1).'}</span>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={server.lan}
-          aria-label="Allow on local network"
-          className={`export-switch${server.lan ? ' on' : ''}`}
-          disabled={busy || (!hasLive && !server.lan)}
-          data-tip={hasLive ? undefined : 'Make a link first'}
-          onClick={() => onChange(!server.lan)}
-        >
-          <span className="export-switch-knob" />
-        </button>
+        <span data-tip={hasLive ? undefined : 'Make a link first'}>
+          <Switch on={server.lan} label="Allow on local network" disabled={busy || (!hasLive && !server.lan)} onChange={onChange} />
+        </span>
       </div>
       {server.lan && (
         <div className="alert share-lan-warn" role="alert">
@@ -126,6 +142,12 @@ function useShares(projectId: string) {
   useEffect(() => {
     reload().catch((err: unknown) => setError(errorText(err)));
   }, [reload]);
+  const watching = links.some((l) => l.live && l.active);
+  useEffect(() => {
+    if (!watching) return;
+    const timer = window.setInterval(() => void reload().catch(() => undefined), 3000);
+    return () => window.clearInterval(timer);
+  }, [watching, reload]);
   const act = useCallback(
     async (task: () => Promise<unknown>) => {
       setBusy(true);
@@ -133,13 +155,14 @@ function useShares(projectId: string) {
       try {
         await task();
         await reload();
+        sharesChanged(projectId);
       } catch (err) {
         setError(errorText(err));
       } finally {
         setBusy(false);
       }
     },
-    [reload],
+    [reload, projectId],
   );
   return { links, server, error, busy, act };
 }
@@ -161,9 +184,11 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
   const frames = useMemo(() => canvasFrameChoices(target.projectId, target.directionId), [target.projectId, target.directionId]);
   const [picked, setPicked] = useState<Set<string>>(() => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((f) => f.id)));
   const [expiry, setExpiry] = useState<ShareExpiryHours>(SHARE_DEFAULT_EXPIRY_HOURS);
+  const [liveView, setLiveView] = useState(false);
   const shares = useShares(target.projectId);
   const now = Date.now();
-  const chosen = frames.filter((f) => picked.has(f.id)).map((f) => f.frame);
+  const chosenChoices = frames.filter((f) => picked.has(f.id));
+  const chosen = chosenChoices.map((f) => f.frame);
   const live = shares.links.filter((l) => l.active);
   const shown = [...live, ...shares.links.filter((l) => !l.active).slice(0, 3)];
   const versionId = target.versionId;
@@ -181,7 +206,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
     event.preventDefault();
     if (!canCreate || !versionId) return;
     void shares.act(async () => {
-      const made = await shareApi.create(target.projectId, { directionId: target.directionId, versionId, frames: chosen, expiresInHours: expiry });
+      const made = await shareApi.create(target.projectId, { directionId: target.directionId, versionId, frames: chosen, frameIds: chosenChoices.map((f) => f.id), expiresInHours: expiry, live: liveView });
       sessionTokens.set(made.link.id, made.token);
     });
   };
@@ -192,7 +217,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
         <div className="modal-head">
           <div className="titles">
             <h2>Share a read-only link</h2>
-            <p>Viewers see still images of the frames and can comment. They cannot edit, run the app or reach the studio.</p>
+            <p>Viewers see images of the frames and can comment. They cannot edit, run the app or reach the studio.</p>
           </div>
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
             <Icon name="close" />
@@ -216,6 +241,13 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
             <span className="export-label">Link ends after</span>
             <ExpiryPicker value={expiry} onChange={setExpiry} />
           </div>
+          <div className="share-lan-row">
+            <div className="share-lan-text">
+              <span className="share-lan-title">Live</span>
+              <span className="share-lan-help">{liveView ? 'Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas.' : 'Off: viewers see the images from when you made the link.'}</span>
+            </div>
+            <Switch on={liveView} label="Live" disabled={shares.busy} onChange={setLiveView} />
+          </div>
           {!versionId && <p className="share-link-note">Save a version first. A link shares a saved version.</p>}
           {shares.error && (
             <div className="alert error small" role="alert">
@@ -225,14 +257,22 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
           {shown.length > 0 && (
             <ul className="share-links" aria-label="Share links">
               {shown.map((link) => (
-                <LinkRow key={link.id} link={link} server={shares.server} now={now} busy={shares.busy} onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))} />
+                <LinkRow
+                  key={link.id}
+                  link={link}
+                  server={shares.server}
+                  now={now}
+                  busy={shares.busy}
+                  onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
+                  onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
+                />
               ))}
             </ul>
           )}
           <LanSwitch server={shares.server} hasLive={live.length > 0} busy={shares.busy} onChange={(on) => void shares.act(() => shareApi.setLan(on))} />
         </div>
         <div className="modal-foot">
-          <span className="share-foot-note">No upload and no tunnel. Links serve from this computer while Design Studio is open.</span>
+          <span className="share-foot-note">No upload and no tunnel. Links serve from this computer while Design Studio is open. To reach people off your network, run your own tunnel to the link address.</span>
           <span className="share-spacer" />
           <button type="button" className="btn ghost" onClick={onClose}>
             Close

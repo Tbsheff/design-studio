@@ -59,7 +59,12 @@
 
 .share-link-meta {
   flex: 1;
-  white-space: nowrap;
+  min-width: 0;
+}
+
+.share-link-title {
+  flex: 0 1 auto;
+  max-width: 45%;
 }
 
 .share-urls {
@@ -94,7 +99,13 @@
 .share-lan-text {
   display: grid;
   flex: 1;
+  min-width: 0;
   gap: 2px;
+}
+
+.share-cursor-row {
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--edge);
 }
 
 .share-lan-title {

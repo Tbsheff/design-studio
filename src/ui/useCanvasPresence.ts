@@ -59,4 +59,15 @@ export function useCanvasPresence(o: PresenceInput): void {
     const timer = window.setInterval(send, PRESENCE_MS);
     return () => window.clearInterval(timer);
   }, [o.projectId]);
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let gone = false;
+    void import('./shareLive').then((mod) => {
+      if (!gone) stop = mod.startShareLive(o.projectId, () => latest.current.stage());
+    });
+    return () => {
+      gone = true;
+      stop?.();
+    };
+  }, [o.projectId]);
 }

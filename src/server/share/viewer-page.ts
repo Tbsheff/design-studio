@@ -6,6 +6,8 @@ export interface ViewerData {
   title: string;
   expiresAt: number;
   frames: ShareFrame[];
+  live?: boolean;
+  rev?: number;
 }
 
 function escapeHtml(text: string): string {
@@ -17,8 +19,8 @@ function jsonForScript(value: unknown): string {
 }
 
 const STYLE = `
-:root { color-scheme: light dark; --bg: #f6f6f4; --panel: #ffffff; --line: #e3e3df; --text: #1d1d1b; --muted: #6b6b66; --accent: #2f6bff; --accent-text: #ffffff; --pin: #f5a524; --danger: #c93b3b; }
-@media (prefers-color-scheme: dark) { :root { --bg: #161615; --panel: #1f1f1d; --line: #33332f; --text: #ededea; --muted: #9a9a94; --accent: #5b8cff; --accent-text: #0b0b0a; --pin: #f5b84a; --danger: #ef6b6b; } }
+:root { color-scheme: light dark; --bg: #f6f6f4; --panel: #ffffff; --line: #e3e3df; --text: #1d1d1b; --muted: #6b6b66; --accent: #2f6bff; --accent-text: #ffffff; --pin: #f5a524; --danger: #c93b3b; --live: #1f9d55; --studio: #7c3aed; }
+@media (prefers-color-scheme: dark) { :root { --bg: #161615; --panel: #1f1f1d; --line: #33332f; --text: #ededea; --muted: #9a9a94; --accent: #5b8cff; --accent-text: #0b0b0a; --pin: #f5b84a; --danger: #ef6b6b; --live: #3ccf7a; --studio: #9b6bff; } }
 * { box-sizing: border-box; }
 body { margin: 0; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; background: var(--bg); color: var(--text); }
 header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
@@ -50,7 +52,91 @@ li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
 li .who { font-weight: 600; }
 li .where { color: var(--muted); font-size: 12px; }
 li p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.badge.live { color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+.badge.live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--live); }
+.badge.live.off::before { background: var(--muted); }
+.ended { grid-column: 1 / -1; margin: 64px auto; max-width: 360px; text-align: center; color: var(--muted); }
+.cursor { position: absolute; z-index: 2; pointer-events: none; transform: translate(-2px, -2px); transition: left 80ms linear, top 80ms linear; }
+.cursor svg { display: block; width: 16px; height: 16px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+.cursor span { position: absolute; left: 14px; top: 14px; padding: 1px 6px; border-radius: 4px; background: var(--studio); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .cursor { transition: none; } }
 @media (max-width: 760px) { main { grid-template-columns: 1fr; } aside { position: static; height: auto; border-left: 0; border-top: 1px solid var(--line); } }
+`;
+
+const LIVE_SCRIPT = `
+(() => {
+  const base = location.pathname.replace(/\\/+$/, '');
+  const badge = document.getElementById('live-badge');
+  const nameInput = document.getElementById('viewer-name');
+  let key = null;
+  let rev = Number(document.body.dataset.rev || 0);
+  let pending = null;
+  let timer = 0;
+  let studio = null;
+  const shots = () => Array.from(document.querySelectorAll('.shot'));
+  const flush = () => {
+    timer = 0;
+    if (!key || !pending) return;
+    const body = Object.assign({ key, name: (nameInput.value || '').trim().slice(0, ${SHARE_NAME_MAX}) }, pending);
+    pending = null;
+    fetch(base + '/cursor', { method: 'POST', credentials: 'omit', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).catch(() => undefined);
+  };
+  const queue = (value) => { pending = value; if (!timer) timer = setTimeout(flush, 50); };
+  shots().forEach((shot) => {
+    shot.addEventListener('pointermove', (event) => {
+      const box = shot.getBoundingClientRect();
+      const x = Math.max(0, Math.round((event.clientX - box.left) / box.width * Number(shot.dataset.w)));
+      const y = Math.max(0, Math.round((event.clientY - box.top) / box.height * Number(shot.dataset.h)));
+      queue({ frame: Number(shot.dataset.i), x, y });
+    });
+    shot.addEventListener('pointerleave', () => queue({ frame: null, x: 0, y: 0 }));
+  });
+  const arrow = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 1l5.5 13 2-5.5L14 6.5z" fill="currentColor" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+  const drawStudio = (data) => {
+    if (!data) { if (studio) studio.remove(); studio = null; return; }
+    const shot = document.querySelector('.shot[data-i="' + data.frame + '"]');
+    if (!shot) return;
+    if (!studio) {
+      studio = document.createElement('div');
+      studio.className = 'cursor';
+      studio.style.color = 'var(--studio)';
+      studio.innerHTML = arrow;
+      const tag = document.createElement('span'); tag.textContent = 'Designer'; studio.append(tag);
+    }
+    if (studio.parentElement !== shot) shot.append(studio);
+    studio.style.left = (data.x / Number(shot.dataset.w) * 100) + '%';
+    studio.style.top = (data.y / Number(shot.dataset.h) * 100) + '%';
+  };
+  const swap = (data) => {
+    rev = data.rev;
+    data.frames.forEach((f, i) => {
+      const shot = document.querySelector('.shot[data-i="' + i + '"]');
+      if (!shot) return;
+      const img = shot.querySelector('img');
+      const next = new Image();
+      next.onload = () => { shot.dataset.h = String(f.cssHeight); img.height = f.cssHeight; img.src = next.src; };
+      next.src = base + '/f/' + i + '?r=' + rev;
+    });
+    badge.textContent = 'Live · updated ' + new Date().toLocaleTimeString();
+  };
+  const source = new EventSource(base + '/live');
+  source.addEventListener('hello', (e) => { const d = JSON.parse(e.data); key = d.key; badge.classList.remove('off'); badge.textContent = 'Live'; if (d.rev !== rev) location.reload(); });
+  source.addEventListener('frames', (e) => swap(JSON.parse(e.data)));
+  source.addEventListener('studio', (e) => drawStudio(JSON.parse(e.data)));
+  source.addEventListener('end', () => { source.close(); location.reload(); });
+  const stop = () => {
+    source.close();
+    badge.textContent = 'Off';
+    const note = document.createElement('p');
+    note.className = 'ended';
+    note.textContent = 'This link no longer answers. It was turned off, it ended, or Design Studio closed.';
+    document.querySelector('main').replaceChildren(note);
+  };
+  source.onerror = () => {
+    key = null; badge.classList.add('off'); badge.textContent = 'Reconnecting'; drawStudio(null);
+    fetch(base + '/comments', { credentials: 'omit' }).then((r) => { if (r.status === 404) location.reload(); }).catch(stop);
+  };
+})();
 `;
 
 const SCRIPT = `
@@ -136,8 +222,8 @@ export function viewerHtml(data: ViewerData, nonce: string): string {
 <title>${escapeHtml(data.title)} · Shared from Design Studio</title>
 <style nonce="${nonce}">${STYLE}\n${widths}</style>
 </head>
-<body>
-<header><h1>${escapeHtml(data.title)}</h1><span class="badge">Read only</span><span class="spacer"></span><span class="badge">Link ends ${escapeHtml(expires)}</span></header>
+<body data-rev="${data.rev ?? 0}">
+<header><h1>${escapeHtml(data.title)}</h1><span class="badge">Read only</span>${data.live ? '<span class="badge live off" id="live-badge" role="status">Connecting</span>' : ''}<span class="spacer"></span><span class="badge">Link ends ${escapeHtml(expires)}</span></header>
 <main>
 <section class="frames" aria-label="Frames">${data.frames.map((frame, index) => frameFigure(data.base, frame, index)).join('')}</section>
 <aside aria-label="Comments">
@@ -155,6 +241,7 @@ export function viewerHtml(data: ViewerData, nonce: string): string {
 </main>
 <script type="application/json" id="share-data">${jsonForScript({ frames: data.frames })}</script>
 <script nonce="${nonce}">${SCRIPT}</script>
+${data.live ? `<script nonce="${nonce}">${LIVE_SCRIPT}</script>` : ''}
 </body>
 </html>`;
 }

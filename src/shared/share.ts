@@ -6,6 +6,7 @@ export const SHARE_DEFAULT_EXPIRY_HOURS: ShareExpiryHours = 24;
 export const SHARE_MAX_FRAMES = 12;
 export const SHARE_NAME_MAX = 60;
 export const SHARE_COMMENT_MAX = 1000;
+export const SHARE_LIVE_VIEWERS_MAX = 10;
 
 export interface ShareFrame {
   name: string;
@@ -13,6 +14,7 @@ export interface ShareFrame {
   height: number;
   path?: string;
   cssHeight: number;
+  id?: string;
 }
 
 export interface ShareLink {
@@ -27,6 +29,10 @@ export interface ShareLink {
   revokedAt: number | null;
   comments: number;
   active: boolean;
+  live: boolean;
+  studioCursor: boolean;
+  rev: number;
+  viewers: number;
 }
 
 export interface ShareServerState {
@@ -47,6 +53,30 @@ export interface ShareCreateInput {
   frames?: ExportFrame[];
   expiresInHours?: ShareExpiryHours;
   title?: string;
+  live?: boolean;
+  frameIds?: (string | null)[];
+}
+
+export interface SharePresenceCursor {
+  linkId: string;
+  viewer: string;
+  name: string;
+  frameId: string | null;
+  frame: number;
+  x: number;
+  y: number;
+}
+
+export type SharePresenceEvent =
+  | { type: 'state'; cursors: SharePresenceCursor[]; wantCursor: boolean; live: number }
+  | { type: 'cursor'; cursor: SharePresenceCursor }
+  | { type: 'leave'; linkId: string; viewer: string }
+  | { type: 'idle' };
+
+export interface StudioCursorInput {
+  frameId: string | null;
+  x: number;
+  y: number;
 }
 
 export interface ShareCreated {

@@ -3,10 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { Hono, type Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import type { DesignComment } from '../../shared/contracts.js';
-import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from '../../shared/share.js';
+import { SHARE_COMMENT_MAX, SHARE_LIVE_VIEWERS_MAX, SHARE_NAME_MAX } from '../../shared/share.js';
 import type { CommentStore } from '../store/comments.js';
+import type { LiveHub } from './live.js';
 import { frameFile } from './snapshot.js';
 import type { ShareRecord, ShareStore } from './store.js';
 import { goneHtml, viewerHtml } from './viewer-page.js';
@@ -15,6 +17,19 @@ const BODY_MAX = 8 * 1024;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 10;
 const LINK_COMMENTS_MAX = 200;
+const CURSOR_BODY_MAX = 512;
+const JOIN_MAX = 30;
+const PING_MS = 15_000;
+
+const cursorSchema = z
+  .object({
+    key: z.string().regex(/^[A-Za-z0-9_-]{24}$/),
+    name: z.string().trim().max(SHARE_NAME_MAX),
+    frame: z.number().int().min(0).max(100).nullable(),
+    x: z.number().min(0).max(100_000),
+    y: z.number().min(0).max(100_000),
+  })
+  .strict();
 
 const postSchema = z
   .object({
@@ -29,6 +44,7 @@ const postSchema = z
 export interface ViewerAppDeps {
   shares: ShareStore;
   comments: CommentStore;
+  hub: LiveHub;
 }
 
 const BASE_HEADERS: Record<string, string> = {
@@ -56,12 +72,12 @@ async function goneOrNotFound(c: Context, deps: ViewerAppDeps): Promise<Response
   return c.html(goneHtml(ended, nonce), 410, { 'content-security-policy': `default-src 'none'; style-src 'nonce-${nonce}'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'` });
 }
 
-function createLimiter(now = Date.now) {
+function createLimiter(max = RATE_MAX, now = Date.now) {
   const hits = new Map<string, number[]>();
   return (key: string): boolean => {
     const t = now();
     const recent = (hits.get(key) ?? []).filter((at) => t - at < RATE_WINDOW_MS);
-    if (recent.length >= RATE_MAX) {
+    if (recent.length >= max) {
       hits.set(key, recent);
       return false;
     }
@@ -128,6 +144,7 @@ async function postComment(deps: ViewerAppDeps, record: ShareRecord, input: z.in
 export function createViewerApp(deps: ViewerAppDeps): Hono {
   const app = new Hono();
   const allow = createLimiter();
+  const joins = createLimiter(JOIN_MAX);
 
   app.use('*', async (c, next) => {
     await next();
@@ -139,7 +156,7 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
     const record = await deps.shares.byToken(c.req.param('token'));
     if (!record) return goneOrNotFound(c, deps);
     const nonce = randomBytes(16).toString('base64');
-    const html = viewerHtml({ base: `/s/${c.req.param('token')}`, title: record.title, expiresAt: record.expiresAt, frames: record.frames }, nonce);
+    const html = viewerHtml({ base: `/s/${c.req.param('token')}`, title: record.title, expiresAt: record.expiresAt, frames: record.frames, live: record.live === true, rev: record.rev ?? 0 }, nonce);
     return c.html(html, 200, { 'content-security-policy': csp(nonce) });
   });
 
@@ -173,6 +190,45 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
       return c.json({ comment: await postComment(deps, record, parsed.data) }, 201);
     },
   );
+
+  app.get('/s/:token/live', async (c) => {
+    const record = await deps.shares.byToken(c.req.param('token'));
+    if (!record?.live) return notFound(c);
+    if (!joins(`${record.id}|${remoteOf(c)}`)) return c.text('Too many connections. Wait one minute.', 429);
+    if (deps.hub.count(record.id) >= SHARE_LIVE_VIEWERS_MAX) return c.text('This link has the most viewers it can take.', 429);
+    return streamSSE(c, async (stream) => {
+      let done = (): void => undefined;
+      const ended = new Promise<void>((resolve) => (done = resolve));
+      let last: Promise<void> = Promise.resolve();
+      const send = (event: string, data: unknown): void => {
+        last = stream.writeSSE({ event, data: JSON.stringify(data) }).catch(() => done());
+      };
+      const seat = deps.hub.join(record, send, () => {
+        done();
+        return last;
+      });
+      if (!seat) return;
+      stream.onAbort(() => done());
+      send('hello', { key: seat.key, rev: record.rev ?? 0, studio: record.studioCursor === true });
+      const ping = setInterval(() => send('ping', {}), PING_MS);
+      try {
+        await ended;
+      } finally {
+        clearInterval(ping);
+        deps.hub.leave(record.id, seat.key);
+      }
+    });
+  });
+
+  app.post('/s/:token/cursor', bodyLimit({ maxSize: CURSOR_BODY_MAX, onError: (c) => c.body(null, 413) }), async (c) => {
+    const record = await deps.shares.byToken(c.req.param('token'));
+    if (!record?.live) return notFound(c);
+    if (!sameOrigin(c) || !(c.req.header('content-type') ?? '').startsWith('application/json')) return c.body(null, 403);
+    const parsed = cursorSchema.safeParse(await c.req.json().catch(() => null));
+    if (!parsed.success) return c.body(null, 400);
+    const result = deps.hub.cursor(record.id, { ...parsed.data, name: parsed.data.name.replace(/[\p{Cc}]+/gu, '') || 'Viewer' });
+    return c.body(null, result === 'gone' ? 410 : 204);
+  });
 
   app.all('*', notFound);
   app.onError((_error, c) => c.text('Something went wrong.', 500));

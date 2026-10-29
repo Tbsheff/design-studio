@@ -7,7 +7,7 @@ import type { InlinePromptView } from '../useInlinePrompt';
 import { Icon } from './Icon';
 import '../styles/inline-prompt.css';
 
-const BOX_ROOM = 48;
+const BOX_ROOM = 72;
 const BOX_WIDTH = 320;
 
 interface Props {

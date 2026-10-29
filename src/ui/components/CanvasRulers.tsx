@@ -80,8 +80,20 @@ function tick(a: AxisDraw, pos: number, len: number): void {
   }
 }
 
-function label(a: AxisDraw, pos: number, text: string): void {
+function markSpans(a: AxisDraw): [number, number][] {
+  if (!a.range) return [];
+  return a.range.map((value) => {
+    const pos = toScreen(a, value);
+    const half = (a.ctx.measureText(String(Math.round(value))).width + 6) / 2 + 2;
+    return [pos - half, pos + half];
+  });
+}
+
+function label(a: AxisDraw, pos: number, text: string, marks: [number, number][]): void {
   const { ctx } = a;
+  const width = ctx.measureText(text).width;
+  const [from, to] = a.vertical ? [pos - 3 - width, pos - 3] : [pos + 3, pos + 3 + width];
+  if (marks.some(([lo, hi]) => from < hi && to > lo)) return;
   if (!a.vertical) {
     ctx.fillText(text, pos + 3, 9);
     return;
@@ -138,11 +150,12 @@ function drawAxis(a: AxisDraw): void {
   ctx.strokeStyle = a.colors.tick;
   ctx.fillStyle = a.colors.text;
   ctx.lineWidth = 1;
+  const marks = markSpans(a);
   ctx.beginPath();
   for (let v = first; v <= last; v += step) {
     const pos = Math.round(toScreen(a, v));
     tick(a, pos, RULER_SIZE);
-    label(a, pos, String(Math.round(v)));
+    label(a, pos, String(Math.round(v)), marks);
     for (let i = 1; i < 5; i += 1) tick(a, Math.round(toScreen(a, v + minor * i)), 4);
   }
   ctx.stroke();

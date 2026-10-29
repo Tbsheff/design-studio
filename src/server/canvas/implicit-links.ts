@@ -1,18 +1,15 @@
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { CanvasFileFrame } from '../../shared/canvas-file.js';
 import type { Project } from '../../shared/contracts.js';
-import { cleanLinkSelector, cleanLinkText, coveredBy, implicitId, LINK_TEXT_MAX, upsertLink, withMotion, type LinkMotion, type LinksFile, type PrototypeLink } from '../../shared/links.js';
+import { cleanLinkText, coveredBy, implicitId, upsertLink, withMotion, type LinkMotion, type LinksFile, type PrototypeLink } from '../../shared/links.js';
+import { clickCandidates, pageTree, scriptSources, treeAnchors, type PageAnchor } from './html-anchors.js';
 import { createRouteScanner, type RouteScanner } from '../app/route-links.js';
 import type { CanvasService } from './service.js';
 
-export interface PageAnchor {
-  href: string;
-  selector: string;
-  tag: string;
-  text?: string;
-  label?: string;
-}
+export type { PageAnchor } from './html-anchors.js';
+export { htmlAnchors } from './html-anchors.js';
 
 export type AnchorReader = (frame: CanvasFileFrame) => Promise<PageAnchor[]>;
 
@@ -20,84 +17,13 @@ export interface ImplicitDeps {
   canvas: Pick<CanvasService, 'read' | 'links'>;
   project: Project;
   render?: AnchorReader;
+  clicks?: ClickReader;
 }
 
-const MAX_ANCHORS = 60;
+export type ClickReader = (frame: CanvasFileFrame, skip: readonly string[]) => Promise<PageAnchor[]>;
+
 const MAX_IMPLICIT = 120;
 const CACHE_MS = 15_000;
-const SOURCE_TAGS = 'a|button|div|li|span|article|section|tr|td|img|label';
-const OPEN_RE = new RegExp(`<(${SOURCE_TAGS})\\b([^>]*)>`, 'gi');
-const ATTR_RE = /([:@\w-]+)\s*=\s*("([^"]*)"|'([^']*)')/g;
-const LOCATION_RE = /(?:window\.)?location(?:\.href)?\s*=\s*['"]([^'"]+)['"]|location\.(?:assign|replace)\(\s*['"]([^'"]+)['"]/;
-const ID_RE = /^[A-Za-z_][\w-]*$/;
-
-function attributes(raw: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const match of raw.matchAll(ATTR_RE)) out[(match[1] as string).toLowerCase()] = match[3] ?? match[4] ?? '';
-  return out;
-}
-
-function decode(text: string): string {
-  return text
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)));
-}
-
-function innerText(html: string, start: number, tag: string): string {
-  const end = html.toLowerCase().indexOf(`</${tag.toLowerCase()}>`, start);
-  const inner = html.slice(start, end < 0 ? start + 2000 : end);
-  return decode(inner.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim().slice(0, LINK_TEXT_MAX);
-}
-
-function cssString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-}
-
-interface RawAnchor {
-  href: string;
-  tag: string;
-  id: string | null;
-  attr: 'href' | 'onclick';
-  raw: string;
-  text: string;
-}
-
-function rawAnchor(tag: string, attrs: Record<string, string>, text: string): RawAnchor | null {
-  const id = attrs.id && ID_RE.test(attrs.id) ? attrs.id : null;
-  if (tag === 'a' && attrs.href) return { href: attrs.href, tag, id, attr: 'href', raw: attrs.href, text };
-  const click = attrs.onclick ? LOCATION_RE.exec(attrs.onclick) : null;
-  const href = click?.[1] ?? click?.[2];
-  return href ? { href, tag, id, attr: 'onclick', raw: href, text } : null;
-}
-
-function selectorOf(anchor: RawAnchor): string {
-  if (anchor.id) return `#${anchor.id}`;
-  return anchor.attr === 'href' ? `a[href="${cssString(anchor.raw)}"]` : `${anchor.tag}[onclick*="${cssString(anchor.raw)}"]`;
-}
-
-export function htmlAnchors(html: string): PageAnchor[] {
-  const found: RawAnchor[] = [];
-  for (const match of html.matchAll(OPEN_RE)) {
-    const tag = (match[1] as string).toLowerCase();
-    const anchor = rawAnchor(tag, attributes(match[2] ?? ''), innerText(html, (match.index ?? 0) + match[0].length, tag));
-    if (anchor) found.push(anchor);
-    if (found.length >= MAX_ANCHORS) break;
-  }
-  const counts = new Map<string, number>();
-  for (const anchor of found) counts.set(selectorOf(anchor), (counts.get(selectorOf(anchor)) ?? 0) + 1);
-  return found.flatMap((anchor) => {
-    const selector = cleanLinkSelector(selectorOf(anchor));
-    if (!selector) return [];
-    const name = cleanLinkText(anchor.text);
-    const text = (counts.get(selector) ?? 0) > 1 ? name : null;
-    return [{ href: anchor.href, selector, tag: anchor.tag, ...(text ? { text } : name ? { label: name } : {}) }];
-  });
-}
 
 export function pageKey(pagePath: string): string {
   return pagePath
@@ -161,11 +87,68 @@ function pageFile(workTree: string, framePath: string): string | null {
   return full.startsWith(path.resolve(workTree) + path.sep) ? full : null;
 }
 
-async function staticAnchors(project: Project, frame: CanvasFileFrame): Promise<PageAnchor[]> {
+const SCRIPT_FILES_MAX = 6;
+const SCRIPT_BYTES_MAX = 200_000;
+
+interface StaticPage {
+  anchors: PageAnchor[];
+  open: number;
+  stamp: string;
+}
+
+async function localScripts(workTree: string, file: string, sources: readonly string[]): Promise<string[]> {
+  const root = path.resolve(workTree) + path.sep;
+  const out: string[] = [];
+  for (const src of sources.slice(0, SCRIPT_FILES_MAX)) {
+    const clean = src.split(/[?#]/)[0] ?? '';
+    const full = clean.startsWith('/') ? path.resolve(workTree, `.${clean}`) : path.resolve(path.dirname(file), clean);
+    const text = full.startsWith(root) ? await readFile(full, 'utf8').catch(() => null) : null;
+    if (text && text.length <= SCRIPT_BYTES_MAX) out.push(text);
+  }
+  return out;
+}
+
+async function staticPage(project: Project, frame: CanvasFileFrame): Promise<StaticPage | null> {
   const workTree = workTreeOf(project, frame);
   const file = workTree ? pageFile(workTree, frame.path ?? '') : null;
   const html = file ? await readFile(file, 'utf8').catch(() => null) : null;
-  return html ? htmlAnchors(html) : [];
+  if (!workTree || !file || html === null) return null;
+  const tree = pageTree(html);
+  const scripts = await localScripts(workTree, file, scriptSources(tree));
+  const anchors = treeAnchors(tree, scripts);
+  const stamp = createHash('sha1').update(html).update(scripts.join('\u0000')).digest('hex');
+  return { anchors, open: clickCandidates(tree, anchors), stamp };
+}
+
+const probes = new Map<string, Promise<PageAnchor[]>>();
+
+function probedAnchors(clicks: ClickReader, frame: CanvasFileFrame, page: StaticPage): Promise<PageAnchor[]> {
+  const key = `${frame.id}\u0000${frame.path ?? ''}\u0000${frame.width}\u0000${page.stamp}`;
+  const known = probes.get(key);
+  if (known) return known;
+  const run = clicks(frame, page.anchors.map((anchor) => anchor.selector)).catch(() => {
+    probes.delete(key);
+    return [];
+  });
+  probes.set(key, run);
+  if (probes.size > 200) probes.delete(probes.keys().next().value as string);
+  return run;
+}
+
+function mergeAnchors(own: readonly PageAnchor[], extra: readonly PageAnchor[]): PageAnchor[] {
+  const seen = new Set(own.map((anchor) => anchor.selector));
+  return [...own, ...extra.filter((anchor) => !seen.has(anchor.selector))];
+}
+
+async function htmlLinks(deps: ImplicitDeps, frames: readonly CanvasFileFrame[]): Promise<PrototypeLink[]> {
+  const out: PrototypeLink[] = [];
+  for (const frame of frames) {
+    const page = await staticPage(deps.project, frame);
+    if (!page) continue;
+    const probed = deps.clicks && page.open > 0 && !frame.hidden ? await probedAnchors(deps.clicks, frame, page) : [];
+    out.push(...anchorLinks(frame, mergeAnchors(page.anchors, probed), frames));
+  }
+  return out;
 }
 
 const scanners = new Map<string, { at: number; scanner: Promise<RouteScanner | null> }>();
@@ -210,11 +193,7 @@ async function renderedLinks(render: AnchorReader, frames: readonly CanvasFileFr
 async function pageLinks(deps: ImplicitDeps, frames: readonly CanvasFileFrame[]): Promise<PrototypeLink[]> {
   const { project } = deps;
   if (project.app?.framework === 'next') return nextLinks(project, frames);
-  if (project.kind === 'html' && !project.app) {
-    const out: PrototypeLink[] = [];
-    for (const frame of frames) out.push(...anchorLinks(frame, await staticAnchors(project, frame), frames));
-    return out;
-  }
+  if (project.kind === 'html' && !project.app) return htmlLinks(deps, frames);
   return deps.render ? renderedLinks(deps.render, frames) : [];
 }
 

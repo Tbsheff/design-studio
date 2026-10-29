@@ -112,6 +112,8 @@ import { registerComponentCreateRoutes } from './component-create-routes.js';
 import { registerLayerStateRoutes } from './layer-state-routes.js';
 import { isLeanRun, leanContext } from '../agent/lean-run.js';
 import { registerPortRoutes } from './port-routes.js';
+import { registerUsageRoutes } from './usage-routes.js';
+import { parseEditScope } from '../../shared/usage-scope.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -186,10 +188,12 @@ function parseLevel(raw: unknown): RunLevel | undefined {
   return raw;
 }
 
-function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'mentions'> {
-  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'mentions'> = {};
+function parseRunExtras(body: Record<string, unknown>): Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'editScope' | 'mentions'> {
+  const extras: Pick<RunRequest, 'effort' | 'retryOf' | 'plan' | 'lean' | 'editScope' | 'mentions'> = {};
   if (body.plan === true) extras.plan = true;
   if (body.lean === true) extras.lean = true;
+  const editScope = parseEditScope(body.editScope);
+  if (editScope) extras.editScope = editScope;
   if (body.effort !== undefined) {
     if (!RUN_EFFORTS.includes(body.effort as RunEffort)) throw new BadRequestError('effort must be low, medium or high');
     extras.effort = body.effort as RunEffort;
@@ -1194,6 +1198,7 @@ export function createApp(deps: AppDeps): Hono {
   registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   registerLayerStateRoutes(app, { projects, bus, readBody });
   registerPortRoutes(app, { projects, readBody, isRunning: (pid, did) => runner.isRunning(pid, did), startRun });
+  registerUsageRoutes(app, { projects });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

@@ -86,6 +86,7 @@ Every message has a <run-level> block. It sets which checks to run, how many fix
 - Checks are tools, not guesses: \`mcp__studio__render_check\` (errors, layout and quality findings), \`mcp__studio__screenshot\` (images) and, in prototype and polish runs, \`mcp__studio__design_review\` (a separate critic that sees every screen).
 - Treat each \`layout\` finding (clipped, scrolls-sideways, past-viewport) and each high \`quality\` finding as a defect unless the design needs it.
 - When the level asks for screenshots: take mobile first, from the top (\`from\` 0), then the other sizes. If the text says more of the page is below, call again with \`from\` to see it.
+- When render_check lists more than one screen, take at least one screenshot of every screen (\`screen\` = its number) before you finish. The studio takes the missing ones and sends them back for a fix loop.
 - ${LOOK_CHECKLIST}
 ${NAV_RULE}
 - After the last edit of the run, run the final check that the <run-level> block asks for. An edit after your last check means the work is not verified.`;

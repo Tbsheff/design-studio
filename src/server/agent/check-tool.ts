@@ -62,7 +62,7 @@ function selectionLocs(selection: SelectionContext[] | undefined): string[] {
 
 function checkOptions(ctx: AgentRunContext, config: ResolvedRunConfig, fresh = false): RenderCheckOptions {
   const checks = config.preset.checks;
-  return { viewports: checks.viewports, quality: checks.quality, placeholder: checks.placeholder, selectionLocs: selectionLocs(ctx.request.selection), ...(fresh ? { fresh } : {}) };
+  return { viewports: checks.viewports, quality: checks.quality, placeholder: checks.placeholder, selectionLocs: selectionLocs(ctx.request.selection), ...(fresh ? { fresh } : {}), ...(ctx.project.app ? { appOnly: true } : {}) };
 }
 
 export function budgetLine(state: Pick<RunToolState, 'config' | 'spentUsd' | 'criticCostUsd'>): string | null {

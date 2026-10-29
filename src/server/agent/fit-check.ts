@@ -74,17 +74,48 @@ function sizeFinding(card: LayoutCard, now: LayoutRegion, word: string): Quality
   };
 }
 
-function duplicateFinding(card: LayoutCard, repeated: string[]): QualityFinding | null {
+const GENERIC_WORDS = new Set(
+  'a an and the of to in on for with at by from this that these those it its my our your here there new add show make create put build design small compact tiny mini little narrow minimal slim card cards widget widgets panel panels tile tiles box boxes section sections block blocks module modules summary summaries list lists banner banners component components callout callouts recent latest page screen view data info item items top bottom below above side'.split(' '),
+);
+const ACTION_ROW = /^(view|open|see|show|upload|add|go|more|all|download|edit|new|create|manage)\b(?:\W+\w+){0,2}\W*$/i;
+
+function words(text: string): string[] {
+  return text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+}
+
+function namesContent(request: string, card: LayoutCard, repeated: readonly string[], baseline: LayoutRegion): boolean {
+  const asked = new Set(words(request).filter((word) => word.length >= 3 && !GENERIC_WORDS.has(word)));
+  if (asked.size === 0) return false;
+  const hits = (rows: readonly string[]) => new Set(rows.flatMap(words).filter((word) => asked.has(word)));
+  if (hits(repeated).size > 0) return true;
+  const onPage = hits(baseline.rows ?? []);
+  return [...hits(card.rows.slice(0, 1))].some((word) => onPage.has(word));
+}
+
+function addsSomething(card: LayoutCard, baseline: LayoutRegion): boolean {
+  const base = counts(baseline.rows ?? []);
+  return card.rows.slice(1).some((row) => meaningful(row) && !base.has(row) && !ACTION_ROW.test(row.trim()));
+}
+
+function duplicateFinding(card: LayoutCard, repeated: string[], baseline: LayoutRegion, request: string): QualityFinding | null {
   const enough = repeated.length >= 2 || (repeated.length === 1 && card.rows.filter(meaningful).length <= 2);
   if (!enough) return null;
+  const named = namesContent(request, card, repeated, baseline);
+  if (named && addsSomething(card, baseline)) return null;
   const listed = repeated.slice(0, LISTED).map((row) => `"${row}"`).join(', ');
   const more = repeated.length > LISTED ? ` and ${repeated.length - LISTED} more` : '';
+  const base = { check: 'duplicate-data' as const, viewport: 'desktop' as const, selector: card.name, source: null };
+  if (named) {
+    return {
+      ...base,
+      severity: 'medium',
+      message: `The request names this content, so the new element ${cardLabel(card)} must keep it. But it only repeats what the page already shows (${listed}${more}) and adds nothing new.`,
+      fix: 'Keep the items the request asks for. Make the element a compact summary of them that adds what the page does not show yet: for example the latest 3 items with date and status, a count, or who signed. Do not replace the items with only a count or a button.',
+    };
+  }
   return {
-    check: 'duplicate-data',
+    ...base,
     severity: 'high',
-    viewport: 'desktop',
-    selector: card.name,
-    source: null,
     message: `The new element ${cardLabel(card)} repeats ${repeated.length} item(s) the page already shows elsewhere: ${listed}${more}. The same data shows twice on one screen.`,
     fix: 'Do not list the same items again. Show facts the page does not show yet (for example a count, the latest date, a status summary) or link to the existing list. Keep the new element.',
   };
@@ -96,7 +127,7 @@ export function fitFindings(baseline: LayoutRegion | null, now: LayoutRegion | n
   if (!card) return [];
   const word = sizeWord(request);
   const size = word ? sizeFinding(card, now, word) : null;
-  const dup = duplicateFinding(card, repeatedRows(card, baseline, now));
+  const dup = duplicateFinding(card, repeatedRows(card, baseline, now), baseline, request);
   return [size, dup].filter((finding): finding is QualityFinding => finding !== null);
 }
 

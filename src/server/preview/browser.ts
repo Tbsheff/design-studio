@@ -8,6 +8,7 @@ import { runAxe, runSharedAxe, type AxeViolation } from './axe.js';
 import { CaptureCache, cacheKey, type Stamps } from './capture-cache.js';
 import { layoutProbeExpression, type LayoutProbeResult } from './layout-probe.js';
 import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } from './quality.js';
+import { dropOutsideApp } from './app-source-filter.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
 import { WarmPages } from './page-pool.js';
@@ -52,6 +53,7 @@ export interface RenderCheckOptions {
   filePrefix?: string;
   prepare?: string;
   fresh?: boolean;
+  appOnly?: boolean;
 }
 
 interface PageInspection {
@@ -98,7 +100,8 @@ async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: Ren
   );
   const axe = options.quality && wantsAxe(spec.viewport) ? await timed(timings, 'axe', () => runAxe(page, spec.viewport, shared)) : [];
   const placeholders = placeholderFindings(probe.placeholder, placeholder, spec.viewport);
-  const quality = options.quality ? [...axe, ...tapFindings(probe.tap, spec.viewport), ...placeholders, ...genericFindings(probe.generic ?? []), ...duplicateFindings(probe.duplicates ?? [], spec.viewport)] : placeholders;
+  const found = options.quality ? [...axe, ...tapFindings(probe.tap, spec.viewport), ...placeholders, ...genericFindings(probe.generic ?? []), ...duplicateFindings(probe.duplicates ?? [], spec.viewport)] : placeholders;
+  const quality = options.appOnly ? await timed(timings, 'appSource', () => dropOutsideApp(page, found)) : found;
   return { quality, nav: probe.nav, selectionRects: probe.selectionRects, timingsMs: timings };
 }
 
@@ -208,7 +211,7 @@ type CachedCheck = Omit<RenderCheckResult, 'screenshotPath'>;
 type CachedTiles = Omit<TileResult, 'paths'> & { count: number };
 
 function checkKey(url: string, spec: ViewportSpec, options: RenderCheckOptions): string {
-  return cacheKey({ url, viewport: spec.viewport, quality: options.quality === true, placeholder: options.placeholder ?? 'off', selection: options.selectionLocs ?? [], prepare: options.prepare ?? '' });
+  return cacheKey({ url, viewport: spec.viewport, quality: options.quality === true, placeholder: options.placeholder ?? 'off', selection: options.selectionLocs ?? [], prepare: options.prepare ?? '', appOnly: options.appOnly === true });
 }
 
 function tileKey(url: string, request: TileRequest): string {
@@ -375,6 +378,10 @@ export class BrowserPool {
       state.pageErrors.push(`layout probe failed: ${errorText(error)}`);
       return EMPTY_PROBE;
     });
+    if (options.appOnly && state.probe.findings.length) {
+      const kept = await dropOutsideApp(page, state.probe.findings);
+      state.probe = { ...state.probe, findings: kept, total: Math.max(kept.length, state.probe.total - (state.probe.findings.length - kept.length)) };
+    }
     const shared = () => this.sharedAxe(page, state.url, spec, options.prepare ?? '', state.stamp);
     state.inspection = await inspectQuality(page, spec, options, state.timings, shared).catch((error: unknown) => {
       state.pageErrors.push(`quality probe failed: ${errorText(error)}`);

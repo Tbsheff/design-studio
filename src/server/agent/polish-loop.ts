@@ -16,6 +16,8 @@ export interface CheckRecord {
 export interface ShotRecord {
   at: number;
   viewport: CheckViewport;
+  url?: string;
+  prepare?: string;
 }
 
 export interface LoopLog {
@@ -40,8 +42,8 @@ export function recordCheck(log: LoopLog, findings: QualityFinding[]): CheckReco
   return record;
 }
 
-export function recordShot(log: LoopLog, viewport: CheckViewport): void {
-  log.shots.push({ at: log.toolOrder.length, viewport });
+export function recordShot(log: LoopLog, viewport: CheckViewport, page?: { url: string; prepare?: string }): void {
+  log.shots.push({ at: log.toolOrder.length, viewport, ...(page ? { url: page.url, ...(page.prepare ? { prepare: page.prepare } : {}) } : {}) });
 }
 
 function lastEditIndex(log: LoopLog): number {

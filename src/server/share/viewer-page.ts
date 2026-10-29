@@ -19,13 +19,13 @@ function jsonForScript(value: unknown): string {
 }
 
 const STYLE = `
-:root { color-scheme: light dark; --bg: #f6f6f4; --panel: #ffffff; --line: #e3e3df; --text: #1d1d1b; --muted: #6b6b66; --accent: #2f6bff; --accent-text: #ffffff; --pin: #f5a524; --danger: #c93b3b; --live: #1f9d55; --studio: #7c3aed; }
-@media (prefers-color-scheme: dark) { :root { --bg: #161615; --panel: #1f1f1d; --line: #33332f; --text: #ededea; --muted: #9a9a94; --accent: #5b8cff; --accent-text: #0b0b0a; --pin: #f5b84a; --danger: #ef6b6b; --live: #3ccf7a; --studio: #9b6bff; } }
+:root { color-scheme: light dark; --bg: #faf9f5; --panel: #ffffff; --line: rgb(28 27 25 / 0.12); --line-input: rgb(28 27 25 / 0.2); --text: rgb(28 27 25 / 0.94); --muted: rgb(28 27 25 / 0.66); --focus: oklch(0.53 0.125 250); --strong: #1c1b19; --strong-hover: #33322f; --on-strong: #f0eee6; --disabled-bg: #e7e5de; --disabled-text: rgb(28 27 25 / 0.46); --pin: #e08968; --danger: oklch(0.54 0.19 25); --live: oklch(0.52 0.12 152); --studio: #7c3aed; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1c1b19; --panel: #222220; --line: rgb(250 249 245 / 0.12); --line-input: rgb(250 249 245 / 0.16); --text: rgb(250 249 245 / 0.92); --muted: rgb(250 249 245 / 0.6); --focus: #7eaeda; --strong: #f0eee6; --strong-hover: #ffffff; --on-strong: #1c1b19; --disabled-bg: #383734; --disabled-text: rgb(250 249 245 / 0.46); --pin: #e08968; --danger: oklch(0.7 0.16 25); --live: oklch(0.76 0.13 152); --studio: #9b6bff; } }
 * { box-sizing: border-box; }
-body { margin: 0; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; background: var(--bg); color: var(--text); }
+body { margin: 0; font: 13px/1.45 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); }
 header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
 header h1 { margin: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.badge { padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.badge { font-variant-numeric: tabular-nums; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .spacer { flex: 1; }
 main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: calc(100vh - 48px); }
 .frames { padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 32px; }
@@ -35,17 +35,18 @@ figcaption { margin-bottom: 8px; color: var(--muted); font-size: 12px; }
 .shot img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
 .pin { position: absolute; transform: translate(-50%, -100%); min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px 11px 11px 2px; background: var(--pin); color: #1d1d1b; font-size: 11px; font-weight: 600; display: grid; place-items: center; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 aside { border-left: 1px solid var(--line); background: var(--panel); padding: 16px; display: flex; flex-direction: column; gap: 12px; position: sticky; top: 48px; height: calc(100vh - 48px); overflow: auto; }
-aside h2 { margin: 0; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+aside h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
 .hint { margin: 0; color: var(--muted); }
 form { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-input, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+input, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line-input); border-radius: 6px; padding: 6px 8px; }
 textarea { min-height: 72px; resize: vertical; }
-input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .row { display: flex; gap: 8px; justify-content: flex-end; }
 button { font: inherit; height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
-button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
-button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--strong); border-color: var(--strong); color: var(--on-strong); font-weight: 500; }
+button.primary:hover:not(:disabled) { background: var(--strong-hover); border-color: var(--strong-hover); }
+button:disabled { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-text); cursor: default; }
 .error { color: var(--danger); margin: 0; font-size: 12px; }
 ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
@@ -219,8 +220,17 @@ function frameFigure(base: string, frame: ShareFrame, index: number): string {
   return `<figure><figcaption>${label}</figcaption><div class="shot" data-i="${index}" data-w="${frame.width}" data-h="${frame.cssHeight}"><img src="${base}/f/${index}" alt="${escapeHtml(frame.name)} frame" width="${frame.width}" height="${frame.cssHeight}"></div></figure>`;
 }
 
+const HOUR = 3_600_000;
+
+function endsInText(expiresAt: number, now = Date.now()): string {
+  const left = expiresAt - now;
+  if (left < HOUR) return `Ends in ${Math.max(1, Math.ceil(left / 60_000))} min`;
+  if (left < 48 * HOUR) return `Ends in ${Math.round(left / HOUR)} h`;
+  return `Ends in ${Math.round(left / (24 * HOUR))} days`;
+}
+
 export function viewerHtml(data: ViewerData, nonce: string): string {
-  const expires = new Date(data.expiresAt).toUTCString();
+  const expires = endsInText(data.expiresAt);
   const widths = data.frames.map((f, i) => `figure:nth-of-type(${i + 1}) { width: min(100%, ${f.width}px); }`).join('\n');
   return `<!doctype html>
 <html lang="en">
@@ -233,7 +243,7 @@ export function viewerHtml(data: ViewerData, nonce: string): string {
 <style nonce="${nonce}">${STYLE}\n${widths}</style>
 </head>
 <body data-rev="${data.rev ?? 0}">
-<header><h1>${escapeHtml(data.title)}</h1><span class="badge">Read only</span>${data.live ? '<span class="badge live off" id="live-badge" role="status">Connecting</span>' : ''}<span class="spacer"></span><span class="badge">Link ends ${escapeHtml(expires)}</span></header>
+<header><h1>${escapeHtml(data.title)}</h1><span class="badge">Read only</span>${data.live ? '<span class="badge live off" id="live-badge" role="status">Connecting</span>' : ''}<span class="spacer"></span><span class="badge">${escapeHtml(expires)}</span></header>
 <main>
 <section class="frames" aria-label="Frames">${data.frames.map((frame, index) => frameFigure(data.base, frame, index)).join('')}</section>
 <aside aria-label="Comments">
@@ -256,10 +266,10 @@ ${data.live ? `<script nonce="${nonce}">${LIVE_SCRIPT}</script>` : ''}
 </html>`;
 }
 
-const GONE_STYLE = `:root { color-scheme: light dark; --bg: #f7f7f5; --fg: #1b1b1a; --muted: #6b6b66; --line: #e2e2de; }
-@media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ededea; --muted: #9a9a94; --line: #2c2c2a; } }
+const GONE_STYLE = `:root { color-scheme: light dark; --bg: #faf9f5; --fg: rgb(28 27 25 / 0.94); --muted: rgb(28 27 25 / 0.66); --line: rgb(28 27 25 / 0.12); }
+@media (prefers-color-scheme: dark) { :root { --bg: #1c1b19; --fg: rgb(250 249 245 / 0.92); --muted: rgb(250 249 245 / 0.6); --line: rgb(250 249 245 / 0.12); } }
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, sans-serif; }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--fg); font: 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
 main { max-width: 360px; padding: 24px; border: 1px solid var(--line); border-radius: 12px; text-align: center; }
 h1 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
 p { margin: 0; color: var(--muted); }`;

@@ -103,7 +103,7 @@ export function DraftSources({ state }: { state: DraftSourcesState | null }) {
   if (!state || state.sources.length === 0) return null;
   const note = improveNote(state);
   const full = open || !state.done;
-  const rows = full ? state.sources : state.sources.filter((source) => NEEDS_LOOK.has(source.state));
+  const rows = full ? state.sources : state.sources.filter((source) => NEEDS_LOOK.has(source.state) || (source.kind === 'tokens-file' && source.note !== undefined));
   const shown = rows.length > 0;
   return (
     <section className="ds-sources" aria-label="Sources" aria-busy={!state.done}>

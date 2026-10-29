@@ -14,16 +14,20 @@ export interface Candidate {
   canonical?: boolean;
   verified?: boolean;
   sourceVar?: string;
+  alias?: string;
+  darkAlias?: string;
 }
 
 export interface ExtraToken {
   group: string;
   name: string;
-  type: 'color' | 'dimension' | 'fontFamily' | 'shadow';
+  type: 'color' | 'dimension' | 'fontFamily' | 'shadow' | 'fontWeight' | 'number';
   value: string;
   dark?: string;
   evidence: string;
   sourceVar?: string;
+  alias?: string;
+  darkAlias?: string;
 }
 
 export interface Harvest {
@@ -33,6 +37,7 @@ export interface Harvest {
   extras?: ExtraToken[];
   googleFontsUrl?: string;
   darkHint?: boolean;
+  unmapped?: string[];
 }
 
 export type {

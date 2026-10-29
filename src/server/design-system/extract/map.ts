@@ -1,5 +1,7 @@
 import type { PackManifest } from '../../../shared/contracts.js';
 import type { LoadedPack } from '../packs.js';
+import { applyAliases } from './aliases.js';
+import type { AliasLink } from './aliases.js';
 import { requiredPaths } from './names.js';
 import type { Candidate, Coverage, CoverageEntry, CoverageGrade, ExtraToken, Harvest, SourceKind, SourceReport } from './types.js';
 import { contrast, googleFontsUrlFor, lightnessOf, primaryFamily, readableOn, shiftLightness } from './values.js';
@@ -19,6 +21,8 @@ export interface Pick {
   dark?: string;
   entry: CoverageEntry;
   sourceVar?: string;
+  alias?: string;
+  darkAlias?: string;
 }
 
 const KEY_TOKENS = ['color.bg', 'color.fg', 'color.primary', 'font.body'];
@@ -92,7 +96,9 @@ function extracted(base: LoadedPack, candidate: Candidate, mode: 'light' | 'dark
   const dark = mode === 'light' ? darkFor(base, candidate, value) : undefined;
   const verified = candidate.canonical === true || candidate.verified === true;
   const entry: CoverageEntry = { token: candidate.token, source: candidate.source, confidence: candidate.confidence, evidence: candidate.evidence, ...(verified ? { verified } : {}) };
-  return { value, ...(dark ? { dark } : {}), entry, ...(candidate.sourceVar ? { sourceVar: candidate.sourceVar } : {}) };
+  const alias = mode === 'dark' ? (candidate.darkAlias ?? (candidate.dark ? undefined : candidate.alias)) : candidate.alias;
+  const darkAlias = mode === 'light' && candidate.dark ? candidate.darkAlias : undefined;
+  return { value, ...(dark ? { dark } : {}), entry, ...(candidate.sourceVar ? { sourceVar: candidate.sourceVar } : {}), ...(alias ? { alias } : {}), ...(darkAlias ? { darkAlias } : {}) };
 }
 
 type Picks = Map<string, Pick>;
@@ -259,8 +265,9 @@ function takenNames(tokens: Record<string, unknown>): Set<string> {
   return out;
 }
 
-function addExtras(tokens: Record<string, unknown>, extras: ExtraToken[], mode: 'light' | 'dark'): void {
+function addExtras(tokens: Record<string, unknown>, extras: ExtraToken[], mode: 'light' | 'dark'): AliasLink[] {
   const taken = takenNames(tokens);
+  const links: AliasLink[] = [];
   for (const extra of extras) {
     const css = cssNameOf(extra.group, extra.name);
     if (taken.has(css)) continue;
@@ -268,7 +275,15 @@ function addExtras(tokens: Record<string, unknown>, extras: ExtraToken[], mode: 
     const group = (tokens[extra.group] ??= {}) as Record<string, unknown>;
     const dark = mode === 'light' && extra.dark && extra.dark !== extra.value ? { $extensions: { 'studio.modes': { dark: extra.dark } } } : {};
     group[extra.name] = { $value: mode === 'dark' && extra.dark ? extra.dark : extra.value, $type: extra.type, $description: `From ${extra.evidence}`, ...dark };
+    if (extra.alias || extra.darkAlias) links.push({ path: `${extra.group}.${extra.name}`, ...(extra.alias ? { alias: extra.alias } : {}), ...(extra.darkAlias ? { darkAlias: extra.darkAlias } : {}) });
   }
+  return links;
+}
+
+function pickLinks(picks: Picks): AliasLink[] {
+  const links: AliasLink[] = [];
+  for (const [token, pick] of picks) if (pick.alias || pick.darkAlias) links.push({ path: token, ...(pick.alias ? { alias: pick.alias } : {}), ...(pick.darkAlias ? { darkAlias: pick.darkAlias } : {}) });
+  return links;
 }
 
 export function libraryCoverage(pack: LoadedPack): Coverage {
@@ -302,7 +317,8 @@ export function mapDraft(base: LoadedPack, harvests: Harvest[], mode: 'light' | 
   const tokens = structuredClone(base.tokens) as unknown as Record<string, unknown>;
   if (mode === 'dark' && base.manifest.mode === 'light') flattenToDark(tokens);
   for (const [token, pick] of picks) if (pick.entry.source !== 'base') writeToken(tokens, token, mode === 'dark' ? { ...pick, dark: undefined } : pick);
-  addExtras(tokens, harvests.flatMap((harvest) => harvest.extras ?? []), mode);
+  const extraLinks = addExtras(tokens, harvests.flatMap((harvest) => harvest.extras ?? []), mode);
+  applyAliases(tokens, [...pickLinks(picks), ...extraLinks], mode);
   if (tokens.$description !== undefined) tokens.$description = 'Draft tokens made from your sources; gaps filled from the base pack.';
   const entries = requiredPaths().map((token) => picks.get(token)?.entry ?? { token, source: 'base' as const, confidence: 'fallback' as const, evidence: 'missing' });
   const score = scoreOf(entries);

@@ -31,6 +31,7 @@ import { FrameSnapLayer, MarqueeLayer } from './CanvasOverlays';
 
 const CanvasRulers = lazy(() => import('./CanvasRulers'));
 const VectorLayer = lazy(() => import('./VectorLayer'));
+const InlinePrompt = lazy(() => import('./InlinePrompt'));
 import { RenderCheckPanel } from './RenderCheckPanel';
 import { ReviewEntry } from './ReviewEntry';
 import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
@@ -49,6 +50,7 @@ import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameSta
 import { useClickThrough } from '../useClickThrough';
 import { useFirstBuildCover, useFirstBuildGate, type PageWait } from '../useFirstBuild';
 import { FirstBuildCover } from './FrameSkeleton';
+import { useInlinePrompt, type InlinePromptView } from '../useInlinePrompt';
 
 interface Props {
   projectId: string;
@@ -74,6 +76,7 @@ interface Props {
   shell?: CanvasShell;
   app?: AttachedApp | null;
   onFrameChange?: () => void;
+  onInlinePrompt?: ((prompt: string) => void) | null;
 }
 
 export interface CanvasCommentTools {
@@ -459,6 +462,15 @@ function VectorSlot(p: Omit<ComponentProps<typeof VectorLayer>, 'directionId'> &
   );
 }
 
+function InlinePromptSlot({ view, zoom, frame }: { view: InlinePromptView | null; zoom: number; frame: { width: number; height: number } }) {
+  if (!view) return null;
+  return (
+    <Suspense fallback={null}>
+      <InlinePrompt view={view} zoom={zoom} frame={frame} />
+    </Suspense>
+  );
+}
+
 function marqueeAllowed(picking: boolean, prototype: boolean, comment: boolean): boolean {
   return picking && !prototype && !comment;
 }
@@ -575,6 +587,7 @@ export function Canvas(props: Props) {
   useImageDrop({ projectId, directionId, kind, enabled: editsEnabled, frames, notify: layerEdits.notify });
   const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits, ids: { projectId, directionId, kind } });
   openMenu.current = previewMenu.onContextMenu;
+  const inlinePrompt = useInlinePrompt({ selection: props.selection, live, running: props.running, onSubmit: props.onInlinePrompt, stage: () => stageRef.current });
   const handlesOn = editsEnabled && !commentMode;
   const resize = useResizeHandles({
     projectId,
@@ -704,6 +717,7 @@ export function Canvas(props: Props) {
               />
             }
           />
+          <InlinePromptSlot view={inlinePrompt} zoom={pz.zoom} frame={viewport} />
           <MarqueeLayer listen={frames.listen} />
           <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
           <FreeMoveLayer view={freeMove} />

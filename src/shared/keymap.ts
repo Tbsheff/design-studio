@@ -29,6 +29,7 @@ export const KEYMAP = [
   { id: 'prompt-history', label: 'Last prompt', keys: ['↑'], group: 'Run and chat' },
   { id: 'history-search', label: 'Search prompt history', keys: ['Ctrl+R'], group: 'Run and chat' },
   { id: 'quick-feedback', label: 'Quick feedback on a pin', keys: ['F'], group: 'Run and chat' },
+  { id: 'inline-prompt', label: 'Ask the agent at the selection', keys: ['Mod+I'], group: 'Run and chat' },
 
   { id: 'tool-select', label: 'Select tool', keys: ['V'], group: 'Canvas' },
   { id: 'tool-comment', label: 'Comment tool', keys: ['C'], group: 'Canvas' },

@@ -29,6 +29,12 @@ function plainLength(value: string, ui: TokenUi | null): string {
   return px === null ? resolved : formatNumber(px, 'px');
 }
 
+function displayLength(value: string): string {
+  const parsed = parseNumber(value);
+  if (!parsed || parsed.unit !== 'px' || Number.isInteger(parsed.value)) return value;
+  return formatNumber(Math.round(parsed.value * 10) / 10, 'px');
+}
+
 function clamp(value: string, spec: NumberSpec): string {
   const parsed = parseNumber(value);
   if (!parsed) return value;
@@ -50,11 +56,12 @@ function stepOf(event: { shiftKey: boolean }, spec: NumberSpec): number {
 export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: string; className?: string }) {
   const { edit, prop } = spec;
   const [text, setText] = useState<string | null>(null);
+  const [focused, setFocused] = useState(false);
   const start = useRef<string | null>(null);
   const ui = useTokenUi();
   const unit = spec.unit ?? 'px';
   const current = plainLength(edit.values[prop], ui);
-  const shown = text ?? current;
+  const shown = text ?? (focused ? current : displayLength(current));
   const mixed = edit.mixed.has(prop);
   const inherited = useInherited(prop);
   const refused = mixed && text !== null && dependsOnCurrent(text, unit);
@@ -109,7 +116,11 @@ export function NumberInput({ spec, id, className }: { spec: NumberSpec; id?: st
       title={refused ? 'Values differ. Type a number, not a change.' : undefined}
       onChange={(event) => apply(event.target.value)}
       onKeyDown={onKeyDown}
-      onBlur={settle}
+      onFocus={() => setFocused(true)}
+      onBlur={() => {
+        setFocused(false);
+        settle();
+      }}
     />
   );
 }

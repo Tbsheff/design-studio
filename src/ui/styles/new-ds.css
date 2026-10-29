@@ -725,10 +725,6 @@
   font-size: var(--t-sm);
 }
 
-.ds-sources + .ds-sources {
-  display: none;
-}
-
 .ds-src-head {
   display: flex;
   align-items: center;

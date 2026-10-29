@@ -310,7 +310,6 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
       {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">
-          {lead}
           {lead ?? <EmptyState empty={runs.length === 0 && !pending && !feedShown(mcp)} />}
           {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
           {timeline.map((item) =>

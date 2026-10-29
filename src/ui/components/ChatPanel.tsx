@@ -15,7 +15,8 @@ import { ChatSearch } from './ChatSearch';
 import { Icon } from './Icon';
 import { LiveStatus, ToolChips, ToolSummary } from './ToolChips';
 import { PermissionPrompt } from './PermissionPrompt';
-import { feedShown, McpItem, timelineOf, type McpFeedControl } from './McpFeed';
+import { feedShown, McpItem, timelineOf, type McpFeedControl, type TimelineItem } from './McpFeed';
+import { EarlierRuns, useHistoryWindow } from './ChatPanelWindow';
 
 interface PolishProps {
   headVersionId: string | null;
@@ -127,6 +128,11 @@ interface EntryProps extends TurnProps {
   onStop: (() => void) | undefined;
 }
 
+function hasComments(run: RunView): boolean {
+  const lists = [run.request?.comments, run.request?.commentIds, run.summary?.request?.comments, run.summary?.request?.commentIds];
+  return lists.some((list) => (list?.length ?? 0) > 0);
+}
+
 const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, onStop, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
@@ -142,7 +148,7 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
           <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
-          <RunCommentsCard run={run} />
+          {hasComments(run) && <RunCommentsCard run={run} />}
           <RunFeedbackRow run={run} onDetails={details} />
           {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
@@ -176,6 +182,16 @@ function StickOnNewRun({ runId }: { runId: string | null }) {
     if (runId) stickToBottom();
   }, [runId, stickToBottom]);
   return null;
+}
+
+function WindowedTimeline({ items, resetKey, all, render }: { items: TimelineItem[]; resetKey: string | null; all: boolean; render: (item: TimelineItem) => ReactNode }) {
+  const { shown, hidden, more } = useHistoryWindow(items, resetKey, all);
+  return (
+    <>
+      <EarlierRuns hidden={hidden} onMore={more} />
+      {shown.map(render)}
+    </>
+  );
 }
 
 function useLatest<T>(value: T): { readonly current: T } {
@@ -270,19 +286,27 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
   );
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop }: Props) {
-  const workTree = direction?.workTree ?? null;
-  const headVersionId = direction?.headVersionId ?? null;
-  const detailsRef = useLatest(onDetails);
+function ChatLead({ lead, empty, search }: { lead: ReactNode; empty: boolean; search: { active: boolean; shown: RunView[]; query: string } }) {
+  return (
+    <>
+      {lead}
+      {lead ?? <EmptyState empty={empty} />}
+      {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
+    </>
+  );
+}
+
+function usePolish(headVersionId: string | null, polishing: boolean, onPolish: () => void, onRetry: ((run: RunView) => void) | undefined, onApprovePlan: ((run: RunView) => void) | undefined): PolishProps {
   const polishRef = useLatest(onPolish);
   const retryRef = useLatest(onRetry);
   const retry = useCallback((run: RunView) => retryRef.current?.(run), [retryRef]);
   const approveRef = useLatest(onApprovePlan);
   const approve = useCallback((run: RunView) => approveRef.current?.(run), [approveRef]);
-  const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
   const startPolish = useCallback(() => polishRef.current(), [polishRef]);
-  const polishing = running || busy;
-  const polish = useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry, onApprovePlan: approve }), [headVersionId, polishing, startPolish, retry, approve]);
+  return useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry, onApprovePlan: approve }), [headVersionId, polishing, startPolish, retry, approve]);
+}
+
+function useTurnActions(rewind: RewindControl | undefined) {
   const [titles, setTitles] = useState<Record<string, string>>({});
   const rewindRef = useLatest(rewind);
   const hasRewind = rewind !== undefined;
@@ -301,30 +325,42 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
         : null,
     [hasRewind, rewindRef],
   );
+  return { titles, actions };
+}
+
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop }: Props) {
+  const workTree = direction?.workTree ?? null;
+  const headVersionId = direction?.headVersionId ?? null;
+  const detailsRef = useLatest(onDetails);
+  const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
+  const polish = usePolish(headVersionId, running || busy, onPolish, onRetry, onApprovePlan);
+  const { titles, actions } = useTurnActions(rewind);
   const search = useRunSearch(runs, titles);
   const lastId = runs.at(-1)?.runId;
   const timeline = useMemo(() => timelineOf(search.shown, search.active ? null : mcp), [search.shown, search.active, mcp]);
+  const isOffline = Boolean(offline);
+  const renderRun = (run: RunView) => (
+    <RunEntry key={run.runId} run={run} latest={run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={isOffline} onStop={onStop} {...turnProps(run, rewind, titles[run.runId] ?? run.summary?.title, actions)} />
+  );
   return (
     <div className="chat-wrap">
       <RunAnnouncer run={pending ?? runs.at(-1)} />
       {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">
-          {lead}
-          {lead ?? <EmptyState empty={runs.length === 0 && !pending && !feedShown(mcp)} />}
-          {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
-          {timeline.map((item) =>
-            item.kind === 'run' ? (
-              <RunEntry key={item.key} run={item.run} latest={item.run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={Boolean(offline)} onStop={onStop} {...turnProps(item.run, rewind, titles[item.run.runId] ?? item.run.summary?.title, actions)} />
-            ) : (
-              <McpItem key={item.key} item={item} mcp={mcp} />
-            ),
-          )}
+          <ChatLead lead={lead} empty={runs.length === 0 && !pending && !feedShown(mcp)} search={search} />
+          <WindowedTimeline
+            items={timeline}
+            resetKey={direction?.id ?? null}
+            all={search.active}
+            render={(item) => (item.kind === 'run' ? renderRun(item.run) : <McpItem key={item.key} item={item} mcp={mcp} />)}
+          />
           {pending && <PendingEntry run={pending} workTree={workTree} />}
         </ConversationContent>
-        <StickOnNewRun runId={pending?.runId ?? runs.at(-1)?.runId ?? null} />
-        <ConversationScrollButton className="icon-btn chat-scroll-btn">
-          <Icon name="chevronDown" size={16} />
+        <StickOnNewRun runId={pending?.runId ?? lastId ?? null} />
+        <ConversationScrollButton className="btn small chat-scroll-btn">
+          <Icon name="chevronDown" size={14} />
+          Jump to latest
         </ConversationScrollButton>
       </Conversation>
     </div>

@@ -77,7 +77,8 @@ export function pinPatch(axis: PinAxis, mode: PinMode, styles: Record<string, st
   const box = numberOf(styles, keys.container);
   const margins = numberOf(styles, `margin-${keys.start}`) + numberOf(styles, `margin-${keys.end}`);
   const endOffset = px(box - pos - size - margins);
-  const fixed = current === 'both' || current === 'scale' ? { [keys.size]: px(inner) } : {};
+  const shrinkWidth = axis === 'x' && !isSet(styles['authored-width']);
+  const fixed = current === 'both' || current === 'scale' || shrinkWidth ? { [keys.size]: px(inner) } : {};
   if (mode === 'end') return { [keys.start]: '', [keys.end]: endOffset, ...fixed };
   if (mode === 'both') return { [keys.start]: px(pos), [keys.end]: endOffset, [keys.size]: '' };
   if (mode === 'center') return { [keys.start]: centered(pos - box / 2), [keys.end]: '', ...fixed };

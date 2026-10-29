@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { PREVIEW_ARRANGE_KEY_EVENT, PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
 import { isTypingTarget } from '../typingTarget';
@@ -382,7 +382,7 @@ function hasPinGeometry(selection: SelectionContext): boolean {
   return selection.styles['container-width'] !== undefined && selection.styles['pin-left'] !== undefined;
 }
 
-function useQueuedPins(edit: DirectEdit, selection: SelectionContext) {
+function useQueuedPins(edit: DirectEdit, selection: SelectionContext, applied: (modes: Partial<Record<PinAxis, PinMode>>) => void) {
   const [queued, setQueued] = useState<QueuedPins | null>(null);
   const ready = hasPinGeometry(selection);
   useEffect(() => {
@@ -391,9 +391,10 @@ function useQueuedPins(edit: DirectEdit, selection: SelectionContext) {
     if (!ready) return;
     const patch = (Object.entries(queued.pins) as [PinAxis, { mode: PinMode; from: PinMode }][]).reduce<Record<string, string>>((all, [axis, pin]) => ({ ...all, ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from) }), {});
     setQueued(null);
+    applied(Object.fromEntries(Object.entries(queued.pins).map(([axis, pin]) => [axis, pin.mode])));
     edit.preview(patch, true);
     edit.commit();
-  }, [queued, ready, selection, edit]);
+  }, [queued, ready, selection, edit, applied]);
   const waiting = queued !== null && !ready;
   const reselect = edit.reselect;
   useEffect(() => {
@@ -422,18 +423,19 @@ function PinSelect({ axis, mode, edit, selection, onPick, ready, queue }: { axis
   );
 }
 
-function usePinModes(selection: SelectionContext): { modes: Record<PinAxis, PinMode>; pick: (axis: PinAxis, mode: PinMode) => void } {
+function usePinModes(selection: SelectionContext): { modes: Record<PinAxis, PinMode>; pick: (next: Partial<Record<PinAxis, PinMode>>) => void } {
   const authored = ['left', 'right', 'top', 'bottom'].map((side) => selection.styles[`authored-${side}`] ?? '').join('|');
-  const [picked, setPicked] = useState<{ key: string; modes: Partial<Record<PinAxis, PinMode>> }>({ key: authored, modes: {} });
-  const fresh = picked.key === `${selection.selector}|${authored}` ? picked.modes : {};
+  const key = `${selection.selector}|${authored}`;
+  const [picked, setPicked] = useState<{ key: string; modes: Partial<Record<PinAxis, PinMode>> }>({ key, modes: {} });
+  const fresh = picked.key === key ? picked.modes : {};
   const modes = { x: fresh.x ?? pinModeOf('x', selection.styles), y: fresh.y ?? pinModeOf('y', selection.styles) };
-  const pick = (axis: PinAxis, mode: PinMode) => setPicked({ key: `${selection.selector}|${authored}`, modes: { ...fresh, [axis]: mode } });
+  const pick = useCallback((next: Partial<Record<PinAxis, PinMode>>) => setPicked((prev) => ({ key, modes: { ...(prev.key.startsWith(`${selection.selector}|`) ? prev.modes : {}), ...next } })), [key, selection.selector]);
   return { modes, pick };
 }
 
 function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
   const { modes, pick } = usePinModes(selection);
-  const { ready, queue } = useQueuedPins(edit, selection);
+  const { ready, queue } = useQueuedPins(edit, selection, pick);
   const fields = [...pinFields('x', modes.x), ...pinFields('y', modes.y)];
   return (
     <>
@@ -445,8 +447,8 @@ function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: Sele
         </div>
       )}
       <div className="ins-grid ins-constraints" role="group" aria-label="Constraints">
-        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={pick} ready={ready} queue={queue} />
-        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={pick} ready={ready} queue={queue} />
+        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={(axis, mode) => pick({ [axis]: mode })} ready={ready} queue={queue} />
+        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={(axis, mode) => pick({ [axis]: mode })} ready={ready} queue={queue} />
       </div>
     </>
   );

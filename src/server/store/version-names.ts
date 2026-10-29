@@ -72,3 +72,9 @@ export function createVersionNames(projectDir: (projectId: string) => string): V
     },
   };
 }
+
+const LISTED_FILES_MAX = 200;
+
+export function trimListedFiles(versions: Version[]): Version[] {
+  return versions.map((version) => (version.changedFiles.length > LISTED_FILES_MAX ? { ...version, changedFiles: version.changedFiles.slice(0, LISTED_FILES_MAX), changedFilesTotal: version.changedFiles.length } : version));
+}

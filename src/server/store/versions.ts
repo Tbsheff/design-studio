@@ -232,6 +232,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const untrackedCounts = new Map<string, number>();
   const tracker = createChangeTracker(MAX_SCOPED_PATHS);
   const headIndexTrees = new Map<string, string>();
+  const listCache = new Map<string, { head: string; list: Promise<Version[]> }>();
   const commitTrees = new Map<string, string>();
   const lockSweeps = new Map<string, Promise<void>>();
   const objectStores = new Map<string, ObjectStore>();
@@ -809,8 +810,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     async list(project: Project, direction: Direction): Promise<Version[]> {
       const head = await headOf(project, direction);
       if (head === null) return [];
-      const versions = await readVersions(project, [head]);
-      return versions.filter((version) => version.directionId === direction.id);
+      const key = `${project.id}/${direction.id}`;
+      const known = listCache.get(key);
+      if (known?.head === head) return known.list;
+      const list = readVersions(project, [head]).then((versions) => versions.filter((version) => version.directionId === direction.id));
+      listCache.set(key, { head, list });
+      list.catch(() => listCache.get(key)?.list === list && listCache.delete(key));
+      return list;
     },
 
     get: getVersion,

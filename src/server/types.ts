@@ -162,4 +162,5 @@ export interface PreviewService {
   elementShots?(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]>;
   sourceStamp?(url: string): Promise<string | null>;
   warmBrowser?(): void;
+  usageEdges?(workTree: string, roots: string[]): Promise<[file: string, deps: string[]][]>;
 }

@@ -95,7 +95,8 @@ import { registerHomeRoutes } from './home-routes.js';
 import { finishAttach, registerAppRoutes } from './app-routes.js';
 import { registerDoctorRoutes } from './doctor-routes.js';
 import { registerVersionRoutes } from './version-routes.js';
-import { createVersionNames } from '../store/version-names.js';
+import { createVersionNames, trimListedFiles } from '../store/version-names.js';
+import { isRunSummary, listRunSummaries, runListBody, runListQuery } from './run-list.js';
 import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import { parseStatesRequest } from '../../shared/states.js';
 import { cleanFramePath, isFrameId } from '../../shared/canvas-file.js';
@@ -343,11 +344,7 @@ async function readOptional(file: string): Promise<string | null> {
   }
 }
 
-export function isRunSummary(value: unknown): value is RunSummary {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-  const record = value as Partial<RunSummary>;
-  return typeof record.id === 'string' && typeof record.status === 'string' && typeof record.request === 'object' && record.request !== null;
-}
+export { isRunSummary };
 
 export function createApp(deps: AppDeps): Hono {
   const { config, bus, projects, versions, runner, preview } = deps;
@@ -786,22 +783,8 @@ export function createApp(deps: AppDeps): Hono {
   app.get('/api/projects/:pid/runs', async (c) => {
     const pid = c.req.param('pid');
     await projects.get(pid);
-    const dir = runsDir(pid);
-    if (!existsSync(dir)) return c.json([]);
-    const summaries: RunSummary[] = [];
-    for (const name of await readdir(dir)) {
-      if (!name.endsWith('.json') || name.startsWith('session-')) continue;
-      const text = await readOptional(path.join(dir, name));
-      if (text === null) continue;
-      try {
-        const parsed: unknown = JSON.parse(text);
-        if (isRunSummary(parsed)) summaries.push(parsed);
-      } catch {
-        continue;
-      }
-    }
-    summaries.sort((a, b) => b.startedAt - a.startedAt);
-    return c.json(summaries);
+    const query = runListQuery((name) => c.req.query(name));
+    return c.json(runListBody(await listRunSummaries(runsDir(pid)), query));
   });
 
   app.post('/api/projects/:pid/directions', async (c) => {
@@ -814,7 +797,7 @@ export function createApp(deps: AppDeps): Hono {
 
   app.get('/api/projects/:pid/d/:did/versions', async (c) => {
     const { project, direction } = await loadDirection(c.req.param('pid'), c.req.param('did'));
-    return c.json(await versionNames.apply(project.id, await versions.list(project, direction)));
+    return c.json(trimListedFiles(await versionNames.apply(project.id, await versions.list(project, direction))));
   });
 
   app.get('/api/projects/:pid/d/:did/design-system', async (c) => {
@@ -1198,7 +1181,7 @@ export function createApp(deps: AppDeps): Hono {
   registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   registerLayerStateRoutes(app, { projects, bus, readBody });
   registerPortRoutes(app, { projects, readBody, isRunning: (pid, did) => runner.isRunning(pid, did), startRun });
-  registerUsageRoutes(app, { projects });
+  registerUsageRoutes(app, { projects, preview });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

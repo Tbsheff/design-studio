@@ -12,6 +12,10 @@ export interface ContentStamp {
   newest: number;
 }
 
+export type ImportEdges = [file: string, deps: string[]][];
+export type GraphRequest = { kind: 'stamp'; workTree: string; roots: string[] } | { kind: 'edges'; workTree: string; roots: string[] } | { kind: 'flush' };
+export type GraphReply = ContentStamp | ImportEdges | null;
+
 interface FileDeps {
   mtimeMs: number;
   size: number;
@@ -177,13 +181,23 @@ export class RouteGraph {
   }
 
   async stamp(workTree: string, roots: string[]): Promise<ContentStamp | null> {
+    const seen = await this.walk(workTree, roots);
+    return seen ? stampOf(seen) : null;
+  }
+
+  async edges(workTree: string, roots: string[]): Promise<ImportEdges> {
+    const seen = await this.walk(workTree, roots, Infinity);
+    return [...(seen ?? new Map<string, FileDeps>()).entries()].map(([file, entry]) => [file, entry.deps]);
+  }
+
+  private async walk(workTree: string, roots: string[], cap = GRAPH_CAP): Promise<Map<string, FileDeps> | null> {
     const graph = this.graphFor(workTree);
     await graph.ready();
     const scope: WalkScope = { workTree, graph, options: new Map(), caches: new Map() };
     const seen = new Map<string, FileDeps>();
     let frontier = roots;
     while (frontier.length) {
-      if (seen.size > GRAPH_CAP) return null;
+      if (seen.size > cap) return null;
       const next: string[] = [];
       const read = await Promise.all(frontier.filter((file) => !seen.has(file)).map(async (file) => [file, await this.depsOf(scope, graph, file)] as const));
       for (const [file, deps] of read) {
@@ -194,7 +208,7 @@ export class RouteGraph {
       frontier = [...new Set(next)];
     }
     graph.scheduleSave();
-    return stampOf(seen);
+    return seen;
   }
 
   async flush(): Promise<void> {
@@ -229,4 +243,13 @@ export class RouteGraph {
     }
     return out;
   }
+}
+
+export async function answerGraph(graph: RouteGraph, request: GraphRequest): Promise<GraphReply> {
+  if (request.kind === 'flush') {
+    await graph.flush();
+    return null;
+  }
+  if (request.kind === 'edges') return graph.edges(request.workTree, request.roots);
+  return graph.stamp(request.workTree, request.roots);
 }

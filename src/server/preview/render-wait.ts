@@ -39,6 +39,21 @@ export function renderedSince(projectId: string, since: number): boolean {
   return (lastDone.get(projectId) ?? 0) >= since;
 }
 
+const PREVIEW_HOST = /^p-((?:[0-9a-f]{2})+)\.localhost$/;
+
+function projectOfUrl(url: string): string | undefined {
+  try {
+    const hex = PREVIEW_HOST.exec(new URL(url).hostname)?.[1];
+    return hex ? Buffer.from(hex, 'hex').toString('utf8') : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function renderSettledFor(url: string): Promise<boolean> {
+  return renderSettled(projectOfUrl(url));
+}
+
 export async function renderSettled(projectId?: string): Promise<boolean> {
   const jobs = projectId ? [pending.get(projectId)].filter((job): job is Promise<void> => job !== undefined) : [...pending.values()];
   if (jobs.length === 0) return true;

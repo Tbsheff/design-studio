@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { stateOfHost } from '../../shared/frame-state.js';
+import type { ImportEdges } from './route-graph.js';
 import { RouteStamps } from './route-stamp.js';
 
 interface Owner {
@@ -72,6 +73,10 @@ export class SourceStamps {
 
   close(): Promise<void> {
     return this.routes.close();
+  }
+
+  edges(workTree: string, roots: string[]): Promise<ImportEdges> {
+    return this.routes.edges(workTree, roots);
   }
 
   register(prefix: string, key: string, workTree: string, appDir: string | null): void {

@@ -4,8 +4,7 @@ import type { AppRoute } from '../../shared/contracts.js';
 import { matchRouteFile } from '../agent/run-target.js';
 import { appRouterDir, listAppRoutes } from '../app/routes.js';
 import { siblingWorkerFile, WorkerClient } from '../worker-client.js';
-import { RouteGraph, type ContentStamp } from './route-graph.js';
-import type { GraphRequest } from './route-graph-worker.js';
+import { answerGraph, RouteGraph, type ContentStamp, type GraphReply, type GraphRequest, type ImportEdges } from './route-graph.js';
 
 export type { ContentStamp } from './route-graph.js';
 
@@ -20,20 +19,21 @@ async function filesIn(dir: string, pattern: RegExp): Promise<string[]> {
   return entries.filter((entry) => entry.isFile() && pattern.test(entry.name)).map((entry) => path.join(dir, entry.name));
 }
 
+function graphClient(label: string, cacheDir: string | null): WorkerClient<GraphRequest, GraphReply> {
+  const inProcess = new RouteGraph(cacheDir);
+  return new WorkerClient({ file: WORKER_FILE, label, workerData: { cacheDir }, inProcess: (request) => answerGraph(inProcess, request) });
+}
+
 export class RouteStamps {
   private readonly routes = new Map<string, { at: number; list: Promise<AppRoute[]> }>();
   private readonly built = new Set<string>();
   private readonly building = new Map<string, Promise<ContentStamp | null>>();
-  private readonly graph: WorkerClient<GraphRequest, ContentStamp | null>;
+  private readonly graph: WorkerClient<GraphRequest, GraphReply>;
+  private readonly usageGraph: WorkerClient<GraphRequest, GraphReply>;
 
   constructor(cacheDir: string | null = null) {
-    const inProcess = new RouteGraph(cacheDir);
-    this.graph = new WorkerClient({
-      file: WORKER_FILE,
-      label: 'route graph',
-      workerData: { cacheDir },
-      inProcess: async (request) => (request.kind === 'flush' ? (await inProcess.flush(), null) : inProcess.stamp(request.workTree, request.roots)),
-    });
+    this.graph = graphClient('route graph', cacheDir);
+    this.usageGraph = graphClient('usage graph', cacheDir ? `${cacheDir}-usage` : null);
   }
 
   private routeList(workTree: string, appDir: string): Promise<AppRoute[]> {
@@ -59,16 +59,24 @@ export class RouteStamps {
     return Promise.race([pending, new Promise<null>((resolve) => setTimeout(() => resolve(null), FIRST_WAIT_MS).unref())]);
   }
 
+  async edges(workTree: string, roots: string[]): Promise<ImportEdges> {
+    return ((await this.usageGraph.run({ kind: 'edges', workTree, roots })) as ImportEdges | null) ?? [];
+  }
+
   async close(): Promise<void> {
-    if (this.graph.started) await this.graph.run({ kind: 'flush' }).catch(() => null);
-    await this.graph.close();
+    await Promise.all(
+      [this.graph, this.usageGraph].map(async (client) => {
+        if (client.started) await client.run({ kind: 'flush' }).catch(() => null);
+        await client.close();
+      }),
+    );
   }
 
   private async compute(workTree: string, appDir: string, pathname: string): Promise<ContentStamp | null> {
     const page = matchRouteFile(await this.routeList(workTree, appDir), pathname);
     const pageFile = page ? path.join(workTree, page) : await this.notFoundFile(workTree, appDir);
     if (!pageFile) return null;
-    return this.graph.run({ kind: 'stamp', workTree, roots: await this.roots(workTree, appDir, pageFile) });
+    return (await this.graph.run({ kind: 'stamp', workTree, roots: await this.roots(workTree, appDir, pageFile) })) as ContentStamp | null;
   }
 
   private async notFoundFile(workTree: string, appDir: string): Promise<string | null> {

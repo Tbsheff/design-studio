@@ -16,6 +16,7 @@ export interface RenderBackend {
   readonly reusablePages?: boolean;
   open(viewport: { width: number; height: number; scale?: number }): Promise<RenderPage>;
   close(): Promise<void>;
+  warm?(): Promise<void>;
 }
 
 export const NAVIGATION_TIMEOUT_MS = 30_000;

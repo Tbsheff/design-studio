@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { RunMention } from '../../shared/contracts.js';
 import { checkPathInside } from '../agent/permissions.js';
+import { treeStamp } from '../direct-edit/change-feed.js';
 import { BadRequestError } from '../store/errors.js';
 import type { MentionFile } from '../types.js';
 
@@ -10,7 +11,21 @@ const TREE_MAX = 3000;
 export const MENTION_MAX = 10;
 const FILE_MAX_BYTES = 20_000;
 
-export async function listWorkTree(root: string): Promise<string[]> {
+const TREE_CACHE_MS = 30_000;
+const trees = new Map<string, { stamp: number; at: number; list: Promise<string[]> }>();
+
+export function listWorkTree(root: string): Promise<string[]> {
+  const stamp = treeStamp(root);
+  const known = trees.get(root);
+  if (known && known.stamp === stamp && Date.now() - known.at < TREE_CACHE_MS) return known.list;
+  const list = walkWorkTree(root);
+  trees.set(root, { stamp, at: Date.now(), list });
+  list.catch(() => trees.delete(root));
+  if (trees.size > 50) trees.delete(trees.keys().next().value as string);
+  return list;
+}
+
+async function walkWorkTree(root: string): Promise<string[]> {
   const out: string[] = [];
   const walk = async (dir: string): Promise<void> => {
     if (out.length >= TREE_MAX) return;

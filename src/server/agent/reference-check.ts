@@ -113,12 +113,12 @@ export async function compareToReference(input: CompareInput): Promise<Reference
   const diff = diffPictures(reference, render);
   const diffPath = `${scratch}-diff.png`;
   await writeFile(diffPath, pictureSheet(reference, render, diff));
-  return { score: Math.max(0, Math.round(100 - diff.differsPct)), width: reference.width, height: reference.height, differsPct: diff.differsPct, regions: diff.regions, diffPath, renderPath, ms: Date.now() - started };
+  return { score: diff.score, contentScore: diff.contentScore, edgeScore: diff.edgeScore, width: reference.width, height: reference.height, differsPct: diff.differsPct, regions: diff.regions, diffPath, renderPath, ms: Date.now() - started };
 }
 
 export function scoreLines(score: ReferenceScore, listed = 4): string[] {
-  const worst = score.regions.filter((region) => region.differsPct >= 5).slice(0, listed);
-  return worst.map((region) => `- ${region.name} (x ${region.x}-${region.x + region.width}, y ${region.y}-${region.y + region.height}): ${region.differsPct}% of pixels differ`);
+  const worst = score.regions.filter((region) => region.contentDiffersPct >= 10 || region.edgeMatchPct < 85).slice(0, listed);
+  return worst.map((region) => `- ${region.name} (x ${region.x}-${region.x + region.width}, y ${region.y}-${region.y + region.height}): ${region.contentDiffersPct}% of content differs, edges ${region.edgeMatchPct}/100`);
 }
 
 export function referenceAttachment(attachments: readonly Attachment[]): Attachment | null {
@@ -128,9 +128,9 @@ export function referenceAttachment(attachments: readonly Attachment[]): Attachm
 export function referenceFixPrompt(score: ReferenceScore, name: string): string {
   return [
     '<studio-continue>',
-    `The user marked ${name} as the reference picture. The studio rendered the frame at ${score.width}x${score.height} and compared it with the picture: match score ${score.score}/100 (${score.differsPct}% of pixels differ; the bar is ${REFERENCE_LOW_SCORE}).`,
+    `The user marked ${name} as the reference picture. The studio rendered the frame at ${score.width}x${score.height} and compared it with the picture: match score ${score.score}/100 (content ${score.contentScore}, edges ${score.edgeScore}; the bar is ${REFERENCE_LOW_SCORE}). Content compares the colors of the parts that are not plain background; edges compare where the outlines of text, boxes, icons and pictures fall, to 2 px.`,
     'The attached sheet shows, left to right: the reference, your render, and your render with the different pixels in red.',
-    'The areas that differ most:',
+    'The areas that differ most (low edge numbers mean things are in the wrong place or have the wrong shape):',
     ...scoreLines(score),
     'Do one fix loop: make the layout, spacing, sizes, colors and type of the frame match the reference more closely, with the project kit and tokens. Do not copy text that is not in the picture. Then call mcp__studio__compare_to_reference once and reply in one or two sentences with the new score and what is still different.',
     '</studio-continue>',

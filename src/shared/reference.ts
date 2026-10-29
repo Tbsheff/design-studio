@@ -23,10 +23,14 @@ export interface ReferenceRegion {
   width: number;
   height: number;
   differsPct: number;
+  contentDiffersPct: number;
+  edgeMatchPct: number;
 }
 
 export interface ReferenceScore {
   score: number;
+  contentScore: number;
+  edgeScore: number;
   width: number;
   height: number;
   differsPct: number;

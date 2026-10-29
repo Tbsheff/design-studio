@@ -112,6 +112,22 @@
   opacity: 1;
 }
 
+.version-thumb.loading {
+  animation: version-thumb-wait 1.8s ease-in-out infinite;
+}
+
+@keyframes version-thumb-wait {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .version-thumb.loading {
+    animation: none;
+  }
+}
+
 .version:hover .version-thumb,
 .version:focus-within .version-thumb {
   background: var(--surface-active);
@@ -220,32 +236,17 @@
 }
 
 .version-actions {
-  display: flex;
+  display: none;
   align-items: center;
-  margin: -4px 0 -4px -6px;
-  opacity: 0;
-  transition-property: opacity;
-  transition-duration: var(--dur);
-  transition-timing-function: var(--ease);
-}
-
-.version-meta {
-  transition-property: opacity, visibility;
-  transition-duration: var(--dur);
-  transition-timing-function: var(--ease);
+  grid-area: 2 / 1;
+  margin: 0 0 -4px -6px;
 }
 
 .version:is(:hover, :focus-within, .picked, .expanded) .version-actions {
-  opacity: 1;
-}
-
-.version:is(:hover, :focus-within, .picked):not(.expanded) .version-meta {
-  visibility: hidden;
-  opacity: 0;
+  display: flex;
 }
 
 .version.expanded .version-actions {
-  grid-area: 2 / 1;
   margin: var(--s-1) 0 0 -6px;
 }
 
@@ -262,14 +263,8 @@
 
 @media (hover: none) {
   .version .version-actions {
-    grid-area: 2 / 1;
+    display: flex;
     margin: var(--s-1) 0 0 -6px;
-    opacity: 1;
-  }
-
-  .version .version-meta {
-    visibility: visible;
-    opacity: 1;
   }
 }
 

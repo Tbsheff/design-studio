@@ -34,7 +34,9 @@ import { withFrameStateHost } from '../../shared/frame-state.js';
 import { waitForPage } from '../export/capture.js';
 import { withPagePath } from '../export/source.js';
 import type { PreviewService } from '../types.js';
-import { implicitLinks, keepImplicit, type AnchorReader, type PageAnchor } from './implicit-links.js';
+import type { RenderPage } from '../preview/render-backend.js';
+import { implicitLinks, keepImplicit, type AnchorReader, type ClickReader, type ImplicitDeps, type PageAnchor } from './implicit-links.js';
+import { clickProbeScript } from './click-probe.js';
 import { findFrame, frameRef, type CanvasToolContext, type ToolText } from './tools.js';
 
 export const BACK_REF = 'back';
@@ -61,18 +63,27 @@ export interface ProbedElement {
   text: string;
 }
 
-export type LinkProbe = ((frame: CanvasFileFrame, queries: LinkQuery[]) => Promise<(ProbedElement | null)[]>) & { anchors?: AnchorReader };
+export type LinkProbe = ((frame: CanvasFileFrame, queries: LinkQuery[]) => Promise<(ProbedElement | null)[]>) & { anchors?: AnchorReader; clicks?: ClickReader };
 
 const ANCHOR_SCRIPT = `(() => {
   const out = [];
   const css = (v) => v.replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"');
   const loc = /(?:window\\.)?location(?:\\.href)?\\s*=\\s*['"]([^'"]+)['"]|location\\.(?:assign|replace)\\(\\s*['"]([^'"]+)['"]/;
-  for (const el of Array.from(document.querySelectorAll('a[href], [onclick]')).slice(0, 200)) {
+  const submitOf = (el) => {
+    const form = el.form;
+    const action = form && (form.getAttribute('method') || '').toLowerCase() !== 'dialog' ? form.getAttribute('action') : null;
+    if (!action) return null;
+    const scope = form.id && /^[A-Za-z_][\\w-]*$/.test(form.id) ? '#' + form.id : 'form[action="' + css(action) + '"]';
+    const type = el.getAttribute('type');
+    return { raw: action, selector: scope + ' ' + el.tagName.toLowerCase() + (type ? '[type="' + css(type) + '"]' : ':not([type])') };
+  };
+  for (const el of Array.from(document.querySelectorAll('a[href], [onclick], button, input[type="submit"], input[type="image"]')).slice(0, 200)) {
     const tag = el.tagName.toLowerCase();
     const id = el.id && /^[A-Za-z_][\\w-]*$/.test(el.id) ? el.id : null;
-    const raw = tag === 'a' ? el.getAttribute('href') : (loc.exec(el.getAttribute('onclick') || '') || []).slice(1).find(Boolean);
+    const submit = tag !== 'a' && !el.getAttribute('onclick') && (el.type === 'submit' || el.type === 'image') ? submitOf(el) : null;
+    const raw = tag === 'a' ? el.getAttribute('href') : submit ? submit.raw : (loc.exec(el.getAttribute('onclick') || '') || []).slice(1).find(Boolean);
     if (!raw) continue;
-    const selector = id ? '#' + id : tag === 'a' ? 'a[href="' + css(raw) + '"]' : tag + '[onclick*="' + css(raw) + '"]';
+    const selector = id ? '#' + id : tag === 'a' ? 'a[href="' + css(raw) + '"]' : submit ? submit.selector : tag + '[onclick*="' + css(raw) + '"]';
     out.push({ href: raw, selector, tag, text: (el.innerText || el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, ${LINK_TEXT_MAX}) });
     if (out.length >= 60) break;
   }
@@ -140,16 +151,24 @@ async function withStateHost(project: Project, frameId: string, url: string): Pr
 export function probeWithPreview(preview: Pick<PreviewService, 'directionUrl' | 'withPage'>, project: Project, fallback: Direction): LinkProbe | undefined {
   const withPage = preview.withPage?.bind(preview);
   if (!withPage) return undefined;
-  const run = async <T>(frame: CanvasFileFrame, script: string): Promise<T> => {
+  const open = async <T>(frame: CanvasFileFrame, task: (page: RenderPage) => Promise<T>): Promise<T> => {
     const direction = project.directions.find((item) => item.id === frame.directionId) ?? fallback;
     const url = await withStateHost(project, frame.id, withPagePath(await preview.directionUrl(project, direction), frame.path || undefined));
     return withPage(url, { width: frame.width, height: frame.height }, async (page) => {
       await waitForPage(page);
-      return page.evaluate<T>(script);
+      return task(page);
     });
   };
+  const run = <T>(frame: CanvasFileFrame, script: string): Promise<T> => open(frame, (page) => page.evaluate<T>(script));
   const probe: LinkProbe = (frame, queries) => run<(ProbedElement | null)[]>(frame, resolveScript(queries));
-  probe.anchors = (frame) => run<PageAnchor[]>(frame, ANCHOR_SCRIPT);
+  probe.anchors = (frame) =>
+    open(frame, async (page) => {
+      const anchors = await page.evaluate<PageAnchor[]>(ANCHOR_SCRIPT);
+      const clicked = await page.evaluate<PageAnchor[]>(clickProbeScript(anchors.map((anchor) => anchor.selector))).catch(() => []);
+      const seen = new Set(anchors.map((anchor) => anchor.selector));
+      return [...anchors, ...clicked.filter((anchor) => !seen.has(anchor.selector))];
+    });
+  probe.clicks = (frame, skip) => run<PageAnchor[]>(frame, clickProbeScript(skip));
   return probe;
 }
 
@@ -176,33 +195,40 @@ function describeLink(link: PrototypeLink, frames: readonly CanvasFileFrame[], i
   };
 }
 
-const IMPLICIT_NOTE = 'Links with implicit: true come from <a href> (or location.href onclick, or Next.js <Link>/router.push) between pages. Play and Flow use them as they are; keep_links (or edit_links keep) saves them so you can change the action or transition.';
+const IMPLICIT_NOTE = 'Links with implicit: true come from the page code: <a href>, a form action on its submit button, an href or location.href/assign set by a script or onclick handler, a click probe in the rendered page, or Next.js <Link>/router.push. Play and Flow use them as they are; keep_links (or edit_links keep) saves them so you can change the action or transition.';
+
+export function implicitDeps(canvas: ImplicitDeps['canvas'], project: Project, probe: LinkProbe | undefined): ImplicitDeps {
+  return { canvas, project, ...(probe?.anchors ? { render: probe.anchors } : {}), ...(probe?.clicks ? { clicks: probe.clicks } : {}) };
+}
 
 function implicitOf(ctx: CanvasToolContext, probe: LinkProbe | undefined, file: LinksFile): Promise<PrototypeLink[]> {
-  return implicitLinks({ canvas: ctx.canvas, project: ctx.project, ...(probe?.anchors ? { render: probe.anchors } : {}) }, file).catch(() => []);
+  return implicitLinks(implicitDeps(ctx.canvas, ctx.project, probe), file).catch(() => []);
+}
+
+async function probeIssues(probe: LinkProbe, links: readonly PrototypeLink[], frames: readonly CanvasFileFrame[], issues: Map<string, LinkIssue | null>): Promise<boolean> {
+  let checked = false;
+  const byFrame = new Map<string, PrototypeLink[]>();
+  for (const link of links) if (issues.get(link.id) === null) byFrame.set(link.from.frame, [...(byFrame.get(link.from.frame) ?? []), link]);
+  for (const [frameId, list] of byFrame) {
+    const frame = frames.find((item) => item.id === frameId);
+    if (!frame) continue;
+    const found = await probe(frame, list.map(queryOf)).catch(() => null);
+    if (!found) continue;
+    checked = true;
+    list.forEach((link, index) => issues.set(link.id, found[index] ? null : 'element-missing'));
+  }
+  return checked;
 }
 
 export async function listLinks(ctx: CanvasToolContext, probe?: LinkProbe): Promise<ToolText> {
   const frames = await framesOf(ctx);
   const file = await ctx.canvas.links.read(ctx.project);
-  const issues = new Map<string, LinkIssue | null>(file.links.map((link) => [link.id, staticLinkIssue(link, frames)]));
-  let checked = false;
-  if (probe) {
-    const byFrame = new Map<string, PrototypeLink[]>();
-    for (const link of file.links) if (issues.get(link.id) === null) byFrame.set(link.from.frame, [...(byFrame.get(link.from.frame) ?? []), link]);
-    for (const [frameId, links] of byFrame) {
-      const frame = frames.find((item) => item.id === frameId);
-      if (!frame) continue;
-      const found = await probe(frame, links.map(queryOf)).catch(() => null);
-      if (!found) continue;
-      checked = true;
-      links.forEach((link, index) => issues.set(link.id, found[index] ? null : 'element-missing'));
-    }
-  }
-  const start = startFrameOf(file, frames);
   const implicit = await implicitOf(ctx, probe, file);
   const all = [...file.links, ...implicit];
-  const notes = [all.length === 0 ? 'No prototype links yet. add_link makes one; Play in the studio then starts at startFrame.' : checked ? 'Each saved link was checked against the rendered page.' : null, implicit.length > 0 ? IMPLICIT_NOTE : null].filter(Boolean);
+  const issues = new Map<string, LinkIssue | null>(all.map((link) => [link.id, staticLinkIssue(link, frames)]));
+  const checked = probe ? await probeIssues(probe, all, frames, issues) : false;
+  const start = startFrameOf(file, frames);
+  const notes = [all.length === 0 ? 'No prototype links yet. add_link makes one; Play in the studio then starts at startFrame.' : checked ? 'Each link was checked against the rendered page.' : null, implicit.length > 0 ? IMPLICIT_NOTE : null].filter(Boolean);
   return text({
     startFrame: start,
     links: all.map((link) => describeLink(link, frames, issues.get(link.id) ?? null, start)),
@@ -214,7 +240,7 @@ export async function keepLinks(ctx: CanvasToolContext, ids: readonly string[] |
   if (ctx.plan) return failure('Plan mode is on, so the links stay as they are.');
   if (ctx.mode === 'critique') return failure('Links are not available in critique runs.');
   const frames = await framesOf(ctx);
-  const done = await keepImplicit({ canvas: ctx.canvas, project: ctx.project, ...(probe?.anchors ? { render: probe.anchors } : {}) }, ids, 'agent', motion);
+  const done = await keepImplicit(implicitDeps(ctx.canvas, ctx.project, probe), ids, 'agent', motion);
   if (done.kept.length === 0) return failure(done.missing.length > 0 ? `No implicit link ${done.missing.join(', ')}. Call list_links for the ids (implicit: true).` : 'No implicit links to keep.');
   const start = startFrameOf(done.file, frames);
   return text({ kept: done.kept.map((link) => describeLink(link, frames, null, start)), ...(done.missing.length > 0 ? { notFound: done.missing } : {}), links: done.file.links.length });

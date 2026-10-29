@@ -141,9 +141,27 @@ export function cleanLinkSelector(raw: unknown): string | null {
   return selector === '' || selector.length > LINK_SELECTOR_MAX ? null : selector;
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', larr: '←', rarr: '→', uarr: '↑', darr: '↓', harr: '↔', lsaquo: '‹', rsaquo: '›', laquo: '«', raquo: '»',
+  mdash: '—', ndash: '–', hellip: '…', middot: '·', bull: '•', times: '×', divide: '÷', copy: '©', reg: '®', trade: '™', deg: '°', plusmn: '±', check: '✓', cross: '✗',
+  lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', euro: '€', pound: '£', yen: '¥', cent: '¢', sect: '§', para: '¶', star: '☆', starf: '★', hearts: '♥', minus: '−',
+};
+
+function codePoint(value: number): string {
+  return Number.isInteger(value) && value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : '';
+}
+
+export function decodeEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi, (whole, body: string) => {
+    if (body[0] !== '#') return NAMED_ENTITIES[body] ?? NAMED_ENTITIES[body.toLowerCase()] ?? whole;
+    const value = body[1] === 'x' || body[1] === 'X' ? Number.parseInt(body.slice(2), 16) : Number(body.slice(1));
+    return codePoint(value) || whole;
+  });
+}
+
 export function cleanLinkText(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
-  const text = raw.replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, LINK_TEXT_MAX);
+  const text = decodeEntities(raw).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, LINK_TEXT_MAX);
   return text === '' ? null : text;
 }
 

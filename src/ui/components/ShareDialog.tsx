@@ -98,7 +98,9 @@ function LinkRow({ link, server, now, onRevoke, onCursor, busy, copied }: RowPro
   return (
     <li className={`share-link${link.active ? '' : ' off'}`} data-testid="share-link" data-link-id={link.id}>
       <div className="share-link-head">
-        <span className="share-link-title truncate" data-tip={link.title} data-tip-align="start">{link.title}</span>
+        <span className="share-link-title" data-tip={link.title} data-tip-align="start">
+          <span className="truncate">{link.title}</span>
+        </span>
         <span className="share-link-meta truncate">{linkMeta(link, now)}</span>
         {link.active && (
           <button type="button" className="btn ghost small danger" disabled={busy} onClick={() => onRevoke(link.id)} data-tip={link.live ? 'The link stops working at once, open viewers are cut off and its images are deleted' : 'The link stops working at once and its images are deleted'}>

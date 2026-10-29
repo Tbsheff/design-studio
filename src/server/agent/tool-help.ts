@@ -1,3 +1,4 @@
+import { FIGMA_IMPORT_TOOL_DESCRIPTION } from './figma-import-tool.js';
 import { COMPARE_REFERENCE_DESCRIPTION } from './reference-tool.js';
 import { VECTOR_BOOLEAN_SHORT, VECTOR_DRAW_SHORT, VECTOR_PAINT_SHORT } from './vector-tool.js';
 import { FRAME_STATES_NOTE } from '../app/frame-state-service.js';
@@ -55,6 +56,7 @@ export const TOOL_SHORT = {
   paint_shape: VECTOR_PAINT_SHORT,
   set_layer_state: 'Lock or unlock, hide or show, or rename one layer. Locks live in the studio; hide and rename change the source.',
   list_locked_layers: 'List the locked layers of the design with their page.',
+  import_figma_frame: 'Turn a Figma nodes JSON file (exported by the user) into flex markup with token colors and kit components, as one version.',
   compare_to_reference: 'Score a frame against the reference picture the user attached (0-100) and get a diff image. Changes nothing.',
   studio_help: 'Full description of one studio tool: when to use it, what it refuses, and the fields of its result.',
 } as const;
@@ -107,5 +109,6 @@ export const TOOL_HELP: Record<Exclude<StudioToolName, 'studio_help'>, string> =
   paint_shape: VECTOR_PAINT_SHORT,
   set_layer_state: 'Lock or unlock, hide or show, or rename one layer, like the lock, eye and name in the Layers panel. A locked layer ignores canvas clicks. Locks are stored in the studio data folder, not in the source; hide writes display:none and rename writes data-name in the source as one version.',
   compare_to_reference: COMPARE_REFERENCE_DESCRIPTION,
+  import_figma_frame: FIGMA_IMPORT_TOOL_DESCRIPTION,
   list_locked_layers: 'List the locked layers of the design, with the page of each and whether it is on the page now. Changes nothing.',
 };

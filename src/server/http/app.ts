@@ -75,6 +75,7 @@ import { registerRulesRoutes, rulesLoader } from './rules-routes.js';
 import { loadRepoContext } from '../agent/repo-context.js';
 import { registerRunContextRoutes } from './run-context-routes.js';
 import { registerInsertRoutes } from './insert-routes.js';
+import { registerFigmaRoutes } from './figma-routes.js';
 import { createComponentService } from '../components/thumbs.js';
 import { componentPreviewsFor } from '../components/preview.js';
 import { registerComponentPreviewRoutes } from './component-preview-routes.js';
@@ -1104,6 +1105,7 @@ export function createApp(deps: AppDeps): Hono {
   };
   registerRulesRoutes(app, { preview, canvas, readBody, loadDirection, withDirection, projectDir: projects.projectDir, commitDesignMd });
   registerInsertRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
+  registerFigmaRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
 
   const library = createPackLibrary(packs);
   registerPackRoutes(app, {

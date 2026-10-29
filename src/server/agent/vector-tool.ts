@@ -17,7 +17,7 @@ const paint = {
   strokeWidth: z.number().min(0).max(1000).nullable().optional().describe('Stroke width in px.'),
 };
 const where = {
-  targetSelector: z.string().trim().min(1).max(2000).optional().describe('CSS selector or layer id of the element on the live page.'),
+  targetSelector: z.string().trim().min(1).max(2000).optional().describe('CSS selector of the element on the live page.'),
   targetSource: z.string().trim().max(1100).optional().describe('Or the element as file:line:col of its tag.'),
   path: z.string().trim().max(300).optional().describe('Page path. Leave out for the page of the frame in <canvas-context>.'),
 };
@@ -40,7 +40,7 @@ export const drawVectorShape = {
 };
 
 export const booleanShapesShape = {
-  selectors: z.tuple([z.string().trim().min(1).max(2000), z.string().trim().min(1).max(2000)]).optional().describe('Two CSS selectors or layer ids of SVG shapes. The first keeps its place and paint.'),
+  selectors: z.tuple([z.string().trim().min(1).max(2000), z.string().trim().min(1).max(2000)]).optional().describe('Two CSS selectors of SVG shapes. The first keeps its place and paint.'),
   sources: z.tuple([z.string().trim().max(1100), z.string().trim().max(1100)]).optional().describe('Or the two shapes as file:line:col.'),
   path: where.path,
   op: z.enum(BOOLEAN_OPS).describe('union, subtract (first minus second), intersect or exclude.'),

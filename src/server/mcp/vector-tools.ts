@@ -9,7 +9,7 @@ import { targetOf } from './insert-tools.js';
 type Direction = Project['directions'][number];
 
 const color = z.string().trim().max(100).regex(VECTOR_COLOR);
-const targetSelector = selector.optional().describe('CSS selector or layer id of the element, for example "main" or "[data-name=\'Hero\']".');
+const targetSelector = selector.optional().describe('CSS selector of the element, for example "main" or "[data-name=\'Hero\']".');
 const targetSource = z.string().trim().max(1100).optional().describe('Or the element as file:line:col of its tag, as get_layers prints it.');
 const paint = {
   fill: color.nullable().optional().describe('Fill color, for example "#3b82f6" or "var(--primary)". null or "none" for no fill.'),
@@ -23,7 +23,7 @@ const drawSchema = z
     projectId,
     directionId,
     path: pagePath,
-    targetSelector: targetSelector.describe('CSS selector or layer id of the parent element to draw into, for example "main" or "body".'),
+    targetSelector: targetSelector.describe('CSS selector of the parent element to draw into, for example "main" or "body".'),
     targetSource,
     shape: z.enum(['rect', 'ellipse', 'path']).describe('rect or ellipse: pass x, y, width, height. path: pass d.'),
     x: z.number().min(-100000).max(100000).default(0).describe('Left edge in px from the parent padding box.'),
@@ -44,7 +44,7 @@ const booleanSchema = z
     projectId,
     directionId,
     path: pagePath,
-    selectors: z.tuple([selector, selector]).optional().describe('Two CSS selectors or layer ids of SVG shapes: an <svg>, or a <path>, <rect>, <circle>, <ellipse> or <polygon> in one. The first one keeps its place and paint.'),
+    selectors: z.tuple([selector, selector]).optional().describe('Two CSS selectors of SVG shapes: an <svg>, or a <path>, <rect>, <circle>, <ellipse> or <polygon> in one. The first one keeps its place and paint.'),
     sources: z.tuple([z.string().trim().max(1100), z.string().trim().max(1100)]).optional().describe('Or the two shapes as file:line:col. Without selectors, two separate <svg> elements must be placed with left and top in px.'),
     op: z.enum(BOOLEAN_OPS).describe('union, subtract (first minus second), intersect or exclude.'),
   })

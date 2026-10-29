@@ -914,6 +914,15 @@ body.element-resizing .frame {
   cursor: nwse-resize;
 }
 
+.resize-frame.compact .resize-handle.se {
+  margin: 0;
+  transform-origin: 0 0;
+}
+
+.resize-frame.compact .resize-handle::before {
+  inset: -1px -6px -6px -1px;
+}
+
 .resize-label {
   position: absolute;
   top: 100%;

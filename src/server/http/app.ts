@@ -109,6 +109,7 @@ import { registerShipRoutes } from './ship-routes.js';
 import { registerShareRoutes } from './share-routes.js';
 import { registerComponentCreateRoutes } from './component-create-routes.js';
 import { registerLayerStateRoutes } from './layer-state-routes.js';
+import { registerPortRoutes } from './port-routes.js';
 
 const STOP_WAIT_MS = 10_000;
 
@@ -247,7 +248,7 @@ function parseRunCanvas(raw: unknown): RunRequest['canvas'] {
 
 function parseRunTask(body: Record<string, unknown>, request: RunRequest): void {
   if (body.task !== undefined) {
-    if (body.task !== 'tweaks' && body.task !== 'design-system') throw new BadRequestError('task must be tweaks or design-system');
+    if (body.task !== 'tweaks' && body.task !== 'design-system' && body.task !== 'port') throw new BadRequestError('task must be tweaks, design-system or port');
     if (request.mode !== 'edit') throw new BadRequestError(`task ${body.task} needs mode edit`);
     request.task = body.task;
   }
@@ -1188,6 +1189,7 @@ export function createApp(deps: AppDeps): Hono {
   registerShareRoutes(app, { projects, versions, preview, comments, dataDir: config.dataDir, studioPort: config.studioPort, readBody });
   registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   registerLayerStateRoutes(app, { projects, bus, readBody });
+  registerPortRoutes(app, { projects, readBody, isRunning: (pid, did) => runner.isRunning(pid, did), startRun });
 
   app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 

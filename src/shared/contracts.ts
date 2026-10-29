@@ -349,7 +349,7 @@ export interface Attachment {
 }
 
 export type RunMode = 'edit' | 'critique';
-export type RunTask = 'tweaks' | 'design-system';
+export type RunTask = 'tweaks' | 'design-system' | 'port';
 
 export type RunEffort = 'low' | 'medium' | 'high';
 export const RUN_EFFORTS: readonly RunEffort[] = ['low', 'medium', 'high'];

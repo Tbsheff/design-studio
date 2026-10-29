@@ -93,7 +93,7 @@ export function registerPortRoutes(app: Hono, deps: PortRouteDeps): void {
     assertStartable(deps, input, plan);
     const html = await readSourcePage(input.source.direction.workTree, input.source.path);
     const { project, direction, route } = input.target;
-    const request = { prompt: portPrompt(input, plan, html), mode: 'edit', level: levelFor(project), task: PORT_TASK } as unknown as RunRequest;
+    const request = { prompt: portPrompt(input, plan, html), mode: 'edit', level: levelFor(project), task: PORT_TASK } satisfies RunRequest;
     const runId = await deps.startRun(project, direction, request);
     const result: PortStartResult = { runId, projectId: project.id, directionId: direction.id, route: route ?? '', routeFile: plan.target?.routeFile ?? null };
     return c.json(result, 201);

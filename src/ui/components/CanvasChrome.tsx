@@ -6,7 +6,7 @@ import { canAddFrame, FRAME_PRESETS, frameName, setFrameHidden, setFramePath, ty
 import { uiStore, type UiState } from '../storage';
 import { isTypingTarget } from '../usePanZoom';
 import type { PanelTab } from '../usePanelTab';
-import { CanvasViewRow } from './CanvasToolbar';
+import { CanvasViewRow, VectorToolButtons } from './CanvasToolbar';
 import { CanvasTopBar, type CanvasTool, type MenuGroup, type PresentMode } from './CanvasTopBar';
 import { PresentLayer, TweakPrompt } from './CanvasOverlays';
 
@@ -203,6 +203,7 @@ export function CanvasChrome(p: ChromeProps) {
   return (
     <>
       <CanvasTopBar
+        shapeTools={<VectorToolButtons />}
         paneCollapsed={bar.paneCollapsed}
         onExpandPane={bar.onExpandPane}
         onReload={() => reloadFrames(p.stage())}

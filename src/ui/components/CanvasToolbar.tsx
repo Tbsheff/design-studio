@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import { uiStore, type Viewport, type ZoomSetting } from '../storage';
 import { Icon, type IconName } from './Icon';
 import { PenIcon } from './DrawLayer';
+import { VECTOR_TOOLS, useVectorTool, vectorTool } from '../vectorTool';
 
 export const PRESETS: { id: Viewport['preset']; label: string; icon: IconName; width: number; height: number }[] = [
   { id: 'desktop', label: 'Desktop 1440', icon: 'desktop', width: 1440, height: 900 },
@@ -217,6 +218,30 @@ function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
       </svg>
       <span className="label">Rulers</span> <kbd>⇧R</kbd>
     </button>
+  );
+}
+
+export function VectorToolButtons() {
+  const { tool, available } = useVectorTool();
+  if (!available) return null;
+  return (
+    <div className="ui-tools topbar-tools vector-tools" role="group" aria-label="Shape tools">
+      {VECTOR_TOOLS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          aria-label={item.label}
+          aria-pressed={tool === item.id}
+          aria-keyshortcuts={item.id === 'pen' ? 'Shift+P' : item.keyLabel}
+          data-tip={`${item.label} ${item.keyLabel}`}
+          onClick={() => vectorTool.toggle(item.id)}
+        >
+          <svg className="icon" width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <path d={item.glyph} />
+          </svg>
+        </button>
+      ))}
+    </div>
   );
 }
 

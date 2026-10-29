@@ -59,7 +59,7 @@ export function useDrawTool(available: boolean, onActivate: () => void): DrawToo
       }
       if (isTypingTarget(event.target) || mod || event.altKey) return;
       const key = event.key.toLowerCase();
-      if (key === 'p' && live.current.available) {
+      if (key === 'p' && !event.shiftKey && live.current.available) {
         event.preventDefault();
         toggle();
       } else if (key === 'escape' || key === 'v' || key === 'c') {

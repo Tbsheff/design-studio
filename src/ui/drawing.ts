@@ -112,3 +112,32 @@ export function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
   paintStrokes(ctx, drawing.strokes, true);
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not make the drawing image'))), 'image/png'));
 }
+
+export interface PenAnchor {
+  x: number;
+  y: number;
+  hin?: { x: number; y: number };
+  hout?: { x: number; y: number };
+}
+
+function penSegment(from: PenAnchor, to: PenAnchor): string {
+  if (!from.hout && !to.hin) return `L${round(to.x)} ${round(to.y)}`;
+  const a = from.hout ?? from;
+  const b = to.hin ?? to;
+  return `C${round(a.x)} ${round(a.y)} ${round(b.x)} ${round(b.y)} ${round(to.x)} ${round(to.y)}`;
+}
+
+function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
+  const move = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y + dy });
+  return { x: anchor.x + dx, y: anchor.y + dy, ...(anchor.hin ? { hin: move(anchor.hin) } : {}), ...(anchor.hout ? { hout: move(anchor.hout) } : {}) };
+}
+
+export function penPath(anchors: PenAnchor[], closed: boolean, dx = 0, dy = 0): string {
+  const moved = dx === 0 && dy === 0 ? anchors : anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
+  const first = moved[0];
+  if (!first) return '';
+  let d = `M${round(first.x)} ${round(first.y)}`;
+  for (let i = 1; i < moved.length; i += 1) d += penSegment(moved[i - 1] as PenAnchor, moved[i] as PenAnchor);
+  if (closed && moved.length > 1) d += `${penSegment(moved[moved.length - 1] as PenAnchor, first)}Z`;
+  return d;
+}

@@ -1,0 +1,96 @@
+.vector-layer {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 3;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.vector-layer:focus {
+  outline: none;
+}
+
+.vector-layer.pen {
+  cursor: copy;
+}
+
+.vector-preview {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.vector-preview rect,
+.vector-preview ellipse,
+.vector-preview path {
+  fill: var(--select-tint);
+  stroke: var(--select);
+}
+
+.vector-preview.pen path {
+  fill: none;
+}
+
+.vector-preview.pen .rubber {
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+
+.vector-preview.pen .handle {
+  stroke: var(--select);
+  opacity: 0.6;
+}
+
+.vector-preview.pen .anchor {
+  fill: var(--surface);
+  stroke: var(--select);
+}
+
+.vector-preview.pen .anchor.closing {
+  fill: var(--select);
+}
+
+.vector-preview.pen .close-ring {
+  fill: none;
+  stroke: var(--select);
+}
+
+.vector-size {
+  position: absolute;
+  transform-origin: 50% 0;
+  transform: translateX(-50%) scale(var(--inv-zoom, 1)) translateY(var(--s-1));
+  padding: 0 6px;
+  border-radius: var(--r-xs);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--w-medium) var(--t-2xs) / 20px var(--mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.vector-hint {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: 50% 0;
+  transform: translateX(-50%) scale(var(--inv-zoom, 1)) translateY(var(--s-2));
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-md);
+  color: var(--text-2);
+  font: var(--t-xs) / 1.4 var(--font);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.vector-inspector .vector-boolean {
+  display: flex;
+  width: 100%;
+}
+
+.vector-inspector .vector-boolean button {
+  flex: 1;
+}

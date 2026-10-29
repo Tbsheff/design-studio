@@ -134,6 +134,7 @@ function ZoomPill({ zoom, setting, onZoomTo, onFit, onStep }: { zoom: number; se
 }
 
 interface Props {
+  shapeTools?: ReactNode;
   paneCollapsed: boolean;
   onExpandPane: () => void;
   onReload: () => void;
@@ -221,6 +222,7 @@ export function CanvasTopBar(p: Props) {
           <span>Prototype</span>
         </button>
       </div>
+      {p.shapeTools}
       <span data-topbar-slot="review" style={{ display: 'contents' }} />
       <DropMenu label="Present" className="btn ghost topbar-present" groups={presentGroups} align="end">
         <span>Present</span>

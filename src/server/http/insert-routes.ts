@@ -5,6 +5,7 @@ import { listInsertable } from '../components/insert-list.js';
 import { applyClearText, applyInsertJsx } from '../direct-edit/jsx-insert.js';
 import { DirectEditError, type DirectEditDeps } from '../direct-edit/index.js';
 import { applySetImage } from '../direct-edit/image.js';
+import { applyVector } from '../direct-edit/vector-ops.js';
 import type { PreviewService } from '../types.js';
 
 interface InsertRouteDeps {
@@ -30,7 +31,7 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
     return c.json(await listInsertable(project, direction.workTree));
   });
 
-  const insertRoute = (route: string, apply: typeof applyInsertComponent | typeof applyInsertJsx | typeof applyClearText | typeof applySetImage) =>
+  const insertRoute = (route: string, apply: typeof applyInsertComponent | typeof applyInsertJsx | typeof applyClearText | typeof applySetImage | typeof applyVector) =>
     app.post(route, async (c) => {
       const body = await deps.readBody(c);
       try {
@@ -47,4 +48,5 @@ export function registerInsertRoutes(app: Hono, deps: InsertRouteDeps): void {
   insertRoute('/api/projects/:pid/d/:did/insert/jsx', applyInsertJsx);
   insertRoute('/api/projects/:pid/d/:did/insert/clear-text', applyClearText);
   insertRoute('/api/projects/:pid/d/:did/image', applySetImage);
+  insertRoute('/api/projects/:pid/d/:did/vector', applyVector);
 }

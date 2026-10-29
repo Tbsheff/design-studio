@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { SkillInfo } from '../../shared/contracts';
 import { NO_SKILLS_TEXT, plural, useSkillCatalog } from '../skills';
+import { Icon } from './Icon';
 
 interface Props {
   disabled: string[];
@@ -109,7 +110,10 @@ export function SkillsChecklist({ disabled, allowBash, onChange }: Props) {
           )}
           {catalog.problems.length > 0 && (
             <details className="skills-problems">
-              <summary>{plural(catalog.problems.length, 'folder')} did not load</summary>
+              <summary>
+                <Icon name="chevronRight" size={12} />
+                {plural(catalog.problems.length, 'folder')} did not load
+              </summary>
               <ul>
                 {catalog.problems.map((problem) => (
                   <li key={problem.source}>

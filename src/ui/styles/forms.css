@@ -231,6 +231,17 @@ kbd {
   overflow: hidden;
 }
 
+.skill-row:hover .skill-desc,
+.skill-row:focus-within .skill-desc {
+  display: block;
+  overflow: visible;
+}
+
+.settings-modal .skills-list {
+  max-height: none;
+  overflow: visible;
+}
+
 .skills-note {
   margin: 0;
 }
@@ -302,7 +313,28 @@ kbd {
 }
 
 .skills-problems summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 24px;
+  list-style: none;
   cursor: pointer;
+}
+
+.skills-problems summary::-webkit-details-marker {
+  display: none;
+}
+
+.skills-problems summary:hover {
+  color: var(--text);
+}
+
+.skills-problems summary .icon {
+  transition: rotate var(--dur) var(--ease);
+}
+
+.skills-problems[open] summary .icon {
+  rotate: 90deg;
 }
 
 .skills-problems ul {

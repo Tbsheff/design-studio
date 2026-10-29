@@ -8,7 +8,6 @@ import { Icon } from './Icon';
 
 const MAX_URLS = 3;
 const MAX_IMAGES = 8;
-const MAX_PRESETS = 6;
 const DEFAULT_BASE = 'modern-minimal';
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const DROP_ACCEPT = `${IMAGE_TYPES.join(',')},.json,application/json,.css,text/css,.md,.markdown,text/markdown`;
@@ -221,12 +220,9 @@ function PackSwatches({ pack }: { pack: PackSummary }) {
 function Presets({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   const { packs } = pickable(usePacks());
   if (!packs) return null;
-  const first = packs.slice(0, MAX_PRESETS);
-  const chosen = packs.find((pack) => pack.id === value);
-  const shown = chosen && !first.includes(chosen) ? [...first.slice(0, MAX_PRESETS - 1), chosen] : first;
   return (
     <div className="nds-presets" role="group" aria-label="Start from">
-      {shown.map((pack) => (
+      {packs.map((pack) => (
         <button key={pack.id} type="button" className="nds-preset" aria-pressed={pack.id === value} onClick={() => onChange(pack.id)}>
           <PackSwatches pack={pack} />
           <span className="truncate">{pack.name}</span>
@@ -376,7 +372,6 @@ function SourceSummary({ form }: { form: DraftForm }) {
 }
 
 function Basics({ form, set }: { form: DraftForm; set: (patch: Patch) => void }) {
-  const { packs } = pickable(usePacks());
   return (
     <div className="nds-basics" role="group" aria-label="Design system settings">
       <label className="field">
@@ -389,18 +384,6 @@ function Basics({ form, set }: { form: DraftForm; set: (patch: Patch) => void })
           <option value="auto">Detect</option>
           <option value="light">Light</option>
           <option value="dark">Dark</option>
-        </select>
-      </label>
-      <label className="field">
-        <span>Start from</span>
-        <select className="select" value={form.basePackId} aria-label="Start from" onChange={(e) => set({ basePackId: e.target.value })}>
-          {(packs ?? []).map((pack) => (
-            <option key={pack.id} value={pack.id}>
-              {pack.name}
-              {pack.source === 'user' ? ' (yours)' : ''}
-            </option>
-          ))}
-          {!packs && <option value={DEFAULT_BASE}>Modern Minimal</option>}
         </select>
       </label>
     </div>
@@ -450,7 +433,8 @@ export function NewDesignSystem({ onCancel, onCreated }: { onCancel: () => void;
   return (
     <div className="home nds">
       <header className="home-header">
-        <button type="button" className="btn ghost small" onClick={onCancel} disabled={busy}>
+        <button type="button" className="btn ghost small has-icon back-btn" onClick={onCancel} disabled={busy}>
+          <Icon name="arrowLeft" size={14} />
           Back
         </button>
       </header>

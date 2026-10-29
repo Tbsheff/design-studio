@@ -195,7 +195,8 @@ export function DesignSystems({ from }: { from: LibraryFrom | null }) {
   return (
     <div className="home lib">
       <header className="home-header">
-        <button type="button" className="btn ghost small" onClick={back}>
+        <button type="button" className="btn ghost small has-icon back-btn" onClick={back}>
+          <Icon name="arrowLeft" size={14} />
           Back
         </button>
       </header>

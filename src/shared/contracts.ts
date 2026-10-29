@@ -280,6 +280,7 @@ export interface Version {
   meta: VersionMeta;
   createdAt: number;
   changedFiles: string[];
+  changedFilesTotal?: number;
   name?: string;
 }
 

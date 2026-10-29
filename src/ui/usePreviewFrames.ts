@@ -12,13 +12,14 @@ import { textEditability } from './cssValues';
 import type { BuildError, FilesChange } from './useStudioData';
 import { openLayer } from './commands/registry';
 import { moveRegion } from './commands/useStudioCommands';
+import { PREVIEW_TOOL_KEY_EVENT } from './vectorTool';
 
 export const PREVIEW_LAYOUT_KEY_EVENT = 'studio:preview-layout-key';
 export const PREVIEW_ARRANGE_KEY_EVENT = 'studio:preview-arrange-key';
 
-type KeyMessage = Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' | 'app-key' | 'arrange-key' }>;
+type KeyMessage = Extract<BridgeToParent, { type: 'escape' | 'history-key' | 'layout-key' | 'app-key' | 'arrange-key' | 'tool-key' }>;
 
-const KEY_MESSAGES = new Set<BridgeToParent['type']>(['escape', 'history-key', 'layout-key', 'app-key', 'arrange-key']);
+const KEY_MESSAGES = new Set<BridgeToParent['type']>(['escape', 'history-key', 'layout-key', 'app-key', 'arrange-key', 'tool-key']);
 
 function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
   return KEY_MESSAGES.has(msg.type);
@@ -33,6 +34,7 @@ function forwardKeyMessage(msg: KeyMessage): void {
   if (msg.type === 'app-key') forwardAppKey(msg.id);
   else if (msg.type === 'escape') window.dispatchEvent(new CustomEvent(PREVIEW_ESCAPE_EVENT));
   else if (msg.type === 'layout-key') window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+  else if (msg.type === 'tool-key') window.dispatchEvent(new CustomEvent(PREVIEW_TOOL_KEY_EVENT, { detail: { tool: msg.tool } }));
   else if (msg.type === 'arrange-key') window.dispatchEvent(new CustomEvent(PREVIEW_ARRANGE_KEY_EVENT, { detail: { key: msg.key } }));
   else if (typeof msg.redo === 'boolean') window.dispatchEvent(new CustomEvent(PREVIEW_HISTORY_EVENT, { detail: { redo: msg.redo } }));
 }

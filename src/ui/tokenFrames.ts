@@ -36,7 +36,10 @@ function createChannel(type: CssMessage): CssChannel {
 const tokenChannel = createChannel('tokens-preview');
 const tweakChannel = createChannel('tweaks-preview');
 const channels = [tokenChannel, tweakChannel];
-const current: { theme: ThemeChoice } = { theme: null };
+const current: { theme: ThemeChoice; pointer: boolean } = { theme: null, pointer: false };
+
+type SharePointerMessage = Extract<BridgeToParent, { type: 'share-pointer' }>;
+const pointerListeners = new Set<(frame: BridgeFrame, message: SharePointerMessage) => void>();
 const canvas: { front: string | null; swapping: boolean } = { front: null, swapping: false };
 
 function holding(channel: CssChannel): boolean {
@@ -134,17 +137,33 @@ export function useCanvasTheme(): ThemeChoice {
   return useSyncExternalStore(subscribeTheme, () => current.theme);
 }
 
+export function setSharePointer(on: boolean): void {
+  if (current.pointer === on) return;
+  current.pointer = on;
+  for (const frame of tokenFrames()) postToFrame(frame, { type: 'share-pointer', on });
+}
+
+export function onSharePointer(listener: (frame: BridgeFrame, message: SharePointerMessage) => void): () => void {
+  pointerListeners.add(listener);
+  return () => pointerListeners.delete(listener);
+}
+
 function syncTokenFrame(frame: BridgeFrame): void {
   for (const channel of channels) {
     if (holding(channel)) channel.hold.fresh.add(frame.token);
     else if (channel.css !== '') postToFrame(frame, { type: channel.type, css: channel.css });
   }
   if (current.theme !== null) postToFrame(frame, { type: 'set-theme', theme: current.theme });
+  if (current.pointer) postToFrame(frame, { type: 'share-pointer', on: true });
 }
 
 function onTokenFrameMessage(frame: BridgeFrame, message: BridgeToParent): void {
   if (message.type === 'ready') {
     syncTokenFrame(frame);
+    return;
+  }
+  if (message.type === 'share-pointer') {
+    for (const listener of pointerListeners) listener(frame, message);
     return;
   }
   if (message.type !== 'painted') return;

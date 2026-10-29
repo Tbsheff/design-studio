@@ -1,9 +1,10 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import type { VectorRequest, VectorResult } from '../shared/vector';
+import { vectorToolKeyOf, type VectorRequest, type VectorResult, type VectorToolId } from '../shared/vector';
 import { json } from './api';
 import { isTypingTarget } from './typingTarget';
 
-export type VectorToolId = 'rect' | 'ellipse' | 'pen';
+export type { VectorToolId };
+export const PREVIEW_TOOL_KEY_EVENT = 'studio:preview-tool-key';
 
 interface State {
   tool: VectorToolId | null;
@@ -42,27 +43,27 @@ export const VECTOR_TOOLS: { id: VectorToolId; label: string; key: string; keyLa
   { id: 'pen', label: 'Pen', key: 'P', keyLabel: '⇧P', glyph: 'M8 2.5 12.5 9 8 13.5 3.5 9zM8 2.5v5.25M8 9.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' },
 ];
 
-function toolForKey(event: KeyboardEvent): VectorToolId | null {
-  if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return null;
-  if (event.key === 'P' && event.shiftKey) return 'pen';
-  if (event.shiftKey) return null;
-  const key = event.key.toLowerCase();
-  return key === 'r' ? 'rect' : key === 'o' ? 'ellipse' : null;
-}
-
 export function useVectorToolKeys(available: boolean): void {
   useEffect(() => vectorTool.setAvailable(available), [available]);
   useEffect(() => () => vectorTool.setAvailable(false), []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || isTypingTarget(event.target) || document.querySelector('.play-bar')) return;
-      const tool = toolForKey(event);
+      const tool = vectorToolKeyOf(event);
       if (!tool || !vectorTool.get().available) return;
       event.preventDefault();
       vectorTool.toggle(tool);
     };
+    const onForwarded = (event: Event) => {
+      const tool = (event as CustomEvent<{ tool?: VectorToolId }>).detail?.tool;
+      if (tool && vectorTool.get().available && !document.querySelector('.play-bar')) vectorTool.toggle(tool);
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(PREVIEW_TOOL_KEY_EVENT, onForwarded);
+    };
   }, []);
 }
 

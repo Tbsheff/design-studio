@@ -1,7 +1,9 @@
 import { STUDIO_TOKEN_HEADER } from '../shared/contracts';
+import type { BridgeFrame } from './bridge';
 import type { SharePresenceCursor, SharePresenceEvent, StudioCursorInput } from '../shared/share';
 import { getSession } from './session';
 import { SHARES_CHANGED } from './shareApi';
+import { onSharePointer, setSharePointer } from './tokenFrames';
 import './styles/share-live.css';
 
 const RETRY_MS = 5000;
@@ -165,34 +167,46 @@ function studioPointer(projectId: string, stage: () => HTMLElement | null) {
     pending = value;
     if (!timer) timer = window.setTimeout(flush, SEND_MS);
   };
-  const onMove = (event: PointerEvent) => {
+  const at = (from: Element | null, clientX: number, clientY: number) => {
     const root = stage();
-    const target = event.target instanceof Element ? event.target.closest<HTMLElement>(FRAME_SELECTOR) : null;
+    const target = from?.closest<HTMLElement>(FRAME_SELECTOR) ?? null;
     if (!root || !target || !root.contains(target) || target.offsetWidth === 0) {
-      if (lastFrame !== null) queue(null);
-      lastFrame = null;
+      onLeave();
       return;
     }
     const r = target.getBoundingClientRect();
     const scale = r.width / target.offsetWidth;
     lastFrame = target.dataset.frameId ?? null;
-    queue({ frameId: lastFrame, x: Math.max(0, (event.clientX - r.left) / scale), y: Math.max(0, (event.clientY - r.top) / scale) });
+    queue({ frameId: lastFrame, x: Math.max(0, (clientX - r.left) / scale), y: Math.max(0, (clientY - r.top) / scale) });
   };
-  const onLeave = () => {
+  const onMove = (event: PointerEvent) => at(event.target instanceof Element ? event.target : null, event.clientX, event.clientY);
+  const onFrame = (frame: BridgeFrame, message: { x: number; y: number; inside: boolean }) => {
+    const iframe = frame.element;
+    if (!message.inside || !iframe || iframe.offsetWidth === 0) return;
+    const r = iframe.getBoundingClientRect();
+    const scale = r.width / iframe.offsetWidth;
+    at(iframe, r.left + message.x * scale, r.top + message.y * scale);
+  };
+  function onLeave() {
     if (lastFrame !== null) queue(null);
     lastFrame = null;
-  };
+  }
+  let offFrame: (() => void) | null = null;
   return {
     set(next: boolean) {
       if (next === on) return;
       on = next;
+      setSharePointer(on);
       if (on) {
         document.addEventListener('pointermove', onMove, true);
         document.documentElement.addEventListener('pointerleave', onLeave);
+        offFrame = onSharePointer(onFrame);
         return;
       }
       document.removeEventListener('pointermove', onMove, true);
       document.documentElement.removeEventListener('pointerleave', onLeave);
+      offFrame?.();
+      offFrame = null;
       onLeave();
     },
   };

@@ -754,6 +754,12 @@
   bottom: var(--s-2);
 }
 
+.ins-tweaks-prompt .ins-tweaks-auto {
+  position: absolute;
+  left: var(--s-1);
+  bottom: var(--s-2);
+}
+
 .edit-pane .box-ring .side {
   padding: 0 2px;
   text-align: center;

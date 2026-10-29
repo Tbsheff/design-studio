@@ -30,11 +30,16 @@ function TweaksPrompt({ running, onSuggest }: { running: boolean; onSuggest?: (p
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();
-              send();
+              if (text.trim()) send();
             }
           }}
         />
-        <button type="button" className="icon-btn small send" aria-label="Add tweaks panel" disabled={!onSuggest || running} onClick={send}>
+        {!text.trim() && (
+          <button type="button" className="btn small ghost ins-tweaks-auto" disabled={!onSuggest || running} data-tip="Claude picks the controls" onClick={send}>
+            Let Claude choose
+          </button>
+        )}
+        <button type="button" className="icon-btn small send" aria-label="Add tweaks panel" disabled={!onSuggest || running || !text.trim()} onClick={send}>
           <Icon name="arrowUp" size={14} />
         </button>
       </div>

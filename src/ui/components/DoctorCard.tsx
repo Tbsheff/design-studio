@@ -36,7 +36,11 @@ export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose }
         </button>
       </div>
       <p className="app-fail-message">{cause.detail}</p>
-      {cause.evidence[0] && <code className="app-doctor-evidence truncate" data-tip={cause.evidence.join('\n')} data-tip-align="start">{cause.evidence[0]}</code>}
+      {cause.evidence[0] && (
+        <span className="app-doctor-evidence" data-tip={cause.evidence.join('\n')} data-tip-align="start">
+          <code className="truncate">{cause.evidence[0]}</code>
+        </span>
+      )}
       {cause.command && (
         <div className="app-fail-cmd">
           <code className="truncate">{cause.command}</code>

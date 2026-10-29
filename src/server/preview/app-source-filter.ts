@@ -9,7 +9,10 @@ export function outsideAppExpression(selectors: readonly string[]): string {
     const stackOf = (f) => [f?._debugStack?.stack, f?.debugStack?.stack, f?.stack].find((v) => typeof v === 'string' && v.length > 0) || '';
     const chains = selectors.map((selector) => {
       let el = null;
-      try { el = document.querySelector(selector); } catch { el = null; }
+      const parts = selector.split(' > ');
+      for (let n = parts.length; !el && n > 0; n -= 1) {
+        try { el = document.querySelector(parts.slice(0, n).join(' > ')); } catch { el = null; }
+      }
       if (!el) return null;
       if (el.closest(${JSON.stringify(DEV_CHROME_SELECTOR)})) return 'chrome';
       const stacks = [];

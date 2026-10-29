@@ -7,6 +7,7 @@ import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch, type InsetProp, type PinAx
 import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, isGridDisplay, parentLayout, sizeFacts, sizeModeOf, sizePatch, type Axis, type SizeFacts, type SizeMode } from '../sizing';
 import { Icon, type IconName } from './Icon';
 import { InspectorSection, SelectField } from './InspectorFields';
+import { AddButton } from './InspectorShared';
 import { NumberField } from './NumberField';
 import { UiSelect } from './UiSelect';
 
@@ -126,7 +127,7 @@ function GapModeField({ edit }: { edit: DirectEdit }) {
   };
   return (
     <div className="ins-field select ins-gap-mode" data-tip="Auto puts the space between the children" data-tip-align="end">
-      <span className="ins-scrub static">Gap</span>
+      <span className="ins-scrub static">Spacing</span>
       <UiSelect className="ins-select" aria-label="Gap mode" value={mode} options={GAP_MODES} onChange={change} />
     </div>
   );
@@ -213,7 +214,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
   );
   const remove = (
     <button type="button" className="icon-btn small" aria-label="Remove auto layout" aria-keyshortcuts="Alt+Shift+A" data-tip="Remove auto layout ⌥⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
-      <Icon name="minus" size={14} />
+      <Icon name="close" size={12} />
     </button>
   );
   return (
@@ -222,12 +223,7 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
           <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
-          {!flex && !grid && (
-            <button type="button" className="btn small has-icon ins-add-layout" aria-keyshortcuts="Shift+A" data-tip="⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'flex' })}>
-              <Icon name="plus" size={14} />
-              Add auto layout
-            </button>
-          )}
+          {!flex && !grid && <AddButton label="Auto layout" tip="Add auto layout ⇧A" shortcut="Shift+A" onClick={() => write(edit, { display: 'flex' })} />}
         </div>
         {flex && <FlexControls edit={edit} />}
         {grid && <GridControls edit={edit} />}
@@ -310,11 +306,9 @@ export function MinMaxRows({ edit }: { edit: DirectEdit }) {
   const [open, setOpen] = useState(false);
   if (!open && !limitsSet(edit)) {
     return (
-      <p className="ins-add-links ins-limits-add">
-        <button type="button" className="ins-add-link" onClick={() => setOpen(true)}>
-          + Min/Max
-        </button>
-      </p>
+      <div className="ins-add-row ins-limits-add">
+        <AddButton label="Min/Max" tip="Add min and max width and height" onClick={() => setOpen(true)} />
+      </div>
     );
   }
   return (

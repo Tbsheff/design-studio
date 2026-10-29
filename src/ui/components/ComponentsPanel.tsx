@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentInfo, ProjectKind, SelectionContext } from '../../shared/contracts';
 import type { InsertableComponent } from '../../shared/insert';
 import { componentThumb, type ComponentList } from '../useComponents';
-import { ComponentPreviewThumb } from './ComponentPreviewThumb';
+import { ComponentPreviewThumb, trimmedUrl } from './ComponentPreviewThumb';
 import { DragGhost, InsertMenu, useComponentDrag, useInsertable, type ComponentDrag } from './ComponentInsert';
 import { Icon } from './Icon';
 import { PanelHead } from './SheetHead';
@@ -38,7 +38,7 @@ function Thumb({ projectId, directionId, component, version, active }: { project
     }
     if (!active) return;
     let live = true;
-    componentThumb(projectId, directionId, component.id, version).then(
+    componentThumb(projectId, directionId, component.id, version).then(trimmedUrl).then(
       (next) => {
         if (!live) {
           if (next) URL.revokeObjectURL(next);

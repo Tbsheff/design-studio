@@ -51,13 +51,13 @@ function targetOf(selection: SelectionContext): InsertTarget {
 
 function ColorRow({ label, value, disabled, onSave }: { label: string; value: string; disabled: boolean; onSave: (value: string | null) => void }) {
   const [text, setText] = useState<string | null>(null);
-  const shown = text ?? (value || 'none');
+  const shown = text ?? (/^#[0-9a-f]+$/i.test(value) ? value.toLowerCase() : value || 'none');
   const valid = (raw: string) => raw.trim() === '' || VECTOR_COLOR.test(raw.trim());
   const settle = () => {
     if (text === null) return;
     const next = text.trim();
     setText(null);
-    if (!valid(next) || next === value) return;
+    if (!valid(next) || next.toLowerCase() === value.toLowerCase()) return;
     onSave(next === '' || next === 'none' ? null : next);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

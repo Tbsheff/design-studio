@@ -23,7 +23,7 @@ import { CopyCssButton, InspectorOtherStyles } from './InspectorOtherStyles';
 import { ContentRow, CssTextRow, TextStyleToggles } from './InspectorRows';
 import { CreateTokenHost, FontField, MatchSection, SnapToggle, TokenLint, TokenNotes, useInspectorTokens } from './InspectorTokens';
 import { SourceLink } from './InspectorSource';
-import { InspectorAppContext, SharedSourceNote, dataTextPrompt, useInspectorApp } from './InspectorShared';
+import { AddButton, InspectorAppContext, SharedSourceNote, dataTextPrompt, useInspectorApp } from './InspectorShared';
 import { NumberField } from './NumberField';
 
 export interface EditorProps {
@@ -45,10 +45,10 @@ const NEW_BORDER = { 'border-width': '1px', 'border-style': 'solid', 'border-col
 
 type Extra = 'shadow' | 'text-shadow' | 'transform' | 'filter';
 const EXTRAS: { id: Extra; label: string }[] = [
-  { id: 'shadow', label: 'shadow' },
-  { id: 'text-shadow', label: 'text shadow' },
-  { id: 'transform', label: 'transform' },
-  { id: 'filter', label: 'filter' },
+  { id: 'shadow', label: 'Shadow' },
+  { id: 'text-shadow', label: 'Text shadow' },
+  { id: 'transform', label: 'Transform' },
+  { id: 'filter', label: 'Filter' },
 ];
 
 function isSet(value: string): boolean {
@@ -144,17 +144,11 @@ function AppearanceSection({ edit, extras, onReveal }: { edit: DirectEdit; extra
       {extras.has('transform') && <CssTextRow prop="transform" label="Transform" short="Transform" edit={edit} placeholder="rotate(4deg)" />}
       {extras.has('filter') && <CssTextRow prop="filter" label="Filter" short="Filter" edit={edit} placeholder="blur(4px)" />}
       {hidden.length > 0 && (
-        <p className="ins-add-links">
-          <span>Add:</span>
-          {hidden.map((extra, index) => (
-            <span key={extra.id}>
-              {index > 0 && <span aria-hidden="true"> · </span>}
-              <button type="button" className="ins-add-link" onClick={() => onReveal(extra.id)}>
-                {extra.label}
-              </button>
-            </span>
+        <div className="ins-add-row" role="group" aria-label="Add to appearance">
+          {hidden.map((extra) => (
+            <AddButton key={extra.id} label={extra.label} onClick={() => onReveal(extra.id)} />
           ))}
-        </p>
+        </div>
       )}
     </InspectorSection>
   );
@@ -164,15 +158,16 @@ function BorderSection({ edit }: { edit: DirectEdit }) {
   const on = hasBorder(edit);
   const aside = on ? (
     <button type="button" className="icon-btn small" aria-label="Remove border" data-tip="Remove border" data-tip-align="end" onClick={() => write(edit, { 'border-width': '0px', 'border-style': 'none' })}>
-      <Icon name="minus" size={14} />
+      <Icon name="close" size={12} />
     </button>
-  ) : (
-    <button type="button" className="ins-add-link" onClick={() => write(edit, NEW_BORDER)}>
-      Add border
-    </button>
-  );
+  ) : undefined;
   return (
-    <InspectorSection title="Border" aside={aside} className={on ? '' : 'collapsed'}>
+    <InspectorSection title="Border" aside={aside}>
+      {!on && (
+        <div className="ins-add-row">
+          <AddButton label="Border" onClick={() => write(edit, NEW_BORDER)} />
+        </div>
+      )}
       {on && (
         <div className="ins-grid">
           <NumberField short="Width" spec={{ prop: 'border-width', label: 'Border width', edit, min: 0 }} />
@@ -217,8 +212,8 @@ function SimpleSections({ edit, ui, selection }: { edit: DirectEdit; ui: TokenUi
       <LayoutSection edit={edit} selection={selection} />
       <TextSection edit={edit} ui={ui} selection={selection} />
       <AppearanceSection edit={edit} extras={extras} onReveal={reveal} />
+      {extras.has('shadow') && <EffectsSection edit={edit} revealed={revealed.has('shadow')} />}
       <BorderSection edit={edit} />
-      {extras.has('shadow') && <EffectsSection edit={edit} />}
     </>
   );
 }
@@ -320,7 +315,7 @@ export function SimpleEditor(props: SimpleEditorProps) {
   );
 }
 
-export function SimpleMultiEditor(props: EditorProps) {
+export function SimpleMultiEditor(props: EditorProps & { component?: ReactNode }) {
   const first = props.selection[0] as SelectionContext;
   const scope = { projectId: props.projectId, directionId: props.directionId, selection: first, tokens: props.tokens, onCommitted: props.onCommitted };
   const tk = useInspectorTokens(scope);
@@ -346,6 +341,7 @@ export function SimpleMultiEditor(props: EditorProps) {
         <div className="ins-scroll">
           <MultiNote reason={edit.blocked} />
           <ErrorLine status={edit.status} />
+          {props.component}
           <fieldset className="ins-fieldset" disabled={edit.blocked !== null}>
             <SimpleSections edit={edit} ui={tk.ui} selection={null} />
           </fieldset>

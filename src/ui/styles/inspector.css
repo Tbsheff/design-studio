@@ -405,7 +405,7 @@
 
 .box-ring {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  grid-template-columns: 60px minmax(0, 1fr) 60px;
   grid-template-areas:
     'head head head'
     '. top .'
@@ -481,13 +481,13 @@
 .box-ring .side-cell.top {
   grid-area: top;
   justify-self: center;
-  width: 48px;
+  width: 60px;
 }
 
 .box-ring .side-cell.bottom {
   grid-area: bottom;
   justify-self: center;
-  width: 48px;
+  width: 60px;
 }
 
 .box-ring .side-cell.left {
@@ -542,18 +542,6 @@
 
 .ins-layout-row > .ins-field {
   min-width: 0;
-}
-
-.ins-add-layout {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.edit-pane .btn.small.ins-add-layout {
-  height: 28px;
-  padding: 0 var(--s-2);
-  gap: var(--s-1);
 }
 
 .ins-flex {

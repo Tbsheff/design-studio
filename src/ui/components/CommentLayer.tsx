@@ -323,6 +323,14 @@ export function CommentLayer(props: Props) {
     setFeedbackActive(false);
   }, [selKey]);
 
+  const modeKey = `${props.commentMode}:${props.selectMode}:${props.editing}`;
+  const lastMode = useRef(modeKey);
+  useEffect(() => {
+    if (lastMode.current === modeKey) return;
+    lastMode.current = modeKey;
+    setDismissedKey(selKey);
+  }, [modeKey, selKey]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;

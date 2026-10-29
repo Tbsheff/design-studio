@@ -398,6 +398,27 @@
   --viewrow-h: 48px;
 }
 
+.pane-canvas > .canvas {
+  container: canvas-pane / inline-size;
+}
+
+@container canvas-pane (max-width: 800px) {
+  .pane-canvas .canvas-viewrow .select-toggle kbd,
+  .pane-canvas .canvas-viewrow .dims-readout {
+    display: none;
+  }
+}
+
+@container canvas-pane (max-width: 640px) {
+  .pane-canvas .canvas-viewrow .select-toggle .label {
+    display: none;
+  }
+  .pane-canvas .canvas-viewrow .select-toggle {
+    width: 28px;
+    padding: 0;
+  }
+}
+
 .pane-canvas .canvas-viewrow {
   position: absolute;
   z-index: 30;
@@ -428,7 +449,7 @@
 .tweak-prompt {
   position: absolute;
   z-index: 40;
-  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px));
+  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px));
   left: 40px;
   display: flex;
   align-items: center;
@@ -486,6 +507,18 @@
 }
 
 @container (max-width: 760px) {
+  .pane-canvas .canvas-topbar .btn.topbar-review > span:not(.review-badge) {
+    display: inline;
+  }
+
+  .pane-canvas .canvas-topbar .btn.topbar-review {
+    padding: 0 var(--s-2);
+  }
+
+  .pane-canvas .canvas-topbar .btn.topbar-review > .icon {
+    display: none;
+  }
+
   .canvas-topbar .topbar-tools > button > span,
   .canvas-topbar .topbar-avatar {
     display: none;

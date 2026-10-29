@@ -223,7 +223,6 @@ function RulersSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 
 export function VectorToolButtons() {
   const { tool, available } = useVectorTool();
-  if (!available) return null;
   return (
     <div className="ui-tools topbar-tools vector-tools" role="group" aria-label="Shape tools">
       {VECTOR_TOOLS.map((item) => (
@@ -231,7 +230,8 @@ export function VectorToolButtons() {
           key={item.id}
           type="button"
           aria-label={item.label}
-          aria-pressed={tool === item.id}
+          aria-pressed={available && tool === item.id}
+          disabled={!available}
           aria-keyshortcuts={item.id === 'pen' ? 'Shift+P' : item.keyLabel}
           data-tip={`${item.label} ${item.keyLabel}`}
           onClick={() => vectorTool.toggle(item.id)}

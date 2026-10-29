@@ -27,13 +27,23 @@ function step(key: string, index: number, count: number): number | null {
 export function PreviewMenu({ at, label, items, onClose }: { at: { x: number; y: number }; label: string; items: PreviewMenuItem[]; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(at);
+  const [scrolls, setScrolls] = useState(false);
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    setPos({ x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)), y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)) });
+    const clamp = () => {
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+      const last = el.lastElementChild as HTMLElement | null;
+      setScrolls((last ? last.offsetTop + last.offsetHeight : height) > window.innerHeight - EDGE * 2);
+      setPos({ x: Math.max(EDGE, Math.min(at.x, window.innerWidth - width - EDGE)), y: Math.max(EDGE, Math.min(at.y, window.innerHeight - height - EDGE)) });
+    };
+    clamp();
     el.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus({ preventScroll: true });
+    const observer = new ResizeObserver(clamp);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [at]);
 
   useEffect(() => {
@@ -65,7 +75,7 @@ export function PreviewMenu({ at, label, items, onClose }: { at: { x: number; y:
   };
 
   return (
-    <div ref={ref} className="project-menu at-pointer preview-menu" role="menu" aria-label={label} style={{ position: 'fixed', left: pos.x, top: pos.y, right: 'auto' }} onKeyDown={onKeyDown} onContextMenu={(event) => event.preventDefault()}>
+    <div ref={ref} className={`project-menu at-pointer preview-menu${scrolls ? ' scrolls' : ''}`} role="menu" aria-label={label} style={{ position: 'fixed', left: pos.x, top: pos.y, right: 'auto' }} onKeyDown={onKeyDown} onContextMenu={(event) => event.preventDefault()}>
       {items
         .filter((item) => !item.hidden)
         .map((item) => (

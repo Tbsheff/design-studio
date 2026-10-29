@@ -89,7 +89,13 @@
 }
 
 .compare-code-view .diff-line {
-  grid-template-columns: 4ch 4ch 2ch 1fr;
+  grid-template-columns: 4ch 4ch 2ch minmax(0, 1fr);
+  white-space: pre-wrap;
+}
+
+.compare-code-view .diff-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .compare-code-note {

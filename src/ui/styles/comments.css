@@ -1048,7 +1048,7 @@
 
 .comment-mode-pill {
   position: absolute;
-  top: var(--s-2);
+  top: calc(var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px));
   left: 50%;
   z-index: 30;
   display: flex;
@@ -1058,11 +1058,11 @@
   padding: 0 var(--s-3);
   box-sizing: border-box;
   border-radius: var(--r-full);
-  background: var(--float-accent);
-  color: oklch(1 0 0);
+  background: var(--float-bg);
+  color: var(--float-fg);
   font: 500 12px/16px var(--font);
   white-space: nowrap;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--float-shadow);
   translate: -50% 0;
   pointer-events: none;
   user-select: none;
@@ -1083,7 +1083,7 @@
   padding: 0 6px;
   border: 0;
   border-radius: var(--r-full);
-  background: var(--halo-soft);
+  background: var(--float-bg-hover);
   color: inherit;
   font: 500 var(--t-2xs)/1 var(--font);
   box-shadow: none;

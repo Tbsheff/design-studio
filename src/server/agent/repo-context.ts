@@ -230,3 +230,24 @@ export async function loadRepoContext(project: Pick<Project, 'app'>, workTree: s
   const text = parts.length ? `<repo_context>\n${BLOCK_INTRO}\n\n${parts.join('\n\n')}\n</repo_context>` : null;
   return { workspaceRoot: found.root, appDir: appRel || '.', files, bytes, text };
 }
+
+const OUTLINE_MAX_LINES = 30;
+
+function titleLines(text: string): string[] {
+  return text
+    .split('\n')
+    .filter((line) => /^#{1,2} \S/.test(line))
+    .slice(0, OUTLINE_MAX_LINES);
+}
+
+export async function loadRepoContextOutline(project: Pick<Project, 'app'>, workTree: string): Promise<string | null> {
+  const found = contextDirs(project, workTree);
+  if (!found) return null;
+  const outer = found.dirs[found.dirs.length - 1]?.abs ?? found.appDir;
+  const boundary = (await realOrNull(outer)) ?? outer;
+  const list = candidates(found.dirs, outer).filter((candidate) => FOCUS_FILES.has(path.basename(candidate.abs)));
+  const { loaded } = await loadFiles(list, boundary, null);
+  const parts = loaded.map((item) => ({ path: item.file.path, titles: titleLines(item.text) })).filter((item) => item.titles.length > 0);
+  if (parts.length === 0) return null;
+  return parts.map((item) => `<file path="${item.path}" titles-only="true">\n${item.titles.join('\n')}\n</file>`).join('\n');
+}

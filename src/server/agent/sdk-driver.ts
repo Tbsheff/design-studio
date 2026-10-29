@@ -32,6 +32,7 @@ import { buildUserMessageParts, toSdkPrompt, type UserMessageParts } from './use
 import { describeTargetLayout } from './run-target.js';
 import { createScreenshotTrimStore } from './screenshot-trim-store.js';
 import { designMdDigest } from './design-md-digest.js';
+import { isLeanRun, LEAN_RUN_BLOCK, leanRunConfig } from './lean-run.js';
 
 type QueryFn = typeof query;
 type StreamEventMessage = Extract<SDKMessage, { type: 'stream_event' }>;
@@ -186,10 +187,18 @@ function runSkillIds(skills: PreparedSkills, input: DriverInput, config: Resolve
   return { recommended, loaded: [...new Set([...recommended, ...namedSkills(skills.enabled, input.ctx.request.prompt)])] };
 }
 
+function skipsReview(input: DriverInput, total: DriverOutcome): boolean {
+  return input.signal.aborted || total.status === 'failed' || isLeanRun(input.ctx.request);
+}
+
+function leanEdit(input: DriverInput): boolean {
+  return input.ctx.request.mode === 'edit' && isLeanRun(input.ctx.request);
+}
+
 function prepareMessage(parts: UserMessageParts, setup: AttemptSetup, input: DriverInput, prompt: { text: string; hash: string }, resume: string | null): PreparedMessage {
   const { config } = setup;
   const recommendedSkills = setup.runSkills.recommended;
-  const withSkills = withRunLevel(withRecommendedSkills(parts, recommendedSkills), config, input.ctx.request.mode, { app: Boolean(input.ctx.project.app), appTokens: input.ctx.project.kind === 'react' && Boolean(input.ctx.designSystem?.source) });
+  const withSkills = leanEdit(input) ? { ...parts, text: `${LEAN_RUN_BLOCK}\n\n${parts.text}` } : withRunLevel(withRecommendedSkills(parts, recommendedSkills), config, input.ctx.request.mode, { app: Boolean(input.ctx.project.app), appTokens: input.ctx.project.kind === 'react' && Boolean(input.ctx.designSystem?.source) });
   const sent = resume ? withUpdatedInstructions(withSkills, prompt.text, prompt.hash, priorFor(input, resume)) : withSkills;
   return { sent, updatedInstructions: sent !== withSkills, recommendedSkills };
 }
@@ -686,7 +695,8 @@ async function consumeStream(stream: SdkStream, state: StreamState, input: Drive
 
 export function createSdkDriver(options: SdkDriverOptions): RunDriver {
   async function setupAttempt(input: DriverInput): Promise<AttemptSetup> {
-    const config = withRunTask(resolveRunConfig(input.ctx.project.settings, levelOf(input.ctx.request, input.ctx.project.settings)), input.ctx.request.task);
+    const resolved = withRunTask(resolveRunConfig(input.ctx.project.settings, levelOf(input.ctx.request, input.ctx.project.settings)), input.ctx.request.task);
+    const config = isLeanRun(input.ctx.request) ? leanRunConfig(resolved) : resolved;
     const run: RunToolState = {
       config,
       spentUsd: () => 0,
@@ -777,7 +787,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
 
   async function appReviewPass(input: DriverInput, segment: AttemptSegment, total: DriverOutcome, pass: number): Promise<{ outcome: DriverOutcome; record: AppReviewRecord } | null> {
     const run = segment.setup.run;
-    const gaps = input.signal.aborted || total.status === 'failed' ? null : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
+    const gaps = skipsReview(input, total) ? null : appReviewGaps(input.ctx, run, run.log?.toolOrder ?? []);
     if (!gaps) return null;
     const review = await studioAppReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId, ...(input.baseFile ? { baseFile: input.baseFile } : {}) }, gaps);
     const text = appReviewPrompt(review, gaps, pass);
@@ -806,7 +816,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
 
   async function continueScreenReview(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<DriverOutcome> {
     const run = segment.setup.run;
-    if (input.signal.aborted || total.status !== 'completed') return total;
+    if (input.signal.aborted || total.status !== 'completed' || isLeanRun(input.ctx.request)) return total;
     const unseen = await unseenScreens({ preview: options.preview, ctx: input.ctx, run });
     if (unseen.length === 0) return total;
     const review = await studioScreenReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId }, unseen);

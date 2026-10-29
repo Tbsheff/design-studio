@@ -1,10 +1,24 @@
 import { STUDIO_TOKEN_HEADER } from '../shared/contracts';
+import type { HunkRevertRequest, HunkRevertResult } from '../shared/hunk';
 import { json } from './api';
 import { getSession } from './session';
 
 const MAX_THUMB_FETCHES = 2;
 
 const base = (pid: string, vid: string) => `/api/projects/${encodeURIComponent(pid)}/versions/${encodeURIComponent(vid)}`;
+
+const COMPARE_MODE_KEY = 'design-studio.compare-mode';
+
+export const revertHunk = (pid: string, did: string, request: HunkRevertRequest) =>
+  json<HunkRevertResult>('POST', `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/hunks/revert`, request);
+
+export function openCompareInCode(): void {
+  try {
+    localStorage.setItem(COMPARE_MODE_KEY, 'code');
+  } catch {
+    return;
+  }
+}
 
 export const renameVersion = (pid: string, vid: string, name: string | null) => json<{ id: string; name: string | null }>('PATCH', base(pid, vid), { name });
 

@@ -974,6 +974,8 @@ export interface FreeMoveStart {
   siblings: SelectionContext['rect'][];
   left: number;
   top: number;
+  fromRight: boolean;
+  fromBottom: boolean;
   convert: boolean;
   transform: string;
   blocked?: string;

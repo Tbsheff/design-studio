@@ -1,4 +1,5 @@
 import type { FreeMoveDrag, FreeMoveInsert, FreeMoveLine, FreeMoveStart, SelectionContext, SourceLoc } from '../shared/contracts.js';
+import { authoredBox } from './authored.js';
 import { isLayer } from './layers.js';
 
 type Rect = SelectionContext['rect'];
@@ -6,7 +7,7 @@ type FlowAxis = 'x' | 'y' | 'grid';
 
 const START_PX = 4;
 const SIBLING_MAX = 200;
-const MAPPED = 'This element is one of several copies made by one line of code (a .map() loop), so it cannot move on its own. Change the order of the data instead.';
+const MAPPED = 'This element is one of several copies made by one line of code (a .map() loop, or a component used more than once), so it cannot move on its own. Change the order of the data, or move the component use in the code.';
 const NO_SOURCE = 'This element has no source location, so it cannot move here.';
 const REF_NO_SOURCE = 'The element at the drop place has no source location, so the move cannot go there.';
 
@@ -81,11 +82,20 @@ function visible(rect: Rect): boolean {
   return rect.width > 0 || rect.height > 0;
 }
 
-function absoluteStart(element: Element, others: Element[]): { left: number; top: number; convert: boolean } | null {
+type AbsoluteStart = Pick<FreeMoveStart, 'left' | 'top' | 'convert' | 'fromRight' | 'fromBottom'>;
+
+function anchored(element: Element, cs: CSSStyleDeclaration): AbsoluteStart {
+  const box = authoredBox(element, true);
+  const fromRight = box.left === undefined && box.right !== undefined && box.right !== 'auto';
+  const fromBottom = box.top === undefined && box.bottom !== undefined && box.bottom !== 'auto';
+  return { left: num(fromRight ? cs.right : cs.left), top: num(fromBottom ? cs.bottom : cs.top), convert: false, fromRight, fromBottom };
+}
+
+function absoluteStart(element: Element, others: Element[]): AbsoluteStart | null {
   const cs = getComputedStyle(element);
-  if (cs.position === 'absolute' || cs.position === 'fixed') return { left: num(cs.left), top: num(cs.top), convert: false };
+  if (cs.position === 'absolute' || cs.position === 'fixed') return anchored(element, cs);
   if (cs.position !== 'static' || others.length === 0 || !others.every(isOut) || !(element instanceof HTMLElement)) return null;
-  return { left: element.offsetLeft - num(cs.marginLeft), top: element.offsetTop - num(cs.marginTop), convert: true };
+  return { left: element.offsetLeft - num(cs.marginLeft), top: element.offsetTop - num(cs.marginTop), convert: true, fromRight: false, fromBottom: false };
 }
 
 function placeOf(loc: { own: SourceLoc | null; usedAt: SourceLoc | null } | undefined): SourceLoc | null {
@@ -112,6 +122,8 @@ function begin(element: Element, ports: FreeMovePorts): Session {
     left: abs?.left ?? 0,
     top: abs?.top ?? 0,
     convert: abs?.convert ?? false,
+    fromRight: abs?.fromRight ?? false,
+    fromBottom: abs?.fromBottom ?? false,
     transform: getComputedStyle(element).transform,
   };
   const sources = Promise.all([element, ...flow.map((item) => item.element)].map((each) => ports.ownSource(each)));

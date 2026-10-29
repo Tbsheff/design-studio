@@ -62,8 +62,11 @@ function transformOf(s: Session, dx: number, dy: number): string {
 }
 
 function absoluteStyle(s: Session, dx: number, dy: number): Record<string, string> {
-  const style: Record<string, string> = { left: `${Math.round(s.start.left + dx)}px`, top: `${Math.round(s.start.top + dy)}px` };
-  if (s.start.convert) style.position = 'absolute';
+  const style: Record<string, string> = {};
+  const { fromRight, fromBottom } = s.start;
+  if (dx !== 0 || s.start.convert) style[fromRight ? 'right' : 'left'] = `${Math.round(s.start.left + (fromRight ? -dx : dx))}px`;
+  if (dy !== 0 || s.start.convert) style[fromBottom ? 'bottom' : 'top'] = `${Math.round(s.start.top + (fromBottom ? -dy : dy))}px`;
+  if (s.start.convert) Object.assign(style, { position: 'absolute', width: `${Math.round(s.start.rect.width)}px` });
   return style;
 }
 

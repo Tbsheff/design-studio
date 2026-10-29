@@ -3,11 +3,8 @@
   z-index: 6;
   box-sizing: border-box;
   display: flex;
-  align-items: center;
-  gap: var(--s-1);
+  flex-direction: column;
   width: 320px;
-  height: 28px;
-  padding: 0 2px 0 var(--s-1);
   border-radius: var(--r-md);
   background: var(--float-bg);
   color: var(--float-fg);
@@ -21,6 +18,56 @@
   @starting-style {
     opacity: 0;
   }
+}
+
+.inline-prompt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 28px;
+  padding: 0 2px 0 var(--s-1);
+}
+
+.inline-prompt-scope {
+  box-sizing: border-box;
+  display: flex;
+  gap: 2px;
+  height: 28px;
+  padding: 2px;
+  border-top: 1px solid var(--float-line);
+}
+
+.inline-prompt-scope button {
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 0 var(--s-1);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--float-fg-muted);
+  font: 500 11px/24px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.inline-prompt-scope button:hover:not(.on) {
+  background: var(--float-bg-hover);
+  color: var(--float-fg);
+}
+
+.inline-prompt-scope button.on {
+  background: var(--float-accent-tint);
+  color: var(--float-accent-text);
+}
+
+.inline-prompt-scope button:focus-visible {
+  outline: 1px solid var(--float-accent-line);
+  outline-offset: -1px;
 }
 
 .inline-prompt:focus-within {

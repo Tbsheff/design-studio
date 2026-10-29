@@ -8,6 +8,7 @@ import { layoutLines } from './layout-region.js';
 import { referenceBlock, variationBlock } from '../variations/message.js';
 import { referencePagesBlock } from '../reference-page.js';
 import { isReferenceName, plainAttachmentName, REFERENCE_LOW_SCORE } from '../../shared/reference.js';
+import { editScopeOf, type EditScope } from '../../shared/usage-scope.js';
 
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const;
 type ImageMime = (typeof IMAGE_MIMES)[number];
@@ -128,6 +129,24 @@ export function canvasContextBlock(target: RunTarget | null | undefined, selecti
   return lines.filter((line): line is string => line !== null).join('\n');
 }
 
+function routeList(routes: readonly string[]): string {
+  return routes.length ? routes.join(', ') : '(none listed)';
+}
+
+export function editScopeBlock(scope: EditScope | undefined): string | null {
+  if (!scope) return null;
+  const name = scope.component ? `${scope.component} in ${scope.file}` : scope.file;
+  const count = `${scope.routes.length} route${scope.routes.length === 1 ? '' : 's'}`;
+  if (scope.choice === 'all') {
+    return `<edit-scope>all uses
+The user picked "All uses": change the shared file ${name} itself. The change shows on all ${count} that use it: ${routeList(scope.routes)}. Name these routes in your final reply.
+</edit-scope>`;
+  }
+  return `<edit-scope>this use
+The selected element comes from ${name}, which ${count} use: ${routeList(scope.routes)}. The user picked "This use": change only this use, on the page in <canvas-context>. Never edit ${scope.file}. Pass a prop or className at the call site that renders it for this page. When that call site is a layout that other routes share, make the change apply to this page only and say so in your final reply.
+</edit-scope>`;
+}
+
 type NamedAttachment = { name?: string; mime?: string };
 
 function imageAttachments(attachments: readonly unknown[] | undefined): NamedAttachment[] {
@@ -166,6 +185,8 @@ export function buildUserText(ctx: Pick<AgentRunContext, 'request' | 'designMd' 
   if (reference) blocks.push(reference);
   const pages = referencePagesBlock(ctx.request.referencePages);
   if (pages) blocks.push(pages);
+  const scope = editScopeBlock(editScopeOf(ctx.request));
+  if (scope) blocks.push(scope);
   const selection = ctx.request.selection ?? [];
   if (selection.length) {
     blocks.push(['<selected-elements>', ...selection.map(formatSelection), '</selected-elements>'].join('\n'));

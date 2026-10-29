@@ -38,7 +38,7 @@ export function useSkillCatalog(): { catalog: SkillCatalog | null; error: string
       live = false;
     };
   }, []);
-  useEffect(() => load(true), [load]);
+  useEffect(() => load(false), [load]);
   return { catalog, error, reload: () => void load(true) };
 }
 

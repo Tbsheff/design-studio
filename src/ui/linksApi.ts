@@ -100,6 +100,7 @@ export function useLinks(projectId: string): LinksFile {
 }
 
 const IMPLICIT_DEBOUNCE_MS = 400;
+const REPLAY_SLACK_MS = 1000;
 
 export function useImplicitLinks(projectId: string, framesKey: string): PrototypeLink[] {
   const [links, setLinks] = useState<PrototypeLink[]>([]);
@@ -118,11 +119,19 @@ export function useImplicitLinks(projectId: string, framesKey: string): Prototyp
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => fetchNow.current(), IMPLICIT_DEBOUNCE_MS);
   };
+  const mountedAt = useRef(Date.now());
+  const lastKey = useRef(framesKey);
   useEffect(() => {
     fetchNow.current();
     return () => window.clearTimeout(timer.current);
-  }, [projectId, framesKey]);
+  }, [projectId]);
+  useEffect(() => {
+    const before = lastKey.current;
+    lastKey.current = framesKey;
+    if (before !== '' && before !== framesKey) later();
+  }, [framesKey]);
   useProjectEvents(projectId, (event) => {
+    if (event.ts < mountedAt.current - REPLAY_SLACK_MS) return;
     if (event.type === 'files.changed' || event.type === 'links.changed' || event.type === 'version.created') later();
   });
   return links;

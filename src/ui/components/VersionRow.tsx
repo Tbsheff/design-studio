@@ -128,11 +128,16 @@ function VersionDetail({ version: v, index, id, onOpenVersion }: { version: Vers
             {v.changedFiles.map((file) => (
               <code key={file}>{file}</code>
             ))}
+            {fileCount(v) > v.changedFiles.length && <span>and {fileCount(v) - v.changedFiles.length} more</span>}
           </dd>
         </div>
       )}
     </dl>
   );
+}
+
+function fileCount(v: Version): number {
+  return Math.max(v.changedFilesTotal ?? 0, v.changedFiles.length);
 }
 
 function VersionLevel({ version: v }: { version: Version }) {
@@ -150,7 +155,8 @@ function VersionLevel({ version: v }: { version: Version }) {
 
 function VersionMeta({ version: v }: { version: Version }) {
   const kind = kindInfo(v);
-  const files = v.changedFiles.length;
+  const files = fileCount(v);
+  const more = files - v.changedFiles.length;
   return (
     <div className="version-meta">
       <span className={`version-kind ${v.meta.kind}`} data-kind={v.meta.kind} data-tip={kind.hint} data-tip-align="start">
@@ -163,7 +169,7 @@ function VersionMeta({ version: v }: { version: Version }) {
         {formatRelative(v.createdAt)}
       </time>
       <span className="dot version-file-count-dot" />
-      <span className="version-file-count" data-tip={v.changedFiles.join('\n')}>
+      <span className="version-file-count" data-tip={more > 0 ? `${v.changedFiles.slice(0, 20).join('\n')}\nand ${more} more` : v.changedFiles.join('\n')}>
         {files} file{files === 1 ? '' : 's'}
       </span>
     </div>

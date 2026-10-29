@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useConversation } from '../ai/components/ai/conversation';
+import { requestOlderRuns, useOlderRuns } from '../runHistoryApi';
 
 const FIRST = 12;
 const STEP = 16;
@@ -43,27 +44,31 @@ export function useHistoryWindow<T extends Item>(items: T[], resetKey: string | 
   else if (state.last !== last) setState({ ...state, count, last });
   const start = all ? 0 : Math.max(0, items.length - count);
   const fromBottom = useRef<number | null>(null);
+  const shortBy = start - STEP;
   const more = useCallback(() => {
     const v = viewportRef.current;
     if (v) fromBottom.current = v.scrollHeight - v.scrollTop;
     setState((prev) => ({ ...prev, count: prev.count + STEP }));
-  }, [viewportRef]);
+    if (shortBy <= 0) requestOlderRuns();
+  }, [viewportRef, shortBy]);
   useLayoutEffect(() => {
     const v = viewportRef.current;
     if (!v || fromBottom.current === null) return;
     v.scrollTop = v.scrollHeight - fromBottom.current;
     fromBottom.current = null;
-  }, [start, viewportRef]);
+  }, [start, items.length, viewportRef]);
   return { shown: start > 0 ? items.slice(start) : items, hidden: start, more };
 }
 
 export function EarlierRuns({ hidden, onMore }: { hidden: number; onMore: () => void }) {
   const { viewportRef, wasAtBottomRef } = useConversation();
   const ref = useRef<HTMLButtonElement | null>(null);
+  const older = useOlderRuns();
+  const shown = hidden > 0 || older.more;
   useEffect(() => {
     const el = ref.current;
     const root = viewportRef.current;
-    if (!el || !root || hidden === 0) return;
+    if (!el || !root || !shown || older.loading) return;
     let frame = 0;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -78,11 +83,11 @@ export function EarlierRuns({ hidden, onMore }: { hidden: number; onMore: () => 
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [hidden, onMore, viewportRef, wasAtBottomRef]);
-  if (hidden === 0) return null;
+  }, [hidden, shown, older.loading, onMore, viewportRef, wasAtBottomRef]);
+  if (!shown) return null;
   return (
     <button ref={ref} type="button" className="btn ghost small chat-earlier" onClick={onMore}>
-      Show {hidden} earlier {hidden === 1 ? 'run' : 'runs'}
+      {hidden > 0 ? `Show ${hidden} earlier ${hidden === 1 ? 'run' : 'runs'}` : older.loading ? 'Loading earlier runs' : 'Show earlier runs'}
     </button>
   );
 }

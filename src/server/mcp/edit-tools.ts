@@ -5,6 +5,7 @@ import { MOVE_TOOLS } from './move-tools.js';
 import { REFERENCE_TOOLS } from './reference-tools.js';
 import { HUNK_TOOLS } from './hunk-tools.js';
 import { PORT_TOOLS } from './port-tools.js';
+import { USAGE_TOOLS } from './usage-tools.js';
 import { FIGMA_IMPORT_TOOLS } from './figma-import-tools.js';
 import { FLOW_TOOLS } from './flow-tools.js';
 import { FRAME_STATE_TOOLS } from './frame-state-tools.js';
@@ -195,7 +196,7 @@ function jsonSchema(schema: z.ZodType): Record<string, unknown> {
   return rest;
 }
 
-const EXTRA_TOOLS: ToolSpec[] = [] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS, ...SELECT_TOOLS, ...VERSION_DIFF_TOOLS, ...TWEAK_TOOLS, ...EXPORT_TOOLS, ...IMAGE_TOOLS, ...VECTOR_TOOLS, ...LAYER_STATE_TOOLS, ...MOVE_TOOLS, ...REFERENCE_TOOLS, ...HUNK_TOOLS, ...PORT_TOOLS, ...FIGMA_IMPORT_TOOLS];
+const EXTRA_TOOLS: ToolSpec[] = [] = [...HISTORY_TOOLS, ...LIBRARY_TOOLS, ...LINK_TOOLS, ...SHIP_TOOLS, ...VARIANT_TOOLS, ...PROPS_TOOLS, ...STYLE_TOOLS, ...REVIEW_TOOLS, ...INSERT_TOOLS, ...FRAME_STATE_TOOLS, ...JSX_INSERT_TOOLS, ...LAYER_TOOLS, ...COMMENT_TOOLS, ...FLOW_TOOLS, ...RULES_TOOLS, ...ARRANGE_TOOLS, ...CONTEXT_TOOLS, ...DOCTOR_TOOLS, ...COMPONENT_PREVIEW_TOOLS, ...SHARE_TOOLS, ...COMPONENT_CREATE_TOOLS, ...SELECT_TOOLS, ...VERSION_DIFF_TOOLS, ...TWEAK_TOOLS, ...EXPORT_TOOLS, ...IMAGE_TOOLS, ...VECTOR_TOOLS, ...LAYER_STATE_TOOLS, ...MOVE_TOOLS, ...REFERENCE_TOOLS, ...HUNK_TOOLS, ...PORT_TOOLS, ...FIGMA_IMPORT_TOOLS, ...USAGE_TOOLS];
 const EXTRA_BY_NAME = new Map(EXTRA_TOOLS.map((tool) => [tool.name, tool]));
 
 

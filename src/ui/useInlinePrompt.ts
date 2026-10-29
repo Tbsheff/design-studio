@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { matchesKey } from '../shared/keymap';
 import type { SelectionContext } from '../shared/contracts';
+import type { EditScope, InlineRunExtras } from '../shared/usage-scope';
 import { useCommands } from './commands/registry';
 import { IS_MAC } from './commands/keys';
 import { isTypingTarget } from './typingTarget';
@@ -12,7 +13,7 @@ export interface InlinePromptOptions {
   selection: SelectionContext[];
   live: boolean;
   running: boolean | undefined;
-  onSubmit: ((prompt: string) => void) | null | undefined;
+  onSubmit: ((prompt: string, extras?: InlineRunExtras) => void) | null | undefined;
   stage: () => HTMLElement | null;
 }
 
@@ -20,7 +21,8 @@ export interface InlinePromptView {
   rect: NonNullable<ReturnType<typeof unionRect>>;
   label: string;
   blocked: string | null;
-  submit: (prompt: string) => void;
+  usageFile: string | null;
+  submit: (prompt: string, editScope?: EditScope) => void;
   close: () => void;
 }
 
@@ -35,6 +37,10 @@ function labelOf(selection: SelectionContext[]): string {
   const last = selection.at(-1);
   if (selection.length > 1) return `${selection.length} elements`;
   return last?.component || last?.tag || 'element';
+}
+
+function usageFileOf(selection: SelectionContext[]): string | null {
+  return selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
 }
 
 function restoreFocus(previous: Element | null, stage: HTMLElement | null): void {
@@ -94,10 +100,11 @@ export function useInlinePrompt(o: InlinePromptOptions): InlinePromptView | null
     rect,
     label: labelOf(o.selection),
     blocked: blockerOf(o),
-    submit: (prompt) => {
+    usageFile: usageFileOf(o.selection),
+    submit: (prompt, editScope) => {
       const cur = latest.current;
       if (blockerOf(cur) || !prompt.trim()) return;
-      cur.onSubmit?.(prompt.trim());
+      cur.onSubmit?.(prompt.trim(), editScope ? { lean: true, editScope } : { lean: true });
       close();
     },
     close,

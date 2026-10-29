@@ -410,11 +410,9 @@ export function ExportDialog({ target, onClose }: Props) {
   return (
     <dialog ref={dialog.ref} className="modal export-dialog" aria-label="Export" onMouseDown={dialog.onMouseDown}>
       <div className="modal-head">
-        <div className="titles" data-tip={target.versionLabel} data-tip-align="start">
+        <div className="titles" data-tip={`From version: ${target.versionLabel}`} data-tip-align="start">
           <h2>Export</h2>
-          <p className="truncate">
-            {target.versionLabel}
-          </p>
+          <p className="truncate">From version: {target.versionLabel}</p>
         </div>
         <button className="icon-btn" aria-label="Close export" onClick={onClose} disabled={busy}>
           <Icon name="close" />

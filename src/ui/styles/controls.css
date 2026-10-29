@@ -86,16 +86,11 @@
   background: var(--brand-press);
 }
 
-.btn.primary:disabled,
-.btn.strong:disabled {
+:is(.btn.primary, .btn.strong, .btn.send, .icon-btn.send):disabled {
   opacity: 1;
   background: var(--surface-active);
   color: var(--text-faint);
   box-shadow: none;
-}
-
-.btn.send:disabled {
-  opacity: 0.45;
 }
 
 .btn.danger {

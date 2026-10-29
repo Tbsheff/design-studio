@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
+import type { InlineRunExtras } from '../../shared/usage-scope';
 import type { CommentPrefill, CompiledTokenEntry, Project, RunCanvasRef, RunEffort, RunLevel, RunMention, RunRequest, SelectionContext, Version } from '../../shared/contracts';
 import { useRunCanvas } from '../useRunCanvas';
 import { runStepText } from './ToolChips';
@@ -390,7 +391,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     return canvas ? { ...request, canvas } : request;
   };
   const polish = () => void act(() => startRun(withCanvas(POLISH_REQUEST)));
-  const tweak = (prompt: string) => void act(() => startRun(composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection, canvas: runCanvas.current() }), true));
+  const tweak = (prompt: string, extras?: InlineRunExtras) => void act(() => startRun({ ...composeRequest({ prompt, mode: 'edit', attachmentIds: [], level: project.settings.defaultLevel, effort: null, mentions: [], selection, canvas: runCanvas.current() }), ...extras }, true));
   const suggestTweaks = (prompt?: string) =>
     void act(() => startRun(prompt ? { ...TWEAKS_REQUEST, prompt: `${TWEAKS_REQUEST.prompt}\n\nThe user asked for: ${prompt}` } : TWEAKS_REQUEST));
   const showPane = async (tab: Parameters<typeof panel.choose>[0]): Promise<boolean> => {

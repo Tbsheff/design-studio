@@ -257,14 +257,14 @@ function RowBody({ row }: { row: Row }) {
   const { choice } = row;
   return (
     <>
+      {choice.checked !== undefined && <span className="slash-check-slot">{choice.checked && <Icon name="check" size={14} />}</span>}
       <Icon name={choice.icon} size={16} />
       <span className="slash-label">{choice.label}</span>
       {choice.hint && <span className="slash-hint">{choice.hint}</span>}
       {choice.tag}
-      {(choice.meta || choice.checked) && (
+      {choice.meta && (
         <span className="slash-end">
-          {choice.meta && <span className="slash-meta">{choice.meta}</span>}
-          {choice.checked && <Icon name="check" size={16} className="slash-check" />}
+          <span className="slash-meta">{choice.meta}</span>
         </span>
       )}
     </>

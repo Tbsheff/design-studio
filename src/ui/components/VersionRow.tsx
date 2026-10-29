@@ -79,6 +79,7 @@ function RowAction(props: { label: string; icon: IconName; tip: string; onClick:
       className="icon-btn"
       aria-label={props.label}
       data-tip={props.tip}
+      data-tip-side="top"
       aria-pressed={props.pressed}
       data-testid={props.testId}
       disabled={props.disabled}

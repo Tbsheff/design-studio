@@ -3,6 +3,7 @@ import type { LinkQuery, LinkRectReport, LinksFile } from './links';
 import type { StatesRequest } from './states';
 import type { ElementScope } from './element-variants';
 import type { StyleQuery, StyleScanResult } from './style-search';
+import type { EditScope } from './usage-scope';
 export type ProjectKind = 'html' | 'react';
 
 export interface ProjectSettings {
@@ -386,6 +387,7 @@ export interface RunRequest {
   retryOf?: string;
   plan?: boolean;
   lean?: boolean;
+  editScope?: EditScope;
   mentions?: RunMention[];
   variation?: VariationBrief & { index: number; count: number };
   scope?: ElementScope;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { RenderCheckResult } from '../../shared/contracts';
+import type { LayoutFinding, RenderCheckResult } from '../../shared/contracts';
+import { consoleKey, keyCounts, layoutKey, takeKey, type FinalCheckWithBaseline } from '../../shared/final-check-baseline';
 import { api } from '../api';
 import { Icon } from './Icon';
 
@@ -34,7 +35,61 @@ function CheckScreenshot({ projectId, filePath, label }: { projectId: string; fi
   return <img className="check-shot" src={src} alt={`${label} render check screenshot`} />;
 }
 
+const SHOT_SUFFIX = /-(?:desktop|tablet|mobile)\.png$/;
+
+function directionOf(results: RenderCheckResult[] | null): string | null {
+  const shot = results?.find((r) => r.screenshotPath)?.screenshotPath;
+  const name = shot?.split(/[\\/]/).pop() ?? '';
+  return SHOT_SUFFIX.test(name) ? name.replace(SHOT_SUFFIX, '') : null;
+}
+
+function useOldKeys(projectId: string, results: RenderCheckResult[] | null): string[] | null {
+  const [keys, setKeys] = useState<string[] | null>(null);
+  const did = directionOf(results);
+  useEffect(() => {
+    let alive = true;
+    setKeys(null);
+    if (!did) return;
+    api
+      .listRuns(projectId)
+      .then((runs) => {
+        const run = runs.find((r) => r.directionId === did && (r.finalCheck as FinalCheckWithBaseline | undefined)?.baseline);
+        if (alive) setKeys((run?.finalCheck as FinalCheckWithBaseline | undefined)?.baseline?.keys ?? null);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [projectId, did, results]);
+  return keys;
+}
+
+interface ShownResult {
+  result: RenderCheckResult;
+  problems: string[];
+  layout: LayoutFinding[];
+  overflow: boolean;
+}
+
+function hideOld(results: RenderCheckResult[] | null, keys: string[] | null): { shown: ShownResult[]; hidden: number } {
+  const counts = keyCounts(keys ?? []);
+  let hidden = 0;
+  const keep = (key: string) => {
+    const old = takeKey(counts, `error|${key}`);
+    if (old) hidden += 1;
+    return !old;
+  };
+  const shown = (results ?? []).map((result) => ({
+    result,
+    problems: [...result.pageErrors, ...result.consoleErrors].filter((p) => keep(consoleKey(result.viewport, p))),
+    layout: (result.layout ?? []).filter((f) => f.severity !== 'error' || keep(layoutKey(result.viewport, f))),
+    overflow: result.horizontalOverflow && keep(`${result.viewport}|overflow`),
+  }));
+  return { shown, hidden };
+}
+
 export function RenderCheckPanel({ projectId, results, error, onClose }: Props) {
+  const { shown, hidden } = hideOld(results, useOldKeys(projectId, results));
   return (
     <div className="check-panel" role="region" aria-label="Render check results">
       <div className="check-head">
@@ -47,22 +102,28 @@ export function RenderCheckPanel({ projectId, results, error, onClose }: Props) 
       </div>
       <div className="check-body">
         {error && <div className="alert error">{error}</div>}
-        {results?.map((r) => {
-          const problems = [...r.pageErrors, ...r.consoleErrors];
+        {hidden > 0 && (
+          <div className="muted small-text" data-tip="Findings the page had before the last run started">
+            {hidden} old, hidden
+          </div>
+        )}
+        {shown.map(({ result: r, problems, layout, overflow }) => {
+          const ok = problems.length === 0 && !overflow;
+          const layoutTotal = Math.max(layout.length, (r.layoutTotal ?? 0) - ((r.layout ?? []).length - layout.length));
           return (
             <div key={`${r.viewport}-${r.width}`} className="check-row">
               <div className="row">
-                <span className={`badge ${r.ok ? 'ok' : 'fail'}`}>{r.ok ? 'Pass' : 'Fail'}</span>
-                <span>{r.viewport === 'desktop' ? 'Desktop' : 'Mobile'}</span>
+                <span className={`badge ${ok ? 'ok' : 'fail'}`}>{ok ? 'Pass' : 'Fail'}</span>
+                <span>{r.viewport === 'desktop' ? 'Desktop' : r.viewport === 'tablet' ? 'Tablet' : 'Mobile'}</span>
                 <span className="muted num">
                   {r.width} × {r.height}
                 </span>
-                {r.horizontalOverflow && <span className="badge warn">Horizontal overflow</span>}
-                {r.layout?.length > 0 && <span className="badge warn">{r.layoutTotal} layout {r.layoutTotal === 1 ? 'issue' : 'issues'}</span>}
+                {overflow && <span className="badge warn">Horizontal overflow</span>}
+                {layout.length > 0 && <span className="badge warn">{layoutTotal} layout {layoutTotal === 1 ? 'issue' : 'issues'}</span>}
               </div>
-              {r.layout?.length > 0 && (
+              {layout.length > 0 && (
                 <ul className="check-errors check-layout">
-                  {r.layout.map((f, i) => (
+                  {layout.map((f, i) => (
                     <li key={i}>
                       <strong>{f.kind}</strong> <code>{f.source ?? f.selector}</code>: {f.detail}
                     </li>
@@ -80,7 +141,7 @@ export function RenderCheckPanel({ projectId, results, error, onClose }: Props) 
                 <CheckScreenshot
                   projectId={projectId}
                   filePath={r.screenshotPath}
-                  label={r.viewport === 'desktop' ? 'Desktop' : 'Mobile'}
+                  label={r.viewport === 'desktop' ? 'Desktop' : r.viewport === 'tablet' ? 'Tablet' : 'Mobile'}
                 />
               )}
             </div>

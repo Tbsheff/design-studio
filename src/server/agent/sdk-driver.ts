@@ -11,7 +11,9 @@ import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import { captureBaseline, prewarmChecks, type RunToolState } from './check-tool.js';
 import { screenReviewNote, screenReviewPrompt, studioScreenReview, unseenScreens } from './screen-review.js';
-import { appReviewGaps, appReviewNote, appReviewPrompt, mergeAppReviews, noteReview, runFinalCheck, studioAppReview } from './final-check.js';
+import { appReviewGaps, appReviewNote, appReviewPrompt, mergeAppReviews, noteReview, referenceNote, runFinalCheck, studioAppReview, withReference } from './final-check.js';
+import { runReferencePass } from './reference-check.js';
+import type { ReferenceRecord } from '../../shared/reference.js';
 import type { AppReviewRecord } from '../../shared/contracts.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
 import { SOURCE_DIR } from '../design-system/extract/draft.js';
@@ -239,10 +241,11 @@ export function addCriticCost(outcome: DriverOutcome, criticCostUsd: number): vo
   outcome.criticCostUsd = criticCostUsd;
 }
 
-async function attachFinalCheck(outcome: DriverOutcome, input: Parameters<typeof runFinalCheck>[0], appReview: AppReviewRecord | null): Promise<void> {
+async function attachFinalCheck(outcome: DriverOutcome, input: Parameters<typeof runFinalCheck>[0], appReview: AppReviewRecord | null, reference: ReferenceRecord | null): Promise<void> {
   if (outcome.status === 'failed') return;
   const finalCheck = await runFinalCheck(input);
-  if (finalCheck) outcome.finalCheck = appReview ? { ...finalCheck, appReview } : finalCheck;
+  const checked = withReference(finalCheck && appReview ? { ...finalCheck, appReview } : finalCheck, reference);
+  if (checked) outcome.finalCheck = checked;
 }
 
 const APP_REVIEW_MIN_LEFT = 0.15;
@@ -818,6 +821,23 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     return { ...merged, finalText: `${merged.finalText}\n\n${screenReviewNote(review, true)}` };
   }
 
+  async function continueReference(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<{ outcome: DriverOutcome; record: ReferenceRecord | null }> {
+    if (input.signal.aborted || total.status !== 'completed') return { outcome: total, record: null };
+    let merged = total;
+    const continueWith = async (text: string, images: UserMessageParts['images']): Promise<boolean> => {
+      const sessionId = segment.sessionId;
+      if (!sessionId || !roomForFixLoop(total, segment) || input.signal.aborted) return false;
+      input.sink.sent({ text, imageCount: images.length, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: (total.loop?.continuations ?? 0) + 1 });
+      segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
+      const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };
+      merged = mergeOutcomes(total, (await runSegment(input, segment, { text, images }, prior)).outcome);
+      return true;
+    };
+    const record = await runReferencePass({ preview: options.preview, ctx: input.ctx, runsDir: input.runsDir, runId: input.runId, continueWith });
+    if (!record) return { outcome: total, record: null };
+    return { outcome: { ...merged, finalText: `${merged.finalText}\n\n${referenceNote(record)}` }, record };
+  }
+
   async function attempt(input: DriverInput, parts: UserMessageParts, resume: string | null): Promise<AttemptResult> {
     const { sink, signal } = input;
     const setup = await setupAttempt(input);
@@ -834,9 +854,10 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const looped = wantsLoop(setup.config, input.ctx.request.mode) ? await continueLoop(input, segment, first) : null;
     const checked = wantsDesignSystemCheck(input.ctx) ? await continueDesignSystem(input, segment, first) : first.outcome;
     const reviewed = await continueAppReview(input, segment, looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : checked);
-    const outcome = await continueScreenReview(input, segment, reviewed.outcome);
+    const referenced = await continueReference(input, segment, await continueScreenReview(input, segment, reviewed.outcome));
+    const outcome = referenced.outcome;
     addCriticCost(outcome, setup.run.criticCostUsd);
-    if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId }, reviewed.record);
+    if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId }, reviewed.record, referenced.record);
     return { sawInit: first.state.sawInit, outcome };
   }
 

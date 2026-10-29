@@ -16,6 +16,8 @@ import { mockCanvasContext, runMockCanvas, runMockLinks, runMockStates, wantsMoc
 import { probeWithPreview } from '../canvas/link-tools.js';
 import { runMockDirect, wantsMockDirect } from './mock-direct.js';
 import type { PreviewService } from '../types.js';
+import { runReferencePass } from './reference-check.js';
+import { referenceNote, withReference } from './final-check.js';
 
 const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
 const DELTA_DELAY_MS = 20;
@@ -660,6 +662,18 @@ function runMockEdit(input: DriverInput, session: MockSession): Promise<string> 
   return runReactEdit(session, workTree, text);
 }
 
+async function withMockReference(input: DriverInput, session: MockSession, preview: PreviewService | undefined, outcome: DriverOutcome): Promise<DriverOutcome> {
+  if (!preview || outcome.status !== 'completed') return outcome;
+  const continueWith = async (text: string, images: unknown[]): Promise<boolean> => {
+    input.sink.sent({ text, imageCount: images.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId, continuation: 1 });
+    await session.say('Mock fix loop: compared the frame with the reference picture again.');
+    return true;
+  };
+  const reference = await runReferencePass({ preview, ctx: input.ctx, runsDir: input.runsDir, runId: input.runId, continueWith });
+  const finalCheck = withReference(outcome.finalCheck, reference);
+  return reference && finalCheck ? { ...outcome, finalCheck, finalText: `${outcome.finalText}\n\n${referenceNote(reference)}` } : outcome;
+}
+
 async function runMock(input: DriverInput, canvas: CanvasService | undefined, preview: PreviewService | undefined): Promise<DriverOutcome> {
   const startedAt = Date.now();
   const prompt = input.ctx.request.prompt;
@@ -708,7 +722,7 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined, pr
     finalText,
     error: null,
   };
-  if (!wantsDesignSystemCheck(input.ctx)) return outcome;
+  if (!wantsDesignSystemCheck(input.ctx)) return withMockReference(input, session, preview, outcome);
   return enforceDesignSystemCheck({
     workTree: input.ctx.direction.workTree,
     first: outcome,

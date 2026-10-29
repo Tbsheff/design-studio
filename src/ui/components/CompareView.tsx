@@ -3,10 +3,11 @@ import type { ProjectKind, Version } from '../../shared/contracts';
 import { useUi } from '../storage';
 import { displayTitle, indexVersions } from '../versionLabels';
 import { CompareFrame } from './CompareFrame';
-import { OverlayBoard, SliderBoard, type BoardProps } from './CompareModes';
+import { OverlayBoard, ReferenceBoard, SliderBoard, type BoardProps } from './CompareModes';
+import '../styles/reference.css';
 import { Icon } from './Icon';
 
-type Mode = 'side' | 'slider' | 'overlay' | 'code';
+type Mode = 'side' | 'slider' | 'overlay' | 'reference' | 'code';
 
 const CompareCode = lazy(() => import('./CompareCode'));
 
@@ -14,6 +15,7 @@ const MODES: { id: Mode; label: string; tip: string }[] = [
   { id: 'side', label: 'Side by side', tip: 'Both versions next to each other' },
   { id: 'slider', label: 'Slider', tip: 'Drag a line to wipe between versions' },
   { id: 'overlay', label: 'Overlay', tip: 'The newer version with changed pixels in red' },
+  { id: 'reference', label: 'Reference', tip: 'A screenshot or mock over the newer version, with a slider' },
   { id: 'code', label: 'Code', tip: 'The line changes in each changed file' },
 ];
 const MODE_KEY = 'design-studio.compare-mode';
@@ -163,6 +165,7 @@ export function CompareView({ projectId, kind, left, right, versions, onClose }:
           )}
           {mode === 'slider' && <SliderBoard {...board} />}
           {mode === 'overlay' && <OverlayBoard {...board} />}
+          {mode === 'reference' && <ReferenceBoard {...board} />}
         </div>
       )}
     </div>

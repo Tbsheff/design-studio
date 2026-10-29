@@ -1,0 +1,73 @@
+.thumb .thumb-ref {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  height: 16px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--text-2);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.thumb:hover .thumb-ref,
+.thumb .thumb-ref:focus-visible,
+.thumb .thumb-ref.on {
+  opacity: 1;
+}
+
+.thumb .thumb-ref:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.thumb .thumb-ref.on {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.thumb.is-reference {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.compare-ref-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+}
+
+.compare-ref-picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.compare-ref-empty {
+  display: grid;
+  place-items: center;
+  gap: var(--s-2);
+  padding: var(--s-6);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: var(--t-sm);
+  text-align: center;
+}
+
+.compare-ref-empty.over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}

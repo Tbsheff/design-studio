@@ -56,8 +56,10 @@
 }
 
 .compare-ref-empty {
+  box-sizing: border-box;
   display: grid;
   place-items: center;
+  place-content: center;
   gap: var(--s-2);
   padding: var(--s-6);
   border: 1px dashed var(--line-strong);

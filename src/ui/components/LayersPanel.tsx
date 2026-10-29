@@ -5,10 +5,24 @@ import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
 import type { LayerDrop } from '../structureEdits';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
 
 const ROW = 28;
+const TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'em', 'strong', 'b', 'i', 'small', 'label', 'li', 'blockquote', 'figcaption', 'dt', 'dd', 'code', 'pre', 'time', 'mark', 'sup', 'sub', 'cite', 'q', 'abbr']);
+const IMAGE_TAGS = new Set(['img', 'picture', 'video', 'canvas', 'iframe']);
+const VECTOR_TAGS = new Set(['svg', 'path', 'circle', 'rect', 'ellipse', 'line', 'polyline', 'polygon', 'g', 'use']);
+const CONTROL_TAGS = new Set(['button', 'input', 'select', 'textarea']);
+
+function layerIcon(node: LayerNode): IconName {
+  const tag = node.tag.toLowerCase();
+  if (IMAGE_TAGS.has(tag)) return 'image';
+  if (VECTOR_TAGS.has(tag)) return 'token';
+  if (tag === 'a') return 'link';
+  if (CONTROL_TAGS.has(tag)) return 'pointer';
+  if (TEXT_TAGS.has(tag) || (node.childCount === 0 && node.text)) return 'alignLeft';
+  return 'frame';
+}
 const OVERSCAN = 8;
 const OPEN_DEPTH = 2;
 const DRAG_START_PX = 4;
@@ -204,6 +218,9 @@ function LayerRow(p: RowProps) {
       ) : (
         <span className="layers-twisty" aria-hidden="true" />
       )}
+      <span className="layers-kind" aria-hidden="true">
+        <Icon name={layerIcon(node)} size={12} />
+      </span>
       <span className="layers-tag">{node.tag}</span>
       {p.editing ? (
         <RenameInput initial={editableName(node.name)} onDone={(value) => p.onRenameDone(node, value)} />

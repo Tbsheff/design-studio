@@ -37,10 +37,12 @@ function Label({ side, title, align }: { side: 'A' | 'B'; title: string; align: 
   );
 }
 
-function Stage({ labels, children }: { labels: ReactNode; children: ReactNode }) {
+function Stage({ labels, width, children }: { labels: ReactNode; width: number; children: ReactNode }) {
   return (
     <div className="compare-pane single">
-      <div className="compare-labels">{labels}</div>
+      <div className="compare-labels" style={{ width }}>
+        {labels}
+      </div>
       <div className="compare-stage">{children}</div>
     </div>
   );
@@ -112,7 +114,7 @@ export function SliderBoard(props: BoardProps) {
   const wipe = useWipe();
   const rounded = Math.round(wipe.pos);
   return (
-    <Stage labels={<><Label side="A" title={props.olderTitle} align="start" /><Label side="B" title={props.newerTitle} align="end" /></>}>
+    <Stage width={width} labels={<><Label side="A" title={props.olderTitle} align="start" /><Label side="B" title={props.newerTitle} align="end" /></>}>
       <div {...wipe.boardProps} className={`compare-board locked slider ${wipe.dragging ? 'dragging' : ''}`} data-testid="compare-slider" style={{ width, height: viewport.height * scale }}>
         <CompareFrame projectId={props.projectId} version={props.older} title={props.olderTitle} kind={props.kind} viewport={viewport} scale={scale} onError={props.onError} />
         <div className="compare-layer" data-testid="compare-slider-top" style={{ clipPath: `inset(0 0 0 ${wipe.pos}%)` }}>
@@ -185,6 +187,7 @@ export function OverlayBoard(props: BoardProps) {
   const state = useDiffMask(props.projectId, props.older.id, props.newer.id, viewport, attempt);
   return (
     <Stage
+      width={viewport.width * scale}
       labels={
         <>
           <Label side="B" title={props.newerTitle} align="start" />
@@ -245,7 +248,7 @@ function usePicture() {
   return { picture, setPicture };
 }
 
-function PicturePicker({ onPick, compact }: { onPick: (file: File | undefined) => void; compact?: boolean }) {
+function PicturePicker({ onPick, compact, size }: { onPick: (file: File | undefined) => void; compact?: boolean; size?: { width: number; height: number } }) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -267,7 +270,7 @@ function PicturePicker({ onPick, compact }: { onPick: (file: File | undefined) =
   );
   if (compact) return pick;
   return (
-    <div className={`compare-ref-empty ${over ? 'over' : ''}`} onDragOver={(event) => (event.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={onDrop}>
+    <div className={`compare-ref-empty ${over ? 'over' : ''}`} style={size} onDragOver={(event) => (event.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={onDrop}>
       <span>Drop a screenshot or mock here to lay it over the newer version.</span>
       {pick}
     </div>
@@ -283,6 +286,7 @@ export function ReferenceBoard(props: BoardProps) {
   const rounded = Math.round(wipe.pos);
   return (
     <Stage
+      width={width}
       labels={
         <>
           <Label side="B" title={props.newerTitle} align="start" />
@@ -308,7 +312,7 @@ export function ReferenceBoard(props: BoardProps) {
           <WipeHandle handleRef={wipe.handle} pos={wipe.pos} width={width} onKeyDown={wipe.onKeyDown} valueText={`${rounded}% frame, ${100 - rounded}% reference`} />
         </div>
       ) : (
-        <PicturePicker onPick={setPicture} />
+        <PicturePicker onPick={setPicture} size={{ width, height: viewport.height * scale }} />
       )}
     </Stage>
   );

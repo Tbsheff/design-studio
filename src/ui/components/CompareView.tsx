@@ -20,6 +20,8 @@ const MODES: { id: Mode; label: string; tip: string }[] = [
 ];
 const MODE_KEY = 'design-studio.compare-mode';
 
+const STACK_GAIN = 1.25;
+
 function savedMode(): Mode {
   try {
     const value = localStorage.getItem(MODE_KEY);
@@ -65,7 +67,7 @@ function SidePane(props: BoardProps & { side: 'A' | 'B' }) {
   const title = props.side === 'A' ? props.olderTitle : props.newerTitle;
   return (
     <div className="compare-pane">
-      <div className="compare-label" data-tip={title}>
+      <div className="compare-label" data-tip={title} style={{ width: props.viewport.width * props.scale }}>
         <span className="badge accent">{props.side}</span>
         <span className="compare-title truncate">
           {title}
@@ -94,6 +96,7 @@ export function CompareView({ projectId, kind, left, right, versions, onClose }:
   const ref = useRef<HTMLDivElement>(null);
   const [mode, setModeState] = useState<Mode>(savedMode);
   const [scale, setScale] = useState(0.5);
+  const [stacked, setStacked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [older, newer] = left.createdAt <= right.createdAt ? [left, right] : [right, left];
   const index = useMemo(() => indexVersions(versions ?? [left, right]), [versions, left, right]);
@@ -109,9 +112,18 @@ export function CompareView({ projectId, kind, left, right, versions, onClose }:
     const el = ref.current;
     if (!el) return;
     const measure = () => {
-      const paneW = mode === 'side' ? (el.clientWidth - 48) / 2 : el.clientWidth - 32;
-      const paneH = el.clientHeight - 76;
-      setScale(Math.max(0.1, Math.min(1, paneW / viewport.width, paneH / viewport.height)));
+      const fit = (w: number, h: number) => Math.max(0.1, Math.min(1, w / viewport.width, h / viewport.height));
+      const single = fit(el.clientWidth - 32, el.clientHeight - 76);
+      if (mode !== 'side') {
+        setStacked(false);
+        setScale(single);
+        return;
+      }
+      const across = fit((el.clientWidth - 48) / 2, el.clientHeight - 76);
+      const down = fit(el.clientWidth - 32, (el.clientHeight - 48) / 2 - 36);
+      const stack = down > across * STACK_GAIN;
+      setStacked(stack);
+      setScale(stack ? down : across);
     };
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -151,7 +163,7 @@ export function CompareView({ projectId, kind, left, right, versions, onClose }:
           </Suspense>
         </div>
       ) : (
-        <div className={`compare ${mode === 'side' ? '' : 'single'}`} ref={ref} data-mode={mode}>
+        <div className={`compare ${mode === 'side' ? (stacked ? 'stacked' : '') : 'single'}`} ref={ref} data-mode={mode}>
           {error && (
             <div className="stage-message" role="alert">
               {error}

@@ -169,6 +169,12 @@
   font: 400 var(--t-sm) / 1.2 var(--font);
   color: var(--text);
   user-select: none;
+  transition: bottom var(--dur) var(--ease);
+}
+
+body:has(.ds-toast) .proto-bar,
+.canvas:has(.frame-undo) .proto-bar {
+  bottom: calc(var(--s-4) + 44px);
 }
 
 .proto-start,
@@ -308,7 +314,7 @@
 
 .play-error {
   position: absolute;
-  top: 56px;
+  top: calc(56px + var(--banner-h, 0px));
   left: 50%;
   z-index: 2;
   padding: 6px 10px;
@@ -450,4 +456,10 @@
   border: 0;
   transform-origin: 0 0;
   color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto-bar {
+    transition: none;
+  }
 }

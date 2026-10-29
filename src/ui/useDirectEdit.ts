@@ -48,6 +48,14 @@ export function mergeCommit(prev: SelectionContext[], commit: DirectEditCommit):
 
 export const NO_MIXED: ReadonlySet<DirectStyleProperty> = new Set();
 
+type EditValues = Pick<DirectEdit, 'values' | 'mixed' | 'preview' | 'commit'>;
+
+export function sameEditValues(a: EditValues, b: EditValues, props: readonly DirectStyleProperty[]): boolean {
+  if (a === b) return true;
+  if (a.preview !== b.preview || a.commit !== b.commit) return false;
+  return props.every((prop) => a.values[prop] === b.values[prop] && a.mixed.has(prop) === b.mixed.has(prop));
+}
+
 const DEBOUNCE_MS = 250;
 const AGENT_RUNNING_MESSAGE = 'Agent is running. Wait or cancel.';
 

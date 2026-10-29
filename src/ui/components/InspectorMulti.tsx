@@ -1,4 +1,4 @@
-import { useSyncExternalStore, type MutableRefObject } from 'react';
+import { memo, useSyncExternalStore, type MutableRefObject } from 'react';
 import type { BridgeToParent, CreateTokenResult, MatchKind, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import { cssVarFor } from '../../shared/token-match';
@@ -109,7 +109,7 @@ function askMatching(port: PreviewPort, selector: string, by: MatchKind): void {
   port.post({ type: 'select-matching', requestId, selector, by });
 }
 
-export function SelectMatchingSection({ selection, port }: { selection: SelectionContext[]; port: MutableRefObject<PreviewPort | null> }) {
+function SelectMatchingView({ selection, port }: { selection: SelectionContext[]; port: MutableRefObject<PreviewPort | null> }) {
   const note = useSyncExternalStore(subscribeMatch, () => matchNote);
   const base = selection.at(-1);
   if (!base) return null;
@@ -131,3 +131,5 @@ export function SelectMatchingSection({ selection, port }: { selection: Selectio
     </InspectorSection>
   );
 }
+
+export const SelectMatchingSection = memo(SelectMatchingView, (a, b) => a.port === b.port && a.selection.length === b.selection.length && a.selection.every((item, i) => item === b.selection[i]));

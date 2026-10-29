@@ -1,7 +1,7 @@
-import { useState, type KeyboardEvent } from 'react';
+import { memo, useState, type KeyboardEvent } from 'react';
 import type { DirectStyleProperty, SelectionContext } from '../../shared/contracts';
 import { textEditability } from '../cssValues';
-import type { DirectEdit } from '../useDirectEdit';
+import { sameEditValues, type DirectEdit } from '../useDirectEdit';
 import { DataTextNote, useInspectorApp } from './InspectorShared';
 
 function useRowKeys(onCommit: () => void, onRevert: () => void) {
@@ -105,7 +105,7 @@ function toggleLine(value: string, line: string): string {
   return next.length === 0 ? 'none' : next.join(' ');
 }
 
-export function TextStyleToggles({ edit }: { edit: DirectEdit }) {
+function TextStyleTogglesView({ edit }: { edit: DirectEdit }) {
   const italic = edit.values['font-style'] === 'italic' || edit.values['font-style'] === 'oblique';
   const decoration = edit.values['text-decoration-line'];
   const write = (patch: Partial<Record<DirectStyleProperty, string>>) => {
@@ -127,3 +127,5 @@ export function TextStyleToggles({ edit }: { edit: DirectEdit }) {
     </div>
   );
 }
+
+export const TextStyleToggles = memo(TextStyleTogglesView, (a, b) => sameEditValues(a.edit, b.edit, ['font-style', 'text-decoration-line']));

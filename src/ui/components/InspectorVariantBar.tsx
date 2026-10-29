@@ -1,4 +1,4 @@
-import { useEffect, type MutableRefObject } from 'react';
+import { memo, useEffect, type MutableRefObject } from 'react';
 import { DEFAULT_BREAKPOINTS, parseVariant, variantPrefix, type ParsedVariant, type VariantState, type VariantSupport } from '../../shared/variants';
 import type { PreviewPort } from '../bridge';
 import { editVariantStore, fitFrameTo, postForceState, useEditVariant } from '../editVariant';
@@ -44,7 +44,7 @@ function summary(prefix: string, support: VariantSupport | null): string {
 
 const ANY_WIDTH = '';
 
-export function InspectorVariantBar({ selector, port, support, quietNote }: Props) {
+function InspectorVariantBarView({ selector, port, support, quietNote }: Props) {
   const prefix = useEditVariant();
   const current = parseVariant(prefix) ?? BASE;
   const off = support?.mode === 'none';
@@ -89,5 +89,7 @@ export function InspectorVariantBar({ selector, port, support, quietNote }: Prop
     </div>
   );
 }
+
+export const InspectorVariantBar = memo(InspectorVariantBarView);
 
 export default InspectorVariantBar;

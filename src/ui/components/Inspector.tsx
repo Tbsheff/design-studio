@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
+import { Suspense, lazy, memo, useEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
 import { sharedSourceOf } from '../../shared/app';
 import type { EditSessionEnd, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
@@ -82,7 +82,17 @@ function EmptyState({ reason, notice }: { reason: string; notice: string | null 
           <span>{notice}</span>
         </div>
       ) : null}
-      <p className="ins-hint">{reason}</p>
+      {reason === EMPTY_HINT ? (
+        <div className="ins-empty-card">
+          <span className="ins-empty-icon" aria-hidden="true">
+            <Icon name="pointer" size={16} />
+          </span>
+          <p className="ins-empty-title">Select an element</p>
+          <p className="ins-empty-text">Click it on the canvas or in Layers. Shift-click to add more.</p>
+        </div>
+      ) : (
+        <p className="ins-hint">{reason}</p>
+      )}
     </div>
   );
 }
@@ -274,6 +284,61 @@ function ComponentsTab({ components }: { components: InspectorProps['components'
   );
 }
 
+const UNSHARED_PROPS = new Set(['layers', 'tweaks', 'components', 'tab', 'onTab', 'session', 'onExit', 'onSessionEnd']);
+
+function sameButRect(a: SelectionContext, b: SelectionContext): boolean {
+  if (a === b) return true;
+  const left = a as unknown as Record<string, unknown>;
+  const right = b as unknown as Record<string, unknown>;
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+  for (const key of keys) if (key !== 'rect' && left[key] !== right[key]) return false;
+  return true;
+}
+
+function sameSelection(a: SelectionContext[], b: SelectionContext[]): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length || vectorShown(b)) return false;
+  return a.every((item, i) => sameButRect(item, b[i] as SelectionContext));
+}
+
+function sameShared(a: object, b: object): boolean {
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+  for (const key of keys) {
+    if (UNSHARED_PROPS.has(key) || left[key] === right[key]) continue;
+    if (key === 'selection' && sameSelection(left[key] as SelectionContext[], right[key] as SelectionContext[])) continue;
+    return false;
+  }
+  return true;
+}
+
+type AnyFn = (...args: never[]) => unknown;
+
+function useStableCallbacks<P extends object>(props: P): P {
+  const latest = useRef(props);
+  latest.current = props;
+  const wrappers = useRef(new Map<string, AnyFn>());
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(props)) {
+    if (typeof value !== 'function') {
+      out[key] = value;
+      continue;
+    }
+    let wrapper = wrappers.current.get(key);
+    if (!wrapper) {
+      wrapper = (...args: never[]) => (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
+      wrappers.current.set(key, wrapper);
+    }
+    out[key] = wrapper;
+  }
+  return out as P;
+}
+
+const SimpleTabMemo = memo(SimpleTab, sameShared);
+const ToolsMemo = memo(InspectorTools, sameShared);
+const ArrangeMemo = memo(InspectorArrange, sameShared);
+
 function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | undefined, session: EditSession) {
   useEffect(() => {
     if (!ref) return;
@@ -287,7 +352,8 @@ function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | unde
   );
 }
 
-export function Inspector(props: InspectorProps) {
+export function Inspector(raw: InspectorProps) {
+  const props = useStableCallbacks(raw);
   const [ownTab, setOwnTab] = useState<InspectorTab>('simple');
   const tab = props.tab ?? ownTab;
   const onTab = props.onTab ?? setOwnTab;
@@ -319,10 +385,10 @@ export function Inspector(props: InspectorProps) {
         )}
         <LeavePrompt session={session} />
         <Tabs tab={tab} onTab={onTab} />
-        {(tab === 'simple' || tab === 'pro') && <InspectorTools {...props} />}
-        <InspectorArrange {...props} showBar={tab === 'simple'} />
+        {(tab === 'simple' || tab === 'pro') && <ToolsMemo {...props} />}
+        <ArrangeMemo {...props} showBar={tab === 'simple'} />
         <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
-          {tab === 'simple' && <SimpleTab {...props} />}
+          {tab === 'simple' && <SimpleTabMemo {...props} />}
           {tab === 'pro' && <ProTab {...props} />}
           {tab === 'components' && <ComponentsTab components={props.components} />}
           {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}

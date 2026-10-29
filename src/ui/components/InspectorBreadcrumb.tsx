@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react';
+import { memo, Fragment, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { parseSelectionPath, pathCrumbs, type PathCrumb } from '../authoredCss';
 import type { PreviewPort } from '../bridge';
@@ -14,12 +14,27 @@ function elementLabel(selection: SelectionContext): string {
   return firstClass ? `${selection.tag}.${firstClass}` : selection.tag;
 }
 
+const GAP_CRUMB_PX = 28;
+
+function fitCount(el: HTMLOListElement, total: number): number {
+  const items = Array.from(el.children) as HTMLElement[];
+  const first = items[0];
+  if (!first || el.scrollWidth <= el.clientWidth + 1) return total;
+  const gap = GAP_CRUMB_PX + (items[1]?.offsetWidth ?? 0);
+  for (let cut = 1; cut <= total; cut += 1) {
+    const start = items[cut * 2]?.offsetLeft ?? el.scrollWidth;
+    if (el.scrollWidth - (start - first.offsetLeft) + gap <= el.clientWidth + 1) return total - cut;
+  }
+  return 0;
+}
+
 function useFitCount(list: MutableRefObject<HTMLOListElement | null>, total: number): number {
   const [shown, setShown] = useState(total);
   useLayoutEffect(() => {
     const el = list.current;
-    if (el && shown > 0 && el.scrollWidth > el.clientWidth + 1) setShown(shown - 1);
-  }, [list, shown]);
+    if (!el || shown === 0 || el.scrollWidth <= el.clientWidth + 1) return;
+    setShown(shown === total ? fitCount(el, total) : shown - 1);
+  }, [list, shown, total]);
   useEffect(() => {
     const el = list.current;
     if (!el) return;
@@ -58,7 +73,7 @@ function HiddenCrumbs({ hidden, onSelect }: { hidden: PathCrumb[]; onSelect: (le
   );
 }
 
-export function InspectorBreadcrumb({ selection, port }: Props) {
+function InspectorBreadcrumbView({ selection, port }: Props) {
   const list = useRef<HTMLOListElement>(null);
   const path = pathCrumbs(parseSelectionPath(selection.path));
   const count = useFitCount(list, path.length);
@@ -91,3 +106,8 @@ export function InspectorBreadcrumb({ selection, port }: Props) {
     </nav>
   );
 }
+
+export const InspectorBreadcrumb = memo(
+  InspectorBreadcrumbView,
+  (a, b) => a.port === b.port && a.selection.selector === b.selection.selector && a.selection.tag === b.selection.tag && a.selection.outerHTML === b.selection.outerHTML && a.selection.path === b.selection.path,
+);

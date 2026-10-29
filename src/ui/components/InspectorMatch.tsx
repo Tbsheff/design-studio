@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject } from 'react';
 import type { CompiledTokenEntry, SelectionContext } from '../../shared/contracts';
 import { TOKEN_GROUP_FOR_PROPERTY } from '../../shared/contracts';
 import {
@@ -320,7 +320,7 @@ function selectedText(count: number, total: number): string {
   return total > count ? `Selected ${count} of ${total} elements (the first ${count}).` : `Selected ${count} ${count === 1 ? 'element' : 'elements'}.`;
 }
 
-export default function InspectorMatch(props: InspectorMatchProps) {
+function InspectorMatch(props: InspectorMatchProps) {
   const single = props.selection.length === 1;
   const [scope, setScope] = useState<Scope>('selection');
   const [picking, setPicking] = useState<StyleValueRow | null>(null);
@@ -374,3 +374,9 @@ export default function InspectorMatch(props: InspectorMatchProps) {
     </InspectorSection>
   );
 }
+
+function sameItems(a: SelectionContext[], b: SelectionContext[]): boolean {
+  return a.length === b.length && a.every((item, i) => item === b[i]);
+}
+
+export default memo(InspectorMatch, (a, b) => a.projectId === b.projectId && a.directionId === b.directionId && a.port === b.port && a.tokens === b.tokens && a.drain === b.drain && sameItems(a.selection, b.selection));

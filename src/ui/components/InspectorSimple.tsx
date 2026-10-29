@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { SharedSource } from '../../shared/app';
-import type { SelectionContext } from '../../shared/contracts';
+import type { DirectStyleProperty, SelectionContext } from '../../shared/contracts';
 import type { PreviewPort } from '../bridge';
 import type { DesignTokens } from '../useDesignSystemState';
 import { useAuthoredCss } from '../useAuthoredCss';
+import { SIDES } from '../cssValues';
 import { useDirectEdits } from '../useDirectEdits';
-import { useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
+import { sameEditValues, useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
 import { TokenUiContext, type TokenUi } from '../useTokenSnap';
 import { BoxModel } from './BoxModel';
 import { CopyCodeMenu } from './CopyCodeMenu';
@@ -50,6 +51,9 @@ const EXTRAS: { id: Extra; label: string }[] = [
   { id: 'transform', label: 'Transform' },
   { id: 'filter', label: 'Filter' },
 ];
+
+const BOX_PROPS = (['margin', 'padding'] as const).flatMap((box) => SIDES.map((side) => `${box}-${side}` as DirectStyleProperty));
+const BoxModelMemo = memo(BoxModel, (a, b) => sameEditValues(a.edit, b.edit, BOX_PROPS));
 
 function isSet(value: string): boolean {
   return value !== '' && value !== 'none' && value !== 'normal';
@@ -195,7 +199,7 @@ function LayoutSection({ edit, selection }: { edit: DirectEdit; selection: Selec
   );
   return (
     <AutoLayoutSection edit={edit} title="Layout" lead={size}>
-      <BoxModel edit={edit} />
+      <BoxModelMemo edit={edit} />
     </AutoLayoutSection>
   );
 }
@@ -235,6 +239,17 @@ function MetaRow({ tag, source, status, ui, onReset, resetDisabled, children }: 
   );
 }
 
+const SAVE_SETTLE_MS = 400;
+
+function useSettled<T>(value: T, ms: number): T {
+  const [settled, setSettled] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSettled(value), ms);
+    return () => window.clearTimeout(timer);
+  }, [value, ms]);
+  return settled;
+}
+
 type SimpleEditorProps = EditorProps & { target: SelectionContext; sharedEditing?: SharedEditing | null; component?: ReactNode };
 
 function useSimpleEditor(props: SimpleEditorProps) {
@@ -253,7 +268,7 @@ function useSimpleEditor(props: SimpleEditorProps) {
     variant,
   });
   const authored = useAuthoredCss(props.port, props.target.selector);
-  const savedAt = edit.status.kind === 'saved' ? edit.status.at : 0;
+  const savedAt = useSettled(edit.status.kind === 'saved' ? edit.status.at : 0, SAVE_SETTLE_MS);
   const refreshAuthored = authored.request;
   useEffect(() => {
     if (savedAt) void refreshAuthored();

@@ -75,9 +75,11 @@ export function pinPatch(axis: PinAxis, mode: PinMode, styles: Record<string, st
   const size = numberOf(styles, keys.box);
   const inner = styles[keys.inner] === undefined ? size : numberOf(styles, keys.inner);
   const box = numberOf(styles, keys.container);
+  const margins = numberOf(styles, `margin-${keys.start}`) + numberOf(styles, `margin-${keys.end}`);
+  const endOffset = px(box - pos - size - margins);
   const fixed = current === 'both' || current === 'scale' ? { [keys.size]: px(inner) } : {};
-  if (mode === 'end') return { [keys.start]: '', [keys.end]: px(box - pos - size), ...fixed };
-  if (mode === 'both') return { [keys.start]: px(pos), [keys.end]: px(box - pos - size), [keys.size]: '' };
+  if (mode === 'end') return { [keys.start]: '', [keys.end]: endOffset, ...fixed };
+  if (mode === 'both') return { [keys.start]: px(pos), [keys.end]: endOffset, [keys.size]: '' };
   if (mode === 'center') return { [keys.start]: centered(pos - box / 2), [keys.end]: '', ...fixed };
   if (mode === 'scale' && box > 0) return { [keys.start]: percent((pos / box) * 100), [keys.end]: '', [keys.size]: percent((inner / box) * 100) };
   return { [keys.start]: px(pos), [keys.end]: '', ...fixed };

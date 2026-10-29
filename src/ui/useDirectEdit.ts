@@ -105,6 +105,7 @@ export function useDirectEdit(o: Options) {
   const post = useCallback((body: Parameters<PreviewPort['post']>[0]) => opts.current.port.current?.post(body), []);
 
   const resetPreview = useCallback(() => post({ type: 'preview-reset' }), [post]);
+  const reselect = useCallback(() => post({ type: 'select-selector', selector: opts.current.selection.selector }), [post]);
 
   const cancel = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
@@ -284,7 +285,7 @@ export function useDirectEdit(o: Options) {
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
   const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope };
+  return { values, mixed: NO_MIXED, text, status, tailwind, preview, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

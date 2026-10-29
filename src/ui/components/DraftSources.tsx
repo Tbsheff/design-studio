@@ -90,7 +90,7 @@ function summary(state: DraftSourcesState): string {
 
 function improveNote(state: DraftSourcesState): string | null {
   if (!state.done) return 'When every source is read, the AI step starts by itself.';
-  if (state.improve.state === 'started') return 'The AI step started. Its plan shows below the chat.';
+  if (state.improve.state === 'started') return 'The AI step started. Follow its steps in the chat below.';
   if (state.improve.state === 'skipped') return state.improve.reason ?? null;
   return null;
 }

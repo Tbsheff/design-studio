@@ -152,8 +152,8 @@ function DraftSummary({ name, coverage, check, run, error }: { name: string; cov
     <div className="draft-main">
       <strong className="truncate">{name}</strong>
       {coverage && (
-        <span className={`draft-grade grade-${coverage.grade}`} aria-label={`Coverage ${coverage.score} of 100, ${GRADE_LABELS[coverage.grade]}`}>
-          {GRADE_LABELS[coverage.grade]} · {coverage.score}/100
+        <span className="draft-grade" aria-label={`Coverage ${coverage.score} of 100, ${GRADE_LABELS[coverage.grade]}`}>
+          Coverage {coverage.score}/100 · {GRADE_LABELS[coverage.grade]}
         </span>
       )}
       {coverage && <Fallbacks tokens={coverage.fallbacks} />}

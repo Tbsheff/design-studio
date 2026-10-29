@@ -2,6 +2,10 @@
   padding-inline: max(var(--s-6), calc((100% - 1040px) / 2));
 }
 
+.nds .home-header .back-btn {
+  margin-left: -10px;
+}
+
 .nds-form input:not([type='file'], [type='checkbox'], [type='radio']),
 .nds-form select {
   height: 30px;
@@ -312,21 +316,6 @@
   color: var(--text-2);
 }
 
-.draft-grade.grade-excellent,
-.draft-grade.grade-usable {
-  background: var(--ok-soft);
-  color: var(--ok);
-}
-
-.draft-grade.grade-needs-review {
-  background: var(--warn-soft);
-  color: var(--warn);
-}
-
-.draft-grade.grade-rebuild {
-  background: var(--danger-soft);
-  color: var(--danger);
-}
 
 .draft-fallbacks {
   flex: none;
@@ -357,7 +346,7 @@
 
 .draft-improve {
   display: flex;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   align-items: center;
   gap: var(--s-2);
   min-width: 0;
@@ -368,17 +357,26 @@
 }
 
 .draft-focus {
-  flex: 1 1 160px;
-  width: 160px;
-  min-width: 120px;
+  flex: 1 1 200px;
+  width: 200px;
+  min-width: 0;
   height: 28px;
   padding: 0 var(--s-2);
   font: inherit;
   font-size: var(--t-xs);
   color: var(--text);
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+.draft-focus:hover {
+  box-shadow: inset 0 0 0 1px var(--line-strong), inset 0 1px 2px rgb(0 0 0 / 0.12);
+}
+
+.draft-focus:focus {
+  box-shadow: inset 0 0 0 1px var(--accent), var(--ring-soft);
 }
 
 .draft-check {
@@ -725,6 +723,10 @@
   background: var(--surface-raised);
   box-shadow: var(--shadow-inset), var(--shadow-sm);
   font-size: var(--t-sm);
+}
+
+.ds-sources + .ds-sources {
+  display: none;
 }
 
 .ds-src-head {

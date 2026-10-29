@@ -13,6 +13,10 @@
   padding-inline: max(var(--s-6), calc((100% - 1120px) / 2 + var(--s-6)));
 }
 
+.lib .home-header .back-btn {
+  margin-left: -10px;
+}
+
 .lib-main {
   display: grid;
   gap: var(--s-6);

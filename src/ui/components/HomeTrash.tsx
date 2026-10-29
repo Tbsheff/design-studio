@@ -211,17 +211,19 @@ export default function HomeTrash({ onClose, onRestored }: { onClose: () => void
       </div>
       <div className="modal-foot">
         <span className="hint trash-count">{items === null ? '' : count === 1 ? '1 project' : `${count} projects`}</span>
-        <button
-          type="button"
-          className="btn danger"
-          disabled={count === 0 || busy !== null}
-          onClick={() => {
-            setConfirmError(null);
-            setConfirm({ kind: 'all', count, folderStays: (items ?? []).every((item) => item.folderStays) });
-          }}
-        >
-          Empty trash…
-        </button>
+        {count > 0 && (
+          <button
+            type="button"
+            className="btn danger"
+            disabled={busy !== null}
+            onClick={() => {
+              setConfirmError(null);
+              setConfirm({ kind: 'all', count, folderStays: (items ?? []).every((item) => item.folderStays) });
+            }}
+          >
+            Empty trash…
+          </button>
+        )}
         <button type="button" className="btn" onClick={onClose}>
           Done
         </button>

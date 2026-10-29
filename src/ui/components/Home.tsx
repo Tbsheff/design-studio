@@ -58,7 +58,7 @@ const LEVEL_LABEL: Record<RunLevel, string> = {
 const TABS: { id: HomeTab; label: string }[] = [
   { id: 'projects', label: 'Projects' },
   { id: 'systems', label: 'Design systems' },
-  { id: 'templates', label: 'Templates' },
+  { id: 'templates', label: 'Starters' },
 ];
 
 function useModule<T>(load: () => Promise<T>, enabled: boolean): T | null {
@@ -146,7 +146,7 @@ const EMPTY_PROMPT = 'Describe the design first';
 function SendButton({ busy, disabled, reason }: { busy: Busy; disabled: boolean; reason: string | null }) {
   const working = busy === 'create' || busy === 'ask';
   return (
-    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-busy={working || undefined} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end">
+    <button className="icon-btn send home-send" type="submit" disabled={disabled} aria-busy={working || undefined} aria-label={busy === 'ask' ? 'Thinking' : busy === 'create' ? 'Creating' : 'Create'} data-tip={disabled && reason ? reason : `Create  ${MOD_KEY}↩`} data-tip-align="end" data-tip-side="top">
       <span key={working ? 'busy' : 'idle'} className="home-send-glyph">
         {working ? <span className="spinner" /> : <Icon name="arrowUp" size={16} />}
       </span>

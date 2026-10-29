@@ -96,7 +96,7 @@
 
 .app-panel-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
@@ -110,6 +110,11 @@
 
 .app-panel-title {
   font-weight: var(--w-medium);
+  line-height: var(--lh-body);
+}
+
+.app-panel-head > .app-status-dot {
+  margin-top: calc((var(--lh-body) - 7px) / 2);
 }
 
 .app-panel-sub {
@@ -316,13 +321,15 @@ body:has(.frame-menu) .app-fail {
 
 .app-fail-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  line-height: var(--lh-body);
   gap: 8px;
   font-size: var(--t-sm);
 }
 
 .app-fail-head > svg {
   flex: none;
+  margin-top: 3px;
   color: var(--danger);
 }
 
@@ -414,7 +421,8 @@ body:has(.frame-menu) .app-fail {
 }
 
 .app-doctor-evidence {
-  display: block;
+  display: flex;
+  min-width: 0;
   padding: 4px 8px;
   border-radius: var(--r-sm);
   background: var(--surface-2);

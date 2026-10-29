@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { EXPORT_SCALES, type EditorInfo, type ExportFormat, type ExportFrame, type ExportScale, type ExportScope, type HandoffResult, type McpStatus } from '../../shared/export';
 import { downloadBlob } from '../format';
-import { canRevealDownload, canvasFrameChoices, exportApi, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
+import { canRevealDownload, canvasFrameChoices, exportApi, frameRoute, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
 import { useModalDialog } from '../usePopover';
 import { Icon, type IconName } from './Icon';
 import '../styles/export.css';
@@ -305,7 +305,7 @@ function FrameList({ options }: { options: Options }) {
         <label key={choice.id} className="export-frame">
           <input type="checkbox" checked={options.picked.has(choice.id)} onChange={() => options.toggle(choice.id)} />
           <span className="export-frame-name">{choice.frame.name}</span>
-          {choice.frame.path ? <span className="export-frame-path truncate">/{choice.frame.path}</span> : null}
+          <span className="export-frame-path truncate">{frameRoute(choice.frame)}</span>
           <span className="export-frame-size">
             {choice.frame.width} × {choice.frame.height}
           </span>

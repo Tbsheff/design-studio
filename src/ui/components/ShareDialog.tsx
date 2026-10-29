@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { SHARE_DEFAULT_EXPIRY_HOURS, SHARE_MAX_FRAMES, shareUrl, type ShareExpiryHours, type ShareLink, type ShareServerState } from '../../shared/share';
 import { errorText } from '../api';
-import { canvasFrameChoices } from '../exportApi';
+import { canvasFrameChoices, frameRoute } from '../exportApi';
 import { shareApi } from '../shareApi';
 import { useModalDialog } from '../usePopover';
 import { CopyButton } from './CopyButton';
@@ -56,6 +56,11 @@ function LinkUrls({ token, server }: { token: string; server: ShareServerState }
   );
 }
 
+function offNote(link: ShareLink, server: ShareServerState): string {
+  const what = link.revokedAt !== null ? 'Turned off.' : 'Ended.';
+  return server.running ? `${what} Viewers see a page that says the link no longer works.` : `${what} No link is live, so the share server is off and the address does not answer.`;
+}
+
 function LinkRow({ link, server, now, onRevoke, busy }: { link: ShareLink; server: ShareServerState; now: number; onRevoke: (id: string) => void; busy: boolean }) {
   const token = sessionTokens.get(link.id);
   return (
@@ -73,6 +78,7 @@ function LinkRow({ link, server, now, onRevoke, busy }: { link: ShareLink; serve
       </div>
       {link.active && token && <LinkUrls token={token} server={server} />}
       {link.active && !token && <p className="share-link-note">The link was shown when it was made. Make a new link to copy it again.</p>}
+      {!link.active && <p className="share-link-note">{offNote(link, server)}</p>}
     </li>
   );
 }
@@ -199,7 +205,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
               <label key={choice.id} className="export-frame">
                 <input type="checkbox" checked={picked.has(choice.id)} onChange={() => toggle(choice.id)} />
                 <span className="export-frame-name">{choice.frame.name}</span>
-                {choice.frame.path ? <span className="export-frame-path truncate">/{choice.frame.path}</span> : null}
+                <span className="export-frame-path truncate">{frameRoute(choice.frame)}</span>
                 <span className="export-frame-size">
                   {choice.frame.width} × {choice.frame.height}
                 </span>

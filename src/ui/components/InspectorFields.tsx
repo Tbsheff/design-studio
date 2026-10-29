@@ -1,7 +1,7 @@
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
+import { memo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { DirectStyleProperty } from '../../shared/contracts';
 import { colorToHex, displayColor, isValidColor } from '../cssValues';
-import type { DirectEdit } from '../useDirectEdit';
+import { sameEditValues, type DirectEdit } from '../useDirectEdit';
 import { Icon, type IconName } from './Icon';
 import { TokenControl } from './TokenControl';
 import { UiSelect } from './UiSelect';
@@ -18,7 +18,11 @@ interface FieldProps {
 
 const NEUTRAL_SWATCH = '#ffffff';
 
-export function ColorField({ prop, label, short, edit }: FieldProps) {
+function sameField(a: FieldProps, b: FieldProps): boolean {
+  return a.prop === b.prop && a.label === b.label && a.short === b.short && sameEditValues(a.edit, b.edit, [a.prop]);
+}
+
+function ColorFieldView({ prop, label, short, edit }: FieldProps) {
   const [text, setText] = useState<string | null>(null);
   const ui = useTokenUi();
   const value = edit.values[prop];
@@ -85,7 +89,7 @@ export function ColorField({ prop, label, short, edit }: FieldProps) {
   );
 }
 
-export function SelectField({ prop, label, short, edit, options }: FieldProps & { options: string[] }) {
+function SelectFieldView({ prop, label, short, edit, options }: FieldProps & { options: string[] }) {
   const value = edit.values[prop];
   const list = value && !options.includes(value) ? [value, ...options] : options;
   const id = `ins-${prop}`;
@@ -124,7 +128,7 @@ function alignOf(value: string): string {
   return value;
 }
 
-export function AlignField({ edit }: { edit: DirectEdit }) {
+function AlignFieldView({ edit }: { edit: DirectEdit }) {
   const current = alignOf(edit.values['text-align']);
   return (
     <div className="segmented icons ins-align" role="group" aria-label="Text align">
@@ -204,3 +208,7 @@ export function InspectorSection({ title, children, aside, className, label, ini
     </section>
   );
 }
+
+export const ColorField = memo(ColorFieldView, sameField);
+export const SelectField = memo(SelectFieldView, (a, b) => sameField(a, b) && a.options.join() === b.options.join());
+export const AlignField = memo(AlignFieldView, (a, b) => sameEditValues(a.edit, b.edit, ['text-align']));

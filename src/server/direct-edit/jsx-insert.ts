@@ -13,7 +13,9 @@ import { DirectEditError } from './errors.js';
 import { planImports, type ImportItem, type ImportNeed } from './imports.js';
 import { assertCanEdit, publishVersion, resolveSource, type DirectEditDeps, type ResolvedSource } from './index.js';
 import { parseHtmlSnippet, parseJsxSnippet, type Snippet } from './jsx-snippet.js';
-import { structureDoc, type NodeRole } from './structure-docs.js';
+import { parseSource } from './jsx.js';
+import { jsxElementAt } from './structure.js';
+import { structureDoc, type DocNode, type NodeRole } from './structure-docs.js';
 import { indentUnit, planInsert, planStructure, positionAt, refuse, type Placement, type StructNode } from './structure-ops.js';
 
 export interface JsxInsertPlan {
@@ -43,7 +45,7 @@ const requestSchema = z
   .strict();
 
 const VOID_TAGS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr', 'textarea', 'select']);
-const ROLE: Record<InsertJsxRequest['position'], NodeRole> = { inside: 'into', before: 'ref', after: 'ref', replace: 'target' };
+const ROLE: Record<InsertJsxRequest['position'], NodeRole> = { inside: 'into', before: 'insert', after: 'insert', replace: 'insert' };
 const GLOBALS = new Set(['undefined', 'Infinity', 'NaN', 'Math', 'Number', 'String', 'Date', 'JSON', 'window', 'document']);
 
 export function parseInsertJsxRequest(raw: unknown): InsertJsxRequest {
@@ -130,10 +132,60 @@ function placement(position: InsertJsxRequest['position'], node: StructNode): Pl
   return { replace: node };
 }
 
-function piecesFor(snippet: Snippet, position: InsertJsxRequest['position'], node: StructNode, html: boolean, unit: string): string[] {
+function wrapFragment(pieces: string[], unit: string): string {
+  const body = pieces.map((piece) => piece.split('\n').map((line) => (line === '' ? line : `${unit}${line}`)).join('\n')).join('\n');
+  return `<>\n${body}\n</>`;
+}
+
+function lineLead(source: string, offset: number): string {
+  const start = source.lastIndexOf('\n', offset - 1) + 1;
+  return /^[ \t]*/.exec(source.slice(start, offset))?.[0] ?? '';
+}
+
+function ownLine(source: string, node: StructNode): boolean {
+  const start = source.lastIndexOf('\n', node.start - 1) + 1;
+  const next = source.indexOf('\n', node.end);
+  return /^[ \t]*$/.test(source.slice(start, node.start)) && /^[ \t\r]*$/.test(source.slice(node.end, next < 0 ? source.length : next));
+}
+
+function branchPieces(source: string, snippet: Snippet, position: InsertJsxRequest['position'], node: StructNode, unit: string): string[] {
+  const lead = lineLead(source, node.start);
+  const own = source.slice(node.start, node.end).split('\n').map((line, index) => (index > 0 && line.startsWith(lead) ? line.slice(lead.length) : line)).join('\n');
+  const fragment = wrapFragment(position === 'after' ? [own, ...snippet.pieces] : [...snippet.pieces, own], unit);
+  return [ownLine(source, node) ? fragment : fragment.split('\n').join(`\n${lead}`)];
+}
+
+function piecesFor(source: string, snippet: Snippet, position: InsertJsxRequest['position'], node: DocNode, html: boolean, unit: string): string[] {
+  if (node.branch && position !== 'replace') return branchPieces(source, snippet, position, node, unit);
   if (position !== 'replace' || !node.root || snippet.pieces.length < 2 || html) return snippet.pieces;
-  const body = snippet.pieces.map((piece) => `${unit}${piece.split('\n').join(`\n${unit}`)}`).join('\n');
-  return [`<>\n${body}\n</>`];
+  return [wrapFragment(snippet.pieces, unit)];
+}
+
+function placementFor(position: InsertJsxRequest['position'], node: DocNode): Placement {
+  return node.branch ? { replace: node } : placement(position, node);
+}
+
+function fragmentChildren(code: string, ast: t.File, offset: number): number[] {
+  const out: number[] = [];
+  let at = offset + 2;
+  for (;;) {
+    while (/\s/.test(code[at] ?? '')) at += 1;
+    const child = code[at] === '<' && code[at + 1] !== '/' ? jsxElementAt(ast.program, at) : null;
+    if (!child || child.end == null) return out;
+    out.push(at);
+    at = child.end;
+  }
+}
+
+function insertedOffsets(code: string, select: number[], position: InsertJsxRequest['position'], node: DocNode, typescript: boolean): number[] {
+  if (!select.some((offset) => code.startsWith('<>', offset))) return select;
+  const ast = parseSource(code, typescript);
+  return select.flatMap((offset) => {
+    if (!code.startsWith('<>', offset)) return [offset];
+    const children = fragmentChildren(code, ast, offset);
+    if (!node.branch || position === 'replace') return children;
+    return position === 'after' ? children.slice(1) : children.slice(0, -1);
+  });
 }
 
 function subject(snippet: Snippet): string {
@@ -153,9 +205,14 @@ async function resolveFor(scope: InsertScope, request: Pick<InsertJsxRequest, 't
   return { resolved: await resolveTarget(scope, library.root, request, library.entries), library };
 }
 
+function isTypeScript(relative: string): boolean {
+  const extension = path.extname(relative).toLowerCase();
+  return extension !== '.js' && extension !== '.jsx';
+}
+
 function snippetFor(request: InsertJsxRequest, relative: string, unit: string): Snippet {
   if (isHtml(relative)) return parseHtmlSnippet(request.jsx, unit);
-  return parseJsxSnippet(request.jsx, path.extname(relative).toLowerCase() !== '.js' && path.extname(relative).toLowerCase() !== '.jsx', unit);
+  return parseJsxSnippet(request.jsx, isTypeScript(relative), unit);
 }
 
 export async function planInsertJsx(scope: InsertScope, raw: unknown): Promise<JsxInsertPlan> {
@@ -170,8 +227,9 @@ export async function planInsertJsx(scope: InsertScope, raw: unknown): Promise<J
   const node = doc.node(resolved.at, ROLE[request.position], resolved.tag);
   if (request.position === 'inside' && VOID_TAGS.has(node.tag)) throw refuse(`<${node.tag}> cannot hold other elements; insert after it instead`);
   const imported = library && !html ? await importsFor(scope, library, resolved, snippet, request) : { splices: [], items: [] };
-  const plan = planInsert(resolved.code, { pieces: piecesFor(snippet, request.position, node, html, unit), place: placement(request.position, node), closeTag: doc.closeTag, extras: imported.splices });
-  const positions = plan.select.map((offset) => positionAt(plan.code, offset));
+  const plan = planInsert(resolved.code, { pieces: piecesFor(resolved.code, snippet, request.position, node, html, unit), place: placementFor(request.position, node), closeTag: doc.closeTag, extras: imported.splices });
+  const offsets = html ? plan.select : insertedOffsets(plan.code, plan.select, request.position, node, isTypeScript(relative));
+  const positions = offsets.map((offset) => positionAt(plan.code, offset));
   doc.verify(plan.code, positions);
   const select = positions.map((position, index) => ({ file: relative, ...position, tag: snippet.tags[index] ?? snippet.tags[0] ?? 'element' }));
   return { target: resolved.target, original: resolved.code, code: plan.code, select, imports: imported.items, usedAt: resolved.usedAt, title: titleOf(snippet, request.position, node.tag), request };

@@ -1,4 +1,4 @@
-import type { PortPlan, PortStartRequest, PortStartResult } from '../shared/port';
+import type { PortFlowPlan, PortPlan, PortStartRequest, PortStartResult } from '../shared/port';
 import { PORT_OPEN_EVENT } from '../shared/port';
 import { json } from './api';
 
@@ -28,7 +28,14 @@ function planQuery(input: Omit<PortStartRequest, 'route'> & { route?: string }):
   return query.toString();
 }
 
+function flowQuery(input: Omit<PortStartRequest, 'route'> & { route?: string }): string {
+  const query = new URLSearchParams(planQuery(input));
+  query.set('flow', '1');
+  return query.toString();
+}
+
 export const portApi = {
   plan: (input: Omit<PortStartRequest, 'route'> & { route?: string }) => json<PortPlan>('GET', `/api/port/plan?${planQuery(input)}`),
+  flowPlan: (input: Omit<PortStartRequest, 'route'> & { route?: string }) => json<PortFlowPlan>('GET', `/api/port/plan?${flowQuery(input)}`),
   start: (input: PortStartRequest) => json<PortStartResult>('POST', '/api/port/start', input),
 };

@@ -1,9 +1,26 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse, type DefaultTreeAdapterMap } from 'parse5';
 import { cleanFramePath } from '../../shared/canvas-file.js';
 import type { CompiledTokenEntry, Direction, Project } from '../../shared/contracts.js';
-import type { PortImage, PortKitRole, PortLink, PortPlan, PortRepeat, PortSection, PortTarget, PortToken } from '../../shared/port.js';
+import {
+  cleanPortRoute,
+  PORT_FLOW_MAX_PAGES,
+  portPageSlug,
+  suggestPortRoute,
+  type PortFlowLink,
+  type PortFlowLinkKind,
+  type PortFlowPage,
+  type PortFlowPlan,
+  type PortImage,
+  type PortKitRole,
+  type PortLink,
+  type PortPlan,
+  type PortRepeat,
+  type PortSection,
+  type PortTarget,
+  type PortToken,
+} from '../../shared/port.js';
 import { matchColor } from '../../shared/token-match.js';
 import { appRouterDir, listAppRoutes } from '../app/routes.js';
 import { searchComponents } from '../components/component-search.js';
@@ -449,4 +466,163 @@ export async function buildPortPlan(input: PortPlanInput): Promise<PortPlan> {
     tokens: mapTokens(facts.tokens, designSystem?.entries ?? []),
     ...kitInfo,
   };
+}
+
+interface PageRef {
+  kind: PortFlowLinkKind;
+  href: string;
+  page: string;
+  rest: string;
+}
+
+const LINK_ATTRS: Record<string, PortFlowLinkKind> = { href: 'a', action: 'form', formaction: 'form' };
+const PAGE_LITERAL = /["'`]((?:\.\/)?[\w-][\w./-]*\.html?)((?:[?#][^"'`\s]*)?)/gi;
+const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i;
+
+function pageRef(from: string, kind: PortFlowLinkKind, raw: string): PageRef | null {
+  const href = raw.trim();
+  if (!href || EXTERNAL.test(href)) return null;
+  const split = /^([^?#]*)(.*)$/.exec(href);
+  const file = split?.[1] ?? '';
+  if (!/\.html?$/i.test(file) || file.startsWith('/')) return null;
+  const page = cleanFramePath(path.posix.normalize(path.posix.join(path.posix.dirname(from), file)));
+  return page ? { kind, href, page, rest: split?.[2] ?? '' } : null;
+}
+
+function literals(code: string): string[] {
+  return [...code.matchAll(PAGE_LITERAL)].map((match) => `${match[1] as string}${match[2] ?? ''}`);
+}
+
+function elementRefs(from: string, el: Element): PageRef[] {
+  const out: (PageRef | null)[] = [];
+  for (const item of el.attrs) {
+    const kind = LINK_ATTRS[item.name];
+    if (kind && el.tagName !== 'link') out.push(pageRef(from, kind, item.value));
+    else if (item.name.startsWith('on')) out.push(...literals(item.value).map((href) => pageRef(from, 'script', href)));
+  }
+  if (el.tagName === 'script') {
+    const code = kids(el).map((child) => ('value' in child ? child.value : '')).join('');
+    out.push(...literals(code).map((href) => pageRef(from, 'script', href)));
+  }
+  return out.filter((ref): ref is PageRef => ref !== null);
+}
+
+function pageRefs(from: string, html: string): PageRef[] {
+  const seen = new Set<string>();
+  return descendants(parse(html), () => true, NO_SKIP)
+    .flatMap((el) => elementRefs(from, el))
+    .filter((ref) => {
+      const key = `${ref.kind} ${ref.href}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+interface FlowPage {
+  path: string;
+  refs: PageRef[];
+}
+
+async function crawlFlow(workTree: string, entry: string): Promise<FlowPage[]> {
+  const pages: FlowPage[] = [{ path: entry, refs: pageRefs(entry, await readSourcePage(workTree, entry)) }];
+  const seen = new Set([entry]);
+  for (let index = 0; index < pages.length && pages.length < PORT_FLOW_MAX_PAGES; index += 1) {
+    for (const ref of (pages[index] as FlowPage).refs) {
+      if (seen.has(ref.page) || pages.length >= PORT_FLOW_MAX_PAGES) continue;
+      seen.add(ref.page);
+      const html = await readSourcePage(workTree, ref.page).catch(() => null);
+      if (html !== null) pages.push({ path: ref.page, refs: pageRefs(ref.page, html) });
+    }
+  }
+  return pages;
+}
+
+async function rootPages(workTree: string): Promise<string[]> {
+  const names = await readdir(workTree).catch(() => [] as string[]);
+  return names.filter((name) => /\.html?$/i.test(name)).sort();
+}
+
+function flowRoutes(entry: string, order: string[], base: string): Map<string, string> {
+  const routes = new Map<string, string>([[entry, base]]);
+  const used = new Set<string>();
+  for (const page of order.filter((item) => item !== entry)) {
+    const slug = portPageSlug(page);
+    let name = slug;
+    for (let n = 2; used.has(name); n += 1) name = `${slug}-${n}`;
+    used.add(name);
+    const route = cleanPortRoute(`${base}/${name}`);
+    if (!route) throw new BadRequestError(`The route for ${page} under ${base} is too deep. Use a shorter route path.`);
+    routes.set(page, route);
+  }
+  return routes;
+}
+
+function pickPages(order: string[], paths: string[] | null): string[] {
+  if (!paths) return order;
+  const wanted = new Set(paths.map(sourcePagePath));
+  return [...order.filter((page) => wanted.has(page)), ...[...wanted].filter((page) => !order.includes(page))].slice(0, PORT_FLOW_MAX_PAGES);
+}
+
+function flowLinks(crawled: FlowPage[], picked: string[], routes: Map<string, string>): PortFlowLink[] {
+  const chosen = new Set(picked);
+  return crawled
+    .filter((page) => chosen.has(page.path))
+    .flatMap((page) =>
+      page.refs.flatMap((ref) => {
+        const route = routes.get(ref.page);
+        return route ? [{ from: page.path, kind: ref.kind, href: ref.href, page: ref.page, to: `${portRouteUrl(route)}${ref.rest}`, ported: chosen.has(ref.page) }] : [];
+      }),
+    );
+}
+
+export interface PortFlowInput extends PortPlanInput {
+  paths: string[] | null;
+}
+
+async function flowPage(input: PortFlowInput, page: string, route: string): Promise<PortFlowPage> {
+  const target = input.target ? { ...input.target, route } : null;
+  const plan = await buildPortPlan({ source: { ...input.source, path: page }, target });
+  return { path: page, title: plan.source.title, route, url: portRouteUrl(route), routeFile: plan.target?.routeFile ?? null, routeExists: plan.target?.routeExists ?? false, plan };
+}
+
+async function addPicked(workTree: string, crawled: FlowPage[], picked: string[]): Promise<void> {
+  for (const page of picked) {
+    if (!crawled.some((item) => item.path === page)) crawled.push({ path: page, refs: pageRefs(page, await readSourcePage(workTree, page)) });
+  }
+}
+
+export async function buildFlowPlan(input: PortFlowInput): Promise<PortFlowPlan> {
+  const { source, target } = input;
+  const entry = sourcePagePath(source.path);
+  const workTree = source.direction.workTree;
+  const crawled = await crawlFlow(workTree, entry);
+  const picked = pickPages(
+    crawled.map((page) => page.path),
+    input.paths,
+  );
+  await addPicked(workTree, crawled, picked);
+  const order = crawled.map((page) => page.path);
+  const base = target?.route ?? suggestPortRoute(entry, readPageFacts(await readSourcePage(workTree, entry)).title);
+  const routes = flowRoutes(entry, order, base);
+  const pages = await Promise.all(picked.map((page) => flowPage(input, page, routes.get(page) as string)));
+  return {
+    source: { projectId: source.project.id, directionId: source.direction.id, entry },
+    target: target ? { projectId: target.project.id, name: target.project.name, framework: target.project.app?.framework ?? null } : null,
+    base,
+    pages,
+    links: flowLinks(crawled, picked, routes),
+    unselected: order.filter((page) => !picked.includes(page)),
+    unreached: (await rootPages(workTree)).filter((page) => !order.includes(page)),
+  };
+}
+
+export function portFlowText(flow: PortFlowPlan): string {
+  const pages = flow.pages.map((page) => `- ${page.path} -> ${page.route}${page.routeFile ? ` (file ${page.routeFile})` : ''}`);
+  const links = flow.links.map((link) => `- ${link.from} [${link.kind}] ${link.href} -> ${link.to}${link.ported ? '' : ' (page not ported in this run: keep this app path)'}`);
+  return [
+    `Base route: ${flow.base}`,
+    `Pages in flow order (${flow.pages.length} route files):\n${pages.join('\n')}`,
+    links.length > 0 ? `Link map (prototype href -> app path; keep the query part):\n${links.join('\n')}` : 'Link map: no links between the pages.',
+  ].join('\n\n');
 }

@@ -1,0 +1,31 @@
+.port-pages {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.port-pages legend {
+  padding: 0;
+  margin-bottom: var(--s-1);
+}
+
+.export-frame.port-page {
+  grid-template-columns: 16px minmax(0, 120px) minmax(0, 1fr) auto;
+  min-height: 28px;
+}
+
+.port-page-name {
+  color: var(--text);
+}
+
+.port-page-route {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.port-page-taken {
+  color: var(--danger);
+  font-size: var(--t-xs);
+}

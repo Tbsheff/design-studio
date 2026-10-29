@@ -81,10 +81,42 @@ export interface PortPlan {
   missing: PortKitMiss[];
 }
 
+export interface PortFlowPage {
+  path: string;
+  title: string | null;
+  route: string;
+  url: string;
+  routeFile: string | null;
+  routeExists: boolean;
+  plan: PortPlan;
+}
+
+export type PortFlowLinkKind = 'a' | 'form' | 'script';
+
+export interface PortFlowLink {
+  from: string;
+  kind: PortFlowLinkKind;
+  href: string;
+  page: string;
+  to: string;
+  ported: boolean;
+}
+
+export interface PortFlowPlan {
+  source: { projectId: string; directionId: string; entry: string };
+  target: Omit<PortTarget, 'route' | 'routeFile' | 'routeExists'> | null;
+  base: string | null;
+  pages: PortFlowPage[];
+  links: PortFlowLink[];
+  unselected: string[];
+  unreached: string[];
+}
+
 export interface PortStartRequest {
   sourceProjectId: string;
   sourceDirectionId?: string;
   path: string;
+  paths?: string[];
   targetProjectId: string;
   route: string;
 }
@@ -95,6 +127,14 @@ export interface PortStartResult {
   directionId: string;
   route: string;
   routeFile: string | null;
+  routes?: { path: string; route: string; routeFile: string | null }[];
+}
+
+export const PORT_FLOW_MAX_PAGES = 8;
+
+export function portPageSlug(pagePath: string): string {
+  const stem = pagePath.replace(/^.*\//, '').replace(/\.html?$/i, '');
+  return stem.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'page';
 }
 
 const ROUTE_PART = /^[a-z0-9][a-z0-9-]{0,47}$|^\([a-z0-9-]{1,40}\)$|^\[[a-zA-Z0-9_]{1,40}\]$/;

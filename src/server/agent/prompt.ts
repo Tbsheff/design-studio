@@ -32,13 +32,15 @@ export function buildAppRules(project: Pick<Project, 'app'>, workTree: string): 
 - Server components, data loaders and auth are real code. Do not stub them out to make a page render; say what the page needs instead.`;
 }
 
-export const PORT_RULES = `Port rules (a prototype page moves into this app):
-- One route: write the one route file the <port-plan> names (or, with no file named, the page file of the route path under the app router). Do not change other routes, layouts or shared components. Never overwrite a file that exists.
+export const PORT_RULES = `Port rules (prototype pages move into this app):
+- Route files: write the one route file the <port-plan> names (or, with no file named, the page file of the route path under the app router). Do not change other routes, layouts or shared components. Never overwrite a file that exists.
+- A flow: when the message has a <port-flow> block, it lists N pages, each with its route file under one base route, and one <port-plan> and <prototype-source> per page. Write every route file in that list, one per page, and nothing else. "The route file" in the steps means each of them; check each new route.
+- Link map: in a flow, rewrite every prototype href in the <port-flow> link map to its app path with next/link, also the links that scripts build (\`'details.html?'+params\` becomes the app path plus the same query) and form actions (submit with \`useRouter().push\`). Keep the query keys and values. A page that reads the query string is a client component ("use client") with \`useSearchParams\` inside a \`<Suspense>\` boundary, so the build does not fail.
 - Kit components: build every block the plan maps to a kit component with that component and its import line (Card with its parts for each repeated card, Badge for short meta labels, Button for actions). Call \`mcp__studio__list_components\` with a query for any other part before you write markup. Never rebuild a kit component from plain elements.
 - Tokens: style only with the app's token classes (bg-background, text-foreground, text-muted-foreground, border-border, bg-primary, text-primary-foreground, rounded-lg) and its spacing and type scale. Use the token map in the plan to pick them. No raw colors, no hex or oklch values, no arbitrary values in brackets.
 - No copied inline styles: the prototype's style attributes, its <style> block and its absolute positions do not move. Rebuild the layout with flex or grid classes. Leave out what the plan lists under "Leave out".
 - Content: keep every heading, label, price and step text of the page word for word, in the same order. Put repeated items in a typed constant array at the top of the file and map over it.
-- Links: turn the prototype's page links into app links (next/link) to sibling routes of this route; a link to a page that is not ported yet keeps its path under the same route folder.
+- Links: turn the prototype's page links into app links (next/link) to sibling routes of this route; a link to a page that is not ported yet keeps its path under the same route folder (the link map gives that path).
 - The file must compile: typed props, no unused imports, no code comments, a default export named after the route.`;
 
 const EDITING_RULES = `## How to edit

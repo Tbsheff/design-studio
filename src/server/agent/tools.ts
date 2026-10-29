@@ -265,7 +265,7 @@ export async function takeScreenshot(deps: StudioToolDeps, counters: StudioToolC
   const start = firstMobileFrom(counters, viewport, args.from);
   counters.shots += 1;
   if (deps.run) deps.run.shots = (deps.run.shots ?? 0) + 1;
-  if (deps.run?.log) recordShot(deps.run.log, viewport);
+  if (deps.run?.log) recordShot(deps.run.log, viewport, { url: target.url, ...(target.prepare ? { prepare: target.prepare } : {}) });
   const dark = args.theme === 'dark';
   const outPrefix = path.join(deps.runsDir, `${deps.runId}-shot-${counters.shots}-${viewport}${dark ? '-dark' : ''}`);
   try {

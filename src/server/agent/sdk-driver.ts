@@ -10,6 +10,7 @@ import { BASH_EDIT_TOOL, bashWriteProblem, builtinToolNames, createCanUseTool, c
 import { createHash } from 'node:crypto';
 import { levelOf, resolveRunConfig, withRunTask, type ResolvedRunConfig } from '../../shared/run-levels.js';
 import { captureBaseline, prewarmChecks, type RunToolState } from './check-tool.js';
+import { screenReviewNote, screenReviewPrompt, studioScreenReview, unseenScreens } from './screen-review.js';
 import { appReviewGaps, appReviewNote, appReviewPrompt, mergeAppReviews, noteReview, runFinalCheck, studioAppReview } from './final-check.js';
 import type { AppReviewRecord } from '../../shared/contracts.js';
 import { continuationPrompt, decideLoop, loopReport, loopsDone, checkSteps, newLoopLog, wantsLoop, type LoopDecision, type StopReason } from './polish-loop.js';
@@ -800,6 +801,23 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     return { outcome: { ...outcome, finalText: `${outcome.finalText}\n\n${appReviewNote(records)}` }, record: mergeAppReviews(records) };
   }
 
+  async function continueScreenReview(input: DriverInput, segment: AttemptSegment, total: DriverOutcome): Promise<DriverOutcome> {
+    const run = segment.setup.run;
+    if (input.signal.aborted || total.status !== 'completed') return total;
+    const unseen = await unseenScreens({ preview: options.preview, ctx: input.ctx, run });
+    if (unseen.length === 0) return total;
+    const review = await studioScreenReview({ preview: options.preview, ...(options.canvas ? { canvas: options.canvas } : {}), ctx: input.ctx, run, runsDir: input.runsDir, runId: input.runId }, unseen);
+    const text = screenReviewPrompt(review);
+    const sessionId = segment.sessionId;
+    if (!text || !sessionId || !roomForFixLoop(total, segment) || input.signal.aborted) return { ...total, finalText: `${total.finalText}\n\n${screenReviewNote(review, false)}` };
+    input.sink.sent({ text, imageCount: review.images.length, updatedInstructions: false, recommendedSkills: [], promptHash: segment.promptHash, resume: sessionId, continuation: (total.loop?.continuations ?? 0) + 1 });
+    segment.sdkOptions = { ...(await buildSdkOptions(options, input, sessionId, segment.setup)), resume: sessionId, ...(segment.maxBudgetUsd !== null ? { maxBudgetUsd: segment.maxBudgetUsd } : {}) };
+    const prior: PriorSession = { sessionId, costUsd: total.sessionTotals?.costUsd ?? 0, apiMs: total.sessionTotals?.apiMs ?? null };
+    const next = await runSegment(input, segment, { text, images: review.images }, prior);
+    const merged = mergeOutcomes(total, next.outcome);
+    return { ...merged, finalText: `${merged.finalText}\n\n${screenReviewNote(review, true)}` };
+  }
+
   async function attempt(input: DriverInput, parts: UserMessageParts, resume: string | null): Promise<AttemptResult> {
     const { sink, signal } = input;
     const setup = await setupAttempt(input);
@@ -816,7 +834,7 @@ export function createSdkDriver(options: SdkDriverOptions): RunDriver {
     const looped = wantsLoop(setup.config, input.ctx.request.mode) ? await continueLoop(input, segment, first) : null;
     const checked = wantsDesignSystemCheck(input.ctx) ? await continueDesignSystem(input, segment, first) : first.outcome;
     const reviewed = await continueAppReview(input, segment, looped ? withLoopReport(looped.outcome, setup.run, looped.reason, looped.continuations) : checked);
-    const outcome = reviewed.outcome;
+    const outcome = await continueScreenReview(input, segment, reviewed.outcome);
     addCriticCost(outcome, setup.run.criticCostUsd);
     if (!signal.aborted) await attachFinalCheck(outcome, { preview: options.preview, ctx: input.ctx, run: setup.run, toolOrder: setup.run.log?.toolOrder ?? first.state.toolOrder, runsDir: input.runsDir, runId: input.runId }, reviewed.record);
     return { sawInit: first.state.sawInit, outcome };

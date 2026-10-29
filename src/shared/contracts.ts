@@ -664,6 +664,7 @@ export type StudioEventBody =
   | { type: 'design-system.sources'; sources: DraftSourcesState }
   | { type: 'app.status'; status: AppServerStatus }
   | { type: 'frame-states.changed'; states: import('./frame-state.js').FrameStatesView }
+  | { type: 'layer-locks.changed'; keys: string[] }
   | { type: 'edit.planned'; id: string; patches: DomPatch[] }
   | { type: 'edit.unplanned'; id: string };
 

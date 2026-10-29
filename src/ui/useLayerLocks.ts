@@ -1,29 +1,51 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { BridgeToParent } from '../shared/contracts';
+import type { BridgeToParent, StudioEvent } from '../shared/contracts';
+import { cleanLockKeys, type LayerLocksView } from '../shared/layer-locks';
+import { json } from './api';
 import type { ParentMessageBody } from './bridge';
+import { useProjectEvents } from './events';
 
-const PREFIX = 'studio.layer-locks';
+const LEGACY_PREFIX = 'studio.layer-locks';
 
-function storageKey(projectId: string, directionId: string | null): string {
-  return `${PREFIX}:${projectId}:${directionId ?? ''}`;
+function legacyKey(projectId: string, directionId: string): string {
+  return `${LEGACY_PREFIX}:${projectId}:${directionId}`;
 }
 
-function readKeys(key: string): string[] {
+function readLegacy(key: string): string[] {
   try {
-    const raw: unknown = JSON.parse(window.localStorage.getItem(key) ?? '[]');
-    return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : [];
+    return cleanLockKeys(JSON.parse(window.localStorage.getItem(key) ?? '[]'));
   } catch {
     return [];
   }
 }
 
-function writeKeys(key: string, keys: string[]): void {
+function dropLegacy(key: string): void {
   try {
-    if (keys.length === 0) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, JSON.stringify(keys));
+    window.localStorage.removeItem(key);
   } catch {
     void 0;
   }
+}
+
+function locksPath(projectId: string, directionId: string): string {
+  return `/api/projects/${encodeURIComponent(projectId)}/d/${encodeURIComponent(directionId)}/layer-locks`;
+}
+
+async function loadLocks(projectId: string, directionId: string): Promise<string[]> {
+  const view = await json<LayerLocksView>('GET', locksPath(projectId, directionId));
+  const legacy = legacyKey(projectId, directionId);
+  const old = readLegacy(legacy).filter((key) => !view.keys.includes(key));
+  if (old.length === 0) {
+    dropLegacy(legacy);
+    return view.keys;
+  }
+  const merged = await json<LayerLocksView>('PUT', locksPath(projectId, directionId), { add: old });
+  dropLegacy(legacy);
+  return merged.keys;
+}
+
+function same(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((key, index) => key === b[index]);
 }
 
 export interface LayerLocks {
@@ -32,24 +54,47 @@ export interface LayerLocks {
 }
 
 export function useLayerLocks(projectId: string, directionId: string | null, frontToken: string | null, post: (body: ParentMessageBody) => void): LayerLocks {
-  const key = storageKey(projectId, directionId);
+  const scope = directionId ? `${projectId}/${directionId}` : null;
   const keys = useRef<string[]>([]);
-  const live = useRef({ key, post });
-  live.current = { key, post };
+  const loaded = useRef<string | null>(null);
+  const live = useRef({ projectId, directionId, scope, post });
+  live.current = { projectId, directionId, scope, post };
 
-  const send = useCallback(() => {
-    const { post: postNow } = live.current;
-    postNow({ type: 'set-locks', keys: keys.current });
-    if (keys.current.length > 0) postNow({ type: 'request-tree' });
+  const send = useCallback((always = false) => {
+    const cur = live.current;
+    if (!cur.scope || loaded.current !== cur.scope) return;
+    cur.post({ type: 'set-locks', keys: keys.current });
+    if (keys.current.length > 0 || always) cur.post({ type: 'request-tree' });
   }, []);
 
   useEffect(() => {
-    keys.current = readKeys(key);
-  }, [key]);
+    keys.current = [];
+    loaded.current = null;
+    if (!directionId || !scope) return;
+    let active = true;
+    loadLocks(projectId, directionId)
+      .then((list) => {
+        if (!active) return;
+        keys.current = list;
+        loaded.current = scope;
+        send();
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [projectId, directionId, scope, send]);
 
   useEffect(() => {
     if (frontToken) send();
-  }, [frontToken, key, send]);
+  }, [frontToken, scope, send]);
+
+  useProjectEvents(projectId, (event: StudioEvent) => {
+    if (event.type !== 'layer-locks.changed' || event.directionId !== live.current.directionId || loaded.current !== live.current.scope) return;
+    if (same(event.keys, keys.current)) return;
+    keys.current = event.keys;
+    send(true);
+  });
 
   const setNodeLocked = useCallback((id: number, locked: boolean) => live.current.post({ type: 'lock-node', id, locked }), []);
 
@@ -57,8 +102,12 @@ export function useLayerLocks(projectId: string, directionId: string | null, fro
     (message: BridgeToParent) => {
       if (message.type === 'ready') send();
       if (message.type !== 'locks' || !Array.isArray(message.keys)) return;
-      keys.current = message.keys.filter((item): item is string => typeof item === 'string');
-      writeKeys(live.current.key, keys.current);
+      const cur = live.current;
+      if (!cur.directionId || loaded.current !== cur.scope) return;
+      const next = cleanLockKeys(message.keys);
+      if (same(next, keys.current)) return;
+      keys.current = next;
+      void json<LayerLocksView>('PUT', locksPath(cur.projectId, cur.directionId), { keys: next }).catch(() => undefined);
     },
     [send],
   );

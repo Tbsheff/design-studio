@@ -166,14 +166,14 @@ export function topOf(png: PNG, height: number): PNG {
 }
 
 const COMPARE_WIDTH = 480;
-const EDGE_WIDTH = 360;
+const EDGE_WIDTH = 320;
 const EDGE_TOLERANCE = 2;
 const EDGE_THRESHOLD = 96;
 const BACKGROUND_TOLERANCE = 18;
 const CONTENT_WIDTH = 160;
 const CONTENT_THRESHOLD = 0.15;
-const EDGE_POWER = 1.5;
-const CONTENT_WEIGHT = 0.3;
+const EDGE_POWER = 2;
+const CONTENT_WEIGHT = 0.2;
 const GRID = 3;
 const ROW_NAMES = ['top', 'middle', 'bottom'];
 const COL_NAMES = ['left', 'center', 'right'];

@@ -13,7 +13,7 @@ import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasT
 import { publishVersion } from '../direct-edit/index.js';
 import type { ActivityDraft } from './activity.js';
 import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
-import { approve, EditError, loadTarget, oneLine, outputFolder, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
+import { approve, EditError, loadTarget, exportFolder, oneLine, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
 import { base, checkWritePath, classes, variant, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
 import { describeElement, textHintsOf } from './element.js';
 import { PENDING_VERSION, savedVersionId, savesSettled } from '../direct-edit/save-queue.js';
@@ -455,7 +455,7 @@ async function exportFiles(deps: EditDeps, input: Input<'export'>, client: strin
   const versionId = input.versionId ?? direction.headVersionId;
   if (!versionId) throw new EditError('This direction has no saved version yet.');
   const version = await deps.versions.get(project, versionId);
-  const { folder, trusted } = await outputFolder(deps, input.folder);
+  const { folder, trusted } = await exportFolder(deps, project.id, input.folder);
   const format = input.format.toUpperCase();
   if (!trusted) await approve(deps, { tool: 'export', action: 'Export to a folder outside Downloads and the projects folder', projectId: project.id, client, title: `${client} wants to export ${format} to ${oneLine(folder, 160)}`, detail: `${oneLine(project.name)}. This folder is outside Downloads and the projects folder.` });
   const exported = (file: string): ActivityDraft => ({ projectId: project.id, directionId: direction.id, summary: `Exported ${format} to ${oneLine(file, 120)}` });

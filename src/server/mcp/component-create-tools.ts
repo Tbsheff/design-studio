@@ -25,6 +25,7 @@ const createSchema = z
           .object({
             targetSelector: selector.optional().describe('CSS selector or get_layers id of the element, for example "e0k3pz".'),
             targetSource: z.string().trim().max(1100).optional().describe('Or file:line:col of its JSX tag, for example "src/App.tsx:14:9".'),
+            path: pagePath.describe('Page path of this element. Leave out to use the top-level path.'),
           })
           .strict()
           .refine((item) => (item.targetSelector === undefined) !== (item.targetSource === undefined), 'pass targetSelector or targetSource, not both'),
@@ -54,7 +55,7 @@ type Loaded = Awaited<ReturnType<typeof loadTarget>>;
 
 async function targetsOf(deps: Parameters<typeof targetOf>[0], loaded: Loaded, input: z.output<typeof createSchema>): Promise<InsertTarget[]> {
   const out: InsertTarget[] = [];
-  for (const item of input.targets) out.push(await targetOf(deps, loaded.project, loaded.direction, { ...item, path: input.path }));
+  for (const item of input.targets) out.push(await targetOf(deps, loaded.project, loaded.direction, { ...item, path: item.path ?? input.path }));
   return out;
 }
 

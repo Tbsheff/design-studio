@@ -369,12 +369,50 @@ const PIN_TIPS: Record<PinAxis, string> = {
   y: 'How the element follows when its container gets taller or shorter',
 };
 
-function PinSelect({ axis, mode, edit, selection, onPick }: { axis: PinAxis; mode: PinMode; edit: DirectEdit; selection: SelectionContext; onPick: (axis: PinAxis, mode: PinMode) => void }) {
+const PIN_RESELECT_MS = [400, 1000, 2000, 3500, 6000];
+
+type QueuedPins ={ selector: string; pins: Partial<Record<PinAxis, { mode: PinMode; from: PinMode }>> };
+
+function pinStyles(edit: DirectEdit, selection: SelectionContext): Record<string, string> {
+  const margins = (['margin-top', 'margin-right', 'margin-bottom', 'margin-left'] as const).map((prop) => [prop, edit.values[prop] ?? '']);
+  return { ...selection.styles, ...Object.fromEntries(margins) };
+}
+
+function hasPinGeometry(selection: SelectionContext): boolean {
+  return selection.styles['container-width'] !== undefined && selection.styles['pin-left'] !== undefined;
+}
+
+function useQueuedPins(edit: DirectEdit, selection: SelectionContext) {
+  const [queued, setQueued] = useState<QueuedPins | null>(null);
+  const ready = hasPinGeometry(selection);
+  useEffect(() => {
+    if (!queued) return;
+    if (queued.selector !== selection.selector) return setQueued(null);
+    if (!ready) return;
+    const patch = (Object.entries(queued.pins) as [PinAxis, { mode: PinMode; from: PinMode }][]).reduce<Record<string, string>>((all, [axis, pin]) => ({ ...all, ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from) }), {});
+    setQueued(null);
+    edit.preview(patch, true);
+    edit.commit();
+  }, [queued, ready, selection, edit]);
+  const waiting = queued !== null && !ready;
+  const reselect = edit.reselect;
+  useEffect(() => {
+    if (!waiting) return;
+    const timers = PIN_RESELECT_MS.map((ms) => window.setTimeout(reselect, ms));
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [waiting, reselect]);
+  const queue = (axis: PinAxis, mode: PinMode, from: PinMode) =>
+    setQueued((prev) => ({ selector: selection.selector, pins: { ...(prev?.selector === selection.selector ? prev.pins : {}), [axis]: { mode, from: prev?.pins[axis]?.from ?? from } } }));
+  return { ready, queue };
+}
+
+function PinSelect({ axis, mode, edit, selection, onPick, ready, queue }: { axis: PinAxis; mode: PinMode; edit: DirectEdit; selection: SelectionContext; onPick: (axis: PinAxis, mode: PinMode) => void; ready: boolean; queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void }) {
   const change = (next: PinMode) => {
     if (next === mode) return;
-    edit.preview(pinPatch(axis, next, selection.styles, mode), true);
-    edit.commit();
     onPick(axis, next);
+    if (!ready) return queue(axis, next, mode);
+    edit.preview(pinPatch(axis, next, pinStyles(edit, selection), mode), true);
+    edit.commit();
   };
   return (
     <div className="ins-field select ins-pin" data-tip={PIN_TIPS[axis]} data-tip-align="end">
@@ -395,6 +433,7 @@ function usePinModes(selection: SelectionContext): { modes: Record<PinAxis, PinM
 
 function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
   const { modes, pick } = usePinModes(selection);
+  const { ready, queue } = useQueuedPins(edit, selection);
   const fields = [...pinFields('x', modes.x), ...pinFields('y', modes.y)];
   return (
     <>
@@ -406,8 +445,8 @@ function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: Sele
         </div>
       )}
       <div className="ins-grid ins-constraints" role="group" aria-label="Constraints">
-        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={pick} />
-        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={pick} />
+        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={pick} ready={ready} queue={queue} />
+        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={pick} ready={ready} queue={queue} />
       </div>
     </>
   );

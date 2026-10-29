@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, Project } from '../../shared/contracts.js';
 import type { CanvasService } from '../canvas/service.js';
@@ -83,6 +83,13 @@ export async function outputFolder(deps: EditDeps, raw: unknown): Promise<{ fold
   const folder = await safeFolder(raw === undefined ? downloads : raw, deps.dataDir);
   const projects = await safeFolder(await deps.projectsFolder(), deps.dataDir).catch(() => null);
   return { folder, trusted: isInside(folder, downloads) || (projects !== null && isInside(folder, projects)) };
+}
+
+export async function exportFolder(deps: EditDeps, projectId: string, raw: unknown): Promise<{ folder: string; trusted: boolean }> {
+  if (raw !== undefined) return outputFolder(deps, raw);
+  const folder = path.join(deps.dataDir, 'exports', projectId);
+  await mkdir(folder, { recursive: true });
+  return { folder, trusted: true };
 }
 
 export async function writeUnique(folder: string, name: string, bytes: Uint8Array): Promise<string> {

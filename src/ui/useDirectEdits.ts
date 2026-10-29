@@ -209,5 +209,5 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   }, [merged, draft]);
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed, text: '', status, tailwind: null, preview, revert, commit, commitSoon, previewText: noop, revertText: noop, reset, drain, absorb, dirty, blocked, scope };
+  return { values, mixed, text: '', status, tailwind: null, preview, revert, commit, commitSoon, previewText: noop, revertText: noop, reset, drain, absorb, dirty, blocked, scope, reselect: noop };
 }

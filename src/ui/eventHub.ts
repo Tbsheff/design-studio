@@ -35,6 +35,7 @@ const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
   'design-system.sources': true,
   'app.status': true,
   'frame-states.changed': true,
+  'layer-locks.changed': true,
   'edit.planned': true,
   'edit.unplanned': true,
 };

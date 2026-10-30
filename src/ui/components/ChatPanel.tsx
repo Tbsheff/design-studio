@@ -255,7 +255,8 @@ function useRunSearch() {
     },
     [close],
   );
-  return { open, query, target, onOpen: () => setOpen(true), onClose: close, onQuery: setQuery, onPick: pick, onFound: () => setTarget(null) };
+  const found = useCallback(() => setTarget(null), []);
+  return { open, query, target, onOpen: () => setOpen(true), onClose: close, onQuery: setQuery, onPick: pick, onFound: found };
 }
 
 function ScrollToRun({ runId, shown, onDone }: { runId: string | null; shown: boolean; onDone: () => void }) {
@@ -267,9 +268,8 @@ function ScrollToRun({ runId, shown, onDone }: { runId: string | null; shown: bo
     wasAtBottomRef.current = false;
     el.scrollIntoView({ block: 'start' });
     el.dataset.found = '';
-    const timer = window.setTimeout(() => delete el.dataset.found, FOUND_MS);
+    window.setTimeout(() => delete el.dataset.found, FOUND_MS);
     onDone();
-    return () => window.clearTimeout(timer);
   }, [runId, shown, onDone, viewportRef, wasAtBottomRef]);
   return null;
 }

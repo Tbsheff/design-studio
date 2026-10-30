@@ -62,7 +62,7 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: {
   const done = run.status === 'completed';
   return (
     <div className="run-feedback">
-      <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0} onOpen={onDetails} />
+      <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0 && !run.request?.plan} onOpen={onDetails} />
       <div className="run-foot" data-status={run.status}>
         {done && (
           <span className="run-thumbs" role="group" aria-label="Rate this response">

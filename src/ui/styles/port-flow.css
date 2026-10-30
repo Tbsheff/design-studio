@@ -6,6 +6,10 @@
   border: 0;
 }
 
+.port-pages[aria-busy='true'] .port-page-route {
+  opacity: 0.4;
+}
+
 .port-pages legend {
   padding: 0;
   margin-bottom: var(--s-1);

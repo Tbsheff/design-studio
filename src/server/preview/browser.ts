@@ -269,7 +269,7 @@ export class BrowserPool {
     },
     (page) => this.pages.release(page),
     (page, url) => this.landPeek(page, url),
-    async (url) => (await this.stamps.stampFor(url))?.key ?? null,
+    (url) => this.stamps.stampFor(url),
   );
 
   private async landPeek(page: RenderPage, url: string): Promise<void> {
@@ -309,8 +309,8 @@ export class BrowserPool {
     return this.peeks.run(url, viewport, task);
   }
 
-  sourcesChanged(at?: number, coldAt?: number): void {
-    this.peeks.markDirty(at, coldAt);
+  sourcesChanged(at?: number, coldAt?: number, code?: boolean): void {
+    this.peeks.markDirty(at, coldAt, code);
   }
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>, oneOff = false): Promise<T> {

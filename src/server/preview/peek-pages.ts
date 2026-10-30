@@ -4,7 +4,7 @@ type Viewport = { width: number; height: number; scale?: number };
 type Opener = (url: string, viewport: Viewport) => Promise<RenderPage>;
 type Closer = (page: RenderPage) => Promise<void>;
 type Lander = (page: RenderPage, url: string) => Promise<void>;
-type Stamper = (url: string) => Promise<string | null>;
+type Stamper = (url: string) => Promise<{ key: string; newest: number | null } | null>;
 
 interface WarmPage {
   page: RenderPage;
@@ -25,6 +25,7 @@ interface PageClock {
   rebuildAt: number;
   doneAt: number;
   mutationAt: number;
+  bodyAt: number;
   taint: number;
   now: number;
 }
@@ -35,12 +36,13 @@ const SWEEP_MS = 30_000;
 const POLL_MS = 25;
 const QUIET_MS = 120;
 const REBUILD_WAIT_MS = 900;
+const STAMP_TRUST_MS = 1000;
 const REFRESH_MAX_MS = 4000;
 const GONE = /has been closed|Execution context was destroyed|Target closed|navigat/i;
 
 const HOOK = `(() => {
   if (window.__studioWarm) return true;
-  const clock = { rebuildAt: 0, doneAt: 0, mutationAt: 0, taint: 0, paused: false };
+  const clock = { rebuildAt: 0, doneAt: 0, mutationAt: 0, bodyAt: 0, taint: 0, paused: false, saving: false, saved: new Map() };
   window.__studioWarm = clock;
   for (const level of ['log', 'info', 'debug']) {
     const original = console[level].bind(console);
@@ -54,16 +56,34 @@ const HOOK = `(() => {
   }
   const devChrome = (node) => { const el = node && node.nodeType === 1 ? node : node && node.parentElement; return Boolean(el && el.closest && el.closest('nextjs-portal')); };
   const sheetOnly = (record) => record.type === 'childList' && record.target === document.head && record.removedNodes.length === 0 && [...record.addedNodes].every((node) => node.nodeName === 'STYLE');
+  const keep = (record) => {
+    if (clock.paused || sheetOnly(record)) return;
+    if (clock.saving && record.type === 'attributes' && record.attributeName === 'style') {
+      if (!clock.saved.has(record.target)) clock.saved.set(record.target, record.oldValue);
+      return;
+    }
+    clock.taint += 1;
+  };
   new MutationObserver((records) => {
     const real = records.filter((record) => !devChrome(record.target));
     if (real.length) clock.mutationAt = Date.now();
-    if (!clock.paused && real.some((record) => !sheetOnly(record))) clock.taint += 1;
-  }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+    if (real.some((record) => !document.head.contains(record.target))) clock.bodyAt = Date.now();
+    real.forEach(keep);
+  }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeOldValue: true, characterData: true });
   return true;
 })()`;
-const CLOCK = `(() => { const c = window.__studioWarm; return { hooked: Boolean(c), rebuildAt: c ? c.rebuildAt : 0, doneAt: c ? c.doneAt : 0, mutationAt: c ? c.mutationAt : 0, taint: c ? c.taint : 0, now: Date.now() }; })()`;
-const TAINT = `(() => { const c = window.__studioWarm; return c ? c.taint : -1; })()`;
-const TOP = `(() => { window.scrollTo(0, 0); return true; })()`;
+const CLOCK = `(() => { const c = window.__studioWarm; return { hooked: Boolean(c), rebuildAt: c ? c.rebuildAt : 0, doneAt: c ? c.doneAt : 0, mutationAt: c ? c.mutationAt : 0, bodyAt: c ? c.bodyAt : 0, taint: c ? c.taint : 0, now: Date.now() }; })()`;
+const SAVE = `(() => { const c = window.__studioWarm; if (!c) return -1; window.scrollTo(0, 0); c.saved = new Map(); c.saving = true; return c.taint; })()`;
+const ROLLBACK = `new Promise((done) => {
+  const c = window.__studioWarm;
+  if (!c) return done(-1);
+  c.saving = false;
+  c.paused = true;
+  for (const [el, old] of c.saved) { if (old === null) el.removeAttribute('style'); else el.setAttribute('style', old); }
+  c.saved = new Map();
+  window.scrollTo(0, 0);
+  requestAnimationFrame(() => requestAnimationFrame(() => { c.paused = false; done(c.taint); }));
+})`;
 const PAUSE = `(() => { if (window.__studioWarm) window.__studioWarm.paused = true; return true; })()`;
 const RESUME = `new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => { if (window.__studioWarm) window.__studioWarm.paused = false; done(true); })))`;
 const HOT = `Boolean(window.next || window.__NEXT_DATA__ || self.__next_f || document.querySelector('script[src*="/@vite/client"]'))`;
@@ -88,14 +108,15 @@ function keyOf(url: string, viewport: Viewport): string {
 
 const pause = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
-function refreshed(clock: PageClock, dirtyAt: number): boolean {
-  const applied = clock.doneAt >= clock.rebuildAt || clock.mutationAt >= clock.rebuildAt;
+function refreshed(clock: PageClock, dirtyAt: number, styleOnly: boolean): boolean {
+  const applied = clock.doneAt >= clock.rebuildAt || (styleOnly ? clock.mutationAt : clock.bodyAt) >= clock.rebuildAt;
   return clock.rebuildAt >= dirtyAt && applied && clock.now - Math.max(clock.mutationAt, clock.doneAt) >= QUIET_MS;
 }
 
 export class PeekPages {
   private readonly pages = new Map<string, WarmPage>();
   private dirtyAt = 0;
+  private codeAt = 0;
   private coldDirtyAt = 0;
   private reloadTimer: NodeJS.Timeout | null = null;
   private sweepTimer: NodeJS.Timeout | null = null;
@@ -107,8 +128,9 @@ export class PeekPages {
     private readonly stampOf: Stamper = async () => null,
   ) {}
 
-  markDirty(at = Date.now(), coldAt = at): void {
+  markDirty(at = Date.now(), coldAt = at, code = true): void {
     this.dirtyAt = Math.max(this.dirtyAt, at);
+    if (code) this.codeAt = Math.max(this.codeAt, at);
     this.coldDirtyAt = Math.max(this.coldDirtyAt, coldAt);
     if (!this.land || this.reloadTimer) return;
     this.reloadTimer = setTimeout(() => {
@@ -173,12 +195,11 @@ export class PeekPages {
   }
 
   private async alone<T>(warm: WarmPage, task: (page: RenderPage) => Promise<T>): Promise<T> {
-    await warm.page.evaluate(TOP);
-    const before = await warm.page.evaluate<number>(TAINT);
+    const before = await warm.page.evaluate<number>(SAVE);
     try {
       return await task(shotsKeepTaint(warm.page));
     } finally {
-      const after = await warm.page.evaluate<number>(TAINT).catch(() => -1);
+      const after = await warm.page.evaluate<number>(ROLLBACK).catch(() => -1);
       if (before < 0 || after !== before) void this.reload(warm, true).catch(() => undefined);
     }
   }
@@ -191,7 +212,7 @@ export class PeekPages {
     warm.ready = warm.ready.then(async () => {
       warm.queued = false;
       const at = Date.now();
-      warm.stamp = await this.stampOf(warm.url).catch(() => null);
+      warm.stamp = (await this.stampOf(warm.url).catch(() => null))?.key ?? null;
       if (clean) await warm.page.reset?.();
       await land(warm.page, warm.url);
       await warm.page.evaluate(HOOK);
@@ -245,7 +266,7 @@ export class PeekPages {
     const freshAt = Date.now();
     const warm: WarmPage = { page: null as unknown as RenderPage, url, freshAt, usedAt: freshAt, ready: Promise.resolve(), cold: false, busy: 0, queued: false, lock: null, drained: [], stamp: null };
     warm.ready = (async () => {
-      warm.stamp = await this.stampOf(url).catch(() => null);
+      warm.stamp = (await this.stampOf(url).catch(() => null))?.key ?? null;
       warm.page = await this.open(url, viewport);
       await warm.page.evaluate(HOOK);
       warm.cold = !(await warm.page.evaluate<boolean>(HOT).catch(() => true));
@@ -258,23 +279,39 @@ export class PeekPages {
 
   private async current(warm: WarmPage): Promise<boolean> {
     const dirtyAt = this.dirtyAt;
-    const stamp = await this.stampOf(warm.url).catch(() => null);
-    if (stamp !== null && stamp === warm.stamp) {
-      warm.freshAt = Math.max(warm.freshAt, dirtyAt);
+    if (await this.untouched(warm, dirtyAt)) return true;
+    if (await this.caughtUp(warm, dirtyAt)) {
+      this.restampLater(warm, dirtyAt);
       return true;
     }
-    if (!(await this.caughtUp(warm))) return false;
-    warm.stamp = stamp;
+    await pause(dirtyAt + STAMP_TRUST_MS - Date.now());
+    return this.untouched(warm, dirtyAt);
+  }
+
+  private async untouched(warm: WarmPage, dirtyAt: number): Promise<boolean> {
+    if (warm.stamp === null || Date.now() - dirtyAt < STAMP_TRUST_MS) return false;
+    const stamp = await this.stampOf(warm.url).catch(() => null);
+    if (stamp?.key !== warm.stamp) return false;
+    warm.freshAt = Math.max(warm.freshAt, dirtyAt);
     return true;
   }
 
-  private async caughtUp(warm: WarmPage): Promise<boolean> {
-    const dirtyAt = this.dirtyAt;
+  private restampLater(warm: WarmPage, dirtyAt: number): void {
+    warm.stamp = null;
+    const timer = setTimeout(() => {
+      void this.stampOf(warm.url).then((stamp) => {
+        if (this.dirtyAt === dirtyAt && warm.freshAt >= dirtyAt) warm.stamp = stamp?.key ?? null;
+      }, () => undefined);
+    }, Math.max(0, dirtyAt + STAMP_TRUST_MS - Date.now()));
+    timer.unref();
+  }
+
+  private async caughtUp(warm: WarmPage, dirtyAt: number): Promise<boolean> {
     const started = Date.now();
     for (;;) {
       const clock = await warm.page.evaluate<PageClock>(CLOCK);
       if (!clock.hooked) return false;
-      if (refreshed(clock, dirtyAt)) {
+      if (refreshed(clock, dirtyAt, this.codeAt <= warm.freshAt)) {
         warm.freshAt = Math.max(warm.freshAt, dirtyAt);
         return true;
       }

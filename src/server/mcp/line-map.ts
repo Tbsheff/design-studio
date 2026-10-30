@@ -30,9 +30,24 @@ function lcsPairs(a: string[], b: string[]): [number, number][] {
   return pairs;
 }
 
-function pairHunk(mapping: Int32Array, fromOld: number, toOld: number, fromNew: number, toNew: number): void {
+function pairByIndex(mapping: Int32Array, fromOld: number, toOld: number, fromNew: number, toNew: number): void {
   const count = Math.min(toOld - fromOld, toNew - fromNew);
   for (let k = 0; k < count; k += 1) mapping[fromOld + k] = fromNew + k;
+}
+
+function pairHunk(mapping: Int32Array, before: string[], after: string[], fromOld: number, toOld: number, fromNew: number, toNew: number): void {
+  if (toOld <= fromOld || toNew <= fromNew) return;
+  const oldText = before.slice(fromOld, toOld).map((line) => line.trim());
+  const newText = after.slice(fromNew, toNew).map((line) => line.trim());
+  const pairs = lcsPairs(oldText, newText).filter(([i]) => !TRIVIAL_LINE.test(oldText[i] as string));
+  let lastOld = 0;
+  let lastNew = 0;
+  for (const [i, j] of [...pairs, [oldText.length, newText.length] as [number, number]]) {
+    pairByIndex(mapping, fromOld + lastOld, fromOld + i, fromNew + lastNew, fromNew + j);
+    if (i < oldText.length) mapping[fromOld + i] = fromNew + j;
+    lastOld = i + 1;
+    lastNew = j + 1;
+  }
 }
 
 function lineMapping(before: string[], after: string[]): Int32Array {
@@ -53,7 +68,7 @@ function lineMapping(before: string[], after: string[]): Int32Array {
   let lastOld = 0;
   let lastNew = 0;
   for (const [i, j] of [...pairs, [midOld.length, midNew.length] as [number, number]]) {
-    pairHunk(mapping, head + lastOld, head + i, head + lastNew, head + j);
+    pairHunk(mapping, before, after, head + lastOld, head + i, head + lastNew, head + j);
     if (i < midOld.length) mapping[head + i] = head + j;
     lastOld = i + 1;
     lastNew = j + 1;
@@ -97,10 +112,9 @@ function matchMovedLines(before: string[], after: string[], mapping: Int32Array)
 function shiftedCol(oldText: string, newText: string, col: number): number {
   if (oldText === newText) return col;
   const at = col - 1;
-  if (oldText.slice(0, at) === newText.slice(0, at)) return col;
   const tail = oldText.slice(at);
   const delta = newText.length - oldText.length;
-  if (tail.length > 0 && newText.slice(at + delta) === tail) return col + delta;
+  if (tail.length > 0 && at + delta >= 0 && newText.slice(at + delta) === tail) return col + delta;
   return col;
 }
 

@@ -11,8 +11,9 @@ import { duplicateFindings, genericFindings, placeholderFindings, tapFindings } 
 import { dropOutsideApp } from './app-source-filter.js';
 import { qualityProbeExpression, type ProbeRect, type QualityProbeResult } from './quality-probe.js';
 import { createRenderBackend, type RenderBackend, type RenderPage } from './render-backend.js';
+import type { PeekOptions } from '../types.js';
 import { WarmPages } from './page-pool.js';
-import { renderSettledFor } from './render-wait.js';
+import { projectOfUrl } from './render-wait.js';
 import { expandScrollRoot } from './scroll-root.js';
 import { PeekPages } from './peek-pages.js';
 import { waitForPage } from '../export/capture.js';
@@ -305,12 +306,16 @@ export class BrowserPool {
     return this.withPage(url, viewport, task);
   }
 
-  peek<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
-    return this.peeks.run(url, viewport, task);
+  peek<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>, options?: PeekOptions): Promise<T> {
+    return this.peeks.run(url, viewport, task, options?.layoutOnly === true);
   }
 
-  sourcesChanged(at?: number, coldAt?: number, code?: boolean): void {
-    this.peeks.markDirty(at, coldAt, code);
+  livePages(projectId: string): string[] {
+    return this.peeks.liveUrls().flatMap((url) => (projectOfUrl(url) === projectId ? [new URL(url).pathname] : []));
+  }
+
+  sourcesChanged(at?: number, coldAt?: number, code?: boolean, moved?: boolean): void {
+    this.peeks.markDirty(at, coldAt, code, moved);
   }
 
   private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>, oneOff = false): Promise<T> {
@@ -320,7 +325,6 @@ export class BrowserPool {
       return task(shared);
     };
     if (!oneOff && /^https?:/.test(url)) return this.peeks.capture(url, viewport, withAxe);
-    await renderSettledFor(url);
     return this.pages.lease(viewport, async (page) => {
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
@@ -370,7 +374,6 @@ export class BrowserPool {
   }
 
   async screenshotTiles(url: string, request: TileRequest): Promise<TileResult> {
-    await renderSettledFor(url);
     const key = tileKey(url, request);
     const ext = request.format === 'jpeg' ? '.jpg' : '.png';
     const started = Date.now();
@@ -438,7 +441,6 @@ export class BrowserPool {
   }
 
   private async checkViewport(url: string, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions = {}): Promise<RenderCheckResult> {
-    await renderSettledFor(url);
     const started = Date.now();
     const key = checkKey(url, spec, options);
     const before = await this.stamps.stampFor(url);

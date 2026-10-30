@@ -279,10 +279,12 @@ async function elementSelector(deps: ExportDeps, src: ExportSource, url: string,
 const WARM_TIMEOUT_MS = 120_000;
 
 const SCRIPT_SRC = /<script[^>]+src="(\/_next\/[^"]+)"/g;
-const WARM_SCRIPTS_MAX = 60;
+const WARM_SCRIPTS_MAX = 40;
+const WARM_SCRIPTS_AT_ONCE = 6;
 
-async function touch(url: URL): Promise<string | null> {
-  const answer = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(WARM_TIMEOUT_MS) }).catch(() => null);
+async function touch(url: URL, signal?: AbortSignal): Promise<string | null> {
+  const timeout = AbortSignal.timeout(WARM_TIMEOUT_MS);
+  const answer = await fetch(url, { redirect: 'manual', signal: signal ? AbortSignal.any([signal, timeout]) : timeout }).catch(() => null);
   if (!answer) return null;
   if (!(answer.headers.get('content-type') ?? '').includes('text/html')) {
     await answer.body?.cancel().catch(() => undefined);
@@ -291,18 +293,21 @@ async function touch(url: URL): Promise<string | null> {
   return answer.text().catch(() => null);
 }
 
-export async function warmUpstream(upstream: string, page: string | undefined): Promise<void> {
-  const html = await touch(new URL(`/${page ?? ''}`, upstream));
+export async function warmUpstream(upstream: string, page: string | undefined, signal?: AbortSignal): Promise<void> {
+  const html = await touch(new URL(`/${page ?? ''}`, upstream), signal);
   if (!html) return;
   const scripts = [...new Set([...html.matchAll(SCRIPT_SRC)].map((match) => (match[1] as string).replace(/&amp;/g, '&')))].slice(0, WARM_SCRIPTS_MAX);
-  await Promise.all(scripts.map((src) => touch(new URL(src, upstream))));
+  const lane = async (): Promise<void> => {
+    for (let src = scripts.shift(); src !== undefined && !signal?.aborted; src = scripts.shift()) await touch(new URL(src, upstream), signal);
+  };
+  await Promise.all(Array.from({ length: WARM_SCRIPTS_AT_ONCE }, lane));
 }
 
 async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {
-  const upstream = project.app ? await deps.preview.apps?.ensure(project).catch(() => null) : null;
-  if (!upstream) return;
   noteRenderedPage(project.id, page);
-  await warmUpstream(upstream, page);
+  if (!project.app || (await deps.preview.livePages?.(project.id))?.includes(`/${page ?? ''}`)) return;
+  const upstream = await deps.preview.apps?.ensure(project).catch(() => null);
+  if (upstream) await warmUpstream(upstream, page);
 }
 
 async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {

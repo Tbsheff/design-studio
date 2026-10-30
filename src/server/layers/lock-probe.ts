@@ -91,7 +91,7 @@ const PROBE = String.raw`async (input) => {
 }`;
 
 export function probeLock(preview: PreviewService, url: string, selector: string | null, keys: string[]): Promise<LockProbe> {
-  return probeOnPage<LockProbe>(preview, url, VIEWPORT, `(${PROBE})(${JSON.stringify({ selector, keys })})`);
+  return probeOnPage<LockProbe>(preview, url, VIEWPORT, `(${PROBE})(${JSON.stringify({ selector, keys })})`, { layoutOnly: true });
 }
 
 export function lockDelta(probe: LockProbe, locked: boolean): { add: string[]; remove: string[] } {

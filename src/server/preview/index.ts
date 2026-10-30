@@ -19,6 +19,7 @@ import { resolveFrameState } from '../app/frame-state.js';
 import { AppServers } from '../app/dev-server.js';
 import { createAppProxy, type AppTarget } from '../app/proxy.js';
 import { sourcesShifted } from '../app/source-map.js';
+import { noteLayoutKeepingWrite, writesKeptLayout } from './tag-layout.js';
 
 interface PreviewServiceDeps {
   config: ServerConfig;
@@ -115,8 +116,8 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const files = change.paths.map((relative) => path.join(change.root, ...relative.split('/')));
     noteTreeChange(change.root, files);
     const seenAt = Date.now() - WATCH_LAG_MS;
-    void writtenAt(files, seenAt)
-      .then((coldAt) => browsers.loaded()?.then((pool) => pool.sourcesChanged(seenAt, coldAt, !onlyStyles(change.paths))))
+    void Promise.all([writtenAt(files, seenAt), writesKeptLayout(change)])
+      .then(([coldAt, kept]) => browsers.loaded()?.then((pool) => pool.sourcesChanged(seenAt, coldAt, !onlyStyles(change.paths), !kept)))
       .catch(() => undefined);
     void recompileOnTokensChange(bus, change).catch((error: unknown) => console.error('[preview] tokens recompile failed', error));
     void vite
@@ -143,7 +144,10 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const { BrowserPool: Pool } = await import('./browser.js');
     return new Pool(config.previewOrigin, undefined, { stampFor, landed: (url: string, href: string) => stamps.landed(url, href) });
   });
-  onSourceChange((change) => browsers.loaded()?.then((pool) => pool.sourcesChanged(undefined, undefined, !onlyStyles(change.files.map((file) => file.relative)))).catch(() => undefined));
+  onSourceChange((change) => {
+    const kept = noteLayoutKeepingWrite(change.projectId, change.directionId, change.files);
+    browsers.loaded()?.then((pool) => pool.sourcesChanged(undefined, undefined, !onlyStyles(change.files.map((file) => file.relative)), !kept)).catch(() => undefined);
+  });
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
   const apps = new AppServers({ bus, portBase: config.appPortBase ?? config.vitePortBase + 400, portCount: config.appPortCount ?? 200, dataDir: config.dataDir });
   const appCache = new Map<string, { project: Project | null; at: number }>();
@@ -335,8 +339,9 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     screenshot: async (url, viewport, outPath) => (await browsers.get()).screenshot(url, viewport, outPath),
     screenshotTiles: async (url, request) => (await browsers.get()).screenshotTiles(url, request),
     withPage: async (url, viewport, task) => (await browsers.get()).run(url, viewport, task),
-    peekPage: async (url, viewport, task) => (await browsers.get()).peek(url, viewport, task),
+    peekPage: async (url, viewport, task, options) => (await browsers.get()).peek(url, viewport, task, options),
     sourceStamp: async (url) => (await stampFor(url))?.key ?? null,
+    livePages: async (projectId) => (await browsers.loaded())?.livePages(projectId) ?? [],
     warmBrowser,
     usageEdges,
     elementShots: async (url, viewport, selectors, outPrefix) => (await browsers.get()).elementShots(url, viewport, selectors, outPrefix),

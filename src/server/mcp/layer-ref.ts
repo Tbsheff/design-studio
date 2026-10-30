@@ -162,6 +162,7 @@ const SCAN_SOURCE = String.raw`async (input) => {
     } catch {}
   }));
   const HOST = new Set([5, 26, 27]);
+  const sameOwner = (a, b) => { if (a === b) return true; if (!a || !b || typeof a.tag === 'number' || typeof b.tag === 'number') return false; const upper = (info) => (info.owner ? nameOf(info.owner) : null); return nameOf(a) === nameOf(b) && a.key === b.key && a.env === b.env && upper(a) === upper(b); };
   const rootOf = (el, owner) => {
     for (let f = fiberOf(el)?.return; f; f = f.return) {
       if (f === owner || f === owner.alternate) return true;
@@ -178,7 +179,7 @@ const SCAN_SOURCE = String.raw`async (input) => {
     const used = own && usedRaw && file(own) !== file(usedRaw) ? usedRaw : null;
     let parentEl = el.parentElement;
     while (parentEl && parentEl !== document.body && !fiberOf(parentEl)) parentEl = parentEl.parentElement;
-    const rootOfOwner = r.ownerRef && (typeof r.ownerRef.tag === 'number' ? rootOf(el, r.ownerRef) : !parentEl || parentEl === document.body || (fiberOf(parentEl)?._debugOwner || null) !== r.ownerRef);
+    const rootOfOwner = r.ownerRef && (typeof r.ownerRef.tag === 'number' ? rootOf(el, r.ownerRef) : !parentEl || parentEl === document.body || !sameOwner(fiberOf(parentEl)?._debugOwner || null, r.ownerRef));
     return { parent, depth, tag: el.tagName.toLowerCase(), path: pathOf(el), nth: nth.get(el) || 0, sib: sibOf(el), own: own || null, used, comp: rootOfOwner ? nameOf(r.ownerRef) : null, text: depth >= 0 ? textOf(el) : '', childCount: kids(el).length, hidden: el.getClientRects().length === 0 };
   });
   return { layers, truncated, missingRoot: false, roots };
@@ -210,8 +211,8 @@ function scanIn(page: ScanPage, input: ScanInput): Promise<ScanResult> {
   return page.evaluate<ScanResult>(`(${SCAN_SOURCE})(${JSON.stringify(input)})`);
 }
 
-async function onPage<T>(preview: PreviewService, url: string, viewport: Viewport, task: (page: ScanPage) => Promise<T>): Promise<T> {
-  return onProbePage(preview, url, viewport, task);
+async function onPage<T>(preview: PreviewService, url: string, viewport: Viewport, task: (page: ScanPage) => Promise<T>, layoutOnly = false): Promise<T> {
+  return onProbePage(preview, url, viewport, task, { layoutOnly });
 }
 
 function remember(scope: string, page: string | undefined, layers: Layer[]): void {
@@ -276,7 +277,7 @@ function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope:
       hits.set(ref, (found[0] as Layer).path);
     }
     return hits;
-  });
+  }, !last);
 }
 
 export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[]): Promise<Map<string, string>> {

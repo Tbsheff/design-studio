@@ -36,10 +36,15 @@ function warmAfterEdits(deps: McpRouteDeps): void {
   onSourceChange((change) => {
     const pages = recentPages(change.projectId);
     if (pages.length === 0) return;
-    startRender(change.projectId, async () => {
+    startRender(change.projectId, async (signal) => {
       const project = await deps.projects.get(change.projectId);
       const upstream = project.app ? await deps.preview.apps?.ensure(project).catch(() => null) : null;
-      if (upstream) await Promise.all(pages.map((page) => warmUpstream(upstream, page || undefined)));
+      if (!upstream) return;
+      const live = new Set(await deps.preview.livePages?.(project.id));
+      for (const page of recentPages(project.id)) {
+        if (signal.aborted) return;
+        if (!live.has(`/${page}`)) await warmUpstream(upstream, page || undefined, signal);
+      }
     });
   });
 }

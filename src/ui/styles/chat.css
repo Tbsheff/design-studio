@@ -487,10 +487,7 @@
   left: var(--pane-inset);
   right: var(--pane-inset);
   display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  height: 36px;
-  padding: 0 var(--s-1) 0 var(--s-3);
+  flex-direction: column;
   border-radius: var(--r-md);
   background: var(--surface);
   box-shadow: var(--shadow-md), 0 0 0 1px var(--line);
@@ -501,6 +498,57 @@
     opacity: 0;
     translate: 0 -4px;
   }
+}
+
+.chat-search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 36px;
+  padding: 0 var(--s-1) 0 var(--s-3);
+}
+
+.chat-search-results {
+  max-height: min(340px, 50vh);
+  overflow-y: auto;
+  padding: var(--s-1);
+  box-shadow: inset 0 1px 0 var(--line);
+  overscroll-behavior: contain;
+}
+
+.chat-search-hits {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-search-hit .status {
+  flex: none;
+}
+
+.chat-search-hit-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-search-hit .ui-menu-meta {
+  flex: none;
+  color: var(--text-3);
+}
+
+.chat-search-note {
+  margin: 0;
+  padding: var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  text-wrap: pretty;
+}
+
+.run[data-found] .msg.user .msg-card {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .chat-search.closed {
@@ -560,15 +608,6 @@
 
 .chat-conversation[data-searching] .chat {
   padding-top: calc(36px + var(--s-4));
-}
-
-.chat-search-empty {
-  margin: 0;
-  padding: var(--s-6) var(--s-4);
-  color: var(--text-2);
-  font-size: var(--t-sm);
-  text-align: center;
-  text-wrap: pretty;
 }
 
 .msg-actions {
@@ -1176,4 +1215,8 @@
 
 .drawer .tools-table .tools-col-flag {
   width: 56px;
+}
+
+.run[data-run-id] {
+  scroll-margin-top: calc(36px + var(--s-4));
 }

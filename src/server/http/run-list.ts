@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import type { RunSummary } from '../../shared/contracts.js';
+import { runMatches, runQueryTerms } from '../../shared/rewind.js';
 import { BadRequestError } from '../store/errors.js';
 
 interface CachedRun {
@@ -14,6 +15,8 @@ export interface RunListQuery {
   limit: number | null;
   before: number | null;
   light: boolean;
+  terms: string[];
+  directionId: string | null;
 }
 
 export interface RunPage {
@@ -64,7 +67,13 @@ function whole(raw: string | undefined, name: string): number | null {
 
 export function runListQuery(query: (name: string) => string | undefined): RunListQuery {
   const limit = whole(query('limit'), 'limit');
-  return { limit: limit === null ? null : Math.min(Math.max(limit, 1), LIMIT_MAX), before: whole(query('before'), 'before'), light: query('light') === '1' };
+  return {
+    limit: limit === null ? null : Math.min(Math.max(limit, 1), LIMIT_MAX),
+    before: whole(query('before'), 'before'),
+    light: query('light') === '1',
+    terms: runQueryTerms(query('q') ?? ''),
+    directionId: query('direction') || null,
+  };
 }
 
 function lightRun(run: RunSummary): RunSummary {
@@ -72,9 +81,16 @@ function lightRun(run: RunSummary): RunSummary {
   return { ...rest, toolCalls: [], finalText: run.finalText.slice(0, 400) };
 }
 
+function matchRuns(all: RunSummary[], query: RunListQuery): RunSummary[] {
+  const { terms, directionId, before } = query;
+  if (terms.length === 0 && directionId === null && before === null) return all;
+  return all.filter((run) => (before === null || run.startedAt < before) && (directionId === null || run.directionId === directionId) && runMatches(terms, run.request.prompt ?? '', run.title));
+}
+
 export function runListBody(all: RunSummary[], query: RunListQuery): RunSummary[] | RunPage {
-  if (query.limit === null && query.before === null && !query.light) return all;
-  const after = query.before === null ? all : all.filter((run) => run.startedAt < (query.before as number));
+  const filtered = query.terms.length > 0 || query.directionId !== null;
+  if (query.limit === null && query.before === null && !query.light && !filtered) return all;
+  const after = matchRuns(all, query);
   const page = query.limit === null ? after : after.slice(0, query.limit);
   const last = page[page.length - 1];
   const runs = query.light ? page.map(lightRun) : page;

@@ -5,7 +5,7 @@ import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
 import { reportFirstToken } from './perfTelemetry';
 import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
-import { listRunPage, publishOlderRuns } from './runHistoryApi';
+import { listRunPage, publishOlderRuns, publishRunHistory } from './runHistoryApi';
 import { useRunNotice } from './useRunNotice';
 import { uiStore, useUi } from './storage';
 
@@ -76,13 +76,16 @@ interface RunCursor {
   before: number | null;
   done: boolean;
   loading: boolean;
+  pending: Promise<void> | null;
   byDirection: Map<string, number>;
   seen: Set<string>;
 }
 
 function newCursor(projectId: string): RunCursor {
-  return { projectId, before: null, done: false, loading: false, byDirection: new Map(), seen: new Set() };
+  return { projectId, before: null, done: false, loading: false, pending: null, byDirection: new Map(), seen: new Set() };
 }
+
+const THROUGH_RUNS = 60;
 
 function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
   const next: RunMap = { ...prev };
@@ -118,54 +121,80 @@ function useRunPages(projectId: string, directionId: string | null, setRuns: Set
     if (cursor.current === c) publishOlderRuns({ more: !c.done, loading: c.loading }, load);
   }, []);
 
+  const page = useCallback(
+    async (c: RunCursor, want: (c: RunCursor) => boolean, size: number) => {
+      let first = c.before === null;
+      while (!c.done && cursor.current === c && want(c)) {
+        const next = await listRunPage(c.projectId, first ? FIRST_RUNS : size, c.before);
+        if (cursor.current !== c) return;
+        first = false;
+        countRuns(c, next.runs);
+        c.before = next.nextBefore;
+        c.done = next.nextBefore === null;
+        setRuns((prev) => mergeSummaries(prev, next.runs));
+        setRunsLoaded(true);
+        for (const s of next.runs.filter((r) => r.status === 'running')) {
+          api
+            .getRun(s.id)
+            .then(({ events }) => cursor.current === c && setRuns((prev) => events.reduce(applyRunEvent, prev)))
+            .catch(() => undefined);
+        }
+      }
+    },
+    [setRuns, setRunsLoaded],
+  );
+
+  const wantMore = useCallback((target: number) => (c: RunCursor) => loadedFor(c, direction.current) < target, []);
+
   const fill = useCallback(
-    async (c: RunCursor, target: number) => {
+    async (c: RunCursor, want: (c: RunCursor) => boolean, size = MORE_RUNS) => {
       if (c.loading || c.done) return;
       c.loading = true;
       publish(c, null);
-      try {
-        let first = c.before === null;
-        while (!c.done && cursor.current === c && loadedFor(c, direction.current) < target) {
-          const page = await listRunPage(c.projectId, first ? FIRST_RUNS : MORE_RUNS, c.before);
-          if (cursor.current !== c) return;
-          first = false;
-          countRuns(c, page.runs);
-          c.before = page.nextBefore;
-          c.done = page.nextBefore === null;
-          setRuns((prev) => mergeSummaries(prev, page.runs));
-          setRunsLoaded(true);
-          for (const s of page.runs.filter((r) => r.status === 'running')) {
-            api
-              .getRun(s.id)
-              .then(({ events }) => cursor.current === c && setRuns((prev) => events.reduce(applyRunEvent, prev)))
-              .catch(() => undefined);
-          }
-        }
-      } catch {
-        setRunsLoaded(true);
-      } finally {
-        c.loading = false;
-        publish(c, () => void fill(c, loadedFor(c, direction.current) + MORE_RUNS));
-      }
+      const work = page(c, want, size).catch(() => setRunsLoaded(true));
+      c.pending = work;
+      await work;
+      c.loading = false;
+      c.pending = null;
+      publish(c, () => void fill(c, wantMore(loadedFor(c, direction.current) + MORE_RUNS)));
     },
-    [publish, setRuns, setRunsLoaded],
+    [page, publish, setRunsLoaded, wantMore],
   );
+
+  const through = useCallback(
+    async (runId: string) => {
+      const c = cursor.current;
+      while (cursor.current === c && !c.seen.has(runId) && !c.done) {
+        const before = c.before;
+        if (c.pending) await c.pending;
+        else await fill(c, (x) => !x.seen.has(runId), THROUGH_RUNS);
+        if (c.before === before && !c.pending) break;
+      }
+      return c.seen.has(runId);
+    },
+    [fill],
+  );
+
+  useEffect(() => {
+    publishRunHistory({ projectId, through });
+    return () => publishRunHistory(null);
+  }, [projectId, through]);
 
   useEffect(() => {
     const c = newCursor(projectId);
     cursor.current = c;
     setRunsLoaded(false);
-    void fill(c, FIRST_RUNS);
+    void fill(c, wantMore(FIRST_RUNS));
     return () => {
       if (cursor.current === c) cursor.current = newCursor(projectId);
       publishOlderRuns({ more: false, loading: false }, null);
     };
-  }, [projectId, fill, setRunsLoaded]);
+  }, [projectId, fill, wantMore, setRunsLoaded]);
 
   useEffect(() => {
     const c = cursor.current;
-    if (directionId !== null && !c.loading && loadedFor(c, directionId) < FIRST_RUNS) void fill(c, FIRST_RUNS);
-  }, [directionId, fill]);
+    if (directionId !== null && !c.loading && loadedFor(c, directionId) < FIRST_RUNS) void fill(c, wantMore(FIRST_RUNS));
+  }, [directionId, fill, wantMore]);
 }
 
 export function useStudioData(projectId: string): StudioData {

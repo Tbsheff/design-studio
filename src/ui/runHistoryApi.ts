@@ -16,6 +16,30 @@ export function listRunPage(projectId: string, limit: number, before: number | n
   return json<RunPage>('GET', `/api/projects/${encodeURIComponent(projectId)}/runs?limit=${limit}${after}`);
 }
 
+export const SEARCH_LIMIT = 20;
+
+export function searchRunPage(directionId: string, query: string): Promise<RunPage> {
+  const projectId = history?.projectId;
+  if (!projectId) return Promise.resolve({ runs: [], nextBefore: null });
+  const params = new URLSearchParams({ q: query, direction: directionId, limit: String(SEARCH_LIMIT), light: '1' });
+  return json<RunPage>('GET', `/api/projects/${encodeURIComponent(projectId)}/runs?${params.toString()}`);
+}
+
+interface RunHistory {
+  projectId: string;
+  through: (runId: string) => Promise<boolean>;
+}
+
+let history: RunHistory | null = null;
+
+export function publishRunHistory(next: RunHistory | null): void {
+  history = next;
+}
+
+export function loadRunsThrough(runId: string): Promise<boolean> {
+  return history ? history.through(runId) : Promise.resolve(false);
+}
+
 export interface OlderRuns {
   more: boolean;
   loading: boolean;

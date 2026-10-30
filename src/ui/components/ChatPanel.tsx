@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Direction } from '../../shared/contracts';
-import { forkBaseOf, runMatches, runQueryTerms } from '../../shared/rewind';
-import { renameRun } from '../runHistoryApi';
+import { forkBaseOf } from '../../shared/rewind';
+import { loadRunsThrough, renameRun } from '../runHistoryApi';
 import type { RewindControl } from '../useRewind';
 import { Conversation, ConversationContent, ConversationScrollButton, useConversation } from '../ai/components/ai/conversation';
 import { Message, MessageContent } from '../ai/components/ai/message';
@@ -184,12 +184,22 @@ function StickOnNewRun({ runId }: { runId: string | null }) {
   return null;
 }
 
-function WindowedTimeline({ items, resetKey, all, render }: { items: TimelineItem[]; resetKey: string | null; all: boolean; render: (item: TimelineItem) => ReactNode }) {
-  const { shown, hidden, more } = useHistoryWindow(items, resetKey, all);
+interface TimelineProps {
+  items: TimelineItem[];
+  resetKey: string | null;
+  reveal: string | null;
+  onRevealed: () => void;
+  render: (item: TimelineItem) => ReactNode;
+}
+
+function WindowedTimeline({ items, resetKey, reveal, onRevealed, render }: TimelineProps) {
+  const { shown, hidden, more } = useHistoryWindow(items, resetKey, reveal);
+  const inView = reveal !== null && shown.some((item) => item.key === reveal);
   return (
     <>
       <EarlierRuns hidden={hidden} onMore={more} />
       {shown.map(render)}
+      <ScrollToRun runId={reveal} shown={inView} onDone={onRevealed} />
     </>
   );
 }
@@ -228,26 +238,40 @@ function turnProps(run: RunView, rewind: RewindControl | undefined, title: strin
   return { title, restoreTip, restoreVersionId: restoreTip === null ? versionId : null, forkBase, editTip, actions };
 }
 
-function useRunSearch(runs: RunView[], titles: Record<string, string>) {
+const FOUND_MS = 1600;
+
+function useRunSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const terms = useMemo(() => runQueryTerms(query), [query]);
-  const shown = useMemo(
-    () => (terms.length === 0 ? runs : runs.filter((run) => runMatches(terms, run.request?.prompt ?? '', titles[run.runId] ?? run.summary?.title))),
-    [runs, terms, titles],
-  );
-  return {
-    open,
-    query,
-    shown,
-    active: terms.length > 0,
-    onOpen: () => setOpen(true),
-    onClose: () => {
-      setOpen(false);
-      setQuery('');
+  const [target, setTarget] = useState<string | null>(null);
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery('');
+  }, []);
+  const pick = useCallback(
+    (runId: string) => {
+      close();
+      void loadRunsThrough(runId).then((found) => found && setTarget(runId));
     },
-    onQuery: setQuery,
-  };
+    [close],
+  );
+  return { open, query, target, onOpen: () => setOpen(true), onClose: close, onQuery: setQuery, onPick: pick, onFound: () => setTarget(null) };
+}
+
+function ScrollToRun({ runId, shown, onDone }: { runId: string | null; shown: boolean; onDone: () => void }) {
+  const { viewportRef, wasAtBottomRef } = useConversation();
+  useEffect(() => {
+    if (!runId || !shown) return;
+    const el = viewportRef.current?.querySelector<HTMLElement>(`[data-run-id="${CSS.escape(runId)}"]`);
+    if (!el) return;
+    wasAtBottomRef.current = false;
+    el.scrollIntoView({ block: 'start' });
+    el.dataset.found = '';
+    const timer = window.setTimeout(() => delete el.dataset.found, FOUND_MS);
+    onDone();
+    return () => window.clearTimeout(timer);
+  }, [runId, shown, onDone, viewportRef, wasAtBottomRef]);
+  return null;
 }
 
 interface Props {
@@ -286,13 +310,8 @@ function RunAnnouncer({ run }: { run: RunView | undefined }) {
   );
 }
 
-function ChatLead({ lead, empty, search }: { lead: ReactNode; empty: boolean; search: { active: boolean; shown: RunView[]; query: string } }) {
-  return (
-    <>
-      {lead ?? <EmptyState empty={empty} />}
-      {search.active && search.shown.length === 0 && <p className="chat-search-empty">No run matches “{search.query.trim()}”.</p>}
-    </>
-  );
+function ChatLead({ lead, empty }: { lead: ReactNode; empty: boolean }) {
+  return <>{lead ?? <EmptyState empty={empty} />}</>;
 }
 
 function usePolish(headVersionId: string | null, polishing: boolean, onPolish: () => void, onRetry: ((run: RunView) => void) | undefined, onApprovePlan: ((run: RunView) => void) | undefined): PolishProps {
@@ -334,9 +353,9 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
   const polish = usePolish(headVersionId, running || busy, onPolish, onRetry, onApprovePlan);
   const { titles, actions } = useTurnActions(rewind);
-  const search = useRunSearch(runs, titles);
+  const search = useRunSearch();
   const lastId = runs.at(-1)?.runId;
-  const timeline = useMemo(() => timelineOf(search.shown, search.active ? null : mcp), [search.shown, search.active, mcp]);
+  const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
   const renderRun = (run: RunView) => (
     <RunEntry key={run.runId} run={run} latest={run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={isOffline} onStop={onStop} {...turnProps(run, rewind, titles[run.runId] ?? run.summary?.title, actions)} />
@@ -344,14 +363,15 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   return (
     <div className="chat-wrap">
       <RunAnnouncer run={pending ?? runs.at(-1)} />
-      {runs.length > 1 && <ChatSearch open={search.open} query={search.query} shown={search.shown.length} total={runs.length} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} />}
+      {runs.length > 1 && <ChatSearch open={search.open} query={search.query} directionId={direction?.id ?? null} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} onPick={search.onPick} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">
-          <ChatLead lead={lead} empty={runs.length === 0 && !pending && !feedShown(mcp)} search={search} />
+          <ChatLead lead={lead} empty={runs.length === 0 && !pending && !feedShown(mcp)} />
           <WindowedTimeline
             items={timeline}
             resetKey={direction?.id ?? null}
-            all={search.active}
+            reveal={search.target}
+            onRevealed={search.onFound}
             render={(item) => (item.kind === 'run' ? renderRun(item.run) : <McpItem key={item.key} item={item} mcp={mcp} />)}
           />
           {pending && <PendingEntry run={pending} workTree={workTree} />}

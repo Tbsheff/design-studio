@@ -166,7 +166,7 @@
 
 .export-done {
   color: var(--text);
-  animation: export-in var(--dur) var(--ease);
+  animation: rise-in var(--dur) var(--ease-out);
 }
 
 .export-done > svg {
@@ -181,7 +181,7 @@
   border-radius: var(--r-lg);
   background: var(--surface-2);
   box-shadow: var(--shadow-sm);
-  animation: export-in var(--dur-slow) var(--ease);
+  animation: rise-in var(--dur-slow) var(--ease-out);
 }
 
 .export-path {
@@ -340,26 +340,9 @@
   min-width: 200px;
 }
 
-@keyframes export-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .export-done,
-  .export-handoff-result {
-    animation-name: export-fade;
-  }
-
   .export-switch-knob {
     transition: none;
-  }
-}
-
-@keyframes export-fade {
-  from {
-    opacity: 0;
   }
 }

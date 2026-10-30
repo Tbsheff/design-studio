@@ -14,7 +14,7 @@
   pointer-events: auto;
   font: 400 13px/18px var(--font);
   -webkit-font-smoothing: antialiased;
-  transition: opacity 150ms var(--ease-out);
+  transition: opacity var(--dur) var(--ease-out);
   @starting-style {
     opacity: 0;
   }

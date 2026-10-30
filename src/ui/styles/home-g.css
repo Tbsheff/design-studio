@@ -271,8 +271,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+.home-continue:not(.placeholder) {
+  animation: fade-in var(--dur-slow) var(--ease-out);
+}
+
 .home-continue.placeholder {
   height: 203px;
+}
+
+.project-grid.list > .project-card {
+  animation: fade-in var(--dur) var(--ease-out);
+}
+
+.project-grid.grid > .project-card {
+  animation: fade-in-swap var(--dur) var(--ease-out);
 }
 
 .home-continue-thumb {
@@ -418,7 +430,7 @@
 
 .project-health.building .project-dot {
   background: var(--accent);
-  animation: health-pulse 1.2s var(--ease) infinite alternate;
+  animation: health-pulse var(--dur-loop) var(--ease-in-out) infinite alternate;
 }
 
 @keyframes health-pulse {

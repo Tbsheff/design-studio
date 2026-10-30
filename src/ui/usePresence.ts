@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export const EXIT_MS = 100;
+export const CSS_DUR_EXIT_MS = 100;
 
 function reducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,7 +17,7 @@ export function usePresence<T>(value: T | null): { shown: T | null; closing: boo
       setKept(null);
       return;
     }
-    const timer = window.setTimeout(() => setKept(null), EXIT_MS);
+    const timer = window.setTimeout(() => setKept(null), CSS_DUR_EXIT_MS);
     return () => window.clearTimeout(timer);
   }, [value]);
   return { shown: value ?? kept, closing: value === null && kept !== null };

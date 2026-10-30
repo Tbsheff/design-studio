@@ -155,28 +155,25 @@
   inset: 0;
   display: grid;
   place-items: center;
-  transition-property: opacity, scale, filter;
+  transition-property: opacity, scale;
   transition-duration: var(--dur);
-  transition-timing-function: var(--ease-standard);
+  transition-timing-function: var(--ease-out);
 }
 
 .copy-btn .copy-done {
   opacity: 0;
-  scale: 0.25;
-  filter: blur(4px);
+  scale: 0.6;
   color: var(--ok);
 }
 
 .copy-btn[data-state='copied'] .copy-icon:not(.copy-done) {
   opacity: 0;
-  scale: 0.25;
-  filter: blur(4px);
+  scale: 0.6;
 }
 
 .copy-btn[data-state='copied'] .copy-done {
   opacity: 1;
   scale: 1;
-  filter: blur(0);
 }
 
 .msg-user-row {
@@ -491,12 +488,9 @@
   border-radius: var(--r-md);
   background: var(--surface);
   box-shadow: var(--shadow-md), 0 0 0 1px var(--line);
-  transition-property: opacity, translate;
-  transition-duration: var(--dur);
-  transition-timing-function: var(--ease);
+  transition: opacity var(--dur-exit) var(--ease-out);
   @starting-style {
     opacity: 0;
-    translate: 0 -4px;
   }
 }
 
@@ -753,7 +747,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chat-search,
   .msg-confirm {
     @starting-style {
       translate: none;

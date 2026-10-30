@@ -95,6 +95,8 @@
   top: calc(100% + var(--s-1));
   max-height: min(70vh, 520px);
   overflow-y: auto;
+  transform-origin: top left;
+  animation: menu-in var(--dur) var(--ease-out);
 }
 
 .pane-project-menu {
@@ -107,6 +109,7 @@
 
 .topbar-menu.align-end {
   right: 0;
+  transform-origin: top right;
 }
 
 .pane-head-btn.icon-btn {

@@ -96,6 +96,10 @@
   padding-top: 0;
 }
 
+.prail[data-state='open'] > * {
+  animation: fade-in var(--dur-fast) var(--ease-out);
+}
+
 .prail[data-state='mini'] {
   align-items: center;
   gap: var(--s-2);

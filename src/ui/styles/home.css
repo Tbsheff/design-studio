@@ -289,7 +289,8 @@
   left: 0;
   z-index: 60;
   transform-origin: top left;
-  animation: home-pop-in 150ms var(--ease-out);
+  --pop-dy: -4px;
+  animation: menu-in var(--dur) var(--ease-out);
 }
 
 .home-anchor.end .home-pop {
@@ -300,22 +301,9 @@
 
 .home-pop[data-closing] {
   pointer-events: none;
-  animation: home-pop-out 100ms var(--ease-out) forwards;
+  animation: pop-out var(--dur-exit) var(--ease-in) forwards;
 }
 
-@keyframes home-pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.97);
-  }
-}
-
-@keyframes home-pop-out {
-  to {
-    opacity: 0;
-    transform: translateY(-2px) scale(0.98);
-  }
-}
 
 .home-plus-menu {
   width: 260px;
@@ -1048,14 +1036,9 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  animation: thumb-in var(--dur-slow) var(--ease);
+  animation: fade-in var(--dur-slow) var(--ease-out);
 }
 
-@keyframes thumb-in {
-  from {
-    opacity: 0;
-  }
-}
 
 .project-body {
   display: grid;
@@ -1145,23 +1128,18 @@
   top: calc(100% - var(--s-6) + var(--s-1));
   right: var(--s-1);
   transform-origin: top right;
-  animation: menu-in var(--dur) var(--ease);
+  animation: menu-in var(--dur) var(--ease-out);
 }
 
 .project-menu.at-pointer {
   transform-origin: top left;
+  animation: fade-in var(--dur-exit) var(--ease-out);
 }
 
 .project-menu.instant {
   animation: none;
 }
 
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    scale: 0.96;
-  }
-}
 
 .project-menu [role='menuitem'].danger,
 .project-menu [role='menuitem'].danger .icon {
@@ -1415,15 +1393,9 @@
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
   font-size: var(--t-xs);
-  animation: chip-in var(--dur) var(--ease);
+  animation: menu-in var(--dur) var(--ease-out);
 }
 
-@keyframes chip-in {
-  from {
-    opacity: 0;
-    scale: 0.96;
-  }
-}
 
 .home-chip.reference {
   color: var(--text-2);
@@ -1484,15 +1456,10 @@
   gap: var(--s-4);
   padding: 15px 14px 14px;
   border-radius: 0 0 17px 17px;
-  animation: clarify-in var(--dur-slow) var(--ease);
+  --pop-dy: -4px;
+  animation: menu-in var(--dur-slow) var(--ease-out);
 }
 
-@keyframes clarify-in {
-  from {
-    opacity: 0;
-    translate: 0 -4px;
-  }
-}
 
 .clarify-head {
   display: flex;
@@ -1618,25 +1585,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .project-menu,
-  .home-chip,
-  .clarify,
-  .project-thumb img {
-    animation-name: fade-in;
-    animation-duration: var(--dur) !important;
-  }
-
   .project-card:has(.project-open:active),
   .starter-card:active:not(:disabled) {
     translate: none;
   }
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-}
 
 .home-empty {
   display: flex;
@@ -1911,13 +1865,6 @@
 }
 
 .home-send[aria-busy] .home-send-glyph {
-  animation: send-glyph-in 180ms var(--ease-out);
+  animation: glyph-in var(--dur-slow) var(--ease-out);
 }
 
-@keyframes send-glyph-in {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-    transform: scale(0.6);
-  }
-}

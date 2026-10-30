@@ -16,6 +16,7 @@ import { assertKnownTokens, knownTokenVars } from './tokens.js';
 import { parseDirectEditRequest } from './validate.js';
 import { isPendingVersion, saveLater, savesSettled } from './save-queue.js';
 import { isOutsideRequest } from '../edit-origin.js';
+import { noteTreeWrite } from './change-feed.js';
 import { announcePlanned, domPatchOf, withdrawPlanned } from './planned-feed.js';
 
 export { DirectEditError } from './errors.js';
@@ -195,6 +196,7 @@ export function editSummary(request: DirectEditRequest): string {
 }
 
 export async function publishVersion(deps: DirectEditDeps, project: Project, direction: Direction, version: Version, withStatus = true): Promise<void> {
+  noteTreeWrite(direction.workTree, version.changedFiles, (version.changedFilesTotal ?? version.changedFiles.length) <= version.changedFiles.length);
   if (isPendingVersion(version)) return;
   deps.bus.emit({ type: 'version.created', projectId: project.id, directionId: direction.id, version });
   const updated = await deps.projects.updateDirection(project.id, direction.id, { headVersionId: version.id });

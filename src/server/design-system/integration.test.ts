@@ -274,7 +274,7 @@ describe('recompile', { timeout: 20000 }, () => {
     });
     const fakeProject = { id: 'p1' } as Project;
     watcher.watch(fakeProject, { id: 'd1', workTree: root } as Project['directions'][number]);
-    await watcher.ready('d1');
+    await watcher.ready('p1', 'd1');
     try {
       const tokens = JSON.parse(await readFile(path.join(root, TOKENS_FILE), 'utf8')) as Record<string, Record<string, unknown>>;
       tokens.color!.primary = { $value: '#ff0000' };

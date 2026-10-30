@@ -154,7 +154,7 @@ export interface PreviewService {
   snapshotUrl(project: Project, versionId: string, snapshotDir: string): Promise<string>;
   snapshotShot?(project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }>;
   watch(project: Project, direction: Direction): void;
-  unwatch(directionId: string): void;
+  unwatch(projectId: string, directionId: string): void;
   release(project: Project, direction: Direction): Promise<void>;
   renderCheck(project: Project, direction: Direction, options?: RenderCheckOptions & { url?: string }): Promise<RenderCheckResult[]>;
   apps?: AppControl;

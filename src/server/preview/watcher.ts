@@ -48,25 +48,30 @@ function nativeTreeWatch(project: Project): boolean {
   return process.platform === 'darwin' && project.imported !== null && project.imported.created !== true;
 }
 
+function watchKey(projectId: string, directionId: string): string {
+  return `${projectId}:${directionId}`;
+}
+
 export class WatcherManager {
   private readonly watches = new Map<string, DirectionWatch>();
 
   constructor(private readonly deps: WatcherDeps) {}
 
-  has(directionId: string): boolean {
-    return this.watches.has(directionId);
+  has(projectId: string, directionId: string): boolean {
+    return this.watches.has(watchKey(projectId, directionId));
   }
 
-  async flushed(directionId: string): Promise<void> {
-    const entry = this.watches.get(directionId);
+  async flushed(key: string): Promise<void> {
+    const entry = this.watches.get(key);
     if (!entry || (!entry.flushTimer && entry.pending.size === 0)) return;
     await new Promise((resolve) => setTimeout(resolve, COALESCE_MS + 5));
   }
 
   watch(project: Project, direction: Direction): void {
-    const existing = this.watches.get(direction.id);
+    const key = watchKey(project.id, direction.id);
+    const existing = this.watches.get(key);
     if (existing && existing.root === path.resolve(direction.workTree)) return;
-    if (existing) this.unwatch(direction.id);
+    if (existing) this.unwatch(project.id, direction.id);
     const root = path.resolve(direction.workTree);
     if (nativeTreeWatch(project)) {
       this.watchNative(project, direction, root);
@@ -88,7 +93,7 @@ export class WatcherManager {
     watcher.on('addDir', onPath);
     watcher.on('unlinkDir', onPath);
     watcher.on('error', () => undefined);
-    this.watches.set(direction.id, entry);
+    this.watches.set(key, entry);
   }
 
   private entryFor(project: Project, direction: Direction, root: string, watcher: TreeWatcher, readyPromise: Promise<void>): DirectionWatch {
@@ -118,22 +123,23 @@ export class WatcherManager {
     });
     native.on('error', () => undefined);
     entry = this.entryFor(project, direction, root, { close: () => native.close() }, Promise.resolve());
-    this.watches.set(direction.id, entry);
+    this.watches.set(watchKey(project.id, direction.id), entry);
     void this.recordEarlyWrites(entry, Date.now());
   }
 
-  ready(directionId: string): Promise<void> {
-    return this.watches.get(directionId)?.readyPromise ?? Promise.resolve();
+  ready(projectId: string, directionId: string): Promise<void> {
+    return this.watches.get(watchKey(projectId, directionId))?.readyPromise ?? Promise.resolve();
   }
 
   unwatchOf(projectId: string, directionId: string): void {
-    if (this.watches.get(directionId)?.projectId === projectId) this.unwatch(directionId);
+    this.unwatch(projectId, directionId);
   }
 
-  unwatch(directionId: string): void {
-    const entry = this.watches.get(directionId);
+  unwatch(projectId: string, directionId: string): void {
+    const key = watchKey(projectId, directionId);
+    const entry = this.watches.get(key);
     if (!entry) return;
-    this.watches.delete(directionId);
+    this.watches.delete(key);
     entry.closed = true;
     if (entry.flushTimer) clearTimeout(entry.flushTimer);
     if (entry.statusTimer) clearTimeout(entry.statusTimer);

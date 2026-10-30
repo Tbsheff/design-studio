@@ -135,7 +135,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     forwardToVite(change);
   };
   const watchers = new WatcherManager({ bus, projects, versions, onChanged, needsReload: appSourcesShifted });
-  const stampFor = (url: string): Promise<SourceStamp | null> => stamps.stampFor(url, (key) => watchers.flushed(key.slice(key.indexOf(':') + 1)));
+  const stampFor = (url: string): Promise<SourceStamp | null> => stamps.stampFor(url, (key) => watchers.flushed(key));
   const vite = lazily<ViteManager>(async () => {
     const { ViteManager: Manager } = await import('./vite-manager.js');
     return new Manager({ bus, vitePortBase: config.vitePortBase, bridgeScript: loadBridgeScript });
@@ -307,7 +307,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     snapshotUrl,
     snapshotShot,
     watch: (project, direction) => watchers.watch(project, direction),
-    unwatch: (directionId) => watchers.unwatch(directionId),
+    unwatch: (projectId, directionId) => watchers.unwatch(projectId, directionId),
     release: async (project, direction) => {
       watchers.unwatchOf(project.id, direction.id);
       stamps.forgetKey(`${project.id}:${direction.id}`);

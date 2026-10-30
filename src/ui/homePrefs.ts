@@ -1,18 +1,19 @@
 import { useSyncExternalStore } from 'react';
 
 export type HomeView = 'list' | 'grid';
-export type HomeTab = 'projects' | 'systems' | 'templates';
+export type HomeFilter = 'all' | 'prototypes' | 'apps' | 'systems';
+const FILTERS: HomeFilter[] = ['all', 'prototypes', 'apps', 'systems'];
 
 export interface HomePrefs {
   favorites: string[];
   favoritesOnly: boolean;
   view: HomeView;
-  templatesOpen: boolean;
-  tab: HomeTab;
+  templatesShown: boolean;
+  filter: HomeFilter;
 }
 
 const KEY = 'studio.home.v1';
-const DEFAULTS: HomePrefs = { favorites: [], favoritesOnly: false, view: 'list', templatesOpen: true, tab: 'projects' };
+const DEFAULTS: HomePrefs = { favorites: [], favoritesOnly: false, view: 'list', templatesShown: false, filter: 'all' };
 
 function read(): HomePrefs {
   try {
@@ -21,8 +22,8 @@ function read(): HomePrefs {
       favorites: Array.isArray(raw.favorites) ? raw.favorites.filter((id): id is string => typeof id === 'string') : [],
       favoritesOnly: raw.favoritesOnly === true,
       view: raw.view === 'grid' ? 'grid' : 'list',
-      templatesOpen: raw.templatesOpen !== false,
-      tab: raw.tab === 'systems' || raw.tab === 'templates' ? raw.tab : 'projects',
+      templatesShown: raw.templatesShown === true,
+      filter: FILTERS.includes(raw.filter as HomeFilter) ? (raw.filter as HomeFilter) : 'all',
     };
   } catch {
     return DEFAULTS;

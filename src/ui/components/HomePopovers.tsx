@@ -8,11 +8,11 @@ import { Icon } from './Icon';
 import { ChoiceItem, levelGist, levelHint, levelLabel } from './LevelControl';
 import { VariationsControl } from './VariationsControl';
 
-type Close = (refocus: boolean) => void;
+export type Close = (refocus: boolean) => void;
 
 const FOCUS_ITEMS = '.ui-menu-item:not(:disabled), .home-pack-card:not(:disabled), .btn:not(:disabled)';
 
-function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
+export function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
   const items = [...event.currentTarget.querySelectorAll<HTMLElement>(selector)];
   const at = items.indexOf(document.activeElement as HTMLElement);
   const next = event.key === 'ArrowDown' ? at + 1 : event.key === 'ArrowUp' ? at - 1 : event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : null;
@@ -21,7 +21,7 @@ function moveFocus(event: KeyboardEvent<HTMLElement>, selector: string) {
   items[(next + items.length) % items.length]?.focus();
 }
 
-function Pop({ trigger, onClose, className, label, role = 'dialog', children, onKeyDown, closing = false }: { trigger: RefObject<HTMLElement | null>; onClose: Close; className: string; label: string; role?: 'dialog' | 'menu'; children: ReactNode; onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void; closing?: boolean | undefined }) {
+export function Pop({ trigger, onClose, className, label, role = 'dialog', children, onKeyDown, closing = false }: { trigger: RefObject<HTMLElement | null>; onClose: Close; className: string; label: string; role?: 'dialog' | 'menu'; children: ReactNode; onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void; closing?: boolean | undefined }) {
   const root = useRef<HTMLDivElement>(null);
   usePopover(!closing, root, onClose, trigger);
   useFitPopover(root, trigger, true);
@@ -53,13 +53,15 @@ function Pop({ trigger, onClose, className, label, role = 'dialog', children, on
 export interface PlusMenuActions {
   onAttachFile: () => void;
   onLinkCode: () => void;
+  onTemplates: () => void;
+  templatesShown: boolean;
   onImportSystem: () => void;
   onDesignSystem: () => void;
   onSkills: () => void;
   onLocation: () => void;
 }
 
-function Item({ icon, label, meta, onClick }: { icon: Parameters<typeof Icon>[0]['name']; label: string; meta?: ReactNode; onClick: () => void }) {
+export function Item({ icon, label, meta, onClick }: { icon: Parameters<typeof Icon>[0]['name']; label: string; meta?: ReactNode; onClick: () => void }) {
   return (
     <button type="button" role="menuitem" className="ui-menu-item" tabIndex={-1} onClick={onClick}>
       <Icon name={icon} size={14} />
@@ -82,10 +84,11 @@ export function PlusMenu({ trigger, onClose, actions, locationLabel, closing }: 
       </div>
       <div className="ui-menu-section">
         <span className="ui-menu-label">Code</span>
-        <Item icon="folder" label="Open your app or a folder…" onClick={run(actions.onLinkCode)} />
+        <Item icon="folder" label="Add app folder…" onClick={run(actions.onLinkCode)} />
       </div>
       <div className="ui-menu-section">
         <span className="ui-menu-label">Designs</span>
+        <Item icon="layers" label={actions.templatesShown ? 'Hide templates and starters' : 'Templates and starters'} onClick={run(actions.onTemplates)} />
         <Item icon="download" label="Import design system or tokens" onClick={run(actions.onImportSystem)} />
       </div>
       <div className="ui-menu-section">

@@ -6,6 +6,8 @@ import { filterProjects, gridColumns, nextGridIndex, sortProjects } from '../pro
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from '../storage';
 import { homePrefs, useHomePrefs } from '../homePrefs';
 import { Swatches } from './Swatches';
+import { shortenHome } from '../../shared/folders';
+import type { AppHealth } from '../../shared/found-apps';
 import { formatRelative, formatTime } from '../format';
 import { Icon } from './Icon';
 import { LazySelect } from './LazySelect';
@@ -23,7 +25,7 @@ function warmOpen(project: Project, withPreview: boolean): void {
   warmProject(project.id, withPreview ? did : null);
 }
 
-function useThumbnail(project: Project): string | null {
+export function useThumbnail(project: Project): string | null {
   const thumb = project.thumbnail ?? null;
   const key = thumb ? `${project.id}/${thumb.versionId}` : null;
   const [url, setUrl] = useState<{ key: string; url: string } | null>(null);
@@ -60,8 +62,11 @@ export interface CardActions {
   onOpen: (project: Project) => void;
   onRename: (project: Project, name: string) => Promise<void>;
   onDuplicate: (project: Project) => void;
+  onReveal: (project: Project) => void;
   onDelete: (project: Project) => void;
 }
+
+export type CardAction = 'open' | 'rename' | 'duplicate' | 'reveal' | 'delete';
 
 export type MenuAt = { x: number; y: number } | 'button' | 'keys' | null;
 
@@ -72,20 +77,44 @@ const RenameField = lazy(() => menusChunk.then((m) => ({ default: m.RenameField 
 interface CardProps {
   project: Project;
   pack: PackSummary | null;
+  health: AppHealth | null;
+  homeDir: string | null;
   active: boolean;
   favorite: boolean;
   actions: CardActions;
   onFocusCard: () => void;
 }
 
-const FRAMEWORK_BADGE = { next: 'Next.js', vite: 'Vite' } as const;
+const FRAMEWORK_BADGE = { next: { label: 'Next.js app', tone: 'next' }, vite: { label: 'Vite', tone: 'vite' } } as const;
 
-function kindBadge(project: Project): string {
-  if (project.app) return FRAMEWORK_BADGE[project.app.framework];
-  return project.kind === 'html' ? 'HTML' : 'React + Vite';
+export function isFolderProject(project: Project): boolean {
+  return Boolean(project.imported && !project.imported.created);
 }
 
-function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: CardProps) {
+export function projectBadge(project: Project): { label: string; tone: string } {
+  if (project.designSystemFor) return { label: 'Design system', tone: 'dsb' };
+  if (project.app) return FRAMEWORK_BADGE[project.app.framework];
+  if (!isFolderProject(project)) return { label: 'Prototype', tone: 'proto' };
+  return project.kind === 'html' ? { label: 'HTML', tone: 'html' } : { label: 'Vite', tone: 'vite' };
+}
+
+export function projectPlace(project: Project, homeDir: string | null): string {
+  return isFolderProject(project) && project.imported ? shortenHome(project.imported.sourcePath.replace(/^\/private(?=\/)/, ''), homeDir) : 'Design Studio';
+}
+
+const HEALTH_TEXT: Record<AppHealth['state'], string> = { ready: 'Ready', install: 'Needs install', building: 'Building…', failed: 'Failed', static: 'Static' };
+
+export function HealthCell({ health }: { health: AppHealth | null }) {
+  const state = health?.state ?? 'static';
+  return (
+    <span className={`project-health ${state}`} data-tip={health?.title ?? undefined}>
+      <span className="project-dot" aria-hidden="true" />
+      {HEALTH_TEXT[state]}
+    </span>
+  );
+}
+
+function ProjectCard({ project, pack, health, homeDir, active, favorite, actions, onFocusCard }: CardProps) {
   const html = project.kind === 'html';
   const count = project.directions.length;
   const thumb = useThumbnail(project);
@@ -100,12 +129,13 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
     if (refocus) openRef.current?.focus();
   };
 
-  const pick = (action: 'open' | 'rename' | 'duplicate' | 'delete') => {
-    closeMenu(action === 'duplicate');
-    if (action === 'open') actions.onOpen(project);
+  const pick = (action: CardAction) => {
+    closeMenu(action === 'duplicate' || action === 'reveal');
     if (action === 'rename') setRenaming(true);
-    if (action === 'duplicate') actions.onDuplicate(project);
-    if (action === 'delete') actions.onDelete(project);
+    else if (action === 'open') actions.onOpen(project);
+    else if (action === 'duplicate') actions.onDuplicate(project);
+    else if (action === 'reveal') actions.onReveal(project);
+    else actions.onDelete(project);
   };
 
   const onContextMenu = (event: MouseEvent<HTMLDivElement>) => {
@@ -137,9 +167,11 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
     if (name) void actions.onRename(project, name);
   };
 
+  const badge = projectBadge(project);
   const meta = (
     <span className="project-meta">
-      <span className="badge">{kindBadge(project)}</span>
+      <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
+      {project.imported && <HealthCell health={health} />}
       <time className="project-time" dateTime={new Date(project.updatedAt).toISOString()} data-tip={formatTime(project.updatedAt)}>
         {formatRelative(project.updatedAt)}
       </time>
@@ -184,6 +216,7 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
             <span className="project-name" data-tip={project.name}>
               {project.name}
             </span>
+            <span className="project-place mono truncate">{projectPlace(project, homeDir)}</span>
             {meta}
           </span>
         </button>
@@ -217,7 +250,7 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
       </button>
       {menu && (
         <Suspense fallback={null}>
-          <CardMenu project={project} at={menu} onClose={closeMenu} onPick={pick} />
+          <CardMenu project={project} place={isFolderProject(project) ? projectPlace(project, homeDir) : null} at={menu} onClose={closeMenu} onPick={pick} />
         </Suspense>
       )}
     </div>
@@ -227,6 +260,8 @@ function ProjectCard({ project, pack, active, favorite, actions, onFocusCard }: 
 interface Props {
   projects: Project[] | null;
   packs: PackSummary[] | null;
+  health: Map<string, AppHealth>;
+  homeDir: string | null;
   error: string | null;
   actions: CardActions;
   query: string;
@@ -296,7 +331,7 @@ function useHomeView() {
   return { view: prefs.view, favoritesOnly: prefs.favoritesOnly, favorites: prefs.favorites };
 }
 
-function ProjectListStates({ projects, error, filter, query, shownCount, onClearQuery }: { projects: Project[] | null; error: string | null; filter: { label: string } | null; query: string; shownCount: number; onClearQuery: () => void }) {
+function ProjectListStates({ projects, error, filter, query, shownCount, onClearQuery }: { projects: Project[] | null; error: string | null; filter: { label: string; onClear: () => void } | null; query: string; shownCount: number; onClearQuery: () => void }) {
   return (
     <>
       {error && (
@@ -314,7 +349,10 @@ function ProjectListStates({ projects, error, filter, query, shownCount, onClear
       {filter && projects?.length === 0 && (
         <div className="home-empty">
           <Icon name="folder" size={16} />
-          <span>No projects in {filter.label} yet. Use New project here or Open folder here.</span>
+          <span>No {filter.label} yet.</span>
+          <button type="button" className="link" onClick={filter.onClear}>
+            Show all
+          </button>
         </div>
       )}
       {!filter && projects?.length === 0 && (
@@ -356,7 +394,7 @@ function useGridFocus(shown: Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-export function ProjectGrid({ projects, packs, error, actions, query, onQuery, searchRef, filter = null, tabs }: Props) {
+export function ProjectGrid({ projects, packs, health, homeDir, error, actions, query, onQuery, searchRef, filter = null, tabs }: Props) {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = sortProjects(filterProjects(projects ?? [], query), homeSort);
@@ -386,14 +424,6 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
         <div className="spacer" />
         {total > 0 && <ProjectListTools query={query} onQuery={onQuery} searchRef={searchRef} onFirst={() => focusAt(0)} onOpenFirst={() => first && actions.onOpen(first)} canOpen={first !== undefined} />}
       </div>
-      {filter && (
-        <p className="home-filter-note">
-          Projects in {filter.label}
-          <button type="button" className="link" onClick={filter.onClear}>
-            Show all
-          </button>
-        </p>
-      )}
       <ProjectListStates projects={projects} error={error} filter={filter} query={query} shownCount={matched.length} onClearQuery={() => onQuery('')} />
       {favoritesOnly && matched.length > 0 && shown.length === 0 && (
         <div className="home-empty" role="status">
@@ -404,7 +434,7 @@ export function ProjectGrid({ projects, packs, error, actions, query, onQuery, s
       {shown.length > 0 && (
         <div className={`project-grid ${view}`} ref={gridRef} onKeyDown={onGridKey}>
           {shown.map((project) => (
-            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} active={project.id === active} favorite={favorites.includes(project.id)} actions={gridActions} onFocusCard={() => setActiveId(project.id)} />
+            <ProjectCard key={project.id} project={project} pack={findPack(packs, project.packId)} health={health.get(project.id) ?? null} homeDir={homeDir} active={project.id === active} favorite={favorites.includes(project.id)} actions={gridActions} onFocusCard={() => setActiveId(project.id)} />
           ))}
         </div>
       )}

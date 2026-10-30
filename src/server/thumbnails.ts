@@ -138,7 +138,14 @@ function createShotQueue() {
   };
 }
 
-const CACHED = /^(v|diff)-.+\.png$/;
+const CACHED = /^(v|vp|diff)-.+\.png$/;
+
+function changedPage(project: Project, changed: string[], snapshotDir: string): string | undefined {
+  if (project.kind !== 'html' || project.app) return undefined;
+  const entry = project.entry || 'index.html';
+  const pages = changed.filter((file) => /\.html?$/i.test(file) && existsSync(path.join(snapshotDir, ...file.split('/'))));
+  return pages.length === 0 || pages.includes(entry) ? undefined : pages[0];
+}
 
 async function prune(dir: string, keep: string | null): Promise<void> {
   const names = await readdir(dir).catch(() => [] as string[]);
@@ -178,10 +185,11 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
     }
   };
 
-  const shootVersion = async (project: Project, versionId: string, viewport: { width: number; height: number }): Promise<Buffer | null> => {
+  const shootVersion = async (project: Project, versionId: string, viewport: { width: number; height: number }, changed: string[]): Promise<Buffer | null> => {
     const snapshotDir = await versions.snapshot(project, versionId);
-    if (project.kind === 'html' && !existsSync(path.join(snapshotDir, project.entry || 'index.html'))) throw new NotFoundError('this version has no page to show');
-    const target = preview.snapshotShot ? await preview.snapshotShot(project, versionId, snapshotDir) : { url: await preview.snapshotUrl(project, versionId, snapshotDir), release: async () => undefined };
+    const page = changedPage(project, changed, snapshotDir);
+    if (project.kind === 'html' && !page && !existsSync(path.join(snapshotDir, project.entry || 'index.html'))) throw new NotFoundError('this version has no page to show');
+    const target = preview.snapshotShot ? await preview.snapshotShot(project, versionId, snapshotDir, page) : { url: await preview.snapshotUrl(project, versionId, snapshotDir, page), release: async () => undefined };
     try {
       return await shootFirstViewport(target.url, viewport, path.join(thumbsDir(project.id), `.raw-${versionId}-${viewport.width}x${viewport.height}`));
     } finally {
@@ -224,12 +232,12 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       return bytes;
     },
     async version(projectId, versionId, signal) {
-      const name = `v-${assertSafeId(versionId, 'versionId')}.png`;
+      const name = `vp-${assertSafeId(versionId, 'versionId')}.png`;
       const file = path.join(thumbsDir(projectId), name);
       const cached = await readCached(file);
       if (cached) return cached;
       const project = await projects.get(projectId);
-      await versions.get(project, versionId);
+      const version = await versions.get(project, versionId);
       if (project.app) {
         const head = await readCached(path.join(thumbsDir(projectId), `${assertSafeId(versionId, 'versionId')}.png`));
         if (head) return head;
@@ -238,7 +246,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       return queue.run(`version:${projectId}:${versionId}`, async () => {
         const again = await readCached(file);
         if (again) return again;
-        const raw = await shootVersion(project, versionId, THUMB_VIEWPORT);
+        const raw = await shootVersion(project, versionId, THUMB_VIEWPORT, version.changedFiles);
         if (!raw) throw new NotFoundError('thumbnail not found');
         const bytes = await halfSizeOffThread(raw);
         await store(projectId, name, bytes);
@@ -258,11 +266,11 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       const cached = await readCached(file);
       if (cached) return toResult(cached);
       const project = await projects.get(projectId);
-      await Promise.all([versions.get(project, beforeId), versions.get(project, afterId)]);
+      const [, later] = await Promise.all([versions.get(project, beforeId), versions.get(project, afterId)]);
       return queue.run(`diff:${projectId}:${name}`, async () => {
         const again = await readCached(file);
         if (again) return toResult(again);
-        const [before, after] = [await shootVersion(project, beforeId, viewport), await shootVersion(project, afterId, viewport)];
+        const [before, after] = [await shootVersion(project, beforeId, viewport, later.changedFiles), await shootVersion(project, afterId, viewport, later.changedFiles)];
         if (!before || !after) throw new NotFoundError('could not render both versions');
         const mask = diffMask(PNG.sync.read(before), PNG.sync.read(after));
         await store(projectId, name, mask.png);

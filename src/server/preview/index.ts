@@ -253,11 +253,11 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return url;
   };
 
-  const snapshotUrl = async (project: Project, versionId: string, snapshotDir: string): Promise<string> => {
+  const snapshotUrl = async (project: Project, versionId: string, snapshotDir: string, page?: string): Promise<string> => {
     snapshotRoots.set(`${project.id}/${versionId}`, snapshotDir);
     if (project.app) return appUrl(project);
     if (project.kind === 'html') {
-      return `${projectPreviewOrigin(project.id, config.previewPort)}/s/${encodeURIComponent(project.id)}/${encodeURIComponent(versionId)}/${encodeEntry(project.entry || 'index.html')}`;
+      return `${projectPreviewOrigin(project.id, config.previewPort)}/s/${encodeURIComponent(project.id)}/${encodeURIComponent(versionId)}/${encodeEntry(page ?? (project.entry || 'index.html'))}`;
     }
     await linkNodeModules(project, snapshotDir);
     const url = await viteUrl({
@@ -270,10 +270,10 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     return url;
   };
 
-  const snapshotShot = async (project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }> => {
+  const snapshotShot = async (project: Project, versionId: string, snapshotDir: string, page?: string): Promise<{ url: string; release: () => Promise<void> }> => {
     const key = `s:${project.id}:${versionId}`;
     const owned = project.kind !== 'html' && !project.app && !((await vite.loaded()?.then((manager) => manager.pid(key) !== null)) ?? false);
-    const url = await snapshotUrl(project, versionId, snapshotDir);
+    const url = await snapshotUrl(project, versionId, snapshotDir, page);
     return { url, release: async () => (owned ? vite.loaded()?.then((manager) => manager.stopOne(key)) : undefined) };
   };
 

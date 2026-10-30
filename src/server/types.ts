@@ -151,8 +151,8 @@ export interface PreviewService {
   start(): Promise<void>;
   stop(): Promise<void>;
   directionUrl(project: Project, direction: Direction): Promise<string>;
-  snapshotUrl(project: Project, versionId: string, snapshotDir: string): Promise<string>;
-  snapshotShot?(project: Project, versionId: string, snapshotDir: string): Promise<{ url: string; release: () => Promise<void> }>;
+  snapshotUrl(project: Project, versionId: string, snapshotDir: string, page?: string): Promise<string>;
+  snapshotShot?(project: Project, versionId: string, snapshotDir: string, page?: string): Promise<{ url: string; release: () => Promise<void> }>;
   watch(project: Project, direction: Direction): void;
   unwatch(projectId: string, directionId: string): void;
   release(project: Project, direction: Direction): Promise<void>;

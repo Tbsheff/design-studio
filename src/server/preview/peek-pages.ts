@@ -13,6 +13,7 @@ interface WarmPage {
   usedAt: number;
   ready: Promise<void>;
   cold: boolean;
+  live: boolean;
   busy: number;
   queued: boolean;
   lock: Promise<void> | null;
@@ -118,6 +119,7 @@ export class PeekPages {
   private dirtyAt = 0;
   private codeAt = 0;
   private coldDirtyAt = 0;
+  private movedAt = 0;
   private reloadTimer: NodeJS.Timeout | null = null;
   private sweepTimer: NodeJS.Timeout | null = null;
 
@@ -128,8 +130,9 @@ export class PeekPages {
     private readonly stampOf: Stamper = async () => null,
   ) {}
 
-  markDirty(at = Date.now(), coldAt = at, code = true): void {
+  markDirty(at = Date.now(), coldAt = at, code = true, moved = true): void {
     this.dirtyAt = Math.max(this.dirtyAt, at);
+    if (moved) this.movedAt = Math.max(this.movedAt, at);
     if (code) this.codeAt = Math.max(this.codeAt, at);
     this.coldDirtyAt = Math.max(this.coldDirtyAt, coldAt);
     if (!this.land || this.reloadTimer) return;
@@ -140,18 +143,22 @@ export class PeekPages {
     this.reloadTimer.unref();
   }
 
-  run<T>(url: string, viewport: Viewport, task: (page: RenderPage) => Promise<T>): Promise<T> {
-    return this.attempt(url, viewport, false, task);
+  liveUrls(): string[] {
+    return [...this.pages.values()].filter((warm) => warm.live).map((warm) => warm.url);
+  }
+
+  run<T>(url: string, viewport: Viewport, task: (page: RenderPage) => Promise<T>, layoutOnly = false): Promise<T> {
+    return this.attempt(url, viewport, false, task, layoutOnly);
   }
 
   capture<T>(url: string, viewport: Viewport, task: (page: RenderPage) => Promise<T>): Promise<T> {
     return this.attempt(url, viewport, true, task);
   }
 
-  private async attempt<T>(url: string, viewport: Viewport, exclusive: boolean, task: (page: RenderPage) => Promise<T>): Promise<T> {
+  private async attempt<T>(url: string, viewport: Viewport, exclusive: boolean, task: (page: RenderPage) => Promise<T>, layoutOnly = false): Promise<T> {
     const key = keyOf(url, viewport);
     for (let attempt = 0; ; attempt += 1) {
-      const warm = await this.enter(key, url, viewport, exclusive);
+      const warm = await this.enter(key, url, viewport, exclusive, layoutOnly && attempt === 0);
       const leave = this.occupy(warm, exclusive);
       try {
         return exclusive ? await this.alone(warm, task) : await task(warm.page);
@@ -179,9 +186,9 @@ export class PeekPages {
     };
   }
 
-  private async enter(key: string, url: string, viewport: Viewport, exclusive: boolean): Promise<WarmPage> {
+  private async enter(key: string, url: string, viewport: Viewport, exclusive: boolean, layoutOnly: boolean): Promise<WarmPage> {
     for (;;) {
-      const warm = await this.fresh(key, url, viewport);
+      const warm = (layoutOnly ? await this.layoutCurrent(key) : null) ?? (await this.fresh(key, url, viewport));
       if (warm.lock) {
         await warm.lock;
         continue;
@@ -239,6 +246,13 @@ export class PeekPages {
     }));
   }
 
+  private async layoutCurrent(key: string): Promise<WarmPage | null> {
+    const known = this.pages.get(key);
+    if (!known?.live) return null;
+    await this.settled(known).catch(() => undefined);
+    return this.pages.get(key) === known && known.freshAt >= this.movedAt ? known : null;
+  }
+
   private async fresh(key: string, url: string, viewport: Viewport): Promise<WarmPage> {
     this.sweep();
     const known = this.pages.get(key);
@@ -264,12 +278,13 @@ export class PeekPages {
   private load(key: string, url: string, viewport: Viewport): WarmPage {
     this.drop(key);
     const freshAt = Date.now();
-    const warm: WarmPage = { page: null as unknown as RenderPage, url, freshAt, usedAt: freshAt, ready: Promise.resolve(), cold: false, busy: 0, queued: false, lock: null, drained: [], stamp: null };
+    const warm: WarmPage = { page: null as unknown as RenderPage, url, freshAt, usedAt: freshAt, ready: Promise.resolve(), cold: false, live: false, busy: 0, queued: false, lock: null, drained: [], stamp: null };
     warm.ready = (async () => {
       warm.stamp = (await this.stampOf(url).catch(() => null))?.key ?? null;
       warm.page = await this.open(url, viewport);
       await warm.page.evaluate(HOOK);
       warm.cold = !(await warm.page.evaluate<boolean>(HOT).catch(() => true));
+      warm.live = !warm.cold;
     })();
     warm.ready.catch(() => this.pages.get(key) === warm && this.pages.delete(key));
     this.pages.set(key, warm);

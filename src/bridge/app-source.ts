@@ -13,7 +13,10 @@ interface DebugFiber {
   debugStack?: { stack?: unknown } | null;
   stack?: unknown;
   _debugOwner?: DebugFiber | null;
+  owner?: DebugFiber | null;
   return?: DebugFiber | null;
+  key?: unknown;
+  env?: unknown;
   tag?: number;
   name?: unknown;
   type?: DebugType | string | null;
@@ -53,6 +56,13 @@ function ownerName(owner: DebugFiber): string | null {
   return textName(owner.name, type?.displayName, type?.render?.displayName, type?.render?.name, type?.type?.displayName, type?.type?.name, type?.name);
 }
 
+function sameOwner(a: DebugFiber | null, b: DebugFiber | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || typeof a.tag === 'number' || typeof b.tag === 'number') return false;
+  const upper = (info: DebugFiber) => (info.owner ? ownerName(info.owner) : null);
+  return ownerName(a) === ownerName(b) && a.key === b.key && a.env === b.env && upper(a) === upper(b);
+}
+
 export function componentUseOf(element: Element): ComponentUse | null {
   const host = hostElementOf(element);
   const owner = host?.fiber._debugOwner ?? null;
@@ -60,7 +70,7 @@ export function componentUseOf(element: Element): ComponentUse | null {
   const name = ownerName(owner);
   if (!name) return null;
   const parent = host.element.parentElement ? hostElementOf(host.element.parentElement) : null;
-  return { name, root: !parent || (parent.fiber._debugOwner ?? null) !== owner };
+  return { name, root: !parent || !sameOwner(parent.fiber._debugOwner ?? null, owner) };
 }
 
 function stackOf(fiber: DebugFiber | null): string | null {

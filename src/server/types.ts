@@ -2,6 +2,10 @@ import type { DesignRule } from '../shared/design-rules.js';
 import type { InspectResult, RenderCheckOptions, TileRequest, TileResult } from './preview/browser.js';
 import type { RunTarget } from './agent/run-target.js';
 import type { RenderPage } from './preview/render-backend.js';
+
+export interface PeekOptions {
+  layoutOnly?: boolean;
+}
 import type {
   AppLogLine,
   AppServerStatus,
@@ -158,9 +162,10 @@ export interface PreviewService {
   screenshot(url: string, viewport: { width: number; height: number }, outPath: string): Promise<string>;
   screenshotTiles(url: string, request: TileRequest): Promise<TileResult>;
   withPage?<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T>;
-  peekPage?<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>): Promise<T>;
+  peekPage?<T>(url: string, viewport: { width: number; height: number }, task: (page: RenderPage) => Promise<T>, options?: PeekOptions): Promise<T>;
   elementShots?(url: string, viewport: { width: number; height: number }, selectors: string[], outPrefix: string): Promise<(string | null)[]>;
   sourceStamp?(url: string): Promise<string | null>;
+  livePages?(projectId: string): Promise<string[]>;
   warmBrowser?(): void;
   usageEdges?(workTree: string, roots: string[]): Promise<[file: string, deps: string[]][]>;
 }

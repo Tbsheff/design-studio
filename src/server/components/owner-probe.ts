@@ -27,7 +27,9 @@ export function appSourceBody(): string {
     const name = typeof owner?.name === 'string' ? owner.name : type?.displayName || type?.render?.displayName || type?.render?.name || type?.type?.displayName || type?.type?.name || type?.name || null;
     let parent = el.parentElement;
     while (parent && !fiberOf(parent)) parent = parent.parentElement;
-    const root = !parent || (fiberOf(parent)._debugOwner || null) !== owner;
+    const nameOf = (info) => (typeof info?.name === 'string' ? info.name : info?.type?.displayName || info?.type?.render?.displayName || info?.type?.render?.name || info?.type?.type?.displayName || info?.type?.type?.name || info?.type?.name) || null;
+    const sameOwner = (a, b) => { if (a === b) return true; if (!a || !b || typeof a.tag === 'number' || typeof b.tag === 'number') return false; const upper = (info) => (info.owner ? nameOf(info.owner) : null); return nameOf(a) === nameOf(b) && a.key === b.key && a.env === b.env && upper(a) === upper(b); };
+    const root = !parent || !sameOwner(fiberOf(parent)._debugOwner || null, owner);
     const stacks = [stackOf(fiber), stackOf(owner)];
     if (stacks.every((stack) => stack === '')) return null;
     try {

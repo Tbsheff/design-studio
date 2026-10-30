@@ -117,13 +117,17 @@ async function firstVersionRefusal(edits: EditDeps, name: string, projectId: unk
   return project ? firstVersionBlock(project, FIRST_VERSION_WAIT_MS) : null;
 }
 
+function lockOnly(name: string, args: Record<string, unknown>): boolean {
+  return name === 'set_layer_state' && args.hidden === undefined && args.name === undefined;
+}
+
 async function runEdit(edits: EditDeps, name: string, raw: unknown, client: string): Promise<unknown> {
   try {
     const started = Date.now();
     const { args, wait } = splitWait(name, raw);
     const blocked = await firstVersionRefusal(edits, name, args.projectId);
     if (blocked) return { content: [{ type: 'text', text: blocked }], isError: true };
-    const result = await withMcpOrigin(client, async () => callEditTool(edits, name, await withLayerSelectors(edits, args, TAKES_PATH.has(name)), client));
+    const result = await withMcpOrigin(client, async () => callEditTool(edits, name, await withLayerSelectors(edits, args, TAKES_PATH.has(name), lockOnly(name, args)), client));
     const failed = (result as { isError?: boolean }).isError === true;
     const done = wait && !failed ? await withRender(result, args.projectId, started) : result;
     return withSaveFailures(done, args.projectId);

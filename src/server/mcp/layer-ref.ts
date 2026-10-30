@@ -162,6 +162,7 @@ const SCAN_SOURCE = String.raw`async (input) => {
     } catch {}
   }));
   const HOST = new Set([5, 26, 27]);
+  const sameOwner = (a, b) => { if (a === b) return true; if (!a || !b || typeof a.tag === 'number' || typeof b.tag === 'number') return false; const upper = (info) => (info.owner ? nameOf(info.owner) : null); return nameOf(a) === nameOf(b) && a.key === b.key && a.env === b.env && upper(a) === upper(b); };
   const rootOf = (el, owner) => {
     for (let f = fiberOf(el)?.return; f; f = f.return) {
       if (f === owner || f === owner.alternate) return true;
@@ -178,7 +179,7 @@ const SCAN_SOURCE = String.raw`async (input) => {
     const used = own && usedRaw && file(own) !== file(usedRaw) ? usedRaw : null;
     let parentEl = el.parentElement;
     while (parentEl && parentEl !== document.body && !fiberOf(parentEl)) parentEl = parentEl.parentElement;
-    const rootOfOwner = r.ownerRef && (typeof r.ownerRef.tag === 'number' ? rootOf(el, r.ownerRef) : !parentEl || parentEl === document.body || (fiberOf(parentEl)?._debugOwner || null) !== r.ownerRef);
+    const rootOfOwner = r.ownerRef && (typeof r.ownerRef.tag === 'number' ? rootOf(el, r.ownerRef) : !parentEl || parentEl === document.body || !sameOwner(fiberOf(parentEl)?._debugOwner || null, r.ownerRef));
     return { parent, depth, tag: el.tagName.toLowerCase(), path: pathOf(el), nth: nth.get(el) || 0, sib: sibOf(el), own: own || null, used, comp: rootOfOwner ? nameOf(r.ownerRef) : null, text: depth >= 0 ? textOf(el) : '', childCount: kids(el).length, hidden: el.getClientRects().length === 0 };
   });
   return { layers, truncated, missingRoot: false, roots };
@@ -210,8 +211,8 @@ function scanIn(page: ScanPage, input: ScanInput): Promise<ScanResult> {
   return page.evaluate<ScanResult>(`(${SCAN_SOURCE})(${JSON.stringify(input)})`);
 }
 
-async function onPage<T>(preview: PreviewService, url: string, viewport: Viewport, task: (page: ScanPage) => Promise<T>): Promise<T> {
-  return onProbePage(preview, url, viewport, task);
+async function onPage<T>(preview: PreviewService, url: string, viewport: Viewport, task: (page: ScanPage) => Promise<T>, layoutOnly = false): Promise<T> {
+  return onProbePage(preview, url, viewport, task, { layoutOnly });
 }
 
 function remember(scope: string, page: string | undefined, layers: Layer[]): void {
@@ -259,14 +260,12 @@ function refError(ref: string, count: number, page: string | undefined): LayerRe
   return new LayerRefError(`No element with layer id ${ref} on this page${page ? ` (${page})` : ''}. It was removed, or it is on another page, or the file changed outside the studio: call get_layers again for fresh ids.`);
 }
 
-class StalePage extends Error {}
-
-function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope: string, wanted: string[], known: (Memo | undefined)[], last: boolean): Promise<Map<string, string>> {
+function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope: string, wanted: string[], known: (Memo | undefined)[], last: boolean, layoutOnly: boolean): Promise<Map<string, string> | null> {
   return onPage(preview, url, viewport, async (page) => {
     const hits = quickHits(scope, wanted, await scanIn(page, { root: null, depth: 0, max: 0, paths: known.map((item) => item?.path ?? ''), all: false }));
     const missing = wanted.filter((ref) => !hits.has(ref));
     if (missing.length === 0) return hits;
-    if (!last && missing.some((ref) => !isGoneRef(scope, ref))) throw new StalePage();
+    if (!last && missing.some((ref) => !isGoneRef(scope, ref))) return null;
     const all = keyed((await scanIn(page, { root: null, depth: 0, max: 0, paths: null, all: true })).layers, scope);
     for (const ref of missing) {
       const found = all.filter((layer) => layer.ref === ref);
@@ -276,18 +275,13 @@ function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope:
       hits.set(ref, (found[0] as Layer).path);
     }
     return hits;
-  });
+  }, layoutOnly && !last);
 }
 
-export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[]): Promise<Map<string, string>> {
+export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[], layoutOnly = false): Promise<Map<string, string>> {
   const wanted = [...new Set(refs)];
   const known = wanted.map((ref) => memo.get(`${scope}|${ref}`));
-  try {
-    return await lookUp(preview, url, viewport, scope, wanted, known, false);
-  } catch (error) {
-    if (!(error instanceof StalePage)) throw error;
-    return lookUp(preview, url, viewport, scope, wanted, known, true);
-  }
+  return (await lookUp(preview, url, viewport, scope, wanted, known, false, layoutOnly)) ?? ((await lookUp(preview, url, viewport, scope, wanted, known, true, false)) as Map<string, string>);
 }
 
 export async function resolveLayerRef(preview: PreviewService, url: string, viewport: Viewport, scope: string, ref: string): Promise<string> {

@@ -5,6 +5,7 @@ import { api, errorText } from './api';
 import type { ParentMessageBody } from './bridge';
 import { startOptimistic } from './optimisticEdit';
 import { multiBlockReason } from './mixedValues';
+import { isTypingTarget } from './typingTarget';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 
 const SAVE_MS = 300;
@@ -80,6 +81,18 @@ function savedOf(b: Burst): Saved[] {
     const back = Object.fromEntries(Object.keys(style).map((key) => [key, item.target.styles[key] ?? '']));
     return [{ edit, selector: item.target.selector, style, back }];
   });
+}
+
+const OVERLAY_OPEN = 'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
+
+function blurToCanvas(event: KeyboardEvent): boolean {
+  const focused = document.activeElement;
+  if (event.key !== 'Escape' || event.defaultPrevented || !(focused instanceof HTMLElement) || focused === document.body) return false;
+  if (focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
+  focused.blur();
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  return true;
 }
 
 function isBodyFocus(): boolean {
@@ -166,6 +179,7 @@ export function useElementNudge(o: Options): void {
       timer.current = window.setTimeout(flush, SAVE_MS);
     };
     const onKey = (event: KeyboardEvent) => {
+      if (live.current.enabled && live.current.selection.length > 0 && blurToCanvas(event)) return;
       const step = nudgeStepOf(event);
       if (!step) {
         if (burst.current && event.key !== 'Shift') flush();

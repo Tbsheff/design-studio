@@ -23,7 +23,7 @@ const FORMATS: FormatInfo[] = [
   { id: 'png', label: 'PNG', icon: 'image', hint: 'One image per frame. Many frames download as a zip.', action: 'Export PNG' },
   { id: 'svg', label: 'SVG', icon: 'pencil', hint: 'Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.', action: 'Export SVG' },
   { id: 'pdf', label: 'PDF', icon: 'doc', hint: 'One page per frame, at 2× for sharp print.', action: 'Export PDF' },
-  { id: 'pptx', label: 'PPTX', icon: 'play', hint: 'One slide per frame, or per slide of a deck, with text you can edit in Keynote or PowerPoint.', action: 'Export PPTX' },
+  { id: 'pptx', label: 'PPTX', icon: 'play', hint: 'One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.', action: 'Export PPTX' },
   { id: 'html', label: 'HTML', icon: 'code', hint: 'One file with CSS, fonts and images inside. Opens offline.', action: 'Export HTML' },
   { id: 'zip', label: 'Source', icon: 'folder', hint: 'The project files of this version as a zip.', action: 'Export zip' },
   { id: 'handoff', label: 'Handoff', icon: 'terminal', hint: 'A folder for a coding agent: HANDOFF.md, tokens, screens and source.', action: 'Create handoff' },

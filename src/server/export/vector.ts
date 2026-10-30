@@ -51,7 +51,7 @@ function slidesExpression(width: number, height: number): string {
 
 function hideExpression(plan: NativePlan): string {
   const rule = (ids: number[], body: string): string => (ids.length > 0 ? `${ids.map((id) => `[data-ds-i="${id}"]`).join(',')}{${body}}` : '');
-  const css = `${rule(plan.paint, 'background-color:transparent!important;border-color:transparent!important')}${rule(plan.gone, 'opacity:0!important')}`;
+  const css = `${rule(plan.paint, 'background-color:transparent!important;border-color:transparent!important;box-shadow:none!important;background-image:none!important')}${rule(plan.gone, 'opacity:0!important')}`;
   return `(() => { const style = document.createElement('style'); style.id = 'ds-native-hide'; style.textContent = ${JSON.stringify(css)}; document.head.append(style); return true; })()`;
 }
 

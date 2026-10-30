@@ -1,30 +1,35 @@
 import type PptxGenJS from 'pptxgenjs';
 import { PNG } from 'pngjs';
-import type { ScanColor } from './page-scan.js';
+import type { ScanColor, ScanRect } from './page-scan.js';
 import type { NativeShape, NativeStroke } from './pptx-plan.js';
+import { addBlock, type Slide } from './pptx-text.js';
+import { gradientXml, roundGeomXml, shadowXml, type XmlPatch } from './pptx-xml.js';
 import type { PathPoint } from './svg-path.js';
 import { cropPng, type VectorRegion } from './vector.js';
 
-type Slide = ReturnType<PptxGenJS['addSlide']>;
 type Points = NonNullable<PptxGenJS.ShapeProps['points']>;
+type Filled = Extract<NativeShape, { kind: 'rect' | 'ellipse' | 'path' }>;
 
 const PX_PER_IN = 96;
 const PT_PER_PX = 0.75;
+const EPS = 0.5;
 const r2 = (value: number): number => Math.round(value * 100) / 100;
 
 export interface ShapeCount {
   shapes: number;
   pictures: number;
+  texts: number;
 }
 
-class ShapeWriter {
+export class ShapeWriter {
   private source: PNG | null = null;
-  readonly count: ShapeCount = { shapes: 0, pictures: 0 };
+  readonly count: ShapeCount = { shapes: 0, pictures: 0, texts: 0 };
 
   constructor(
     private readonly slide: Slide,
     private readonly region: VectorRegion,
     private readonly k: number,
+    private readonly patches: Map<string, XmlPatch>,
   ) {}
 
   private inch(value: number): number {
@@ -42,7 +47,7 @@ class ShapeWriter {
     return { ...this.fill(stroke.color, opacity), width: r2(stroke.width * PT_PER_PX * this.k), dashType: stroke.dashed ? 'dash' : 'solid' };
   }
 
-  private frame(box: { x: number; y: number; width: number; height: number }): { x: number; y: number; w: number; h: number } {
+  private frame(box: ScanRect): { x: number; y: number; w: number; h: number } {
     return { x: this.inch(box.x), y: this.inch(box.y), w: this.inch(box.width), h: this.inch(box.height) };
   }
 
@@ -57,39 +62,47 @@ class ShapeWriter {
     }) as Points;
   }
 
-  private image(box: { x: number; y: number; width: number; height: number }): void {
+  private name(patch: XmlPatch): { objectName?: string } {
+    if (!patch.fill && !patch.effect && !patch.geom) return {};
+    const objectName = `ds-${this.patches.size + 1}`;
+    this.patches.set(objectName, patch);
+    return { objectName };
+  }
+
+  private image(box: ScanRect, radius: number): void {
     if (!this.region.under) return;
     this.source ??= PNG.sync.read(this.region.under);
     const crop = cropPng(this.source, box, this.region.scale);
     if (!crop) return;
-    this.slide.addImage({ data: `image/png;base64,${crop.toString('base64')}`, ...this.frame(box) });
+    const circle = radius >= Math.min(box.width, box.height) / 2 - EPS && Math.abs(box.width - box.height) < 1;
+    const patch = radius > EPS && !circle ? { geom: roundGeomXml(radius, box) } : {};
+    this.slide.addImage({ data: `image/png;base64,${crop.toString('base64')}`, ...this.frame(box), ...(circle ? { rounding: true } : {}), ...this.name(patch) });
     this.count.pictures += 1;
   }
 
-  add(shape: NativeShape): void {
-    if (shape.kind === 'image') return this.image(shape.box);
-    this.count.shapes += 1;
-    if (shape.kind === 'line') {
-      const flip = (shape.x2 - shape.x1) * (shape.y2 - shape.y1) < 0;
-      this.slide.addShape('line', { ...this.frame({ x: Math.min(shape.x1, shape.x2), y: Math.min(shape.y1, shape.y2), width: Math.abs(shape.x2 - shape.x1), height: Math.abs(shape.y2 - shape.y1) }), line: this.line(shape.stroke, shape.opacity), ...(flip ? { flipV: true } : {}) });
-      return;
-    }
-    const paint = { fill: this.fill(shape.fill, shape.opacity), line: this.line(shape.stroke, shape.opacity) };
-    if (shape.kind === 'path') {
-      this.slide.addShape('custGeom' as PptxGenJS.SHAPE_NAME, { ...this.frame(shape.box), ...paint, points: this.points(shape.points, shape.box.x, shape.box.y) });
-      return;
-    }
-    if (shape.kind === 'ellipse') {
-      this.slide.addShape('ellipse', { ...this.frame(shape.box), ...paint });
-      return;
-    }
-    const round = shape.radius > 0.5;
-    this.slide.addShape(round ? 'roundRect' : 'rect', { ...this.frame(shape.box), ...paint, ...(round ? { rectRadius: this.inch(shape.radius) } : {}) });
+  private filled(shape: Filled): void {
+    const patch: XmlPatch = {
+      ...(shape.gradient ? { fill: gradientXml(shape.gradient, shape.opacity) } : {}),
+      ...(shape.shadow ? { effect: shadowXml(shape.shadow, shape.box, this.k, shape.opacity) } : {}),
+    };
+    const first = shape.gradient?.stops[0]?.color ?? shape.fill;
+    const props = { ...this.frame(shape.box), fill: this.fill(first, shape.opacity), line: this.line(shape.stroke, shape.opacity), ...this.name(patch) };
+    if (shape.kind === 'path') return void this.slide.addShape('custGeom' as PptxGenJS.SHAPE_NAME, { ...props, points: this.points(shape.points, shape.box.x, shape.box.y) });
+    if (shape.kind === 'ellipse') return void this.slide.addShape('ellipse', props);
+    const round = shape.radius > EPS;
+    this.slide.addShape(round ? 'roundRect' : 'rect', { ...props, ...(round ? { rectRadius: this.inch(shape.radius) } : {}) });
   }
-}
 
-export function addShapes(slide: Slide, region: VectorRegion, k: number): ShapeCount {
-  const writer = new ShapeWriter(slide, region, k);
-  for (const shape of region.native?.shapes ?? []) writer.add(shape);
-  return writer.count;
+  add(shape: NativeShape): void {
+    if (shape.kind === 'image') return this.image(shape.box, shape.radius);
+    if (shape.kind === 'text') {
+      addBlock(this.slide, [{ text: shape.text, line: shape.text.lines[0] ?? { x: 0, y: 0, width: 0, height: 0, text: '', baseline: 0 } }], this.k);
+      this.count.texts += 1;
+      return;
+    }
+    this.count.shapes += 1;
+    if (shape.kind !== 'line') return this.filled(shape);
+    const flip = (shape.x2 - shape.x1) * (shape.y2 - shape.y1) < 0;
+    this.slide.addShape('line', { ...this.frame({ x: Math.min(shape.x1, shape.x2), y: Math.min(shape.y1, shape.y2), width: Math.abs(shape.x2 - shape.x1), height: Math.abs(shape.y2 - shape.y1) }), line: this.line(shape.stroke, shape.opacity), ...(flip ? { flipV: true } : {}) });
+  }
 }

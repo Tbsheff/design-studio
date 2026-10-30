@@ -13,6 +13,7 @@ function isFaviconMiss(url: string): boolean {
 const QUIET_MS = 120;
 const LONG_REQUEST_MS = 1500;
 const STREAM_TYPES = new Set(['eventsource', 'websocket']);
+const DATA_TYPES = new Set(['fetch', 'xhr']);
 
 interface NetworkTracker {
   inflight: Map<object, number>;
@@ -29,6 +30,9 @@ function trackNetwork(page: Page): NetworkTracker {
     if (STREAM_TYPES.has(request.resourceType())) return;
     tracker.inflight.set(request, Date.now());
     tracker.lastAt = Date.now();
+  });
+  page.on('response', (response) => {
+    if (DATA_TYPES.has(response.request().resourceType())) done(response.request());
   });
   page.on('requestfinished', done);
   page.on('requestfailed', done);
@@ -71,12 +75,14 @@ function wrapPage(context: BrowserContext, page: Page): RenderPage {
   let nav: { loadMs: number; idleMs: number } | null = null;
   return {
     async reset() {
+      network.inflight.clear();
       await clearOrigin(context, page, page.url());
       await page.goto('about:blank').catch(() => undefined);
     },
     async goto(url) {
       errors.consoleErrors.length = 0;
       errors.pageErrors.length = 0;
+      network.inflight.clear();
       const started = Date.now();
       await page.goto(url, { waitUntil: 'load', timeout: NAVIGATION_TIMEOUT_MS });
       const loaded = Date.now();

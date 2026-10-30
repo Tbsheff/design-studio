@@ -139,6 +139,7 @@ export interface TileRequest {
   prepare?: string;
   format?: 'png' | 'jpeg';
   fresh?: boolean;
+  oneOff?: boolean;
 }
 
 export interface TileResult {
@@ -243,7 +244,7 @@ function checkKey(url: string, spec: ViewportSpec, options: RenderCheckOptions):
 }
 
 function tileKey(url: string, request: TileRequest): string {
-  const { outPrefix: _out, fresh: _fresh, ...rest } = request;
+  const { outPrefix: _out, fresh: _fresh, oneOff: _oneOff, ...rest } = request;
   return cacheKey({ url, ...rest });
 }
 
@@ -268,6 +269,7 @@ export class BrowserPool {
     },
     (page) => this.pages.release(page),
     (page, url) => this.landPeek(page, url),
+    async (url) => (await this.stamps.stampFor(url))?.key ?? null,
   );
 
   private async landPeek(page: RenderPage, url: string): Promise<void> {
@@ -311,15 +313,19 @@ export class BrowserPool {
     this.peeks.markDirty(at, coldAt);
   }
 
-  private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>): Promise<T> {
+  private async withPage<T>(url: string, viewport: { width: number; height: number; scale?: number }, task: (page: RenderPage) => Promise<T>, oneOff = false): Promise<T> {
+    const withAxe = async (page: RenderPage): Promise<T> => {
+      const stamp = (await this.stamps.stampFor(url))?.key ?? null;
+      const shared: RenderPage = Object.assign(Object.create(page) as RenderPage, { axe: () => this.sharedAxe(page, url, viewport, '', stamp) });
+      return task(shared);
+    };
+    if (!oneOff && /^https?:/.test(url)) return this.peeks.capture(url, viewport, withAxe);
     await renderSettledFor(url);
     return this.pages.lease(viewport, async (page) => {
-      const stamp = (await this.stamps.stampFor(url))?.key ?? null;
       await page.goto(withServerBridgeParams(url, this.parentOrigin));
       await settle(page);
       await this.noteLanded(page, url);
-      const shared: RenderPage = Object.assign(Object.create(page) as RenderPage, { axe: () => this.sharedAxe(page, url, viewport, '', stamp) });
-      return task(shared);
+      return withAxe(page);
     });
   }
 
@@ -400,7 +406,7 @@ export class BrowserPool {
       for (const [index, tile] of tiles.entries()) await page.screenshot(paths[index] as string, { x: 0, y: tile.y, width: request.viewport.width, height: tile.height });
       const last = tiles[tiles.length - 1];
       return { paths, pageHeight, from: tiles[0]?.y ?? 0, to: last ? last.y + last.height : 0 };
-    });
+    }, request.oneOff === true);
   }
 
   private async probeViewport(page: RenderPage, spec: ViewportSpec, screenshotPath: string, options: RenderCheckOptions, state: ViewportState): Promise<void> {

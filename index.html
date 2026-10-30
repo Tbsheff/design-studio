@@ -11,11 +11,16 @@
         var media = matchMedia('(prefers-color-scheme: dark)');
         var host = window.studioThemeHost;
         var pref = 'dark';
+        var tabOnly = false;
         function valid(value) {
           return value === 'light' || value === 'dark' || value === 'system' ? value : 'dark';
         }
         try {
-          pref = valid(host ? host.initial : localStorage.getItem(key));
+          var asked = new URLSearchParams(location.search).get('theme');
+          if (asked) sessionStorage.setItem(key, valid(asked));
+          var tab = sessionStorage.getItem(key);
+          tabOnly = tab !== null;
+          pref = valid(tabOnly ? tab : host ? host.initial : localStorage.getItem(key));
         } catch (e) {}
         function apply() {
           root.dataset.theme = pref === 'dark' || (pref === 'system' && media.matches) ? 'dark' : 'light';
@@ -42,9 +47,9 @@
           set: function (value) {
             pref = valid(value);
             try {
-              localStorage.setItem(key, pref);
+              (tabOnly ? sessionStorage : localStorage).setItem(key, pref);
             } catch (e) {}
-            if (host) host.set(pref);
+            if (host && !tabOnly) host.set(pref);
             quiet();
             apply();
           },

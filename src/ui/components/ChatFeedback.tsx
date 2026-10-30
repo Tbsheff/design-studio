@@ -55,6 +55,20 @@ function FileChips({ changes, quiet, onOpen }: { changes: FileChange[]; quiet: b
   );
 }
 
+function stopNote(run: RunView): string | null {
+  const summary = run.summary;
+  if (!summary || run.status === 'running' || run.status === 'completed') return null;
+  const restored = summary.restoredFiles ?? [];
+  const putBack = restored.length > 0 ? `Put back ${restored.map(baseName).join(', ')}: the write was cut off.` : '';
+  const saved = summary.versionId ? 'Saved what it changed as a version.' : '';
+  return [putBack, saved].filter(Boolean).join(' ') || null;
+}
+
+function StopNote({ run }: { run: RunView }) {
+  const note = stopNote(run);
+  return note ? <p className="run-no-changes" data-testid="run-stop-note">{note}</p> : null;
+}
+
 export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: { run: RunView; onDetails: () => void }) {
   const [feedback, setFeedback] = useRunFeedback(run.runId);
   const changes = useMemo(() => (run.status === 'running' ? [] : fileChanges(run.tools)), [run.status, run.tools]);
@@ -63,6 +77,7 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: {
   return (
     <div className="run-feedback">
       <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0 && !run.request?.plan} onOpen={onDetails} />
+      <StopNote run={run} />
       <div className="run-foot" data-status={run.status}>
         {done && (
           <span className="run-thumbs" role="group" aria-label="Rate this response">

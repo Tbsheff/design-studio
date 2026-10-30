@@ -1,11 +1,12 @@
 import type { Project } from './contracts.js';
+import { withoutAnswers } from './clarify.js';
 
 const SLUG_MAX_LENGTH = 48;
 const SLUG_FALLBACK = 'untitled';
 export const MAX_SLUG_SUFFIX = 999;
 
 export function nameFromPrompt(prompt: string): string {
-  const words = prompt.replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join(' ');
+  const words = withoutAnswers(prompt).replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join(' ');
   return words.length > 48 ? `${words.slice(0, 47)}…` : words || 'Untitled';
 }
 

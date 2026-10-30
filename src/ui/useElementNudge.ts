@@ -85,6 +85,13 @@ function savedOf(b: Burst): Saved[] {
 
 const OVERLAY_OPEN = 'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
 
+function picksNew(message: BridgeToParent, current: SelectionContext[]): boolean {
+  if (message.type !== 'select' && message.type !== 'select-many') return false;
+  const picked = message.type === 'select' ? [message.selection.selector] : message.selections.map((s) => s.selector);
+  if (message.additive) return true;
+  return burstKey(picked) !== burstKey(current.map((s) => s.selector));
+}
+
 function keysToCanvas(): void {
   const focused = document.activeElement;
   if (focused instanceof HTMLIFrameElement && focused.closest('.canvas .stage')) focused.blur();
@@ -192,10 +199,13 @@ export function useElementNudge(o: Options): void {
       cur.post({ type: 'nudge', dx: step.dx, dy: step.dy });
     };
     flushNow.current = flush;
+    let editing = false;
     const stop = o.listen((message) => {
       if (message.type === 'nudge-key') press([{ selector: message.selector, base: message.base }, ...(message.others ?? [])], message.dx, message.dy);
       else if (FLUSH_ON.has(message.type)) flush();
-      if (message.type === 'select' || message.type === 'select-many') keysToCanvas();
+      if (message.type === 'text-edit') editing = message.state === 'start';
+      else if (message.type === 'text-commit') editing = false;
+      if (picksNew(message, live.current.selection)) window.setTimeout(() => editing || keysToCanvas(), 0);
     });
     window.addEventListener('keydown', onKey, true);
     return () => {

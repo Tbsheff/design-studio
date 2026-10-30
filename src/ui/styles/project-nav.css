@@ -67,7 +67,7 @@
   background: var(--warn);
 }
 
-.studio {
+.studio[data-rail] {
   --rail-w: 52px;
   position: relative;
 }
@@ -76,7 +76,7 @@
   --rail-w: 224px;
 }
 
-.studio > .columns {
+.studio[data-rail] > .columns {
   margin-left: var(--rail-w);
 }
 
@@ -302,7 +302,7 @@
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] .studio .pane-head,
-:root[data-shell='mac'] .studio[data-pane='collapsed'] .canvas-topbar {
+:root[data-shell='mac'] .studio[data-rail] .pane-head,
+:root[data-shell='mac'] .studio[data-rail][data-pane='collapsed'] .canvas-topbar {
   padding-left: max(var(--pane-inset, var(--s-3)), calc(var(--shell-inset) - var(--rail-w)));
 }

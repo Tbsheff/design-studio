@@ -9,7 +9,7 @@ function tagStarts(text: string): string {
   const lines = text.split('\n');
   return lines.map((line) => {
     const at: number[] = [];
-    for (let index = line.indexOf('<'); index >= 0; index = line.indexOf('<', index + 1)) at.push(index);
+    for (let index = line.indexOf('<'); index >= 0; index = line.indexOf('<', index + 1)) if (line[index + 1] !== '/') at.push(index);
     return at.join(',');
   }).join('\n');
 }

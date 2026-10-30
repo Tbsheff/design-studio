@@ -260,8 +260,10 @@ function refError(ref: string, count: number, page: string | undefined): LayerRe
   return new LayerRefError(`No element with layer id ${ref} on this page${page ? ` (${page})` : ''}. It was removed, or it is on another page, or the file changed outside the studio: call get_layers again for fresh ids.`);
 }
 
-function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope: string, wanted: string[], known: (Memo | undefined)[], last: boolean, layoutOnly: boolean): Promise<Map<string, string> | null> {
-  return onPage(preview, url, viewport, async (page) => {
+type LookUp = Map<string, string> | LayerRefError | null;
+
+function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope: string, wanted: string[], known: (Memo | undefined)[], last: boolean, layoutOnly: boolean): Promise<LookUp> {
+  return onPage<LookUp>(preview, url, viewport, async (page) => {
     const hits = quickHits(scope, wanted, await scanIn(page, { root: null, depth: 0, max: 0, paths: known.map((item) => item?.path ?? ''), all: false }));
     const missing = wanted.filter((ref) => !hits.has(ref));
     if (missing.length === 0) return hits;
@@ -270,18 +272,22 @@ function lookUp(preview: PreviewService, url: string, viewport: Viewport, scope:
     for (const ref of missing) {
       const found = all.filter((layer) => layer.ref === ref);
       const page = known[wanted.indexOf(ref)]?.page;
-      if (found.length !== 1) throw refError(ref, found.length, page);
+      if (found.length !== 1) return refError(ref, found.length, page);
       remember(scope, page, found);
       hits.set(ref, (found[0] as Layer).path);
     }
     return hits;
-  }, layoutOnly && !last);
+  }, layoutOnly);
 }
 
 export async function resolveLayerRefs(preview: PreviewService, url: string, viewport: Viewport, scope: string, refs: string[], layoutOnly = false): Promise<Map<string, string>> {
   const wanted = [...new Set(refs)];
   const known = wanted.map((ref) => memo.get(`${scope}|${ref}`));
-  return (await lookUp(preview, url, viewport, scope, wanted, known, false, layoutOnly)) ?? ((await lookUp(preview, url, viewport, scope, wanted, known, true, false)) as Map<string, string>);
+  let found = await lookUp(preview, url, viewport, scope, wanted, known, false, layoutOnly);
+  if (found === null && layoutOnly) found = await lookUp(preview, url, viewport, scope, wanted, known, true, true);
+  if (found === null || (found instanceof LayerRefError && layoutOnly)) found = await lookUp(preview, url, viewport, scope, wanted, known, true, false);
+  if (found instanceof LayerRefError) throw found;
+  return found as Map<string, string>;
 }
 
 export async function resolveLayerRef(preview: PreviewService, url: string, viewport: Viewport, scope: string, ref: string): Promise<string> {

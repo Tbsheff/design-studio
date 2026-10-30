@@ -60,6 +60,16 @@ async function readBaselineFindings(runsDir: string, runId: string): Promise<Bas
   }
 }
 
+export async function baselineNote(results: RenderCheckResult[], runsDir: string, runId: string): Promise<string | null> {
+  const baseline = await readBaselineFindings(runsDir, runId);
+  if (!baseline) return null;
+  const { fresh, old } = splitByBaseline(checkItems(results), baseline.items);
+  if (old.length === 0) return null;
+  const was = levelCounts(old);
+  const now = levelCounts(fresh);
+  return `Before this run: ${old.length} of these findings were already on the page (${was.error} errors, ${was.high} high). They are not from your change, so do not list them as problems in your reply. New from this run: ${now.error} errors, ${now.high} high, ${now.medium} medium${fresh.length > 0 ? `: ${fresh.slice(0, 3).map((item) => item.key.slice(0, 140)).join('; ')}` : ''}.`;
+}
+
 export function judgeChange(results: RenderCheckResult[], ranBy: FinalCheck['ranBy'], baseline: BaselineFindings | null): FinalCheckWithBaseline {
   if (!baseline) return summarizeCheck(results, ranBy);
   const { fresh, old } = splitByBaseline(checkItems(results), baseline.items);

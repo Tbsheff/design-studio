@@ -38,6 +38,7 @@ import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } fr
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
 import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from './tool-help.js';
 import { HELP_TOOL, studioToolsFor } from './tool-sets.js';
+import { baselineNote } from './final-check.js';
 import { isLeanRun } from './lean-run.js';
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
@@ -299,7 +300,8 @@ export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolC
       deps.run.lastChecks = report.results;
     }
     await saveCheck(deps.runsDir, deps.runId, counters.checks, report.results);
-    return { content: [{ type: 'text' as const, text: report.text }] };
+    const note = await baselineNote(report.results, deps.runsDir, deps.runId).catch(() => null);
+    return { content: [{ type: 'text' as const, text: note ? `${report.text}\n\n${note}` : report.text }] };
   } catch (error) {
     return errorText(`render_check failed: ${describeError(error)}`);
   }

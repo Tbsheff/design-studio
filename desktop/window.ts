@@ -14,7 +14,7 @@ export interface WindowOptions {
 
 const DEFAULT_SIZE = { width: 1440, height: 900 };
 const SAVE_DELAY_MS = 400;
-const MAC_CHROME = { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } } as const;
+export const MAC_CHROME = { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 17 } } as const;
 
 function displays(): DisplayInfo[] {
   return screen.getAllDisplays().map((display) => ({ id: display.id, bounds: display.bounds, workArea: display.workArea }));

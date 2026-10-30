@@ -25,7 +25,8 @@ interface PageClock {
 }
 
 const MAX_PAGES = 4;
-const IDLE_MS = 10 * 60_000;
+const IDLE_MS = 3 * 60_000;
+const SWEEP_MS = 30_000;
 const POLL_MS = 25;
 const QUIET_MS = 120;
 const REBUILD_WAIT_MS = 900;
@@ -70,6 +71,7 @@ export class PeekPages {
   private dirtyAt = 0;
   private coldDirtyAt = 0;
   private reloadTimer: NodeJS.Timeout | null = null;
+  private sweepTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly open: Opener,
@@ -128,6 +130,8 @@ export class PeekPages {
   }
 
   async close(): Promise<void> {
+    if (this.sweepTimer) clearTimeout(this.sweepTimer);
+    this.sweepTimer = null;
     const all = [...this.pages.values()];
     this.pages.clear();
     await Promise.all(all.map(async (warm) => {
@@ -169,6 +173,7 @@ export class PeekPages {
     })();
     warm.ready.catch(() => this.pages.get(key) === warm && this.pages.delete(key));
     this.pages.set(key, warm);
+    this.sweepLater();
     return warm;
   }
 
@@ -192,8 +197,18 @@ export class PeekPages {
     const now = Date.now();
     const byUse = [...this.pages.entries()].sort((a, b) => b[1].usedAt - a[1].usedAt);
     byUse.forEach(([key, warm], index) => {
-      if (index >= MAX_PAGES || now - warm.usedAt > IDLE_MS) this.drop(key);
+      if (index >= MAX_PAGES || (warm.busy === 0 && now - warm.usedAt > IDLE_MS)) this.drop(key);
     });
+    this.sweepLater();
+  }
+
+  private sweepLater(): void {
+    if (this.sweepTimer || this.pages.size === 0) return;
+    this.sweepTimer = setTimeout(() => {
+      this.sweepTimer = null;
+      this.sweep();
+    }, SWEEP_MS);
+    this.sweepTimer.unref();
   }
 
   private drop(key: string): void {

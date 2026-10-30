@@ -108,7 +108,8 @@ interface SendView {
 }
 
 const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`;
-const SEND_CLASS: Record<SendState, string> = { send: 'btn send send-btn', queue: 'btn send send-btn', stop: 'btn send-btn stop-btn' };
+const SEND_CLASS: Record<SendState, string> = { send: 'icon-btn send send-btn', queue: 'icon-btn send send-btn', stop: 'icon-btn send-btn stop-btn' };
+const SEND_ICON: Record<SendState, IconName> = { send: 'arrowUp', queue: 'history', stop: 'stop' };
 
 function sendView(props: SendProps): SendView {
   if (props.running && !props.hasDraft) return { state: 'stop', busy: false, disabled: false, tip: 'Stop (Esc)', keys: 'Escape', onClick: props.onStop };
@@ -135,8 +136,7 @@ function SendButton(props: SendProps) {
       data-tip-side="top"
     >
       <span key={key} className={morph ? 'send-label morph' : 'send-label'}>
-        {view.state === 'stop' && <Icon name="stop" size={12} />}
-        {view.busy ? <span className="spinner" /> : SEND_LABEL[view.state]}
+        {view.busy ? <span className="spinner" /> : <Icon name={SEND_ICON[view.state]} size={view.state === 'stop' ? 14 : 16} />}
       </span>
     </button>
   );

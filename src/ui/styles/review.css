@@ -47,12 +47,6 @@
   color: var(--text-3);
 }
 
-@container (max-width: 760px) {
-  .canvas-topbar .btn.topbar-review > span:not(.review-badge) {
-    display: none;
-  }
-}
-
 .review-panel {
   position: absolute;
   top: calc(var(--bar-h) + 8px + var(--viewrow-h, 0px));

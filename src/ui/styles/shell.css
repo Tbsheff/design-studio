@@ -1,11 +1,13 @@
 :root[data-shell='mac'] {
   --shell-inset: 88px;
+  --shell-inset-end: var(--s-3);
   --shell-bar-h: 48px;
   --shell-top: var(--shell-bar-h);
 }
 
 :root[data-shell='mac'][data-fullscreen='true'] {
   --shell-inset: var(--s-3);
+  --shell-inset-end: var(--s-2);
   --shell-top: var(--s-2);
 }
 

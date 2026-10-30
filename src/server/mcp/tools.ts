@@ -16,6 +16,7 @@ import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from 
 import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame } from '../canvas/tools.js';
 import { listAppRoutes } from '../app/routes.js';
+import { searchProjects } from '../app/project-search.js';
 import { listElementVariants } from '../variations/routes.js';
 import { isLayerRef, LayerRefError, resolveLayerRef, scopeOf } from './layer-ref.js';
 
@@ -58,6 +59,11 @@ function def(name: string, title: string, description: string, properties: Recor
 
 export const TOOLS: ToolDef[] = [
   def('list_projects', 'List projects', 'List the design projects in Design Studio with their directions and newest version ids.', {}),
+  def('search_projects', 'Search projects', 'Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt and health (level ok, busy, warn or off with a note such as "Needs install" or "Dev server ready"; null for prototypes). A query that starts with "/" searches the routes of every attached app. An empty query lists recent projects, newest first. Read only.', {
+    query: { type: 'string', maxLength: 100, description: 'Search text, for example "bona" or "/f2f". Leave out for recent projects.' },
+    projectId: { type: 'string', description: 'Project id from list_projects whose routes are always searched, like the open project in the studio.' },
+    limit: { type: 'integer', minimum: 1, maximum: 100, description: 'Most projects to return. Default 20.' },
+  }),
   def('list_versions', 'List versions', 'List the saved versions of one direction, newest first.', { projectId: PROJECT, directionId: DIRECTION }, ['projectId']),
   def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
   def('get_tokens', 'Get design tokens', 'Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
@@ -330,7 +336,26 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   }
 }
 
+const PROJECT_TOOLS: Record<string, (deps: ExportDeps, args: Args) => Promise<ToolResult>> = {
+  search_projects: async (deps, args) =>
+    json(await searchProjects({ projects: deps.projects, appStatus: (p) => deps.preview.apps?.status(p) ?? null }, { query: str(args, 'query') ?? '', projectId: str(args, 'projectId') ?? null, limit: int(args, 'limit', 1, 100, 20) })),
+  list_found_apps: async (deps, args) => json(await findApps(await deps.projects.list(), { fresh: args.fresh === true })),
+  list_variants: async (deps, args) => {
+    const project = await deps.projects.get(str(args, 'projectId', true) as string);
+    return json(await listElementVariants(project, deps.runner ?? { isRunning: () => false }));
+  },
+  list_routes: async (deps, args) => {
+    const project = await deps.projects.get(str(args, 'projectId', true) as string);
+    if (!project.app) throw new ToolError('this project is not an attached app');
+    const main = project.directions[0];
+    if (!main) throw new ToolError('project has no direction');
+    return json({ appDir: project.app.appDir, framework: project.app.framework, ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args) });
+  },
+};
+
 export async function callTool(deps: ExportDeps, name: string, args: Args): Promise<ToolResult> {
+  const projectTool = Object.hasOwn(PROJECT_TOOLS, name) ? PROJECT_TOOLS[name] : undefined;
+  if (projectTool) return projectTool(deps, args);
   switch (name) {
     case 'list_projects':
       return json((await deps.projects.list()).filter((p) => !p.designSystemFor).map(summary));
@@ -353,19 +378,6 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
     }
     case 'get_screenshot':
       return screenshot(deps, args);
-    case 'list_variants': {
-      const project = await deps.projects.get(str(args, 'projectId', true) as string);
-      return json(await listElementVariants(project, deps.runner ?? { isRunning: () => false }));
-    }
-    case 'list_routes': {
-      const project = await deps.projects.get(str(args, 'projectId', true) as string);
-      if (!project.app) throw new ToolError('this project is not an attached app');
-      const main = project.directions[0];
-      if (!main) throw new ToolError('project has no direction');
-      return json({ appDir: project.app.appDir, framework: project.app.framework, ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args) });
-    }
-    case 'list_found_apps':
-      return json(await findApps(await deps.projects.list(), { fresh: args.fresh === true }));
     case 'list_files': {
       const src = await source(deps, args);
       return json({ versionId: src.version.id, files: await listFiles(await src.files()) });

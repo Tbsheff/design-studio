@@ -10,7 +10,8 @@ export interface KeyBinding {
 }
 
 export const KEYMAP = [
-  { id: 'palette', label: 'Command palette', keys: ['Mod+K'], group: 'General' },
+  { id: 'palette', label: 'Go to anything (palette)', keys: ['Mod+K', 'Mod+P'], group: 'General' },
+  { id: 'project-rail', label: 'Show or hide the project rail', keys: ['Mod+\\'], group: 'General' },
   { id: 'shortcuts', label: 'Keyboard shortcuts', keys: ['?', 'Ctrl+Shift+?'], group: 'General' },
   { id: 'focus-next-region', label: 'Next region', keys: ['F6'], group: 'General' },
   { id: 'focus-prev-region', label: 'Previous region', keys: ['Shift+F6'], group: 'General' },

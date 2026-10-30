@@ -34,6 +34,9 @@ import { ImproveControl, improveRequest, lastImproveRun } from './DraftImprove';
 import { useDraftChrome } from './DraftSources';
 import { LeftPane } from './LeftPane';
 import { StudioPaneHeader } from './StudioPaneHeader';
+import { ProjectRail, toggleRail, useRail } from './ProjectRail';
+import { setProjectSwitcher } from '../projectNav';
+import { focusNewProject } from '../commands/globalCommands';
 import { DesignSystemChip, designSystemRef } from './DesignSystemChip';
 import { CenterView, StudioBoot, StudioModals, StudioToast, UnfinishedSlot, runStoppedUnsaved } from './StudioParts';
 import { useStudioTokens } from '../useStudioTokens';
@@ -290,6 +293,10 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     setLeaveCheck(leaveCheck);
     return () => setLeaveCheck(null);
   }, [leaveCheck]);
+  const guardRef = useRef(guard);
+  guardRef.current = guard;
+  useEffect(() => setProjectSwitcher((id) => guardRef.current((pid: string | null) => uiStore.set(pid ? { activeProjectId: pid } : { activeProjectId: null, screen: 'home' }))(id)), []);
+  const rail = useRail();
   const detailsRun = runById(runs, detailsRunId);
   const componentList = useComponents(projectId, directionId, data.lastChange);
   const [mentionRequest, setMentionRequest] = useState<MentionRequest | null>(null);
@@ -445,7 +452,15 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
 
 
   return (
-    <div className="studio" data-pane={paneAttr(paneCollapsed)}>
+    <div className="studio" data-pane={paneAttr(paneCollapsed)} data-rail={rail}>
+      <ProjectRail
+        projectId={projectId}
+        onHome={guard(onExit)}
+        onNewPrototype={guard(() => {
+          onExit();
+          focusNewProject();
+        })}
+      />
       <div className="columns" ref={columnsRef} style={chatWidthStyle(chatWidth)}>
         <RunCommentsContext.Provider value={comments}>
         <LeftPane
@@ -469,6 +484,8 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               commentCount={comments.queued.length}
               onRename={(name) => act(async () => data.setProject(await api.renameProject(projectId, name)))}
               onExit={guard(onExit)}
+              onToggleRail={toggleRail}
+              railOpen={rail === 'open'}
               onDesignMd={() => setDesignOpen(true)}
               onSettings={() => setSettingsOpen(true)}
               onCollapse={() => uiStore.set({ paneCollapsed: true })}

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import { BrandMark } from './BrandMark';
+import { shortcutLabel } from '../../shared/keymap';
+import { IS_MAC } from '../commands/keys';
 import { Icon, type IconName } from './Icon';
 import { usePopover } from '../usePopover';
 import type { PanelTab } from '../usePanelTab';
@@ -23,6 +24,8 @@ interface Props {
   commentCount: number;
   onRename: (name: string) => Promise<void>;
   onExit: () => void;
+  onToggleRail: () => void;
+  railOpen: boolean;
   onDesignMd: () => void;
   onSettings: () => void;
   onCollapse: () => void;
@@ -105,7 +108,13 @@ function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onSta
         <MenuItems items={themes} onDone={done} />
       </div>
       <div className="ui-menu-section">
-        <MenuItems items={[{ id: 'home', label: 'Back to projects', icon: 'arrowLeft', run: props.onExit }]} onDone={done} />
+        <MenuItems
+          items={[
+            { id: 'rail', label: props.railOpen ? 'Hide project list' : 'Show project list', icon: 'sidebar', meta: shortcutLabel('project-rail', IS_MAC), run: props.onToggleRail },
+            { id: 'home', label: 'All projects', icon: 'arrowLeft', run: props.onExit },
+          ]}
+          onDone={done}
+        />
       </div>
     </div>
   );
@@ -174,7 +183,6 @@ export function StudioPaneHeader(props: Props) {
   return (
     <>
       <header className="pane-head">
-        <BrandMark />
         {renaming ? (
           <RenameField
             name={props.name}

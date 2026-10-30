@@ -69,10 +69,12 @@
 }
 
 .cmdk-group {
-  padding: var(--s-2) var(--s-2) var(--s-1);
+  padding: var(--s-3) var(--s-2) var(--s-1);
   color: var(--text-3);
-  font-size: var(--t-xs);
+  font-size: var(--t-2xs);
   font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .cmdk-row {
@@ -312,4 +314,79 @@ body:has(dialog:modal) .keysheet {
   .keysheet-group li {
     transition: none;
   }
+}
+
+.cmdk-row[data-kind='project'],
+.cmdk-row[data-kind='new'],
+.cmdk-row:has(.cmdk-icon[data-tone]) {
+  height: 40px;
+}
+
+.cmdk-row[data-kind='project'] .cmdk-icon,
+.cmdk-row[data-kind='route'] .cmdk-icon,
+.cmdk-icon[data-tone] {
+  width: 26px;
+  height: 26px;
+  margin-inline: 6px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.cmdk-row[data-kind='route'] {
+  height: 36px;
+}
+
+.cmdk-row[data-kind='project'] .cmdk-title,
+.cmdk-row[data-kind='new'] .cmdk-title {
+  flex: 0 1 auto;
+  font-weight: var(--w-medium);
+}
+
+.cmdk-icon[data-tone='brand'] {
+  box-shadow: none;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.cmdk-icon[data-tone='accent'] {
+  box-shadow: none;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.cmdk-meta {
+  flex: 1 1 0;
+  min-width: 0;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.cmdk-end {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: none;
+  max-width: 45%;
+}
+
+.cmdk-row .pnav-thumb {
+  width: 38px;
+  height: 24px;
+}
+
+.cmdk-error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  color: var(--danger);
+  font-size: var(--t-xs);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+.cmdk-row:has(.cmdk-meta) .cmdk-title {
+  flex: 0 1 auto;
+  max-width: 60%;
 }

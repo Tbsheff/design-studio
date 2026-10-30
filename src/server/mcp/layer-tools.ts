@@ -193,7 +193,7 @@ async function resolveForEdit(deps: EditDeps, url: string, viewport: Viewport, s
   }
 }
 
-export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: boolean): Promise<Args> {
+export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: boolean, layoutOnly = false): Promise<Args> {
   if (selectorSlots(args).length === 0) return args;
   const target = await directionOf(deps, args);
   if (!target) return args;
@@ -211,7 +211,7 @@ export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: 
   const outer = pageAt(out);
   for (const { page, slots } of byPage.values()) {
     const url = await pageUrl(deps, target.project, target.direction, page);
-    const paths = await resolveRefs(deps, url, scope, slots.map((slot) => slot.ref));
+    const paths = await resolveRefs(deps, url, scope, slots.map((slot) => slot.ref), layoutOnly);
     for (const slot of slots) {
       slot.holder[slot.key] = paths.get(slot.ref) as string;
       if (page !== undefined && slot.holder.path === undefined && (slot.nested ? page !== outer : takesPath)) slot.holder.path = page;
@@ -220,9 +220,9 @@ export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: 
   return out;
 }
 
-async function resolveRefs(deps: EditDeps, url: string, scope: string, refs: string[]): Promise<Map<string, string>> {
+async function resolveRefs(deps: EditDeps, url: string, scope: string, refs: string[], layoutOnly: boolean): Promise<Map<string, string>> {
   try {
-    return await resolveLayerRefs(deps.preview, url, EDIT_VIEWPORT, scope, refs);
+    return await resolveLayerRefs(deps.preview, url, EDIT_VIEWPORT, scope, refs, layoutOnly);
   } catch (error) {
     if (error instanceof LayerRefError) throw new EditError(error.message);
     throw error;

@@ -48,7 +48,7 @@ async function resolved(deps: DirectToolDeps, input: Input): Promise<{ url: stri
   const page = input.path ?? (isLayerRef(raw) ? memoPage(scope, raw) : undefined);
   const url = editPageUrl(deps.ctx, page);
   if (!isLayerRef(raw)) return { url, selector: raw };
-  const paths = await resolveLayerRefs(deps.preview, url, VIEWPORT, scope, [raw]);
+  const paths = await resolveLayerRefs(deps.preview, url, VIEWPORT, scope, [raw], input.hidden === undefined && input.name === undefined);
   return { url, selector: paths.get(raw) ?? raw };
 }
 

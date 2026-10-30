@@ -56,6 +56,38 @@ export function useRail(): RailState {
   );
 }
 
+const OVERLAY_QUERY = '(max-width: 1279px)';
+
+function floating(): boolean {
+  return window.matchMedia(OVERLAY_QUERY).matches;
+}
+
+function pickProject(id: string): void {
+  if (railState === 'open' && floating()) setRail('mini');
+  openProject(id);
+}
+
+function useFloatingDismiss(state: RailState, rail: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    if (state !== 'open') return;
+    const close = () => floating() && setRail('mini');
+    const onPointer = (event: PointerEvent) => {
+      if (!rail.current?.contains(event.target as Node)) close();
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('[role="dialog"][aria-modal="true"]')) close();
+    };
+    window.addEventListener('pointerdown', onPointer, true);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('blur', close);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer, true);
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', close);
+    };
+  }, [state, rail]);
+}
+
 function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
   if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
   const items = [...event.currentTarget.querySelectorAll<HTMLElement>('.prail-item')];
@@ -113,7 +145,7 @@ function MiniRail({ hits, projectId, onNewPrototype }: { hits: ProjectHit[]; pro
             aria-label={tipOf(hit, hit.id === projectId)}
             data-tip={tipOf(hit, hit.id === projectId)}
             data-tip-align="start"
-            onClick={() => openProject(hit.id)}
+            onClick={() => pickProject(hit.id)}
           >
             <ProjectThumb hit={hit} />
             <HealthDot hit={hit} className="prail-mini-dot" />
@@ -140,7 +172,7 @@ function RailRow({ hit, current }: { hit: ProjectHit; current: boolean }) {
       aria-current={current ? 'page' : undefined}
       data-tip={hit.health ? `${hit.typeLabel} · ${hit.health.note}` : hit.typeLabel}
       data-tip-align="start"
-      onClick={() => openProject(hit.id)}
+      onClick={() => pickProject(hit.id)}
     >
       <ProjectThumb hit={hit} />
       <span className="truncate">{hit.name}</span>
@@ -175,7 +207,7 @@ function OpenRail({ hits, projectId, onHome, onNewPrototype, find }: { hits: Pro
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => {
             const first = shown[0];
-            if (e.key === 'Enter' && first && !e.nativeEvent.isComposing) openProject(first.id);
+            if (e.key === 'Enter' && first && !e.nativeEvent.isComposing) pickProject(first.id);
             else if (e.key === 'Escape' && filter) {
               e.preventDefault();
               e.stopPropagation();
@@ -215,9 +247,14 @@ function OpenRail({ hits, projectId, onHome, onNewPrototype, find }: { hits: Pro
 
 export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   const state = useRail();
-  const result = useProjectHits(projectId);
+  const result = useProjectHits(projectId, false);
   const find = useRef<HTMLInputElement>(null);
+  const aside = useRef<HTMLElement>(null);
   useRailKeys(() => find.current?.focus());
+  useFloatingDismiss(state, aside);
+  useEffect(() => {
+    if (state === 'open' && document.activeElement instanceof HTMLIFrameElement) find.current?.focus();
+  }, [state]);
   useEffect(() => noteProjectOpened(projectId), [projectId]);
   useEffect(() => {
     const onFocus = () => void refreshProjectHits(projectId);
@@ -226,7 +263,7 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   }, [projectId]);
   const hits = result?.projects ?? [];
   return (
-    <aside className="prail" data-state={state} aria-label="Project rail" onKeyDown={moveFocus}>
+    <aside ref={aside} className="prail" data-state={state} aria-label="Project rail" onKeyDown={moveFocus}>
       {state === 'open' ? <OpenRail hits={hits} projectId={projectId} onHome={onHome} onNewPrototype={onNewPrototype} find={find} /> : <MiniRail hits={hits} projectId={projectId} onNewPrototype={onNewPrototype} />}
     </aside>
   );

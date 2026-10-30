@@ -70,10 +70,10 @@ export function noteProjectOpened(projectId: string): void {
     .then(() => refreshProjectHits(projectId, true));
 }
 
-export function useProjectHits(current: string | null): ProjectSearchResult | null {
+export function useProjectHits(current: string | null, refresh = true): ProjectSearchResult | null {
   useEffect(() => {
-    void refreshProjectHits(current);
-  }, [current]);
+    if (refresh) void refreshProjectHits(current);
+  }, [current, refresh]);
   return useSyncExternalStore(subscribe, () => latest);
 }
 

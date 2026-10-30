@@ -27,6 +27,17 @@ const QUIET_EXPRESSION = `new Promise((resolve) => {
   observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
   requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); timer = setTimeout(done, 80); }));
 })`;
+const WAIT_FOR_HYDRATION_EXPRESSION = `new Promise((resolve) => {
+  const isNext = Boolean(window.__next_f || document.querySelector('script[src*="/_next/"]'));
+  const hydrated = () => {
+    const nodes = [...document.querySelectorAll('main *, body > div *')].slice(0, 300);
+    const live = nodes.filter((node) => Object.keys(node).some((key) => key.startsWith('__reactFiber$'))).length;
+    return nodes.length > 0 && live >= nodes.length * 0.9;
+  };
+  if (!isNext || hydrated()) return resolve(false);
+  const started = Date.now();
+  const timer = setInterval(() => { if (hydrated() || Date.now() - started > 5000) { clearInterval(timer); resolve(true); } }, 50);
+})`;
 const OVERFLOW_EXPRESSION = 'document.documentElement.scrollWidth > window.innerWidth + 1';
 const PAGE_HEIGHT_EXPRESSION = 'Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)';
 
@@ -64,6 +75,8 @@ interface PageInspection {
 }
 
 const PROBE_CAP = 8;
+const APP_PROBE_CAP_BEFORE_FILTER = 120;
+const CAPPED_AFTER_FILTER = new Set(['tap-target', 'placeholder']);
 
 export interface InspectResult {
   path: string;
@@ -84,6 +97,16 @@ function wantsAxe(viewport: CheckViewport): boolean {
   return viewport !== 'tablet';
 }
 
+function capProbeFindings(findings: QualityFinding[]): QualityFinding[] {
+  const seen = new Map<string, number>();
+  return findings.filter((finding) => {
+    if (!CAPPED_AFTER_FILTER.has(finding.check)) return true;
+    const count = (seen.get(finding.check) ?? 0) + 1;
+    seen.set(finding.check, count);
+    return count <= PROBE_CAP;
+  });
+}
+
 async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: RenderCheckOptions, timings: Record<string, number>, shared?: () => Promise<AxeViolation[]>): Promise<PageInspection> {
   const placeholder = options.placeholder ?? 'off';
   const probe = await timed(timings, 'probe', () =>
@@ -94,14 +117,14 @@ async function inspectQuality(page: RenderPage, spec: ViewportSpec, options: Ren
         layout: options.quality === true && spec.viewport === 'desktop',
         duplicates: options.quality === true,
         selectionLocs: options.selectionLocs ?? [],
-        cap: PROBE_CAP,
+        cap: options.appOnly ? APP_PROBE_CAP_BEFORE_FILTER : PROBE_CAP,
       }),
     ),
   );
   const axe = options.quality && wantsAxe(spec.viewport) ? await timed(timings, 'axe', () => runAxe(page, spec.viewport, shared)) : [];
   const placeholders = placeholderFindings(probe.placeholder, placeholder, spec.viewport);
   const found = options.quality ? [...axe, ...tapFindings(probe.tap, spec.viewport), ...placeholders, ...genericFindings(probe.generic ?? []), ...duplicateFindings(probe.duplicates ?? [], spec.viewport)] : placeholders;
-  const quality = options.appOnly ? await timed(timings, 'appSource', () => dropOutsideApp(page, found)) : found;
+  const quality = options.appOnly ? capProbeFindings(await timed(timings, 'appSource', () => dropOutsideApp(page, found))) : found;
   return { quality, nav: probe.nav, selectionRects: probe.selectionRects, timingsMs: timings };
 }
 
@@ -194,6 +217,11 @@ export function elementClipsExpression(selectors: string[]): string {
 
 async function settle(page: RenderPage): Promise<void> {
   await page.evaluate(QUIET_EXPRESSION).catch(() => undefined);
+}
+
+async function settleApp(page: RenderPage): Promise<void> {
+  const waited = await page.evaluate<boolean>(WAIT_FOR_HYDRATION_EXPRESSION).catch(() => false);
+  if (waited) await settle(page);
 }
 
 const CAPTURE_DIR = path.join(os.tmpdir(), 'design-studio-captures', String(process.pid));
@@ -380,6 +408,7 @@ export class BrowserPool {
     const nav = page.lastNav?.();
     if (nav) Object.assign(state.timings, { load: nav.loadMs, idle: nav.idleMs });
     await timed(state.timings, 'settle', () => settle(page));
+    if (options.appOnly) await timed(state.timings, 'hydrate', () => settleApp(page));
     await this.noteLanded(page, state.url);
     if (options.prepare) await timed(state.timings, 'prepare', () => page.evaluate(options.prepare as string));
     state.horizontalOverflow = await page.evaluate<boolean>(OVERFLOW_EXPRESSION);

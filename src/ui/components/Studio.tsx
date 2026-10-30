@@ -23,6 +23,7 @@ import type { EditSessionHandle } from '../useEditSession';
 import { runCommand } from '../commands/registry';
 import { useTryVariants } from '../useTryVariants';
 import { usePanelTab } from '../usePanelTab';
+import { useInlineApprovals } from '../approvalSpot';
 import { undoAllowed } from '../useUndoShortcut';
 import { mergeCommit, type DirectEditControl } from '../useDirectEdit';
 import type { CanvasSource } from './CanvasToolbar';
@@ -334,6 +335,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const rewind = useRewind({ projectId, direction, versions, status, busy, running: activeRun, act, guard, seedRun: data.seedRun, setDirectionId: data.setDirectionId, refreshVersions: data.refreshVersions });
   const mcpFeed = useMcpFeed(projectId, directionId);
   const mcp = useMemo(() => ({ ...mcpFeed, locked: rewind.locked, onUndo: rewind.onRestore }), [mcpFeed, rewind.locked, rewind.onRestore]);
+  useInlineApprovals(projectId, paneCollapsed, panel.tab);
 
   if (data.loadError || !project) return <StudioBoot message={data.loadError || null} onExit={onExit} />;
 

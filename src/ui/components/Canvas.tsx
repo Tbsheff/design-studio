@@ -105,6 +105,10 @@ function noteCommentFrame(control: CommentsControl | undefined, active: { id: st
   if (control) control.frameRef.current = { id: active.id, path: active.path ?? '', ...(active.label ? { label: active.label } : {}) };
 }
 
+function activeFrameOf(active: { id: string; path?: string }, all: { id: string }[]) {
+  return { id: active.id, path: active.path ?? '', ids: all.map((f) => f.id) };
+}
+
 function pageNameOf(path: string | undefined): string {
   const file = path?.split('/').pop()?.replace(/\.html?$/i, '');
   return file && file !== 'index' ? file : 'Page';
@@ -757,6 +761,7 @@ function CanvasView(props: ViewProps) {
                 editing={inEditPane(props.shell)}
                 selection={props.selection}
                 tools={commentToolsOf(props, active.path)}
+                activeFrame={activeFrameOf(active, layout.frames)}
               />
             }
           />

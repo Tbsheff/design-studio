@@ -101,16 +101,23 @@ function only<E>(items: E[]): E | null {
   return items.length === 1 ? (items[0] ?? null) : null;
 }
 
+function soleCandidate<E>(candidate: E, query: AnchorQuery, dom: AnchorDom<E>): E | null {
+  if (!query.textSnippet || textMatches(dom.textOf(candidate), query.textSnippet)) return candidate;
+  const byText = byTextMatch(query, dom);
+  return byText !== null && byText !== candidate ? null : candidate;
+}
+
 function bySourceLoc<E>(query: AnchorQuery, dom: AnchorDom<E>, sameTag: (element: E) => boolean): E | null {
   if (!query.sourceLoc) return null;
   const candidates = dom.bySource(query.sourceLoc).filter(sameTag);
-  if (candidates.length <= 1) return candidates[0] ?? null;
+  if (candidates.length === 1) return soleCandidate(candidates[0] as E, query, dom);
+  if (candidates.length === 0) return null;
   const bySelector = dom.bySelector(query.selector);
   if (bySelector !== null && candidates.includes(bySelector)) return bySelector;
   return only(candidates.filter((element) => textMatches(dom.textOf(element), query.textSnippet)));
 }
 
-function byText<E>(query: AnchorQuery, dom: AnchorDom<E>): E | null {
+function byTextMatch<E>(query: AnchorQuery, dom: AnchorDom<E>): E | null {
   if (!query.textSnippet) return null;
   return dom.byTag(query.tag.toLowerCase()).find((element) => textMatches(dom.textOf(element), query.textSnippet)) ?? null;
 }
@@ -124,7 +131,7 @@ export function resolveAnchor<E>(query: AnchorQuery, dom: AnchorDom<E>): AnchorR
   const selector = found !== null && sameTag(found) ? found : null;
   const textAgrees = selector !== null && (!query.textSnippet || textMatches(dom.textOf(selector), query.textSnippet));
   if (selector !== null && textAgrees) return { element: selector, via: 'selector' };
-  const text = byText(query, dom);
+  const text = byTextMatch(query, dom);
   if (text !== null) return { element: text, via: 'text' };
   return selector !== null ? { element: selector, via: 'selector' } : null;
 }

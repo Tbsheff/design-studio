@@ -191,6 +191,8 @@
 
 .disclosure-toggle-narrow {
   display: none;
+  align-items: center;
+  gap: 6px;
 }
 
 .prompt-foot {
@@ -212,7 +214,10 @@
     display: none;
   }
   .prompt-foot .disclosure-toggle-narrow {
-    display: inline;
+    display: inline-flex;
+  }
+  .prompt-foot:not(.open) > .icon {
+    display: none;
   }
 }
 
@@ -874,13 +879,17 @@
 .composer-pill.ui-pill-select {
   flex: none;
   min-width: 0;
-  padding: 0 8px;
-  box-shadow: none;
+  background: transparent;
+}
+
+.composer-pill.ui-pill-select:hover:not(:disabled),
+.composer-pill.ui-pill-select[aria-expanded='true'] {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
 .composer-pill .ui-pill-select-value {
-  font-size: var(--t-xs);
-  line-height: 16px;
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
   font-weight: var(--w-medium);
   color: var(--home-pill-value);
 }
@@ -932,49 +941,42 @@
 @container prompt-bar (max-width: 300px) {
   .prompt-bar .composer-pill.ui-pill-select {
     column-gap: 2px;
-    padding: 0 3px;
+    padding: 0 6px;
   }
 }
 
-.btn.send.send-btn {
-  width: 72px;
-  height: var(--composer-ctl);
-  padding: 0 var(--s-3);
-  border-radius: var(--r-md);
-  font-size: var(--t-xs);
-  line-height: var(--lh-xs);
-  font-weight: var(--w-medium);
+@container prompt-bar (max-width: 250px) {
+  .prompt-bar .composer-pill.ui-pill-select {
+    padding: 0 4px 0 6px;
+  }
+
+  .prompt-bar .composer-pill .ui-pill-select-value {
+    font-size: var(--t-xs);
+    line-height: var(--lh-xs);
+  }
 }
 
-.btn.send.send-btn .spinner {
+.icon-btn.send-btn {
+  width: var(--composer-ctl);
+  height: var(--composer-ctl);
+  flex: none;
+  padding: 0;
+  border-radius: var(--r-md);
+}
+
+.icon-btn.send-btn .spinner {
   width: 14px;
   height: 14px;
 }
 
-.btn.send-btn.stop-btn {
-  justify-content: center;
-  gap: 6px;
-  width: 72px;
-  height: var(--composer-ctl);
-  padding: 0 var(--s-3);
-  border-radius: var(--r-md);
+.icon-btn.send-btn.stop-btn {
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line);
   color: var(--text);
-  font-size: var(--t-xs);
-  line-height: var(--lh-xs);
-  font-weight: var(--w-medium);
 }
 
-.btn.send-btn.stop-btn:hover {
+.icon-btn.send-btn.stop-btn:hover {
   background: var(--surface-hover);
-}
-
-@container prompt-bar (max-width: 300px) {
-  .prompt-bar .btn.send-btn {
-    width: 60px;
-    padding-inline: var(--s-2);
-  }
 }
 
 .send-btn .send-label {
@@ -1349,4 +1351,56 @@
   padding: 2px var(--s-2) 4px;
   color: var(--danger);
   font-size: var(--t-2xs);
+}
+
+.prompt-foot.disclosure-line {
+  gap: 2px;
+  padding: 0;
+}
+
+.prompt-foot .skills-ind,
+.prompt-foot .disclosure-toggle,
+.prompt-foot .context-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: 24px;
+  margin: 0;
+  padding: 0 5px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-2);
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
+  text-decoration: none;
+}
+
+.prompt-foot .disclosure-toggle-narrow {
+  gap: var(--s-1);
+}
+
+.prompt-foot .context-meter {
+  padding: 0 2px;
+}
+
+.prompt-foot :is(.skills-ind, .disclosure-toggle) .icon {
+  color: var(--text-3);
+}
+
+.prompt-foot :is(.skills-ind, .disclosure-toggle):hover:not(:disabled),
+.prompt-foot .skills-ind[aria-expanded='true'] {
+  background: var(--surface-hover);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.prompt-foot .disclosure-toggle:focus-visible,
+.prompt-foot .skills-ind:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.prompt-foot-trail {
+  gap: 2px;
 }

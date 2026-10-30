@@ -602,7 +602,11 @@
 }
 
 .home-foot > .home-disclosure .disclosure-toggle-narrow {
-  display: inline;
+  display: inline-flex;
+}
+
+.home-foot > .home-disclosure:not(.open) > .icon {
+  display: none;
 }
 
 .home-foot .disclosure-toggle {

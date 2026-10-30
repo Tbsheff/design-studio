@@ -26,7 +26,10 @@ export function Disclosure({ className = '', lead, trail }: { className?: string
         ) : (
           <>
             <span className="disclosure-toggle-wide">Details</span>
-            <span className="disclosure-toggle-narrow">Data use</span>
+            <span className="disclosure-toggle-narrow">
+              <Icon name="lock" size={13} />
+              Data use
+            </span>
           </>
         )}
       </button>

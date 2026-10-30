@@ -531,6 +531,29 @@
   }
 }
 
+@container (max-width: 1000px) {
+  .canvas-topbar .topbar-tools > button > span {
+    display: none;
+  }
+
+  .canvas-topbar .topbar-tools > button {
+    width: 28px;
+    padding: 0;
+  }
+}
+
+@container (max-width: 680px) {
+  .canvas-topbar .btn.topbar-share {
+    gap: 0;
+    padding: 0 var(--s-2);
+    font-size: 0;
+  }
+
+  .canvas-topbar .btn.topbar-share > svg:last-child {
+    display: none;
+  }
+}
+
 @container (max-width: 600px) {
   .canvas-topbar .topbar-present,
   .canvas-topbar .topbar-file {

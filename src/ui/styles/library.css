@@ -342,7 +342,7 @@
   border-radius: var(--r-lg);
   background: var(--bg);
   color: var(--fg);
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: inset 0 0 0 1px var(--line);
   font-family: var(--font-body);
   font-size: var(--t-md);
 }
@@ -376,7 +376,7 @@
 .pv-chip {
   height: 28px;
   border-radius: var(--radius-sm);
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 .pv-components {
@@ -429,7 +429,7 @@
 }
 
 .pv-btn.outline {
-  box-shadow: inset 0 0 0 1px var(--border);
+  box-shadow: inset 0 0 0 1px var(--line);
   color: var(--fg);
 }
 
@@ -440,7 +440,7 @@
   padding: 0 var(--space-3, var(--s-3));
   border-radius: var(--radius-md);
   background: var(--bg);
-  box-shadow: inset 0 0 0 1px var(--border), 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  box-shadow: inset 0 0 0 1px var(--line), 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
   color: var(--fg-muted);
 }
 

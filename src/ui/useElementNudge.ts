@@ -5,7 +5,7 @@ import { api, errorText } from './api';
 import type { ParentMessageBody } from './bridge';
 import { startOptimistic } from './optimisticEdit';
 import { multiBlockReason } from './mixedValues';
-import { isTypingTarget } from './typingTarget';
+import { canvasHasKeys, isTypingTarget } from './typingTarget';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 
 const SAVE_MS = 300;
@@ -85,18 +85,19 @@ function savedOf(b: Burst): Saved[] {
 
 const OVERLAY_OPEN = 'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
 
+function keysToCanvas(): void {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLIFrameElement && focused.closest('.canvas .stage')) focused.blur();
+}
+
 function blurToCanvas(event: KeyboardEvent): boolean {
   const focused = document.activeElement;
   if (event.key !== 'Escape' || event.defaultPrevented || !(focused instanceof HTMLElement) || focused === document.body) return false;
-  if (focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
+  if (canvasHasKeys() || focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
   focused.blur();
   event.preventDefault();
   event.stopImmediatePropagation();
   return true;
-}
-
-function isBodyFocus(): boolean {
-  return document.activeElement === document.body || document.activeElement === null;
 }
 
 export function useElementNudge(o: Options): void {
@@ -186,7 +187,7 @@ export function useElementNudge(o: Options): void {
         return;
       }
       const cur = live.current;
-      if (!cur.enabled || cur.selection.length === 0 || !isBodyFocus()) return;
+      if (!cur.enabled || cur.selection.length === 0 || !canvasHasKeys()) return;
       event.preventDefault();
       cur.post({ type: 'nudge', dx: step.dx, dy: step.dy });
     };
@@ -194,6 +195,7 @@ export function useElementNudge(o: Options): void {
     const stop = o.listen((message) => {
       if (message.type === 'nudge-key') press([{ selector: message.selector, base: message.base }, ...(message.others ?? [])], message.dx, message.dy);
       else if (FLUSH_ON.has(message.type)) flush();
+      if (message.type === 'select' || message.type === 'select-many') keysToCanvas();
     });
     window.addEventListener('keydown', onKey, true);
     return () => {

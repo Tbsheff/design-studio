@@ -69,7 +69,15 @@ async function appKeyOf(element: Element, app: AppSources): Promise<string> {
   return `${window.location.pathname}|${sourceKey(element, own, element.getAttribute(USED_AT_ATTR))}`;
 }
 
-export function createLockSet(app: AppSources | null, onResolved: () => void): LockSet {
+function upgradedKey(key: string): string | null {
+  const { page, rest } = pageOf(key);
+  if (!rest.startsWith('sel:')) return null;
+  const element = resolveKey(key);
+  const own = element?.getAttribute(SOURCE_LOC_ATTR);
+  return element && own ? `${page}|${sourceKey(element, own, element.getAttribute(USED_AT_ATTR))}` : null;
+}
+
+export function createLockSet(app: AppSources | null, onResolved: (keys: string[] | null) => void): LockSet {
   let keys = new Set<string>();
   const held = new Map<string, Element>();
   let cache: Element[] | null = null;
@@ -101,15 +109,29 @@ export function createLockSet(app: AppSources | null, onResolved: () => void): L
     cacheFrame = 0;
   };
 
+  const upgrade = (): boolean => {
+    let changed = false;
+    for (const key of [...keys]) {
+      const next = upgradedKey(key);
+      if (!next) continue;
+      keys.delete(key);
+      held.delete(key);
+      keys.add(next);
+      changed = true;
+    }
+    return changed;
+  };
+
   const prime = (): void => {
-    if (!app || primeTimer || ![...keys].some(isSourceKey)) return;
+    if (!app || primeTimer || keys.size === 0) return;
     primeTimer = window.setTimeout(() => {
       primeTimer = 0;
       void app.prime().then((changed) => {
-        if (!changed) return;
+        const upgraded = upgrade();
+        if (!changed && !upgraded) return;
         held.clear();
         reset();
-        onResolved();
+        onResolved(upgraded ? [...keys] : null);
       }).catch(() => undefined);
     }, PRIME_DELAY_MS);
   };

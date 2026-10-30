@@ -849,7 +849,10 @@ function startBridge(session: BridgeSession): void {
   };
 
   const layers = createLayerIndex();
-  const locks = createLockSet(APP_MODE === 'next' ? { prime: primeAppSources, source: appSourceFor } : null, () => post({ type: 'tree', ...layers.build(locks.ownLocked) }));
+  const locks = createLockSet(APP_MODE === 'next' ? { prime: primeAppSources, source: appSourceFor } : null, (keys) => {
+    if (keys) post({ type: 'locks', keys });
+    post({ type: 'tree', ...layers.build(locks.ownLocked) });
+  });
   const hitOf = (event: Event): Element | null => locks.hit(event, eventElement(event));
   let selected: Element | null = null;
   let selectedAt = -Infinity;

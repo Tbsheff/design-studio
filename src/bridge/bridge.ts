@@ -20,7 +20,7 @@ import { createForceState, type ForcedState } from './force-state.js';
 import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
 import { createLinkBridge } from './play.js';
-import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf } from './app-source.js';
+import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf, primeAppSources } from './app-source.js';
 import { componentOwners } from './component-owner.js';
 import { createOptimistic, type Released } from './optimistic.js';
 import { dropElement, insideTarget } from './insert-target.js';
@@ -849,7 +849,10 @@ function startBridge(session: BridgeSession): void {
   };
 
   const layers = createLayerIndex();
-  const locks = createLockSet(APP_MODE !== 'next');
+  const locks = createLockSet(APP_MODE === 'next' ? { prime: primeAppSources, source: appSourceFor } : null, (keys) => {
+    if (keys) post({ type: 'locks', keys });
+    post({ type: 'tree', ...layers.build(locks.ownLocked) });
+  });
   const hitOf = (event: Event): Element | null => locks.hit(event, eventElement(event));
   let selected: Element | null = null;
   let selectedAt = -Infinity;
@@ -1161,8 +1164,10 @@ function startBridge(session: BridgeSession): void {
     'lock-node': (message) => {
       const element = typeof message.id === 'number' ? layers.element(message.id) : null;
       if (!element) return;
-      post({ type: 'locks', keys: locks.lock(element, message.locked === true) });
-      post({ type: 'tree', ...layers.build(locks.ownLocked) });
+      void locks.lock(element, message.locked === true).then((keys) => {
+        post({ type: 'locks', keys });
+        post({ type: 'tree', ...layers.build(locks.ownLocked) });
+      });
     },
     'select-matching': (message) => {
       if (typeof message.requestId !== 'string' || typeof message.selector !== 'string' || !isMatchKind(message.by)) return;

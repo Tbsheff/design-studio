@@ -50,10 +50,11 @@ export async function resolveSource(deps: ExportDeps, projectId: string, version
 }
 
 export function withPagePath(url: string, pagePath: string | undefined): string {
-  if (!pagePath) return url;
+  const page = pagePath?.replace(/^\/+/, '');
+  if (!page) return url;
   const base = new URL(url);
   if (!base.pathname.endsWith('/')) base.pathname = base.pathname.replace(/[^/]*$/, '');
-  const next = new URL(pagePath, base);
+  const next = new URL(page, base);
   next.search = base.search;
   return next.toString();
 }

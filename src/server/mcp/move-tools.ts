@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DirectEditResult, StructureEditResult } from '../../shared/contracts.js';
+import type { DirectEditResult, SourceLoc, StructureEditResult } from '../../shared/contracts.js';
 import { EditError, loadTarget, refuseWhileRunning, studioCall, type EditDeps } from './edit-deps.js';
 import { base, defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, sourceElement, versionActivity, type Done } from './edit-kit.js';
 
@@ -38,6 +38,10 @@ async function moveAbsolute(deps: EditDeps, input: MoveInput): Promise<Done> {
   return { result: ok({ file: result.file, versionId: result.version.id, title: result.version.title, applied: result.applied, style }), activity: versionActivity(project, direction, summary, result.version) };
 }
 
+function siteOf(element: Awaited<ReturnType<typeof sourceElement>>): { source: SourceLoc; tag?: string } {
+  return element.usedBy?.root && element.usedAt ? { source: element.usedAt } : { source: element.source, tag: element.tag };
+}
+
 const moveElement = defineTool(
   'move_element',
   moveSchema,
@@ -53,8 +57,8 @@ const moveElement = defineTool(
     const url = await pageUrl(deps, project, direction, input.path);
     const refSelector = (input.before ?? input.after) as string;
     const [element, ref] = await Promise.all([sourceElement(deps, url, input.selector), sourceElement(deps, url, refSelector)]);
-    const place = { source: ref.source, selector: refSelector, tag: ref.tag };
-    const body = { op: input.copy ? 'duplicate' : 'move', targets: [{ source: element.source, selector: input.selector, tag: element.tag }], ...(input.before ? { before: place } : { after: place }) };
+    const place = { ...siteOf(ref), selector: refSelector };
+    const body = { op: input.copy ? 'duplicate' : 'move', targets: [{ ...siteOf(element), selector: input.selector }], ...(input.before ? { before: place } : { after: place }) };
     const result = await studioCall<StructureEditResult>(deps, 'POST', `${base(project, direction.id)}/direct-edit`, body);
     const summary = `${input.copy ? 'Copied' : 'Moved'} ${element.tag} ${input.before ? 'before' : 'after'} ${ref.tag}`;
     return { result: ok({ files: result.files, versionId: result.version.id, title: result.version.title, select: result.select }), activity: versionActivity(project, direction, summary, result.version) };

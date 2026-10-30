@@ -64,7 +64,8 @@ function probeExpression(selectors: string[]): string {
     for (const [i, el] of els.entries()) {
       const cs = getComputedStyle(el);
       const src = kidSources.get(el) || await sourceOf(el);
-      const copies = src.loc ? kids.filter((kid) => kidSources.get(kid)?.loc === src.loc).length : 1;
+      const place = (found) => (found?.usedBy?.root && found.usedAt ? 'use:' + found.usedAt : found?.loc || null);
+      const copies = place(src) ? kids.filter((kid) => place(kidSources.get(kid)) === place(src)).length : 1;
       targets.push({ selector: selectors[i], tag: el.tagName.toLowerCase(), ...src, rect: box(el.getBoundingClientRect()), position: cs.position, left: num(cs.left), top: num(cs.top), margin: sides(cs, 'margin'), alignSelf: cs.alignSelf, copies });
     }
     let parent = null;

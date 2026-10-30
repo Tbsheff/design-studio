@@ -4,7 +4,7 @@ import { readProjectCanvas } from '../canvas/service.js';
 import { findFrame, frameRef } from '../canvas/tools.js';
 import { EditError, loadTarget, type EditDeps } from './edit-deps.js';
 import type { PreviewService } from '../types.js';
-import { defineTool, directionId, ok, pagePath, pageUrl, projectId, selector, type Done } from './edit-kit.js';
+import { defineTool, directionId, ok, pageName, pagePath, pageUrl, projectId, selector, type Done } from './edit-kit.js';
 import { noteRenderedPage } from '../preview/render-wait.js';
 import { noteShownFiles } from './source-loc.js';
 import { isLayerRef, LayerRefError, memoPage, resolveLayerRef, resolveLayerRefs, scanLayers, scopeOf, type Layer, type Viewport } from './layer-ref.js';
@@ -179,6 +179,11 @@ function stringAt(holder: Args, key: string): string | undefined {
   return typeof holder[key] === 'string' ? (holder[key] as string) : undefined;
 }
 
+function pageAt(holder: Args): string | undefined {
+  const page = stringAt(holder, 'path');
+  return page === undefined ? undefined : pageName(page.trim());
+}
+
 async function resolveForEdit(deps: EditDeps, url: string, viewport: Viewport, scope: string, ref: string): Promise<string> {
   try {
     return await resolveLayerRef(deps.preview, url, viewport, scope, ref);
@@ -198,17 +203,18 @@ export async function withLayerSelectors(deps: EditDeps, args: Args, takesPath: 
   for (const slot of selectorSlots(out)) {
     const ref = String(slot.holder[slot.key]).trim();
     const nested = slot.holder !== out;
-    const page = stringAt(slot.holder, 'path') ?? (nested ? stringAt(out, 'path') : undefined) ?? memoPage(scope, ref);
+    const page = pageAt(slot.holder) ?? (nested ? pageAt(out) : undefined) ?? memoPage(scope, ref);
     const group = byPage.get(page ?? '') ?? { page, slots: [] };
     group.slots.push({ ...slot, ref, nested });
     byPage.set(page ?? '', group);
   }
+  const outer = pageAt(out);
   for (const { page, slots } of byPage.values()) {
     const url = await pageUrl(deps, target.project, target.direction, page);
     const paths = await resolveRefs(deps, url, scope, slots.map((slot) => slot.ref));
     for (const slot of slots) {
       slot.holder[slot.key] = paths.get(slot.ref) as string;
-      if (page !== undefined && slot.holder.path === undefined && (slot.nested || takesPath)) slot.holder.path = page;
+      if (page !== undefined && slot.holder.path === undefined && (slot.nested ? page !== outer : takesPath)) slot.holder.path = page;
     }
   }
   return out;

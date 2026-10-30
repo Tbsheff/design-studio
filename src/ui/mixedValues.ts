@@ -26,7 +26,7 @@ export function mergeValues(list: StyleValues[]): MergedValues {
 }
 
 function locKey(selection: SelectionContext): string | null {
-  const s = selection.source;
+  const s = selection.usedBy?.root && selection.usedAt ? selection.usedAt : selection.source;
   return s ? `${s.file}:${s.line}:${s.col}` : null;
 }
 

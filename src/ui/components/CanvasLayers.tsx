@@ -2,7 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from 'react';
 import type { LiveStore } from '../liveStore';
 import type { HoverBox } from '../usePreviewFrames';
 import { selectMoveOf, type SelectMove, type SelectionContext } from '../../shared/contracts';
-import { isTypingTarget } from '../typingTarget';
+import { canvasHasKeys, isTypingTarget } from '../typingTarget';
 import type { LayerTree } from '../layersTree';
 import { selectionTargets, structureMenuItems } from '../structureEdits';
 import type { LayerEdits } from '../useLayerEdits';
@@ -92,7 +92,7 @@ export function useSelectMoveKeys(selectMode: boolean, selection: SelectionConte
     const onKey = (e: KeyboardEvent) => {
       const cur = live.current;
       const last = cur.selection.at(-1);
-      if (!cur.selectMode || !last || document.activeElement !== document.body) return;
+      if (!cur.selectMode || !last || !canvasHasKeys()) return;
       const move = selectMoveOf(e);
       if (!move) return;
       e.preventDefault();

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome, TextSourceHints } from '../shared/contracts';
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
-import { changedProps, shiftedValue, valuesFromStyles, type Shift, type StyleValues } from './cssValues';
+import { changedProps, shiftedPart, shiftedValue, valuesFromStyles, type Shift, type ShiftPart, type StyleValues } from './cssValues';
 import { editVariantStore } from './editVariant';
 import { startOptimistic } from './optimisticEdit';
 
@@ -223,10 +223,11 @@ export function useDirectEdit(o: Options) {
   );
 
   const shift = useCallback(
-    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}) => {
+    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}, part?: ShiftPart) => {
       const patch: Partial<StyleValues> = {};
       for (const prop of props) {
-        const next = shiftedValue(draftRef.current[prop] ?? baseRef.current[prop], { ...bounds, delta });
+        const from = draftRef.current[prop] ?? baseRef.current[prop];
+        const next = part ? shiftedPart(from, part, { ...bounds, delta }) : shiftedValue(from, { ...bounds, delta });
         if (next !== null) patch[prop] = next;
       }
       if (Object.keys(patch).length > 0) preview(patch);
@@ -305,7 +306,7 @@ export function useDirectEdit(o: Options) {
   const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
   const text = textDraft ?? o.selection.text;
   const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed: NO_MIXED, text, status, tailwind, preview, shift, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
+  return { values, mixed: NO_MIXED, each: null as readonly StyleValues[] | null, text, status, tailwind, preview, shift, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

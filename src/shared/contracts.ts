@@ -973,7 +973,12 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'move-live'; drag: FreeMoveDrag }
   | { ns: 'studio'; token: string; type: 'move-drop'; drag: FreeMoveDrag }
   | { ns: 'studio'; token: string; type: 'move-cancel' }
-  | { ns: 'studio'; token: string; type: 'nudge-key'; selector: string; dx: number; dy: number; base: NudgeBase };
+  | { ns: 'studio'; token: string; type: 'nudge-key'; selector: string; dx: number; dy: number; base: NudgeBase; others?: NudgeItem[] };
+
+export interface NudgeItem {
+  selector: string;
+  base: NudgeBase;
+}
 
 export type FreeMoveMode = 'absolute' | 'flow';
 

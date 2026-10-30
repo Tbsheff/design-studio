@@ -31,13 +31,28 @@ export function formatNumber(value: number, unit: string): string {
 
 export function stepValue(raw: string, delta: number, fallbackUnit: string): string {
   const parsed = parseNumber(raw) ?? { value: 0, unit: fallbackUnit };
-  return formatNumber(parsed.value + delta, parsed.unit);
+  return formatNumber(parsed.value + delta, parsed.unit || fallbackUnit);
 }
 
 export interface Shift {
   delta: number;
   min?: number;
   max?: number;
+}
+
+export interface ShiftPart {
+  key: string;
+  map: (raw: string, change: (value: string) => string) => string;
+  set?: string;
+}
+
+export function shiftedPart(raw: string, part: ShiftPart, shift: Shift): string {
+  return part.map(raw, (value) => {
+    const from = part.set ?? value;
+    const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
+    const parsed = parseNumber(next);
+    return parsed && parsed.unit === '' && parsed.value !== 0 ? formatNumber(parsed.value, 'px') : next;
+  });
 }
 
 export function shiftedValue(raw: string, shift: Shift): string | null {

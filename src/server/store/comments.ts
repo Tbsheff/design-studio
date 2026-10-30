@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { nanoid } from 'nanoid';
-import type { CommentDrawing, CommentFrame, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../../shared/contracts.js';
+import type { CommentDrawing, CommentFrame, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext, SourceLoc } from '../../shared/contracts.js';
 import { COMMENT_REPLIES_MAX, canTransition, isSendable, statusAfterRun, type CommentActor } from '../../shared/comments.js';
 import type { EventBus } from '../types.js';
 import { BadRequestError, ConflictError, NotFoundError, assertSafeId } from './errors.js';
@@ -51,6 +51,7 @@ export interface CommentStore {
   markSent(projectId: string, directionId: string, ids: string[], runId: string): Promise<DesignComment[]>;
   requeue(projectId: string, directionId: string, ids: string[]): Promise<DesignComment[]>;
   finishRun(projectId: string, directionId: string, outcome: RunOutcome): Promise<DesignComment[]>;
+  followSource(projectId: string, directionId: string, remap: (loc: SourceLoc) => SourceLoc | null): Promise<void>;
 }
 
 function emptyFile(): CommentFile {
@@ -123,7 +124,23 @@ export function createCommentStore(dataDir: string, bus: EventBus): CommentStore
     comment.updatedAt = Date.now();
   };
 
+  const followed = (comment: DesignComment, remap: (loc: SourceLoc) => SourceLoc | null): void => {
+    const loc = comment.target.sourceLoc;
+    const next = loc && comment.status !== 'resolved' ? remap(loc) : null;
+    if (!loc || !next || (next.line === loc.line && next.col === loc.col)) return;
+    comment.target = { ...comment.target, sourceLoc: next };
+    const own = comment.context?.source;
+    if (comment.context && own && own.file === loc.file && own.line === loc.line && own.col === loc.col) comment.context = { ...comment.context, source: { ...own, ...next } };
+  };
+
   return {
+    async followSource(projectId, directionId, remap) {
+      if (!existsSync(fileOf(projectId, directionId))) return;
+      await mutate(projectId, directionId, (data) => {
+        for (const comment of data.comments) followed(comment, remap);
+      });
+    },
+
     async list(projectId, directionId) {
       return (await read(fileOf(projectId, directionId))).comments;
     },

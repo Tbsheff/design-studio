@@ -66,7 +66,7 @@ export function parseShadows(value: string): Shadow[] | null {
 }
 
 function formatOne(shadow: Shadow): string {
-  const parts = [shadow.inset ? 'inset' : '', shadow.x || '0', shadow.y || '0', shadow.blur || '0', shadow.spread || '0', shadow.color.trim()];
+  const parts = [shadow.inset ? 'inset' : '', tidyLength(shadow.x || '0'), tidyLength(shadow.y || '0'), tidyLength(shadow.blur || '0'), tidyLength(shadow.spread || '0'), shadow.color.trim()];
   return parts.filter(Boolean).join(' ');
 }
 

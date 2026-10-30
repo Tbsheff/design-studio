@@ -61,6 +61,39 @@ function lineMapping(before: string[], after: string[]): Int32Array {
   return mapping;
 }
 
+const TRIVIAL_LINE = /^(?:<\/[\w.:-]*>|\/?>|[\s{}()[\];,]*)$/;
+
+function unclaimedByText(after: string[], mapping: Int32Array): Map<string, number[]> {
+  const claimed = new Set(mapping);
+  const byText = new Map<string, number[]>();
+  after.forEach((line, index) => {
+    if (claimed.has(index)) return;
+    const text = line.trim();
+    byText.set(text, [...(byText.get(text) ?? []), index]);
+  });
+  return byText;
+}
+
+function movedTo(text: string, candidates: number[] | undefined, prev: number): number | null {
+  if (!candidates || candidates.length === 0) return null;
+  if (prev >= 0 && candidates.includes(prev + 1)) return prev + 1;
+  if (text === '' || TRIVIAL_LINE.test(text)) return null;
+  return candidates.length === 1 ? (candidates[0] as number) : null;
+}
+
+function matchMovedLines(before: string[], after: string[], mapping: Int32Array): void {
+  const byText = unclaimedByText(after, mapping);
+  for (let i = 0; i < before.length; i += 1) {
+    if ((mapping[i] as number) >= 0) continue;
+    const text = (before[i] as string).trim();
+    const candidates = byText.get(text);
+    const to = movedTo(text, candidates, i > 0 ? (mapping[i - 1] as number) : -1);
+    if (to === null || !candidates) continue;
+    mapping[i] = to;
+    candidates.splice(candidates.indexOf(to), 1);
+  }
+}
+
 function shiftedCol(oldText: string, newText: string, col: number): number {
   if (oldText === newText) return col;
   const at = col - 1;
@@ -75,6 +108,7 @@ export function lineMapOf(before: string, after: string): LineMap {
   const oldLines = before.split('\n');
   const newLines = after.split('\n');
   const mapping = lineMapping(oldLines, newLines);
+  matchMovedLines(oldLines, newLines, mapping);
   return {
     line: (oldLine) => {
       const mapped = mapping[oldLine - 1];

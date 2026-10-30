@@ -1022,7 +1022,12 @@ function startBridge(session: BridgeSession): void {
 
   const postNudge = (dx: number, dy: number): boolean => {
     if (mode !== 'select' || !selected?.isConnected || textEditor.editing()) return false;
-    post({ type: 'nudge-key', selector: selectorFor(selected), dx, dy, base: nudgeBaseOf(selected) });
+    const own = selectorFor(selected);
+    const others = tracked.filter((selector) => selector !== own).flatMap((selector) => {
+      const element = queryElement(selector);
+      return element?.isConnected && element !== selected ? [{ selector, base: nudgeBaseOf(element) }] : [];
+    });
+    post({ type: 'nudge-key', selector: own, dx, dy, base: nudgeBaseOf(selected), ...(others.length > 0 ? { others } : {}) });
     return true;
   };
 

@@ -8,7 +8,7 @@ import { useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import type { LayerTree } from './layersTree';
 import { IS_MAC } from './commands/keys';
 import { NO_SOURCE, dropRequest, selectionTargets, type LayerDrop, type SelectionOp } from './structureEdits';
-import { isTypingTarget } from './typingTarget';
+import { canvasHasKeys, isTypingTarget } from './typingTarget';
 import { useLayerLocks } from './useLayerLocks';
 
 const RESELECT_MS = 5000;
@@ -391,7 +391,7 @@ export function useLayerEdits(o: Options): LayerEdits {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const cur = live.current;
-      if (!cur.selectMode || cur.selection.length === 0 || isTypingTarget(e.target) || document.activeElement !== document.body) return;
+      if (!cur.selectMode || cur.selection.length === 0 || isTypingTarget(e.target) || !canvasHasKeys()) return;
       const move = reorderMoveOf(e);
       const structure = move || e.repeat ? null : structureKeyOf(e, IS_MAC);
       if (!move && !structure) return;

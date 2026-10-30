@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
-import type { BridgeToParent, NudgeBase, SelectionContext } from '../shared/contracts';
+import type { BridgeToParent, DirectEditRequest, NudgeBase, NudgeItem, SelectionContext } from '../shared/contracts';
 import { nudgeStepOf } from '../shared/nudge';
 import { api, errorText } from './api';
 import type { ParentMessageBody } from './bridge';
 import { startOptimistic } from './optimisticEdit';
+import { multiBlockReason } from './mixedValues';
+import { canvasHasKeys, isTypingTarget } from './typingTarget';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 
 const SAVE_MS = 300;
 const FLOW_HINT = 'Arrow keys move absolute elements and elements with a margin. Drag this one to change its place in the layout.';
-const MANY_HINT = 'Select one element to move it with the arrow keys.';
+const NO_SOURCE_HINT = 'This element has no source location, so it cannot move here.';
+const SOME_HINT = 'Some selected elements sit in the layout, so the arrow keys move only the others. Drag one to change its place.';
 
 interface Options {
   projectId: string;
@@ -22,8 +25,19 @@ interface Options {
   onError: (message: string) => void;
 }
 
-interface Burst {
+interface Mover {
   target: SelectionContext;
+  base: NudgeBase;
+}
+
+interface Burst {
+  key: string;
+  items: Mover[];
+  dx: number;
+  dy: number;
+}
+
+interface Step {
   base: NudgeBase;
   dx: number;
   dy: number;
@@ -36,7 +50,7 @@ function axisStyle(prop: string, start: number, delta: number): Record<string, s
   return delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 }
 
-export function nudgeStyle(b: Burst): Record<string, string> {
+export function nudgeStyle(b: Step): Record<string, string> {
   const { base, dx, dy } = b;
   if (base.mode === 'margin') return { ...axisStyle('margin-left', base.x, base.lockX ? 0 : dx), ...axisStyle('margin-top', base.y, base.lockY ? 0 : dy) };
   if (base.mode !== 'position') return {};
@@ -48,8 +62,49 @@ function movable(base: NudgeBase, dx: number, dy: number): boolean {
   return base.mode === 'margin' && ((dx !== 0 && !base.lockX) || (dy !== 0 && !base.lockY));
 }
 
-function isBodyFocus(): boolean {
-  return document.activeElement === document.body || document.activeElement === null;
+function burstKey(selectors: string[]): string {
+  return [...selectors].sort().join('\n');
+}
+
+interface Saved {
+  edit: DirectEditRequest;
+  selector: string;
+  style: Record<string, string>;
+  back: Record<string, string>;
+}
+
+function savedOf(b: Burst): Saved[] {
+  return b.items.flatMap((item) => {
+    const style = nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy });
+    const edit = buildEditRequest(item.target, style);
+    if (!edit) return [];
+    const back = Object.fromEntries(Object.keys(style).map((key) => [key, item.target.styles[key] ?? '']));
+    return [{ edit, selector: item.target.selector, style, back }];
+  });
+}
+
+const OVERLAY_OPEN = 'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
+
+function picksNew(message: BridgeToParent, current: SelectionContext[]): boolean {
+  if (message.type !== 'select' && message.type !== 'select-many') return false;
+  const picked = message.type === 'select' ? [message.selection.selector] : message.selections.map((s) => s.selector);
+  if (message.additive) return true;
+  return burstKey(picked) !== burstKey(current.map((s) => s.selector));
+}
+
+function keysToCanvas(): void {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLIFrameElement && focused.closest('.canvas .stage')) focused.blur();
+}
+
+function blurToCanvas(event: KeyboardEvent): boolean {
+  const focused = document.activeElement;
+  if (event.key !== 'Escape' || event.defaultPrevented || !(focused instanceof HTMLElement) || focused === document.body) return false;
+  if (canvasHasKeys() || focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
+  focused.blur();
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  return true;
 }
 
 export function useElementNudge(o: Options): void {
@@ -65,24 +120,30 @@ export function useElementNudge(o: Options): void {
       shown.add(text);
       live.current.onError(text);
     };
+    const restore = (list: Saved[], message: string) => {
+      live.current.post({ type: 'preview-reset' });
+      for (const one of list) live.current.setSelection((prev) => mergeCommit(prev, { selector: one.selector, style: one.back }));
+      live.current.onError(message);
+    };
     const save = async (b: Burst) => {
       const cur = live.current;
-      const style = nudgeStyle(b);
-      const req = buildEditRequest(b.target, style);
-      if (!req || !cur.directionId) return;
-      const selector = b.target.selector;
-      cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
-      const optimistic = startOptimistic({ post: cur.post, refreshRects: cur.refreshRects }, req, (message) => live.current.onError(message));
+      const list = savedOf(b);
+      if (list.length === 0 || !cur.directionId) return;
+      for (const one of list) cur.setSelection((prev) => mergeCommit(prev, { selector: one.selector, style: one.style }));
+      const port = { post: cur.post, refreshRects: cur.refreshRects };
+      const optimistic = list.map((one) => startOptimistic(port, one.edit, (message) => live.current.onError(message)));
       try {
-        const result = await api.directEdit(cur.projectId, cur.directionId, req);
-        optimistic.saved(result.tailwind);
+        if (list.length === 1) {
+          const result = await api.directEdit(cur.projectId, cur.directionId, (list[0] as Saved).edit);
+          optimistic[0]?.saved(result.tailwind);
+        } else {
+          const result = await api.directEditBatch(cur.projectId, cur.directionId, { edits: list.map((one) => one.edit) });
+          optimistic.forEach((one, index) => one.saved(result.applied[index]?.tailwind));
+        }
         live.current.refreshRects();
       } catch (err) {
-        optimistic.failed(errorText(err));
-        live.current.post({ type: 'preview-reset' });
-        const back = Object.fromEntries(Object.keys(style).map((key) => [key, b.target.styles[key] ?? '']));
-        live.current.setSelection((prev) => mergeCommit(prev, { selector, style: back }));
-        live.current.onError(errorText(err));
+        for (const one of optimistic) one.failed(errorText(err));
+        restore(list, errorText(err));
       }
     };
     const flush = () => {
@@ -92,47 +153,59 @@ export function useElementNudge(o: Options): void {
       burst.current = null;
       if (b && (b.dx !== 0 || b.dy !== 0)) void save(b);
     };
-    const targetFor = (selector: string): SelectionContext | null => {
+    const moversFor = (wanted: NudgeItem[]): Mover[] | null => {
       const cur = live.current;
       if (!cur.enabled || !cur.directionId) return null;
-      if (cur.selection.length > 1) {
-        hintOnce(MANY_HINT);
-        return null;
-      }
-      const target = cur.selection[0];
-      if (target?.selector !== selector) return null;
-      if (!target.source) hintOnce('This element has no source location, so it cannot move here.');
-      return target.source ? target : null;
+      const picked = wanted.flatMap((item) => {
+        const target = cur.selection.find((s) => s.selector === item.selector);
+        return target ? [{ target, base: item.base }] : [];
+      });
+      if (picked.length === 0) return null;
+      const reason = picked.length > 1 ? multiBlockReason(picked.map((item) => item.target)) : picked[0]?.target.source ? null : NO_SOURCE_HINT;
+      if (reason) hintOnce(reason);
+      return reason ? null : picked;
     };
-    const press = (selector: string, dx: number, dy: number, base: NudgeBase) => {
-      if (burst.current && burst.current.target.selector !== selector) flush();
-      const target = targetFor(selector);
-      if (!target) return;
-      const b = burst.current ?? { target, base, dx: 0, dy: 0 };
-      if (!movable(b.base, dx, dy)) return hintOnce(FLOW_HINT);
+    const begin = (wanted: NudgeItem[], key: string): Burst | null => {
+      const all = moversFor(wanted);
+      if (!all) return null;
+      const items = all.filter((item) => item.base.mode !== 'none');
+      if (items.length < all.length) hintOnce(items.length === 0 ? FLOW_HINT : SOME_HINT);
+      return items.length === 0 ? null : { key, items, dx: 0, dy: 0 };
+    };
+    const press = (wanted: NudgeItem[], dx: number, dy: number) => {
+      const key = burstKey(wanted.map((item) => item.selector));
+      if (burst.current && burst.current.key !== key) flush();
+      const b = burst.current ?? begin(wanted, key);
+      if (!b) return;
+      if (!b.items.some((item) => movable(item.base, dx, dy))) return hintOnce(FLOW_HINT);
       b.dx += dx;
       b.dy += dy;
       burst.current = b;
-      live.current.post({ type: 'preview-style', selector, style: nudgeStyle(b) });
+      for (const item of b.items) live.current.post({ type: 'preview-style', selector: item.target.selector, style: nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy }) });
       live.current.refreshRects();
       if (timer.current !== null) window.clearTimeout(timer.current);
       timer.current = window.setTimeout(flush, SAVE_MS);
     };
     const onKey = (event: KeyboardEvent) => {
+      if (live.current.enabled && live.current.selection.length > 0 && blurToCanvas(event)) return;
       const step = nudgeStepOf(event);
       if (!step) {
         if (burst.current && event.key !== 'Shift') flush();
         return;
       }
       const cur = live.current;
-      if (!cur.enabled || cur.selection.length === 0 || !isBodyFocus()) return;
+      if (!cur.enabled || cur.selection.length === 0 || !canvasHasKeys()) return;
       event.preventDefault();
       cur.post({ type: 'nudge', dx: step.dx, dy: step.dy });
     };
     flushNow.current = flush;
+    let editing = false;
     const stop = o.listen((message) => {
-      if (message.type === 'nudge-key') press(message.selector, message.dx, message.dy, message.base);
+      if (message.type === 'nudge-key') press([{ selector: message.selector, base: message.base }, ...(message.others ?? [])], message.dx, message.dy);
       else if (FLUSH_ON.has(message.type)) flush();
+      if (message.type === 'text-edit') editing = message.state === 'start';
+      else if (message.type === 'text-commit') editing = false;
+      if (picksNew(message, live.current.selection)) window.setTimeout(() => editing || keysToCanvas(), 0);
     });
     window.addEventListener('keydown', onKey, true);
     return () => {
@@ -142,8 +215,8 @@ export function useElementNudge(o: Options): void {
     };
   }, [o.listen]);
 
-  const key = o.selection.map((s) => s.selector).join('\n');
+  const key = burstKey(o.selection.map((s) => s.selector));
   useEffect(() => {
-    if (burst.current && key !== burst.current.target.selector) flushNow.current();
+    if (burst.current && key !== burst.current.key) flushNow.current();
   }, [key]);
 }

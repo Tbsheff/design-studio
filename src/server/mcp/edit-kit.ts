@@ -20,7 +20,8 @@ export const id = (what: string) => z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, 'm
 export const projectId = id('Project id from list_projects.');
 export const directionId = id('Direction id. Leave out for the main direction.').optional();
 export const selector = z.string().trim().min(1).max(SELECTOR_MAX);
-export const pagePath = z.string().trim().max(PATH_MAX).optional().describe('Page path in the project, for example "about.html". Leave out for the entry page.');
+export const pageName = (value: string): string => value.replace(/^\/+/, '');
+export const pagePath = z.string().trim().max(PATH_MAX).transform(pageName).optional().describe('Page path in the project, for example "about.html". Leave out for the entry page.');
 export const packId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 const styleValue = z.string().max(200).nullable();
 const styleObject = z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict();

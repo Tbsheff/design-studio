@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { PORT_FLOW_MAX_PAGES, type PortFlowPlan, type PortPlan } from '../../shared/port.js';
 import { studioCall } from './edit-deps.js';
-import { PATH_MAX, defineTool, directionId, id, ok, projectId, type ToolSpec } from './edit-kit.js';
+import { PATH_MAX, defineTool, directionId, id, ok, pageName, projectId, type ToolSpec } from './edit-kit.js';
 
 const schema = z
   .object({
     projectId: projectId.describe('The prototype project id (an HTML project), from list_projects.'),
-    path: z.string().trim().max(PATH_MAX).optional().describe('HTML page in the prototype project, for example "index.html" or "time.html". Leave out for index.html. With flow or paths it is the first page of the flow, which gets the base route.'),
-    paths: z.array(z.string().trim().min(1).max(PATH_MAX)).min(1).max(PORT_FLOW_MAX_PAGES).optional().describe('Port these pages of the prototype as one flow, for example ["index.html", "time.html"]. They come back in flow order.'),
+    path: z.string().trim().max(PATH_MAX).transform(pageName).optional().describe('HTML page in the prototype project, for example "index.html" or "time.html". Leave out for index.html. With flow or paths it is the first page of the flow, which gets the base route.'),
+    paths: z.array(z.string().trim().min(1).max(PATH_MAX).transform(pageName)).min(1).max(PORT_FLOW_MAX_PAGES).optional().describe('Port these pages of the prototype as one flow, for example ["index.html", "time.html"]. They come back in flow order.'),
     flow: z.boolean().optional().describe('true: follow the links from path (anchors, form actions and page names in scripts) and plan every page of the flow.'),
     directionId,
     targetProjectId: id('The attached app project id to port into (a project made with Open app), from list_projects. Leave out to read the page only.').optional(),

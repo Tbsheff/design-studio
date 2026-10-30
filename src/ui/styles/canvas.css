@@ -1190,7 +1190,7 @@ body.element-resizing .frame {
   flex-direction: column;
   gap: var(--s-12);
   padding: var(--s-6) 10%;
-  animation: frame-skeleton-pulse 1.8s ease-in-out infinite;
+  animation: frame-skeleton-pulse var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .sk-block {

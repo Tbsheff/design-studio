@@ -113,7 +113,7 @@
 }
 
 .version-thumb.loading {
-  animation: version-thumb-wait 1.8s ease-in-out infinite;
+  animation: version-thumb-wait var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 @keyframes version-thumb-wait {

@@ -62,33 +62,22 @@
 
 .composer-menu,
 .run-settings-pop {
-  animation: composer-pop-in 150ms var(--ease-out);
+  --pop-dy: 4px;
+  animation: menu-in var(--dur) var(--ease-out);
 }
 
 .composer-menu[data-closing],
 .run-settings-pop[data-closing] {
   pointer-events: none;
-  animation: composer-pop-out 100ms var(--ease-out) forwards;
+  animation: pop-out var(--dur-exit) var(--ease-in) forwards;
 }
 
 .skill-pop {
   transform-origin: bottom center;
-  animation: composer-pop-in 120ms var(--ease-out);
+  --pop-dy: 4px;
+  animation: menu-in var(--dur-fast) var(--ease-out);
 }
 
-@keyframes composer-pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--pop-dy, 4px)) scale(0.97);
-  }
-}
-
-@keyframes composer-pop-out {
-  to {
-    opacity: 0;
-    transform: translateY(calc(var(--pop-dy, 4px) / 2)) scale(0.98);
-  }
-}
 
 .rs-group {
   display: grid;
@@ -1025,16 +1014,9 @@
 }
 
 .send-btn .send-label.morph {
-  animation: send-label-in 180ms var(--ease-out);
+  animation: glyph-in var(--dur-slow) var(--ease-out);
 }
 
-@keyframes send-label-in {
-  from {
-    opacity: 0;
-    filter: blur(2px);
-    transform: scale(0.9);
-  }
-}
 
 .choice-item {
   gap: var(--s-2);
@@ -1120,7 +1102,7 @@
   padding-right: var(--s-1);
   white-space: normal;
   text-wrap: pretty;
-  animation: composer-rise-in 160ms var(--ease-out);
+  animation: rise-in var(--dur) var(--ease-out);
 }
 
 .composer-alert-text {
@@ -1148,15 +1130,9 @@
   color: inherit;
 }
 
-@keyframes composer-rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
 
 .prompt .thumb {
-  animation: composer-thumb-in 160ms var(--ease-out);
+  animation: glyph-in var(--dur) var(--ease-out);
 }
 
 .prompt .thumb[data-tip]::after {
@@ -1165,15 +1141,9 @@
 }
 
 .prompt .skill-chip {
-  animation: composer-thumb-in 140ms var(--ease-out);
+  animation: glyph-in var(--dur) var(--ease-out);
 }
 
-@keyframes composer-thumb-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-}
 
 .context-meter,
 .skills-ind,
@@ -1365,7 +1335,8 @@
   bottom: calc(100% + 4px);
   min-width: 220px;
   transform-origin: bottom right;
-  animation: composer-pop-in 120ms var(--ease-out);
+  --pop-dy: 4px;
+  animation: menu-in var(--dur-fast) var(--ease-out);
 }
 
 .budget-custom {

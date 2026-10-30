@@ -34,6 +34,8 @@
 }
 
 .prp-swap-menu {
+  transform-origin: top left;
+  animation: menu-in var(--dur) var(--ease-out);
   position: absolute;
   z-index: 20;
   top: calc(100% + 4px);

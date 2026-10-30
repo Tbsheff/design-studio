@@ -161,13 +161,14 @@
   --ring-soft: 0 0 0 3px oklch(0.53 0.125 250 / 0.22);
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --ease: var(--ease-out);
+  --dur-exit: 100ms;
   --dur-fast: 120ms;
   --dur: 140ms;
   --dur-slow: 200ms;
+  --dur-pulse: 1800ms;
   --dur-tip-delay: 350ms;
   --dur-reveal-delay: 300ms;
   --dur-spin: 800ms;
@@ -508,6 +509,62 @@ input[type='number'] {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-swap {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--pop-dy, 4px);
+    scale: 0.98;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--pop-dy, 0px);
+    scale: 0.97;
+  }
+}
+
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    scale: 0.98;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+  }
+}
+
+@keyframes glyph-in {
+  from {
+    opacity: 0;
+    scale: 0.8;
   }
 }
 

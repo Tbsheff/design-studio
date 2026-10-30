@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { diffVersionFiles } from '../store/version-diff.js';
 import { runGit } from '../store/versions.js';
 import { DIFF_VERSIONS_TEXT } from '../mcp/version-diff-tools.js';
+import { versionThumbName } from '../thumbnails.js';
 
 type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
@@ -32,7 +33,7 @@ export async function runDiffVersions(deps: DiffDeps, args: { from: string; to?:
   if (!to) return text('diff_versions: this direction has no saved version yet.', true);
   const projectDir = path.dirname(deps.runsDir);
   const thumb = (id: string): string | null => {
-    const file = path.join(projectDir, 'thumbs', `v-${id}.png`);
+    const file = path.join(projectDir, 'thumbs', versionThumbName(id));
     return existsSync(file) ? file : null;
   };
   try {

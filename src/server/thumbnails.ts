@@ -138,7 +138,15 @@ function createShotQueue() {
   };
 }
 
-const CACHED = /^(v|vp|diff)-.+\.png$/;
+const CACHED = /^(v|vp|diff|diffp)-.+\.png$/;
+
+export function versionThumbName(versionId: string): string {
+  return `vp-${assertSafeId(versionId, 'versionId')}.png`;
+}
+
+export function diffThumbName(beforeId: string, afterId: string, viewport: { width: number; height: number }): string {
+  return `diffp-${assertSafeId(beforeId, 'versionId')}-${assertSafeId(afterId, 'versionId')}-${viewport.width}x${viewport.height}.png`;
+}
 
 function changedPage(project: Project, changed: string[], snapshotDir: string): string | undefined {
   if (project.kind !== 'html' || project.app) return undefined;
@@ -232,7 +240,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       return bytes;
     },
     async version(projectId, versionId, signal) {
-      const name = `vp-${assertSafeId(versionId, 'versionId')}.png`;
+      const name = versionThumbName(versionId);
       const file = path.join(thumbsDir(projectId), name);
       const cached = await readCached(file);
       if (cached) return cached;
@@ -255,7 +263,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
     },
     async diff(projectId, beforeId, afterId, requested, signal) {
       const viewport = clampViewport(requested.width, requested.height);
-      const name = `diff-${assertSafeId(beforeId, 'versionId')}-${assertSafeId(afterId, 'versionId')}-${viewport.width}x${viewport.height}.png`;
+      const name = diffThumbName(beforeId, afterId, viewport);
       const file = path.join(thumbsDir(projectId), name);
       const toResult = (png: Buffer): DiffResult => {
         const mask = PNG.sync.read(png);

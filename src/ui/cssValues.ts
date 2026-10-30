@@ -31,7 +31,7 @@ export function formatNumber(value: number, unit: string): string {
 
 export function stepValue(raw: string, delta: number, fallbackUnit: string): string {
   const parsed = parseNumber(raw) ?? { value: 0, unit: fallbackUnit };
-  return formatNumber(parsed.value + delta, parsed.unit);
+  return formatNumber(parsed.value + delta, parsed.unit || fallbackUnit);
 }
 
 export interface Shift {
@@ -49,7 +49,9 @@ export interface ShiftPart {
 export function shiftedPart(raw: string, part: ShiftPart, shift: Shift): string {
   return part.map(raw, (value) => {
     const from = part.set ?? value;
-    return shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
+    const next = shift.delta === 0 ? from : (shiftedValue(from, shift) ?? from);
+    const parsed = parseNumber(next);
+    return parsed && parsed.unit === '' && parsed.value !== 0 ? formatNumber(parsed.value, 'px') : next;
   });
 }
 

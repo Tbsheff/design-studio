@@ -206,8 +206,9 @@
 
 .version-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-2);
+  gap: 0 var(--s-2);
   min-width: 0;
   overflow: hidden;
   min-height: 20px;

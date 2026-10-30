@@ -20,7 +20,7 @@ function targetLabel(comment: DesignComment): string {
     const { box } = comment.drawing;
     return `Drawing · ${box.width} × ${box.height}`;
   }
-  const loc = comment.target.sourceLoc;
+  const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
   const where = loc ? `${loc.file.split('/').pop()}:${loc.line}` : comment.target.selector;
   const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet.slice(0, 32)}”` : '';
   return `${comment.target.tag}${snippet} · ${where}`;

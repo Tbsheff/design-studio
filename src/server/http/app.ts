@@ -466,6 +466,7 @@ export function createApp(deps: AppDeps): Hono {
     await markLofi(project, direction, request);
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, designRules, previewUrl, mentionFiles, target, repoContext });
     runProjectIndex.set(handle.runId, project.id);
+    void handle.done.then((summary) => (summary.versionId ? editHistory.clear(project.id, direction.id) : undefined), () => undefined);
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
   };

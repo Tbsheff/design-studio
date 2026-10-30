@@ -38,6 +38,8 @@ import { resolveShotTarget, type ShotArgs, type ShotTarget, type TargetDeps } fr
 import { clearTextShape, insertJsxShape, runClearText, runInsertJsx } from './jsx-insert-tool.js';
 import { TOOL_HELP, TOOL_SHORT, type StudioToolName } from './tool-help.js';
 import { HELP_TOOL, studioToolsFor } from './tool-sets.js';
+import { baselineNote } from './final-check.js';
+import { isLeanRun } from './lean-run.js';
 import { getLayersShape, listComponentsShape, runGetLayers, runListComponents, withLayerIds } from './kit-tools.js';
 import { listCommentsShape, resolveCommentShape, runListComments, runResolveComment } from './comment-tools.js';
 import type { CommentStore } from '../store/comments.js';
@@ -298,7 +300,8 @@ export async function runRenderCheck(deps: StudioToolDeps, counters: StudioToolC
       deps.run.lastChecks = report.results;
     }
     await saveCheck(deps.runsDir, deps.runId, counters.checks, report.results);
-    return { content: [{ type: 'text' as const, text: report.text }] };
+    const note = await baselineNote(report.results, deps.runsDir, deps.runId).catch(() => null);
+    return { content: [{ type: 'text' as const, text: note ? `${report.text}\n\n${note}` : report.text }] };
   } catch (error) {
     return errorText(`render_check failed: ${describeError(error)}`);
   }
@@ -697,7 +700,7 @@ export async function createStudioMcpServer(deps: StudioToolDeps): Promise<McpSd
   const figmaImportTool = tool('import_figma_frame', TOOL_SHORT.import_figma_frame, figmaImportShape, withLayerIds(deps, (args) => runFigmaImport(deps, args)));
   const paintShapeTool = tool('paint_shape', TOOL_SHORT.paint_shape, paintShapeShape, (args) => runPaintShape(deps, args));
 
-  const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode);
+  const allowed = studioToolsFor(deps.ctx.project, deps.ctx.request.mode, deps.ctx.request.mode === 'edit' && isLeanRun(deps.ctx.request));
   const helpTool = tool(HELP_TOOL, TOOL_SHORT.studio_help, { tool: z.string().trim().max(40).describe('Tool name without the mcp__studio__ prefix.') }, async (args) => ({ content: [{ type: 'text' as const, text: studioHelp(args.tool, allowed) }] }), { annotations: { readOnlyHint: true } });
   const all = [screenshot, renderCheck, designReview, defineTweaksTool, designSystemCheck, canvasListTool, canvasPlaceTool, canvasPointTool, listLinksTool, editLinksTool, listFrameStatesTool, setFrameStateTool, setFrameSessionTool, editElementTool, setTokenTool, prepareShipTool, setPropsTool, findStylesTool, replaceStyleTool, reviewFrameTool, insertComponentTool, insertJsxTool, clearTextTool, listComponentsTool, getLayersTool, listCommentsTool, resolveCommentTool, listRouteLinksTool, addFlowTool, arrangeTool, measureTool, getRunContextTool, appDoctorTool, componentPreviewTool, createComponentTool, swapInstanceTool, selectMatchingTool, diffVersionsTool, exportFrameTool, setImageTool, drawVectorTool, booleanShapesTool, paintShapeTool, setLayerStateTool, listLockedLayersTool, compareReferenceTool, figmaImportTool, helpTool];
   return createSdkMcpServer({ name: 'studio', version: '0.1.0', tools: all.filter((entry) => allowed.has(entry.name)) });

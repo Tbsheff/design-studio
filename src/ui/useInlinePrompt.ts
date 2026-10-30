@@ -33,10 +33,16 @@ function blockerOf(o: InlinePromptOptions): string | null {
   return o.running ? 'Wait for the current run to finish' : null;
 }
 
+const SNIPPET_MAX = 16;
+export const INLINE_PROMPT_OPEN_EVENT = 'studio:inline-prompt-open';
+
 function labelOf(selection: SelectionContext[]): string {
   const last = selection.at(-1);
   if (selection.length > 1) return `${selection.length} elements`;
-  return last?.component || last?.tag || 'element';
+  if (last?.component) return last.component;
+  const text = last?.text.replace(/\s+/g, ' ').trim() ?? '';
+  const snippet = text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+  return snippet ? `“${snippet}”` : last?.tag || 'element';
 }
 
 function usageFileOf(selection: SelectionContext[]): string | null {
@@ -59,6 +65,7 @@ export function useInlinePrompt(o: InlinePromptOptions): InlinePromptView | null
     if (cur.selection.length === 0 || !cur.live) return;
     returnTo.current = document.activeElement;
     setOpen(true);
+    window.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
   }, []);
   const close = useCallback(() => {
     setOpen(false);

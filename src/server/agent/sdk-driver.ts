@@ -34,6 +34,7 @@ import { describeTargetLayout } from './run-target.js';
 import { createScreenshotTrimStore } from './screenshot-trim-store.js';
 import { designMdDigest } from './design-md-digest.js';
 import { isLeanRun, LEAN_RUN_BLOCK, leanRunConfig } from './lean-run.js';
+import { leanBuiltins } from './tool-sets.js';
 
 type QueryFn = typeof query;
 type StreamEventMessage = Extract<SDKMessage, { type: 'stream_event' }>;
@@ -520,7 +521,7 @@ async function buildSdkOptions(options: SdkDriverOptions, input: DriverInput, re
   const { ctx, signal } = input;
   const { skills, config } = setup;
   const policy = buildPolicy(input, skills, config);
-  const builtins = builtinToolNames(policy);
+  const builtins = leanEdit(input) ? leanBuiltins(builtinToolNames(policy)) : builtinToolNames(policy);
   const controller = linkAbort(signal);
   const env = buildEnv(process.env, policy.allowBash || policy.allowInstall);
   const studio = await createStudioMcpServer({

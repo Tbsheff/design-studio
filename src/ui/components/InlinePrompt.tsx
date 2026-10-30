@@ -107,7 +107,7 @@ export default function InlinePrompt({ view, zoom, frame }: Props) {
       <div className="inline-prompt-row">
         <span className="inline-prompt-target" data-tip="The run edits this selection">
           <Icon name="sparkle" size={12} />
-          {view.label}
+          <span className="inline-prompt-target-text">{view.label}</span>
         </span>
         <input
           ref={input}

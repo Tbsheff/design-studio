@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import type { AppDoctorResult, DoctorCause, DoctorFix } from '../../shared/app-doctor.js';
 import { installHint } from './install-hint.js';
+import { buildCommand, findWorkspacePackage } from './workspace-package.js';
 
 export interface DoctorProbe {
   status: number;
@@ -184,25 +185,52 @@ function portInUse(ctx: Ctx): DoctorCause | null {
   };
 }
 
-function missingPackage(lines: string[]): string | null {
+function missingSpecifier(lines: string[]): string | null {
   for (const line of lines) {
     const match = MODULE_MISSING.exec(line);
     const name = match?.[1] ?? match?.[2];
-    if (name && !/^[./~]|^@\//.test(name)) return name.split('/').slice(0, name.startsWith('@') ? 2 : 1).join('/');
+    if (name && !/^[./~]|^@\//.test(name)) return name;
   }
   return null;
 }
 
+const packageName = (specifier: string) => specifier.split('/').slice(0, specifier.startsWith('@') ? 2 : 1).join('/');
+
+function unbuilt(ctx: Ctx, specifier: string): DoctorCause | null {
+  const found = findWorkspacePackage(ctx.workTree, ctx.appRoot, specifier);
+  if (!found || found.built || !found.hasBuild) return null;
+  const hint = installHint(ctx.workTree, ctx.appDir);
+  const where = path.relative(ctx.workTree, found.dir).split(path.sep).join('/');
+  return {
+    kind: 'install',
+    severity: 'error',
+    title: `Workspace package ${found.name} is not built`,
+    detail: `${specifier} points to build output in ${where} that does not exist yet. Build it in a terminal with ${buildCommand(hint.manager, found.name)} in ${hint.dir}, then start again.`,
+    evidence: evidence(ctx.all, MODULE_MISSING),
+    fix: null,
+    command: `cd ${JSON.stringify(hint.dir)} && ${buildCommand(hint.manager, found.name)}`,
+  };
+}
+
+function installDetail(ctx: Ctx, hint: { command: string; dir: string }): string {
+  const appRoot = path.join(ctx.workTree, ctx.appDir);
+  const skipped = ctx.appDir !== '' && ctx.appDir !== '.' && !existsSync(path.join(appRoot, 'node_modules')) && existsSync(path.join(ctx.workTree, 'node_modules'));
+  const note = skipped ? ` ${ctx.appDir} has no node_modules folder, so the last install skipped this app (a filtered install or a copy without links).` : '';
+  return `Install the dependencies in a terminal with ${hint.command} in ${hint.dir}, then start again.${note}`;
+}
+
 function install(ctx: Ctx): DoctorCause | null {
   const noNext = ctx.message?.includes('next is not installed') ?? false;
-  const name = noNext ? 'next' : missingPackage(ctx.all);
-  if (!name) return null;
+  const specifier = noNext ? 'next' : missingSpecifier(ctx.all);
+  if (!specifier) return null;
+  const workspace = noNext ? null : unbuilt(ctx, specifier);
+  if (workspace) return workspace;
   const hint = installHint(ctx.workTree, ctx.appDir);
   return {
     kind: 'install',
     severity: 'error',
-    title: noNext ? 'Dependencies are not installed' : `Package ${name} is not installed`,
-    detail: `Install the dependencies in a terminal with ${hint.command} in ${hint.dir}, then start again.`,
+    title: noNext ? 'Dependencies are not installed' : `Package ${packageName(specifier)} is not installed`,
+    detail: installDetail(ctx, hint),
     evidence: noNext ? [] : evidence(ctx.all, MODULE_MISSING),
     fix: null,
     command: `cd ${JSON.stringify(hint.dir)} && ${hint.command}`,

@@ -12,6 +12,7 @@ import { AvatarFace } from './CommentAvatar';
 import { breadcrumbOf, pinPlacement, scopeText } from '../commentPlacement';
 import { mentionLabel } from './MentionPicker';
 import { useProfileInitial } from '../useProfileInitial';
+import { INLINE_PROMPT_OPEN_EVENT } from '../useInlinePrompt';
 import { DrawingStrokes, PenIcon } from './DrawLayer';
 import '../styles/comments.css';
 
@@ -321,6 +322,12 @@ export function CommentLayer(props: Props) {
 
   useEffect(() => {
     setFeedbackActive(false);
+  }, [selKey]);
+
+  useEffect(() => {
+    const hide = () => setDismissedKey(selKey);
+    window.addEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
+    return () => window.removeEventListener(INLINE_PROMPT_OPEN_EVENT, hide);
   }, [selKey]);
 
   const modeKey = `${props.commentMode}:${props.selectMode}:${props.editing}`;

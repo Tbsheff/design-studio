@@ -228,6 +228,7 @@ function usePlay(p: Props) {
     return () => window.removeEventListener('keydown', handler, true);
   });
 
+  const linkKey = p.file.links.map((link) => `${link.id}:${link.from.frame}:${link.from.selector}`).join('|');
   const sendLinks = (frame: BridgeFrame, slot: Slot) => {
     const links = props.current.file.links.filter((link) => link.from.frame === slot.frame.id && staticLinkIssue(link, props.current.frames) === null).map(linkQuery);
     postToFrame(frame, { type: 'play-links', links });
@@ -239,7 +240,7 @@ function usePlay(p: Props) {
       const frame = readyFrames.current.get(slot.token);
       if (frame) sendLinks(frame, slot);
     }
-  }, [p.file]);
+  }, [linkKey]);
 
   const onReady = (frame: BridgeFrame, slot: Slot) => {
     readyFrames.current.set(slot.token, frame);

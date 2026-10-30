@@ -187,7 +187,7 @@ export function ComponentsPanel(props: Props) {
           groups.map(([folder, items]) => (
             <section key={folder || 'all'} className="cmp-group" aria-label={folder || 'Components'}>
               {groups.length > 1 && (
-                <h3 className="cmp-group-head truncate" data-tip={folder}>
+                <h3 className="cmp-group-head" data-tip={folder} data-tip-align="start">
                   <Icon name="folder" size={12} />
                   <span className="truncate">{folder}</span>
                   <span className="cmp-count">{items.length}</span>

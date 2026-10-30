@@ -34,6 +34,19 @@ export function stepValue(raw: string, delta: number, fallbackUnit: string): str
   return formatNumber(parsed.value + delta, parsed.unit);
 }
 
+export interface Shift {
+  delta: number;
+  min?: number;
+  max?: number;
+}
+
+export function shiftedValue(raw: string, shift: Shift): string | null {
+  const parsed = parseNumber(raw);
+  if (!parsed) return null;
+  const next = Math.min(shift.max ?? Infinity, Math.max(shift.min ?? -Infinity, parsed.value + shift.delta));
+  return formatNumber(next, parsed.unit);
+}
+
 export function normalizeLength(raw: string, defaultUnit: string): string {
   const trimmed = raw.trim();
   const parsed = parseNumber(trimmed);

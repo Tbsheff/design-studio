@@ -45,6 +45,11 @@
   color: var(--text-2);
 }
 
+.compare-ref-name {
+  display: flex;
+  min-width: 0;
+}
+
 .compare-ref-picture {
   position: absolute;
   inset: 0;

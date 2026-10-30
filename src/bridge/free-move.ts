@@ -1,5 +1,5 @@
-import type { FreeMoveDrag, FreeMoveInsert, FreeMoveLine, FreeMoveStart, SelectionContext, SourceLoc } from '../shared/contracts.js';
-import { authoredBox } from './authored.js';
+import type { FreeMoveDrag, FreeMoveInsert, FreeMoveLine, FreeMoveStart, NudgeBase, SelectionContext, SourceLoc } from '../shared/contracts.js';
+import { authoredBox, authoredMargins } from './authored.js';
 import { isLayer } from './layers.js';
 
 type Rect = SelectionContext['rect'];
@@ -114,6 +114,23 @@ function anchored(element: Element, cs: CSSStyleDeclaration): AbsoluteStart {
   const fromRight = box.left === undefined && box.right !== undefined && box.right !== 'auto';
   const fromBottom = box.top === undefined && box.bottom !== undefined && box.bottom !== 'auto';
   return { left: num(fromRight ? cs.right : cs.left), top: num(fromBottom ? cs.bottom : cs.top), convert: false, fromRight, fromBottom };
+}
+
+const OFFSET_POSITIONS = new Set(['absolute', 'fixed', 'relative']);
+
+export function nudgeBaseOf(element: Element): NudgeBase {
+  const cs = getComputedStyle(element);
+  if (OFFSET_POSITIONS.has(cs.position)) {
+    const at = anchored(element, cs);
+    return { mode: 'position', x: at.left, y: at.top, fromRight: at.fromRight, fromBottom: at.fromBottom, lockX: false, lockY: false };
+  }
+  const authored = authoredMargins(element);
+  const lockX = authored.left === 'auto';
+  const lockY = authored.top === 'auto';
+  const x = num(cs.marginLeft);
+  const y = num(cs.marginTop);
+  const hasMargin = (x !== 0 && !lockX) || (y !== 0 && !lockY);
+  return { mode: hasMargin ? 'margin' : 'none', x, y, fromRight: false, fromBottom: false, lockX, lockY };
 }
 
 function absoluteStart(element: Element, others: Element[]): AbsoluteStart | null {

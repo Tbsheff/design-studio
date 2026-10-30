@@ -100,9 +100,9 @@ const LOGICAL: [string, BoxProp][] = [
 ];
 
 interface BoxFound {
-  props: BoxProp[];
+  props: readonly string[];
   logical: boolean;
-  values: Partial<Record<BoxProp, string>>;
+  values: Record<string, string>;
 }
 
 function readDeclarations(style: CSSStyleDeclaration, found: BoxFound): void {
@@ -135,8 +135,7 @@ function sizeVisit(element: Element, rule: CSSRule, found: BoxFound, depth: numb
   if (rule instanceof CSSGroupingRule && groupApplies(rule)) for (const child of Array.from(rule.cssRules)) sizeVisit(element, child, found, depth + 1);
 }
 
-export function authoredBox(element: Element, insets: boolean): Partial<Record<BoxProp, string>> {
-  const found: BoxFound = { props: insets ? [...SIZE_PROPS, ...INSET_PROPS] : SIZE_PROPS, logical: insets, values: {} };
+function authoredValues(element: Element, found: BoxFound): Record<string, string> {
   for (const sheet of Array.from(document.styleSheets)) {
     if (sheet.disabled || isStudioSheet(sheet)) continue;
     const media = sheet.media.mediaText;
@@ -145,6 +144,15 @@ export function authoredBox(element: Element, insets: boolean): Partial<Record<B
   }
   if (element instanceof HTMLElement) readDeclarations(element.style, found);
   return found.values;
+}
+
+export function authoredBox(element: Element, insets: boolean): Partial<Record<BoxProp, string>> {
+  return authoredValues(element, { props: insets ? [...SIZE_PROPS, ...INSET_PROPS] : SIZE_PROPS, logical: insets, values: {} });
+}
+
+export function authoredMargins(element: Element): { left?: string; top?: string } {
+  const values = authoredValues(element, { props: ['margin-left', 'margin-top'], logical: false, values: {} });
+  return { left: values['margin-left'], top: values['margin-top'] };
 }
 
 export function authoredRules(element: Element): AuthoredRule[] {

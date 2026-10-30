@@ -7,7 +7,7 @@ import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
 import { createLayerIndex, moveSelection } from './layers.js';
 import { createLockSet } from './locks.js';
 import { createMarquee } from './marquee.js';
-import { createFreeMove } from './free-move.js';
+import { createFreeMove, nudgeBaseOf } from './free-move.js';
 import { createSharePointer } from './share-pointer.js';
 import { exposeHeadlessMatch, isMatchKind, matchingElements } from './select-match.js';
 import { exposeHeadlessScan, findStyles } from './style-scan.js';
@@ -15,6 +15,7 @@ import { elementBySource } from './reorder.js';
 import { reorderMoveOf } from '../shared/reorder.js';
 import { vectorToolKeyOf } from '../shared/vector.js';
 import { structureKeyOf } from '../shared/structure-keys.js';
+import { nudgeStepOf } from '../shared/nudge.js';
 import { createForceState, type ForcedState } from './force-state.js';
 import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
 import { createTextEditor } from './text-edit.js';
@@ -1010,6 +1011,29 @@ function startBridge(session: BridgeSession): void {
     return true;
   };
 
+  const forwardReorderKey = (event: KeyboardEvent): boolean => {
+    const reorder = reorderMoveOf(event);
+    if (!reorder || !selected?.isConnected || isTypingElement(eventElement(event))) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    post({ type: 'reorder-key', selector: selectorFor(selected), move: reorder });
+    return true;
+  };
+
+  const postNudge = (dx: number, dy: number): boolean => {
+    if (mode !== 'select' || !selected?.isConnected || textEditor.editing()) return false;
+    post({ type: 'nudge-key', selector: selectorFor(selected), dx, dy, base: nudgeBaseOf(selected) });
+    return true;
+  };
+
+  const forwardNudgeKey = (event: KeyboardEvent): boolean => {
+    const step = nudgeStepOf(event);
+    if (!step || isTypingElement(eventElement(event)) || !postNudge(step.dx, step.dy)) return false;
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  };
+
   const cancelMarquee = (event: KeyboardEvent): boolean => {
     if (event.key !== 'Escape' || !(freeMove.cancel() || marquee.cancel())) return false;
     event.preventDefault();
@@ -1021,14 +1045,7 @@ function startBridge(session: BridgeSession): void {
     if (textEditor.onKeyDown(event) || cancelMarquee(event)) return;
     if (mode !== 'select' && links.onKeyDown(event)) return;
     onAltChange(event);
-    const reorder = reorderMoveOf(event);
-    if (reorder && selected?.isConnected && !isTypingElement(eventElement(event))) {
-      event.preventDefault();
-      event.stopPropagation();
-      post({ type: 'reorder-key', selector: selectorFor(selected), move: reorder });
-      return;
-    }
-    if (mode !== 'select' || forwardStructureKey(event)) return;
+    if (forwardReorderKey(event) || mode !== 'select' || forwardStructureKey(event) || forwardNudgeKey(event)) return;
     if (isEditKey(event) && textEditor.canEdit(selected) && !isTypingElement(eventElement(event))) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -1222,6 +1239,7 @@ function startBridge(session: BridgeSession): void {
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
     },
     'move-cancel': () => void freeMove.cancel(),
+    nudge: (message) => void postNudge(Number(message.dx) || 0, Number(message.dy) || 0),
     'share-pointer': (message) => sharePointer.set(message.on === true),
     'request-neighbors': (message) => {
       if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });

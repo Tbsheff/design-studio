@@ -972,9 +972,20 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'move-start'; move: FreeMoveStart }
   | { ns: 'studio'; token: string; type: 'move-live'; drag: FreeMoveDrag }
   | { ns: 'studio'; token: string; type: 'move-drop'; drag: FreeMoveDrag }
-  | { ns: 'studio'; token: string; type: 'move-cancel' };
+  | { ns: 'studio'; token: string; type: 'move-cancel' }
+  | { ns: 'studio'; token: string; type: 'nudge-key'; selector: string; dx: number; dy: number; base: NudgeBase };
 
 export type FreeMoveMode = 'absolute' | 'flow';
+
+export interface NudgeBase {
+  mode: 'position' | 'margin' | 'none';
+  x: number;
+  y: number;
+  fromRight: boolean;
+  fromBottom: boolean;
+  lockX: boolean;
+  lockY: boolean;
+}
 
 export interface FreeMoveLine {
   axis: 'x' | 'y';
@@ -1111,6 +1122,7 @@ export type ParentToBridge =
   | { ns: 'studio'; token: string; type: 'find-styles'; requestId: string; query: StyleQuery; select?: boolean }
   | { ns: 'studio'; token: string; type: 'request-neighbors'; requestId: string; selector: string }
   | { ns: 'studio'; token: string; type: 'move-cancel' }
+  | { ns: 'studio'; token: string; type: 'nudge'; dx: number; dy: number }
   | { ns: 'studio'; token: string; type: 'share-pointer'; on: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-apply'; id: string; patch: DomPatch; written: boolean }
   | { ns: 'studio'; token: string; type: 'optimistic-settle'; id: string; ok: boolean; classes?: ClassDelta; reason?: string }

@@ -20,6 +20,7 @@ import { createLiveStore, useLive, type LiveStore } from '../liveStore';
 import { useStableProps } from '../stableProps';
 import type { HoverBox } from '../usePreviewFrames';
 import { useFreeMove, type FreeMoveView } from '../useFreeMove';
+import { useElementNudge } from '../useElementNudge';
 import { FreeMoveLayer } from './FreeMoveLayer';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { usePreviewMenu } from '../usePreviewMenu';
@@ -643,6 +644,17 @@ function CanvasView(props: ViewProps) {
     refreshRects: frames.refreshRects,
     onError: layerEdits.notify,
     applyStructure: layerEdits.applyStructure,
+  });
+  useElementNudge({
+    projectId,
+    directionId,
+    selection: props.selection,
+    enabled: handlesOn,
+    post: frames.post,
+    listen: frames.listen,
+    setSelection: props.setSelection,
+    refreshRects: frames.refreshRects,
+    onError: layerEdits.notify,
   });
 
   useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });

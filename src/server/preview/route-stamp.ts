@@ -19,9 +19,13 @@ async function filesIn(dir: string, pattern: RegExp): Promise<string[]> {
   return entries.filter((entry) => entry.isFile() && pattern.test(entry.name)).map((entry) => path.join(dir, entry.name));
 }
 
-function graphClient(label: string, cacheDir: string | null): WorkerClient<GraphRequest, GraphReply> {
-  const inProcess = new RouteGraph(cacheDir);
-  return new WorkerClient({ file: WORKER_FILE, label, workerData: { cacheDir }, inProcess: (request) => answerGraph(inProcess, request) });
+const ROUTE_GRAPH_IDLE_MS = 2 * 60_000;
+const USAGE_GRAPH_IDLE_MS = 20_000;
+
+function graphClient(label: string, cacheDir: string | null, idleMs: number): WorkerClient<GraphRequest, GraphReply> {
+  let inProcess: RouteGraph | null = null;
+  const answer = (request: GraphRequest) => answerGraph((inProcess ??= new RouteGraph(cacheDir)), request);
+  return new WorkerClient({ file: WORKER_FILE, label, workerData: { cacheDir }, inProcess: answer, idleMs });
 }
 
 export class RouteStamps {
@@ -32,8 +36,8 @@ export class RouteStamps {
   private readonly usageGraph: WorkerClient<GraphRequest, GraphReply>;
 
   constructor(cacheDir: string | null = null) {
-    this.graph = graphClient('route graph', cacheDir);
-    this.usageGraph = graphClient('usage graph', cacheDir ? `${cacheDir}-usage` : null);
+    this.graph = graphClient('route graph', cacheDir, ROUTE_GRAPH_IDLE_MS);
+    this.usageGraph = graphClient('usage graph', cacheDir ? `${cacheDir}-usage` : null, USAGE_GRAPH_IDLE_MS);
   }
 
   private routeList(workTree: string, appDir: string): Promise<AppRoute[]> {

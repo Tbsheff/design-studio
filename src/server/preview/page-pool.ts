@@ -11,9 +11,9 @@ interface IdlePage {
   timer: NodeJS.Timeout;
 }
 
-const MAX_IDLE = 12;
+const MAX_IDLE = 4;
 const MAX_ACTIVE = { playwright: 6, electron: 4 } as const;
-const IDLE_CLOSE_MS = 10 * 60_000;
+const IDLE_CLOSE_MS = 3 * 60_000;
 
 function sizeKey(size: PageSize): string {
   return `${size.width}x${size.height}@${size.scale ?? 1}`;

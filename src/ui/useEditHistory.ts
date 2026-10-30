@@ -10,6 +10,7 @@ export const PREVIEW_PAINTED_EVENT = 'studio:preview-painted';
 const EMPTY: EditHistoryState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null };
 const TOAST_MS = 2400;
 const REFRESH_WINDOW_MS = 3000;
+const REPLAY_SLACK_MS = 1000;
 const NOTHING_TO_UNDO = 'Nothing more to undo';
 
 type Describe = (anchors: AnchorQuery[]) => Promise<(SelectionContext | null)[]>;
@@ -60,20 +61,35 @@ export function useEditHistory(o: Options) {
     setState(next);
   }, []);
 
+  const loading = useRef<{ key: string; again: boolean } | null>(null);
+  const mountedAt = useRef(Date.now());
+
   const load = useCallback(() => {
     if (!directionId) return apply(EMPTY);
+    const key = `${projectId}/${directionId}`;
+    if (loading.current?.key === key) {
+      loading.current.again = true;
+      return;
+    }
+    const mine = { key, again: false };
+    loading.current = mine;
     const started = generation.current;
     api
       .editHistory(projectId, directionId)
       .then((next) => {
         if (generation.current === started && opts.current.directionId === directionId) apply(next);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (loading.current !== mine) return;
+        loading.current = null;
+        if (mine.again) load();
+      });
   }, [projectId, directionId, apply]);
 
   useEffect(load, [load]);
   useProjectEvents(projectId, (event) => {
-    if (event.type === 'edit-history.changed') load();
+    if (event.type === 'edit-history.changed' && event.ts >= mountedAt.current - REPLAY_SLACK_MS) load();
   });
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 

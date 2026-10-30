@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Project, RunRequest, StudioEvent, Version, WorkTreeStatus } from '../shared/contracts';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import type { Project, RunRequest, RunSummary, StudioEvent, Version, WorkTreeStatus } from '../shared/contracts';
 import { api, errorText } from './api';
 import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
 import { useProjectEvents, type ConnectionState } from './events';
 import { reportFirstToken } from './perfTelemetry';
 import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
+import { listRunPage, publishOlderRuns } from './runHistoryApi';
 import { useRunNotice } from './useRunNotice';
 import { uiStore, useUi } from './storage';
 
@@ -67,6 +68,106 @@ function trackFirstToken(sends: SendTimes, projectId: string, event: StudioEvent
   reportFirstToken(projectId, event.directionId, event.runId, sentAt);
 }
 
+const FIRST_RUNS = 12;
+const MORE_RUNS = 16;
+
+interface RunCursor {
+  projectId: string;
+  before: number | null;
+  done: boolean;
+  loading: boolean;
+  byDirection: Map<string, number>;
+  seen: Set<string>;
+}
+
+function newCursor(projectId: string): RunCursor {
+  return { projectId, before: null, done: false, loading: false, byDirection: new Map(), seen: new Set() };
+}
+
+function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
+  const next: RunMap = { ...prev };
+  for (const s of list) {
+    const known = next[s.id];
+    if (!known?.summary) next[s.id] = runFromSummary(s);
+    else if (s.title && !known.summary.title) next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
+  }
+  return next;
+}
+
+function countRuns(cursor: RunCursor, list: RunSummary[]): void {
+  for (const s of list) {
+    if (cursor.seen.has(s.id)) continue;
+    cursor.seen.add(s.id);
+    cursor.byDirection.set(s.directionId, (cursor.byDirection.get(s.directionId) ?? 0) + 1);
+  }
+}
+
+function loadedFor(cursor: RunCursor, directionId: string | null): number {
+  if (directionId === null) return cursor.seen.size;
+  return cursor.byDirection.get(directionId) ?? 0;
+}
+
+type SetRuns = Dispatch<SetStateAction<RunMap>>;
+
+function useRunPages(projectId: string, directionId: string | null, setRuns: SetRuns, setRunsLoaded: (loaded: boolean) => void): void {
+  const cursor = useRef<RunCursor>(newCursor(projectId));
+  const direction = useRef(directionId);
+  direction.current = directionId;
+
+  const publish = useCallback((c: RunCursor, load: (() => void) | null) => {
+    if (cursor.current === c) publishOlderRuns({ more: !c.done, loading: c.loading }, load);
+  }, []);
+
+  const fill = useCallback(
+    async (c: RunCursor, target: number) => {
+      if (c.loading || c.done) return;
+      c.loading = true;
+      publish(c, null);
+      try {
+        let first = c.before === null;
+        while (!c.done && cursor.current === c && loadedFor(c, direction.current) < target) {
+          const page = await listRunPage(c.projectId, first ? FIRST_RUNS : MORE_RUNS, c.before);
+          if (cursor.current !== c) return;
+          first = false;
+          countRuns(c, page.runs);
+          c.before = page.nextBefore;
+          c.done = page.nextBefore === null;
+          setRuns((prev) => mergeSummaries(prev, page.runs));
+          setRunsLoaded(true);
+          for (const s of page.runs.filter((r) => r.status === 'running')) {
+            api
+              .getRun(s.id)
+              .then(({ events }) => cursor.current === c && setRuns((prev) => events.reduce(applyRunEvent, prev)))
+              .catch(() => undefined);
+          }
+        }
+      } catch {
+        setRunsLoaded(true);
+      } finally {
+        c.loading = false;
+        publish(c, () => void fill(c, loadedFor(c, direction.current) + MORE_RUNS));
+      }
+    },
+    [publish, setRuns, setRunsLoaded],
+  );
+
+  useEffect(() => {
+    const c = newCursor(projectId);
+    cursor.current = c;
+    setRunsLoaded(false);
+    void fill(c, FIRST_RUNS);
+    return () => {
+      if (cursor.current === c) cursor.current = newCursor(projectId);
+      publishOlderRuns({ more: false, loading: false }, null);
+    };
+  }, [projectId, fill, setRunsLoaded]);
+
+  useEffect(() => {
+    const c = cursor.current;
+    if (directionId !== null && !c.loading && loadedFor(c, directionId) < FIRST_RUNS) void fill(c, FIRST_RUNS);
+  }, [directionId, fill]);
+}
+
 export function useStudioData(projectId: string): StudioData {
   const ui = useUi();
   const [project, setProject] = useState<Project | null>(null);
@@ -101,33 +202,12 @@ export function useStudioData(projectId: string): StudioData {
       .getProject(projectId)
       .then((p) => alive && setProject(p))
       .catch((err) => alive && setLoadError(errorText(err)));
-    setRunsLoaded(false);
-    api
-      .listRuns(projectId)
-      .then((list) => {
-        if (!alive) return;
-        setRunsLoaded(true);
-        setRuns((prev) => {
-          const next: RunMap = { ...prev };
-          for (const s of list) {
-            const known = next[s.id];
-            if (!known?.summary) next[s.id] = runFromSummary(s);
-            else if (s.title && !known.summary.title) next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
-          }
-          return next;
-        });
-        for (const s of list.filter((r) => r.status === 'running')) {
-          api
-            .getRun(s.id)
-            .then(({ events }) => alive && setRuns((prev) => events.reduce(applyRunEvent, prev)))
-            .catch(() => undefined);
-        }
-      })
-      .catch(() => alive && setRunsLoaded(true));
     return () => {
       alive = false;
     };
   }, [projectId]);
+
+  useRunPages(projectId, directionId, setRuns, setRunsLoaded);
 
   const refreshVersions = useCallback(() => {
     const did = directionRef.current;

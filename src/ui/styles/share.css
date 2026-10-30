@@ -33,13 +33,16 @@
   display: grid;
   margin: 0;
   padding: 0;
-  max-height: 206px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   list-style: none;
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   background: var(--surface-2);
+}
+
+.share-links:has(> :nth-child(5)) {
+  max-height: 206px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .share-link {

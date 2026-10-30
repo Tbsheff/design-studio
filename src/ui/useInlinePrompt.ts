@@ -34,6 +34,7 @@ function blockerOf(o: InlinePromptOptions): string | null {
 }
 
 const SNIPPET_MAX = 16;
+export const INLINE_PROMPT_OPEN_EVENT = 'studio:inline-prompt-open';
 
 function labelOf(selection: SelectionContext[]): string {
   const last = selection.at(-1);
@@ -64,6 +65,7 @@ export function useInlinePrompt(o: InlinePromptOptions): InlinePromptView | null
     if (cur.selection.length === 0 || !cur.live) return;
     returnTo.current = document.activeElement;
     setOpen(true);
+    window.dispatchEvent(new Event(INLINE_PROMPT_OPEN_EVENT));
   }, []);
   const close = useCallback(() => {
     setOpen(false);

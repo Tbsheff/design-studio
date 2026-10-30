@@ -152,7 +152,7 @@ function snippet(text: string, max: number): string {
 }
 
 function className(selection: SelectionContext): string | null {
-  const match = /\bclass="([^"]*)"/.exec(selection.outerHTML.slice(0, 400));
+  const match = /^<[^>]*\bclass="([^"]*)"/.exec(selection.outerHTML.slice(0, 4000));
   const first = match?.[1]?.trim().split(/\s+/)[0];
   return first ? first : null;
 }

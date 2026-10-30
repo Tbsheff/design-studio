@@ -3,7 +3,7 @@ import type { DirectStyleProperty, SelectionContext } from '../shared/contracts'
 import { ApiError, api, errorText } from './api';
 import type { PreviewPort } from './bridge';
 import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
-import { addShift, mergeValues, multiBlockReason, ownEdits, shiftedStyle, withoutShifts, type Shift, type Shifts } from './mixedValues';
+import { addShift, mergeValues, multiBlockReason, ownEdits, shiftedStyle, withoutShifts, type Shift, type ShiftPart, type Shifts } from './mixedValues';
 import type { DirectEdit, DirectEditCommit, DirectEditControl, SaveStatus } from './useDirectEdit';
 import { startOptimistic } from './optimisticEdit';
 
@@ -157,9 +157,9 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   );
 
   const shift = useCallback(
-    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}) => {
+    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}, part?: ShiftPart) => {
       if (blocked) return;
-      const next = addShift(shifts.current, props, delta, bounds);
+      const next = addShift(shifts.current, props, delta, bounds, part);
       setShifts(next);
       const draft = { ...draftRef.current };
       for (const prop of props) delete draft[prop];
@@ -244,5 +244,5 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   }, [merged, draft]);
   const dirty = useMemo(() => [...new Set([...(Object.keys(draft) as DirectStyleProperty[]), ...shifted])], [draft, shifted]);
   const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed, text: '', status, tailwind: null, preview, shift, revert, commit, commitSoon, previewText: noop, revertText: noop, reset, drain, absorb, dirty, blocked, scope, reselect: noop };
+  return { values, mixed, each: bases, text: '', status, tailwind: null, preview, shift, revert, commit, commitSoon, previewText: noop, revertText: noop, reset, drain, absorb, dirty, blocked, scope, reselect: noop };
 }

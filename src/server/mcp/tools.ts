@@ -280,7 +280,6 @@ const WARM_TIMEOUT_MS = 120_000;
 
 const SCRIPT_SRC = /<script[^>]+src="(\/_next\/[^"]+)"/g;
 const WARM_SCRIPTS_MAX = 40;
-const WARM_SCRIPTS_AT_ONCE = 6;
 
 async function touch(url: URL, signal?: AbortSignal): Promise<string | null> {
   const timeout = AbortSignal.timeout(WARM_TIMEOUT_MS);
@@ -297,10 +296,7 @@ export async function warmUpstream(upstream: string, page: string | undefined, s
   const html = await touch(new URL(`/${page ?? ''}`, upstream), signal);
   if (!html) return;
   const scripts = [...new Set([...html.matchAll(SCRIPT_SRC)].map((match) => (match[1] as string).replace(/&amp;/g, '&')))].slice(0, WARM_SCRIPTS_MAX);
-  const lane = async (): Promise<void> => {
-    for (let src = scripts.shift(); src !== undefined && !signal?.aborted; src = scripts.shift()) await touch(new URL(src, upstream), signal);
-  };
-  await Promise.all(Array.from({ length: WARM_SCRIPTS_AT_ONCE }, lane));
+  await Promise.all(scripts.map((src) => touch(new URL(src, upstream), signal)));
 }
 
 async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {

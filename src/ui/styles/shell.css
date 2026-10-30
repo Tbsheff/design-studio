@@ -1,9 +1,16 @@
 :root[data-shell='mac'] {
   --shell-inset: 88px;
+  --shell-bar-h: 48px;
+  --shell-top: var(--shell-bar-h);
 }
 
 :root[data-shell='mac'][data-fullscreen='true'] {
   --shell-inset: var(--s-3);
+  --shell-top: var(--s-2);
+}
+
+:root[data-shell='mac'] .pane-head {
+  height: var(--shell-bar-h);
 }
 
 :root[data-shell='mac'] .pane-head,
@@ -23,7 +30,7 @@
 
 :root[data-shell='mac'] .home-header {
   flex: none;
-  height: 48px;
+  height: var(--shell-bar-h);
   padding-left: var(--shell-inset);
   box-shadow: 0 1px 0 transparent;
   position: relative;
@@ -84,5 +91,5 @@
 }
 
 :root[data-shell='mac'] .studio .pane-canvas {
-  margin-top: var(--s-2);
+  margin-top: calc((var(--shell-bar-h) - var(--bar-h)) / 2);
 }

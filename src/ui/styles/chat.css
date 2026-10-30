@@ -1020,7 +1020,7 @@
 
 .run-change .ui-file-chip {
   height: 28px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
 }
@@ -1057,7 +1057,7 @@
   width: 28px;
   height: 28px;
   margin: -2px 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .chat .run-error {
@@ -1160,6 +1160,7 @@
 
 .btn.run-foot-details {
   height: 28px;
+  border-radius: var(--r-control-sm);
   margin: -2px 0 -2px auto;
   padding: 0 var(--s-2);
   color: var(--text-3);
@@ -1188,6 +1189,7 @@
 .polish-this .btn {
   flex: none;
   height: 28px;
+  border-radius: var(--r-control-sm);
   font-size: var(--t-xs);
 }
 

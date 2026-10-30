@@ -22,6 +22,7 @@
 
 .img-actions .btn {
   height: 28px;
+  border-radius: var(--r-control-sm);
 }
 
 .img-fit {

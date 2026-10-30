@@ -21,7 +21,7 @@
   align-items: center;
   height: 22px;
   border: 0;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-xs);
   background: transparent;
   font-size: var(--t-xs);
   line-height: 16px;

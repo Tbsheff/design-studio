@@ -249,7 +249,7 @@
 
 .lib-actions .btn {
   height: 30px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-control);
 }
 
 .lib-detail-body {

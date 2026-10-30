@@ -21,7 +21,7 @@
   height: 28px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-2);
   font-size: var(--t-sm);
@@ -222,7 +222,7 @@
   align-items: center;
   min-width: 0;
   height: 28px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px transparent;
   transition-property: box-shadow, background-color;
@@ -270,7 +270,7 @@ body.ins-scrubbing * {
   width: 100%;
   height: 100%;
   padding: 0 var(--s-2) 0 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   box-shadow: none;
   font-size: var(--t-xs);
@@ -433,7 +433,7 @@ body.ins-scrubbing * {
 
 .box-ring.padding {
   padding: var(--s-1);
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-sm);
   background: var(--surface-2);
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -455,7 +455,7 @@ body.ins-scrubbing * {
 .ins-link.icon-btn {
   width: 24px;
   height: 24px;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-sm);
 }
 
 .ins-link.icon-btn::before {
@@ -467,7 +467,7 @@ body.ins-scrubbing * {
 .box-ring .side {
   height: 28px;
   padding: 0 var(--s-1);
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-sm);
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line);
   text-align: center;
@@ -512,7 +512,7 @@ body.ins-scrubbing * {
 .box-content {
   display: block;
   height: 24px;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-xs);
   background: var(--accent-soft);
   box-shadow: inset 0 0 0 1px var(--accent-line);
 }
@@ -687,7 +687,7 @@ body.ins-scrubbing * {
   height: 28px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-3);
   font-size: var(--t-xs);

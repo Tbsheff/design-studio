@@ -3,6 +3,7 @@ import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { createAgentRunner } from './agent/index.js';
 import { createCommentStore } from './store/comments.js';
+import { followSourceMoves } from './direct-edit/follow-moves.js';
 import { loadConfig } from './config.js';
 import { createApp } from './http/app.js';
 import { createCanvasService } from './canvas/service.js';
@@ -63,6 +64,7 @@ async function main(): Promise<void> {
   const preview = createPreviewService({ config, bus, projects, versions });
   const canvas = createCanvasService(bus, (projectId) => projects.projectDir(projectId));
   const comments = createCommentStore(config.dataDir, bus);
+  followSourceMoves(comments);
   const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas, comments });
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {

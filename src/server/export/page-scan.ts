@@ -14,7 +14,13 @@ export interface ScanShadow {
   dx: number;
   dy: number;
   blur: number;
+  spread: number;
   color: ScanColor;
+}
+
+export interface ScanGradient {
+  angle: number;
+  stops: { color: ScanColor; pos: number }[];
 }
 
 export interface ScanBorder {
@@ -36,6 +42,8 @@ export interface ScanBox extends ScanRect {
   id?: number;
   complex?: boolean;
   image?: boolean;
+  gradient?: ScanGradient;
+  inset?: boolean;
 }
 
 export interface ScanLine extends ScanRect {
@@ -86,7 +94,8 @@ export type ScanShape =
   | (ScanPaint & ScanRect & { kind: 'rect'; radius: number })
   | (ScanPaint & ScanRect & { kind: 'ellipse' })
   | (ScanPaint & { kind: 'line'; x1: number; y1: number; x2: number; y2: number })
-  | (ScanPaint & { kind: 'path'; d: string; matrix: [number, number, number, number, number, number] });
+  | (ScanPaint & { kind: 'path'; d: string; matrix: [number, number, number, number, number, number] })
+  | (ScanPaint & ScanRect & { kind: 'text'; text: string; font: ScanFont; anchor: string });
 
 export type ScanItem = ScanBox | ScanText | ScanSvg;
 
@@ -172,14 +181,117 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     return [list[0] ?? 0, list[1] ?? 0, list[2] ?? 0, list[3] ?? 0];
   };
 
-  const shadowOf = (raw: string): ScanShadow | null => {
-    if (!raw || raw === 'none' || raw.includes('inset')) return null;
-    const first = raw.split(/,(?![^(]*\))/)[0] ?? '';
-    const paint = /(rgba?\([^)]*\)|#[0-9a-f]{3,8}|[a-z]+\([^)]*\))/i.exec(first)?.[0] ?? 'rgba(0,0,0,0.3)';
-    const nums = first.replace(paint, '').trim().split(/\s+/).map((part) => parseFloat(part));
+  const topLevel = (raw: string): string[] => {
+    const parts: string[] = [];
+    let depth = 0;
+    let start = 0;
+    for (let index = 0; index < raw.length; index += 1) {
+      const char = raw[index];
+      if (char === '(') depth += 1;
+      else if (char === ')') depth -= 1;
+      else if (char === ',' && depth === 0) {
+        parts.push(raw.slice(start, index).trim());
+        start = index + 1;
+      }
+    }
+    parts.push(raw.slice(start).trim());
+    return parts;
+  };
+
+  const shadowLayer = (layer: string): (ScanShadow & { inset: boolean }) | null => {
+    const paint = /(rgba?\([^)]*\)|#[0-9a-f]{3,8}|[a-z]+\([^)]*\))/i.exec(layer)?.[0] ?? 'rgba(0,0,0,0.3)';
     const shade = color(paint);
     if (!shade) return null;
-    return { dx: nums[0] ?? 0, dy: nums[1] ?? 0, blur: nums[2] ?? 0, color: shade };
+    const nums = layer.replace(paint, '').replace('inset', '').trim().split(/\s+/).map((part) => parseFloat(part) || 0);
+    return { dx: nums[0] ?? 0, dy: nums[1] ?? 0, blur: nums[2] ?? 0, spread: nums[3] ?? 0, color: shade, inset: layer.includes('inset') };
+  };
+
+  const shadowOf = (raw: string): { shadow: ScanShadow | null; inset: boolean } => {
+    if (!raw || raw === 'none') return { shadow: null, inset: false };
+    const layers = topLevel(raw).map(shadowLayer).filter((layer): layer is ScanShadow & { inset: boolean } => layer !== null);
+    const outer = layers.filter((layer) => !layer.inset).sort((a, b) => b.blur + Math.hypot(b.dx, b.dy) - (a.blur + Math.hypot(a.dx, a.dy)));
+    const [top] = outer;
+    return { shadow: top ? { dx: top.dx, dy: top.dy, blur: top.blur, spread: top.spread, color: top.color } : null, inset: layers.some((layer) => layer.inset) };
+  };
+
+  const sideAngle = (raw: string, box: ScanRect): number | null => {
+    const words = raw.replace(/^to\s+/, '').split(/\s+/);
+    const sx = words.includes('right') ? 1 : words.includes('left') ? -1 : 0;
+    const sy = words.includes('bottom') ? 1 : words.includes('top') ? -1 : 0;
+    if (sx === 0 && sy === 0) return null;
+    const [vx, vy] = sx !== 0 && sy !== 0 ? [sx * box.height, sy * box.width] : [sx, sy];
+    return (Math.atan2(vx, -vy) * 180) / Math.PI;
+  };
+
+  const angleOf = (raw: string, box: ScanRect): number | null => {
+    const head = raw.replace(/\s*in\s+[a-z-]+(\s+[a-z]+\s+hue)?\s*/i, ' ').trim();
+    if (head === '') return 180;
+    if (head.startsWith('to ')) return sideAngle(head, box);
+    const match = /^(-?[\d.]+)(deg|turn|rad|grad)$/.exec(head);
+    if (!match) return null;
+    const value = parseFloat(match[1] ?? '0');
+    return match[2] === 'turn' ? value * 360 : match[2] === 'rad' ? (value * 180) / Math.PI : match[2] === 'grad' ? value * 0.9 : value;
+  };
+
+  type RawStop = { color: ScanColor; pos: number | null };
+
+  const rawStops = (parts: string[], length: number): RawStop[] | null => {
+    const raw: RawStop[] = [];
+    for (const part of parts) {
+      const paint = /^(rgba?\([^)]*\)|[a-z]+\([^)]*\)|#[0-9a-f]{3,8}|[a-z]+)\s*(.*)$/i.exec(part);
+      const shade = paint ? color(paint[1] ?? '') : null;
+      if (!paint || !shade) return null;
+      const spots = (paint[2] ?? '').split(/\s+/).filter(Boolean).map((spot) => (spot.endsWith('%') ? parseFloat(spot) / 100 : spot.endsWith('px') ? parseFloat(spot) / length : NaN));
+      if (spots.some((spot) => !Number.isFinite(spot))) return null;
+      if (spots.length === 0) raw.push({ color: shade, pos: null });
+      for (const spot of spots) raw.push({ color: shade, pos: spot });
+    }
+    return raw.length < 2 ? null : raw;
+  };
+
+  const fillGap = (raw: RawStop[], from: number): void => {
+    let to = from + 1;
+    while (raw[to]?.pos === null) to += 1;
+    const a = raw[from]?.pos ?? 0;
+    const b = raw[to]?.pos ?? 1;
+    for (let at = from + 1; at < to; at += 1) {
+      const stop = raw[at];
+      if (stop) stop.pos = a + ((b - a) * (at - from)) / (to - from);
+    }
+  };
+
+  const stopsOf = (parts: string[], length: number): ScanGradient['stops'] | null => {
+    const raw = rawStops(parts, length);
+    if (!raw) return null;
+    const first = raw[0];
+    const last = raw[raw.length - 1];
+    if (first && first.pos === null) first.pos = 0;
+    if (last && last.pos === null) last.pos = 1;
+    let floor = 0;
+    for (const stop of raw) {
+      if (stop.pos === null) continue;
+      stop.pos = Math.max(floor, stop.pos);
+      floor = stop.pos;
+    }
+    for (let index = 1; index < raw.length; index += 1) if (raw[index]?.pos === null) fillGap(raw, index - 1);
+    return raw.map((stop) => ({ color: stop.color, pos: round(Math.min(1, Math.max(0, stop.pos ?? 0))) }));
+  };
+
+  const gradientOf = (style: CSSStyleDeclaration, box: ScanRect, fill: ScanColor | null): ScanGradient | undefined => {
+    if (!options.native || [style.backgroundClip, style.getPropertyValue('-webkit-background-clip')].includes('text')) return undefined;
+    const layers = topLevel(style.backgroundImage);
+    const match = layers.length === 1 ? /^linear-gradient\((.*)\)$/s.exec(layers[0] ?? '') : null;
+    if (!match || !['auto', 'auto auto'].includes(style.backgroundSize)) return undefined;
+    const args = topLevel(match[1] ?? '');
+    const head = args[0] ?? '';
+    const named = /^(to\s|in\s|-?[\d.]+(deg|turn|rad|grad)\b)/.test(head);
+    const angle = named ? angleOf(head, box) : 180;
+    if (angle === null) return undefined;
+    const theta = (angle * Math.PI) / 180;
+    const length = Math.abs(box.width * Math.sin(theta)) + Math.abs(box.height * Math.cos(theta));
+    const stops = stopsOf(named ? args.slice(1) : args, length || 1);
+    if (!stops || (fill && stops.some((stop) => stop.color.alpha < 0.99))) return undefined;
+    return { angle: round(angle), stops };
   };
 
   const borderSide = (style: CSSStyleDeclaration, side: 'Top' | 'Right' | 'Bottom' | 'Left'): { width: number; color: ScanColor | null; style: string } => {
@@ -249,6 +361,12 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     return { id: tag(element), complex: complexOf(element, style, box), image: element.tagName === 'IMG' };
   };
 
+  const paintExtras = (style: CSSStyleDeclaration, box: ScanRect, fill: ScanColor | null, image: boolean, inset: boolean): { gradient?: ScanGradient; inset?: boolean } => {
+    const gradient = image ? gradientOf(style, box, fill) : undefined;
+    if (image && !gradient) note('background images and gradients kept as pictures');
+    return { ...(gradient ? { gradient } : {}), ...(inset ? { inset } : {}) };
+  };
+
   const pushBox = (element: Element, style: CSSStyleDeclaration, opacity: number, clip: number): void => {
     const box = local(element.getBoundingClientRect());
     if (box.width < 0.5 || box.height < 0.5 || outside(box)) return;
@@ -256,10 +374,9 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     const image = style.backgroundImage !== 'none' && style.backgroundImage !== '';
     const fill = color(style.backgroundColor);
     const edge = borders(style, box);
-    const shadow = shadowOf(style.boxShadow);
-    if (!replaced && !image && !fill && !edge.border && edge.sides.length === 0 && !shadow) return;
-    if (image && !replaced) note('background images and gradients kept as pictures');
-    items.push({ kind: 'box', ...box, fill: replaced ? null : fill, radius: radii(style, box), ...edge, shadow, raster: replaced || image, opacity, clip, ...nativeOf(element, style, box) });
+    const { shadow, inset } = shadowOf(style.boxShadow);
+    if (!replaced && !image && !fill && !edge.border && edge.sides.length === 0 && !shadow && !inset) return;
+    items.push({ kind: 'box', ...box, fill: replaced ? null : fill, radius: radii(style, box), ...edge, shadow, raster: replaced || image, opacity, clip, ...nativeOf(element, style, box), ...paintExtras(style, box, fill, image && !replaced, inset) });
   };
 
   const SVG_PAINT = ['fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width', 'stroke-opacity', 'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray', 'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor', 'dominant-baseline', 'stop-color', 'stop-opacity', 'visibility'];
@@ -348,6 +465,28 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
     return geometry ? ({ ...geometry, ...paint } as ScanShape) : geometry;
   };
 
+  const plainText = (node: SVGTextElement): boolean => {
+    const lists = [node.x.baseVal, node.y.baseVal, node.dx.baseVal, node.dy.baseVal];
+    if (lists.some((list) => list.numberOfItems > 1) || node.rotate.baseVal.numberOfItems > 0 || node.hasAttribute('textLength')) return false;
+    return Array.from(node.querySelectorAll('*')).every((child) => child instanceof SVGTSpanElement && ['x', 'y', 'dx', 'dy', 'rotate', 'textLength'].every((attr) => !child.hasAttribute(attr)));
+  };
+
+  const svgText = (node: SVGTextElement, root: SVGSVGElement, style: CSSStyleDeclaration): ScanShape | null | undefined => {
+    const m = node.getScreenCTM();
+    if (!m || Math.abs(m.b) > 1e-6 || Math.abs(m.c) > 1e-6 || !plainText(node)) return null;
+    const fill = paintOf(style, 'fill');
+    const stroke = paintOf(style, 'stroke');
+    if (fill === false || stroke === false || (stroke && (parseFloat(style.strokeWidth) || 0) > 0)) return null;
+    const text = (node.textContent ?? '').replace(/\s+/g, ' ').trim();
+    if (!fill || !text) return undefined;
+    const box = local(node.getBoundingClientRect());
+    if (box.width <= 0 || box.height <= 0) return undefined;
+    const size = round((parseFloat(style.fontSize) || 16) * Math.abs(m.d));
+    const font = { family: familyList(style.fontFamily), size, weight: parseInt(style.fontWeight, 10) || 400, italic: style.fontStyle === 'italic' || style.fontStyle.startsWith('oblique') };
+    font.family.split(',').forEach((name) => usedFamilies.add(name.trim().replace(/^["']|["']$/g, '').toLowerCase()));
+    return { kind: 'text', ...box, text, font, anchor: style.textAnchor || 'start', fill, stroke: null, strokeWidth: 0, opacity: round(opacityIn(node, root)) };
+  };
+
   const svgShapes = (root: SVGSVGElement): ScanShape[] | null => {
     const out: ScanShape[] = [];
     for (const node of Array.from(root.querySelectorAll('*'))) {
@@ -355,8 +494,8 @@ export async function scanPage(options: ScanOptions): Promise<ScanResult> {
       if (hiddenIn(node, root)) continue;
       const style = getComputedStyle(node);
       if (effects(style)) return null;
-      if (SVG_GROUP.has(node.tagName)) continue;
-      const shape = svgShape(node, root, style);
+      if (SVG_GROUP.has(node.tagName) || node instanceof SVGTSpanElement) continue;
+      const shape = node instanceof SVGTextElement ? svgText(node, root, style) : svgShape(node, root, style);
       if (shape === null) return null;
       if (shape) out.push(shape);
     }

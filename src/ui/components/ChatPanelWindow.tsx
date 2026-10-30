@@ -34,7 +34,7 @@ function nextCount(state: WindowState, items: readonly Item[], since: number): n
   return state.count + live;
 }
 
-export function useHistoryWindow<T extends Item>(items: T[], resetKey: string | null, all: boolean): HistoryWindow<T> {
+export function useHistoryWindow<T extends Item>(items: T[], resetKey: string | null, reveal: string | null): HistoryWindow<T> {
   const { viewportRef } = useConversation();
   const [since] = useState(() => Date.now());
   const [state, setState] = useState<WindowState>({ reset: resetKey, count: FIRST, last: null });
@@ -42,7 +42,10 @@ export function useHistoryWindow<T extends Item>(items: T[], resetKey: string | 
   const count = state.reset === resetKey ? nextCount(state, items, since) : FIRST;
   if (state.reset !== resetKey) setState({ reset: resetKey, count: FIRST, last: null });
   else if (state.last !== last) setState({ ...state, count, last });
-  const start = all ? 0 : Math.max(0, items.length - count);
+  const revealAt = reveal === null ? -1 : items.findIndex((item) => item.key === reveal);
+  const need = revealAt === -1 ? 0 : items.length - revealAt;
+  if (need > count && state.reset === resetKey) setState((prev) => ({ ...prev, count: Math.max(prev.count, need) }));
+  const start = Math.max(0, items.length - Math.max(count, need));
   const fromBottom = useRef<number | null>(null);
   const shortBy = start - STEP;
   const more = useCallback(() => {

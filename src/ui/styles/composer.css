@@ -233,6 +233,15 @@
   text-align: start;
 }
 
+@container (max-width: 560px) {
+  .prompt-foot {
+    column-gap: var(--s-1);
+  }
+  .prompt-foot .disclosure-toggle {
+    min-width: 0;
+  }
+}
+
 .prompt-foot.disclosure-line.open {
   position: static;
   align-items: center;

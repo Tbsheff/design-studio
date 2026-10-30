@@ -7,6 +7,7 @@ const CORE_TOOLS = ['screenshot', 'render_check', 'design_review', 'canvas_list'
 const TWEAK_TOOLS = ['define_tweaks'];
 const DESIGN_SYSTEM_TOOLS = ['design_system_check'];
 const KIT_TOOLS = ['list_components', 'component_preview', 'insert_component', 'set_props', 'create_component', 'swap_instance'];
+const LEAN_TOOLS = new Set(['screenshot', 'render_check', 'edit_element', 'set_props', 'measure', HELP_TOOL]);
 const APP_TOOLS = ['list_frame_states', 'set_frame_state', 'set_frame_session', 'list_route_links', 'add_flow', 'prepare_ship', 'app_doctor', 'get_run_context'];
 
 export type ToolScopeProject = Pick<Project, 'kind' | 'app' | 'designSystemFor'>;
@@ -16,7 +17,11 @@ function scopedTools(project: ToolScopeProject): string[] {
   return [...CORE_TOOLS, ...(app ? [] : TWEAK_TOOLS), ...(project.designSystemFor ? DESIGN_SYSTEM_TOOLS : []), ...(project.kind === 'react' || app ? KIT_TOOLS : []), ...(app ? APP_TOOLS : [])];
 }
 
-export function studioToolsFor(project: ToolScopeProject, mode: RunMode): Set<string> {
-  const names = scopedTools(project);
+export function studioToolsFor(project: ToolScopeProject, mode: RunMode, lean = false): Set<string> {
+  const names = scopedTools(project).filter((name) => !lean || LEAN_TOOLS.has(name));
   return new Set(mode === 'critique' ? names.filter((name) => !blockedInCritique(`mcp__studio__${name}`)) : names);
+}
+
+export function leanBuiltins(names: string[]): string[] {
+  return names.filter((name) => name !== 'TodoWrite' && name !== 'Bash' && name !== 'Skill');
 }

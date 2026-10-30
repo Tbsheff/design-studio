@@ -21,7 +21,7 @@ export function isLeanRun(request: LeanRequest): boolean {
 }
 
 export function leanRunConfig(config: ResolvedRunConfig): ResolvedRunConfig {
-  const preset = config.preset;
+  const { screens: _screens, ...preset } = config.preset;
   return {
     ...config,
     maxTurns: Math.min(LEAN_MAX_TURNS, config.maxTurns),

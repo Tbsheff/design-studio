@@ -21,6 +21,10 @@ const ROUTE_APPS = 3;
 const ROUTE_LIMIT = 8;
 const routeCache = new Map<string, { at: number; routes: Promise<RouteHit[]> }>();
 
+function recency(project: Project): number {
+  return project.openedAt ?? project.updatedAt;
+}
+
 function typeOf(project: Project): ProjectType {
   if (project.designSystemFor) return 'design-system';
   if (project.app) return project.app.framework;
@@ -65,6 +69,7 @@ function hitOf(project: Project, deps: ProjectSearchDeps): ProjectHit {
     typeLabel: TYPE_LABELS[type],
     place: placeOf(project),
     updatedAt: project.updatedAt,
+    openedAt: project.openedAt ?? null,
     health: projectHealth(project, project.app ? (deps.appStatus?.(project) ?? null) : null),
     thumbnail: project.thumbnail?.versionId ?? null,
   };
@@ -101,7 +106,7 @@ function routeSources(all: Project[], matched: Project[], projectId: string | nu
 export async function searchProjects(deps: ProjectSearchDeps, input: ProjectSearchInput = {}): Promise<ProjectSearchResult> {
   const query = (input.query ?? '').trim().slice(0, 100);
   const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
-  const all = (await deps.projects.list()).sort((a, b) => b.updatedAt - a.updatedAt);
+  const all = (await deps.projects.list()).filter((p) => !p.designSystemDeleted).sort((a, b) => recency(b) - recency(a));
   const matched = query ? all.map((p) => ({ p, score: fuzzyScore(`${p.name} ${p.app?.appDir ?? ''}`, query) })).filter((r) => r.score !== null).sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).map((r) => r.p) : all;
   const sources = routeSources(all, matched, input.projectId, query);
   const routeQuery = query.replace(/^\//, '');

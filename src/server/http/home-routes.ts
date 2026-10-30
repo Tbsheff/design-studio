@@ -57,14 +57,34 @@ export function registerHomeRoutes(app: Hono, deps: HomeRouteDeps): void {
     return c.json({ project, runId: null });
   });
 
-  app.post('/api/projects/sample', async (c) => {
-    const body = await readBody(c);
-    const first = await createFromStarter(SAMPLE_STARTER_ID, optionalPath(body), SAMPLE_NAME);
-    const main = projects.mainDirection(first);
-    await applySampleEdit(main.workTree);
+  const createSample = async (parentPath: string | undefined): Promise<Project> => {
+    const existing = (await projects.list()).find((project) => project.name === SAMPLE_NAME && project.imported?.created === true && !project.designSystemFor);
+    if (existing) return existing;
+    const first = await createFromStarter(SAMPLE_STARTER_ID, parentPath, SAMPLE_NAME);
+    await applySampleEdit(projects.mainDirection(first).workTree);
     const project = await deps.commitInit(first, 'Sample edit: new headline', 'manual');
     deps.watch(project);
-    return c.json({ project, runId: null });
+    return project;
+  };
+  let sampleInflight: Promise<Project> | null = null;
+
+  app.post('/api/projects/sample', async (c) => {
+    const body = await readBody(c);
+    sampleInflight ??= createSample(optionalPath(body)).finally(() => {
+      sampleInflight = null;
+    });
+    return c.json({ project: await sampleInflight, runId: null });
+  });
+
+  app.post('/api/projects/:pid/opened', async (c) => {
+    const pid = c.req.param('pid');
+    const openedAt = await projects.withLock(pid, async () => {
+      const project = await projects.get(pid);
+      project.openedAt = Date.now();
+      await projects.writeRaw(project);
+      return project.openedAt;
+    });
+    return c.json({ openedAt });
   });
 
   app.patch('/api/projects/:pid', async (c) => {

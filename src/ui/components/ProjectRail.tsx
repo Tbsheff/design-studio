@@ -4,7 +4,7 @@ import type { ProjectHit } from '../../shared/project-search';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { useCommands } from '../commands/registry';
 import { openProject } from '../projectNav';
-import { refreshProjectHits, useProjectHits } from '../projectHits';
+import { noteProjectOpened, refreshProjectHits, useProjectHits } from '../projectHits';
 import { BrandMark } from './BrandMark';
 import { Icon } from './Icon';
 import { HealthDot, ProjectThumb } from './ProjectThumb';
@@ -218,6 +218,7 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   const result = useProjectHits(projectId);
   const find = useRef<HTMLInputElement>(null);
   useRailKeys(() => find.current?.focus());
+  useEffect(() => noteProjectOpened(projectId), [projectId]);
   useEffect(() => {
     const onFocus = () => void refreshProjectHits(projectId);
     window.addEventListener('focus', onFocus);

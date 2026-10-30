@@ -168,6 +168,7 @@ export const api = {
   createFromStarter: (starterId: string, parentPath?: string) => json<{ project: Project }>('POST', '/api/projects/from-starter', { starterId, ...(parentPath ? { parentPath } : {}) }),
   createSample: (parentPath?: string) => json<{ project: Project }>('POST', '/api/projects/sample', parentPath ? { parentPath } : {}),
   renameProject: (pid: string, name: string) => json<Project>('PATCH', p(pid), { name }),
+  markProjectOpened: (pid: string) => json<{ openedAt: number }>('POST', `${p(pid)}/opened`),
   duplicateProject: (pid: string) => json<{ project: Project }>('POST', `${p(pid)}/duplicate`),
   trashProject: (pid: string) => json<TrashedProject>('DELETE', p(pid)),
   restoreProject: (trashId: string) => json<{ project: Project }>('POST', `/api/trash/${encodeURIComponent(trashId)}/restore`),

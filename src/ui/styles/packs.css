@@ -445,10 +445,6 @@
   padding-right: var(--s-1);
 }
 
-.ds-toast :is(.btn, .icon-btn) {
-  border-radius: var(--r-md);
-}
-
 .ds-toast.error {
   color: var(--danger, var(--text));
 }

@@ -8,7 +8,7 @@
   height: var(--btn-h);
   padding: 0 var(--s-3);
   border: 0;
-  border-radius: var(--r-md);
+  border-radius: var(--r-control);
   background: var(--surface-raised);
   color: var(--text);
   box-shadow: inset 0 0 0 1px var(--line), var(--shadow-xs);
@@ -40,14 +40,14 @@
   --btn-h: 28px;
   padding: 0 10px;
   font-size: var(--t-xs);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .btn.xs {
   --btn-h: 24px;
   padding: 0 var(--s-2);
   font-size: var(--t-xs);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .btn.large {
@@ -133,7 +133,7 @@
   flex: none;
   padding: 0;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
@@ -159,7 +159,7 @@
 .icon-btn.small {
   width: 28px;
   height: 28px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .icon-btn.on,

@@ -148,6 +148,9 @@
   --r-lg: 12px;
   --r-xl: 16px;
   --r-full: 999px;
+  --r-control: 10px;
+  --r-control-sm: 8px;
+  --r-control-xs: 6px;
 
   --shadow-xs: 0 1px 1px oklch(0.2 0.01 var(--hue) / 0.04);
   --shadow-sm: 0 0 0 1px oklch(0.2 0.01 var(--hue) / 0.06), 0 1px 2px oklch(0.2 0.01 var(--hue) / 0.06);

@@ -93,7 +93,7 @@
 .modal-foot .btn.small {
   --btn-h: 30px;
   padding: 0 var(--s-3);
-  border-radius: var(--r-md);
+  border-radius: var(--r-control);
   font-size: var(--t-xs);
 }
 

@@ -100,7 +100,7 @@
   width: 24px;
   height: 24px;
   margin: -2px;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-sm);
   color: inherit;
 }
 
@@ -387,7 +387,7 @@
   gap: var(--s-1);
   max-width: 100%;
   padding: 2px 2px 2px 6px;
-  border-radius: var(--r-xs);
+  border-radius: var(--r-control-xs);
   background: var(--accent-soft);
   color: var(--accent);
   font-size: var(--t-xs);
@@ -420,7 +420,7 @@
   height: 24px;
   margin-right: var(--s-1);
   padding: 0 var(--s-2);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   color: var(--text-2);
   font-size: var(--t-xs);
   font-weight: 500;
@@ -731,7 +731,7 @@
   gap: 6px;
   padding: var(--s-3);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: calc(var(--r-control) + var(--s-3) + 1px);
   background: var(--surface-raised);
   box-shadow: 0 0 0 0 transparent;
   transition-property: border-color, box-shadow, background-color;
@@ -781,7 +781,7 @@
 .prompt-bar .icon-btn.bordered {
   width: var(--composer-ctl);
   height: var(--composer-ctl);
-  border-radius: var(--r-md);
+  border-radius: var(--r-control);
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -904,7 +904,7 @@
     width: var(--composer-ctl);
     height: var(--composer-ctl);
     padding: 0;
-    border-radius: var(--r-md);
+    border-radius: var(--r-control);
   }
 
   .prompt-bar .composer-state-label {
@@ -961,7 +961,7 @@
   height: var(--composer-ctl);
   flex: none;
   padding: 0;
-  border-radius: var(--r-md);
+  border-radius: var(--r-control);
 }
 
 .icon-btn.send-btn .spinner {
@@ -1088,7 +1088,7 @@
   width: 22px;
   height: 22px;
   margin: -2px 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-xs);
   color: inherit;
 }
 
@@ -1334,7 +1334,7 @@
   min-width: 0;
   height: 24px;
   padding: 0 var(--s-2);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   border: 0;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line);
@@ -1367,7 +1367,7 @@
   height: 24px;
   margin: 0;
   padding: 0 5px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   box-shadow: none;
   color: var(--text-2);

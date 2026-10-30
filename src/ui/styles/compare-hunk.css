@@ -24,7 +24,7 @@
   height: 22px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-xs);
   background: var(--surface);
   box-shadow: inset 0 0 0 0.5px var(--line);
   color: var(--text);

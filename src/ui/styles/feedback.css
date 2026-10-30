@@ -158,7 +158,7 @@
   height: 28px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-md);
+  border-radius: var(--r-control-sm);
   background: none;
   color: var(--danger);
   font: inherit;

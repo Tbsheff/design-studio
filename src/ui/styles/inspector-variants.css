@@ -31,7 +31,7 @@
   min-width: 28px;
   padding: 0 var(--s-2);
   border: 1px solid transparent;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-2);
   font: inherit;

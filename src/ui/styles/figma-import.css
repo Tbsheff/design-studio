@@ -150,7 +150,7 @@
   margin-left: -2px;
   padding: 0 var(--s-1) 0 0;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: none;
   color: inherit;
   font: inherit;

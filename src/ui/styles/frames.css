@@ -29,7 +29,7 @@
   height: 24px;
   padding: 0 var(--s-1);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--stage-text);
   font: var(--w-medium) var(--t-xs) / 24px var(--font);
@@ -132,7 +132,7 @@
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-3);
   cursor: pointer;
@@ -190,7 +190,7 @@
   height: 24px;
   padding: 0 var(--s-2);
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: transparent;
   color: var(--text-3);
   font: var(--w-medium) var(--t-xs) / 24px var(--font);
@@ -288,7 +288,7 @@
   height: 28px;
   padding: 0 var(--s-2);
   border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
   background: var(--surface);
   color: var(--text);
   font: var(--t-xs) var(--mono);

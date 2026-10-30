@@ -255,7 +255,7 @@
   flex: none;
   width: 28px;
   height: 28px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .version-actions .icon-btn:hover:not(:disabled) {

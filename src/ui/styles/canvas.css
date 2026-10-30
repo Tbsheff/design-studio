@@ -147,7 +147,7 @@
   height: 28px;
   font-size: var(--t-xs);
   font-variant-numeric: tabular-nums;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-control-sm);
 }
 
 .select-toggle {

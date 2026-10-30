@@ -10,7 +10,7 @@ import {
 import { Chip } from '../ai/components/ai/chip';
 import { formatMs } from '../format';
 import type { RunView, ToolRow } from '../runState';
-import { SKILL_TOOL, toolSubject, toolTally, toolVerb } from '../toolLabels';
+import { SKILL_TOOL, toolGroupLabel, toolSubject, toolTally, toolVerb } from '../toolLabels';
 import { Icon, type IconName } from './Icon';
 
 const TOOL_ICON: Record<string, IconName> = {
@@ -51,18 +51,23 @@ const STATE_TONE: Record<ToolState, string> = {
 const STATE_WORD: Partial<Record<ToolState, string>> = { error: 'Error', stopped: 'Stopped', denied: 'Denied' };
 
 const CANCEL_NOTE = /\bRun canceled\.?$/;
+const PLAN_NOTE = /^Plan mode is on\b/;
 
 function canceled(tool: ToolRow): boolean {
   return tool.isError && CANCEL_NOTE.test(tool.summary);
 }
 
+function planHeld(tool: ToolRow): boolean {
+  return tool.isError && PLAN_NOTE.test(tool.summary);
+}
+
 function failed(tool: ToolRow): boolean {
-  return tool.isError && !tool.denied && !canceled(tool);
+  return tool.isError && !tool.denied && !canceled(tool) && !planHeld(tool);
 }
 
 function toolState(tool: ToolRow, running = true): ToolState {
   if (tool.durationMs === null) return running ? 'pending' : 'stopped';
-  if (tool.denied) return 'denied';
+  if (tool.denied || planHeld(tool)) return 'denied';
   if (canceled(tool)) return 'stopped';
   return tool.isError ? 'error' : 'done';
 }
@@ -88,26 +93,37 @@ interface RowGroup {
   tool: ToolRow;
   count: number;
   durationMs: number | null;
+  members: ToolRow[];
+}
+
+const CHECK_GROUP = 'Checked';
+
+function quiet(tool: ToolRow): boolean {
+  return toolDiffs(tool).length === 0 && toolState(tool) === 'done';
+}
+
+function sameRow(a: ToolRow, b: ToolRow, workTree: string | null): boolean {
+  if (!quiet(a) || !quiet(b)) return false;
+  if (toolGroupLabel(a.name) === CHECK_GROUP && toolGroupLabel(b.name) === CHECK_GROUP) return true;
+  return a.name === b.name && toolSubject(a.name, a.input, workTree) === toolSubject(b.name, b.input, workTree);
 }
 
 export function groupRepeats(tools: ToolRow[], workTree: string | null): RowGroup[] {
   const groups: RowGroup[] = [];
   for (const tool of tools) {
     const last = groups.at(-1);
-    const same =
-      last &&
-      toolDiffs(last.tool).length === 0 &&
-      toolDiffs(tool).length === 0 &&
-      toolState(last.tool) === 'done' &&
-      toolState(tool) === 'done' &&
-      last.tool.name === tool.name &&
-      toolSubject(last.tool.name, last.tool.input, workTree) === toolSubject(tool.name, tool.input, workTree);
-    if (same) {
+    if (last && sameRow(last.tool, tool, workTree)) {
       last.count += 1;
       last.durationMs = (last.durationMs ?? 0) + (tool.durationMs ?? 0);
-    } else groups.push({ tool, count: 1, durationMs: tool.durationMs });
+      last.members.push(tool);
+    } else groups.push({ tool, count: 1, durationMs: tool.durationMs, members: [tool] });
   }
   return groups;
+}
+
+function checkParts(members: ToolRow[], workTree: string | null): string {
+  const parts = members.map((tool) => toolSubject(tool.name, tool.input, workTree) || toolVerb(tool.name).replace(/ check$/, '').toLowerCase());
+  return [...new Set(parts)].join(', ');
 }
 
 function ToolStateIcon({ tool, state }: { tool: ToolRow; state: ToolState }) {
@@ -175,6 +191,23 @@ function ShellEditDetail({ tool, diffs }: { tool: ToolRow; diffs: ToolDiff[] }) 
   );
 }
 
+function CheckDetail({ members, workTree }: { members: ToolRow[]; workTree: string | null }) {
+  return (
+    <ul className="tool-check-list flex flex-col gap-1 text-xs">
+      {members.map((tool) => {
+        const subject = toolSubject(tool.name, tool.input, workTree);
+        return (
+          <li key={tool.toolUseId} className="wrap-anywhere">
+            <span className="text-foreground">{toolVerb(tool.name)}</span>
+            {subject && <span className="font-mono"> {subject}</span>}
+            {tool.summary && <span className="text-muted-foreground"> · {tool.summary}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; state: ToolState }) {
   if (tool.diff) return <DiffView diff={tool.diff} />;
   const edits = shellEdits(tool);
@@ -188,18 +221,36 @@ function ToolDetail({ tool, target, state }: { tool: ToolRow; target: string; st
   );
 }
 
-function rowView(tool: ToolRow, workTree: string | null) {
+function rowView(group: RowGroup, workTree: string | null) {
+  const { tool, members } = group;
   const edits = shellEdits(tool);
+  if (new Set(members.map((member) => `${member.name}|${toolSubject(member.name, member.input, workTree)}`)).size > 1) return { edits, target: checkParts(members, workTree), totals: null, verb: CHECK_GROUP };
   if (edits.length === 0) return { edits, target: toolSubject(tool.name, tool.input, workTree), totals: tool.diff ?? null, verb: toolVerb(tool.name) };
   return { edits, target: edits.length === 1 ? (edits[0]?.path ?? '') : `${edits.length} files`, totals: diffTotals(edits), verb: 'Edited' };
 }
 
+const SHOW_MS_FROM = 1000;
+
+function ToolMeta({ group, state, totals }: { group: RowGroup; state: ToolState; totals: { added: number; removed: number } | null }) {
+  const ms = state !== 'pending' && state !== 'stopped' && group.durationMs !== null && group.durationMs >= SHOW_MS_FROM ? group.durationMs : null;
+  return (
+    <>
+      {group.count > 1 && <span className="tool-count tabular-nums">×{group.count}</span>}
+      {totals && <DiffBadge added={totals.added} removed={totals.removed} />}
+      {ms !== null && <span className="tool-ms shrink-0 tabular-nums">{formatMs(ms)}</span>}
+      {state === 'denied' && <span className="tool-denied">{planHeld(group.tool) ? 'Plan only' : 'Denied'}</span>}
+      {STATE_WORD[state] && state !== 'denied' && <span className="sr-only">{STATE_WORD[state]}</span>}
+    </>
+  );
+}
+
 function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: string | null; running: boolean }) {
-  const { tool, count } = group;
+  const { tool } = group;
   const state = toolState(tool, running);
   const [open, setOpen] = useState<boolean | null>(null);
   const isSkill = tool.name === SKILL_TOOL;
-  const { edits, target, totals, verb } = rowView(tool, workTree);
+  const { edits, target, totals, verb } = rowView(group, workTree);
+  const mixed = verb === CHECK_GROUP;
   return (
     <Action
       className={`tool-row ${state} ${isSkill ? 'skill-tool' : ''}`}
@@ -216,17 +267,13 @@ function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: str
         <ActionLabel className={`tool-verb font-medium ${state === 'error' ? 'text-destructive' : isSkill ? 'text-primary' : ''}`}>{verb}</ActionLabel>
         {target && (
           <Chip size="sm" className="tool-target min-w-0 truncate font-mono">
-            {isSkill ? target : shortName(target)}
+            {isSkill || mixed ? target : shortName(target)}
           </Chip>
         )}
-        {count > 1 && <span className="tool-count tabular-nums">×{count}</span>}
-        {totals && <DiffBadge added={totals.added} removed={totals.removed} />}
-        {state !== 'pending' && state !== 'stopped' && <span className="tool-ms shrink-0 tabular-nums">{formatMs(group.durationMs)}</span>}
-        {state === 'denied' && <span className="tool-denied">Denied</span>}
-        {STATE_WORD[state] && state !== 'denied' && <span className="sr-only">{STATE_WORD[state]}</span>}
+        <ToolMeta group={group} state={state} totals={totals} />
       </ActionTrigger>
       <ActionContent className="pl-6">
-        <ToolDetail tool={tool} target={target} state={state} />
+        {mixed ? <CheckDetail members={group.members} workTree={workTree} /> : <ToolDetail tool={tool} target={target} state={state} />}
       </ActionContent>
     </Action>
   );
@@ -297,24 +344,21 @@ export function fileChanges(tools: ToolRow[]): FileChange[] {
   return [...byPath.values()];
 }
 
-const SUMMARY_GROUPS = 3;
-
 export function ToolSummary({ tools, children }: { tools: ToolRow[]; children: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const parts = useMemo(() => toolTally(tools.map((tool) => (shellEdits(tool).length > 0 ? 'Edit' : tool.name))).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)), [tools]);
-  const full = parts.join(', ');
-  const label = parts.length > SUMMARY_GROUPS ? `${parts.slice(0, SUMMARY_GROUPS - 1).join(', ')} +${parts.length - SUMMARY_GROUPS + 1} more` : full;
+  const label = useMemo(() => toolTally(tools.map((tool) => (shellEdits(tool).length > 0 ? 'Edit' : tool.name))).map((item) => (item.count > 1 ? `${item.label} ×${item.count}` : item.label)).join(', '), [tools]);
   const failedCount = useMemo(() => tools.filter(failed).length, [tools]);
   if (tools.length === 0) return null;
   return (
     <div className="tool-summary" data-open={open || undefined} data-testid="tool-summary">
-      <button type="button" className="tool-summary-head" aria-expanded={open} data-tip={label === full ? undefined : full} onClick={() => setOpen((value) => !value)}>
+      <button type="button" className="tool-summary-head" aria-expanded={open} data-tip={label} onClick={() => setOpen((value) => !value)}>
         <span className="tool-summary-icon" aria-hidden="true">
           <Icon name="sparkle" size={14} />
         </span>
-        <span className="tool-summary-label">
-          {label}
+        <span className="tool-summary-count tabular-nums">
+          {tools.length} step{tools.length === 1 ? '' : 's'}
         </span>
+        <span className="tool-summary-label">{label}</span>
         {failedCount > 0 && <span className="tool-summary-failed">{failedCount} failed</span>}
         <Icon name="chevronDown" size={14} className="tool-summary-caret" />
       </button>

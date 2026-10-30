@@ -5,7 +5,7 @@ import { useRunFeedback, type Thumb } from '../runFeedback';
 import { runText, type RunView } from '../runState';
 import { CopyButton } from './CopyButton';
 import { Icon } from './Icon';
-import { fileChanges, type FileChange } from './ToolChips';
+import { DiffBadge, fileChanges, type FileChange } from './ToolChips';
 
 const STATUS_LABEL: Record<RunStatus, string> = {
   running: 'Running',
@@ -38,8 +38,8 @@ function fileLabel(change: FileChange): string {
   return `${change.created ? 'Created' : 'Edited'} ${baseName(change.path)}`;
 }
 
-function FileChips({ changes, onOpen }: { changes: FileChange[]; onOpen: () => void }) {
-  if (changes.length === 0) return null;
+function FileChips({ changes, quiet, onOpen }: { changes: FileChange[]; quiet: boolean; onOpen: () => void }) {
+  if (changes.length === 0) return quiet ? <p className="run-no-changes">No files changed.</p> : null;
   return (
     <ul className="run-changes" aria-label="Changed files" data-testid="run-changes">
       {changes.map((change) => (
@@ -47,6 +47,7 @@ function FileChips({ changes, onOpen }: { changes: FileChange[]; onOpen: () => v
           <button type="button" className="ui-file-chip" data-tip-align="start" data-tip={`${change.path} (+${change.added} −${change.removed}). Open run details`} onClick={onOpen}>
             <Icon name={change.created ? 'doc' : 'file'} size={14} />
             <span className="run-change-path">{fileLabel(change)}</span>
+            <DiffBadge added={change.added} removed={change.removed} />
           </button>
         </li>
       ))}
@@ -61,7 +62,7 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: {
   const done = run.status === 'completed';
   return (
     <div className="run-feedback">
-      <FileChips changes={changes} onOpen={onDetails} />
+      <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0} onOpen={onDetails} />
       <div className="run-foot" data-status={run.status}>
         {done && (
           <span className="run-thumbs" role="group" aria-label="Rate this response">

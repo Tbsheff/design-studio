@@ -901,10 +901,16 @@
   color: var(--text-3);
 }
 
+.tool-summary-count {
+  flex: none;
+}
+
 .tool-summary-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  color: var(--text-3);
+  font-weight: var(--w-regular);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1024,6 +1030,17 @@
   border-radius: var(--r-sm);
   font-size: var(--t-xs);
   font-weight: var(--w-medium);
+}
+
+.run-change .diff-badge {
+  flex: none;
+  font-weight: var(--w-regular);
+}
+
+.run-no-changes {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--t-2xs);
 }
 
 .run-change-path {

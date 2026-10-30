@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { McpApprovalOutcome } from '../../shared/contracts';
+import { useInlineApprovalProject } from '../approvalSpot';
 import { mcpApi } from '../mcpApi';
 import type { McpApprovalCard } from '../useMcpFeed';
 import { Icon } from './Icon';
@@ -77,9 +78,10 @@ function Toast({ card, onAnswer, onDrop }: { card: McpApprovalCard; onAnswer: (a
   );
 }
 
-export default function McpToasts({ openProjectId }: { openProjectId: string | null }) {
+export default function McpToasts() {
   const [cards, mark, drop] = useApprovalPoll();
-  const shown = cards.filter((card) => card.approval.projectId === null || card.approval.projectId !== openProjectId);
+  const inlineProject = useInlineApprovalProject();
+  const shown = cards.filter((card) => card.approval.projectId === null || card.approval.projectId !== inlineProject);
   if (shown.length === 0) return null;
   return (
     <div className="mcp-toasts" role="status" aria-live="polite">

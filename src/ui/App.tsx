@@ -105,7 +105,7 @@ export function App() {
     <>
       {layer}
       <Suspense fallback={null}>
-        <McpToasts openProjectId={ui.activeProjectId} />
+        <McpToasts />
       </Suspense>
       {DesktopApp && (
         <Suspense fallback={null}>

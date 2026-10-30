@@ -6,7 +6,7 @@ import type { EditRecorder } from '../direct-edit/index.js';
 import type { ExportDeps } from '../export/source.js';
 import type { AgentRunner, EventBus } from '../types.js';
 import type { ActivityLog } from './activity.js';
-import type { ApprovalAsk, ApprovalQueue } from './approvals.js';
+import { APPROVAL_TIMEOUT_MS, type ApprovalAsk, type ApprovalQueue } from './approvals.js';
 import { warmKit } from '../components/props-service.js';
 import { mcpErrorText } from './error-copy.js';
 import { downloadsFolder, isInside, safeFolder } from './folders.js';
@@ -74,7 +74,7 @@ export async function approve(deps: EditDeps, ask: ApprovalAsk): Promise<void> {
   const outcome = await deps.approvals.ask(ask);
   if (outcome === 'allow') return;
   if (outcome === 'closed') throw new EditError('Design Studio is not open, so nobody can approve this write. Open the Design Studio window, or write to ~/Downloads or the projects folder.');
-  if (outcome === 'timeout') throw new EditError('Nobody approved this write in Design Studio within 2 minutes, so it was refused.');
+  if (outcome === 'timeout') throw new EditError(`Nobody answered the approval prompt in Design Studio within ${APPROVAL_TIMEOUT_MS / 1000} seconds, so it was refused. Ask the user to watch for the prompt, then call the tool again.`);
   throw new EditError('The user denied this write in Design Studio.');
 }
 

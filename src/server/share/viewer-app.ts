@@ -11,6 +11,7 @@ import type { CommentStore } from '../store/comments.js';
 import type { LiveHub } from './live.js';
 import { frameFile } from './snapshot.js';
 import type { ShareRecord, ShareStore } from './store.js';
+import { FAVICON_PNG_16, FAVICON_PNG_32, FAVICON_SVG } from './favicon.js';
 import { goneHtml, viewerHtml } from './viewer-page.js';
 
 const BODY_MAX = 8 * 1024;
@@ -151,6 +152,11 @@ export function createViewerApp(deps: ViewerAppDeps): Hono {
     for (const [key, value] of Object.entries(BASE_HEADERS)) c.res.headers.set(key, value);
     if (!c.res.headers.has('content-security-policy')) c.res.headers.set('content-security-policy', "default-src 'none'; frame-ancestors 'none'");
   });
+
+  const ICON_CACHE = 'public, max-age=86400';
+  app.get('/favicon.svg', (c) => c.body(FAVICON_SVG, 200, { 'content-type': 'image/svg+xml', 'cache-control': ICON_CACHE }));
+  app.get('/favicon-32.png', (c) => c.body(new Uint8Array(FAVICON_PNG_32), 200, { 'content-type': 'image/png', 'cache-control': ICON_CACHE }));
+  app.get('/favicon-16.png', (c) => c.body(new Uint8Array(FAVICON_PNG_16), 200, { 'content-type': 'image/png', 'cache-control': ICON_CACHE }));
 
   app.get('/s/:token', async (c) => {
     const record = await deps.shares.byToken(c.req.param('token'));

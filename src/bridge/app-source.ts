@@ -23,6 +23,8 @@ const HOST_COMPONENT = 5;
 const MAX_SOURCE_CANDIDATES = 150;
 const SOURCE_BATCH = 10;
 const pending = new WeakMap<Element, Promise<string | null>>();
+const resolvedFrom = new WeakMap<Element, string>();
+const STACKS_PER_REQUEST = 20;
 
 export function appSourceMode(): string | null {
   const script = document.currentScript;
@@ -92,27 +94,74 @@ export function appHydrated(element: Element): boolean {
   return hostElementOf(element) !== null;
 }
 
+function stacksOf(fiber: DebugFiber): [string, string] {
+  return [stackOf(fiber) ?? '', stackOf(fiber._debugOwner ?? null) ?? ''];
+}
+
+function freshSource(element: Element, stacks: [string, string]): string | null {
+  const known = element.getAttribute(SOURCE_LOC_ATTR);
+  if (!known) return null;
+  const from = resolvedFrom.get(element);
+  return from === undefined || from === stacks.join('\u0001') ? known : null;
+}
+
+function writeSource(element: Element, stacks: [string, string], own: string | null, owner: string | null): string | null {
+  resolvedFrom.set(element, stacks.join('\u0001'));
+  const source = own ?? owner;
+  if (!source) {
+    element.removeAttribute(SOURCE_LOC_ATTR);
+    element.removeAttribute(USED_AT_ATTR);
+    return null;
+  }
+  element.setAttribute(SOURCE_LOC_ATTR, source);
+  if (own && owner && fileOf(own) !== fileOf(owner)) element.setAttribute(USED_AT_ATTR, owner);
+  else element.removeAttribute(USED_AT_ATTR);
+  return source;
+}
+
 export function appSourceFor(element: Element): Promise<string | null> {
   const host = hostElementOf(element);
   if (!host) return Promise.resolve(null);
-  const known = host.element.getAttribute(SOURCE_LOC_ATTR);
+  const stacks = stacksOf(host.fiber);
+  const known = freshSource(host.element, stacks);
   if (known) return Promise.resolve(known);
   const existing = pending.get(host.element);
   if (existing) return existing;
-  const stacks = [stackOf(host.fiber) ?? '', stackOf(host.fiber._debugOwner ?? null) ?? ''];
-  if (stacks.every((stack) => stack === '')) return Promise.resolve(null);
+  if (stacks.every((stack) => stack === '')) return Promise.resolve(host.element.getAttribute(SOURCE_LOC_ATTR));
   const lookup = resolveStacks(stacks)
-    .then(([own = null, owner = null]) => {
-      const source = own ?? owner;
-      if (!source) return null;
-      host.element.setAttribute(SOURCE_LOC_ATTR, source);
-      if (own && owner && fileOf(own) !== fileOf(owner)) host.element.setAttribute(USED_AT_ATTR, owner);
-      return source;
-    })
+    .then(([own = null, owner = null]) => writeSource(host.element, stacks, own, owner))
     .catch(() => null)
     .finally(() => pending.delete(host.element));
   pending.set(host.element, lookup);
   return lookup;
+}
+
+async function resolveMany(stacks: string[]): Promise<Map<string, string | null>> {
+  const found = new Map<string, string | null>();
+  const chunks: string[][] = [];
+  for (let start = 0; start < stacks.length; start += STACKS_PER_REQUEST) chunks.push(stacks.slice(start, start + STACKS_PER_REQUEST));
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      const sources = await resolveStacks(chunk).catch(() => chunk.map(() => null));
+      chunk.forEach((stack, index) => found.set(stack, sources[index] ?? null));
+    }),
+  );
+  return found;
+}
+
+export async function primeAppSources(): Promise<boolean> {
+  const stale: { element: Element; stacks: [string, string] }[] = [];
+  for (const element of document.body.querySelectorAll('*')) {
+    const fiber = fiberOf(element);
+    if (!fiber || (fiber.tag !== undefined && fiber.tag !== HOST_COMPONENT) || pending.has(element)) continue;
+    const stacks = stacksOf(fiber);
+    if (stacks.every((stack) => stack === '') || freshSource(element, stacks)) continue;
+    stale.push({ element, stacks });
+  }
+  if (stale.length === 0) return false;
+  const sources = await resolveMany([...new Set(stale.flatMap((item) => item.stacks.filter((stack) => stack !== '')))]);
+  for (const { element, stacks } of stale) writeSource(element, stacks, sources.get(stacks[0]) ?? null, sources.get(stacks[1]) ?? null);
+  return true;
 }
 
 let finding: string | null = null;

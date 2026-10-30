@@ -123,6 +123,18 @@ function visibleText(element: Element): string {
   return element instanceof HTMLElement ? element.innerText : (element.textContent ?? '');
 }
 
+function closestLink(query: LinkQuery, target: Element): Element | null {
+  let found: Element | null = null;
+  try {
+    found = target.closest(query.selector);
+  } catch {
+    return null;
+  }
+  const tag = query.tag?.toLowerCase();
+  if (!found || (tag && found.tagName.toLowerCase() !== tag)) return null;
+  return isIdSelector(query.selector) || textAgrees(visibleText(found), query.text) ? found : null;
+}
+
 export function resolveLink(query: LinkQuery): Element | null {
   const tag = query.tag?.toLowerCase();
   const found = safeQuery(query.selector);
@@ -185,10 +197,8 @@ export function createLinkBridge(post: PlayPost): LinkBridge {
 
   const linkAt = (target: EventTarget | null): LinkQuery | null => {
     if (!playing || !(target instanceof Element)) return null;
-    for (const query of playing) {
-      const element = resolveLink(query);
-      if (element && element.contains(target)) return query;
-    }
+    for (const query of playing) if (closestLink(query, target)) return query;
+    for (const query of playing) if (resolveLink(query)?.contains(target)) return query;
     return null;
   };
 

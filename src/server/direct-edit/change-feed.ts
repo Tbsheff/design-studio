@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 export interface SourceFileChange {
   relative: string;
   before: string;
@@ -22,6 +24,16 @@ export function noteTreeChange(root: string, paths: string[]): void {
   treeStamps.set(root, stamp);
   const log = [...(treeLogs.get(root) ?? []), { stamp, paths }];
   treeLogs.set(root, log.slice(-TREE_LOG_MAX));
+}
+
+export function noteTreeWrite(workTree: string, relatives: string[], complete: boolean): void {
+  const root = path.resolve(workTree);
+  if (complete) {
+    noteTreeChange(root, relatives.map((relative) => path.join(root, ...relative.split('/'))));
+    return;
+  }
+  treeStamps.set(root, treeStamp(root) + 1);
+  treeLogs.delete(root);
 }
 
 export function treeChangesSince(root: string, stamp: number): string[] | null {

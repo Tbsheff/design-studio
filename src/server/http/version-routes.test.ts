@@ -113,7 +113,7 @@ describe('version thumbnails', () => {
     expect([png.width, png.height]).toEqual([640, 400]);
     expect((await request('GET', `/api/projects/${project.id}/versions/${older.id}/thumb`)).status).toBe(200);
     expect(shots).toHaveLength(1);
-    expect(await readdir(thumbsDir(project.id))).toEqual([`v-${older.id}.png`]);
+    expect(await readdir(thumbsDir(project.id))).toEqual([`vp-${older.id}.png`]);
   });
 
   it('does no browser work for an unknown version or a version with no page', async () => {
@@ -166,7 +166,7 @@ describe('version thumbnails', () => {
     const files = await readdir(dir);
     expect(files).toHaveLength(THUMB_KEEP + 1);
     expect(files).toContain(`${headId}.png`);
-    expect(files).toContain(`v-${older}.png`);
+    expect(files).toContain(`vp-${older}.png`);
     expect(files).not.toContain('v-old0000.png');
     expect(files).not.toContain('stale-head.png');
     expect(files).not.toContain('.raw-stale-1.png');

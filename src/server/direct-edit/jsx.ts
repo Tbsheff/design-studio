@@ -177,6 +177,15 @@ function overwriteValue(magic: MagicString, source: string, property: StyleEntry
   magic.overwrite(startOf(property.value), endOf(property.value), literal);
 }
 
+const SHORTHAND_OF: Record<string, string> = { backgroundColor: 'background' };
+
+function styleIndices(entries: StyleEntry[], key: string, setting: boolean): number[] {
+  const exact = entries.flatMap((entry, index) => (entry.key === key ? [index] : []));
+  const shorthand = SHORTHAND_OF[key];
+  if (exact.length > 0 || !setting || !shorthand) return exact;
+  return entries.flatMap((entry, index) => (entry.key === shorthand ? [index] : []));
+}
+
 function planStyle(
   magic: MagicString,
   source: string,
@@ -187,7 +196,7 @@ function planStyle(
   const plan: StylePlan = { removed: new Set(), additions: [] };
   for (const [prop, value] of Object.entries(changes)) {
     const key = camelCaseProp(prop);
-    const indices = entries.flatMap((entry, index) => (entry.key === key ? [index] : []));
+    const indices = styleIndices(entries, key, value !== null);
     const [first, ...rest] = indices;
     if (value === null || first === undefined) {
       if (value === null) for (const index of indices) plan.removed.add(index);
@@ -455,6 +464,7 @@ function patchClassesOrStyle(magic: MagicString, source: string, element: t.JSXE
   for (const [prop, value] of Object.entries(style)) {
     if (!mapped.has(prop)) inline[prop] = value;
     else if (present?.has(camelCaseProp(prop))) inline[prop] = null;
+    else if (present?.has(SHORTHAND_OF[camelCaseProp(prop)] ?? '')) inline[SHORTHAND_OF[camelCaseProp(prop)] as string] = null;
   }
   if (Object.keys(inline).length > 0) patchStyle(magic, source, element, inline);
   return decision.patch.outcome;

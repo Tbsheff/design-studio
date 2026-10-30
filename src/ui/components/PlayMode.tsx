@@ -120,6 +120,7 @@ function usePlay(p: Props) {
   const timers = useRef<number[]>([]);
   const shot = useRef<LayerShot | null>(null);
   const pendingFx = useRef(new Map<string, Record<string, LinkRect>>());
+  const readyFrames = useRef(new Map<string, BridgeFrame>());
   const props = useRef(p);
   props.current = p;
 
@@ -227,9 +228,23 @@ function usePlay(p: Props) {
     return () => window.removeEventListener('keydown', handler, true);
   });
 
-  const onReady = (frame: BridgeFrame, slot: Slot) => {
+  const linkKey = p.file.links.map((link) => `${link.id}:${link.from.frame}:${link.from.selector}`).join('|');
+  const sendLinks = (frame: BridgeFrame, slot: Slot) => {
     const links = props.current.file.links.filter((link) => link.from.frame === slot.frame.id && staticLinkIssue(link, props.current.frames) === null).map(linkQuery);
     postToFrame(frame, { type: 'play-links', links });
+  };
+
+  useEffect(() => {
+    for (const token of readyFrames.current.keys()) if (!slotsRef.current.some((slot) => slot.token === token)) readyFrames.current.delete(token);
+    for (const slot of slotsRef.current) {
+      const frame = readyFrames.current.get(slot.token);
+      if (frame) sendLinks(frame, slot);
+    }
+  }, [linkKey]);
+
+  const onReady = (frame: BridgeFrame, slot: Slot) => {
+    readyFrames.current.set(slot.token, frame);
+    sendLinks(frame, slot);
     const layers = pendingFx.current.get(slot.token);
     if (layers) {
       pendingFx.current.delete(slot.token);

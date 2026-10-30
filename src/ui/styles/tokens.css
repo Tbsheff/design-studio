@@ -115,6 +115,7 @@
   --s-10: 40px;
   --s-12: 48px;
   --bar-h: 40px;
+  --composer-ctl: var(--s-8);
   --pane-inset: 16px;
 
   --t-2xs: 11px;

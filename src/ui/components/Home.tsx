@@ -161,7 +161,7 @@ function SendButton({ busy, disabled, reason, label }: { busy: Busy; disabled: b
 
 function PillSelect({ label, value, sizes = [], open, triggerRef, onOpen, ariaLabel }: { label: string; value: string; sizes?: readonly string[]; open: boolean; triggerRef: RefObject<HTMLButtonElement | null>; onOpen: () => void; ariaLabel: string }) {
   return (
-    <button ref={triggerRef} type="button" className="ui-pill-select" aria-haspopup="dialog" aria-expanded={open} aria-label={`${ariaLabel}: ${value}`} onPointerEnter={() => void loadPops()} onFocus={() => void loadPops()} onClick={onOpen}>
+    <button ref={triggerRef} type="button" className="ui-pill-select inline" aria-haspopup="dialog" aria-expanded={open} aria-label={`${ariaLabel}: ${value}`} data-tip={label} data-tip-side="top" onPointerEnter={() => void loadPops()} onFocus={() => void loadPops()} onClick={onOpen}>
       <span className="ui-pill-select-label">{label}</span>
       <span className="ui-pill-select-value truncate">
         <StableText sizes={sizes}>{value}</StableText>
@@ -233,9 +233,9 @@ interface AppSlotProps {
 function AppSlot({ chip, pop, folderRef, onAddFolder, onDoctor }: AppSlotProps) {
   if (!chip) {
     return (
-      <button ref={folderRef} type="button" className="home-pill" aria-haspopup="dialog" aria-expanded={pop === 'folder'} onPointerEnter={() => void loadAppMenu()} onClick={onAddFolder}>
+      <button ref={folderRef} type="button" className="home-pill" aria-haspopup="dialog" aria-expanded={pop === 'folder'} data-tip="Add app folder" data-tip-side="top" onPointerEnter={() => void loadAppMenu()} onClick={onAddFolder}>
         <Icon name="folder" size={14} />
-        Add app folder
+        <span className="home-pill-text">Add app folder</span>
       </button>
     );
   }
@@ -328,7 +328,7 @@ function ComposerBar({ fileRef, onFiles, plusActions, locationLabel, packs, pack
       )}
       <div className="spacer" />
       <div className="home-anchor end">
-        <PillSelect label="Design system" ariaLabel="Design system" value={pack?.name ?? 'None'} open={pop === 'pack'} triggerRef={packRef} onOpen={() => togglePop('pack')} />
+        <PillSelect label="Design system" ariaLabel="Design system" value={pack?.name ?? 'No design system'} open={pop === 'pack'} triggerRef={packRef} onOpen={() => togglePop('pack')} />
         {shownPop.shown === 'pack' && (
           <Suspense fallback={null}>
             <PackPopover trigger={packRef} closing={shownPop.closing} onClose={closePop} state={pickable(packs)} value={pack?.id ?? null} onChange={(id) => uiStore.set({ lastPackId: id })} onNew={() => uiStore.set({ screen: 'new-design-system', returnTo: 'home' })} />

@@ -238,7 +238,7 @@ export function LevelPill({ level, onLevel, onOpen }: { level: RunLevel; onLevel
       <button
         ref={trigger}
         type="button"
-        className="ui-pill-select composer-pill"
+        className="ui-pill-select inline composer-pill"
         data-testid="level-pill"
         aria-haspopup="menu"
         aria-expanded={menu.open}
@@ -319,7 +319,7 @@ export function ModelPill({ model, level, effort, onModel, onOpen }: ModelPillPr
       <button
         ref={trigger}
         type="button"
-        className="ui-pill-select composer-pill model-pill"
+        className="ui-pill-select inline composer-pill model-pill"
         data-testid="run-settings"
         aria-label={`Model: ${shortModel(shown)}`}
         aria-haspopup="dialog"

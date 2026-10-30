@@ -126,12 +126,6 @@
   color: var(--warn);
 }
 
-.home-composer-bar .home-badge {
-  height: 24px;
-  padding: 0 8px;
-  font-size: var(--t-xs);
-}
-
 .home-badge-btn {
   border: 0;
   cursor: pointer;

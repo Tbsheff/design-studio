@@ -1,5 +1,5 @@
 import type { AnchorReport, DesignComment, SourceLoc } from '../shared/contracts';
-import { canOrphan, formatLoc, type OrphanTracker } from '../shared/comments';
+import { canOrphan, formatLoc, matchesFrame, type OrphanTracker } from '../shared/comments';
 import type { CommentPatch } from './useComments';
 
 interface ReportReview {
@@ -13,6 +13,18 @@ export interface ReviewState {
   now: number;
 }
 
+export interface ActiveFrame {
+  id: string;
+  path: string;
+  ids: string[];
+}
+
+export function onActiveFrame(comment: Pick<DesignComment, 'frame'>, active: ActiveFrame): boolean {
+  const frame = comment.frame;
+  if (frame?.id && active.ids.includes(frame.id)) return frame.id === active.id;
+  return matchesFrame(frame ? { frame: { path: frame.path } } : {}, '', { path: active.path });
+}
+
 export function parseLoc(value: string | null | undefined): SourceLoc | null {
   if (!value) return null;
   const match = /^(.*):(\d+):(\d+)$/.exec(value);
@@ -24,7 +36,7 @@ function movedTarget(comment: DesignComment, report: AnchorReport): CommentPatch
   return {
     ...comment.target,
     selector: report.selector ?? comment.target.selector,
-    sourceLoc: parseLoc(report.sourceLoc),
+    sourceLoc: parseLoc(report.sourceLoc) ?? comment.target.sourceLoc,
     ...(report.rect ? { rectHint: report.rect } : {}),
   };
 }
@@ -32,7 +44,8 @@ function movedTarget(comment: DesignComment, report: AnchorReport): CommentPatch
 function needsRetarget(comment: DesignComment, report: AnchorReport): boolean {
   if (report.via === null || report.via === 'source') return false;
   if (comment.status !== 'queued' && comment.status !== 'draft') return false;
-  return report.selector !== comment.target.selector || (report.sourceLoc ?? null) !== formatLoc(comment.target.sourceLoc);
+  const movedSource = Boolean(report.sourceLoc) && report.sourceLoc !== formatLoc(comment.target.sourceLoc);
+  return report.selector !== comment.target.selector || movedSource;
 }
 
 function retargetPatch(comment: DesignComment, report: AnchorReport, state: ReviewState): CommentPatch | null {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObjec
 import type { AnchorQuery, AnchorReport, CommentDrawing, DesignComment, ProjectKind, SelectionContext } from '../../shared/contracts';
 import { anchorQueryOf, canPickForChat, createOrphanTracker, hasPin } from '../../shared/comments';
 import { ChatPickBar } from './CommentsPanel';
-import { reviewReport } from '../commentAnchors';
+import { onActiveFrame, reviewReport, type ActiveFrame } from '../commentAnchors';
 import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
 import { isTypingTarget } from '../typingTarget';
 import type { CommentsControl } from '../useComments';
@@ -36,6 +36,7 @@ interface Props {
   selection: SelectionContext[];
   onExitCommentMode: () => void;
   tools: CommentTools;
+  activeFrame?: ActiveFrame;
 }
 
 export interface CommentTools {
@@ -51,12 +52,13 @@ function visible(rect: Rect, frame: { width: number; height: number }): boolean 
   return rect.y + rect.height > 0 && rect.y < frame.height && rect.x + rect.width > 0 && rect.x < frame.width;
 }
 
-function useShown(control: CommentsControl): DesignComment[] {
+function useShown(control: CommentsControl, active: ActiveFrame | undefined): DesignComment[] {
   const showResolved = control.showResolved;
-  return useMemo(
-    () => control.comments.filter((c) => hasPin(c.status) || c.status === 'orphaned' || (showResolved && c.status === 'resolved')),
-    [control.comments, showResolved],
-  );
+  const activeKey = active ? JSON.stringify(active) : '';
+  return useMemo(() => {
+    const frame: ActiveFrame | null = activeKey ? (JSON.parse(activeKey) as ActiveFrame) : null;
+    return control.comments.filter((c) => (hasPin(c.status) || c.status === 'orphaned' || (showResolved && c.status === 'resolved')) && (!frame || onActiveFrame(c, frame)));
+  }, [control.comments, showResolved, activeKey]);
 }
 
 function openComment(control: CommentsControl): DesignComment | null {
@@ -199,7 +201,7 @@ export function CommentLayer(props: Props) {
   const live = useRef({ control, commentMode: props.commentMode });
   live.current = { control, commentMode: props.commentMode };
 
-  const shown = useShown(control);
+  const shown = useShown(control, props.activeFrame);
   const tracked = useMemo(() => shown.filter((c) => !c.drawing), [shown]);
   const queries = useMemo<AnchorQuery[]>(() => tracked.map(anchorQueryOf), [tracked]);
   const queryKey = JSON.stringify(queries);
@@ -230,6 +232,7 @@ export function CommentLayer(props: Props) {
 
   useEffect(() => {
     setRects({});
+    orphans.current = createOrphanTracker(ORPHAN_GRACE_MS);
   }, [frames.frontToken]);
 
   useEffect(

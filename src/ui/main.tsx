@@ -8,6 +8,7 @@ import './styles/forms.css';
 import './styles/feedback.css';
 import './styles/overlays.css';
 import './styles/home.css';
+import './styles/home-g.css';
 import './styles/layout.css';
 import './styles/versions.css';
 import './styles/canvas.css';

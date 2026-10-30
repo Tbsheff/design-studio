@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import type { Project } from '../../shared/contracts';
 import { Icon } from './Icon';
-import type { MenuAt } from './ProjectGrid';
+import type { CardAction, MenuAt } from './ProjectGrid';
 
-export function CardMenu({ project, at, onClose, onPick }: { project: Project; at: Exclude<MenuAt, null>; onClose: (refocus: boolean) => void; onPick: (action: 'open' | 'rename' | 'duplicate' | 'delete') => void }) {
+export function CardMenu({ project, place, at, onClose, onPick }: { project: Project; place: string | null; at: Exclude<MenuAt, null>; onClose: (refocus: boolean) => void; onPick: (action: CardAction) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
@@ -29,11 +29,11 @@ export function CardMenu({ project, at, onClose, onPick }: { project: Project; a
   };
   const style = typeof at === 'string' ? undefined : { left: at.x, top: at.y, right: 'auto' };
   const mode = typeof at === 'string' ? (at === 'keys' ? ' instant' : '') : ' at-pointer';
-  const item = (action: 'open' | 'rename' | 'duplicate' | 'delete', label: string, icon: Parameters<typeof Icon>[0]['name'], keys: string, danger = false) => (
+  const item = (action: CardAction, label: string, icon: Parameters<typeof Icon>[0]['name'], keys: string, danger = false) => (
     <button type="button" role="menuitem" className={danger ? 'danger' : undefined} onClick={() => onPick(action)}>
       <Icon name={icon} size={14} />
       <span>{label}</span>
-      <kbd aria-hidden="true">{keys}</kbd>
+      {keys && <kbd aria-hidden="true">{keys}</kbd>}
     </button>
   );
   return (
@@ -41,8 +41,10 @@ export function CardMenu({ project, at, onClose, onPick }: { project: Project; a
       {item('open', 'Open', 'chevronRight', '↩')}
       {item('rename', 'Rename', 'pencil', 'F2')}
       {item('duplicate', 'Duplicate', 'copy', '⌘D')}
+      {place && item('reveal', 'Reveal in Finder', 'folder', '')}
       <div className="project-menu-sep" role="separator" />
-      {item('delete', 'Delete', 'trash', '⌘⌫', true)}
+      {item('delete', place ? 'Remove from Design Studio' : 'Move to Trash', 'trash', '⌘⌫', true)}
+      {place && <p className="project-menu-note">Files stay in {place}.</p>}
     </div>
   );
 }

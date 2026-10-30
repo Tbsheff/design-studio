@@ -10,12 +10,17 @@ import { nextAppWorkspace } from '../app/workspace-root.js';
 import { findTokenFile } from '../design-system/app-tokens/detect.js';
 import { BadRequestError } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
+import { findApps } from '../app/found-apps.js';
+import { projectHealth, viteNeedsInstall } from '../app/app-health.js';
+import { revealInFinder } from '../export/editors.js';
+import type { PreviewService } from '../types.js';
 
 const MAX_PATH = 4096;
 const PREFERRED_APP = /(^|\/)(web|dashboard|app|site|frontend)$/;
 
 interface InspectDeps {
   projects: StudioProjectStore;
+  preview: PreviewService;
   readBody: (c: Context) => Promise<Record<string, unknown>>;
 }
 
@@ -66,7 +71,8 @@ export async function inspectFolder(projects: StudioProjectStore, raw: string, w
   const detected = workspace ? await memberDetection(folder, workspace.appDir) : await detectApp(folder);
   const kind = detected.framework === 'next' ? 'next' : await plainKind(folder);
   const appDir = kind === 'next' ? chooseAppDir(detected, wanted) : null;
-  const hint = appDir ? installHint(folder, appDir) : null;
+  const vite = kind === 'vite';
+  const hint = appDir ? installHint(folder, appDir) : vite ? installHint(folder, '.') : null;
   const existing = (await projects.list()).find((project) => project.imported?.sourcePath === folder && (kind !== 'next' || project.app?.appDir === appDir));
   const problem = kind === null ? 'This folder has no Next.js app, no Vite app and no index.html. Add the name of your app folder to the path.' : null;
   return {
@@ -75,7 +81,7 @@ export async function inspectFolder(projects: StudioProjectStore, raw: string, w
     kind,
     appDir,
     candidates: detected.candidates,
-    depsInstalled: appDir ? nextBinary(folder, appDir) !== null : null,
+    depsInstalled: appDir ? nextBinary(folder, appDir) !== null : vite ? !(await viteNeedsInstall(folder)) : null,
     install: hint ? { command: hint.command, dir: hint.dir } : null,
     projectId: existing?.id ?? null,
     problem,
@@ -89,5 +95,20 @@ export function registerFolderInspectRoutes(app: Hono, deps: InspectDeps): void 
     const raw = body.path;
     if (typeof raw !== 'string' || raw.trim() === '' || raw.length > MAX_PATH || raw.includes('\0')) throw new BadRequestError('path is required');
     return c.json(await inspectFolder(deps.projects, raw, typeof body.appDir === 'string' ? body.appDir : null));
+  });
+
+  app.get('/api/folders/found', async (c) => c.json(await findApps(await deps.projects.list(), { fresh: c.req.query('fresh') === '1' })));
+
+  app.get('/api/home/health', async (c) => {
+    const list = (await deps.projects.list()).filter((project) => !project.designSystemFor && project.imported);
+    return c.json(await Promise.all(list.map((project) => projectHealth(project, deps.preview.apps))));
+  });
+
+  app.post('/api/projects/:pid/reveal', async (c) => {
+    const project = await deps.projects.get(c.req.param('pid'));
+    const folder = project.imported?.sourcePath;
+    if (!folder) throw new BadRequestError('Only an opened folder or app can be shown in Finder');
+    await revealInFinder(folder);
+    return c.json({ ok: true });
   });
 }

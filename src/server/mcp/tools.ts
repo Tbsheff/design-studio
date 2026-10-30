@@ -1,4 +1,5 @@
 import { withFrameStateHost } from '../../shared/frame-state.js';
+import { findApps } from '../app/found-apps.js';
 import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
 import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -77,6 +78,7 @@ export const TOOLS: ToolDef[] = [
     limit: { type: 'integer', minimum: 1, maximum: 500, description: 'Routes per page. Default 50.' },
     cursor: { type: 'string', description: 'nextCursor from the previous page.' },
   }, ['projectId']),
+  def('list_found_apps', 'List app folders found on this Mac', 'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.', { fresh: { type: 'boolean', description: 'Scan again instead of using the cached list. Default false.' } }),
   def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
 ];
@@ -362,6 +364,8 @@ export async function callTool(deps: ExportDeps, name: string, args: Args): Prom
       if (!main) throw new ToolError('project has no direction');
       return json({ appDir: project.app.appDir, framework: project.app.framework, ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args) });
     }
+    case 'list_found_apps':
+      return json(await findApps(await deps.projects.list(), { fresh: args.fresh === true }));
     case 'list_files': {
       const src = await source(deps, args);
       return json({ versionId: src.version.id, files: await listFiles(await src.files()) });

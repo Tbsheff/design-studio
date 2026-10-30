@@ -588,7 +588,7 @@ export function createApp(deps: AppDeps): Hono {
 
   const appRouteDeps = { projects, versions, preview, readBody, commitInit: (project: Project) => commitInit(project), watch: (project: Project, direction: Direction) => watchDirection(project, direction) };
   registerAppRoutes(app, appRouteDeps);
-  registerFolderInspectRoutes(app, { projects, readBody });
+  registerFolderInspectRoutes(app, { projects, preview, readBody });
 
   app.post('/api/projects/import', async (c) => {
     const body = await readBody(c);

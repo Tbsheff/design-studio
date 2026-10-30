@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Version, VersionChanges, VersionFileDiff } from '../../shared/contracts';
 import { errorText, json } from '../api';
+import { useProjectEvents } from '../events';
 import { splitHunks, type PatchHunk } from '../../shared/hunk';
 import { revertHunk } from '../versionsApi';
 import { Icon } from './Icon';
@@ -65,6 +66,14 @@ function useHunkReview(projectId: string, directionId: string, from: string, to:
     },
     [projectId, directionId, from, to, put],
   );
+  useProjectEvents(projectId, (event) => {
+    if (event.type !== 'version.created' || event.version.directionId !== directionId) return;
+    const back = event.version.title;
+    setStore((prev) => {
+      const hit = Object.entries(prev.states).find(([, state]) => state?.kind === 'undone' && back === `Undo: ${state.title}`);
+      return hit ? { ...prev, states: { ...prev.states, [hit[0]]: undefined } } : prev;
+    });
+  });
   return { states: store.pair === pair ? store.states : {}, keep, undo };
 }
 

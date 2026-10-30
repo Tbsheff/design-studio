@@ -10,6 +10,7 @@ import { savesSettled } from '../direct-edit/save-queue.js';
 import { firstVersionWaitText } from '../app/first-version.js';
 import { jsxElementSpan } from '../direct-edit/jsx.js';
 import type { EditHistory, HistoryStep } from '../direct-edit/history.js';
+import { recordRunInHistory } from '../direct-edit/run-record.js';
 import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
 import type { StudioProjectStore } from '../store/projects.js';
 
@@ -125,6 +126,7 @@ export function registerEditHistoryRoutes(app: Hono, deps: EditHistoryRouteDeps)
         if (ended.remapped) deps.onRemapped?.(project.id, ended.remapped);
         if (span.count > 0) {
           history.forget(project.id, direction.id);
+          if (ended.version) await recordRunInHistory(history, editDeps.versions, project, direction, ended.version.id).catch(() => undefined);
           editDeps.bus.emit({ type: 'versions.changed', projectId: project.id, directionId: direction.id });
         }
         return { version: ended.version, headVersionId: ended.head };

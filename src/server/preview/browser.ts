@@ -32,7 +32,7 @@ const WAIT_FOR_HYDRATION_EXPRESSION = `new Promise((resolve) => {
   const hydrated = () => {
     const nodes = [...document.querySelectorAll('main *, body > div *')].slice(0, 300);
     const live = nodes.filter((node) => Object.keys(node).some((key) => key.startsWith('__reactFiber$'))).length;
-    return nodes.length > 0 && live >= nodes.length * 0.9;
+    return live >= nodes.length * 0.9;
   };
   if (!isNext || hydrated()) return resolve(false);
   const started = Date.now();

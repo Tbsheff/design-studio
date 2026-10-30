@@ -3,7 +3,7 @@ import path from 'node:path';
 import { z } from 'zod';
 import { ALIGN_OPS, DISTRIBUTE_OPS, arrangeLabel, type ArrangeMode, type ArrangeRequest, type ArrangeResult, type ArrangeWrite, type MeasureResult } from '../../shared/arrange.js';
 import { planArrangeFacts, unchangedNote, type PlannedArrangeWrite } from '../../shared/arrange-plan.js';
-import type { Direction, DirectEditRequest, Project, VersionMeta } from '../../shared/contracts.js';
+import type { Direction, DirectEditRequest, Project, SourceLoc, VersionMeta } from '../../shared/contracts.js';
 import { measureRects } from '../../shared/measure.js';
 import { withPagePath } from '../export/source.js';
 import type { PreviewService } from '../types.js';
@@ -78,11 +78,15 @@ function keptGroup(group: PlannedArrangeWrite[], copies: number): PlannedArrange
   return null;
 }
 
-function withoutCopies(writes: PlannedArrangeWrite[], copiesOf: Map<string, number>): { writes: PlannedArrangeWrite[]; note: string | null } {
+function placeKey(entry: PlannedArrangeWrite & { source: SourceLoc }, probed: ProbedSource | undefined): string {
+  return probed?.usedBy?.root && probed.usedAt ? `use:${locKey(probed.usedAt)}` : locKey(entry.source);
+}
+
+function withoutCopies(writes: PlannedArrangeWrite[], copiesOf: Map<string, number>, sources: Map<string, ProbedSource>): { writes: PlannedArrangeWrite[]; note: string | null } {
   const byLoc = new Map<string, PlannedArrangeWrite[]>();
   for (const entry of writes) {
     if (!entry.source) throw refuse(`${entry.selector} has no source location, so it cannot be arranged. Change it in the code.`);
-    const key = locKey(entry.source);
+    const key = placeKey({ ...entry, source: entry.source }, sources.get(entry.selector));
     byLoc.set(key, [...(byLoc.get(key) ?? []), entry]);
   }
   const kept: PlannedArrangeWrite[] = [];
@@ -161,7 +165,7 @@ export async function planArrange(preview: PreviewService, url: string, scope: A
   const plan = planArrangeFacts(probe.facts, request.action);
   if (!plan.ok) throw refuse(plan.reason);
   const copies = new Map(probe.facts.targets.map((target) => [target.selector, target.copies]));
-  const kept = withoutCopies(plan.writes, copies);
+  const kept = withoutCopies(plan.writes, copies, probe.sources);
   const writes = await Promise.all(kept.writes.map((entry) => siteWrite(scope, entry, probe.sources.get(entry.selector))));
   const patched = await patchFiles(scope.workTree, scope.project.kind, writes.map((entry) => entry.request));
   const note = [plan.note, kept.note].filter((part): part is string => Boolean(part)).join(' ') || null;

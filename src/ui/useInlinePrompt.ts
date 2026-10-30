@@ -33,10 +33,15 @@ function blockerOf(o: InlinePromptOptions): string | null {
   return o.running ? 'Wait for the current run to finish' : null;
 }
 
+const SNIPPET_MAX = 16;
+
 function labelOf(selection: SelectionContext[]): string {
   const last = selection.at(-1);
   if (selection.length > 1) return `${selection.length} elements`;
-  return last?.component || last?.tag || 'element';
+  if (last?.component) return last.component;
+  const text = last?.text.replace(/\s+/g, ' ').trim() ?? '';
+  const snippet = text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX - 1)}…` : text;
+  return snippet ? `“${snippet}”` : last?.tag || 'element';
 }
 
 function usageFileOf(selection: SelectionContext[]): string | null {

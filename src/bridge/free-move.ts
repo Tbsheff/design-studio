@@ -10,6 +10,7 @@ const FRAME_SIZED = 0.9;
 const SIBLING_MAX = 200;
 const MAPPED = 'This element is one of several copies made by one line of code (a .map() loop, or a component used more than once), so it cannot move on its own. Change the order of the data, or move the component use in the code.';
 const NO_SOURCE = 'This element has no source location, so it cannot move here.';
+const ONLY_CHILD = 'This element is the only one in its parent, so there is no other place in the layout. Select the parent in the breadcrumb to move it, or turn on Absolute position.';
 const REF_NO_SOURCE = 'The element at the drop place has no source location, so the move cannot go there.';
 
 export type FreeMoveMessage = { type: 'move-start'; move: FreeMoveStart } | { type: 'move-live'; drag: FreeMoveDrag } | { type: 'move-drop'; drag: FreeMoveDrag } | { type: 'move-cancel' };
@@ -233,6 +234,7 @@ function dragOf(d: Drag, s: Session, event: PointerEvent): Picked {
 }
 
 async function resolveDrop(s: Session, { drag, index }: Picked): Promise<FreeMoveDrag> {
+  if (s.start.mode === 'flow' && s.flow.length === 0) return { ...drag, insert: null, note: ONLY_CHILD };
   if (s.start.mode !== 'flow' || !drag.insert) return drag;
   const [first, ...rest] = await s.sources;
   const own = placeOf(first);

@@ -12,7 +12,7 @@ import { describeElements, textHintsOf } from './element.js';
 const BATCH_MAX = 50;
 const FILES_MAX = 20;
 const FILE_MAX = 512 * 1024;
-const HISTORY_NOTE = 'This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token edits and write_file changes to existing files. For anything else (a new file, a studio run, a design system apply) use restore_version.';
+const HISTORY_NOTE = 'This is the same undo history as the studio window (Cmd+Z), so the user and you share it. It holds direct edits, structure ops, batches, token edits, write_file changes to existing files and finished studio runs that changed text files. For anything else (a new file, a design system apply) use restore_version.';
 
 type Direction = Project['directions'][number];
 

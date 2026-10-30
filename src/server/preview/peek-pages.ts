@@ -10,6 +10,7 @@ interface WarmPage {
   page: RenderPage;
   url: string;
   freshAt: number;
+  loadedAt: number;
   usedAt: number;
   ready: Promise<void>;
   cold: boolean;
@@ -38,7 +39,7 @@ const POLL_MS = 25;
 const QUIET_MS = 120;
 const REBUILD_WAIT_MS = 900;
 const STAMP_TRUST_MS = 1000;
-const REFRESH_MAX_MS = 4000;
+const REFRESH_MAX_MS = 1500;
 const GONE = /has been closed|Execution context was destroyed|Target closed|navigat/i;
 
 const HOOK = `(() => {
@@ -224,6 +225,7 @@ export class PeekPages {
       await land(warm.page, warm.url);
       await warm.page.evaluate(HOOK);
       warm.freshAt = Math.max(warm.freshAt, at);
+      warm.loadedAt = Math.max(warm.loadedAt, at);
     });
     return warm.ready;
   }
@@ -260,7 +262,7 @@ export class PeekPages {
       try {
         await this.settled(known);
         if (known.freshAt >= (known.cold ? this.coldDirtyAt : this.dirtyAt)) return known;
-        if (!known.cold && (await this.current(known))) return known;
+        if (await this.currentWithMappableCode(known)) return known;
         if (this.land) {
           await this.reload(known);
           await this.settled(known);
@@ -278,7 +280,7 @@ export class PeekPages {
   private load(key: string, url: string, viewport: Viewport): WarmPage {
     this.drop(key);
     const freshAt = Date.now();
-    const warm: WarmPage = { page: null as unknown as RenderPage, url, freshAt, usedAt: freshAt, ready: Promise.resolve(), cold: false, live: false, busy: 0, queued: false, lock: null, drained: [], stamp: null };
+    const warm: WarmPage = { page: null as unknown as RenderPage, url, freshAt, loadedAt: freshAt, usedAt: freshAt, ready: Promise.resolve(), cold: false, live: false, busy: 0, queued: false, lock: null, drained: [], stamp: null };
     warm.ready = (async () => {
       warm.stamp = (await this.stampOf(url).catch(() => null))?.key ?? null;
       warm.page = await this.open(url, viewport);
@@ -290,6 +292,21 @@ export class PeekPages {
     this.pages.set(key, warm);
     this.sweepLater();
     return warm;
+  }
+
+  private async currentWithMappableCode(warm: WarmPage): Promise<boolean> {
+    if (warm.cold) return false;
+    if (warm.loadedAt >= this.movedAt) return this.current(warm);
+    await this.noticed(warm, this.dirtyAt);
+    return false;
+  }
+
+  private async noticed(warm: WarmPage, dirtyAt: number): Promise<void> {
+    for (;;) {
+      const clock = await warm.page.evaluate<PageClock>(CLOCK);
+      if (!clock.hooked || clock.rebuildAt >= dirtyAt || clock.now - dirtyAt > REBUILD_WAIT_MS) return;
+      await pause(POLL_MS);
+    }
   }
 
   private async current(warm: WarmPage): Promise<boolean> {

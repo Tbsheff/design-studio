@@ -44,6 +44,7 @@ import { readTweaksState } from '../tweaks/store.js';
 import { applyDirectEditBatch } from '../direct-edit/batch.js';
 import { DirectEditError, applyDirectEdit } from '../direct-edit/index.js';
 import { onPlannedEdit } from '../direct-edit/planned-feed.js';
+import { recordRunInHistory } from '../direct-edit/run-record.js';
 import { createEditHistory, type EditHistory } from '../direct-edit/history.js';
 import { registerEditHistoryRoutes } from './edit-history-routes.js';
 import { registerHunkRoutes } from './hunk-routes.js';
@@ -466,7 +467,7 @@ export function createApp(deps: AppDeps): Hono {
     await markLofi(project, direction, request);
     const handle = runner.start({ project, direction, request, attachments, designMd, designSystem, designRules, previewUrl, mentionFiles, target, repoContext });
     runProjectIndex.set(handle.runId, project.id);
-    void handle.done.then((summary) => (summary.versionId ? editHistory.clear(project.id, direction.id) : undefined), () => undefined);
+    void handle.done.then((summary) => (summary.versionId ? recordRunInHistory(editHistory, versions, project, direction, summary.versionId) : undefined)).catch(() => editHistory.clear(project.id, direction.id));
     if (!request.task && !request.variation) void handle.done.then(() => continueWithNext(project.id, direction.id, request, handle), () => undefined);
     return handle.runId;
   };

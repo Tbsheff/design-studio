@@ -86,11 +86,16 @@ function useOutsideClose(
     const inside = (target: EventTarget | null) =>
       target instanceof Node &&
       (!!root.current?.contains(target) || !!panel.current?.contains(target));
+    const spot = () => {
+      const box = root.current?.getBoundingClientRect();
+      return box ? `${box.top},${box.left}` : "";
+    };
+    const openedAt = spot();
     const onDown = (e: MouseEvent) => {
       if (!inside(e.target)) close();
     };
     const onScroll = (e: Event) => {
-      if (!inside(e.target)) close();
+      if (!inside(e.target) && spot() !== openedAt) close();
     };
     document.addEventListener("mousedown", onDown, true);
     window.addEventListener("scroll", onScroll, true);

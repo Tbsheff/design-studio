@@ -88,6 +88,26 @@ export function RedirectNote({ note, onClose }: { note: { from: string; to: stri
   );
 }
 
+const HIDDEN_REDIRECTS_KEY = 'design-studio.hidden-redirects.v1';
+const MAX_HIDDEN_REDIRECTS = 50;
+
+function readHiddenRedirects(): string[] {
+  try {
+    const raw: unknown = JSON.parse(localStorage.getItem(HIDDEN_REDIRECTS_KEY) ?? '[]');
+    return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeHiddenRedirects(keys: string[]): void {
+  try {
+    localStorage.setItem(HIDDEN_REDIRECTS_KEY, JSON.stringify(keys));
+  } catch {
+    return;
+  }
+}
+
 const LOAD_HINT_MS = 30_000;
 
 function reloadAppFrames(): void {
@@ -204,11 +224,16 @@ export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNo
   const loaded = useServerFrames(status, o.listen, Boolean(o.app));
   const [routeDismissed, setRouteDismissed] = useState(false);
   const hint = o.app ? (serverHint(o.app, status, loaded) ?? (routeDismissed ? null : routeHint(o.frames.layout))) : null;
-  const [hidden, setHidden] = useState<string | null>(null);
-  const key = redirect ? `${redirect.from}>${redirect.to}` : null;
+  const [hidden, setHidden] = useState(() => readHiddenRedirects());
+  const key = redirect ? `${o.projectId} ${redirect.from}>${redirect.to}` : null;
+  const hide = (value: string) => {
+    const next = [...hidden.filter((item) => item !== value), value].slice(-MAX_HIDDEN_REDIRECTS);
+    writeHiddenRedirects(next);
+    setHidden(next);
+  };
   return {
     bar: o.app ? <AppCanvasBar projectId={o.projectId} app={o.app} onAddRoute={addRoute} /> : null,
-    note: redirect && key !== hidden ? <RedirectNote note={redirect} onClose={() => setHidden(key)} /> : null,
+    note: redirect && key && !hidden.includes(key) ? <RedirectNote note={redirect} onClose={() => hide(key)} /> : null,
     stage: hint ? <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} /> : null,
   };
 }

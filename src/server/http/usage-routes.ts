@@ -19,6 +19,8 @@ export function registerUsageRoutes(app: Hono, deps: UsageRouteDeps): void {
     const project = await deps.projects.get(assertSafeId(c.req.param('pid'), 'projectId'));
     const did = c.req.query('directionId');
     const direction = did ? deps.projects.directionOf(project, assertSafeId(did, 'directionId')) : deps.projects.mainDirection(project);
-    return c.json(await componentUsage(project, direction.workTree, file, edges));
+    const usedAt = c.req.query('usedAt')?.trim().slice(0, FILE_MAX);
+    const route = c.req.query('route')?.trim().slice(0, FILE_MAX);
+    return c.json(await componentUsage(project, direction.workTree, file, edges, { ...(usedAt ? { usedAt } : {}), ...(route ? { route } : {}) }));
   });
 }

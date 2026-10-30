@@ -15,6 +15,7 @@ export interface InlinePromptOptions {
   running: boolean | undefined;
   onSubmit: ((prompt: string, extras?: InlineRunExtras) => void) | null | undefined;
   stage: () => HTMLElement | null;
+  route?: string | null | undefined;
 }
 
 export interface InlinePromptView {
@@ -22,6 +23,8 @@ export interface InlinePromptView {
   label: string;
   blocked: string | null;
   usageFile: string | null;
+  usedAtFile: string | null;
+  route: string | null;
   submit: (prompt: string, editScope?: EditScope) => void;
   close: () => void;
 }
@@ -47,6 +50,10 @@ function labelOf(selection: SelectionContext[]): string {
 
 function usageFileOf(selection: SelectionContext[]): string | null {
   return selection.length === 1 ? (selection[0]?.source?.file ?? null) : null;
+}
+
+function usedAtFileOf(selection: SelectionContext[]): string | null {
+  return selection.length === 1 ? (selection[0]?.usedAt?.file ?? null) : null;
 }
 
 function restoreFocus(previous: Element | null, stage: HTMLElement | null): void {
@@ -108,6 +115,8 @@ export function useInlinePrompt(o: InlinePromptOptions): InlinePromptView | null
     label: labelOf(o.selection),
     blocked: blockerOf(o),
     usageFile: usageFileOf(o.selection),
+    usedAtFile: usedAtFileOf(o.selection),
+    route: o.route ?? null,
     submit: (prompt, editScope) => {
       const cur = latest.current;
       if (blockerOf(cur) || !prompt.trim()) return;

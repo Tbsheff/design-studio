@@ -133,17 +133,31 @@ function routeList(routes: readonly string[]): string {
   return routes.length ? routes.join(', ') : '(none listed)';
 }
 
+function thisUseSite(scope: EditScope): string {
+  const site = scope.callSite;
+  const page = site?.pageFile ? ` (page file ${site.pageFile})` : '';
+  if (!site) return 'Pass a prop or className at the call site that renders it for this page.';
+  if (site.kind === 'layout') return `The call site is the layout ${site.file}, and only this route uses it: change the use there.`;
+  if (site.kind === 'page') return `The call site is the page file ${site.file}: pass a prop or className there.`;
+  return `Make a route-local change. The call site is ${site.file}${page}. Pass a prop or className at that call site; if other routes render ${site.file} too, add an optional prop to it and pass that prop only from this route's page file, or wrap this use in a route-level wrapper in the page file. Do not use arbitrary child selectors such as [&_p]:… to reach into ${scope.file}.`;
+}
+
+function sharedLayoutLine(scope: EditScope): string {
+  const site = scope.callSite;
+  return site?.kind === 'layout' ? ` The selected use sits in the layout ${site.file}, which these routes share, so a change for one page alone is not possible; the user was told so before the run.` : '';
+}
+
 export function editScopeBlock(scope: EditScope | undefined): string | null {
   if (!scope) return null;
   const name = scope.component ? `${scope.component} in ${scope.file}` : scope.file;
   const count = `${scope.routes.length} route${scope.routes.length === 1 ? '' : 's'}`;
   if (scope.choice === 'all') {
     return `<edit-scope>all uses
-The user picked "All uses": change the shared file ${name} itself. The change shows on all ${count} that use it: ${routeList(scope.routes)}. Name these routes in your final reply.
+The user picked "All uses": change the shared file ${name} itself. The change shows on all ${count} that use it: ${routeList(scope.routes)}.${sharedLayoutLine(scope)} Name these routes in your final reply.
 </edit-scope>`;
   }
   return `<edit-scope>this use
-The selected element comes from ${name}, which ${count} use: ${routeList(scope.routes)}. The user picked "This use": change only this use, on the page in <canvas-context>. Never edit ${scope.file}. Pass a prop or className at the call site that renders it for this page. When that call site is a layout that other routes share, make the change apply to this page only and say so in your final reply.
+The selected element comes from ${name}, which ${count} use: ${routeList(scope.routes)}. The user picked "This use": change only this use, on the page in <canvas-context>. Never edit ${scope.file}. ${thisUseSite(scope)}
 </edit-scope>`;
 }
 

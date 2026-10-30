@@ -1,18 +1,17 @@
-import type { Project } from '../../shared/contracts';
-import { api } from '../api';
 import { requestOpenApp } from '../openAppRequest';
 import { pickFolder } from '../folderPicker';
 import { uiStore } from '../storage';
+import { goHome } from '../projectNav';
 import type { Command } from './registry';
 
-function focusNewProject(): void {
+export function focusNewProject(): void {
   window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')?.focus());
 }
 
 async function openFolder(): Promise<void> {
   const picked = await pickFolder({ title: 'Open a folder' });
   if (picked.kind === 'canceled') return;
-  uiStore.set({ activeProjectId: null, screen: 'home' });
+  goHome();
   requestOpenApp(picked.kind === 'picked' ? picked.path : '');
 }
 
@@ -40,7 +39,7 @@ export function globalCommands(openShortcuts: () => void): Command[] {
       icon: 'plus',
       keywords: 'create start prompt',
       run: () => {
-        home();
+        goHome();
         focusNewProject();
       },
     },
@@ -50,13 +49,4 @@ export function globalCommands(openShortcuts: () => void): Command[] {
     ...THEME_COMMANDS,
     { id: 'help.shortcuts', title: 'Keyboard shortcuts', group: 'Help', icon: 'sliders', keyId: 'shortcuts', keywords: 'keys keymap cheat sheet', run: openShortcuts },
   ];
-}
-
-export function recentProjectCommands(projects: Project[]): Command[] {
-  const current = uiStore.get().activeProjectId;
-  return [...projects]
-    .sort((a, b) => b.updatedAt - a.updatedAt)
-    .slice(0, 12)
-    .filter((p) => p.id !== current)
-    .map((p) => ({ id: `project.open.${p.id}`, title: p.name, group: 'Projects', icon: 'file', keywords: `open project ${p.kind}`, run: () => uiStore.set({ activeProjectId: p.id }) }));
 }

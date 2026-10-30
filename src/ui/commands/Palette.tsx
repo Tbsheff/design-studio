@@ -1,16 +1,18 @@
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import type { Project } from '../../shared/contracts';
-import { binding } from '../../shared/keymap';
-import { api } from '../api';
+import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { errorText, api } from '../api';
 import { Icon } from '../components/Icon';
-import { rank } from './fuzzy';
-import { globalCommands, recentProjectCommands } from './globalCommands';
+import { ProjectThumb, TypeBadge } from '../components/ProjectThumb';
+import { openProject } from '../projectNav';
+import { useProjectHits, useRouteHits } from '../projectHits';
+import { uiStore } from '../storage';
+import { globalCommands } from './globalCommands';
 import { Keys } from './keys';
-import { collectCommands, type Command } from './registry';
+import { buildRows, type Row } from './paletteRows';
+import { collectCommands } from './registry';
 
 const RECENT_KEY = 'design-studio.commands.recent.v1';
 const RECENT_MAX = 5;
-const GROUP_ORDER = ['Recent', 'Run', 'Canvas', 'View', 'Panels', 'Selection', 'Version', 'Go', 'Projects', 'Help'];
+const DESKTOP = typeof window !== 'undefined' && 'studioDesktop' in window;
 
 function readRecent(): string[] {
   try {
@@ -27,32 +29,6 @@ function noteRecent(id: string): void {
   } catch {
     return;
   }
-}
-
-function groupIndex(group: string): number {
-  const at = GROUP_ORDER.indexOf(group);
-  return at < 0 ? GROUP_ORDER.length : at;
-}
-
-interface Row {
-  command: Command;
-  group: string;
-  marks: number[];
-}
-
-function rowsFor(commands: Command[], query: string, recent: string[]): Row[] {
-  if (query.trim() === '') {
-    const byId = new Map(commands.map((c) => [c.id, c]));
-    const top = recent.map((id) => byId.get(id)).filter((c): c is Command => c !== undefined && !c.disabled);
-    const topIds = new Set(top.map((c) => c.id));
-    const rest = commands.filter((c) => !topIds.has(c.id)).sort((a, b) => groupIndex(a.group) - groupIndex(b.group));
-    return [...top.map((command) => ({ command, group: 'Recent', marks: [] })), ...rest.map((command) => ({ command, group: command.group, marks: [] }))];
-  }
-  const boost = new Set(recent);
-  return rank(commands, query, (c) => ({ title: c.title, keywords: `${c.keywords ?? ''} ${c.group}` }))
-    .map((r) => ({ ...r, score: r.score + (boost.has(r.item.id) ? 1 : 0) - (r.item.disabled ? 4 : 0) }))
-    .sort((a, b) => b.score - a.score)
-    .map((r) => ({ command: r.item, group: 'Results', marks: r.marks }));
 }
 
 function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
@@ -77,49 +53,112 @@ function Marked({ text, marks }: { text: string; marks: number[] }): ReactNode {
   return out;
 }
 
+function RowLead({ row }: { row: Row }) {
+  if (row.hit && row.kind === 'project' && !row.icon) return <ProjectThumb hit={row.hit} />;
+  return (
+    <span className="cmdk-icon" data-tone={row.tone} aria-hidden="true">
+      <Icon name={row.icon ?? 'dot'} size={14} />
+    </span>
+  );
+}
+
+function RowEnd({ row, active, typing }: { row: Row; active: boolean; typing: boolean }) {
+  return (
+    <span className="cmdk-end">
+      {row.disabled ? <span className="cmdk-note truncate">{row.disabled}</span> : row.note && <span className="cmdk-note">{row.note}</span>}
+      {row.hit && row.kind === 'project' && !row.icon && <TypeBadge hit={row.hit} />}
+      {typing && active ? <Keys keys="Enter" className="cmdk-keys" /> : row.keys && <Keys keys={row.keys} className="cmdk-keys" />}
+    </span>
+  );
+}
+
+function stepOf(event: ReactKeyboardEvent): number {
+  if (event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n')) return 1;
+  if (event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p')) return -1;
+  return 0;
+}
+
+function digitOf(event: ReactKeyboardEvent): number | null {
+  if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return null;
+  const n = Number(event.key);
+  return Number.isInteger(n) && n >= 1 && n <= 9 ? n : null;
+}
+
+function usePaletteRows(query: string, onShortcuts: () => void, onClose: () => void, setError: (error: string | null) => void) {
+  const current = uiStore.get().activeProjectId;
+  const hits = useProjectHits(current);
+  const routes = useRouteHits(query, current, hits?.routes ?? []);
+  const [recent] = useState(readRecent);
+  const [commands] = useState(() => {
+    const all = [...collectCommands(), ...globalCommands(onShortcuts)].filter((c) => !c.id.startsWith('project.open.'));
+    return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
+  });
+  const [busy, setBusy] = useState(false);
+  const actions = useMemo(
+    () => ({
+      openProject: (id: string, route?: string) => {
+        onClose();
+        window.setTimeout(() => openProject(id, route), 0);
+      },
+      newPrototype: (prompt: string) => {
+        setBusy(true);
+        setError(null);
+        api
+          .createProject({ prompt, kind: 'html' })
+          .then(({ project }) => {
+            onClose();
+            openProject(project.id);
+          })
+          .catch((err: unknown) => {
+            setBusy(false);
+            setError(errorText(err));
+          });
+      },
+    }),
+    [onClose, setError],
+  );
+  const rows = useMemo(
+    () => buildRows({ query, commands, projects: hits?.projects ?? [], routes, recent, current, desktop: DESKTOP, actions }),
+    [query, commands, hits, routes, recent, current, actions],
+  );
+  return { rows, busy, loading: hits === null };
+}
+
 export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShortcuts: () => void }) {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const listId = useId();
   const listRef = useRef<HTMLDivElement>(null);
-  const [recent] = useState(readRecent);
-  const [base] = useState(() => {
-    const all = [...collectCommands(), ...globalCommands(onShortcuts)];
-    return all.filter((c, i) => all.findIndex((x) => x.id === c.id) === i);
-  });
-
-  useEffect(() => {
-    let alive = true;
-    api
-      .listProjects()
-      .then((list) => alive && setProjects(list))
-      .catch(() => undefined);
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const commands = useMemo(() => [...base.filter((c) => !c.id.startsWith('project.open.')), ...recentProjectCommands(projects)], [base, projects]);
-  const rows = useMemo(() => rowsFor(commands, query, recent), [commands, query, recent]);
+  const { rows, busy, loading } = usePaletteRows(query, onShortcuts, onClose, setError);
   const current = Math.min(active, Math.max(0, rows.length - 1));
+  const typing = query.trim() !== '';
 
   useLayoutEffect(() => {
     listRef.current?.querySelector<HTMLElement>(`[data-index="${current}"]`)?.scrollIntoView({ block: 'nearest' });
   }, [current, rows]);
 
   const run = (row: Row | undefined) => {
-    if (!row || row.command.disabled) return;
-    noteRecent(row.command.id);
+    if (!row || row.disabled || busy) return;
+    if (row.commandId) noteRecent(row.commandId);
+    if (row.kind === 'new' || row.kind === 'project' || row.kind === 'route') {
+      row.run();
+      return;
+    }
     onClose();
-    window.setTimeout(() => row.command.run(), 0);
+    window.setTimeout(() => row.run(), 0);
   };
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
-    const step = event.key === 'ArrowDown' || (event.ctrlKey && event.key === 'n') ? 1 : event.key === 'ArrowUp' || (event.ctrlKey && event.key === 'p') ? -1 : 0;
+    const step = stepOf(event);
+    const digit = typing ? null : digitOf(event);
     if (step !== 0 && rows.length > 0) {
       event.preventDefault();
       setActive((current + step + rows.length) % rows.length);
+    } else if (digit !== null) {
+      event.preventDefault();
+      event.stopPropagation();
+      run(rows.find((row) => row.keys === `Mod+${digit}` && row.group === 'Recent'));
     } else if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
       event.preventDefault();
       run(rows[current]);
@@ -134,9 +173,9 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
   let lastGroup = '';
   return (
     <div className="cmdk-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="cmdk" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div className="cmdk" role="dialog" aria-modal="true" aria-label="Command palette" aria-busy={busy || undefined}>
         <div className="cmdk-search">
-          <Icon name="search" size={16} />
+          {busy ? <span className="spinner" aria-hidden="true" /> : <Icon name="search" size={16} />}
           <input
             autoFocus
             role="combobox"
@@ -144,26 +183,32 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
             aria-controls={listId}
             aria-activedescendant={rows[current] ? `${listId}-${current}` : undefined}
             aria-autocomplete="list"
-            aria-label="Search commands"
-            placeholder="Type a command or a project"
+            aria-label="Go to anything, or describe something new"
+            placeholder="Go to anything, or describe something new"
             spellCheck={false}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setActive(0);
+              setError(null);
             }}
             onKeyDown={onKeyDown}
           />
           <kbd className="cmdk-esc">Esc</kbd>
         </div>
-        <div className="cmdk-list" role="listbox" id={listId} ref={listRef} aria-label="Commands">
-          {rows.length === 0 && <p className="cmdk-empty">No commands match “{query}”.</p>}
+        {error && (
+          <div className="cmdk-error" role="alert">
+            <Icon name="alert" size={14} />
+            <span>{error}</span>
+          </div>
+        )}
+        <div className="cmdk-list" role="listbox" id={listId} ref={listRef} aria-label="Results">
+          {rows.length === 0 && <p className="cmdk-empty">{loading ? 'Loading projects…' : `Nothing matches “${query}”.`}</p>}
           {rows.map((row, index) => {
-            const head = row.group !== lastGroup && query.trim() === '' ? row.group : null;
+            const head = row.group !== lastGroup ? row.group : null;
             lastGroup = row.group;
-            const keys = row.command.keyId ? binding(row.command.keyId).keys[0] : undefined;
             return (
-              <div key={`${row.group}-${row.command.id}`} role="presentation">
+              <div key={`${row.group}-${row.key}`} role="presentation">
                 {head && (
                   <div className="cmdk-group" role="presentation">
                     {head}
@@ -173,24 +218,19 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
                   id={`${listId}-${index}`}
                   role="option"
                   aria-selected={index === current}
-                  aria-disabled={row.command.disabled ? true : undefined}
+                  aria-disabled={row.disabled ? true : undefined}
                   data-index={index}
+                  data-kind={row.kind}
                   className="cmdk-row"
                   onMouseMove={() => index !== current && setActive(index)}
                   onClick={() => run(row)}
                 >
-                  <span className="cmdk-icon" aria-hidden="true">
-                    <Icon name={row.command.icon ?? 'dot'} size={14} />
-                  </span>
+                  <RowLead row={row} />
                   <span className="cmdk-title truncate">
-                    <Marked text={row.command.title} marks={row.marks} />
+                    <Marked text={row.title} marks={row.marks} />
                   </span>
-                  {row.command.disabled ? (
-                    <span className="cmdk-note truncate">{row.command.disabled}</span>
-                  ) : (
-                    query.trim() !== '' && <span className="cmdk-note">{row.command.group}</span>
-                  )}
-                  {keys && <Keys keys={keys} className="cmdk-keys" />}
+                  {row.meta && <span className="cmdk-meta truncate">{row.meta}</span>}
+                  <RowEnd row={row} active={index === current} typing={typing} />
                 </div>
               </div>
             );
@@ -202,7 +242,10 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
             <kbd>↓</kbd> Move
           </span>
           <span>
-            <kbd>↩</kbd> Run
+            <kbd>↩</kbd> Open
+          </span>
+          <span>
+            <kbd>Esc</kbd> Close
           </span>
           <span className="cmdk-foot-end">
             <Keys keys="?" /> All shortcuts

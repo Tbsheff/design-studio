@@ -19,10 +19,10 @@ const studio = preloadable(() => import('./components/Studio').then((m) => m.Stu
 const designSystems = preloadable(() => import('./components/DesignSystems').then((m) => m.DesignSystems));
 const newDesignSystem = preloadable(() => import('./components/NewDesignSystem').then((m) => m.NewDesignSystem));
 
-const loadLayer = () => import('./commands/CommandLayer');
+const layer = preloadable(() => import('./commands/CommandLayer').then((m) => m.default));
 
 export const Studio = studio.Screen;
-export const CommandLayer = lazy(loadLayer);
+export const CommandLayer = layer.Screen;
 export const DesignSystems = designSystems.Screen;
 export const NewDesignSystem = newDesignSystem.Screen;
 
@@ -31,7 +31,7 @@ export function prefetchStudio(): Promise<unknown> {
 }
 
 export function prefetchCommandLayer(): void {
-  loadLayer().catch(() => undefined);
+  layer.fetch().catch(() => undefined);
 }
 
 export function prefetchScreensWhenIdle(): void {

@@ -29,6 +29,7 @@ function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
 
 function forwardAppKey(id: AppKey): void {
   if (id === 'ask-inline') void runCommand('selection.ask-inline');
+  else if (id === 'project-rail') void runCommand('view.project-rail');
   else if (id === 'palette' || id === 'shortcuts') openLayer(id);
   else moveRegion(id === 'next-region' ? 1 : -1);
 }

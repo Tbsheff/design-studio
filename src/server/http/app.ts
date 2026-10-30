@@ -95,6 +95,7 @@ import { createThumbnailService, type ThumbnailService } from '../thumbnails.js'
 import { registerHomeRoutes } from './home-routes.js';
 import { finishAttach, registerAppRoutes } from './app-routes.js';
 import { registerDoctorRoutes } from './doctor-routes.js';
+import { searchProjects } from '../app/project-search.js';
 import { registerVersionRoutes } from './version-routes.js';
 import { createVersionNames, trimListedFiles } from '../store/version-names.js';
 import { isRunSummary, listRunSummaries, runListBody, runListQuery } from './run-list.js';
@@ -558,6 +559,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   app.get('/api/projects', async (c) => c.json(await projects.list()));
+  app.get('/api/project-search', async (c) => c.json(await searchProjects({ projects, appStatus: (p) => preview.apps?.status(p) ?? null }, { query: c.req.query('q') ?? '', projectId: c.req.query('project') ?? null, limit: Number(c.req.query('limit') ?? 20) || 20 })));
 
   app.get('/api/skills', async (c) => c.json(await discoverSkills()));
 

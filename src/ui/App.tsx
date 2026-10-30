@@ -1,7 +1,7 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { errorText } from './api';
 import { Home } from './components/Home';
-import { CommandLayer, DesignSystems, NewDesignSystem, prefetchStudio, Studio } from './screens';
+import { CommandLayer, DesignSystems, NewDesignSystem, prefetchCommandLayer, prefetchStudio, Studio } from './screens';
 import type { CommandLayer as Layer } from './commands/registry';
 import { isTypingTarget } from './typingTarget';
 import { loadSession } from './session';
@@ -43,8 +43,9 @@ function useCommandLayer() {
   useEffect(() => {
     const toggle = (next: unknown) => (next === 'palette' || next === 'shortcuts') && setLayer((cur) => (cur === next ? null : next));
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control') prefetchCommandLayer();
       const mod = e.metaKey || e.ctrlKey;
-      const next = mod && !e.altKey && !e.shiftKey && e.code === 'KeyK' ? 'palette' : e.key === '?' && !e.metaKey && !e.altKey && (e.ctrlKey || !isTypingTarget(e.target)) ? 'shortcuts' : null;
+      const next = mod && !e.altKey && !e.shiftKey && (e.code === 'KeyK' || e.code === 'KeyP') ? 'palette' : e.key === '?' && !e.metaKey && !e.altKey && (e.ctrlKey || !isTypingTarget(e.target)) ? 'shortcuts' : null;
       if (!next || e.repeat) return;
       e.preventDefault();
       e.stopPropagation();

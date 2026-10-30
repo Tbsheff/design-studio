@@ -161,6 +161,7 @@ export function warmProject(pid: string, directionId: string | null): void {
 
 export const api = {
   listProjects: () => json<Project[]>('GET', '/api/projects'),
+  searchProjects: (q: string, project: string | null, limit = 20) => json<import('../shared/project-search').ProjectSearchResult>('GET', `/api/project-search?${new URLSearchParams({ q, limit: String(limit), ...(project ? { project } : {}) }).toString()}`),
   createProject: (input: { name?: string; prompt: string; kind: ProjectKind; settings?: Partial<ProjectSettings>; designMd?: string; packId?: string; level?: RunLevel; startRun?: boolean; parentPath?: string; referenceUrls?: string[] }) =>
     json<{ project: Project; runId: string | null }>('POST', '/api/projects', input),
   starters: () => json<Starter[]>('GET', '/api/starters'),

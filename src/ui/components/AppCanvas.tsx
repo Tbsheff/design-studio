@@ -4,7 +4,8 @@ import { routeLabel } from '../../shared/app';
 import { cleanFrameLabel } from '../../shared/canvas-file';
 import { api } from '../api';
 import { openAppPanel, useAppStatus } from '../appStatus';
-import { addFrame, canAddFrame, setFramePath, type CanvasLayout } from '../canvasFrames';
+import { addFrame, canAddFrame, canvasStore, setFramePath, type CanvasLayout } from '../canvasFrames';
+import { OPEN_ROUTE_EVENT, takePendingRoute } from '../projectNav';
 import { Icon } from './Icon';
 
 const AppBar = lazy(() => import('./AppBar'));
@@ -195,6 +196,30 @@ function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
   );
 }
 
+function useRouteRequests(projectId: string, isApp: boolean, addRoute: (route: string) => void): void {
+  const add = useRef(addRoute);
+  add.current = addRoute;
+  useEffect(() => {
+    if (!isApp) return;
+    const runPending = () => {
+      if (!canvasStore.loaded(projectId)) return false;
+      const route = takePendingRoute(projectId);
+      if (route) add.current(route);
+      return true;
+    };
+    const unsubscribe = runPending() ? null : canvasStore.subscribe(() => queueMicrotask(() => runPending() && unsubscribe?.()));
+    const onRoute = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId?: string; route?: string }>).detail;
+      if (detail?.projectId === projectId && detail.route) add.current(detail.route);
+    };
+    window.addEventListener(OPEN_ROUTE_EVENT, onRoute);
+    return () => {
+      unsubscribe?.();
+      window.removeEventListener(OPEN_ROUTE_EVENT, onRoute);
+    };
+  }, [projectId, isApp]);
+}
+
 interface AppCanvasInput {
   projectId: string;
   app: AttachedApp | null | undefined;
@@ -219,6 +244,7 @@ export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNo
     o.focus();
     o.notify(shown ? `${route} is already on the canvas. Showing it.` : `Added a frame for ${route}`);
   };
+  useRouteRequests(o.projectId, Boolean(o.app), addRoute);
   const redirect = useRedirectNote(o.listen, Boolean(o.app), o.resetKey);
   const status = useAppStatus(o.projectId);
   const loaded = useServerFrames(status, o.listen, Boolean(o.app));

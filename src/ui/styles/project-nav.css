@@ -1,0 +1,308 @@
+.pnav-thumb {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  color: var(--text-3);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.pnav-thumb[data-type='next'],
+.pnav-thumb[data-type='vite'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.pnav-thumb[data-type='design-system'] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.pnav-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.pnav-badge[data-type='next'],
+.pnav-badge[data-type='vite'] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.pnav-badge[data-type='html'],
+.pnav-badge[data-type='react'] {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.pnav-badge[data-type='design-system'] {
+  background: var(--brand-soft);
+  color: var(--text-2);
+}
+
+.pnav-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--text-faint);
+}
+
+.pnav-dot[data-level='ok'] {
+  background: var(--ok);
+}
+
+.pnav-dot[data-level='busy'] {
+  background: var(--accent);
+}
+
+.pnav-dot[data-level='warn'] {
+  background: var(--warn);
+}
+
+.studio {
+  --rail-w: 52px;
+  position: relative;
+}
+
+.studio[data-rail='open'] {
+  --rail-w: 224px;
+}
+
+.studio > .columns {
+  margin-left: var(--rail-w);
+}
+
+.prail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 5;
+  width: var(--rail-w);
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--s-2);
+  background: var(--bg);
+  box-shadow: inset -1px 0 0 var(--line);
+}
+
+:root[data-shell='mac'] .prail {
+  padding-top: 0;
+}
+
+.prail[data-state='mini'] {
+  align-items: center;
+  gap: var(--s-2);
+  padding-bottom: var(--s-2);
+}
+
+.prail-top,
+.prail-head {
+  flex: none;
+  height: var(--bar-h);
+  display: flex;
+  align-items: center;
+}
+
+.prail .brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+}
+
+.prail-head {
+  gap: var(--s-2);
+  padding: 0 var(--s-2) 0 var(--s-3);
+}
+
+.prail-title {
+  flex: 1;
+  font-size: var(--t-sm);
+  font-weight: var(--w-medium);
+}
+
+.prail-thumbs {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 0;
+  overflow-y: auto;
+  padding: 3px 0;
+  scrollbar-width: none;
+}
+
+.prail-mini {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  cursor: pointer;
+}
+
+.prail-mini .pnav-thumb {
+  width: 34px;
+  border-radius: var(--r-sm);
+}
+
+.prail-mini:hover .pnav-thumb {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.prail-mini[aria-current='page'] {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.prail-mini:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.prail-mini-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+.prail-find {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 28px;
+  margin: 0 var(--s-2) var(--s-1);
+  padding: 0 var(--s-2);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-3);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.prail-find:focus-within {
+  box-shadow: inset 0 0 0 1px var(--accent-line), 0 0 0 3px var(--ring-soft);
+}
+
+.prail .prail-find input,
+.prail .prail-find input:focus {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+}
+
+.prail-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--s-2) var(--s-2);
+  scrollbar-width: thin;
+}
+
+.prail-group-head {
+  padding: var(--s-3) var(--s-2) var(--s-1);
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  font-weight: var(--w-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prail-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 32px;
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--t-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.prail-row > .truncate {
+  flex: 1;
+  min-width: 0;
+}
+
+.prail-row:hover {
+  background: var(--tint-hover);
+}
+
+.prail-row[aria-current='page'] {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+  font-weight: var(--w-medium);
+}
+
+.prail-row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.prail-empty {
+  margin: 0;
+  padding: var(--s-3) var(--s-2);
+  color: var(--text-3);
+  font-size: var(--t-xs);
+}
+
+.prail-foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.prail[data-state='mini'] .prail-foot {
+  margin-top: auto;
+}
+
+.prail[data-state='open'] .prail-foot {
+  padding: var(--s-2);
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+.prail[data-state='open'] .prail-foot .btn {
+  justify-content: flex-start;
+}
+
+:root[data-shell='mac'] .prail-top,
+:root[data-shell='mac'] .prail-head {
+  height: calc(var(--bar-h) + 28px);
+  align-items: flex-end;
+  padding-bottom: var(--s-2);
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+:root[data-shell='mac'] .prail-head > button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+:root[data-shell='mac'] .studio .pane-head,
+:root[data-shell='mac'] .studio[data-pane='collapsed'] .canvas-topbar {
+  padding-left: max(var(--pane-inset, var(--s-3)), calc(var(--shell-inset) - var(--rail-w)));
+}

@@ -5,6 +5,7 @@ import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project,
 import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
 import { runTitle } from '../../shared/version-title.js';
 import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
+import { createCutWriteGuard } from './cut-writes.js';
 import { createBashEditTracker, fileDiff, readFileText, type BashEditResult, type BashWriteCheck, type FileText } from './bash-edits.js';
 import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js';
 import { createCommandRuleStore } from '../store/command-rules.js';
@@ -183,6 +184,17 @@ async function priorSessionFor(lean: boolean, runsDir: string, direction: Direct
   return lean ? null : loadPriorSession(runsDir, direction);
 }
 
+function savesVersion(status: RunStatus, request: AgentRunContext['request']): boolean {
+  if (request.mode !== 'edit') return false;
+  return status === 'completed' || (status !== 'running' && !request.scope);
+}
+
+function versionTitle(status: RunStatus, prompt: string): string {
+  const title = runTitle(prompt);
+  if (status === 'completed') return title;
+  return `${title} (${status === 'canceled' ? 'stopped' : status === 'failed' ? 'failed' : 'limit reached'})`;
+}
+
 function leanDriverContext(ctx: AgentRunContext): AgentRunContext {
   return { ...ctx, designMd: null, direction: { ...ctx.direction, sessionId: null } };
 }
@@ -359,6 +371,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     const toolCalls: ToolCallRecord[] = [];
     const toolIndex = new Map<string, ToolCallRecord>();
     const befores = new Map<string, Before>();
+    const cutWrites = createCutWriteGuard();
     let toolMs = 0;
     let lastText = '';
     let sessionId: string | null = lean ? null : ctx.direction.sessionId;
@@ -434,6 +447,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         const durationMs = record ? finishedAt - record.startedAt : 0;
         const before = befores.get(toolUseId);
         befores.delete(toolUseId);
+        cutWrites.finish(toolUseId, isError);
         const diff = before && !isError ? toolDiff(before) : null;
         if (before && !isError) bashEdits.remember(before.relative);
         const diffs = bashDiffs.get(toolUseId);
@@ -463,7 +477,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         if (name === 'Bash') return ctx.request.mode === 'edit' ? bashEdits.start(toolUseId) : undefined;
         if (!FILE_WRITE_TOOLS.has(name) || befores.has(toolUseId)) return;
         const target = writeTarget(input, ctx.direction.workTree);
-        if (target) befores.set(toolUseId, { ...target, content: readFileText(target.absolute) });
+        if (!target) return;
+        cutWrites.start(toolUseId, target.relative, target.absolute);
+        befores.set(toolUseId, { ...target, content: readFileText(target.absolute) });
       },
       async bashFinished(toolUseId, check) {
         const result = await bashEdits.finish(toolUseId, check);
@@ -545,8 +561,8 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       const project = await deps.projects.get(projectId);
       direction = project.directions.find((candidate) => candidate.id === directionId) ?? direction;
       if (ctx.request.mode === 'edit') await runBeforeCommit(project, direction);
-      if (status === 'completed' && ctx.request.mode === 'edit') {
-        const version = await deps.versions.commit(project, direction, runTitle(ctx.request.prompt), {
+      if (savesVersion(status, ctx.request)) {
+        const version = await deps.versions.commit(project, direction, versionTitle(status, ctx.request.prompt), {
           kind: 'run',
           runId,
           prompt: ctx.request.prompt,
@@ -579,6 +595,14 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       return problem;
     }
 
+    async function checkFinish(status: RunStatus): Promise<string | null> {
+      if (status === 'completed') return guardScope();
+      if (ctx.request.mode !== 'edit') return null;
+      const restored = await cutWrites.restore();
+      if (restored.length > 0) summary.restoredFiles = restored;
+      return null;
+    }
+
     async function recordSessionTotals(outcome: DriverOutcome | null): Promise<void> {
       const totals = outcome?.sessionTotals;
       if (!totals || sessionId === null) return;
@@ -609,7 +633,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
       try {
         await recordSessionTotals(outcome);
-        const rejected = status === 'completed' ? await guardScope() : null;
+        const rejected = await checkFinish(status);
         if (rejected) {
           status = 'failed';
           summary.error = rejected;

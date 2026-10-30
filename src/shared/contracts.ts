@@ -628,6 +628,7 @@ export interface RunSummary {
   toolMs: number;
   toolCalls: ToolCallRecord[];
   versionId: string | null;
+  restoredFiles?: string[];
   error: string | null;
   finalText: string;
   parts?: RunPart[];

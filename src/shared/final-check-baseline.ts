@@ -44,13 +44,17 @@ function qualityKey(viewport: CheckViewport, finding: QualityFinding): string {
   return `${finding.viewport ?? viewport}|${finding.check}|${finding.selector ?? ''}|${plain(finding.message)}`;
 }
 
+function isChangeReport(finding: QualityFinding): boolean {
+  return finding.check === 'visual-diff' && finding.severity === 'low';
+}
+
 export function checkItems(results: readonly RenderCheckResult[]): CheckItem[] {
   return results.flatMap((result) => {
     const view = result.viewport;
     const errors = [...result.consoleErrors, ...result.pageErrors].map((message): CheckItem => ({ key: consoleKey(view, message), level: 'error' }));
     const overflow: CheckItem[] = result.horizontalOverflow ? [{ key: `${view}|overflow`, level: 'error' }] : [];
     const layout = result.layout.filter((finding) => finding.severity === 'error').map((finding): CheckItem => ({ key: layoutKey(view, finding), level: 'error' }));
-    const quality = (result.quality ?? []).map((finding): CheckItem => ({ key: qualityKey(view, finding), level: finding.severity }));
+    const quality = (result.quality ?? []).filter((finding) => !isChangeReport(finding)).map((finding): CheckItem => ({ key: qualityKey(view, finding), level: finding.severity }));
     return [...errors, ...overflow, ...layout, ...quality];
   });
 }

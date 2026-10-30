@@ -620,7 +620,7 @@ function CanvasView(props: ViewProps) {
   useImageDrop({ projectId, directionId, kind, enabled: editsEnabled, frames, notify: layerEdits.notify });
   const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits, ids: { projectId, directionId, kind } });
   openMenu.current = previewMenu.onContextMenu;
-  const inlinePrompt = useInlinePrompt({ selection: props.selection, live, running: props.running, onSubmit: props.onInlinePrompt, stage: () => stageRef.current });
+  const inlinePrompt = useInlinePrompt({ selection: props.selection, live, running: props.running, onSubmit: props.onInlinePrompt, stage: () => stageRef.current, route: active.path });
   const handlesOn = editsEnabled && !commentMode;
   const resize = useResizeHandles({
     projectId,

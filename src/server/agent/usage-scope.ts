@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { AppRoute, Project } from '../../shared/contracts.js';
-import type { ComponentUsage, UsageRoute } from '../../shared/usage-scope.js';
+import type { ComponentUsage, UsageCallSite, UsageRoute } from '../../shared/usage-scope.js';
 import { appRouterDir, listAppRoutes } from '../app/routes.js';
 import { RouteGraph } from '../preview/route-graph.js';
 import { BadRequestError, NotFoundError } from '../store/errors.js';
@@ -136,10 +136,61 @@ function snapshotOf(workTree: string, appDir: string, edges: UsageEdges): Promis
   return known.snapshot;
 }
 
-async function appUsage(workTree: string, appDir: string, target: string, edges: UsageEdges): Promise<UsageRoute[]> {
-  const { routes, roots, reverse } = await snapshotOf(workTree, appDir, edges);
-  const users = usersOf(reverse, target);
-  return routes.filter((_route, index) => roots[index]?.some((root) => users.has(root))).map((route) => ({ route: route.route, file: route.file }));
+export interface UsageAt {
+  usedAt?: string;
+  route?: string;
+}
+
+function routesUsing(snapshot: AppSnapshot, file: string): number {
+  const users = usersOf(snapshot.reverse, file);
+  return snapshot.roots.filter((roots) => roots.some((root) => users.has(root))).length;
+}
+
+function isSegmentFile(file: string): boolean {
+  return SEGMENT_FILES.test(path.basename(file));
+}
+
+function routeIndex(snapshot: AppSnapshot, route: string | undefined): number {
+  if (!route) return -1;
+  const clean = `/${(route.split(/[?#]/)[0] ?? '').replace(/^\/+|\/+$/g, '')}`;
+  return snapshot.routes.findIndex((item) => item.route === clean);
+}
+
+function layoutSite(snapshot: AppSnapshot, workTree: string, layout: string, pageFile: string | null): UsageCallSite {
+  const routes = snapshot.roots.filter((roots) => roots.includes(layout)).length;
+  return { file: posix(path.relative(workTree, layout)), kind: 'layout', routes, routeLocal: routes <= 1, pageFile };
+}
+
+function siteFor(snapshot: AppSnapshot, workTree: string, site: string, at: UsageAt): UsageCallSite | undefined {
+  const index = routeIndex(snapshot, at.route);
+  const roots = snapshot.roots[index] ?? [];
+  const page = roots[0] ?? null;
+  const pageFile = page ? posix(path.relative(workTree, page)) : null;
+  if (isSegmentFile(site)) return layoutSite(snapshot, workTree, site, pageFile);
+  if (!page) return undefined;
+  const users = usersOf(snapshot.reverse, site);
+  const relative = posix(path.relative(workTree, site));
+  if (users.has(page)) return { file: relative, kind: site === page ? 'page' : 'component', routes: routesUsing(snapshot, site), routeLocal: true, pageFile };
+  const layout = roots.slice(1).find((root) => users.has(root));
+  return layout ? layoutSite(snapshot, workTree, layout, pageFile) : undefined;
+}
+
+function siteFile(workTree: string, appDir: string, target: string, usedAt: string | undefined): string {
+  if (!usedAt) return target;
+  try {
+    return resolveUsageFile(workTree, appDir, usedAt);
+  } catch {
+    return target;
+  }
+}
+
+async function appUsage(workTree: string, appDir: string, target: string, edges: UsageEdges, at: UsageAt): Promise<{ routes: UsageRoute[]; callSite?: UsageCallSite }> {
+  const snapshot = await snapshotOf(workTree, appDir, edges);
+  const users = usersOf(snapshot.reverse, target);
+  const routes = snapshot.routes.filter((_route, index) => snapshot.roots[index]?.some((root) => users.has(root))).map((route) => ({ route: route.route, file: route.file }));
+  if (!at.usedAt && !at.route) return { routes };
+  const callSite = siteFor(snapshot, workTree, siteFile(workTree, appDir, target, at.usedAt), at);
+  return callSite ? { routes, callSite } : { routes };
 }
 
 export function warmComponentUsage(project: Project, workTree: string, edges: UsageEdges = inProcessEdges): void {
@@ -147,10 +198,10 @@ export function warmComponentUsage(project: Project, workTree: string, edges: Us
   void snapshotOf(workTree, project.app.appDir, edges).catch(() => undefined);
 }
 
-export async function componentUsage(project: Project, workTree: string, file: string, edges: UsageEdges = inProcessEdges): Promise<ComponentUsage> {
+export async function componentUsage(project: Project, workTree: string, file: string, edges: UsageEdges = inProcessEdges, at: UsageAt = {}): Promise<ComponentUsage> {
   const target = resolveUsageFile(workTree, project.app?.appDir ?? null, file);
   const relative = posix(path.relative(workTree, target));
   if (!project.app) return { file: relative, component: null, routes: [] };
-  const [component, routes] = await Promise.all([componentName(target), appUsage(workTree, project.app.appDir, target, edges)]);
-  return { file: relative, component, routes };
+  const [component, usage] = await Promise.all([componentName(target), appUsage(workTree, project.app.appDir, target, edges, at)]);
+  return { file: relative, component, ...usage };
 }

@@ -148,3 +148,12 @@
     transition: none;
   }
 }
+
+.inline-prompt-shared {
+  align-items: center;
+  padding: 0 var(--s-2);
+  color: var(--float-fg-muted);
+  font: 500 11px/24px var(--font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

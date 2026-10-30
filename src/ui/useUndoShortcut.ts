@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { noteHandledShortcut, recentDesktopCommand, useDesktopCommand } from './desktop';
-import { isTypingTarget } from './typingTarget';
+import { editsText } from './typingTarget';
 
 export const PREVIEW_HISTORY_EVENT = 'studio:preview-history';
 
@@ -44,7 +44,7 @@ export function useUndoShortcut(enabled: boolean, onUndo: () => void, redo?: Red
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const kind = historyKeyOf(event);
-      if (!kind || isTypingTarget(event.target)) return;
+      if (!kind || editsText(event.target)) return;
       if (kind === 'redo' && !state.current.redo) return;
       event.preventDefault();
       routeHistoryCommand(kind, state.current);
@@ -63,7 +63,7 @@ export function useUndoShortcut(enabled: boolean, onUndo: () => void, redo?: Red
     };
   }, []);
   useDesktopCommand((command) => {
-    if ((command.type !== 'undo' && command.type !== 'redo') || isTypingTarget(document.activeElement)) return false;
+    if ((command.type !== 'undo' && command.type !== 'redo') || editsText(document.activeElement)) return false;
     return routeHistoryCommand(command.type, state.current);
   });
 }

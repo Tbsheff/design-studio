@@ -1,4 +1,5 @@
 import { withFrameStateHost } from '../../shared/frame-state.js';
+import { findApps } from '../app/found-apps.js';
 import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
 import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
@@ -83,6 +84,7 @@ export const TOOLS: ToolDef[] = [
     limit: { type: 'integer', minimum: 1, maximum: 500, description: 'Routes per page. Default 50.' },
     cursor: { type: 'string', description: 'nextCursor from the previous page.' },
   }, ['projectId']),
+  def('list_found_apps', 'List app folders found on this Mac', 'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.', { fresh: { type: 'boolean', description: 'Scan again instead of using the cached list. Default false.' } }),
   def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
   def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
 ];
@@ -337,6 +339,7 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
 const PROJECT_TOOLS: Record<string, (deps: ExportDeps, args: Args) => Promise<ToolResult>> = {
   search_projects: async (deps, args) =>
     json(await searchProjects({ projects: deps.projects, appStatus: (p) => deps.preview.apps?.status(p) ?? null }, { query: str(args, 'query') ?? '', projectId: str(args, 'projectId') ?? null, limit: int(args, 'limit', 1, 100, 20) })),
+  list_found_apps: async (deps, args) => json(await findApps(await deps.projects.list(), { fresh: args.fresh === true })),
   list_variants: async (deps, args) => {
     const project = await deps.projects.get(str(args, 'projectId', true) as string);
     return json(await listElementVariants(project, deps.runner ?? { isRunning: () => false }));

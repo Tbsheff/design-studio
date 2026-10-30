@@ -3,7 +3,7 @@ import type { Context, Hono } from 'hono';
 import type { VersionThumbs } from '../../shared/contracts.js';
 import type { StudioProjectStore } from '../store/projects.js';
 import { parseVersionName, type VersionNames } from '../store/version-names.js';
-import { clampViewport, THUMB_VIEWPORT, type ThumbnailService } from '../thumbnails.js';
+import { clampViewport, diffThumbName, THUMB_VIEWPORT, versionThumbName, type ThumbnailService } from '../thumbnails.js';
 import type { VersionStore } from '../types.js';
 
 interface VersionRouteDeps {
@@ -24,11 +24,11 @@ const gone = (error: unknown): Response => {
 
 async function versionThumbs(deps: VersionRouteDeps, projectId: string, from: string, to: string, signal: AbortSignal): Promise<VersionThumbs> {
   const dir = path.join(deps.projects.projectDir(projectId), 'thumbs');
-  const shot = (id: string) => deps.thumbnails.version(projectId, id, signal).then(() => path.join(dir, `v-${id}.png`), () => null);
+  const shot = (id: string) => deps.thumbnails.version(projectId, id, signal).then(() => path.join(dir, versionThumbName(id)), () => null);
   const [fromPath, toPath] = await Promise.all([shot(from), shot(to)]);
   const viewport = clampViewport(THUMB_VIEWPORT.width, THUMB_VIEWPORT.height);
   const mask = await deps.thumbnails.diff(projectId, from, to, viewport, signal).catch(() => null);
-  return { from: fromPath, to: toPath, mask: mask ? path.join(dir, `diff-${from}-${to}-${viewport.width}x${viewport.height}.png`) : null, changedPct: mask?.changedPct ?? null };
+  return { from: fromPath, to: toPath, mask: mask ? path.join(dir, diffThumbName(from, to, viewport)) : null, changedPct: mask?.changedPct ?? null };
 }
 
 export function registerVersionRoutes(app: Hono, deps: VersionRouteDeps): void {

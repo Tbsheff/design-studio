@@ -49,10 +49,11 @@ export function imageFiles(list: FileList | File[] | null | undefined): File[] {
   return [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
 }
 
-export function ComposerChips({ images, references, onRemoveImage, onRemoveReference }: { images: ImageDraft[]; references: ReferenceDraft[]; onRemoveImage: (id: string) => void; onRemoveReference: (url: string) => void }) {
-  if (images.length === 0 && references.length === 0) return null;
+export function ComposerChips({ lead, images, references, onRemoveImage, onRemoveReference }: { lead?: ReactNode; images: ImageDraft[]; references: ReferenceDraft[]; onRemoveImage: (id: string) => void; onRemoveReference: (url: string) => void }) {
+  if (!lead && images.length === 0 && references.length === 0) return null;
   return (
     <ul className="home-chips" aria-label="Attached to this prompt">
+      {lead}
       {images.map((image) => (
         <li key={image.id} className="home-chip image" data-tip={image.file.name}>
           <img src={image.url} alt="" />
@@ -76,7 +77,7 @@ export function ComposerChips({ images, references, onRemoveImage, onRemoveRefer
   );
 }
 
-export function useComposerAttachments(setFormError: (message: string | null) => void) {
+export function useComposerAttachments(setFormError: (message: string | null) => void, onFolder?: (data: DataTransfer) => boolean) {
   const [images, setImages] = useState<ImageDraft[]>([]);
   const [references, setReferences] = useState<ReferenceDraft[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -140,6 +141,7 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
   const onDrop = (event: DragEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDragging(false);
+    if (onFolder?.(event.dataTransfer)) return;
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) {
       addImages(files);

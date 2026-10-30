@@ -303,6 +303,10 @@ function eventElement(event: Event): Element | null {
   return null;
 }
 
+function shapeRoot(element: Element | null): Element | null {
+  return element instanceof SVGElement ? (element.closest('svg') ?? element) : element;
+}
+
 function isTypingElement(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
   return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
@@ -853,7 +857,7 @@ function startBridge(session: BridgeSession): void {
     if (keys) post({ type: 'locks', keys });
     post({ type: 'tree', ...layers.build(locks.ownLocked) });
   });
-  const hitOf = (event: Event): Element | null => locks.hit(event, eventElement(event));
+  const hitOf = (event: Event): Element | null => locks.hit(event, shapeRoot(eventElement(event)));
   let selected: Element | null = null;
   let selectedAt = -Infinity;
   let tracked: string[] = [];

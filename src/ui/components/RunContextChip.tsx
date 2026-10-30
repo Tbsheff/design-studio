@@ -11,7 +11,7 @@ export function RunContextChip({ chip }: { chip: RunCanvasChip | null | undefine
       <Chip size="sm" className="chip max-w-full py-0.5 pr-0.5 text-muted-foreground" data-tip={tip} data-tip-side="top">
         <Icon name="frame" size={12} />
         <span className="chip-text min-w-0 truncate">
-          On <span className="font-mono text-foreground">{chip.page}</span>
+          On page <span className="font-mono text-foreground">{chip.page}</span>
           {chip.state ? ` (${chip.state})` : ''}
           {chip.element ? ` · ${chip.element}` : ''}
         </span>

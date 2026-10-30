@@ -221,7 +221,7 @@
   white-space: nowrap;
 }
 
-@container (max-width: 240px) {
+@container (max-width: 180px) {
   .version-meta .version-file-count,
   .version-meta .version-file-count-dot {
     display: none;

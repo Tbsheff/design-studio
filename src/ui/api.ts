@@ -141,6 +141,15 @@ export async function json<T>(method: string, path: string, body?: unknown): Pro
 
 const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
 const d = (pid: string, did: string) => `${p(pid)}/d/${encodeURIComponent(did)}`;
+
+const treeInFlight = new Map<string, Promise<{ files: string[] }>>();
+function sharedTree(url: string): Promise<{ files: string[] }> {
+  const open = treeInFlight.get(url);
+  if (open) return open;
+  const next = json<{ files: string[] }>('GET', url).finally(() => treeInFlight.delete(url));
+  treeInFlight.set(url, next);
+  return next;
+}
 const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
 
 export function warmProject(pid: string, directionId: string | null): void {
@@ -277,7 +286,7 @@ export const api = {
     timedEdit(pid, did, 'batch', batch.edits.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, batch, pickMessage)).json()) as DirectEditBatchResult),
   structureEdit: (pid: string, did: string, req: StructureEditRequest) =>
     timedEdit(pid, did, req.op, req.targets.length, async () => (await (await request('POST', `${d(pid, did)}/direct-edit`, req, pickMessage)).json()) as StructureEditResult),
-  workTreeFiles: (pid: string, did: string) => json<{ files: string[] }>('GET', `${d(pid, did)}/tree`),
+  workTreeFiles: (pid: string, did: string) => sharedTree(`${d(pid, did)}/tree`),
   renderCheck: (pid: string, did: string) => json<RenderCheckResult[]>('POST', `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>
     json<{ url: string }>('GET', `${p(pid)}/versions/${encodeURIComponent(vid)}/preview`),

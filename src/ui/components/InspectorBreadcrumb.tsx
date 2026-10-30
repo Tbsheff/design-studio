@@ -10,7 +10,7 @@ interface Props {
 }
 
 function elementLabel(selection: SelectionContext): string {
-  const firstClass = /\bclass="([^"\s]+)/.exec(selection.outerHTML.slice(0, 500))?.[1];
+  const firstClass = /^<[^>]*\bclass="([^"\s]+)/.exec(selection.outerHTML.slice(0, 4000))?.[1];
   return firstClass ? `${selection.tag}.${firstClass}` : selection.tag;
 }
 

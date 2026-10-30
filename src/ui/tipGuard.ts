@@ -85,7 +85,43 @@ function tipHost(target: EventTarget | null): Element | null {
   return target instanceof Element ? target.closest('[data-tip]') : null;
 }
 
+const WARM = 'data-tip-warm';
+const WARM_AFTER_MS = 500;
+const COOL_AFTER_MS = 300;
+
+function installWarmTips(): void {
+  const root = document.documentElement;
+  let warmTimer = 0;
+  let coolTimer = 0;
+  document.addEventListener(
+    'pointerover',
+    (event) => {
+      if (!tipHost(event.target)) return;
+      window.clearTimeout(coolTimer);
+      if (!root.hasAttribute(WARM)) {
+        window.clearTimeout(warmTimer);
+        warmTimer = window.setTimeout(() => root.setAttribute(WARM, ''), WARM_AFTER_MS);
+      }
+    },
+    true,
+  );
+  document.addEventListener(
+    'pointerout',
+    (event) => {
+      const host = tipHost(event.target);
+      if (!host) return;
+      const to = event.relatedTarget;
+      if (to instanceof Node && host.contains(to)) return;
+      window.clearTimeout(warmTimer);
+      window.clearTimeout(coolTimer);
+      coolTimer = window.setTimeout(() => root.removeAttribute(WARM), COOL_AFTER_MS);
+    },
+    true,
+  );
+}
+
 export function installTipGuard(): void {
+  installWarmTips();
   document.addEventListener(
     'pointerdown',
     (event) => {

@@ -185,6 +185,11 @@
   background: var(--surface);
 }
 
+.errors-chip .icon-btn,
+.errors-chip .errors-chip-open {
+  border-radius: calc(var(--r-lg) - 2px);
+}
+
 .errors-chip .icon-btn {
   color: var(--text-3);
 }

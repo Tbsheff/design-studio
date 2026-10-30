@@ -32,7 +32,7 @@
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: var(--disabled-opacity);
   cursor: default;
 }
 
@@ -54,6 +54,7 @@
   --btn-h: 36px;
   padding: 0 var(--s-4);
   font-size: var(--t-md);
+  line-height: var(--lh-md);
 }
 
 .btn.has-icon {
@@ -151,7 +152,7 @@
 }
 
 .icon-btn:disabled {
-  opacity: 0.4;
+  opacity: var(--disabled-opacity);
   cursor: default;
 }
 
@@ -202,6 +203,11 @@
   opacity: 1;
   translate: -50% 0;
   transition-delay: var(--dur-tip-delay);
+}
+
+:root[data-tip-warm] [data-tip]:hover::after {
+  transition-delay: 0s;
+  transition-duration: 0s;
 }
 
 [data-tip][aria-expanded='true']::after,

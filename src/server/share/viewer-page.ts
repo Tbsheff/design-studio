@@ -1,5 +1,6 @@
 import type { ShareFrame } from '../../shared/share.js';
 import { SHARE_COMMENT_MAX, SHARE_NAME_MAX } from '../../shared/share.js';
+import { FAVICON_LINKS } from './favicon.js';
 
 export interface ViewerData {
   base: string;
@@ -240,6 +241,7 @@ export function viewerHtml(data: ViewerData, nonce: string): string {
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>${escapeHtml(data.title)} · Shared from Design Studio</title>
+${FAVICON_LINKS}
 <style nonce="${nonce}">${STYLE}\n${widths}</style>
 </head>
 <body data-rev="${data.rev ?? 0}">
@@ -285,6 +287,7 @@ export function goneHtml(reason: 'revoked' | 'expired', nonce: string): string {
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>${title} · Design Studio</title>
+${FAVICON_LINKS}
 <style nonce="${nonce}">${GONE_STYLE}</style>
 </head>
 <body><main><h1>${title}</h1><p>${body}</p></main></body>

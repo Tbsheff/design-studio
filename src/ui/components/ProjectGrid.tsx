@@ -269,6 +269,7 @@ interface Props {
   searchRef: React.RefObject<HTMLInputElement | null>;
   filter?: { label: string; onClear: () => void } | null;
   tabs: ReactNode;
+  headActions?: ReactNode;
 }
 
 function ProjectListTools({ query, onQuery, searchRef, onFirst, onOpenFirst, canOpen }: { query: string; onQuery: (query: string) => void; searchRef: React.RefObject<HTMLInputElement | null>; onFirst: () => void; onOpenFirst: () => void; canOpen: boolean }) {
@@ -394,7 +395,7 @@ function useGridFocus(shown: Project[]) {
   return { gridRef, active, setActiveId, focusAt, onGridKey };
 }
 
-export function ProjectGrid({ projects, packs, health, homeDir, error, actions, query, onQuery, searchRef, filter = null, tabs }: Props) {
+export function ProjectGrid({ projects, packs, health, homeDir, error, actions, query, onQuery, searchRef, filter = null, tabs, headActions }: Props) {
   const { homeSort } = useUi();
   const { view, favoritesOnly, favorites } = useHomeView();
   const matched = sortProjects(filterProjects(projects ?? [], query), homeSort);
@@ -422,6 +423,7 @@ export function ProjectGrid({ projects, packs, health, homeDir, error, actions, 
       <div className="home-list-head">
         {tabs}
         <div className="spacer" />
+        {headActions}
         {total > 0 && <ProjectListTools query={query} onQuery={onQuery} searchRef={searchRef} onFirst={() => focusAt(0)} onOpenFirst={() => first && actions.onOpen(first)} canOpen={first !== undefined} />}
       </div>
       <ProjectListStates projects={projects} error={error} filter={filter} query={query} shownCount={matched.length} onClearQuery={() => onQuery('')} />

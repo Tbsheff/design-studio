@@ -19,9 +19,16 @@ const FILTERS: { id: HomeFilter; label: string }[] = [
 
 export const FILTER_EMPTY: Record<HomeFilter, string> = { all: 'projects', prototypes: 'prototypes', apps: 'apps', systems: 'design systems' };
 
+function filterTest(filter: HomeFilter): (project: Project) => boolean {
+  if (filter === 'systems') return (project) => Boolean(project.designSystemFor);
+  if (filter === 'all') return () => true;
+  return (project) => !project.designSystemFor && isFolderProject(project) === (filter === 'apps');
+}
+
 export function filterLibrary(projects: Project[] | null, filter: HomeFilter): Project[] | null {
-  if (!projects || filter === 'all' || filter === 'systems') return projects;
-  return projects.filter((project) => isFolderProject(project) === (filter === 'apps'));
+  if (!projects) return projects;
+  const test = filterTest(filter);
+  return projects.filter((project) => !project.designSystemDeleted && test(project));
 }
 
 export function FilterChips({ filter }: { filter: HomeFilter }) {

@@ -14,6 +14,7 @@ export interface ProjectHit {
   typeLabel: string;
   place: string | null;
   updatedAt: number;
+  openedAt: number | null;
   health: ProjectHealth | null;
   thumbnail: string | null;
 }

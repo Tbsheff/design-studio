@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon';
 import { ProjectThumb, TypeBadge } from '../components/ProjectThumb';
 import { openProject } from '../projectNav';
 import { useProjectHits, useRouteHits } from '../projectHits';
+import { projectsApi } from '../projectsStore';
 import { uiStore } from '../storage';
 import { globalCommands } from './globalCommands';
 import { Keys } from './keys';
@@ -106,6 +107,7 @@ function usePaletteRows(query: string, onShortcuts: () => void, onClose: () => v
         api
           .createProject({ prompt, kind: 'html' })
           .then(({ project }) => {
+            void projectsApi.load();
             onClose();
             openProject(project.id);
           })

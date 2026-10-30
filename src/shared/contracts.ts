@@ -146,6 +146,7 @@ export interface Project {
   kind: ProjectKind;
   createdAt: number;
   updatedAt: number;
+  openedAt?: number;
   imported: { sourcePath: string; created?: boolean } | null;
   packId?: string | null;
   designSystemFor?: string | null;
@@ -819,6 +820,7 @@ export interface RenderCheckResult {
 export const API_ROUTES = {
   getSession: 'GET /api/session (same-origin only) -> {token, previewOrigin}',
   listProjects: 'GET /api/projects -> Project[]',
+  markProjectOpened: 'POST /api/projects/:pid/opened -> {openedAt} (sets Project.openedAt for Recent; updatedAt does not change)',
   createProject: 'POST /api/projects {name?, prompt, kind, designMd?, packId?, settings?: Partial<ProjectSettings>, level?, startRun?: boolean} -> {project, runId} (startRun false: no first run, runId null; with no parentPath the project gets a new subfolder in the default projects folder)',
   listPacks: 'GET /api/packs -> PackSummary[] (built-in packs first, then user packs; user packs are read again when their files change)',
   packProblems: 'GET /api/packs/problems -> PackProblem[] (packs skipped because a file is missing or invalid)',

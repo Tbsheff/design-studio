@@ -113,6 +113,7 @@ export function createProjectLibrary(deps: LibraryDeps): ProjectLibrary {
           directions: [direction, ...copies],
           thumbnail: thumb && existsSync(thumb) ? source.thumbnail : null,
         };
+        delete project.openedAt;
         if (main.headVersionId) await versions.checkoutInto(project, main.headVersionId, folder);
         await linkSourceModules(main, folder);
         for (const [index, copy] of copies.entries()) {

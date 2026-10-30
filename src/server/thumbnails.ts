@@ -15,7 +15,7 @@ export { halfSize } from './half-size.js';
 export const THUMB_VIEWPORT = { width: 1280, height: 800 };
 export const THUMB_KEEP = 200;
 const THUMB_KINDS = new Set<VersionKind>(['init', 'run', 'undo', 'restore', 'keep']);
-const SETTLE_MS = 150;
+const SETTLE_MS = 1500;
 const THUMB_WORKER_IDLE_MS = 30_000;
 const DIFF_LIMITS = { minWidth: 320, maxWidth: 2560, minHeight: 320, maxHeight: 1600 };
 
@@ -168,7 +168,7 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
   };
 
   const shootFirstViewport = async (url: string, viewport: { width: number; height: number }, prefix: string): Promise<Buffer | null> => {
-    const shot = await preview.screenshotTiles(url, { viewport, tileHeight: viewport.height, maxTiles: 1, from: 0, outPrefix: prefix, still: true });
+    const shot = await preview.screenshotTiles(url, { viewport, tileHeight: viewport.height, maxTiles: 1, from: 0, outPrefix: prefix, still: true, oneOff: true });
     const raw = shot.paths[0];
     if (!raw) return null;
     try {
@@ -230,6 +230,11 @@ export function createThumbnailService(deps: { projects: StudioProjectStore; pre
       if (cached) return cached;
       const project = await projects.get(projectId);
       await versions.get(project, versionId);
+      if (project.app) {
+        const head = await readCached(path.join(thumbsDir(projectId), `${assertSafeId(versionId, 'versionId')}.png`));
+        if (head) return head;
+        if (projects.mainDirection(project).headVersionId !== versionId) throw new NotFoundError('an attached app renders only its current version');
+      }
       return queue.run(`version:${projectId}:${versionId}`, async () => {
         const again = await readCached(file);
         if (again) return again;

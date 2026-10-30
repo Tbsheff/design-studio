@@ -93,6 +93,11 @@ export function withDesignSystemWarning(results: RenderCheckResult[], problem: s
 }
 
 const APP_CACHE_MS = 1500;
+const STYLE_FILE = /\.(css|scss|sass|less)$/i;
+
+function onlyStyles(paths: string[]): boolean {
+  return paths.length > 0 && paths.every((file) => STYLE_FILE.test(file));
+}
 const WATCH_LAG_MS = 150;
 const MTIME_TRUST_MS = 2000;
 
@@ -111,7 +116,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     noteTreeChange(change.root, files);
     const seenAt = Date.now() - WATCH_LAG_MS;
     void writtenAt(files, seenAt)
-      .then((coldAt) => browsers.loaded()?.then((pool) => pool.sourcesChanged(seenAt, coldAt)))
+      .then((coldAt) => browsers.loaded()?.then((pool) => pool.sourcesChanged(seenAt, coldAt, !onlyStyles(change.paths))))
       .catch(() => undefined);
     void recompileOnTokensChange(bus, change).catch((error: unknown) => console.error('[preview] tokens recompile failed', error));
     void vite
@@ -138,7 +143,7 @@ export function createPreviewService(deps: PreviewServiceDeps): PreviewService {
     const { BrowserPool: Pool } = await import('./browser.js');
     return new Pool(config.previewOrigin, undefined, { stampFor, landed: (url: string, href: string) => stamps.landed(url, href) });
   });
-  onSourceChange(() => browsers.loaded()?.then((pool) => pool.sourcesChanged()).catch(() => undefined));
+  onSourceChange((change) => browsers.loaded()?.then((pool) => pool.sourcesChanged(undefined, undefined, !onlyStyles(change.files.map((file) => file.relative)))).catch(() => undefined));
   const viteUrl = async (target: ViteTarget): Promise<string> => (await vite.get()).url(target);
   const apps = new AppServers({ bus, portBase: config.appPortBase ?? config.vitePortBase + 400, portCount: config.appPortCount ?? 200, dataDir: config.dataDir });
   const appCache = new Map<string, { project: Project | null; at: number }>();

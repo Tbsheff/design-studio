@@ -105,9 +105,9 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
   return (
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
-      {session.dirty && session.count > 0 && (
-        <span className="edit-count" role="status" data-tip={unsavedLabel(session.count)}>
-          {session.count}
+      {session.dirty && session.net > 0 && (
+        <span className="edit-count" role="status" data-tip={unsavedLabel(session.net)}>
+          {session.net}
           <span className="sr-only"> unsaved edits</span>
         </span>
       )}
@@ -123,7 +123,7 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
         {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
       </button>
       <button type="button" className="btn small primary" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
-        {session.busy === 'save' ? 'Saving…' : 'Save'}
+        {session.busy === 'save' ? 'Saving…' : 'Save version'}
       </button>
     </div>
   );
@@ -140,7 +140,7 @@ function LeavePrompt({ session }: { session: EditSession }) {
       <p id="edit-leave-title" className="edit-leave-title">
         Save your edits?
       </p>
-      <p className="edit-leave-text">You have {unsavedLabel(session.count).toLowerCase()}. Save keeps them as one version. Discard removes them.</p>
+      <p className="edit-leave-text">You have {unsavedLabel(session.net).toLowerCase()}. Save version keeps them as one version. Discard removes them.</p>
       {session.error && <p className="edit-leave-error">{session.error}</p>}
       <div className="edit-leave-actions">
         <button type="button" className="btn ghost small" onClick={() => void session.answer('cancel')}>
@@ -150,7 +150,23 @@ function LeavePrompt({ session }: { session: EditSession }) {
           Discard
         </button>
         <button ref={first} type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.answer('save')}>
-          Save
+          Save version
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TweaksNote({ session }: { session: EditSession }) {
+  return (
+    <div className="edit-tweaks-note">
+      <p className="ins-note">Save or discard your edits before you ask for a tweaks panel.</p>
+      <div className="edit-leave-actions">
+        <button type="button" className="btn ghost small" disabled={session.busy !== null || session.blocked !== null} data-tip={session.blocked ?? undefined} onClick={() => void session.discard()}>
+          {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
+        </button>
+        <button type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.save()}>
+          {session.busy === 'save' ? 'Saving…' : 'Save version'}
         </button>
       </div>
     </div>
@@ -342,7 +358,7 @@ const ArrangeMemo = memo(InspectorArrange, sameShared);
 function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | undefined, session: EditSession) {
   useEffect(() => {
     if (!ref) return;
-    ref.current = { dirty: session.dirty, count: session.count, requestExit: session.requestExit, save: session.save, discard: session.discard };
+    ref.current = { dirty: session.dirty, count: session.count, net: session.net, requestExit: session.requestExit, save: session.save, discard: session.discard };
   });
   useEffect(
     () => () => {
@@ -394,7 +410,7 @@ export function Inspector(raw: InspectorProps) {
           {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
           {tab === 'tweaks' && (
             <>
-              {props.tweaks && session.count > 0 && <p className="ins-note edit-tweaks-note">Save or discard your edits before you ask for a tweaks panel.</p>}
+              {props.tweaks && session.count > 0 && <TweaksNote session={session} />}
               <InspectorTweaks tweaks={props.tweaks} blocked={session.count > 0} />
             </>
           )}

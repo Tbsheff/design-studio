@@ -85,8 +85,8 @@ function write(edit: DirectEdit, patch: Parameters<DirectEdit['preview']>[0]): v
 }
 
 function StatusText({ status }: { status: SaveStatus }) {
-  if (status.kind === 'saving') return <span className="ins-status saving">Saving…</span>;
-  if (status.kind === 'saved') return <span className="ins-status saved">Saved</span>;
+  if (status.kind === 'saving') return <span className="ins-status saving">Writing…</span>;
+  if (status.kind === 'saved') return <span className="ins-status saved" data-tip="Written to the file. Save version keeps it in the history">Written</span>;
   return null;
 }
 

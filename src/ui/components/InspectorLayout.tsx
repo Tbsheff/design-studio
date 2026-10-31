@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type FocusEvent, type ReactNode, type RefObject } from 'react';
 import type { SelectionContext } from '../../shared/contracts';
 import { PREVIEW_ARRANGE_KEY_EVENT, PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
 import { isTypingTarget } from '../typingTarget';
@@ -239,6 +239,42 @@ function liveFacts(edit: DirectEdit, selection: SelectionContext): SizeFacts {
   return drafted.length === 0 ? facts : { ...facts, authored: { ...facts.authored, ...Object.fromEntries(drafted.map((axis) => [axis, edit.values[axis].trim()])) } };
 }
 
+function roundedPx(value: string): string {
+  const px = Number.parseFloat(value);
+  return value.endsWith('px') && Number.isFinite(px) ? `${Math.round(px * 10) / 10}px` : value;
+}
+
+function SizeValue({ axis, mode, used, edit }: { axis: Axis; mode: SizeMode; used: string; edit: DirectEdit }) {
+  const [editing, setEditing] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const short = axis === 'width' ? 'W' : 'H';
+  const name = axis === 'width' ? 'Width' : 'Height';
+  useEffect(() => {
+    if (editing) wrap.current?.querySelector<HTMLInputElement>('input.ins-input')?.focus();
+  }, [editing]);
+  if (mode === 'fixed' || editing) {
+    const leave = (event: FocusEvent<HTMLDivElement>) => {
+      const next = event.relatedTarget;
+      if (!(next instanceof Node && event.currentTarget.contains(next))) setEditing(false);
+    };
+    return (
+      <div ref={wrap} style={{ display: 'contents' }} onBlur={mode === 'fixed' ? undefined : leave}>
+        <NumberField short={short} spec={{ prop: axis, label: name, edit, min: 0 }} />
+      </div>
+    );
+  }
+  const label = SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
+  const px = roundedPx(used);
+  return (
+    <div className="ins-field ins-size-display" data-tip={`${label}: ${px} now. Type a value to fix it.`}>
+      <label htmlFor={`ins-${axis}`} className="ins-scrub static">
+        {short}
+      </label>
+      <input id={`ins-${axis}`} className="ins-input num" aria-label={name} aria-description={`${label}, ${px}`} value={label} readOnly onFocus={() => setEditing(true)} />
+    </div>
+  );
+}
+
 function SizeRow({ axis, edit, selection }: { axis: Axis; edit: DirectEdit; selection: SelectionContext }) {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);
@@ -247,7 +283,7 @@ function SizeRow({ axis, edit, selection }: { axis: Axis; edit: DirectEdit; sele
   const used = selection.styles[`used-${axis}`] ?? edit.values[axis];
   return (
     <>
-      <NumberField short={axis === 'width' ? 'W' : 'H'} spec={{ prop: axis, label: name, edit, min: 0 }} />
+      <SizeValue key={selection.selector} axis={axis} mode={mode} used={used} edit={edit} />
       <div className="ins-field select ins-size-field">
         <UiSelect className="ins-select ins-size-mode" aria-label={`${name} sizing`} value={mode} options={SIZE_MODES} onChange={(next: SizeMode) => write(edit, sizePatch(axis, next, edit.values, parent, used, facts))} />
       </div>

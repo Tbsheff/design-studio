@@ -510,8 +510,16 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       parent = made.id;
       current = made.id;
     }
+    const live = await readLayout(project, direction);
     await resetWorkTree(project, direction, await treeOf(project, span.head), await treeOf(project, parent), 'keep');
+    await writeLayout(live, true);
     return { version: null, head: parent, changed, remapped };
+  };
+
+  const discardTo = async (project: Project, direction: Direction, from: string, to: string): Promise<void> => {
+    const live = await readLayout(project, direction);
+    await resetWorkTree(project, direction, from, to, 'keep');
+    await writeLayout(live, true);
   };
 
   const listUntracked = async (scope: GitScope): Promise<string[]> => {
@@ -937,7 +945,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           const version = await commitTree(project, direction, headTree, span.base, span.head, title, meta);
           return { version, head: version.id, changed };
         }
-        if (action === 'discard' && span.dirty) await resetWorkTree(project, direction, headTree, baseTree, 'keep');
+        if (action === 'discard' && span.dirty) await discardTo(project, direction, headTree, baseTree);
         await runGit(repoScope(project), ['update-ref', refOf(direction), span.base, span.head]);
         return { version: null, head: span.base, changed };
       });

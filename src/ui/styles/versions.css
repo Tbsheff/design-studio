@@ -10,6 +10,7 @@
 
 .versions {
   gap: 0;
+  overflow-x: clip;
 }
 
 .version {
@@ -206,9 +207,9 @@
 
 .version-meta {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0 var(--s-2);
+  gap: 0 var(--s-1);
   min-width: 0;
   overflow: hidden;
   min-height: 20px;
@@ -222,10 +223,21 @@
   white-space: nowrap;
 }
 
-@container (max-width: 180px) {
+@container (max-width: 280px) {
   .version-meta .version-file-count,
   .version-meta .version-file-count-dot {
     display: none;
+  }
+}
+
+@container (max-width: 210px) {
+  .version-meta .version-kind-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 
@@ -249,6 +261,32 @@
 
 .version.expanded .version-actions {
   margin: var(--s-1) 0 0 -6px;
+}
+
+.version-more {
+  display: contents;
+}
+
+.version-menu {
+  position: fixed;
+  z-index: 60;
+}
+
+.version-side {
+  display: none;
+}
+
+.version.picked:has(~ .version.picked) .version-side,
+.version.picked ~ .version.picked .version-side {
+  display: inline-flex;
+}
+
+.version.picked:has(~ .version.picked) .version-side::before {
+  content: 'B';
+}
+
+.version.picked ~ .version.picked .version-side::before {
+  content: 'A';
 }
 
 .version-actions .icon-btn {

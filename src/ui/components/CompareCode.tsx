@@ -3,6 +3,7 @@ import type { Version, VersionChanges, VersionFileDiff } from '../../shared/cont
 import { errorText, json } from '../api';
 import { useProjectEvents } from '../events';
 import { splitHunks, type PatchHunk } from '../../shared/hunk';
+import { displayTitle, indexVersions } from '../versionLabels';
 import { revertHunk } from '../versionsApi';
 import { Icon } from './Icon';
 import '../styles/compare-code.css';
@@ -213,6 +214,25 @@ function useChanges(projectId: string, from: string, to: string) {
   return state?.key === key ? state : null;
 }
 
+function Pair({ older, newer }: { older: Version; newer: Version }) {
+  const index = indexVersions([older, newer]);
+  const a = displayTitle(older, index);
+  const b = displayTitle(newer, index);
+  return (
+    <div className="compare-code-summary" role="group" aria-label={`Comparing A: ${a} to B: ${b}`}>
+      <span className="badge accent">A</span>
+      <span className="truncate" data-tip={a}>
+        {a}
+      </span>
+      <Icon name="arrowRight" size={12} />
+      <span className="badge accent">B</span>
+      <span className="truncate" data-tip={b}>
+        {b}
+      </span>
+    </div>
+  );
+}
+
 function Summary({ changes }: { changes: VersionChanges }) {
   const add = changes.files.reduce((sum, file) => sum + file.additions, 0);
   const del = changes.files.reduce((sum, file) => sum + file.deletions, 0);
@@ -258,6 +278,7 @@ export default function CompareCode({ projectId, older, newer }: { projectId: st
     });
   return (
     <div className="compare-code">
+      <Pair older={older} newer={newer} />
       <Summary changes={changes} />
       <ul className="compare-code-files">
         {changes.files.map((file) => (

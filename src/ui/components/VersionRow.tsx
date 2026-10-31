@@ -1,10 +1,11 @@
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
 import type { Version } from '../../shared/contracts';
 import { formatRelative, formatTime } from '../format';
 import { openCompareInCode } from '../versionsApi';
 import { autoTitle, displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
 import { Icon, type IconName } from './Icon';
 import { levelLabel } from './LevelControl';
+import { usePopover } from '../usePopover';
 import { VersionThumb } from './VersionThumb';
 
 const NAME_MAX = 80;
@@ -161,11 +162,11 @@ function VersionMeta({ version: v }: { version: Version }) {
     <div className="version-meta">
       <span className={`version-kind ${v.meta.kind}`} data-kind={v.meta.kind} data-tip={kind.hint} data-tip-align="start">
         <Icon name={kind.icon} size={12} />
-        {kind.label}
+        <span className="version-kind-label">{kind.label}</span>
       </span>
       <VersionLevel version={v} />
       <span className="dot" />
-      <time dateTime={new Date(v.createdAt).toISOString()} data-tip={formatTime(v.createdAt)}>
+      <time dateTime={new Date(v.createdAt).toISOString()} data-tip={`${formatTime(v.createdAt)} · ${files} file${files === 1 ? '' : 's'}`}>
         {formatRelative(v.createdAt)}
       </time>
       <span className="dot version-file-count-dot" />
@@ -222,6 +223,7 @@ export function VersionRow(props: VersionRowProps) {
               <span>{title}</span>
             </button>
           )}
+          {props.picked && <span className="badge accent version-side" aria-hidden="true" />}
           {isHead && <span className="badge accent">Head</span>}
         </div>
         <div className="version-line">
@@ -234,8 +236,127 @@ export function VersionRow(props: VersionRowProps) {
   );
 }
 
+interface MoreItem {
+  id: string;
+  label: string;
+  icon: IconName;
+  hint?: string;
+  run: () => void;
+}
+
+function moreItems(props: VersionRowProps): MoreItem[] {
+  const { version: v, isHead } = props;
+  const items: MoreItem[] = [];
+  const onReview = props.onReview;
+  if (onReview && v.parentId !== null) {
+    items.push({
+      id: 'review',
+      label: 'Review changes',
+      icon: 'code',
+      run: () => {
+        openCompareInCode();
+        onReview();
+      },
+    });
+  }
+  items.push({ id: 'export', label: 'Export…', icon: 'download', run: props.onExport });
+  items.push({ id: 'branch', label: 'New direction from here', icon: 'branch', run: props.onBranch });
+  if (isHead && v.meta.level !== 'polish') items.push({ id: 'polish', label: 'Polish this', icon: 'sparkle', hint: props.locked ? 'Wait for the run' : undefined, run: props.onPolish });
+  return items;
+}
+
+const MENU_STEP: Record<string, (index: number, count: number) => number> = {
+  ArrowDown: (index, count) => (index + 1) % count,
+  ArrowUp: (index, count) => (index - 1 + count) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
+function onMenuKey(event: KeyboardEvent<HTMLDivElement>, close: (refocus: boolean) => void) {
+  if (event.key === 'Tab') close(false);
+  const step = MENU_STEP[event.key];
+  if (!step) return;
+  event.preventDefault();
+  const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)'));
+  const index = items.indexOf(document.activeElement as HTMLButtonElement);
+  items[step(Math.max(0, index), items.length)]?.focus();
+}
+
+const MENU_GAP = 4;
+const MENU_EDGE = 8;
+
+function useMenuPlace(open: boolean, trigger: RefObject<HTMLButtonElement | null>, menu: RefObject<HTMLDivElement | null>) {
+  const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!open) return setPlace(null);
+    const button = trigger.current?.getBoundingClientRect();
+    const el = menu.current;
+    if (!button || !el) return;
+    const below = button.bottom + MENU_GAP;
+    const top = below + el.offsetHeight > window.innerHeight - MENU_EDGE ? button.top - MENU_GAP - el.offsetHeight : below;
+    setPlace({ left: Math.max(MENU_EDGE, Math.min(button.left, window.innerWidth - el.offsetWidth - MENU_EDGE)), top: Math.max(MENU_EDGE, top) });
+  }, [open, trigger, menu]);
+  useEffect(() => {
+    if (place) menu.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true });
+  }, [place, menu]);
+  return place;
+}
+
+function VersionMoreMenu({ items, title }: { items: MoreItem[]; title: string }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const close = useCallback((refocus: boolean) => {
+    setOpen(false);
+    if (refocus) trigger.current?.focus({ preventScroll: true });
+  }, []);
+  usePopover(open, root, close);
+  const place = useMenuPlace(open, trigger, menu);
+  return (
+    <div className="version-more" ref={root}>
+      <button
+        ref={trigger}
+        type="button"
+        className="icon-btn"
+        aria-label={`More actions for ${title}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        data-tip={open ? undefined : 'More'}
+        data-tip-side="top"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <Icon name="more" size={15} />
+      </button>
+      {open && (
+        <div ref={menu} className="ui-menu version-menu" role="menu" aria-label="More version actions" style={place ?? { visibility: 'hidden' }} onKeyDown={(event) => onMenuKey(event, close)}>
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="menuitem"
+              className={`ui-menu-item${item.hint ? ' has-hint' : ''}`}
+              tabIndex={-1}
+              disabled={Boolean(item.hint)}
+              data-testid={item.id === 'review' ? 'version-review-changes' : item.id === 'polish' ? 'version-polish-this' : undefined}
+              onClick={(event) => {
+                close(event.detail === 0);
+                item.run();
+              }}
+            >
+              <Icon name={item.icon} size={14} />
+              <span>{item.label}</span>
+              {item.hint && <span className="ui-menu-hint">{item.hint}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VersionActions(props: VersionRowProps) {
-  const { version: v, isHead, picked } = props;
+  const { isHead, picked } = props;
   return (
     <div className="version-actions" role="group" aria-label="Version actions">
       <RowAction label="Open" icon="eye" tip="Open this version" onClick={props.onOpen} />
@@ -247,30 +368,7 @@ function VersionActions(props: VersionRowProps) {
         pressed={picked}
         onClick={props.onToggleCompare}
       />
-      {props.onReview && v.parentId !== null && (
-        <RowAction
-          label="Review changes"
-          icon="code"
-          tip="Review the changes of this version in Compare > Code"
-          testId="version-review-changes"
-          onClick={() => {
-            openCompareInCode();
-            props.onReview?.();
-          }}
-        />
-      )}
-      <RowAction label="Export" icon="download" tip="Export, handoff or source zip" onClick={props.onExport} />
-      <RowAction label="Branch" icon="branch" tip="New direction from here" onClick={props.onBranch} />
-      {isHead && v.meta.level !== 'polish' && (
-        <RowAction
-          label="Polish this"
-          icon="sparkle"
-          tip="Run a Polish pass on this version"
-          testId="version-polish-this"
-          disabled={props.locked}
-          onClick={props.onPolish}
-        />
-      )}
+      <VersionMoreMenu items={moreItems(props)} title={displayTitle(props.version, props.index)} />
     </div>
   );
 }

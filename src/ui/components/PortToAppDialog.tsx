@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import type { Project } from '../../shared/contracts';
+import type { FolderInspection } from '../../shared/open-app';
 import { cleanPortRoute, PORT_LEVEL_LABEL, type PortFlowPage, type PortFlowPlan, type PortKitMatch, type PortStartResult } from '../../shared/port';
 import { api, errorText } from '../api';
 import { canvasFrameChoices, type FrameChoice } from '../exportApi';
+import { hasNativePicker, pickFolder } from '../folderPicker';
 import { portApi } from '../portApi';
 import { uiStore } from '../storage';
 import { useModalDialog } from '../usePopover';
@@ -26,8 +28,16 @@ function pagePath(path: string | undefined): string {
   return clean || 'index.html';
 }
 
-function useTargets(sourceId: string): { apps: Project[] | null; source: Project | null; error: string | null } {
-  const [state, setState] = useState<{ apps: Project[] | null; source: Project | null; error: string | null }>({ apps: null, source: null, error: null });
+interface Targets {
+  apps: Project[] | null;
+  source: Project | null;
+  error: string | null;
+  reload: () => void;
+}
+
+function useTargets(sourceId: string): Targets {
+  const [state, setState] = useState<Omit<Targets, 'reload'>>({ apps: null, source: null, error: null });
+  const [nonce, setNonce] = useState(0);
   useEffect(() => {
     let alive = true;
     api
@@ -37,8 +47,86 @@ function useTargets(sourceId: string): { apps: Project[] | null; source: Project
     return () => {
       alive = false;
     };
-  }, [sourceId]);
-  return state;
+  }, [sourceId, nonce]);
+  return { ...state, reload: () => setNonce((n) => n + 1) };
+}
+
+async function attachFolder(path: string, appDir: string | null): Promise<{ projectId: string } | { inspection: FolderInspection }> {
+  const found = await api.inspectFolder(path, appDir ?? undefined);
+  if (found.problem) throw new Error(found.problem);
+  if (found.kind !== 'next') throw new Error('Move to app needs a Next.js app folder. This folder is not one.');
+  if (!found.appDir && found.candidates.length > 1) return { inspection: found };
+  const { project } = await api.attachApp({ folder: found.path, appDir: found.appDir ?? appDir ?? '.' });
+  return { projectId: project.id };
+}
+
+function CandidatePick({ found, value, onChange }: { found: FolderInspection; value: string; onChange: (appDir: string) => void }) {
+  const options: UiSelectOption[] = found.candidates.map((c) => ({ value: c.appDir, label: `${c.name} · ${c.appDir}` }));
+  return (
+    <div className="field">
+      <span id="port-candidate-label">App in this folder</span>
+      <UiSelect aria-labelledby="port-candidate-label" value={value} options={options} onChange={onChange} placeholder="Pick an app" />
+    </div>
+  );
+}
+
+function useAttach(onAttached: (projectId: string) => void) {
+  const [path, setPath] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [found, setFound] = useState<FolderInspection | null>(null);
+  const [appDir, setAppDir] = useState('');
+  const run = (folder: string) => {
+    if (!folder.trim() || busy) return;
+    setBusy(true);
+    setError(null);
+    attachFolder(folder.trim(), found ? appDir || null : null)
+      .then((result) => ('projectId' in result ? onAttached(result.projectId) : setFound(result.inspection)))
+      .catch((err: unknown) => setError(errorText(err)))
+      .finally(() => setBusy(false));
+  };
+  const choose = async () => {
+    const picked = await pickFolder({ title: 'Choose your app folder' });
+    if (picked.kind !== 'picked') return;
+    setPath(picked.path);
+    setFound(null);
+    run(picked.path);
+  };
+  const edit = (next: string) => {
+    setPath(next);
+    setFound(null);
+  };
+  return { path, edit, busy, error, found, appDir, setAppDir, run, choose };
+}
+
+function AttachField({ error: listError, onAttached }: { error: string | null; onAttached: (projectId: string) => void }) {
+  const attach = useAttach(onAttached);
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    attach.run(attach.path);
+  };
+  const waiting = attach.found !== null && !attach.appDir;
+  return (
+    <>
+      <div className="field">
+        <span id="port-attach-label">App folder</span>
+        <div className="port-attach-row" style={{ display: 'flex', gap: 'var(--s-2)' }}>
+          <input aria-labelledby="port-attach-label" className="mono" style={{ flex: 1, minWidth: 0 }} value={attach.path} placeholder="~/code/my-app" spellCheck={false} autoComplete="off" aria-invalid={Boolean(attach.error)} onChange={(e) => attach.edit(e.target.value)} onKeyDown={onKeyDown} />
+          {hasNativePicker() && (
+            <button type="button" className="btn" disabled={attach.busy} onClick={() => void attach.choose()}>
+              Choose…
+            </button>
+          )}
+          <button type="button" className="btn" disabled={attach.busy || !attach.path.trim() || waiting} onClick={() => attach.run(attach.path)}>
+            {attach.busy ? 'Attaching…' : 'Attach'}
+          </button>
+        </div>
+      </div>
+      {attach.found && <CandidatePick found={attach.found} value={attach.appDir} onChange={attach.setAppDir} />}
+      <p className={`port-note${attach.error || listError ? ' error' : ''}`}>{attach.error ?? listError ?? 'No app is attached yet. Type the folder of your Next.js app, then Attach. Your design stays open.'}</p>
+    </>
+  );
 }
 
 interface FlowState {
@@ -217,14 +305,15 @@ type PortForm = ReturnType<typeof usePortForm>;
 function AppField({ form }: { form: PortForm }) {
   const { apps, error } = form.targets;
   const options: UiSelectOption[] = (apps ?? []).map((a) => ({ value: a.id, label: a.name }));
+  const attached = (projectId: string) => {
+    form.setAppId(projectId);
+    form.targets.reload();
+  };
+  if (apps?.length === 0) return <AttachField error={error} onAttached={attached} />;
   return (
     <div className="field">
       <span id="port-app-label">Target app</span>
-      {apps?.length === 0 ? (
-        <p className="port-note">{error ?? 'No app is attached. On Home, choose Add app folder, then come back.'}</p>
-      ) : (
-        <UiSelect aria-labelledby="port-app-label" value={form.chosenApp} options={options} onChange={form.setAppId} placeholder="Loading apps…" disabled={!apps} />
-      )}
+      <UiSelect aria-labelledby="port-app-label" value={form.chosenApp} options={options} onChange={form.setAppId} placeholder="Loading apps…" disabled={!apps} />
     </div>
   );
 }
@@ -296,22 +385,9 @@ function FormFoot({ form, busy, count, appName, onClose }: { form: PortForm; bus
       <button type="button" className="btn ghost" onClick={onClose}>
         Cancel
       </button>
-      {noApp ? (
-        <button
-          type="button"
-          className="btn primary"
-          onClick={() => {
-            onClose();
-            uiStore.set({ activeProjectId: null });
-          }}
-        >
-          Go to Home
-        </button>
-      ) : (
-        <button type="submit" className="btn primary" disabled={!form.ready || busy}>
-          {busy ? 'Starting…' : 'Start run'}
-        </button>
-      )}
+      <button type="submit" className="btn primary" disabled={noApp || !form.ready || busy}>
+        {busy ? 'Starting…' : 'Start run'}
+      </button>
     </div>
   );
 }

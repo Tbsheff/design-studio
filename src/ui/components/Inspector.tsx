@@ -17,6 +17,7 @@ import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import { resetEditVariant, useEditVariant } from '../editVariant';
 import { imageKindOf } from '../../shared/image';
 import { isSvgShapeTag } from '../../shared/vector';
+import { useModalDialog } from '../usePopover';
 import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
@@ -105,9 +106,9 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
   return (
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
-      {session.dirty && session.count > 0 && (
-        <span className="edit-count" role="status" data-tip={unsavedLabel(session.count)}>
-          {session.count}
+      {session.dirty && session.net > 0 && (
+        <span className="edit-count" role="status" data-tip={unsavedLabel(session.net)}>
+          {session.net}
           <span className="sr-only"> unsaved edits</span>
         </span>
       )}
@@ -123,34 +124,52 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
         {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
       </button>
       <button type="button" className="btn small primary" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
-        {session.busy === 'save' ? 'Saving…' : 'Save'}
+        {session.busy === 'save' ? 'Saving…' : 'Save version'}
       </button>
     </div>
   );
 }
 
 function LeavePrompt({ session }: { session: EditSession }) {
-  const first = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (session.asking) first.current?.focus();
-  }, [session.asking]);
-  if (!session.asking) return null;
+  return session.asking ? <LeaveDialog session={session} /> : null;
+}
+
+function LeaveDialog({ session }: { session: EditSession }) {
+  const dialog = useModalDialog(() => void session.answer('cancel'));
   return (
-    <div className="edit-leave" role="alertdialog" aria-modal="false" aria-labelledby="edit-leave-title" onKeyDown={(event) => event.key === 'Escape' && void session.answer('cancel')}>
-      <p id="edit-leave-title" className="edit-leave-title">
-        Save your edits?
-      </p>
-      <p className="edit-leave-text">You have {unsavedLabel(session.count).toLowerCase()}. Save keeps them as one version. Discard removes them.</p>
-      {session.error && <p className="edit-leave-error">{session.error}</p>}
-      <div className="edit-leave-actions">
+    <dialog ref={dialog.ref} className="modal edit-leave-dialog" style={{ width: 'min(400px, 100%)' }} aria-labelledby="edit-leave-title" aria-describedby="edit-leave-text" onMouseDown={dialog.onMouseDown}>
+      <div className="modal-head">
+        <div className="titles">
+          <h2 id="edit-leave-title">Save your edits?</h2>
+          <p id="edit-leave-text">You have {unsavedLabel(session.net).toLowerCase()}. Save version keeps them as one version. Discard removes them.</p>
+          {session.error && <p className="edit-leave-error">{session.error}</p>}
+        </div>
+      </div>
+      <div className="modal-foot">
         <button type="button" className="btn ghost small" onClick={() => void session.answer('cancel')}>
           Cancel
         </button>
         <button type="button" className="btn small" disabled={session.busy !== null || session.blocked !== null} onClick={() => void session.answer('discard')}>
           Discard
         </button>
-        <button ref={first} type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.answer('save')}>
-          Save
+        <button type="button" className="btn small primary" data-autofocus disabled={session.busy !== null} onClick={() => void session.answer('save')}>
+          Save version
+        </button>
+      </div>
+    </dialog>
+  );
+}
+
+function TweaksNote({ session }: { session: EditSession }) {
+  return (
+    <div className="edit-tweaks-note">
+      <p className="ins-note">Save or discard your edits before you ask for a tweaks panel.</p>
+      <div className="edit-leave-actions">
+        <button type="button" className="btn ghost small" disabled={session.busy !== null || session.blocked !== null} data-tip={session.blocked ?? undefined} onClick={() => void session.discard()}>
+          {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
+        </button>
+        <button type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.save()}>
+          {session.busy === 'save' ? 'Saving…' : 'Save version'}
         </button>
       </div>
     </div>
@@ -342,7 +361,7 @@ const ArrangeMemo = memo(InspectorArrange, sameShared);
 function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | undefined, session: EditSession) {
   useEffect(() => {
     if (!ref) return;
-    ref.current = { dirty: session.dirty, count: session.count, requestExit: session.requestExit, save: session.save, discard: session.discard };
+    ref.current = { dirty: session.dirty, count: session.count, net: session.net, requestExit: session.requestExit, save: session.save, discard: session.discard };
   });
   useEffect(
     () => () => {
@@ -394,7 +413,7 @@ export function Inspector(raw: InspectorProps) {
           {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
           {tab === 'tweaks' && (
             <>
-              {props.tweaks && session.count > 0 && <p className="ins-note edit-tweaks-note">Save or discard your edits before you ask for a tweaks panel.</p>}
+              {props.tweaks && session.count > 0 && <TweaksNote session={session} />}
               <InspectorTweaks tweaks={props.tweaks} blocked={session.count > 0} />
             </>
           )}

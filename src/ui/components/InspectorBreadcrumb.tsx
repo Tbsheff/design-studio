@@ -80,6 +80,7 @@ function InspectorBreadcrumbView({ selection, port }: Props) {
   if (path.length === 0) return null;
   const select = (levels: number) => {
     for (let step = 0; step < levels; step += 1) port.current?.post({ type: 'select-relative', selector: selection.selector, move: 'parent' });
+    list.current?.closest('.studio')?.querySelector<HTMLElement>('.stage')?.focus({ preventScroll: true });
   };
   const cut = path.length - count;
   const current = elementLabel(selection);

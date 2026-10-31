@@ -412,6 +412,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
     panel.choose(tab);
     return true;
   };
+  const canvasPane = (tab: Parameters<typeof panel.choose>[0]): Promise<boolean> => (panel.tab === 'design' && tab === 'comments' ? Promise.resolve(true) : showPane(tab));
   prefillChat.current = (next) => {
     void showPane('chat').then((shown) => {
       if (shown) setPrefill({ ...next, seq: Date.now() });
@@ -681,7 +682,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               directions: canvasVariations({ state: variations, project, runs, setDirectionId: data.setDirectionId }),
               shell: {
                 pane: panel.tab,
-                onPane: showPane,
+                onPane: canvasPane,
                 layersHost: paneCollapsed ? null : layersHost,
                 directionName: nameOf(direction),
                 paneCollapsed,

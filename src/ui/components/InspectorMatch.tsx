@@ -17,9 +17,10 @@ import {
   type StyleValueRow,
   type TokenLookup,
 } from '../../shared/style-search';
-import { colorHex, matchForProperty, tokenFieldState, type TokenMode } from '../../shared/token-match';
+import { colorHex, lengthToPx, matchForProperty, tokenFieldState, type TokenMode } from '../../shared/token-match';
 import { errorText, replaceStyle } from '../api';
 import type { PreviewPort } from '../bridge';
+import { requestAuthoredCss } from '../useAuthoredCss';
 import { usePopover } from '../usePopover';
 import type { DesignTokens } from '../useDesignSystemState';
 import { Icon } from './Icon';
@@ -42,6 +43,38 @@ const REPLY_MS = 5000;
 const ROWS_SHOWN = 6;
 const PICK_SHOWN = 8;
 const KIND_LABEL: Record<StyleKind, string> = { color: 'Colors', 'font-size': 'Font sizes', radius: 'Radii', spacing: 'Spacing' };
+const KIND_EXAMPLE: Record<StyleKind, string> = { color: '--accent or bg-accent', 'font-size': '--text-lg or text-lg', radius: '--radius or rounded-lg', spacing: '--space-4 or p-4' };
+const CUSTOM_PROP = /(--[\w-]+)\s*:\s*([^;]+)/g;
+
+interface PageVar {
+  name: string;
+  value: string;
+}
+
+function parseVars(css: string[]): PageVar[] {
+  const found = new Map<string, string>();
+  for (const text of css) for (const match of text.matchAll(CUSTOM_PROP)) if (match[1] && match[2]) found.set(match[1], match[2].trim());
+  return [...found].map(([name, value]) => ({ name, value }));
+}
+
+function usePageVars(port: MutableRefObject<PreviewPort | null>, open: boolean): PageVar[] {
+  const [vars, setVars] = useState<PageVar[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    void requestAuthoredCss(port.current, 'html').then((css) => {
+      if (live && css) setVars(parseVars([...css.rules.map((rule) => rule.css), css.inline]));
+    });
+    return () => {
+      live = false;
+    };
+  }, [port, open]);
+  return vars;
+}
+
+function rowKey(row: Pick<StyleValueRow, 'kind' | 'value'>): string {
+  return `${row.kind}|${row.value}`;
+}
 
 function requestStyles(port: PreviewPort | null, query: StyleQuery, select: boolean): Promise<{ result: StyleScanResult; selected: number } | null> {
   const listen = port?.listen;
@@ -98,8 +131,13 @@ function shownValue(row: Pick<StyleValueRow, 'kind' | 'value'>): string {
   return row.kind === 'color' ? (colorHex(row.value) ?? row.value) : row.value;
 }
 
-function StateTag({ row }: { row: StyleValueRow }) {
-  if (row.state === 'raw') return <span className="sm-tag raw" data-tip="Not a token. Replace it with one">raw</span>;
+function StateTag({ row, onReplace }: { row: StyleValueRow; onReplace: () => void }) {
+  if (row.state === 'raw')
+    return (
+      <button type="button" className="sm-tag raw" style={{ border: 0, cursor: 'pointer' }} aria-label={`Replace ${shownValue(row)} with a token`} data-tip="Not a token. Replace it with one" onClick={onReplace}>
+        raw
+      </button>
+    );
   if (row.state === 'palette') return <span className="sm-tag mixed" data-tip={`Tailwind palette class ${row.tokens.join(', ')}, not a project token`}>{row.tokens[0] ?? 'palette'}</span>;
   const token = row.tokens[0] ?? '';
   const more = row.tokens.length > 1 ? ` +${row.tokens.length - 1}` : '';
@@ -121,6 +159,28 @@ function designCandidates(row: StyleValueRow, entries: CompiledTokenEntry[], mod
   const property = row.properties[0];
   if (!property || !TOKEN_GROUP_FOR_PROPERTY[property]) return [];
   return matchForProperty(property, row.value, entries, mode).map((match) => ({ token: match.cssVar, value: match.value, hint: match.path }));
+}
+
+function sameValue(kind: StyleKind, a: string, b: string): boolean {
+  if (kind === 'color') return colorHex(a) !== null && colorHex(a) === colorHex(b);
+  const px = lengthToPx(a);
+  return px !== null && px === lengthToPx(b);
+}
+
+function fitsKind(kind: StyleKind, value: string): boolean {
+  return kind === 'color' ? colorHex(value) !== null : lengthToPx(value) !== null;
+}
+
+function varCandidates(row: StyleValueRow, vars: PageVar[]): Candidate[] {
+  return vars
+    .filter((v) => fitsKind(row.kind, v.value))
+    .map((v) => ({ token: v.name, value: v.value, hint: sameValue(row.kind, v.value, row.value) ? 'same value' : '' }))
+    .sort((a, b) => Number(Boolean(b.hint)) - Number(Boolean(a.hint)) || a.token.localeCompare(b.token));
+}
+
+function uniqueTokens(list: Candidate[]): Candidate[] {
+  const seen = new Set<string>();
+  return list.filter((c) => !seen.has(c.token) && Boolean(seen.add(c.token)));
 }
 
 function classCandidates(row: StyleValueRow, page: StyleHit[]): Candidate[] {
@@ -161,7 +221,7 @@ function TokenPicker(props: { row: StyleValueRow; candidates: Candidate[]; targe
       <p className="sm-picker-head">
         Replace <code>{shownValue(props.row)}</code> on {props.target}
       </p>
-      <input ref={input} className="ins-input sm-picker-input" aria-label="Token or class" placeholder="--primary or bg-primary" value={text} spellCheck={false} autoComplete="off" onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} />
+      <input ref={input} className="ins-input sm-picker-input" aria-label="Token or class" placeholder={KIND_EXAMPLE[props.row.kind]} value={text} spellCheck={false} autoComplete="off" onChange={(e) => setText(e.target.value)} onKeyDown={onKeyDown} />
       <div className="sm-picker-list" role="listbox" aria-label="Tokens">
         {shown.map((candidate) => (
           <button key={candidate.token} type="button" role="option" aria-selected="false" className="ui-menu-item sm-pick" onClick={() => props.onPick(candidate.token)}>
@@ -239,10 +299,10 @@ function RowMenu({ row, actions, replaceLabel }: { row: StyleValueRow; actions: 
 
 function ValueRow({ row, actions, replaceLabel }: { row: StyleValueRow; actions: RowActions; replaceLabel: string }) {
   return (
-    <li className="sm-row" data-testid="style-value">
+    <li className="sm-row" data-testid="style-value" data-row={rowKey(row)}>
       <Swatch kind={row.kind} value={row.value} />
       <span className="sm-value">{shownValue(row)}</span>
-      <StateTag row={row} />
+      <StateTag row={row} onReplace={() => actions.replace(row)} />
       <span className="sm-count" data-tip={`${row.count} ${row.count === 1 ? 'element' : 'elements'}`}>
         {row.count}
       </span>
@@ -260,7 +320,7 @@ function KindGroup({ kind, rows, actions, replaceLabel }: { kind: StyleKind; row
       <h4 className="sm-group-head">{KIND_LABEL[kind]}</h4>
       <ul className="sm-list">
         {shown.map((row) => (
-          <ValueRow key={`${row.kind}|${row.value}`} row={row} actions={actions} replaceLabel={replaceLabel} />
+          <ValueRow key={rowKey(row)} row={row} actions={actions} replaceLabel={replaceLabel} />
         ))}
       </ul>
       {rows.length > ROWS_SHOWN && (
@@ -320,6 +380,13 @@ function selectedText(count: number, total: number): string {
   return total > count ? `Selected ${count} of ${total} elements (the first ${count}).` : `Selected ${count} ${count === 1 ? 'element' : 'elements'}.`;
 }
 
+function focusRow(key: string): void {
+  window.requestAnimationFrame(() => {
+    const row = document.querySelector<HTMLElement>(`.sm-section [data-row="${CSS.escape(key)}"]`);
+    (row?.querySelector<HTMLElement>('[aria-haspopup="menu"]') ?? row)?.focus();
+  });
+}
+
 function InspectorMatch(props: InspectorMatchProps) {
   const single = props.selection.length === 1;
   const [scope, setScope] = useState<Scope>('selection');
@@ -329,6 +396,7 @@ function InspectorMatch(props: InspectorMatchProps) {
   const query = useMemo<StyleQuery>(() => (scope === 'page' ? {} : { within: selectors }), [scope, selectors.join('\n')]);
   const scanned = useStyleScan(props.port, query, `${scope}|${selectors.join('\n')}`);
   const page = useStyleScan(props.port, {}, 'page');
+  const vars = usePageVars(props.port, picking !== null);
   const lookup = useMemo(() => lookupFor(props.tokens), [props.tokens]);
   const rows = useMemo(() => summarizeHits(scanned.hits ?? [], lookup), [scanned.hits, lookup]);
   const refreshAll = useCallback(() => {
@@ -355,10 +423,14 @@ function InspectorMatch(props: InspectorMatchProps) {
     },
   };
   const targets = picking ? hitsForRow(pageWide ? (page.hits ?? []) : (scanned.hits ?? []), picking) : [];
-  const candidates = picking ? [...classCandidates(picking, page.hits ?? []), ...(props.tokens ? designCandidates(picking, props.tokens.entries, props.tokens.mode) : [])] : [];
+  const candidates = picking ? uniqueTokens([...varCandidates(picking, vars), ...classCandidates(picking, page.hits ?? []), ...(props.tokens ? designCandidates(picking, props.tokens.entries, props.tokens.mode) : [])]) : [];
+  const closePicker = () => {
+    if (picking) focusRow(rowKey(picking));
+    setPicking(null);
+  };
   const pick = (token: string) => {
     const hits = targets;
-    setPicking(null);
+    closePicker();
     void replace(hits, token);
   };
   const title = scope === 'page' ? 'Page values' : props.selection.length > 1 ? 'Selection values' : 'Values';
@@ -369,7 +441,7 @@ function InspectorMatch(props: InspectorMatchProps) {
       {STYLE_KINDS.map((kind) => (
         <KindGroup key={kind} kind={kind} rows={rows.filter((row) => row.kind === kind)} actions={actions} replaceLabel={replaceLabel} />
       ))}
-      {picking && <TokenPicker row={picking} candidates={candidates} target={`${targets.length === 1 ? '1 element' : `${new Set(targets.map((t) => t.selector)).size} elements`}${pageWide ? ' on this page' : ' in the selection'}`} onPick={pick} onClose={() => setPicking(null)} />}
+      {picking && <TokenPicker row={picking} candidates={candidates} target={`${targets.length === 1 ? '1 element' : `${new Set(targets.map((t) => t.selector)).size} elements`}${pageWide ? ' on this page' : ' in the selection'}`} onPick={pick} onClose={closePicker} />}
       <StatusLine status={status} />
     </InspectorSection>
   );

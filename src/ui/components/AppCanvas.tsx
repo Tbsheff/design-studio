@@ -7,6 +7,7 @@ import { openAppPanel, useAppStatus } from '../appStatus';
 import { addFrame, canAddFrame, canvasStore, setFramePath, type CanvasLayout } from '../canvasFrames';
 import { OPEN_ROUTE_EVENT, takePendingRoute } from '../projectNav';
 import { Icon } from './Icon';
+import { FrameRedirectNote } from './CanvasFrames';
 
 const AppBar = lazy(() => import('./AppBar'));
 
@@ -71,12 +72,6 @@ export function useRedirectNote(listen: Listen, enabled: boolean, resetKey: stri
     });
   }, [listen, enabled]);
   return note;
-}
-
-function redirectHint(note: { from: string; to: string }): Hint {
-  const auth = /sign-?in|log-?in|auth/i.test(note.to);
-  const tail = auth ? 'Sign in inside the frame, or pick a public route.' : 'Pick the route you want.';
-  return { text: `${note.from} goes to ${note.to}. ${tail}`, busy: false, kind: auth ? 'auth' : 'redirect' };
 }
 
 const HIDDEN_REDIRECTS_KEY = 'design-studio.hidden-redirects.v1';
@@ -144,10 +139,8 @@ function useServerFrames(status: AppServerStatus | null, listen: Listen, enabled
 interface Hint {
   text: string;
   busy: boolean;
-  kind: 'failed' | 'starting' | 'loading' | 'route' | 'redirect' | 'auth';
+  kind: 'failed' | 'starting' | 'loading' | 'route';
 }
-
-const ACTION_KINDS: ReadonlySet<Hint['kind']> = new Set(['route', 'redirect', 'auth']);
 
 function serverHint(app: AttachedApp, status: AppServerStatus | null, loaded: boolean): Hint | null {
   const name = app.framework === 'next' ? 'Next.js' : 'App';
@@ -171,16 +164,11 @@ function HintIcon({ hint }: { hint: Hint }) {
 
 function AppStageHint({ hint, onClose }: { hint: Hint; onClose: () => void }) {
   return (
-    <div className="stage-message app-stage-note" role="status" data-kind={ACTION_KINDS.has(hint.kind) ? 'route' : hint.kind}>
+    <div className="stage-message app-stage-note" role="status" data-kind={hint.kind}>
       <HintIcon hint={hint} />
       {hint.text}
-      {ACTION_KINDS.has(hint.kind) && (
+      {hint.kind === 'route' && (
         <>
-          {hint.kind === 'auth' && (
-            <button type="button" className="btn small" onClick={onClose}>
-              Sign in
-            </button>
-          )}
           <button type="button" className="btn small" onClick={() => openAppPanel('routes')}>
             Pick a route
           </button>
@@ -227,6 +215,7 @@ interface AppCanvasInput {
   focus: () => void;
   notify: (message: string) => void;
   size: { width: number; height: number };
+  onSignIn: () => void;
 }
 
 export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNode; stage: ReactNode } {
@@ -248,20 +237,23 @@ export function useAppCanvas(o: AppCanvasInput): { bar: ReactNode; note: ReactNo
   const [routeDismissed, setRouteDismissed] = useState(false);
   const [hidden, setHidden] = useState(() => readHiddenRedirects());
   const key = redirect ? `${o.projectId} ${redirect.from}>${redirect.to}` : null;
-  const shownRedirect = redirect && key && !hidden.includes(key) ? redirectHint(redirect) : null;
-  const hint = o.app ? (serverHint(o.app, status, loaded) ?? shownRedirect ?? (routeDismissed ? null : routeHint(o.frames.layout))) : null;
+  const shownRedirect = o.app && redirect && key && !hidden.includes(key) ? redirect : null;
+  const hint = o.app ? (serverHint(o.app, status, loaded) ?? (routeDismissed || shownRedirect ? null : routeHint(o.frames.layout))) : null;
   const hide = (value: string) => {
     const next = [...hidden.filter((item) => item !== value), value].slice(-MAX_HIDDEN_REDIRECTS);
     writeHiddenRedirects(next);
     setHidden(next);
   };
-  const close = () => {
-    if (hint === shownRedirect && key) hide(key);
-    setRouteDismissed(true);
+  const dismissRedirect = () => {
+    if (key) hide(key);
+  };
+  const signIn = () => {
+    dismissRedirect();
+    o.onSignIn();
   };
   return {
     bar: o.app ? <AppCanvasBar projectId={o.projectId} app={o.app} onAddRoute={addRoute} /> : null,
-    note: null,
-    stage: hint ? <AppStageHint hint={hint} onClose={close} /> : null,
+    note: shownRedirect ? <FrameRedirectNote redirect={shownRedirect} onSignIn={signIn} onDismiss={dismissRedirect} /> : null,
+    stage: hint ? <AppStageHint hint={hint} onClose={() => setRouteDismissed(true)} /> : null,
   };
 }

@@ -430,6 +430,17 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   };
 
   const openShip = shipOpener(project, setShipOpen);
+  const reviewVersion = (v: Version) => {
+    const parent = versions.find((x) => x.id === v.parentId);
+    if (!parent) return;
+    setCompareOpen(false);
+    setCompare([parent, v]);
+    requestAnimationFrame(() => setCompareOpen(true));
+  };
+  const reviewVersionId = (versionId: string) => {
+    const v = versions.find((x) => x.id === versionId);
+    if (v) reviewVersion(v);
+  };
   commandActions.current = {
     running: Boolean(activeRun),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name })),
@@ -506,7 +517,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               <RulesSlot projectId={projectId} directionId={did} />
             </>
           }
-          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
+          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp, onReview: reviewVersionId }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,
@@ -612,13 +623,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             onToggleCompare: (v) =>
               setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
             onCompare: () => setCompareOpen(true),
-            onReview: (v) => {
-              const parent = versions.find((x) => x.id === v.parentId);
-              if (!parent) return;
-              setCompareOpen(false);
-              setCompare([parent, v]);
-              requestAnimationFrame(() => setCompareOpen(true));
-            },
+            onReview: reviewVersion,
             onPolish: polish,
             active: panel.tab === 'versions',
             onRename: (v, name) =>

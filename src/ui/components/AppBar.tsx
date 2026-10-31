@@ -369,7 +369,7 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
     <div className="app-bar-root">
       {showDoctor && cause && (
         <Suspense fallback={null}>
-          <DoctorCard projectId={projectId} cause={cause} onFixed={refresh} onLog={showLog} onClose={() => setHidden(doctorKey)} />
+          <DoctorCard projectId={projectId} cause={cause} onFixed={refresh} onLog={showLog} onClose={() => setHidden(doctorKey)} onRestart={managed ? retry : undefined} />
         </Suspense>
       )}
       {failed && status && <AppFailure projectId={projectId} app={app} status={status} onRetry={retry} onLog={showLog} onClose={() => setHidden(failKey)} onSaved={refresh} />}

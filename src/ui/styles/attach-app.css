@@ -199,23 +199,36 @@
   color: var(--accent-text);
 }
 
-.frame-redirect {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 8px;
-  z-index: 5;
+.frame-label > .frame-redirect {
+  flex: 0 1 auto;
+  min-width: 0;
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  padding: 8px 10px;
-  border-radius: 8px;
+  align-items: center;
+  gap: var(--s-1);
+  height: 24px;
+  padding: 0 2px 0 var(--s-2);
+  border-radius: var(--r-control-sm);
   background: var(--warn-soft);
-  border: 1px solid var(--warn-line);
+  box-shadow: inset 0 0 0 1px var(--warn-line);
   color: var(--text);
-  font-size: var(--t-xs);
-  line-height: 1.4;
-  pointer-events: auto;
+  font: var(--w-regular) var(--t-xs) / 24px var(--font);
+}
+
+.frame-redirect > .icon {
+  flex: none;
+  color: var(--warn);
+}
+
+.frame-redirect-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.frame-redirect > .btn,
+.frame-redirect > .icon-btn {
+  flex: none;
+  height: 20px;
 }
 
 .app-canvas-bar {

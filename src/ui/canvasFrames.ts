@@ -100,10 +100,16 @@ export function canAddFrame(layout: CanvasLayout): boolean {
   return layout.frames.length < MAX_FRAMES;
 }
 
+function nextLabel(frames: CanvasFrame[]): string {
+  let n = frames.length + 1;
+  while (frames.some((f) => f.label === `Frame ${n}`)) n += 1;
+  return `Frame ${n}`;
+}
+
 export function addFrame(layout: CanvasLayout, size: { width: number; height: number }): CanvasLayout {
   if (!canAddFrame(layout)) return layout;
   const bounds = boundsOf(shownFrames(layout));
-  const frame: CanvasFrame = { id: nextId(layout.frames), width: size.width, height: size.height, x: bounds.x + bounds.width + FRAME_GAP, y: bounds.y };
+  const frame: CanvasFrame = { id: nextId(layout.frames), width: size.width, height: size.height, x: bounds.x + bounds.width + FRAME_GAP, y: bounds.y, label: nextLabel(layout.frames) };
   return { ...layout, frames: [...layout.frames, frame] };
 }
 

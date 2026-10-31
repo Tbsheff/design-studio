@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
-import type { PackSummary, Project } from '../../shared/contracts';
-import { api, warmProject } from '../api';
+import type { PackSummary, Project, RunSummary } from '../../shared/contracts';
+import { api, json, warmProject } from '../api';
 import { findPack, keySwatches } from '../packs';
 import { filterProjects, gridColumns, nextGridIndex, sortProjects } from '../projectList';
 import { HOME_SORTS, uiStore, useUi, type HomeSort } from '../storage';
@@ -17,7 +17,29 @@ const SORT_LABELS: Record<HomeSort, string> = { recent: 'Recent', name: 'Name', 
 const SORT_OPTIONS = HOME_SORTS.map((sort) => ({ value: sort, label: SORT_LABELS[sort] }));
 
 const thumbCache = new Map<string, Promise<string>>();
+const runCache = new Map<string, Promise<boolean>>();
 
+export function useLastRunFailed(project: Project): boolean {
+  const key = `${project.id}/${project.updatedAt}`;
+  const [failed, setFailed] = useState<{ key: string; on: boolean } | null>(null);
+  useEffect(() => {
+    let live = true;
+    let pending = runCache.get(key);
+    if (!pending) {
+      pending = json<{ runs: RunSummary[] }>('GET', `/api/projects/${encodeURIComponent(project.id)}/runs?limit=1&light=1`).then(({ runs }) => runs[0]?.status === 'failed');
+      pending.catch(() => runCache.delete(key));
+      runCache.set(key, pending);
+    }
+    pending.then(
+      (on) => live && setFailed({ key, on }),
+      () => undefined,
+    );
+    return () => {
+      live = false;
+    };
+  }, [key, project.id]);
+  return failed?.key === key && failed.on;
+}
 
 function warmOpen(project: Project, withPreview: boolean): void {
   void prefetchStudio();
@@ -85,17 +107,18 @@ interface CardProps {
   onFocusCard: () => void;
 }
 
-const FRAMEWORK_BADGE = { next: { label: 'Next.js app', tone: 'next' }, vite: { label: 'Vite', tone: 'vite' } } as const;
+const FRAMEWORK_BADGE = { next: { label: 'App · Next.js', tone: 'next' }, vite: { label: 'App · Vite', tone: 'vite' } } as const;
+const TECH = { html: 'HTML', react: 'React' } as const;
 
 export function isFolderProject(project: Project): boolean {
   return Boolean(project.imported && !project.imported.created);
 }
 
 export function projectBadge(project: Project): { label: string; tone: string } {
-  if (project.designSystemFor) return { label: 'Design system', tone: 'dsb' };
+  if (project.designSystemFor) return { label: 'System', tone: 'dsb' };
   if (project.app) return FRAMEWORK_BADGE[project.app.framework];
-  if (!isFolderProject(project)) return { label: 'Prototype', tone: 'proto' };
-  return project.kind === 'html' ? { label: 'HTML', tone: 'html' } : { label: 'Vite', tone: 'vite' };
+  if (!isFolderProject(project)) return { label: `Prototype · ${TECH[project.kind]}`, tone: 'proto' };
+  return project.kind === 'html' ? { label: 'Prototype · HTML', tone: 'html' } : FRAMEWORK_BADGE.vite;
 }
 
 export function projectPlace(project: Project, homeDir: string | null): string {
@@ -104,8 +127,17 @@ export function projectPlace(project: Project, homeDir: string | null): string {
 
 const HEALTH_TEXT: Record<AppHealth['state'], string> = { ready: 'Ready', install: 'Needs install', building: 'Building…', failed: 'Failed', static: 'Static' };
 
-export function HealthCell({ health }: { health: AppHealth | null }) {
+export function HealthCell({ health, runFailed = false }: { health: AppHealth | null; runFailed?: boolean }) {
   const state = health?.state ?? 'static';
+  if (runFailed && state !== 'install' && state !== 'failed') {
+    return (
+      <span className="project-health run-failed" data-tip="The last AI run failed. Open the project to see why.">
+        <span className="project-dot" aria-hidden="true" />
+        Last run failed
+      </span>
+    );
+  }
+  if (state === 'static') return null;
   return (
     <span className={`project-health ${state}`} data-tip={health?.title ?? undefined}>
       <span className="project-dot" aria-hidden="true" />
@@ -118,6 +150,7 @@ function ProjectCard({ project, pack, health, homeDir, active, favorite, actions
   const html = project.kind === 'html';
   const count = project.directions.length;
   const thumb = useThumbnail(project);
+  const runFailed = useLastRunFailed(project);
   const [menu, setMenu] = useState<MenuAt>(null);
   const [renaming, setRenaming] = useState(false);
   const openRef = useRef<HTMLButtonElement>(null);
@@ -171,7 +204,7 @@ function ProjectCard({ project, pack, health, homeDir, active, favorite, actions
   const meta = (
     <span className="project-meta">
       <span className={`home-badge ${badge.tone}`}>{badge.label}</span>
-      {project.imported && <HealthCell health={health} />}
+      <HealthCell health={project.imported ? health : null} runFailed={runFailed} />
       <time className="project-time" dateTime={new Date(project.updatedAt).toISOString()} data-tip={formatTime(project.updatedAt)}>
         {formatRelative(project.updatedAt)}
       </time>
@@ -267,7 +300,7 @@ interface Props {
   query: string;
   onQuery: (query: string) => void;
   searchRef: React.RefObject<HTMLInputElement | null>;
-  filter?: { label: string; onClear: () => void } | null;
+  filter?: ListFilter | null;
   tabs: ReactNode;
   headActions?: ReactNode;
 }
@@ -332,7 +365,13 @@ function useHomeView() {
   return { view: prefs.view, favoritesOnly: prefs.favoritesOnly, favorites: prefs.favorites };
 }
 
-function ProjectListStates({ projects, error, filter, query, shownCount, onClearQuery }: { projects: Project[] | null; error: string | null; filter: { label: string; onClear: () => void } | null; query: string; shownCount: number; onClearQuery: () => void }) {
+export interface ListFilter {
+  label: string;
+  onClear: () => void;
+  empty?: string;
+}
+
+function ProjectListStates({ projects, error, filter, query, shownCount, onClearQuery }: { projects: Project[] | null; error: string | null; filter: ListFilter | null; query: string; shownCount: number; onClearQuery: () => void }) {
   return (
     <>
       {error && (
@@ -350,10 +389,12 @@ function ProjectListStates({ projects, error, filter, query, shownCount, onClear
       {filter && projects?.length === 0 && (
         <div className="home-empty">
           <Icon name="folder" size={16} />
-          <span>No {filter.label} yet.</span>
-          <button type="button" className="link" onClick={filter.onClear}>
-            Show all
-          </button>
+          <span>{filter.empty ?? `No ${filter.label} yet.`}</span>
+          {!filter.empty && (
+            <button type="button" className="link" onClick={filter.onClear}>
+              Show all
+            </button>
+          )}
         </div>
       )}
       {!filter && projects?.length === 0 && (

@@ -1,14 +1,14 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { errorText, api } from '../api';
 import { Icon } from '../components/Icon';
-import { ProjectThumb, TypeBadge } from '../components/ProjectThumb';
+import { ProjectThumb } from '../components/ProjectThumb';
 import { openProject } from '../projectNav';
 import { useProjectHits, useRouteHits } from '../projectHits';
 import { projectsApi } from '../projectsStore';
 import { uiStore } from '../storage';
 import { globalCommands } from './globalCommands';
 import { Keys } from './keys';
-import { buildRows, type Row } from './paletteRows';
+import { buildRows, typePair, type Row } from './paletteRows';
 import { collectCommands } from './registry';
 
 const RECENT_KEY = 'design-studio.commands.recent.v1';
@@ -64,11 +64,12 @@ function RowLead({ row }: { row: Row }) {
 }
 
 function RowEnd({ row, active, typing }: { row: Row; active: boolean; typing: boolean }) {
+  const enter = typing && active && !row.disabled;
   return (
     <span className="cmdk-end">
-      {row.disabled ? <span className="cmdk-note truncate">{row.disabled}</span> : row.note && <span className="cmdk-note">{row.note}</span>}
-      {row.hit && row.kind === 'project' && !row.icon && <TypeBadge hit={row.hit} />}
-      {typing && active ? <Keys keys="Enter" className="cmdk-keys" /> : row.keys && <Keys keys={row.keys} className="cmdk-keys" />}
+      {row.disabled ? <span className="cmdk-note">{row.disabled}</span> : row.note && !enter && <span className="cmdk-note">{row.note}</span>}
+      {row.hit && row.kind === 'project' && !row.icon && <span className="cmdk-type">{typePair(row.hit.type)}</span>}
+      {enter ? <Keys keys="Enter" className="cmdk-keys" /> : row.keys && <Keys keys={row.keys} className="cmdk-keys" />}
     </span>
   );
 }

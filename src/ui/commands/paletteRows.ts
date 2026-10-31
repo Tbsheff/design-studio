@@ -1,6 +1,6 @@
-import type { ProjectHit, RouteHit } from '../../shared/project-search';
+import type { ProjectHit, ProjectType, RouteHit } from '../../shared/project-search';
 import type { IconName } from '../components/Icon';
-import { rank } from './fuzzy';
+import { rank, type Ranked } from './fuzzy';
 import type { Command } from './registry';
 
 export type RowKind = 'command' | 'project' | 'route' | 'new';
@@ -40,10 +40,27 @@ export interface RowInput {
 
 const GROUP_ORDER = ['Run', 'Canvas', 'View', 'Panels', 'Selection', 'Version', 'Go', 'Help'];
 const RECENT_PROJECTS = 5;
+const RECENT_IN_STUDIO = 4;
 const SUGGESTED_IDS = new Set(['project.new', 'project.open-folder']);
+const CONTEXT_IDS = ['tool.select', 'tool.comment', 'panel.versions', 'version.export'];
 const MAX_PROJECTS = 6;
 const MAX_ACTIONS = 12;
 const STRONG = 10;
+
+const TYPE_PAIRS: Record<ProjectType, string> = { html: 'Prototype · HTML', react: 'Prototype · React', next: 'App · Next.js', vite: 'App · Vite', 'design-system': 'System' };
+
+export function typePair(type: ProjectType): string {
+  return TYPE_PAIRS[type];
+}
+
+function markRuns(marks: number[]): number {
+  return marks.filter((at, i) => i === 0 || at !== (marks[i - 1] ?? 0) + 1).length;
+}
+
+function clean<T>(list: Ranked<T>[], query: string): Ranked<T>[] {
+  const tokens = query.trim().split(/\s+/).filter(Boolean).length;
+  return list.filter((r) => markRuns(r.marks) <= tokens);
+}
 
 function groupIndex(group: string): number {
   const at = GROUP_ORDER.indexOf(group);
@@ -75,39 +92,46 @@ function commandRow(command: Command, group: string, marks: number[] = [], note?
   };
 }
 
-function suggested(input: RowInput, others: ProjectHit[]): Row[] {
+function contextCommands(input: RowInput): Command[] {
+  if (!input.current) return [];
+  const byId = new Map(input.commands.map((c) => [c.id, c]));
+  return CONTEXT_IDS.map((id) => byId.get(id)).filter((c): c is Command => c !== undefined && !c.disabled);
+}
+
+function suggested(input: RowInput, context: Command[]): Row[] {
   const byId = new Map(input.commands.map((c) => [c.id, c]));
   const make = byId.get('project.new');
   const open = byId.get('project.open-folder');
-  const rows: Row[] = [];
+  const rows: Row[] = context.map((c) => commandRow(c, 'Suggested'));
   if (make) rows.push({ ...commandRow(make, 'Suggested'), title: 'New prototype', meta: 'Describe it next', icon: 'sparkle', tone: 'brand', ...(input.desktop ? { keys: 'Mod+N' } : {}) });
   if (open) rows.push({ ...commandRow(open, 'Suggested'), title: 'Open app folder…', meta: 'Next.js, Vite or HTML', icon: 'folder', tone: 'accent', ...(input.desktop ? { keys: 'Mod+O' } : {}) });
-  const last = others[0];
-  if (last) rows.push({ key: `s:${last.id}`, kind: 'project', group: 'Suggested', title: `Switch to ${last.name}`, marks: [], icon: 'arrowRight', meta: last.place ? `Resume ${last.place}` : 'Resume', run: () => input.actions.openProject(last.id), keys: 'Mod+1' });
   return rows;
 }
 
 function emptyRows(input: RowInput): Row[] {
   const others = input.projects.filter((p) => p.id !== input.current);
-  const recentProjects = others.slice(0, RECENT_PROJECTS).map((hit, i) => projectRow(hit, 'Recent', input.actions, [], `Mod+${i + 1}`));
-  const commands = input.commands.filter((c) => !SUGGESTED_IDS.has(c.id));
+  const context = contextCommands(input);
+  const recentProjects = others.slice(0, context.length > 0 ? RECENT_IN_STUDIO : RECENT_PROJECTS).map((hit, i) => projectRow(hit, 'Recent', input.actions, [], `Mod+${i + 1}`));
+  const contextIds = new Set(context.map((c) => c.id));
+  const commands = input.commands.filter((c) => !SUGGESTED_IDS.has(c.id) && !contextIds.has(c.id));
   const byId = new Map(commands.map((c) => [c.id, c]));
   const top = input.recent.map((id) => byId.get(id)).filter((c): c is Command => c !== undefined && !c.disabled);
   const topIds = new Set(top.map((c) => c.id));
   const rest = commands.filter((c) => !topIds.has(c.id)).sort((a, b) => groupIndex(a.group) - groupIndex(b.group));
-  return [...recentProjects, ...suggested(input, others), ...top.map((c) => commandRow(c, 'Recent commands')), ...rest.map((c) => commandRow(c, c.group))];
+  return [...recentProjects, ...suggested(input, context), ...top.map((c) => commandRow(c, 'Recent commands')), ...rest.map((c) => commandRow(c, c.group))];
 }
 
 function newRow(query: string, actions: RowActions): Row {
   const text = query.trim();
-  return { key: 'new', kind: 'new', group: 'New', title: `New prototype: “${text}”`, marks: [], icon: 'sparkle', tone: 'brand', meta: 'HTML prototype · starts an AI run', run: () => actions.newPrototype(text) };
+  return { key: 'new', kind: 'new', group: 'New', title: `New prototype: “${text}”`, marks: [], icon: 'sparkle', tone: 'brand', meta: `${typePair('html')} · starts an AI run`, run: () => actions.newPrototype(text) };
 }
 
-function routeRows(input: RowInput, tokens: number): { rows: Row[]; strong: boolean } {
+function routeRows(input: RowInput): Row[] {
   const usable = input.routes.filter((r) => !r.dynamic);
-  const ranked = rank(usable, input.query.replace(/^\//, ''), (r) => ({ title: r.route, keywords: r.file }));
+  const query = input.query.replace(/^\//, '');
+  const ranked = clean(rank(usable, query, (r) => ({ title: r.route, keywords: r.file })), query);
   const marksOf = new Map(ranked.map((r) => [r.item, r.marks]));
-  const rows = usable.map<Row>((r) => ({
+  return usable.map<Row>((r) => ({
     key: `r:${r.projectId}:${r.route}`,
     kind: 'route',
     group: `Routes in ${r.projectName}`,
@@ -117,7 +141,6 @@ function routeRows(input: RowInput, tokens: number): { rows: Row[]; strong: bool
     icon: 'link',
     run: () => input.actions.openProject(r.projectId, r.route),
   }));
-  return { rows, strong: (ranked[0]?.score ?? 0) >= STRONG * tokens || (input.query.startsWith('/') && rows.length > 0) };
 }
 
 function looseMatches(input: RowInput): Row[] {
@@ -126,8 +149,8 @@ function looseMatches(input: RowInput): Row[] {
   const seen = new Set<string>();
   const out: Row[] = [];
   for (const word of words) {
-    for (const r of rank(input.projects, word, (p) => ({ title: p.name, keywords: p.place ?? '' }))) {
-      if (r.score < STRONG || seen.has(r.item.id)) continue;
+    for (const r of clean(rank(input.projects, word, (p) => ({ title: p.name, keywords: p.place ?? '' })), word)) {
+      if (r.score < STRONG - 1 || seen.has(r.item.id)) continue;
       seen.add(r.item.id);
       out.push(projectRow(r.item, 'Matches', input.actions, r.marks));
     }
@@ -135,22 +158,25 @@ function looseMatches(input: RowInput): Row[] {
   return out.slice(0, 3);
 }
 
-function typedRows(input: RowInput): Row[] {
-  const tokens = input.query.trim().split(/\s+/).length;
-  const projects = input.query.startsWith('/') ? [] : rank(input.projects, input.query, (p) => ({ title: p.name, keywords: `${p.place ?? ''} ${p.typeLabel}` })).slice(0, MAX_PROJECTS);
-  const commands = rank(input.commands.filter((c) => !SUGGESTED_IDS.has(c.id)), input.query, (c) => ({ title: c.title, keywords: `${c.keywords ?? ''} ${c.group}` }))
+function projectMatches(input: RowInput): Row[] {
+  if (input.query.startsWith('/')) return [];
+  const ranked = clean(rank(input.projects, input.query, (p) => ({ title: p.name, keywords: `${p.place ?? ''} ${p.typeLabel} ${typePair(p.type)}` })), input.query).slice(0, MAX_PROJECTS);
+  return ranked.length > 0 ? ranked.map((r) => projectRow(r.item, 'Projects', input.actions, r.marks)) : looseMatches(input);
+}
+
+function actionMatches(input: RowInput): Row[] {
+  const ranked = clean(rank(input.commands.filter((c) => !SUGGESTED_IDS.has(c.id)), input.query, (c) => ({ title: c.title, keywords: `${c.keywords ?? ''} ${c.group}` })), input.query);
+  return ranked
     .map((r) => ({ ...r, score: r.score + (input.recent.includes(r.item.id) ? 1 : 0) - (r.item.disabled ? 4 : 0) }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_ACTIONS);
-  const routes = routeRows(input, tokens);
-  const strong = (projects[0]?.score ?? 0) >= STRONG * tokens || (commands[0]?.score ?? 0) >= STRONG * tokens || routes.strong;
-  const found = [
-    ...(projects.length > 0 ? projects.map((r) => projectRow(r.item, 'Projects', input.actions, r.marks)) : looseMatches(input)),
-    ...routes.rows,
-    ...commands.map((r) => commandRow(r.item, 'Actions', r.marks, r.item.group)),
-  ];
+    .slice(0, MAX_ACTIONS)
+    .map((r) => commandRow(r.item, 'Actions', r.marks, r.item.group));
+}
+
+function typedRows(input: RowInput): Row[] {
+  const found = [...projectMatches(input), ...routeRows(input), ...actionMatches(input)];
   const make = newRow(input.query, input.actions);
-  return strong ? [...found, make] : [make, ...found];
+  return found.length > 0 ? [...found, make] : [make];
 }
 
 export function buildRows(input: RowInput): Row[] {

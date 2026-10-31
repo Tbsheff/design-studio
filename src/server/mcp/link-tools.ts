@@ -40,7 +40,7 @@ const addLinkTool = defineTool(
     const done = await addLink(ctx, spec, probeOf(deps, ctx));
     const refused = failed(done);
     if (refused || !done.link) return refused ?? { result: done.result };
-    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Linked ${done.title ?? done.link.id}`, frameId: done.link.from.frame } };
+    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Add prototype link ${done.title ?? done.link.id}`, frameId: done.link.from.frame } };
   },
 );
 
@@ -53,7 +53,7 @@ const removeLinkTool = defineTool(
     const done = await removeLink(ctx, input.linkId);
     const refused = failed(done);
     if (refused) return refused;
-    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Removed link ${done.title ?? input.linkId}` } };
+    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Remove prototype link ${done.title ?? input.linkId}` } };
   },
 );
 
@@ -67,7 +67,7 @@ const setStartTool = defineTool(
     const refused = failed(done);
     if (refused) return refused;
     if (!done.frame) throw new EditError(`No frame ${input.frame}.`);
-    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Set the start frame to ${frameLabel(done.frame)}`, frameId: done.frame.id } };
+    return { result: done.result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Set start frame ${frameLabel(done.frame)}`, frameId: done.frame.id } };
   },
 );
 

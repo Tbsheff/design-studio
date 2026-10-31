@@ -26,6 +26,7 @@ export interface HunkRevertResult {
   version: Version;
   file: string;
   hunk: number;
+  label: string;
   from: string;
   to: string;
 }

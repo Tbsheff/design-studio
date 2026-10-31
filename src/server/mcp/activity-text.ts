@@ -18,6 +18,11 @@ export function frameName(frame: CanvasFileFrame | null | undefined, fallback: s
   return frame.label ?? frame.path ?? frame.id;
 }
 
+export function frameStepText(verb: 'Add' | 'Remove', frame: CanvasFileFrame | null | undefined, fallback: string): string {
+  const name = frame ? (frame.label ?? (frame.path === undefined ? frame.id : `/${frame.path}`)) : fallback.replace(/^@/, '');
+  return `${verb} frame ${name}`;
+}
+
 function relationText(spec: PlaceSpec, frames: readonly CanvasFileFrame[]): string {
   for (const key of Object.keys(RELATION_WORDS) as (keyof typeof RELATION_WORDS)[]) {
     const ref = spec[key];

@@ -1,0 +1,122 @@
+import type { CanvasFile, CanvasFileFrame } from '../../shared/canvas-file.js';
+import type { CanvasWriteSource, Project } from '../../shared/contracts.js';
+import type { LinksFile } from '../../shared/links.js';
+
+export type LayoutChange = { kind: 'canvas'; before: CanvasFile; after: CanvasFile } | { kind: 'links'; before: LinksFile; after: LinksFile };
+
+export type LayoutListener = (project: Project, change: LayoutChange, source: CanvasWriteSource) => void;
+
+export type LayoutStep = 'undo' | 'redo';
+
+const RECORDED_SOURCES = new Set<CanvasWriteSource>(['user', 'agent']);
+
+export function recordsLayout(source: CanvasWriteSource): boolean {
+  return RECORDED_SOURCES.has(source);
+}
+
+function same(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+interface ItemDiff<T> {
+  added: T[];
+  removed: T[];
+  changed: { from: T; to: T }[];
+}
+
+function diffItems<T extends { id: string }>(from: T[], to: T[]): ItemDiff<T> {
+  const toById = new Map(to.map((item) => [item.id, item]));
+  const fromIds = new Set(from.map((item) => item.id));
+  const changed: { from: T; to: T }[] = [];
+  for (const item of from) {
+    const next = toById.get(item.id);
+    if (next && !same(item, next)) changed.push({ from: item, to: next });
+  }
+  return { added: to.filter((item) => !fromIds.has(item.id)), removed: from.filter((item) => !toById.has(item.id)), changed };
+}
+
+function touchedIds<T extends { id: string }>(diff: ItemDiff<T>): string[] {
+  return [...diff.added, ...diff.removed, ...diff.changed.map((pair) => pair.from)].map((item) => item.id);
+}
+
+function revertItems<T extends { id: string }>(current: T[], made: T[], back: T[]): T[] | null {
+  const ids = touchedIds(diffItems(back, made));
+  const madeById = new Map(made.map((item) => [item.id, item]));
+  const backById = new Map(back.map((item) => [item.id, item]));
+  const currentById = new Map(current.map((item) => [item.id, item]));
+  if (ids.some((id) => !same(currentById.get(id), madeById.get(id)))) return null;
+  const touched = new Set(ids);
+  const next = current.flatMap((item) => {
+    if (!touched.has(item.id)) return [item];
+    const restored = backById.get(item.id);
+    return restored ? [restored] : [];
+  });
+  for (const id of ids) {
+    const restored = backById.get(id);
+    if (!restored || currentById.has(id)) continue;
+    next.splice(Math.min(back.indexOf(restored), next.length), 0, restored);
+  }
+  return next;
+}
+
+function revertSet(current: string[], made: string[], back: string[]): string[] | null {
+  const added = made.filter((item) => !back.includes(item));
+  const removed = back.filter((item) => !made.includes(item));
+  if (added.some((item) => !current.includes(item)) || removed.some((item) => current.includes(item))) return null;
+  return [...current.filter((item) => !added.includes(item)), ...removed];
+}
+
+export function revertCanvas(current: CanvasFile, made: CanvasFile, back: CanvasFile): CanvasFile | null {
+  const frames = revertItems(current.frames, made.frames, back.frames);
+  const lofi = revertSet(current.lofi, made.lofi, back.lofi);
+  if (frames === null || lofi === null) return null;
+  return { ...current, frames, lofi };
+}
+
+export function revertLinks(current: LinksFile, made: LinksFile, back: LinksFile): LinksFile | null {
+  const links = revertItems(current.links, made.links, back.links);
+  if (links === null) return null;
+  if (same(made.start, back.start)) return { ...current, links };
+  if (!same(current.start, made.start)) return null;
+  const { start: _start, ...rest } = current;
+  return back.start === undefined ? { ...rest, links } : { ...rest, start: back.start, links };
+}
+
+function frameName(frame: CanvasFileFrame): string {
+  const name = frame.label ?? (frame.path === undefined ? undefined : `/${frame.path}`);
+  return name ? ` ${name}` : '';
+}
+
+function changedFramesLabel(changed: { from: CanvasFileFrame; to: CanvasFileFrame }[]): string {
+  const moved = changed.every(({ from, to }) => same({ ...from, x: 0, y: 0, order: 0 }, { ...to, x: 0, y: 0, order: 0 }));
+  const resized = changed.every(({ from, to }) => same({ ...from, width: 0, height: 0 }, { ...to, width: 0, height: 0 }));
+  const verb = moved ? 'Move' : resized ? 'Resize' : 'Change';
+  const first = changed[0];
+  return changed.length === 1 && first ? `${verb} frame${frameName(first.to)}` : `${verb} ${changed.length} frames`;
+}
+
+function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
+  const diff = diffItems(before.frames, after.frames);
+  const kinds = [diff.added.length, diff.removed.length, diff.changed.length].filter((count) => count > 0).length;
+  if (kinds > 1) return 'Change canvas frames';
+  const [added, removed] = [diff.added[0], diff.removed[0]];
+  if (added) return diff.added.length === 1 ? `Add frame${frameName(added)}` : `Add ${diff.added.length} frames`;
+  if (removed) return diff.removed.length === 1 ? `Remove frame${frameName(removed)}` : `Remove ${diff.removed.length} frames`;
+  if (diff.changed.length > 0) return changedFramesLabel(diff.changed);
+  return same(before.lofi, after.lofi) ? null : 'Change lo-fi frames';
+}
+
+function linksLabel(before: LinksFile, after: LinksFile): string | null {
+  const diff = diffItems(before.links, after.links);
+  const counts = [diff.added.length, diff.removed.length, diff.changed.length];
+  const total = counts.reduce((sum, count) => sum + count, 0);
+  const startChanged = !same(before.start, after.start);
+  if (total === 0) return startChanged ? 'Set start frame' : null;
+  if (startChanged || counts.filter((count) => count > 0).length > 1) return 'Change prototype links';
+  const verb = diff.added.length > 0 ? 'Add' : diff.removed.length > 0 ? 'Remove' : 'Change';
+  return total === 1 ? `${verb} prototype link` : `${verb} ${total} prototype links`;
+}
+
+export function layoutLabel(change: LayoutChange): string | null {
+  return change.kind === 'canvas' ? canvasLabel(change.before, change.after) : linksLabel(change.before, change.after);
+}

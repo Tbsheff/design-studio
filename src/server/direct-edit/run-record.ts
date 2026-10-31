@@ -1,5 +1,7 @@
 import path from 'node:path';
+import { CANVAS_FILE } from '../../shared/canvas-file.js';
 import type { Direction, Project, Version } from '../../shared/contracts.js';
+import { LINKS_FILE } from '../../shared/links.js';
 import type { VersionStore } from '../types.js';
 import type { EditHistory } from './history.js';
 import type { EditFileChange } from './index.js';
@@ -7,6 +9,7 @@ import type { EditFileChange } from './index.js';
 const MAX_RUN_FILES = 50;
 const MAX_RUN_BYTES = 4 * 1024 * 1024;
 const decoder = new TextDecoder('utf-8', { fatal: true });
+const LAYOUT_FILES_IN_EVERY_VERSION = new Set([CANVAS_FILE, LINKS_FILE]);
 
 function textOf(bytes: Uint8Array | null): string | null | undefined {
   if (bytes === null) return null;
@@ -29,7 +32,7 @@ async function runChanges(versions: VersionStore, project: Project, direction: D
   const total = version.changedFilesTotal ?? version.changedFiles.length;
   const fileAt = versions.fileAt?.bind(versions);
   if (!fileAt || total === 0 || total > MAX_RUN_FILES || version.changedFiles.length < total) return null;
-  const changes = await Promise.all(version.changedFiles.map((relative) => changeOf(fileAt, project, direction, version, relative)));
+  const changes = await Promise.all(version.changedFiles.filter((relative) => !LAYOUT_FILES_IN_EVERY_VERSION.has(relative)).map((relative) => changeOf(fileAt, project, direction, version, relative)));
   if (changes.some((change) => change === null)) return null;
   const files = changes as EditFileChange[];
   const bytes = files.reduce((sum, change) => sum + change.before.length + change.after.length, 0);

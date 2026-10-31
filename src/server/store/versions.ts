@@ -578,6 +578,31 @@ export function createVersionStore(config: ServerConfig): VersionStore {
 
   const layoutOf = (direction: Direction, file: string): string => path.join(direction.workTree, ...file.split('/'));
 
+  type LiveLayout = { relative: string; target: string; bytes: Buffer | null }[];
+
+  const readLayout = (project: Project, direction: Direction): Promise<LiveLayout> =>
+    Promise.all(layoutFilesOf(project).map(async (relative) => ({ relative, target: layoutOf(direction, relative), bytes: await readFile(layoutOf(direction, relative)).catch(() => null) })));
+
+  const writeLayout = async (live: LiveLayout, removeMissing: boolean): Promise<void> => {
+    for (const { target, bytes } of live) {
+      if (bytes === null) {
+        if (removeMissing) await rm(target, { force: true });
+        continue;
+      }
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, bytes);
+    }
+  };
+
+  const treeWithLayout = async (project: Project, direction: Direction, live: LiveLayout): Promise<string> => {
+    const scope = directionScope(project, direction);
+    const present = live.filter((item) => item.bytes !== null).map((item) => item.relative);
+    const gone = live.filter((item) => item.bytes === null).map((item) => item.relative);
+    if (present.length > 0) await runGit(scope, ['--literal-pathspecs', 'add', '-A', '--', ...present]);
+    if (gone.length > 0) await runGit(scope, ['--literal-pathspecs', 'rm', '--cached', '-q', '--ignore-unmatch', '--', ...gone]);
+    return (await runGit(scope, ['write-tree'])).stdout.trim();
+  };
+
   const checkoutTo = async (project: Project, sha: string, targetDir: string): Promise<void> => {
     await mkdir(targetDir, { recursive: true });
     const indexFile = path.join(gitDirOf(project), `index-tmp-${randomBytes(6).toString('hex')}`);
@@ -855,13 +880,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         const tree = head === null ? null : await treeOf(project, head);
         const fast = await discardDirect(project, direction, tree);
         if (fast) return fast;
-        const kept = await Promise.all(layoutFilesOf(project).map(async (file) => ({ target: layoutOf(direction, file), bytes: await readFile(layoutOf(direction, file)).catch(() => null) })));
+        const kept = await readLayout(project, direction);
         await resetWorkTree(project, direction, tree, tree, 'trash');
-        for (const { target, bytes } of kept) {
-          if (!bytes) continue;
-          await mkdir(path.dirname(target), { recursive: true });
-          await writeFile(target, bytes);
-        }
+        await writeLayout(kept, false);
         return statusOf(project, direction);
       });
     },
@@ -882,10 +903,13 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         }
         const tree = await treeOf(project, target);
         const headTree = await treeOf(project, head);
+        const live = await readLayout(project, direction);
         const fast = project.app ? await direct.reset(project, direction, headTree, tree) : false;
         if (!fast) await resetWorkTree(project, direction, headTree, tree, 'keep');
+        await writeLayout(live, true);
+        const kept = live.length > 0 && !fast ? await treeWithLayout(project, direction, live) : tree;
         const title = restoreTitle(kind, await originTitleOf(project, target));
-        const version = await commitTree(project, direction, tree, head, head, title, { kind, restoredFrom: target });
+        const version = await commitTree(project, direction, kept, head, head, title, { kind, restoredFrom: target });
         if (fast) direct.moved(project, direction, head, version.id);
         return version;
       });

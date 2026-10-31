@@ -4,7 +4,7 @@ import { frameRef, type CanvasToolContext } from '../canvas/tools.js';
 import { EditError, loadTarget, refuseWhileRunning, type EditDeps } from './edit-deps.js';
 import { defineTool, directionId, projectId, type Done } from './edit-kit.js';
 
-const LINKS_NOTE = 'Links live in the studio (.studio/links.json), not in the page code, so they work for HTML, React and attached app routes. Play in the studio starts at the start frame; a click on a linked element goes to its frame. Links save with the next version, like the canvas layout.';
+const LINKS_NOTE = 'Links live in the studio (.studio/links.json), not in the page code, so they work for HTML, React and attached app routes. Play in the studio starts at the start frame; a click on a linked element goes to its frame. Each link change is one step in the edit history (undo and redo, like Cmd+Z). Links save with the next version, like the canvas layout; undo or restore of a version keeps the current links and frames.';
 
 async function contextOf(deps: EditDeps, input: { projectId: string; directionId?: string }, busy: boolean): Promise<CanvasToolContext> {
   const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);

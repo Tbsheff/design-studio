@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, realpath, rm } from 'node:fs/promises';
 import path from 'node:path';
+import type { LayoutChange } from '../canvas/layout-history.js';
 import type { Direction, EditHistoryEntry, EditHistoryList, EditHistoryState, Project, Version, VersionMeta } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
 import type { EventBus } from '../types.js';
@@ -29,6 +30,7 @@ export interface EditHistory extends EditRecorder {
 interface HistoryOptions {
   bus: Pick<EventBus, 'emit'>;
   onRestored?: (workTree: string, relatives: string[]) => void;
+  layout?: (project: Project, change: LayoutChange, kind: HistoryStep) => Promise<boolean>;
   limit?: number;
 }
 
@@ -166,14 +168,29 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     return saveDeferred(deps, project, direction, record.files.map((change) => change.relative), `${STEP_WORD[kind]}: ${record.label}`, stepMeta(kind, record));
   };
 
+  const layoutStep = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction, record: EditRecord, layout: LayoutChange, head: string): Promise<EditStepResult> => {
+    const applied = options.layout ? await options.layout(project, layout, kind) : false;
+    if (!applied) {
+      clear(project.id, direction.id);
+      throw stale();
+    }
+    const stacks = stacksOf(project.id);
+    const from = kind === 'undo' ? stacks.undo : stacks.redo;
+    from.splice(from.indexOf(record), 1);
+    push(kind === 'undo' ? stacks.redo : stacks.undo, record);
+    changed(project.id, direction.id);
+    return { state: state(project.id, direction.id), version: await deps.versions.get(project, savedVersionId(head)) };
+  };
+
   const step = async (kind: HistoryStep, deps: DirectEditDeps, project: Project, direction: Direction): Promise<EditStepResult> => {
-    assertCanEdit(deps, project, direction);
+    const head = assertCanEdit(deps, project, direction);
     await savesSettled(project.id);
     const stacks = stacksOf(project.id);
     const from = kind === 'undo' ? stacks.undo : stacks.redo;
     const index = lastFor(from, direction.id);
     const record = from[index];
     if (!record) throw new DirectEditError('history_empty', kind === 'undo' ? 'Nothing to undo' : 'Nothing to redo');
+    if (record.layout) return layoutStep(kind, deps, project, direction, record, record.layout, head);
     const files = await resolveFiles(direction.workTree, record);
     const texts = files === null ? [] : await Promise.all(files.map(readOrNull));
     const expected = record.files.map((change) => (kind === 'undo' ? change.after : textBefore(change)));
@@ -193,8 +210,8 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
 
   const record = (entry: EditRecord): void => {
     const files = entry.files.filter((change) => change.before !== change.after);
-    if (files.length === 0) return;
-    emitSourceChange({ projectId: entry.projectId, directionId: entry.directionId, files });
+    if (files.length === 0 && !entry.layout) return;
+    if (files.length > 0) emitSourceChange({ projectId: entry.projectId, directionId: entry.directionId, files });
     const stacks = stacksOf(entry.projectId);
     push(stacks.undo, { ...entry, files });
     for (let index = stacks.redo.length - 1; index >= 0; index -= 1) if (stacks.redo[index]?.directionId === entry.directionId) stacks.redo.splice(index, 1);

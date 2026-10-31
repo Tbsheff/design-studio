@@ -266,11 +266,23 @@ function SizeValue({ axis, mode, used, edit }: { axis: Axis; mode: SizeMode; use
   const label = SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
   const px = roundedPx(used);
   return (
-    <div className="ins-field ins-size-display" data-tip={`${label}: ${px} now. Type a value to fix it.`}>
+    <div className="ins-field ins-size-display" data-tip={`${label}: ${px} now. Type a value to set a fixed ${axis}.`}>
       <label htmlFor={`ins-${axis}`} className="ins-scrub static">
         {short}
       </label>
-      <input id={`ins-${axis}`} className="ins-input num" aria-label={name} aria-description={`${label}, ${px}`} value={label} readOnly onFocus={() => setEditing(true)} />
+      <input
+        id={`ins-${axis}`}
+        className="ins-input num"
+        aria-label={name}
+        aria-description={`${label}, ${px}`}
+        value={label}
+        readOnly
+        onFocus={() => setEditing(true)}
+        onPointerDown={(event) => {
+          event.preventDefault();
+          setEditing(true);
+        }}
+      />
     </div>
   );
 }

@@ -78,7 +78,7 @@ const EDIT_LABEL = /^Edit (.+?): (.+?)( \([^)]*\))?$/;
 const TEXT_LABEL = /^Edit text of (.+?)( \([^)]*\))?$/;
 const MANY = /^\d+ elements$/;
 const SIZE_PROPS = new Set(['width', 'height']);
-const PLACE_PROPS = /^(left|right|top|bottom|margin(-.+)?|translate|transform)$/;
+const PLACE_PROPS = /^(left|right|top|bottom|margin(-.+)?|translate)$/;
 const SPACE_PROPS = /^(padding(-.+)?|gap|row-gap|column-gap)$/;
 const COLOR_PROPS = /^(color|background(-color)?|border-color|fill|stroke)$/;
 

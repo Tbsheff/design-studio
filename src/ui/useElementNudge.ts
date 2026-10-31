@@ -7,6 +7,7 @@ import { startOptimistic } from './optimisticEdit';
 import { multiBlockReason } from './mixedValues';
 import { canvasHasKeys, inspectorButtonFocused, isTypingTarget } from './typingTarget';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
+import { focusStageQuietly } from './useInlineTextEdit';
 
 const SAVE_MS = 300;
 const FLOW_HINT = 'Arrow keys move absolute elements and elements with a margin. Drag this one to change its place in the layout.';
@@ -101,7 +102,9 @@ function blurToCanvas(event: KeyboardEvent): boolean {
   const focused = document.activeElement;
   if (event.key !== 'Escape' || event.defaultPrevented || !(focused instanceof HTMLElement) || focused === document.body) return false;
   if (canvasHasKeys() || focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
-  focused.blur();
+  const stage = document.querySelector<HTMLElement>('.canvas .stage');
+  if (stage) focusStageQuietly(stage);
+  else focused.blur();
   event.preventDefault();
   event.stopImmediatePropagation();
   return true;

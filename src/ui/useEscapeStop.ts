@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 export const PREVIEW_ESCAPE_EVENT = 'studio:preview-escape';
+export const PREVIEW_STOP_EVENT = 'studio:preview-stop';
 
 const OVERLAY_SELECTOR = 'dialog[open], [role="dialog"][aria-modal="true"]';
 
@@ -22,7 +23,14 @@ export function useEscapeStop(active: boolean, onStop: () => void): void {
       event.preventDefault();
       stop.current();
     };
+    const onFrameStop = () => {
+      if (!overlayOpen()) stop.current();
+    };
     window.addEventListener('keydown', onKey, { capture: true });
-    return () => window.removeEventListener('keydown', onKey, { capture: true });
+    window.addEventListener(PREVIEW_STOP_EVENT, onFrameStop);
+    return () => {
+      window.removeEventListener('keydown', onKey, { capture: true });
+      window.removeEventListener(PREVIEW_STOP_EVENT, onFrameStop);
+    };
   }, [active]);
 }

@@ -1056,9 +1056,9 @@ export const LAYER_LABEL_MAX = 60;
 
 export type SelectMove = 'child' | 'parent' | 'next' | 'prev';
 
-export type AppKey = 'palette' | 'shortcuts' | 'next-region' | 'prev-region' | 'ask-inline' | 'project-rail';
+export type AppKey = 'palette' | 'shortcuts' | 'next-region' | 'prev-region' | 'ask-inline' | 'project-rail' | 'stop';
 
-const MOD_APP_KEYS: Record<string, AppKey> = { KeyK: 'palette', KeyP: 'palette', Backslash: 'project-rail', KeyI: 'ask-inline' };
+const MOD_APP_KEYS: Record<string, AppKey> = { KeyK: 'palette', KeyP: 'palette', Backslash: 'project-rail', KeyI: 'ask-inline', Period: 'stop' };
 
 export function appKeyOf(event: { key: string; code: string; metaKey: boolean; ctrlKey: boolean; altKey: boolean; shiftKey: boolean }, typing: boolean): AppKey | null {
   if (event.altKey) return null;

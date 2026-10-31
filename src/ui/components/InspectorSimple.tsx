@@ -8,7 +8,7 @@ import { SIDES } from '../cssValues';
 import { useDirectEdits } from '../useDirectEdits';
 import { sameEditValues, useDirectEdit, type DirectEdit, type DirectEditCommit, type DirectEditControl, type SaveStatus } from '../useDirectEdit';
 import { TokenUiContext, type TokenUi } from '../useTokenSnap';
-import { BoxModel } from './BoxModel';
+import { BoxModel, type DeclaredMargins } from './BoxModel';
 import { CopyCodeMenu } from './CopyCodeMenu';
 import { Icon } from './Icon';
 import { InspectorBreadcrumb } from './InspectorBreadcrumb';
@@ -53,7 +53,12 @@ const EXTRAS: { id: Extra; label: string }[] = [
 ];
 
 const BOX_PROPS = (['margin', 'padding'] as const).flatMap((box) => SIDES.map((side) => `${box}-${side}` as DirectStyleProperty));
-const BoxModelMemo = memo(BoxModel, (a, b) => sameEditValues(a.edit, b.edit, BOX_PROPS));
+const BoxModelMemo = memo(BoxModel, (a, b) => sameEditValues(a.edit, b.edit, BOX_PROPS) && a.edit.dirty.join() === b.edit.dirty.join() && SIDES.every((side) => a.declared?.[side] === b.declared?.[side]));
+
+function declaredMargins(selection: SelectionContext | null): DeclaredMargins | undefined {
+  if (!selection) return undefined;
+  return Object.fromEntries(SIDES.map((side) => [side, selection.styles[`declared-margin-${side}`] ?? ''])) as DeclaredMargins;
+}
 
 function isSet(value: string): boolean {
   return value !== '' && value !== 'none' && value !== 'normal';
@@ -199,7 +204,7 @@ function LayoutSection({ edit, selection }: { edit: DirectEdit; selection: Selec
   );
   return (
     <AutoLayoutSection edit={edit} title="Layout" lead={size}>
-      <BoxModelMemo edit={edit} />
+      <BoxModelMemo edit={edit} declared={declaredMargins(selection)} />
     </AutoLayoutSection>
   );
 }

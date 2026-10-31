@@ -18,6 +18,7 @@ export interface NumberSpec {
   min?: number;
   max?: number;
   targets?: DirectStyleProperty[];
+  display?: string;
 }
 
 const SCRUB_PX_PER_STEP = 2;
@@ -72,7 +73,7 @@ function selectSoon(input: HTMLInputElement): void {
 
 function sameSpec(a: NumberSpec, b: NumberSpec): boolean {
   const targets = a.targets ?? [a.prop];
-  const sameShape = a.prop === b.prop && a.label === b.label && a.unit === b.unit && a.step === b.step && a.min === b.min && a.max === b.max;
+  const sameShape = a.prop === b.prop && a.label === b.label && a.unit === b.unit && a.step === b.step && a.min === b.min && a.max === b.max && a.display === b.display;
   return sameShape && targets.join() === (b.targets ?? [b.prop]).join() && sameEditValues(a.edit, b.edit, targets);
 }
 
@@ -136,7 +137,7 @@ function NumberInputView({ spec, id, className }: InputProps) {
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
   const inherited = useInherited(spec.prop);
-  const shown = field.text ?? (focused ? field.current : displayLength(field.current));
+  const shown = field.text ?? (focused ? field.current : (spec.display ?? displayLength(field.current)));
   const refused = field.mixed && field.text !== null && dependsOnCurrent(field.text, field.unit);
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

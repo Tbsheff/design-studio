@@ -38,14 +38,14 @@ interface Options {
 
 type StyleRewrite = (style: Partial<StyleValues>) => Partial<StyleValues>;
 
-function declaredOf(style: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(Object.entries(style).map(([key, value]) => [`declared-${key}`, value]));
+function declaredOf(styles: Record<string, string>, style: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(style).flatMap(([key, value]) => (`declared-${key}` in styles ? [[`declared-${key}`, value]] : [])));
 }
 
 export function mergeCommit(prev: SelectionContext[], commit: DirectEditCommit): SelectionContext[] {
   return prev.map((s) =>
     s.selector === commit.selector
-      ? { ...s, styles: { ...s.styles, ...declaredOf(commit.style), ...commit.style }, text: commit.text ?? s.text }
+      ? { ...s, styles: { ...s.styles, ...declaredOf(s.styles, commit.style), ...commit.style }, text: commit.text ?? s.text }
       : s,
   );
 }

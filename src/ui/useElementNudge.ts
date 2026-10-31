@@ -5,7 +5,7 @@ import { api, errorText } from './api';
 import type { ParentMessageBody } from './bridge';
 import { startOptimistic } from './optimisticEdit';
 import { multiBlockReason } from './mixedValues';
-import { canvasHasKeys, isTypingTarget } from './typingTarget';
+import { canvasHasKeys, inspectorButtonFocused, isTypingTarget } from './typingTarget';
 import { buildEditRequest, mergeCommit } from './useDirectEdit';
 
 const SAVE_MS = 300;
@@ -107,6 +107,14 @@ function blurToCanvas(event: KeyboardEvent): boolean {
   return true;
 }
 
+function takeArrowKeys(): boolean {
+  if (canvasHasKeys()) return true;
+  const button = inspectorButtonFocused();
+  if (!button || document.querySelector(OVERLAY_OPEN)) return false;
+  button.blur();
+  return true;
+}
+
 export function useElementNudge(o: Options): void {
   const live = useRef(o);
   live.current = o;
@@ -194,7 +202,7 @@ export function useElementNudge(o: Options): void {
         return;
       }
       const cur = live.current;
-      if (!cur.enabled || cur.selection.length === 0 || !canvasHasKeys()) return;
+      if (!cur.enabled || cur.selection.length === 0 || !takeArrowKeys()) return;
       event.preventDefault();
       cur.post({ type: 'nudge', dx: step.dx, dy: step.dy });
     };

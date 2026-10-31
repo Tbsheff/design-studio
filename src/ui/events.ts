@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import type { StudioEvent } from '../shared/contracts';
-import { eventsUrl } from './api';
+import { appStream } from './appStream';
 import { createEventHub, type ConnectionState } from './eventHub';
 
 export type { ConnectionState } from './eventHub';
 
 const hub = createEventHub({
-  open: (projectId, afterSeq) => new EventSource(eventsUrl(projectId, afterSeq)),
+  open: (projectId, afterSeq) => appStream().source(projectId, afterSeq),
   setTimer: (fn, ms) => window.setTimeout(fn, ms),
   clearTimer: (id) => window.clearTimeout(id),
   defer: (fn) => queueMicrotask(fn),

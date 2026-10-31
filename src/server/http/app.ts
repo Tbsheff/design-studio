@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
+import { APP_STREAM_PATH } from '../../shared/app-stream.js';
 import { RUN_EFFORTS, RUN_LEVELS, STUDIO_TOKEN_HEADER, isRunLevel, type RunEffort } from '../../shared/contracts.js';
 import type {
   Attachment,
@@ -109,6 +110,7 @@ import { registerFrameStateRoutes } from './frame-state-routes.js';
 import { registerFlowRoutes } from './flow-routes.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
 import { registerMcpRoutes } from './mcp-routes.js';
+import { registerStreamRoutes, type StreamTracker } from './stream-routes.js';
 import { registerShipRoutes } from './ship-routes.js';
 import { registerShareRoutes } from './share-routes.js';
 import { registerComponentCreateRoutes } from './component-create-routes.js';
@@ -140,6 +142,7 @@ interface AppDeps {
 
 const DEV_UI_ORIGINS = ['http://127.0.0.1:5173', 'http://localhost:5173'];
 const HEARTBEAT_MS = 15_000;
+const STREAM_GRACE_MS = 6000;
 const TELEMETRY_KINDS = new Set<TelemetrySample['kind']>(['preview.latency', 'select.latency', 'studio.open', 'file.write', 'app.start', 'run.first_token', 'edit.commit', 'frame.long']);
 const APP_TELEMETRY_KINDS = new Set<TelemetrySample['kind']>(['app.start', 'frame.long']);
 
@@ -373,6 +376,16 @@ export function createApp(deps: AppDeps): Hono {
   };
   const app = new Hono();
   let openStreams = 0;
+  let lastStreamEnd = 0;
+  const streamTracker: StreamTracker = {
+    opened: () => {
+      openStreams += 1;
+    },
+    closed: () => {
+      openStreams -= 1;
+      lastStreamEnd = Date.now();
+    },
+  };
   const versionNames = createVersionNames((pid) => projects.projectDir(pid));
   const thumbnails = deps.thumbnails ?? createThumbnailService({ projects, preview, versions });
 
@@ -552,7 +565,7 @@ export function createApp(deps: AppDeps): Hono {
   app.use('/api/*', async (c, next) => {
     const origin = c.req.header('origin');
     if (origin !== undefined && !allowedOrigins.has(origin)) return c.json({ error: 'forbidden' }, 403);
-    const isEventStream = c.req.method === 'GET' && /^\/api\/projects\/[^/]+\/events$/.test(c.req.path);
+    const isEventStream = c.req.method === 'GET' && (/^\/api\/projects\/[^/]+\/events$/.test(c.req.path) || c.req.path === APP_STREAM_PATH);
     const token = c.req.header(STUDIO_TOKEN_HEADER) ?? (isEventStream ? c.req.query('token') : undefined);
     if (token !== config.studioToken) return c.json({ error: 'forbidden' }, 403);
     await next();
@@ -703,7 +716,7 @@ export function createApp(deps: AppDeps): Hono {
     const after = Number.parseInt(rawAfter, 10);
     const afterSeq = Number.isFinite(after) && after >= 0 ? after : 0;
     return streamSSE(c, async (stream) => {
-      openStreams += 1;
+      streamTracker.opened();
       const pending: StudioEvent[] = [];
       let wake: (() => void) | null = null;
       let closed = false;
@@ -737,7 +750,7 @@ export function createApp(deps: AppDeps): Hono {
           }
         }
       } finally {
-        openStreams -= 1;
+        streamTracker.closed();
         clearInterval(heartbeat);
         unsubscribe();
       }
@@ -1208,7 +1221,8 @@ export function createApp(deps: AppDeps): Hono {
 
   registerVariationRoutes(app, { config, projects, runner, startRun, withDirection, forkDirection, edit: editDeps });
   registerRunContextRoutes(app, { loadDirection });
-  const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0, history: editHistory });
+  const mcpRoutes = registerMcpRoutes(app, { projects, versions, preview, runner, canvas, bus, dataDir: config.dataDir, studioToken: config.studioToken, projectsFolder: () => defaultFolder.ensure(), appOpen: () => openStreams > 0 || Date.now() - lastStreamEnd < STREAM_GRACE_MS, history: editHistory });
+  registerStreamRoutes(app, { bus, projects, approvals: mcpRoutes.approvalFeed, track: streamTracker });
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
   registerDoctorRoutes(app, { projects, preview, readBody });
   registerShareRoutes(app, { projects, versions, preview, comments, dataDir: config.dataDir, studioPort: config.studioPort, readBody });

@@ -6,27 +6,37 @@ export const PANE_MODES: readonly PanelTab[] = ['chat', 'design', 'comments'];
 
 const TABS: readonly PanelTab[] = ['chat', 'design', 'tweaks', 'tokens', 'components', 'comments', 'versions', 'system'];
 
-const TAB_KEY = 'design-studio.panel-tab.v1';
+const TAB_KEY = 'design-studio.panel-tab.v2';
+const MAX_PROJECTS = 100;
 
-function readTab(): PanelTab | null {
+function readAll(): Record<string, PanelTab> {
   try {
-    const raw = localStorage.getItem(TAB_KEY);
-    return TABS.find((tab) => tab === raw) ?? null;
+    const raw: unknown = JSON.parse(localStorage.getItem(TAB_KEY) ?? '{}');
+    return raw && typeof raw === 'object' ? (raw as Record<string, PanelTab>) : {};
   } catch {
-    return null;
+    return {};
   }
 }
 
-function writeTab(tab: PanelTab): void {
+function readTab(projectId: string): PanelTab | null {
+  const raw = readAll()[projectId];
+  return TABS.find((tab) => tab === raw) ?? null;
+}
+
+function writeTab(projectId: string, tab: PanelTab): void {
+  const all = readAll();
+  delete all[projectId];
+  all[projectId] = tab;
+  const kept = Object.entries(all).slice(-MAX_PROJECTS);
   try {
-    localStorage.setItem(TAB_KEY, tab);
+    localStorage.setItem(TAB_KEY, JSON.stringify(Object.fromEntries(kept)));
   } catch {
     return;
   }
 }
 
-export function usePanelTab(eligible: boolean) {
-  const chosen = useRef(readTab());
+export function usePanelTab(projectId: string, eligible: boolean) {
+  const chosen = useRef(readTab(projectId));
   const autoSwitched = useRef(false);
   const [tab, setTab] = useState<PanelTab>(chosen.current ?? 'chat');
 
@@ -36,13 +46,14 @@ export function usePanelTab(eligible: boolean) {
     setTab('design');
   }, [eligible]);
 
-  const choose = useCallback((next: PanelTab) => {
-    chosen.current = next;
-    writeTab(next);
-    setTab(next);
-  }, []);
+  const choose = useCallback(
+    (next: PanelTab) => {
+      chosen.current = next;
+      writeTab(projectId, next);
+      setTab(next);
+    },
+    [projectId],
+  );
 
-  const show = useCallback((next: PanelTab) => setTab(next), []);
-
-  return { tab, choose, show };
+  return { tab, choose, show: choose };
 }

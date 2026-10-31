@@ -239,7 +239,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const port = useRef<PreviewPort | null>(null);
   const editControl = useRef<DirectEditControl | null>(null);
   const editable = isDirectEditable(source, compareOpen);
-  const panel = usePanelTab(inspectorEmptyReason(selection, editable) === null);
+  const panel = usePanelTab(projectId, inspectorEmptyReason(selection, editable) === null);
 
   const direction = project?.directions.find((x) => x.id === directionId) ?? null;
   const designSystem = useDesignSystemState(projectId, project, directionId, data.lastChange);

@@ -121,8 +121,16 @@ interface RailProps {
   onNewPrototype: () => void;
 }
 
+const KIND_LABEL: Record<ProjectHit['type'], string> = {
+  next: 'App · Next.js',
+  vite: 'App · Vite',
+  html: 'Prototype · HTML',
+  react: 'Prototype · React',
+  'design-system': 'System',
+};
+
 function tipOf(hit: ProjectHit, current: boolean): string {
-  const parts = [hit.name, hit.typeLabel, hit.health?.note].filter(Boolean);
+  const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(Boolean);
   return current ? `${parts.join(' · ')} (open)` : parts.join(' · ');
 }
 
@@ -153,10 +161,10 @@ function MiniRail({ hits, projectId, onNewPrototype }: { hits: ProjectHit[]; pro
         ))}
       </nav>
       <div className="prail-foot">
-        <button type="button" className="icon-btn small" aria-label="New prototype" data-tip="New prototype" data-tip-align="start" onClick={onNewPrototype}>
+        <button type="button" className="icon-btn small" aria-label="New prototype" data-tip="New prototype" data-tip-side="top" data-tip-align="start" onClick={onNewPrototype}>
           <Icon name="plus" size={14} />
         </button>
-        <button type="button" className="icon-btn small" aria-label="Show projects" aria-expanded="false" data-tip={tipWithKey('Show projects', 'project-rail')} data-tip-align="start" onClick={() => setRail('open')}>
+        <button type="button" className="icon-btn small" aria-label="Show projects" aria-expanded="false" data-tip={tipWithKey('Show projects', 'project-rail')} data-tip-side="top" data-tip-align="start" onClick={() => setRail('open')}>
           <Icon name="sidebar" size={14} />
         </button>
       </div>
@@ -170,7 +178,7 @@ function RailRow({ hit, current }: { hit: ProjectHit; current: boolean }) {
       type="button"
       className="prail-item prail-row"
       aria-current={current ? 'page' : undefined}
-      data-tip={hit.health ? `${hit.typeLabel} · ${hit.health.note}` : hit.typeLabel}
+      data-tip={hit.health ? `${KIND_LABEL[hit.type]} · ${hit.health.note}` : KIND_LABEL[hit.type]}
       data-tip-align="start"
       onClick={() => pickProject(hit.id)}
     >

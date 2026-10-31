@@ -352,7 +352,7 @@ function LayerTools({ run, busy }: { run: (key: StructureKey) => void; busy: boo
   return (
     <div className="layers-tools" role="toolbar" aria-label="Layer actions">
       {TOOLS.map((tool) => (
-        <button key={tool.key} type="button" className="icon-btn small" aria-label={tool.label} aria-disabled={busy || undefined} data-tip={tipWithKey(tool.label, STRUCTURE_KEY_IDS[tool.key])} data-tip-align="end" onClick={() => !busy && run(tool.key)}>
+        <button key={tool.key} type="button" className={tool.key === 'delete' ? 'icon-btn small layers-delete' : 'icon-btn small'} aria-label={tool.label} aria-disabled={busy || undefined} data-tip={tipWithKey(tool.label, STRUCTURE_KEY_IDS[tool.key])} data-tip-align="end" onClick={() => !busy && run(tool.key)}>
           <Icon name={tool.icon} size={14} />
         </button>
       ))}

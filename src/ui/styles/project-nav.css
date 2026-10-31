@@ -109,10 +109,6 @@
   padding-top: 0;
 }
 
-.prail[data-state='open'] > * {
-  animation: fade-in var(--dur-fast) var(--ease-out);
-}
-
 .prail[data-state='mini'] {
   align-items: center;
   gap: var(--s-2);
@@ -171,7 +167,16 @@
   border-radius: var(--r-sm);
 }
 
-.prail-mini:hover .pnav-thumb {
+.prail-item .pnav-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  pointer-events: none;
+}
+
+.prail-mini:hover .pnav-thumb::after {
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
@@ -180,7 +185,7 @@
 }
 
 .prail-mini:focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -235,10 +240,8 @@
 .prail-group-head {
   padding: var(--s-3) var(--s-2) var(--s-1);
   color: var(--text-3);
-  font-size: var(--t-2xs);
+  font-size: var(--t-xs);
   font-weight: var(--w-medium);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .prail-row {
@@ -274,7 +277,7 @@
 }
 
 .prail-row:focus-visible {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 

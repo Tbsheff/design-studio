@@ -1,6 +1,8 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { shortcutLabel, type KeyId } from '../shared/keymap';
 import { vectorToolKeyOf, type VectorRequest, type VectorResult, type VectorToolId } from '../shared/vector';
 import { json } from './api';
+import { IS_MAC } from './commands/keys';
 import { isTypingTarget } from './typingTarget';
 
 export type { VectorToolId };
@@ -37,11 +39,13 @@ export function useVectorTool(): State {
   return useSyncExternalStore(vectorTool.subscribe, vectorTool.get, vectorTool.get);
 }
 
-export const VECTOR_TOOLS: { id: VectorToolId; label: string; key: string; keyLabel: string; glyph: string }[] = [
-  { id: 'rect', label: 'Rectangle', key: 'r', keyLabel: 'R', glyph: 'M2.75 3.75h10.5v8.5H2.75z' },
-  { id: 'ellipse', label: 'Ellipse', key: 'o', keyLabel: 'O', glyph: 'M8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z' },
-  { id: 'pen', label: 'Pen', key: 'P', keyLabel: '⇧P', glyph: 'M8 2.5 12.5 9 8 13.5 3.5 9zM8 2.5v5.25M8 9.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' },
+const VECTOR_TOOL_LIST: { id: VectorToolId; label: string; keyId: KeyId; glyph: string }[] = [
+  { id: 'rect', label: 'Rectangle', keyId: 'tool-rect', glyph: 'M2.75 3.75h10.5v8.5H2.75z' },
+  { id: 'ellipse', label: 'Ellipse', keyId: 'tool-ellipse', glyph: 'M8 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z' },
+  { id: 'pen', label: 'Pen', keyId: 'tool-pen', glyph: 'M8 2.5 12.5 9 8 13.5 3.5 9zM8 2.5v5.25M8 9.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z' },
 ];
+
+export const VECTOR_TOOLS = VECTOR_TOOL_LIST.map((item) => ({ ...item, keyLabel: shortcutLabel(item.keyId, IS_MAC) }));
 
 export function useVectorToolKeys(available: boolean): void {
   useEffect(() => vectorTool.setAvailable(available), [available]);

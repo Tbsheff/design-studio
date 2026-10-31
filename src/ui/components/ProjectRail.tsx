@@ -98,6 +98,18 @@ function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
   items[next]?.focus();
 }
 
+function useStageFocusOnClose(state: RailState, rail: RefObject<HTMLElement | null>): void {
+  const last = useRef(state);
+  useEffect(() => {
+    const closed = last.current === 'open' && state !== 'open';
+    last.current = state;
+    if (!closed) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && !rail.current?.contains(active)) return;
+    document.querySelector<HTMLElement>('.canvas .stage')?.focus({ preventScroll: true });
+  }, [state, rail]);
+}
+
 function useRailKeys(onOpened: () => void): void {
   const opened = useRef(onOpened);
   opened.current = onOpened;
@@ -254,6 +266,7 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   const aside = useRef<HTMLElement>(null);
   useRailKeys(() => find.current?.focus());
   useFloatingDismiss(state, aside);
+  useStageFocusOnClose(state, aside);
   useEffect(() => {
     if (state === 'open' && document.activeElement instanceof HTMLIFrameElement) find.current?.focus();
   }, [state]);

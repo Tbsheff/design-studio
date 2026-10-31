@@ -849,7 +849,7 @@ export const API_ROUTES = {
   flowParams: 'GET /api/projects/:pid/flow/params -> {params} (sample values for dynamic segments, kept in the studio data dir)',
   buildFlow: 'POST /api/projects/:pid/flow {routes?|from?, depth?, params?} -> FlowResult (route frames laid out left to right, prototype links from the source links)',
   openSource: 'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
-  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped). 400 no source, blocked URL, unknown base pack',
+  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped); when that run ends, improve.state is done with the run status. 400 no source, blocked URL, unknown base pack',
   getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
@@ -1478,9 +1478,10 @@ export interface DraftSourceStatus {
 }
 
 export interface DraftImproveStart {
-  state: 'waiting' | 'started' | 'skipped';
+  state: 'waiting' | 'started' | 'done' | 'skipped';
   runId?: string;
   reason?: string;
+  status?: RunStatus;
 }
 
 export interface DraftSourcesState {

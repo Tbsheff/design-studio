@@ -113,6 +113,7 @@ function startedNote(end: RunStatus | null): string {
 
 function improveNote(state: DraftSourcesState, end: RunStatus | null): string | null {
   if (!state.done) return 'When every source is read, the AI step starts by itself.';
+  if (state.improve.state === 'done') return startedNote(state.improve.status ?? 'completed');
   if (state.improve.state === 'started') return startedNote(end);
   if (state.improve.state === 'skipped') return state.improve.reason ?? null;
   return null;

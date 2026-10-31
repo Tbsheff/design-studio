@@ -440,7 +440,30 @@ interface DoctorGate {
   proceed: () => void;
 }
 
-function installProblem(name: string, place: string, kindLabel: string, install: { command: string; dir: string }): DoctorProblem {
+const INSTALL_DETAIL = 'Dependencies are not installed. Run the command below, then check again.';
+const SHELL_SAFE = /^[\w./-]+$/;
+
+function shellPath(dir: string, homeDir: string | null): string {
+  const short = shortHome(dir, homeDir);
+  if (short === '~') return '~';
+  if (short.startsWith('~/')) {
+    const rest = short.slice(2);
+    return SHELL_SAFE.test(rest) ? `~/${rest}` : `~/${JSON.stringify(rest)}`;
+  }
+  return SHELL_SAFE.test(short) ? short : JSON.stringify(short);
+}
+
+function homeCommand(command: string | null, homeDir: string | null): string | null {
+  const match = command?.match(/^cd ("(?:[^"\\]|\\.)*") && (.+)$/);
+  if (!match?.[1] || !match[2]) return command;
+  try {
+    return `cd ${shellPath(JSON.parse(match[1]) as string, homeDir)} && ${match[2]}`;
+  } catch {
+    return command;
+  }
+}
+
+function installProblem(name: string, place: string, kindLabel: string, install: { command: string; dir: string }, homeDir: string | null): DoctorProblem {
   return {
     name,
     place,
@@ -449,12 +472,12 @@ function installProblem(name: string, place: string, kindLabel: string, install:
       { ok: true, text: `package.json · ${kindLabel}` },
       { ok: false, text: 'node_modules is missing' },
     ],
-    detail: `${name} cannot start yet. The app's dependencies are not installed, so the dev server cannot start. Run ${install.command} in ${install.dir}, then check again.`,
-    command: `cd ${JSON.stringify(install.dir)} && ${install.command}`,
+    detail: INSTALL_DETAIL,
+    command: `cd ${shellPath(install.dir, homeDir)} && ${install.command}`,
   };
 }
 
-function healthProblem(project: Project, health: AppHealth, place: string): DoctorProblem {
+function healthProblem(project: Project, health: AppHealth, place: string, homeDir: string | null): DoctorProblem {
   const label = project.app?.framework === 'next' ? 'Next.js' : 'Vite';
   return {
     name: project.name,
@@ -464,8 +487,8 @@ function healthProblem(project: Project, health: AppHealth, place: string): Doct
       { ok: true, text: `package.json · ${label}` },
       { ok: false, text: health.state === 'install' ? 'node_modules is missing' : (health.title ?? 'The dev server failed') },
     ],
-    detail: health.detail ?? health.title ?? 'The dev server cannot start.',
-    command: health.command,
+    detail: health.state === 'install' ? INSTALL_DETAIL : (health.detail ?? health.title ?? 'The dev server cannot start.'),
+    command: homeCommand(health.command, homeDir),
   };
 }
 
@@ -506,7 +529,7 @@ function Library({ lib, projects, health, homeDir, actions, packs, pack, query, 
   return (
     <>
       {latest && <lib.ContinueCard project={latest} health={health.get(latest.id) ?? null} onOpen={actions.onOpen} />}
-      <lib.ProjectGrid projects={lib.filterLibrary(projects, filter)} packs={packs.packs} health={health} homeDir={homeDir} error={listError} actions={actions} query={query} onQuery={onQuery} searchRef={searchRef} filter={filter === 'all' ? null : { label: lib.FILTER_EMPTY[filter], onClear: () => homePrefs.set({ filter: 'all' }) }} tabs={<lib.FilterChips filter={filter} />} headActions={systemActions} />
+      <lib.ProjectGrid projects={lib.filterLibrary(projects, filter)} packs={packs.packs} health={health} homeDir={homeDir} error={listError} actions={actions} query={query} onQuery={onQuery} searchRef={searchRef} filter={filter === 'all' ? null : { label: lib.FILTER_EMPTY[filter], onClear: () => homePrefs.set({ filter: 'all' }), ...(systems ? { empty: 'Your design systems show here. Start from one below, or make a new one.' } : {}) }} tabs={<lib.FilterChips filter={filter} />} headActions={systemActions} />
       {systems && (
         <section className="home-list" aria-label="Pick a design system">
           <p className="home-section-hint">Pick one for your next project. Edit, import and export them in the library.</p>
@@ -691,7 +714,7 @@ function useChipFlow({ onOpen, setBusy, setFormError, homeRef, homeDir, level, a
     const install = chipBlocker(chip);
     if (!chip || !found || !install) return;
     doctor.open({
-      problem: installProblem(found.name, shortHome(found.path, homeDir), found.kind === 'vite' ? 'Vite' : 'Next.js', install),
+      problem: installProblem(found.name, shortHome(found.path, homeDir), found.kind === 'vite' ? 'Vite' : 'Next.js', install, homeDir),
       check: async () => (await api.inspectFolder(found.path, chip.appDir ?? undefined)).depsInstalled !== false,
       proceed: () => void openChip(text),
     });
@@ -768,7 +791,7 @@ function useOpenFlows({ onOpen, setBusy, setFormError, location, health, homeDir
     const state = health.get(project.id);
     if (!state || (state.state !== 'install' && state.state !== 'failed')) return onOpen(project.id);
     doctor.open({
-      problem: healthProblem(project, state, project.imported ? shortHome(project.imported.sourcePath, homeDir) : project.name),
+      problem: healthProblem(project, state, project.imported ? shortHome(project.imported.sourcePath, homeDir) : project.name, homeDir),
       check: async () => {
         const fresh = (await projectsApi.health()).find((item) => item.projectId === project.id);
         return !fresh || (fresh.state !== 'install' && fresh.state !== 'failed');

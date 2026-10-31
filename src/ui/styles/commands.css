@@ -71,10 +71,8 @@
 .cmdk-group {
   padding: var(--s-3) var(--s-2) var(--s-1);
   color: var(--text-3);
-  font-size: var(--t-2xs);
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: var(--t-xs);
+  font-weight: var(--w-medium);
 }
 
 .cmdk-row {
@@ -118,10 +116,12 @@
   font-weight: var(--w-medium);
 }
 
-.cmdk-note {
-  max-width: 40%;
+.cmdk-note,
+.cmdk-type {
+  flex: none;
   color: var(--text-3);
   font-size: var(--t-xs);
+  white-space: nowrap;
 }
 
 .cmdk-row kbd,
@@ -368,7 +368,6 @@ body:has(dialog:modal) .keysheet {
   align-items: center;
   gap: var(--s-2);
   flex: none;
-  max-width: 45%;
 }
 
 .cmdk-row .pnav-thumb {

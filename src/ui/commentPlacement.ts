@@ -26,7 +26,24 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, Math.max(min, max)));
 }
 
-export function pinPlacement(rect: Rect, zoom: number, frame: Size): PinPlacement {
+export type PinOffset = { x: number; y: number };
+
+function unit(value: number): number {
+  return Number.isFinite(value) ? Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000 : 0;
+}
+
+export function offsetIn(rect: Rect, point: { x: number; y: number } | undefined): PinOffset | undefined {
+  if (!point || rect.width <= 0 || rect.height <= 0) return undefined;
+  return { x: unit((point.x - rect.x) / rect.width), y: unit((point.y - rect.y) / rect.height) };
+}
+
+export function pinAnchor(rect: Rect, offset: PinOffset | undefined): Rect {
+  if (!offset) return rect;
+  return { x: rect.x + offset.x * rect.width, y: rect.y + offset.y * rect.height, width: 0, height: 0 };
+}
+
+export function pinPlacement(target: Rect, zoom: number, frame: Size, offset?: PinOffset): PinPlacement {
+  const rect = pinAnchor(target, offset);
   const pin = PIN_SIZE / zoom;
   const right = rect.x + rect.width;
   const flip = right + pin > frame.width;
@@ -42,7 +59,14 @@ function fits(left: number, top: number, width: number, height: number, frame: S
   return left >= 0 && top >= 0 && left + width <= frame.width && top + height <= frame.height;
 }
 
-export function placeComposer(rect: Rect, zoom: number, frame: Size, card: Size, prefer?: CardSide): ComposerPlacement {
+export function placeComposer(target: Rect, zoom: number, frame: Size, card: Size, prefer?: CardSide, offset?: PinOffset): ComposerPlacement {
+  const placed = placeAround(pinAnchor(target, offset), zoom, frame, card, prefer);
+  if (!offset) return placed;
+  const pin = pinPlacement(target, zoom, frame, offset);
+  return { ...placed, pin };
+}
+
+function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?: CardSide): ComposerPlacement {
   const s = 1 / zoom;
   const pin = PIN_SIZE * s;
   const gap = GAP * s;

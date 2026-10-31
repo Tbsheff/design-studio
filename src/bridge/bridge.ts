@@ -910,7 +910,7 @@ function startBridge(session: BridgeSession): void {
     });
   };
 
-  const postSelect = (element: Element, additive: boolean): void => {
+  const postSelect = (element: Element, additive: boolean, point?: { x: number; y: number }): void => {
     lookUpAppSource(element, additive);
     selected = element;
     selectedAt = performance.now();
@@ -920,6 +920,7 @@ function startBridge(session: BridgeSession): void {
       additive,
       at: performance.timeOrigin + performance.now(),
       node: layers.idOf(element),
+      ...(point ? { point } : {}),
     });
   };
 
@@ -980,7 +981,7 @@ function startBridge(session: BridgeSession): void {
     block(event);
     const element = hitOf(event);
     if (!element) return;
-    postSelect(element, event.shiftKey);
+    postSelect(element, event.shiftKey, { x: event.clientX, y: event.clientY });
   };
 
   const onContextMenu = (event: MouseEvent): void => {

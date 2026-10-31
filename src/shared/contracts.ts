@@ -412,6 +412,7 @@ export interface CommentTarget {
   tag: string;
   textSnippet: string;
   rectHint: SelectionContext['rect'];
+  offset?: { x: number; y: number };
 }
 
 export interface DesignComment {
@@ -925,7 +926,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
   | { ns: 'studio'; token: string; type: 'hover'; rect: SelectionContext['rect'] | null; label?: string; altKey?: boolean; node?: number; source?: 'tree' }
-  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }
+  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number; point?: { x: number; y: number } }
   | { ns: 'studio'; token: string; type: 'tree'; nodes: LayerNode[]; truncated: boolean }
   | { ns: 'studio'; token: string; type: 'rects'; selectors: string[]; rects: (SelectionContext['rect'] | null)[] }
   | { ns: 'studio'; token: string; type: 'styles-found'; requestId: string; result: StyleScanResult; selected: number }

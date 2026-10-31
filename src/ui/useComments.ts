@@ -16,6 +16,12 @@ export interface CommentPatch {
 export interface CommentExtras {
   mentions?: RunMention[];
   attachmentIds?: string[];
+  offset?: CommentTarget['offset'];
+}
+
+function targetWith(selection: SelectionContext, offset: CommentTarget['offset']): CommentTarget {
+  const target = targetFromSelection(selection);
+  return offset ? { ...target, offset } : target;
 }
 
 export interface CommentsControl {
@@ -38,7 +44,7 @@ export interface CommentsControl {
   remove: (id: string) => Promise<void>;
   move: (id: string, delta: -1 | 1) => Promise<void>;
   send: (ids?: string[]) => Promise<void>;
-  repin: (id: string, selection: SelectionContext) => Promise<void>;
+  repin: (id: string, selection: SelectionContext, offset?: CommentTarget['offset']) => Promise<void>;
   addDrawing: (input: { text: string; drawing: CommentDrawing; image: Blob; toClaude: boolean; extras?: CommentExtras }) => Promise<boolean>;
   reply: (id: string, text: string) => Promise<boolean>;
   removeReply: (id: string, replyId: string) => Promise<void>;
@@ -198,7 +204,7 @@ export function useComments(projectId: string, directionId: string | null, compo
         for (const selection of selections) {
           const comment = await call<DesignComment>('POST', '', {
             text: clean,
-            target: targetFromSelection(selection),
+            target: targetWith(selection, selections.length === 1 ? extras.offset : undefined),
             context: selection,
             status: now ? 'draft' : 'queued',
             ...frameField(frameRef),
@@ -270,12 +276,12 @@ export function useComments(projectId: string, directionId: string | null, compo
   );
 
   const repin = useCallback(
-    async (id: string, selection: SelectionContext) => {
+    async (id: string, selection: SelectionContext, offset?: CommentTarget['offset']) => {
       const comment = listRef.current.find((item) => item.id === id);
       setRepinId(null);
       if (!comment) return;
       await update(id, {
-        target: targetFromSelection(selection),
+        target: targetWith(selection, offset),
         context: selection,
         ...(comment.status === 'orphaned' ? { status: 'queued' as const } : {}),
       });

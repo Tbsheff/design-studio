@@ -12,7 +12,7 @@ import {
 } from 'react';
 import type { CompiledTokenEntry, ComponentInfo, RunMention, SelectionContext } from '../../shared/contracts';
 import { api } from '../api';
-import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide } from '../commentPlacement';
+import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide, type PinOffset } from '../commentPlacement';
 import { useMentions } from '../useMentions';
 import { AvatarFace } from './CommentAvatar';
 import { MOD_LABEL, trapTab } from './CommentPopover';
@@ -40,6 +40,7 @@ interface ComposerProps {
   label: string;
   testId: string;
   anchor: Rect;
+  offset?: PinOffset;
   zoom: number;
   frame: { width: number; height: number };
   breadcrumb: Breadcrumb;
@@ -287,7 +288,7 @@ export function CommentComposer(props: ComposerProps) {
     if (props.autoFocus) area.current?.focus({ preventScroll: true });
   }, [props.autoFocus, area]);
 
-  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current);
+  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current, props.offset);
   side.current = placement.side;
   const scale = 1 / props.zoom;
   const empty = text.trim() === '';

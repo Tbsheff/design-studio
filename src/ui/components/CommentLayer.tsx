@@ -9,7 +9,7 @@ import type { CommentsControl } from '../useComments';
 import { OpenCommentPopover } from './CommentPopover';
 import { CommentComposer, type ComposerSources, type ComposerSubmit } from './CommentComposer';
 import { AvatarFace } from './CommentAvatar';
-import { breadcrumbOf, pinPlacement, scopeText } from '../commentPlacement';
+import { breadcrumbOf, offsetIn, pinPlacement, scopeText, type PinOffset } from '../commentPlacement';
 import { mentionLabel } from './MentionPicker';
 import { useProfileInitial } from '../useProfileInitial';
 import { INLINE_PROMPT_OPEN_EVENT } from '../useInlinePrompt';
@@ -82,7 +82,7 @@ function selectionKey(selection: SelectionContext[]): string {
 
 function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; zoom: number; initial: string | null; control: CommentsControl }) {
   if (!rect || !visible(rect, frame) || control.openId === comment.id) return null;
-  const place = pinPlacement(rect, zoom, frame);
+  const place = pinPlacement(rect, zoom, frame, comment.drawing ? undefined : comment.target.offset);
   const replies = comment.replies?.length ?? 0;
   const repliesLabel = replies ? `, ${replies} ${replies === 1 ? 'reply' : 'replies'}` : '';
   return (
@@ -186,10 +186,16 @@ export function CommentModePill({ mode, control }: { mode: { on: boolean; availa
   );
 }
 
+function usePick() {
+  const [picked, setPicked] = useState<{ selection: SelectionContext; offset?: PinOffset } | null>(null);
+  const setPick = useCallback((selection: SelectionContext | null, offset?: PinOffset) => setPicked(selection ? { selection, offset } : null), []);
+  return { pick: picked?.selection ?? null, pickOffset: picked?.offset, setPick };
+}
+
 export function CommentLayer(props: Props) {
   const { control, frames, zoom, frame } = props;
   const [rects, setRects] = useState<Record<string, Rect>>({});
-  const [pick, setPick] = useState<SelectionContext | null>(null);
+  const { pick, pickOffset, setPick } = usePick();
   const [dismissedKey, setDismissedKey] = useState<string | null>(null);
   const [feedbackActive, setFeedbackActive] = useState(false);
   const feedbackInput = useRef<HTMLTextAreaElement>(null);
@@ -284,10 +290,10 @@ export function CommentLayer(props: Props) {
       } else if (message.type === 'select' && live.current.commentMode) {
         const repinId = live.current.control.repinId;
         if (repinId) {
-          void live.current.control.repin(repinId, message.selection);
+          void live.current.control.repin(repinId, message.selection, offsetIn(message.selection.rect, message.point));
           props.onExitCommentMode();
         } else {
-          setPick(message.selection);
+          setPick(message.selection, offsetIn(message.selection.rect, message.point));
         }
       }
     },
@@ -369,13 +375,13 @@ export function CommentLayer(props: Props) {
     focusLater('.comment-toggle');
   };
 
-  const submitFor = (selections: SelectionContext[], finish: () => void) => async (input: ComposerSubmit) => {
+  const submitFor = (selections: SelectionContext[], finish: () => void, offset?: PinOffset) => async (input: ComposerSubmit) => {
     if (input.toClaude && input.now && control.running && input.attachmentIds.length === 0 && tools.onSteer) {
       tools.onSteer(scopeText(breadcrumbOf(tools.pageName, selections), selections, withMentions(input.text, input.mentions)));
       finish();
       return true;
     }
-    const ok = await control.add(selections, input.text, input.toClaude, { mentions: input.mentions, attachmentIds: input.attachmentIds });
+    const ok = await control.add(selections, input.text, input.toClaude, { mentions: input.mentions, attachmentIds: input.attachmentIds, ...(offset ? { offset } : {}) });
     if (ok) finish();
     return ok;
   };
@@ -395,11 +401,12 @@ export function CommentLayer(props: Props) {
           label="New comment"
           testId="comment-compose"
           anchor={pick.rect}
+          offset={pickOffset}
           breadcrumb={breadcrumbOf(tools.pageName, [pick])}
           draftKey={`pick:${pick.selector}`}
           autoFocus
           trap
-          onSubmit={submitFor([pick], finishPick)}
+          onSubmit={submitFor([pick], finishPick, pickOffset)}
           onCancel={() => {
             setPick(null);
             focusLater('.stage');

@@ -45,6 +45,7 @@ const targetSchema = z.object({
   tag: z.string().min(1).max(64),
   textSnippet: z.string().max(200),
   rectHint: rectSchema,
+  offset: z.object({ x: z.number().finite().min(0).max(1), y: z.number().finite().min(0).max(1) }).optional(),
 });
 
 const textSchema = z.string().trim().min(1, 'text is required').max(COMMENT_TEXT_MAX);

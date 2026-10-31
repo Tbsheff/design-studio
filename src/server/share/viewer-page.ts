@@ -176,7 +176,7 @@ const SCRIPT = `
       const y = Math.round((event.clientY - box.top) / box.height * Number(shot.dataset.h));
       spot = { frame: Number(shot.dataset.i), x, y };
       place(shot, x, y, draftPin);
-      where.textContent = data.frames[spot.frame].name + ' at ' + x + ', ' + y;
+      where.textContent = 'Pinned on ' + data.frames[spot.frame].name;
       (nameInput.value ? textInput : nameInput).focus();
     });
   });

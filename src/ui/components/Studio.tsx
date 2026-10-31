@@ -54,7 +54,7 @@ import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
 import { useMcpFeed } from '../useMcpFeed';
 import { setTelemetryScope } from '../perfTelemetry';
-import { renameVersion } from '../versionsApi';
+import { openCompareInCode, renameVersion } from '../versionsApi';
 import { useExportTarget } from '../useExportTarget';
 import type { ExportTarget } from '../exportApi';
 import type { ShareTarget } from './ShareDialog';
@@ -165,6 +165,12 @@ function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
 
 function shipOpener(project: { app?: unknown }, setOpen: (open: boolean) => void): (() => void) | null {
   return project.app ? () => setOpen(true) : null;
+}
+
+function reviewPair(list: readonly Version[], versionId: string): [Version, Version] | null {
+  const v = list.find((x) => x.id === versionId);
+  const parent = v ? list.find((x) => x.id === v.parentId) : undefined;
+  return v && parent ? [parent, v] : null;
 }
 
 function exportTarget(versions: Version[], direction: { headVersionId: string | null } | null): string | null {
@@ -430,17 +436,26 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   };
 
   const openShip = shipOpener(project, setShipOpen);
-  const reviewVersion = (v: Version) => {
-    const parent = versions.find((x) => x.id === v.parentId);
-    if (!parent) return;
+  const openReview = (pair: [Version, Version]) => {
+    openCompareInCode();
     setCompareOpen(false);
-    setCompare([parent, v]);
+    setCompare(pair);
     requestAnimationFrame(() => setCompareOpen(true));
   };
   const reviewVersionId = (versionId: string) => {
-    const v = versions.find((x) => x.id === versionId);
-    if (v) reviewVersion(v);
+    const pair = reviewPair(versions, versionId);
+    if (pair) return openReview(pair);
+    if (!did) return;
+    void api
+      .listVersions(projectId, did)
+      .then((list) => {
+        const fresh = reviewPair(list, versionId);
+        if (fresh) openReview(fresh);
+      })
+      .catch(() => undefined);
+    data.refreshVersions();
   };
+  const reviewVersion = (v: Version) => reviewVersionId(v.id);
   commandActions.current = {
     running: Boolean(activeRun),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name })),

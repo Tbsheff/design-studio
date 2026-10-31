@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import type { AppLogLine, AppRoute, AppServerStatus, AttachedApp, FirstVersionState } from '../../shared/contracts';
 import { cleanRoute, envText, parseEnvText } from '../../shared/app';
 import { api, errorText } from '../api';
@@ -6,6 +6,7 @@ import { APP_PANEL_EVENT, publishAppStatus } from '../appStatus';
 import { AppFailure } from './AppFailure';
 import FlowTab from './FlowTab';
 import { Icon } from './Icon';
+import { focusStageQuietly } from '../useInlineTextEdit';
 import '../styles/attach-app.css';
 
 const DoctorCard = lazy(() => import('./DoctorCard'));
@@ -330,16 +331,35 @@ function useEscape(onClose: () => void): void {
   }, []);
 }
 
-function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void): void {
+function usePanelFocus(setOpen: (open: boolean) => void) {
+  const opener = useRef<HTMLElement | null>(null);
+  const remember = useCallback(() => {
+    const active = document.activeElement;
+    opener.current = active instanceof HTMLElement && active !== document.body ? active : null;
+  }, []);
+  const close = () => {
+    setOpen(false);
+    const back = opener.current;
+    requestAnimationFrame(() => {
+      if (document.activeElement && document.activeElement !== document.body) return;
+      if (back?.isConnected) back.focus();
+      else focusStageQuietly();
+    });
+  };
+  return { remember, close };
+}
+
+function useOpenRequests(setTab: (tab: Tab) => void, setOpen: (open: boolean) => void, remember: () => void): void {
   useEffect(() => {
     const show = (event: Event) => {
+      remember();
       const next = (event as CustomEvent<unknown>).detail;
       setTab(next === 'logs' || next === 'settings' || next === 'flow' ? next : 'routes');
       setOpen(true);
     };
     window.addEventListener(APP_PANEL_EVENT, show);
     return () => window.removeEventListener(APP_PANEL_EVENT, show);
-  }, [setTab, setOpen]);
+  }, [setTab, setOpen, remember]);
 }
 
 function useAlerts(status: AppServerStatus | null, open: boolean) {
@@ -358,7 +378,8 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
   const { status, firstVersion, refresh } = useAppState(projectId, false);
   const state = status?.state ?? 'idle';
   const managed = (status?.mode ?? app.mode) === 'managed';
-  useOpenRequests(setTab, setOpen);
+  const focus = usePanelFocus(setOpen);
+  useOpenRequests(setTab, setOpen, focus.remember);
   const { cause, doctorKey, showDoctor, failKey, failed, setHidden } = useAlerts(status, open);
   const retry = () => void api.appControl(projectId, managed ? 'restart' : 'start').then(refresh).catch(() => undefined);
   const showLog = () => {
@@ -373,13 +394,16 @@ export default function AppBar({ projectId, app, onAddRoute }: AppBarProps) {
         </Suspense>
       )}
       {failed && status && <AppFailure projectId={projectId} app={app} status={status} onRetry={retry} onLog={showLog} onClose={() => setHidden(failKey)} onSaved={refresh} />}
-      <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((v) => !v)} data-tip="Routes, dev server and log">
+      <button type="button" className="btn small app-bar-button" aria-expanded={open} aria-haspopup="dialog" onClick={() => {
+          focus.remember();
+          setOpen((v) => !v);
+        }} data-tip="Routes, dev server and log">
         <span className="app-status-dot" data-state={state} />
         <span>{app.framework === 'next' ? 'Next.js' : 'App'}</span>
         <span className="app-panel-sub">{stateText(status, managed)}</span>
         <PrepChip firstVersion={firstVersion} />
       </button>
-      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={() => setOpen(false)} tab={tab} setTab={setTab} initial={status} />}
+      {open && <AppPanel projectId={projectId} app={app} onAddRoute={onAddRoute} onClose={focus.close} tab={tab} setTab={setTab} initial={status} />}
     </div>
   );
 }

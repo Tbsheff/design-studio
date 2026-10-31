@@ -433,3 +433,13 @@
   font-size: var(--t-2xs);
   font-weight: 500;
 }
+
+.mcp-toasts[popover] {
+  inset: auto var(--s-4) var(--s-4) auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}

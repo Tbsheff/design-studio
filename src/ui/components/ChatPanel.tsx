@@ -122,6 +122,10 @@ interface TurnProps {
 
 interface EntryProps extends TurnProps {
   run: RunView;
+  undoVersionId: string | null;
+  undoTip: string | null;
+  reviewVersionId: string | null;
+  onReview: ((versionId: string) => void) | null;
   latest: boolean;
   workTree: string | null;
   onDetails: (runId: string) => void;
@@ -135,9 +139,11 @@ function hasComments(run: RunView): boolean {
   return lists.some((list) => (list?.length ?? 0) > 0);
 }
 
-const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, onStop, title, restoreTip, restoreVersionId, forkBase, editTip, actions }: EntryProps) {
+const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, onStop, title, restoreTip, restoreVersionId, forkBase, editTip, actions, undoVersionId, undoTip, reviewVersionId, onReview }: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
+  const review = useMemo(() => (onReview && reviewVersionId ? () => onReview(reviewVersionId) : undefined), [onReview, reviewVersionId]);
+  const onUndo = useMemo(() => (actions && undoVersionId ? () => actions.onRestore(undoVersionId) : undefined), [actions, undoVersionId]);
   const running = run.status === 'running';
   const rewind = useMemo(() => ({ restoreTip, restoreVersionId, forkBase, editTip }), [restoreTip, restoreVersionId, forkBase, editTip]);
   return (
@@ -148,10 +154,10 @@ const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, poli
           <RunParts run={run} running={running} workTree={workTree} />
           {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
           {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
-          <RunError run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
+          <RunError run={run} latest={latest} undo={onUndo ? { onUndo, tip: undoTip } : undefined} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
           {hasComments(run) && <RunCommentsCard run={run} />}
-          <RunFeedbackRow run={run} onDetails={details} />
+          <RunFeedbackRow run={run} onDetails={details} onReview={review} />
           {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
           {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
         </MessageContent>
@@ -240,6 +246,19 @@ function turnProps(run: RunView, rewind: RewindControl | undefined, title: strin
   return { title, restoreTip, restoreVersionId: restoreTip === null ? versionId : null, forkBase, editTip, actions };
 }
 
+function undoProps(run: RunView, rewind: RewindControl | undefined): { undoVersionId: string | null; undoTip: string | null } {
+  const versionId = run.summary?.versionId;
+  const parentId = rewind && run.status === 'failed' && versionId && versionId === rewind.headVersionId ? rewind.versions.find((version) => version.id === versionId)?.parentId : null;
+  if (!rewind || !parentId) return { undoVersionId: null, undoTip: null };
+  return { undoVersionId: parentId, undoTip: rewind.locked ? WAIT_TIP : rewind.dirtyCount > 0 ? 'Save or discard your edits first' : null };
+}
+
+function reviewOf(run: RunView, rewind: RewindControl | undefined): string | null {
+  const versionId = run.summary?.versionId;
+  if (!rewind || !versionId || run.status === 'running') return null;
+  return rewind.versions.some((version) => version.id === versionId && version.parentId !== null) ? versionId : null;
+}
+
 const FOUND_MS = 1600;
 
 function useRunSearch(available: boolean) {
@@ -306,6 +325,7 @@ interface Props {
   lead?: ReactNode;
   offline?: boolean;
   onStop?: () => void;
+  onReview?: (versionId: string) => void;
 }
 
 const RUN_ANNOUNCE: Record<RunView['status'], string> = {
@@ -363,11 +383,13 @@ function useTurnActions(rewind: RewindControl | undefined) {
   return { titles, actions };
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop }: Props) {
+export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop, onReview }: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
   const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
+  const reviewRef = useLatest(onReview);
+  const openReview = useCallback((versionId: string) => reviewRef.current?.(versionId), [reviewRef]);
   const polish = usePolish(headVersionId, running || busy, onPolish, onRetry, onApprovePlan);
   const { titles, actions } = useTurnActions(rewind);
   const search = useRunSearch(runs.length > 1);
@@ -375,7 +397,20 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
   const renderRun = (run: RunView) => (
-    <RunEntry key={run.runId} run={run} latest={run.runId === lastId} workTree={workTree} onDetails={openDetails} polish={polish} offline={isOffline} onStop={onStop} {...turnProps(run, rewind, titles[run.runId] ?? run.summary?.title, actions)} />
+    <RunEntry
+      key={run.runId}
+      run={run}
+      latest={run.runId === lastId}
+      workTree={workTree}
+      onDetails={openDetails}
+      polish={polish}
+      offline={isOffline}
+      onStop={onStop}
+      reviewVersionId={reviewOf(run, rewind)}
+      onReview={onReview ? openReview : null}
+      {...undoProps(run, rewind)}
+      {...turnProps(run, rewind, titles[run.runId] ?? run.summary?.title, actions)}
+    />
   );
   return (
     <div className="chat-wrap">

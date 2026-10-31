@@ -14,6 +14,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { STRUCTURE_OPS, TOKENS_FILE, type AppServerStatus, type CompiledTokenEntry, type SelectionContext, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type SourceLoc, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import type { CanvasFileFrame } from '../../shared/canvas-file.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
@@ -249,13 +250,17 @@ async function pointFrame(deps: EditDeps, ctx: CanvasToolContext, ref: string, s
   return ok({ frame: frameId, label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, badge, note });
 }
 
+function addedText(placed: readonly CanvasFileFrame[]): string {
+  return placed.length === 1 ? frameStepText('Add', placed[0], 'a frame') : `Add ${placed.length} frames`;
+}
+
 async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string | null, options: { seed?: boolean } = {}): Promise<Done> {
   const before = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const result = await canvasPlace(ctx, specs, options);
   if (result.isError) return { result };
   const after = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const placed = placedFrames(specs, before, after);
-  const summary = verb === null ? frameStepText('Add', placed[0], specs[0]?.frame ?? 'a frame') : placeSummary(verb, specs, placed, after);
+  const summary = verb === null || specs.every((spec) => !spec.frame) ? addedText(placed) : placeSummary(verb, specs, placed, after);
   return { result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary, frameId: placed[0]?.id ?? null } };
 }
 

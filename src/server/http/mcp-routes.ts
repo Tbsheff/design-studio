@@ -49,7 +49,12 @@ function warmAfterEdits(deps: McpRouteDeps): void {
   });
 }
 
-export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: ActivityLog } {
+export interface ApprovalFeed {
+  snapshot(): Promise<McpApprovalPoll>;
+  watch(onChange: () => void): () => void;
+}
+
+export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: ActivityLog; approvalFeed: ApprovalFeed } {
   const approvals = createApprovalQueue({
     appOpen: deps.appOpen,
     events: {
@@ -72,6 +77,22 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: Ac
   const mcp = createMcpService(deps.dataDir, deps, { ...deps, request, approvals, activity });
   void mcp.boot();
 
+  const settingWatchers = new Set<() => void>();
+  const approvalFeed: ApprovalFeed = {
+    snapshot: async () => ((await mcp.editsOn()) ? { edits: true, pending: approvals.list() } : { edits: false, pending: [] }),
+    watch(onChange) {
+      settingWatchers.add(onChange);
+      const stop = approvals.watch(onChange);
+      return () => {
+        settingWatchers.delete(onChange);
+        stop();
+      };
+    },
+  };
+  const settingsChanged = (): void => {
+    for (const fn of [...settingWatchers]) fn();
+  };
+
   const denyPending = (): void => {
     for (const item of approvals.list()) approvals.answer(item.id, false);
   };
@@ -92,8 +113,11 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: Ac
     }
     if (typeof input.enabled === 'boolean') {
       if (!input.enabled) denyPending();
-      return c.json(await mcp.setEnabled(input.enabled));
+      const status = await mcp.setEnabled(input.enabled);
+      settingsChanged();
+      return c.json(status);
     }
+    settingsChanged();
     return c.json(await mcp.status());
   });
 
@@ -110,5 +134,5 @@ export function registerMcpRoutes(app: Hono, deps: McpRouteDeps): { activity: Ac
     if (!approvals.answer(c.req.param('id'), input.allow)) throw new NotFoundError('approval request is not open');
     return c.json({ ok: true });
   });
-  return { activity };
+  return { activity, approvalFeed };
 }

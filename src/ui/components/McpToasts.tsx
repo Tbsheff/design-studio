@@ -1,24 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import type { McpApprovalOutcome } from '../../shared/contracts';
 import { useInlineApprovalProject } from '../approvalSpot';
-import { mcpApi } from '../mcpApi';
+import { appStream } from '../appStream';
 import type { McpApprovalCard } from '../useMcpFeed';
 import { Icon } from './Icon';
 import { McpApproval } from './McpFeed';
 import '../styles/mcp.css';
 
-const WAIT_S = 25;
-const IDLE_MS = 15_000;
-const RETRY_MS = 5_000;
 const DONE_MS = 5_000;
 
-function useApprovalPoll(): [McpApprovalCard[], (id: string, outcome: McpApprovalOutcome) => void, (id: string) => void] {
+function useApprovalFeed(): [McpApprovalCard[], (id: string, outcome: McpApprovalOutcome) => void, (id: string) => void] {
   const [cards, setCards] = useState<McpApprovalCard[]>([]);
   const answered = useRef(new Map<string, McpApprovalOutcome>());
   useEffect(() => {
-    let live = true;
-    let timer = 0;
-    let seen = '';
     const settle = (ids: Set<string>) =>
       setCards((prev) =>
         prev.map((card) => {
@@ -27,26 +21,10 @@ function useApprovalPoll(): [McpApprovalCard[], (id: string, outcome: McpApprova
           return { ...card, outcome };
         }),
       );
-    const loop = () => {
-      mcpApi
-        .approvals(seen, WAIT_S)
-        .then((res) => {
-          if (!live) return;
-          const ids = new Set(res.pending.map((item) => item.id));
-          seen = res.pending.map((item) => item.id).join(',');
-          settle(ids);
-          setCards((prev) => [...prev, ...res.pending.filter((item) => !prev.some((card) => card.approval.id === item.id)).map((approval) => ({ approval, outcome: null }))]);
-          timer = window.setTimeout(loop, res.edits ? 0 : IDLE_MS);
-        })
-        .catch(() => {
-          if (live) timer = window.setTimeout(loop, RETRY_MS);
-        });
-    };
-    loop();
-    return () => {
-      live = false;
-      window.clearTimeout(timer);
-    };
+    return appStream().onApprovals((poll) => {
+      settle(new Set(poll.pending.map((item) => item.id)));
+      setCards((prev) => [...prev, ...poll.pending.filter((item) => !prev.some((card) => card.approval.id === item.id)).map((approval) => ({ approval, outcome: null }))]);
+    });
   }, []);
   const mark = (id: string, outcome: McpApprovalOutcome) => {
     answered.current.set(id, outcome);
@@ -79,7 +57,7 @@ function Toast({ card, onAnswer, onDrop }: { card: McpApprovalCard; onAnswer: (a
 }
 
 export default function McpToasts() {
-  const [cards, mark, drop] = useApprovalPoll();
+  const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
   const shown = cards.filter((card) => card.approval.projectId === null || card.approval.projectId !== inlineProject);
   if (shown.length === 0) return null;

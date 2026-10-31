@@ -20,6 +20,7 @@ export interface ApprovalQueue {
   answer(id: string, allow: boolean): boolean;
   list(): McpApprovalRecord[];
   poll(seen: string, waitMs: number, signal?: AbortSignal): Promise<McpApprovalRecord[]>;
+  watch(onChange: () => void): () => void;
   windowOpen(): boolean;
 }
 
@@ -54,11 +55,12 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
   const now = options.now ?? Date.now;
   const pending = new Map<string, Pending>();
   const waiters = new Set<() => void>();
+  const watchers = new Set<() => void>();
   let polls = 0;
   let lastPoll = 0;
 
   const changed = (): void => {
-    for (const wake of [...waiters]) wake();
+    for (const wake of [...waiters, ...watchers]) wake();
   };
 
   const list = (): McpApprovalRecord[] => [...pending.values()].map((item) => item.approval);
@@ -119,6 +121,12 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
         polls -= 1;
         lastPoll = now();
       }
+    },
+    watch(onChange) {
+      watchers.add(onChange);
+      return () => {
+        watchers.delete(onChange);
+      };
     },
     windowOpen,
   };

@@ -338,7 +338,7 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
 
 const PROJECT_TOOLS: Record<string, (deps: ExportDeps, args: Args) => Promise<ToolResult>> = {
   search_projects: async (deps, args) =>
-    json(await searchProjects({ projects: deps.projects, appStatus: (p) => deps.preview.apps?.status(p) ?? null }, { query: str(args, 'query') ?? '', projectId: str(args, 'projectId') ?? null, limit: int(args, 'limit', 1, 100, 20) })),
+    json(await searchProjects({ projects: deps.projects, appStatus: (p) => deps.preview.apps?.status(p) ?? null, runsDir: (projectId) => path.join(deps.projects.projectDir(projectId), 'runs') }, { query: str(args, 'query') ?? '', projectId: str(args, 'projectId') ?? null, limit: int(args, 'limit', 1, 100, 20) })),
   list_found_apps: async (deps, args) => json(await findApps(await deps.projects.list(), { fresh: args.fresh === true })),
   list_variants: async (deps, args) => {
     const project = await deps.projects.get(str(args, 'projectId', true) as string);

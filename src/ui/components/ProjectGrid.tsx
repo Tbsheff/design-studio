@@ -8,6 +8,7 @@ import { homePrefs, useHomePrefs } from '../homePrefs';
 import { Swatches } from './Swatches';
 import { shortenHome } from '../../shared/folders';
 import type { AppHealth } from '../../shared/found-apps';
+import { projectTypeOf, TYPE_LABELS, type ProjectType } from '../../shared/project-search';
 import { formatRelative, formatTime } from '../format';
 import { Icon } from './Icon';
 import { LazySelect } from './LazySelect';
@@ -107,18 +108,16 @@ interface CardProps {
   onFocusCard: () => void;
 }
 
-const FRAMEWORK_BADGE = { next: { label: 'App · Next.js', tone: 'next' }, vite: { label: 'App · Vite', tone: 'vite' } } as const;
-const TECH = { html: 'HTML', react: 'React' } as const;
+const TYPE_TONE: Record<ProjectType, string> = { next: 'next', vite: 'vite', html: 'proto', react: 'proto', 'design-system': 'dsb' };
 
 export function isFolderProject(project: Project): boolean {
   return Boolean(project.imported && !project.imported.created);
 }
 
 export function projectBadge(project: Project): { label: string; tone: string } {
-  if (project.designSystemFor) return { label: 'System', tone: 'dsb' };
-  if (project.app) return FRAMEWORK_BADGE[project.app.framework];
-  if (!isFolderProject(project)) return { label: `Prototype · ${TECH[project.kind]}`, tone: 'proto' };
-  return project.kind === 'html' ? { label: 'Prototype · HTML', tone: 'html' } : FRAMEWORK_BADGE.vite;
+  const type = projectTypeOf(project);
+  const tone = type === 'html' && isFolderProject(project) ? 'html' : TYPE_TONE[type];
+  return { label: TYPE_LABELS[type], tone };
 }
 
 export function projectPlace(project: Project, homeDir: string | null): string {

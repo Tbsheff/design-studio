@@ -73,8 +73,8 @@ export function SettingsFields({ draft, onChange, shellExtra }: Props) {
         <span>Auto mode: run commands without asking</span>
       </label>
       <p className="warn-line">
-        Shell commands run on this computer in the project folder. Installs download and run third-party code. Turn these on
-        only for projects you trust.
+        These are on by default. Shell commands run on this computer in the project folder, and installs download and run
+        third-party code. Turn them off for projects you do not trust.
       </p>
       {shellExtra}
       <SkillsChecklist disabled={draft.disabledSkills} allowBash={draft.allowBash} onChange={(disabledSkills) => set({ disabledSkills })} />

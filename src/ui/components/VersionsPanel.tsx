@@ -193,6 +193,12 @@ function useHeadFocus(headVersionId: string | null) {
   return ref;
 }
 
+function compareSides(sorted: Version[], compare: string[]): Map<string, 'A' | 'B'> {
+  const picked = sorted.filter((v) => compare.includes(v.id));
+  const [newer, older] = picked;
+  return picked.length === 2 && newer && older ? new Map([[older.id, 'A' as const], [newer.id, 'B' as const]]) : new Map();
+}
+
 export function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
   const direction = project.directions.find((x) => x.id === directionId) ?? null;
@@ -217,6 +223,7 @@ export function VersionsPanel(props: Props) {
   const locked = props.busy || props.running;
   const headVersionId = direction?.headVersionId ?? null;
   const listRef = useHeadFocus(sorted.some((v) => v.id === headVersionId) ? headVersionId : null);
+  const sides = compareSides(sorted, props.compare);
 
   return (
     <div className="versions-pane">
@@ -235,6 +242,7 @@ export function VersionsPanel(props: Props) {
               isHead={v.id === headVersionId}
               isOpen={props.openVersionId === v.id}
               picked={props.compare.includes(v.id)}
+              compareSide={sides.get(v.id) ?? null}
               locked={locked}
               expanded={expanded === v.id}
               onExpand={() => setExpanded((cur) => (cur === v.id ? null : v.id))}

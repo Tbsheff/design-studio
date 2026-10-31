@@ -25,6 +25,14 @@ async function expectLevel(page: Page, level: RunLevel): Promise<void> {
   await expect(page.getByTestId(`level-option-${level}`)).toHaveAttribute('aria-checked', 'true');
 }
 
+async function openHeadMore(page: Page) {
+  const head = page.locator('li.version.head');
+  if ((await page.getByRole('menu', { name: 'More version actions' }).count()) > 0) await page.keyboard.press('Escape');
+  await head.hover();
+  await head.getByRole('button', { name: /^More actions for/ }).click();
+  return head;
+}
+
 async function savedLevel(api: StudioApi, projectId: string): Promise<RunLevel> {
   return (await api.project(projectId)).settings.defaultLevel;
 }
@@ -110,10 +118,11 @@ test('wireframe run shows its level; Polish this on the head starts a polish run
     'Wireframe',
     'Prototype',
   ]);
-  await expect(page.getByTestId('version-polish-this')).toHaveCount(1);
   await head.hover();
   await page.waitForTimeout(400);
   await page.screenshot({ path: test.info().outputPath('levels-versions-head.png') });
+  await openHeadMore(page);
+  await expect(page.getByTestId('version-polish-this')).toHaveCount(1);
 
   await head.getByTestId('version-polish-this').click();
   await expect(page.getByRole('tab', { name: 'Chat' })).toHaveAttribute('aria-selected', 'true');
@@ -130,6 +139,8 @@ test('wireframe run shows its level; Polish this on the head starts a polish run
 
   await showVersions(page);
   await expect(page.locator('li.version.head').getByTestId('version-level')).toHaveText('Polish');
+  await openHeadMore(page);
+  await expect(page.getByRole('menu', { name: 'More version actions' })).toBeVisible();
   await expect(page.getByTestId('version-polish-this')).toHaveCount(0);
   const headVersion = (await api.versions(project.id, did)).find((version) => version.id === polishRun?.versionId);
   expect(headVersion?.meta.level).toBe('polish');
@@ -146,8 +157,10 @@ test('Polish this is disabled while a run is in progress', async ({ page }) => {
   await expect(page.locator('.chat .run .status.running')).toHaveCount(1);
   await expect(polishInChat).toBeDisabled();
   await showVersions(page);
+  await openHeadMore(page);
   await expect(page.getByTestId('version-polish-this')).toBeDisabled();
 
   await api.waitForRuns(project.id, 2);
+  await openHeadMore(page);
   await expect(page.getByTestId('version-polish-this')).toBeEnabled();
 });

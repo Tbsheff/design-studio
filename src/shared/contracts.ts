@@ -861,7 +861,7 @@ export const API_ROUTES = {
   moveHiddenProjects: 'POST /api/hidden-projects/move -> {moved: pid[], failed: {projectId, error}[]} (copies each main work tree into a new subfolder of the default folder, then removes the old one)',
   pickFolder: 'POST /api/pick-folder {title?, defaultPath?} -> {path} | 204 canceled | 409 a picker is open | 501 not macOS | 504 timed out',
   getProject: 'GET /api/projects/:pid -> Project',
-  updateSettings: 'PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, disabledSkills: skill ids from GET /api/skills) -> Project',
+  updateSettings: 'PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project',
   listSkills: 'GET /api/skills -> SkillCatalog (rescans ~/.claude/skills and enabled plugins on each call)',
   projectEvents: 'GET /api/projects/:pid/events (SSE; Last-Event-ID or ?after=seq)',
   uploadAttachment: 'POST /api/projects/:pid/attachments (multipart file; png, jpeg, gif or webp only, else 400) -> Attachment',

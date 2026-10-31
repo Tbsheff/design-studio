@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { errorText, api } from '../api';
 import { Icon } from '../components/Icon';
-import { ProjectThumb } from '../components/ProjectThumb';
+import { HealthDot, ProjectThumb } from '../components/ProjectThumb';
 import { openProject } from '../projectNav';
 import { useProjectHits, useRouteHits } from '../projectHits';
 import { projectsApi } from '../projectsStore';
@@ -68,6 +68,7 @@ function RowEnd({ row, active, typing }: { row: Row; active: boolean; typing: bo
   return (
     <span className="cmdk-end">
       {row.disabled ? <span className="cmdk-note">{row.disabled}</span> : row.note && !enter && <span className="cmdk-note">{row.note}</span>}
+      {row.hit && row.kind === 'project' && !row.icon && row.hit.health?.level === 'failed' && <HealthDot hit={row.hit} className="cmdk-dot" />}
       {row.hit && row.kind === 'project' && !row.icon && <span className="cmdk-type">{typePair(row.hit.type)}</span>}
       {enter ? <Keys keys="Enter" className="cmdk-keys" /> : row.keys && <Keys keys={row.keys} className="cmdk-keys" />}
     </span>

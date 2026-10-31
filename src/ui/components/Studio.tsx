@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { projectTypeOf, TYPE_LABELS } from '../../shared/project-search';
 import { useVariations } from '../useVariations';
 import { VariationsTop, canvasVariations } from './VariationsLayer';
 import type { InlineRunExtras } from '../../shared/usage-scope';
@@ -182,11 +183,8 @@ function nameOf(direction: { name: string } | null): string | null {
   return direction?.name ?? null;
 }
 
-const FRAMEWORK_LABEL = { next: 'Next.js app', vite: 'Vite app' } as const;
-
 function kindLabel(project: Project): string {
-  if (project.app) return FRAMEWORK_LABEL[project.app.framework];
-  return project.kind === 'html' ? 'HTML project' : 'React + Vite project';
+  return TYPE_LABELS[projectTypeOf(project)];
 }
 
 function whenDirection<T>(did: string | null, value: T): T | null {

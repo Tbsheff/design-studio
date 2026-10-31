@@ -1,4 +1,4 @@
-import { authoredBox } from './authored.js';
+import { authoredBox, declaredMargins } from './authored.js';
 import { ARRANGE_SHORTCUTS } from '../shared/arrange.js';
 
 export const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
@@ -58,6 +58,7 @@ export function layoutStyles(element: Element, computed: CSSStyleDeclaration): R
   const sizes = authoredBox(element, positioned);
   return {
     ...authoredStyles(element),
+    ...declaredMargins(element),
     'authored-width': sizes.width ?? '',
     'authored-height': sizes.height ?? '',
     'parent-align-items': parent?.alignItems ?? '',

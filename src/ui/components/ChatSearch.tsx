@@ -6,10 +6,8 @@ import { searchRunPage, SEARCH_LIMIT } from '../runHistoryApi';
 import { Icon } from './Icon';
 
 interface Props {
-  open: boolean;
   query: string;
   directionId: string | null;
-  onOpen: () => void;
   onClose: () => void;
   onQuery: (query: string) => void;
   onPick: (runId: string) => void;
@@ -95,23 +93,14 @@ function HitList({ id, hits, active, searching, onPick, onActive }: { id: string
   );
 }
 
-export function ChatSearch({ open, query, directionId, onOpen, onClose, onQuery, onPick }: Props) {
+export function ChatSearch({ query, directionId, onClose, onQuery, onPick }: Props) {
   const id = useId();
-  const hits = useRunHits(open ? directionId : null, query);
+  const hits = useRunHits(directionId, query);
   const [active, setActive] = useState(0);
   const text = runQueryTerms(query).join(' ');
   const searching = text !== '' && hits?.query !== text;
   const runs = hits?.runs ?? [];
   useEffect(() => setActive(0), [hits]);
-  if (!open) {
-    return (
-      <div className="chat-search closed">
-        <button type="button" className="icon-btn small chat-search-toggle" aria-label="Search runs" data-tip="Search runs" data-tip-align="end" onClick={onOpen}>
-          <Icon name="search" size={14} />
-        </button>
-      </div>
-    );
-  }
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();

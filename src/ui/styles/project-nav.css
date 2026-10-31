@@ -67,6 +67,10 @@
   background: var(--warn);
 }
 
+.pnav-dot[data-level='failed'] {
+  background: var(--danger);
+}
+
 .studio[data-rail] {
   --rail-w: 52px;
   position: relative;

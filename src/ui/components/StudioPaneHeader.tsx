@@ -4,6 +4,8 @@ import { IS_MAC } from '../commands/keys';
 import { Icon, type IconName } from './Icon';
 import { usePopover } from '../usePopover';
 import type { PanelTab } from '../usePanelTab';
+import { useLive } from '../liveStore';
+import { chatSearchAvailable, chatSearchOpen } from '../chatSearchState';
 
 type ThemePref = 'system' | 'light' | 'dark';
 type ThemeApi = { get: () => ThemePref; set: (pref: ThemePref) => void };
@@ -180,6 +182,8 @@ export function StudioPaneHeader(props: Props) {
     if (refocus) trigger.current?.focus();
   }, []);
   const commentsOn = props.tab === 'comments';
+  const searchShown = useLive(chatSearchAvailable) && props.tab === 'chat';
+  const searchOpen = useLive(chatSearchOpen);
   return (
     <>
       <header className="pane-head">
@@ -214,6 +218,19 @@ export function StudioPaneHeader(props: Props) {
         <button type="button" className="icon-btn pane-head-btn" aria-label="Hide chat pane" data-tip="Hide pane" data-tip-align="end" onClick={props.onCollapse}>
           <Icon name="sidebar" size={14} />
         </button>
+        {searchShown && (
+          <button
+            type="button"
+            className="icon-btn pane-head-btn pane-head-search"
+            aria-label="Search runs"
+            aria-pressed={searchOpen}
+            data-tip="Search runs"
+            data-tip-align="end"
+            onClick={() => chatSearchOpen.set(!searchOpen)}
+          >
+            <Icon name="search" size={14} />
+          </button>
+        )}
         <button
           type="button"
           className="icon-btn pane-head-btn"

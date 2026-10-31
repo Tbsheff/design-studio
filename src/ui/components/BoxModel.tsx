@@ -30,42 +30,49 @@ function LinkToggle({ box, linked, onToggle }: { box: Box; linked: boolean; onTo
   );
 }
 
-function SideInput({ box, side, edit, linked }: { box: Box; side: Side; edit: DirectEdit; linked: boolean }) {
+export type DeclaredMargins = Partial<Record<Side, string>>;
+
+function autoShown(declared: DeclaredMargins | undefined, side: Side, edit: DirectEdit, prop: DirectStyleProperty): string | undefined {
+  return declared?.[side]?.trim() === 'auto' && !edit.dirty.includes(prop) ? 'auto' : undefined;
+}
+
+function SideInput({ box, side, edit, linked, declared }: { box: Box; side: Side; edit: DirectEdit; linked: boolean; declared?: DeclaredMargins }) {
   const prop = `${box}-${side}` as DirectStyleProperty;
   const name = box === 'padding' ? 'Padding' : 'Margin';
   const label = `${name} ${SIDE_LABEL[side]}`;
   const targets = linked ? propsOf(box) : undefined;
+  const display = box === 'margin' ? autoShown(declared, side, edit, prop) : undefined;
   return (
-    <span className={`side-cell ${side}`}>
-      <NumberInput className="side" spec={{ prop, label, edit, min: box === 'padding' ? 0 : undefined, targets }} />
+    <span className={`side-cell ${side}`} data-tip={display ? `auto (${edit.values[prop]} now)` : undefined}>
+      <NumberInput className="side" spec={{ prop, label, edit, min: box === 'padding' ? 0 : undefined, targets, display }} />
       <TokenControl prop={prop} label={label} edit={edit} targets={targets} variant="mini" />
     </span>
   );
 }
 
-function BoxRing(props: { box: Box; edit: DirectEdit; linked: boolean; onToggle: () => void; children: ReactNode }) {
-  const { box, edit, linked } = props;
+function BoxRing(props: { box: Box; edit: DirectEdit; linked: boolean; onToggle: () => void; declared?: DeclaredMargins; children: ReactNode }) {
+  const { box, edit, linked, declared } = props;
   return (
     <div className={`box-ring ${box}`}>
       <div className="box-ring-head">
         <span className="box-ring-label">{box === 'padding' ? 'Padding' : 'Margin'}</span>
         <LinkToggle box={box} linked={linked} onToggle={props.onToggle} />
       </div>
-      <SideInput box={box} side="top" edit={edit} linked={linked} />
-      <SideInput box={box} side="left" edit={edit} linked={linked} />
+      <SideInput box={box} side="top" edit={edit} linked={linked} declared={declared} />
+      <SideInput box={box} side="left" edit={edit} linked={linked} declared={declared} />
       <div className="box-ring-core">{props.children}</div>
-      <SideInput box={box} side="right" edit={edit} linked={linked} />
-      <SideInput box={box} side="bottom" edit={edit} linked={linked} />
+      <SideInput box={box} side="right" edit={edit} linked={linked} declared={declared} />
+      <SideInput box={box} side="bottom" edit={edit} linked={linked} declared={declared} />
     </div>
   );
 }
 
-export function BoxModel({ edit }: { edit: DirectEdit }) {
+export function BoxModel({ edit, declared }: { edit: DirectEdit; declared?: DeclaredMargins }) {
   const [linkPadding, setLinkPadding] = useState(false);
   const [linkMargin, setLinkMargin] = useState(false);
   return (
     <div className="box-model">
-      <BoxRing box="margin" edit={edit} linked={linkMargin} onToggle={() => setLinkMargin((x) => !x)}>
+      <BoxRing box="margin" edit={edit} linked={linkMargin} declared={declared} onToggle={() => setLinkMargin((x) => !x)}>
         <BoxRing box="padding" edit={edit} linked={linkPadding} onToggle={() => setLinkPadding((x) => !x)}>
           <span className="box-content" aria-hidden="true" />
         </BoxRing>

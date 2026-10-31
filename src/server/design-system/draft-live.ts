@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { Attachment, CoverageEntry, Direction, DraftImproveStart, DraftSourceStatus, DraftSourcesState, Project } from '../../shared/contracts.js';
+import type { Attachment, CoverageEntry, Direction, DraftImproveStart, DraftSourceStatus, DraftSourcesState, Project, RunStatus } from '../../shared/contracts.js';
 import { isNodeError } from '../store/errors.js';
 import { harvestDesignText } from './extract/design-md.js';
 import { SOURCE_DIR, assembleDraft, emptyHarvested, META_FILE } from './extract/draft.js';
@@ -35,8 +35,13 @@ export interface LiveDraftDeps {
   emit: (project: Project, state: DraftSourcesState) => void;
   withMain: <T>(projectId: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
   commit: (project: Project, title: string) => Promise<void>;
-  startImprove: (projectId: string) => Promise<DraftImproveStart>;
+  startImprove: (projectId: string) => Promise<ImproveStarted>;
   saveAttachment: (projectId: string, file: { name: string; mime: string; bytes: Uint8Array }) => Promise<Attachment>;
+}
+
+export interface ImproveStarted {
+  start: DraftImproveStart;
+  ended?: Promise<RunStatus>;
 }
 
 export interface LiveDraftStart {
@@ -318,10 +323,28 @@ export function createLiveDrafts(deps: LiveDraftDeps): LiveDrafts {
     job.state = { ...job.state, improve: { state: 'started' } };
     await save(projectId, job);
     try {
-      job.state = { ...job.state, improve: await deps.startImprove(projectId) };
+      const started = await deps.startImprove(projectId);
+      job.state = { ...job.state, improve: started.start };
+      const runId = started.start.runId;
+      if (runId && started.ended) void started.ended.then((status) => improveEnded(projectId, runId, status)).catch((error: unknown) => console.error('[design-systems] could not mark the AI step done', error));
     } catch (error) {
       job.state = { ...job.state, improve: { state: 'skipped', reason: `The AI step did not start: ${errorText(error)}` } };
     }
+  };
+
+  const improveEnded = async (projectId: string, runId: string, status: RunStatus): Promise<void> => {
+    const done: DraftImproveStart = { state: 'done', runId, status };
+    const live = jobs.get(projectId);
+    if (live?.state.improve.runId === runId) {
+      live.state = { ...live.state, improve: done };
+      await save(projectId, live);
+      return;
+    }
+    const stored = await readJson<DraftSourcesState>(stateFile(projectId));
+    if (stored?.improve.runId !== runId) return;
+    const next = { ...stored, improve: done };
+    await writeFile(stateFile(projectId), `${JSON.stringify(next, null, 2)}\n`);
+    deps.emit(await deps.getProject(projectId), next);
   };
 
   const keepPageImages = async (projectId: string, job: Job, source: Planned, result: SourceResult): Promise<void> => {

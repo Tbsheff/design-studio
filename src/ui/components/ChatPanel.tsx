@@ -1,4 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useLive } from '../liveStore';
+import { chatSearchAvailable, chatSearchOpen, focusChatSearchButton } from '../chatSearchState';
 import type { Direction } from '../../shared/contracts';
 import { forkBaseOf } from '../../shared/rewind';
 import { loadRunsThrough, renameRun } from '../runHistoryApi';
@@ -240,14 +242,25 @@ function turnProps(run: RunView, rewind: RewindControl | undefined, title: strin
 
 const FOUND_MS = 1600;
 
-function useRunSearch() {
-  const [open, setOpen] = useState(false);
+function useRunSearch(available: boolean) {
+  const open = useLive(chatSearchOpen);
   const [query, setQuery] = useState('');
   const [target, setTarget] = useState<string | null>(null);
   const close = useCallback(() => {
-    setOpen(false);
+    chatSearchOpen.set(false);
     setQuery('');
   }, []);
+  useEffect(() => {
+    chatSearchAvailable.set(available);
+    if (!available) chatSearchOpen.set(false);
+  }, [available]);
+  useEffect(
+    () => () => {
+      chatSearchAvailable.set(false);
+      chatSearchOpen.set(false);
+    },
+    [],
+  );
   const pick = useCallback(
     (runId: string) => {
       close();
@@ -256,7 +269,11 @@ function useRunSearch() {
     [close],
   );
   const found = useCallback(() => setTarget(null), []);
-  return { open, query, target, onOpen: () => setOpen(true), onClose: close, onQuery: setQuery, onPick: pick, onFound: found };
+  const dismiss = useCallback(() => {
+    close();
+    focusChatSearchButton();
+  }, [close]);
+  return { open: open && available, query, target, onClose: dismiss, onQuery: setQuery, onPick: pick, onFound: found };
 }
 
 function ScrollToRun({ runId, shown, onDone }: { runId: string | null; shown: boolean; onDone: () => void }) {
@@ -353,7 +370,7 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
   const polish = usePolish(headVersionId, running || busy, onPolish, onRetry, onApprovePlan);
   const { titles, actions } = useTurnActions(rewind);
-  const search = useRunSearch();
+  const search = useRunSearch(runs.length > 1);
   const lastId = runs.at(-1)?.runId;
   const timeline = useMemo(() => timelineOf(runs, mcp), [runs, mcp]);
   const isOffline = Boolean(offline);
@@ -363,7 +380,7 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
   return (
     <div className="chat-wrap">
       <RunAnnouncer run={pending ?? runs.at(-1)} />
-      {runs.length > 1 && <ChatSearch open={search.open} query={search.query} directionId={direction?.id ?? null} onOpen={search.onOpen} onClose={search.onClose} onQuery={search.onQuery} onPick={search.onPick} />}
+      {search.open && <ChatSearch query={search.query} directionId={direction?.id ?? null} onClose={search.onClose} onQuery={search.onQuery} onPick={search.onPick} />}
       <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
         <ConversationContent className="chat">
           <ChatLead lead={lead} empty={runs.length === 0 && !pending && !feedShown(mcp)} />

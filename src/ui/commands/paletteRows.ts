@@ -1,4 +1,4 @@
-import type { ProjectHit, ProjectType, RouteHit } from '../../shared/project-search';
+import { TYPE_LABELS, type ProjectHit, type ProjectType, type RouteHit } from '../../shared/project-search';
 import type { IconName } from '../components/Icon';
 import { rank, type Ranked } from './fuzzy';
 import type { Command } from './registry';
@@ -47,10 +47,8 @@ const MAX_PROJECTS = 6;
 const MAX_ACTIONS = 12;
 const STRONG = 10;
 
-const TYPE_PAIRS: Record<ProjectType, string> = { html: 'Prototype · HTML', react: 'Prototype · React', next: 'App · Next.js', vite: 'App · Vite', 'design-system': 'System' };
-
 export function typePair(type: ProjectType): string {
-  return TYPE_PAIRS[type];
+  return TYPE_LABELS[type];
 }
 
 function markRuns(marks: number[]): number {
@@ -160,7 +158,7 @@ function looseMatches(input: RowInput): Row[] {
 
 function projectMatches(input: RowInput): Row[] {
   if (input.query.startsWith('/')) return [];
-  const ranked = clean(rank(input.projects, input.query, (p) => ({ title: p.name, keywords: `${p.place ?? ''} ${p.typeLabel} ${typePair(p.type)}` })), input.query).slice(0, MAX_PROJECTS);
+  const ranked = clean(rank(input.projects, input.query, (p) => ({ title: p.name, keywords: `${p.place ?? ''} ${typePair(p.type)}` })), input.query).slice(0, MAX_PROJECTS);
   return ranked.length > 0 ? ranked.map((r) => projectRow(r.item, 'Projects', input.actions, r.marks)) : looseMatches(input);
 }
 

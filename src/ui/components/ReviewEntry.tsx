@@ -84,7 +84,7 @@ export function ReviewEntry(p: Props) {
       data-tip-align="end"
       onClick={() => setOpen((v) => !v)}
     >
-      {review.busy && !open ? <span className="spinner" /> : <Icon name="check" size={14} />}
+      {review.busy && !open ? <span className="spinner" /> : <Icon name="review" size={14} />}
       <span>Review</span>
       {count !== null && count > 0 && <span className={`review-badge ${review.stale ? 'stale' : (sev ?? 'low')}`}>{badgeText(count)}</span>}
     </button>

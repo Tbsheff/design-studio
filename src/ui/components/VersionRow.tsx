@@ -18,6 +18,7 @@ interface VersionRowProps {
   isHead: boolean;
   isOpen: boolean;
   picked: boolean;
+  compareSide?: 'A' | 'B' | null;
   locked: boolean;
   expanded: boolean;
   onExpand: () => void;
@@ -223,7 +224,12 @@ export function VersionRow(props: VersionRowProps) {
               <span>{title}</span>
             </button>
           )}
-          {props.picked && <span className="badge accent version-side" aria-hidden="true" />}
+          {props.compareSide && (
+            <span className="badge accent version-side" data-tip={`Compare side ${props.compareSide}`}>
+              <span aria-hidden="true">{props.compareSide}</span>
+              <span className="sr-only">Compare side {props.compareSide}</span>
+            </span>
+          )}
           {isHead && <span className="badge accent">Head</span>}
         </div>
         <div className="version-line">

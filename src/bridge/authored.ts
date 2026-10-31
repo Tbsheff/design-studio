@@ -155,6 +155,21 @@ export function authoredMargins(element: Element): { left?: string; top?: string
   return { left: values['margin-left'], top: values['margin-top'] };
 }
 
+const MARGIN_SIDES: [string, string, string][] = [
+  ['top', 'margin-top', 'margin-block-start'],
+  ['right', 'margin-right', 'margin-inline-end'],
+  ['bottom', 'margin-bottom', 'margin-block-end'],
+  ['left', 'margin-left', 'margin-inline-start'],
+];
+
+export function declaredMargins(element: Element): Record<string, string> {
+  const props = MARGIN_SIDES.flatMap(([, physical, logical]) => [physical, logical]);
+  const values = authoredValues(element, { props, logical: false, values: {} });
+  const out: Record<string, string> = {};
+  for (const [side, physical, logical] of MARGIN_SIDES) out[`declared-margin-${side}`] = values[logical] ?? values[physical] ?? '';
+  return out;
+}
+
 export function authoredRules(element: Element): AuthoredRule[] {
   const collector: Collector = { rules: [], bytes: 0, full: false };
   for (const sheet of Array.from(document.styleSheets)) {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
 import { matchesKey } from '../../shared/keymap';
-import type { ProjectHit } from '../../shared/project-search';
+import { TYPE_LABELS, type ProjectHit } from '../../shared/project-search';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { useCommands } from '../commands/registry';
 import { openProject } from '../projectNav';
@@ -121,13 +121,7 @@ interface RailProps {
   onNewPrototype: () => void;
 }
 
-const KIND_LABEL: Record<ProjectHit['type'], string> = {
-  next: 'App · Next.js',
-  vite: 'App · Vite',
-  html: 'Prototype · HTML',
-  react: 'Prototype · React',
-  'design-system': 'System',
-};
+const KIND_LABEL = TYPE_LABELS;
 
 function tipOf(hit: ProjectHit, current: boolean): string {
   const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(Boolean);

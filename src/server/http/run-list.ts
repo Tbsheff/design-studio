@@ -58,6 +58,15 @@ export async function listRunSummaries(dir: string): Promise<RunSummary[]> {
   return runs.filter((run): run is RunSummary => run !== null).sort((a, b) => b.startedAt - a.startedAt);
 }
 
+export async function latestRunStatus(dir: string): Promise<RunSummary['status'] | null> {
+  if (!existsSync(dir)) return null;
+  const names = (await readdir(dir)).filter((name) => name.endsWith('.json') && !name.startsWith('session-'));
+  const stamped = await Promise.all(names.map(async (name) => ({ file: path.join(dir, name), at: (await stat(path.join(dir, name)).catch(() => null))?.mtimeMs ?? 0 })));
+  const newest = stamped.sort((a, b) => b.at - a.at).slice(0, 3);
+  const runs = (await Promise.all(newest.map((item) => readRun(item.file)))).filter((run): run is RunSummary => run !== null);
+  return runs.sort((a, b) => b.startedAt - a.startedAt)[0]?.status ?? null;
+}
+
 function whole(raw: string | undefined, name: string): number | null {
   if (raw === undefined || raw === '') return null;
   const value = Number(raw);

@@ -13,7 +13,7 @@ import type {
   StructureEditResult,
   DirectEditResult,
   DirectionVariation,
-  DraftImproveStart,
+  RunStatus,
   Project,
   ProjectKind,
   ProjectSettings,
@@ -66,7 +66,7 @@ import { registerRunTitleRoutes } from './run-title-routes.js';
 import { listWorkTree, parseMentions, readMentionFiles } from './mentions.js';
 import { registerDesignSystemRoutes } from './design-systems-routes.js';
 import { draftAttachmentIds } from '../design-system/draft-project.js';
-import { createLiveDrafts } from '../design-system/draft-live.js';
+import { createLiveDrafts, type ImproveStarted } from '../design-system/draft-live.js';
 import { createFetcher } from '../design-system/extract/draft.js';
 import { registerPackRoutes } from './packs-routes.js';
 import { registerComponentRoutes } from './components-routes.js';
@@ -559,7 +559,7 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   app.get('/api/projects', async (c) => c.json(await projects.list()));
-  app.get('/api/project-search', async (c) => c.json(await searchProjects({ projects, appStatus: (p) => preview.apps?.status(p) ?? null }, { query: c.req.query('q') ?? '', projectId: c.req.query('project') ?? null, limit: Number(c.req.query('limit') ?? 20) || 20 })));
+  app.get('/api/project-search', async (c) => c.json(await searchProjects({ projects, appStatus: (p) => preview.apps?.status(p) ?? null, runsDir }, { query: c.req.query('q') ?? '', projectId: c.req.query('project') ?? null, limit: Number(c.req.query('limit') ?? 20) || 20 })));
 
   app.get('/api/skills', async (c) => c.json(await discoverSkills()));
 
@@ -1111,13 +1111,43 @@ export function createApp(deps: AppDeps): Hono {
     },
   });
 
-  const startDraftImprove = async (projectId: string): Promise<DraftImproveStart> => {
+  const runEnd = (projectId: string) => {
+    const early = new Map<string, RunStatus>();
+    let settle: ((status: RunStatus) => void) | null = null;
+    let target: string | null = null;
+    const ended = new Promise<RunStatus>((resolve) => (settle = resolve));
+    const finish = (status: RunStatus) => {
+      off();
+      settle?.(status);
+    };
+    const off = bus.subscribe(projectId, (event) => {
+      if (event.type !== 'run.finished') return;
+      if (target === null) early.set(event.runId, event.summary.status);
+      else if (event.runId === target) finish(event.summary.status);
+    });
+    const watch = (runId: string): Promise<RunStatus> => {
+      target = runId;
+      const done = early.get(runId);
+      if (done) finish(done);
+      return ended;
+    };
+    return { watch, stop: off };
+  };
+
+  const startDraftImprove = async (projectId: string): Promise<ImproveStarted> => {
     const main = projects.mainDirection(await projects.get(projectId));
     return withDirection(projectId, main.id, async (project, direction) => {
-      if (runner.isRunning(project.id, direction.id)) return { state: 'skipped', reason: 'Another run was in progress, so the AI step did not start. Use Improve with AI.' };
+      if (runner.isRunning(project.id, direction.id)) return { start: { state: 'skipped', reason: 'Another run was in progress, so the AI step did not start. Use Improve with AI.' } };
       const level = project.settings.defaultLevel === 'wireframe' ? 'prototype' : project.settings.defaultLevel;
       const request: RunRequest = { prompt: 'Improve this design system.', mode: 'edit', task: 'design-system', level };
-      return { state: 'started', runId: await startRun(project, direction, await withTaskInputs(project, direction, request)) };
+      const end = runEnd(project.id);
+      try {
+        const runId = await startRun(project, direction, await withTaskInputs(project, direction, request));
+        return { start: { state: 'started', runId }, ended: end.watch(runId) };
+      } catch (error) {
+        end.stop();
+        throw error;
+      }
     });
   };
 

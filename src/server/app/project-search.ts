@@ -2,12 +2,14 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { AppServerStatus, Project } from '../../shared/contracts.js';
 import { fuzzyScore } from '../../shared/fuzzy.js';
-import { TYPE_LABELS, type ProjectHealth, type ProjectHit, type ProjectSearchResult, type ProjectType, type RouteHit } from '../../shared/project-search.js';
+import { projectTypeOf, TYPE_LABELS, type ProjectHealth, type ProjectHit, type ProjectSearchResult, type RouteHit } from '../../shared/project-search.js';
+import { latestRunStatus } from '../http/run-list.js';
 import { listAppRoutes } from './routes.js';
 
 export interface ProjectSearchDeps {
   projects: { list: () => Promise<Project[]> };
   appStatus?: (project: Project) => AppServerStatus | null;
+  runsDir?: (projectId: string) => string;
 }
 
 export interface ProjectSearchInput {
@@ -20,15 +22,11 @@ const ROUTE_TTL_MS = 15_000;
 const ROUTE_APPS = 3;
 const ROUTE_LIMIT = 8;
 const routeCache = new Map<string, { at: number; routes: Promise<RouteHit[]> }>();
+const runCache = new Map<string, { key: number; at: number; failed: Promise<boolean> }>();
+const RUN_FAILED: ProjectHealth = { level: 'failed', note: 'Last run failed' };
 
 function recency(project: Project): number {
   return project.openedAt ?? project.updatedAt;
-}
-
-function typeOf(project: Project): ProjectType {
-  if (project.designSystemFor) return 'design-system';
-  if (project.app) return project.app.framework;
-  return project.kind;
 }
 
 function hasInstall(workTree: string, appDir: string): boolean {
@@ -44,13 +42,26 @@ function serverHealth(status: AppServerStatus): ProjectHealth {
   return { level: 'off', note: 'Dev server not running' };
 }
 
-export function projectHealth(project: Project, status: AppServerStatus | null): ProjectHealth | null {
+export function projectHealth(project: Project, status: AppServerStatus | null, runFailed = false): ProjectHealth | null {
   const folder = project.imported?.sourcePath;
   if (folder && !project.imported?.created && !existsSync(folder)) return { level: 'warn', note: 'Folder not found' };
-  if (!project.app) return null;
+  if (!project.app) return runFailed ? RUN_FAILED : null;
   const main = project.directions[0];
   if (main && project.app.mode === 'managed' && !hasInstall(main.workTree, project.app.appDir)) return { level: 'warn', note: 'Needs install' };
-  return status ? serverHealth(status) : { level: 'off', note: 'Dev server not running' };
+  const server = status ? serverHealth(status) : { level: 'off' as const, note: 'Dev server not running' };
+  return runFailed && server.level !== 'warn' ? RUN_FAILED : server;
+}
+
+function lastRunFailed(project: Project, deps: ProjectSearchDeps): Promise<boolean> {
+  if (!deps.runsDir) return Promise.resolve(false);
+  const cached = runCache.get(project.id);
+  if (cached && cached.key === project.updatedAt && Date.now() - cached.at < ROUTE_TTL_MS) return cached.failed;
+  const failed = latestRunStatus(deps.runsDir(project.id)).then(
+    (status) => status === 'failed',
+    () => false,
+  );
+  runCache.set(project.id, { key: project.updatedAt, at: Date.now(), failed });
+  return failed;
 }
 
 function placeOf(project: Project): string | null {
@@ -60,8 +71,8 @@ function placeOf(project: Project): string | null {
   return folder ? folder.replace(/^\/(Users|home)\/[^/]+/, '~') : null;
 }
 
-function hitOf(project: Project, deps: ProjectSearchDeps): ProjectHit {
-  const type = typeOf(project);
+async function hitOf(project: Project, deps: ProjectSearchDeps): Promise<ProjectHit> {
+  const type = projectTypeOf(project);
   return {
     id: project.id,
     name: project.name,
@@ -70,7 +81,7 @@ function hitOf(project: Project, deps: ProjectSearchDeps): ProjectHit {
     place: placeOf(project),
     updatedAt: project.updatedAt,
     openedAt: project.openedAt ?? null,
-    health: projectHealth(project, project.app ? (deps.appStatus?.(project) ?? null) : null),
+    health: projectHealth(project, project.app ? (deps.appStatus?.(project) ?? null) : null, await lastRunFailed(project, deps)),
     thumbnail: project.thumbnail?.versionId ?? null,
   };
 }
@@ -112,5 +123,5 @@ export async function searchProjects(deps: ProjectSearchDeps, input: ProjectSear
   const routeQuery = query.replace(/^\//, '');
   const named = new Set(query ? matched.map((p) => p.id) : []);
   const routes = (await Promise.all(sources.map(async (p) => routesFor(await appRoutes(p), routeQuery, named.has(p.id))))).flat();
-  return { query, projects: matched.slice(0, limit).map((p) => hitOf(p, deps)), routes };
+  return { query, projects: await Promise.all(matched.slice(0, limit).map((p) => hitOf(p, deps))), routes };
 }

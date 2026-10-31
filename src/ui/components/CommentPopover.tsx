@@ -156,7 +156,7 @@ export function OpenCommentPopover(props: OpenProps) {
     trapTab(event, root.current);
   };
 
-  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current);
+  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current, comment.drawing ? undefined : comment.target.offset);
   side.current = placement.side;
   const scale = 1 / props.zoom;
 

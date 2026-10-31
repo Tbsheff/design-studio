@@ -272,22 +272,6 @@
   z-index: 60;
 }
 
-.version-side {
-  display: none;
-}
-
-.version.picked:has(~ .version.picked) .version-side,
-.version.picked ~ .version.picked .version-side {
-  display: inline-flex;
-}
-
-.version.picked:has(~ .version.picked) .version-side::before {
-  content: 'B';
-}
-
-.version.picked ~ .version.picked .version-side::before {
-  content: 'A';
-}
 
 .version-actions .icon-btn {
   flex: none;

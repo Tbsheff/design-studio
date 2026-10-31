@@ -412,6 +412,7 @@ export interface CommentTarget {
   tag: string;
   textSnippet: string;
   rectHint: SelectionContext['rect'];
+  offset?: { x: number; y: number };
 }
 
 export interface DesignComment {
@@ -849,7 +850,7 @@ export const API_ROUTES = {
   flowParams: 'GET /api/projects/:pid/flow/params -> {params} (sample values for dynamic segments, kept in the studio data dir)',
   buildFlow: 'POST /api/projects/:pid/flow {routes?|from?, depth?, params?} -> FlowResult (route frames laid out left to right, prototype links from the source links)',
   openSource: 'POST /api/projects/:pid/d/:did/open-source {source: "file:line:col"} -> {opened, path} (opens the file in the editor from STUDIO_EDITOR, default code; 422 when no editor runs)',
-  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped). 400 no source, blocked URL, unknown base pack',
+  createDesignSystemDraft: 'POST /api/design-systems/draft (JSON DraftRequest, or multipart: request = JSON text, tokensFile = file, images = files) -> DesignSystemDraftResult within about 1 s (draft user pack from the base pack + backing HTML project "<name> design system" with a skeleton kit page; one version). Then each source is read in the background: design-system.sources events, the kit page and tokens are rewritten after each source, one version "Read sources" at the end, then one Improve with AI run starts by itself (not with ?improve=off, which MCP sends: improve is skipped); when that run ends, improve.state is done with the run status. 400 no source, blocked URL, unknown base pack',
   getDesignSystemDraft: 'GET /api/projects/:pid/design-system-draft -> DesignSystemDraftInfo with sources (DraftSourcesState or null) (404 when the project is not a design-system project)',
   createInFolder: 'POST /api/projects {..., parentPath} -> {project, runId} (makes a new subfolder <slug of name>[-2, -3…] in parentPath, registers it like an imported folder, adds parentPath to the saved folders)',
   listWorkspaces: 'GET /api/workspaces -> WorkspaceList {homeDir, folders}',
@@ -861,7 +862,7 @@ export const API_ROUTES = {
   moveHiddenProjects: 'POST /api/hidden-projects/move -> {moved: pid[], failed: {projectId, error}[]} (copies each main work tree into a new subfolder of the default folder, then removes the old one)',
   pickFolder: 'POST /api/pick-folder {title?, defaultPath?} -> {path} | 204 canceled | 409 a picker is open | 501 not macOS | 504 timed out',
   getProject: 'GET /api/projects/:pid -> Project',
-  updateSettings: 'PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, disabledSkills: skill ids from GET /api/skills) -> Project',
+  updateSettings: 'PATCH /api/projects/:pid/settings Partial<ProjectSettings> (model 1..200 chars, maxBudgetUsd 0.01..50 or null for no limit, maxTurns 1..200 int, allowBash, allowInstall, autoApprove (all three on by default), disabledSkills: skill ids from GET /api/skills) -> Project',
   listSkills: 'GET /api/skills -> SkillCatalog (rescans ~/.claude/skills and enabled plugins on each call)',
   projectEvents: 'GET /api/projects/:pid/events (SSE; Last-Event-ID or ?after=seq)',
   uploadAttachment: 'POST /api/projects/:pid/attachments (multipart file; png, jpeg, gif or webp only, else 400) -> Attachment',
@@ -925,7 +926,7 @@ export type BridgeToParent =
   | { ns: 'studio'; token: string; type: 'ready'; url: string; redirectedFrom?: string }
   | { ns: 'studio'; token: string; type: 'painted'; at: number }
   | { ns: 'studio'; token: string; type: 'hover'; rect: SelectionContext['rect'] | null; label?: string; altKey?: boolean; node?: number; source?: 'tree' }
-  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number }
+  | { ns: 'studio'; token: string; type: 'select'; selection: SelectionContext; additive: boolean; at: number; node?: number; point?: { x: number; y: number } }
   | { ns: 'studio'; token: string; type: 'tree'; nodes: LayerNode[]; truncated: boolean }
   | { ns: 'studio'; token: string; type: 'rects'; selectors: string[]; rects: (SelectionContext['rect'] | null)[] }
   | { ns: 'studio'; token: string; type: 'styles-found'; requestId: string; result: StyleScanResult; selected: number }
@@ -1478,9 +1479,10 @@ export interface DraftSourceStatus {
 }
 
 export interface DraftImproveStart {
-  state: 'waiting' | 'started' | 'skipped';
+  state: 'waiting' | 'started' | 'done' | 'skipped';
   runId?: string;
   reason?: string;
+  status?: RunStatus;
 }
 
 export interface DraftSourcesState {

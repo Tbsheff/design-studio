@@ -55,7 +55,7 @@
 
 .home-card {
   display: grid;
-  border-radius: calc(var(--r-control) + 15px);
+  border-radius: calc(var(--r-2xl) - 1px);
 }
 
 .home-card:has(> form.clarify) {
@@ -70,7 +70,7 @@
   gap: 6px;
   margin: -1px;
   padding: 14px;
-  border-radius: calc(var(--r-control) + 14px);
+  border-radius: var(--r-2xl);
   background: var(--home-input);
   box-shadow: inset 0 0 0 1px var(--line);
 }
@@ -87,6 +87,10 @@
 
 .home-composer.ui-composer:focus-within {
   box-shadow: inset 0 0 0 1px var(--line-strong), 0 0 0 3px color-mix(in oklab, var(--text) 5%, transparent);
+}
+
+.home-composer.ui-composer:has(textarea:focus-visible) {
+  box-shadow: inset 0 0 0 1px var(--accent), var(--ring-soft);
 }
 
 .home-composer textarea {

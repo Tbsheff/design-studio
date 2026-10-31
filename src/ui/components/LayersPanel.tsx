@@ -1,10 +1,11 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
 import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contracts';
 import { reorderMoveOf } from '../../shared/reorder';
 import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
 import { IS_MAC, tipWithKey } from '../commands/keys';
 import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, layerKeys, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
 import type { LayerDrop } from '../structureEdits';
+import { focusStageQuietly } from '../useInlineTextEdit';
 import { Icon, type IconName } from './Icon';
 import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
 
@@ -428,6 +429,13 @@ function usePendingSelect(selectedNode: number | null, onSelect: (id: number, ad
   return { shown: pending ?? selectedNode, select };
 }
 
+function stageOnDroppedFocus(e: FocusEvent<HTMLDivElement>): void {
+  if (e.target !== e.currentTarget || e.relatedTarget !== null) return;
+  window.requestAnimationFrame(() => {
+    if (document.activeElement === document.body && document.hasFocus()) focusStageQuietly();
+  });
+}
+
 export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover, onSelect: onSelectProp, onClose, edits, onToggleLocked, busy = false, hoveredNode = null }: Props) {
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const latestSelect = useLatest(onSelectProp);
@@ -488,6 +496,12 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      focusStageQuietly();
+      return;
+    }
     if (onToggleLocked && selectedRow && isLockKey(e)) {
       e.preventDefault();
       onToggleLocked(selectedRow.id, !selectedRow.locked);
@@ -537,6 +551,7 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
         aria-activedescendant={selectedIndex >= 0 ? `layer-${selectedNode}` : undefined}
         aria-busy={busy}
         onKeyDown={onKeyDown}
+        onBlur={stageOnDroppedFocus}
         onPointerMove={drag.onPointerMove}
         onPointerUp={drag.onPointerUp}
         onPointerCancel={drag.onPointerCancel}

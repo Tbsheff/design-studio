@@ -325,6 +325,10 @@ body.frame-dragging * {
   outline-offset: -2px;
 }
 
+.stage[data-quiet-focus]:focus-visible {
+  outline: none;
+}
+
 body.frame-dragging .frame,
 body.element-resizing .frame {
   pointer-events: none;

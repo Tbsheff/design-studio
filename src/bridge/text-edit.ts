@@ -170,7 +170,7 @@ export function createTextEditor(deps: TextEditDeps): TextEditor {
     const plain = !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
     if (event.key === 'Escape') {
       event.preventDefault();
-      cancel();
+      if (!event.repeat) commit();
     } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey || plain)) {
       event.preventDefault();
       if (!event.repeat) commit();

@@ -1,5 +1,5 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
-import type { AttachedApp, CompiledTokenEntry, ComponentInfo, Direction, ProjectKind, RenderCheckResult, SelectionContext } from '../../shared/contracts';
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode, type PointerEvent as ReactPointerEvent, type FocusEvent as ReactFocusEvent } from 'react';
+import { selectMoveOf, type AttachedApp, type CompiledTokenEntry, type ComponentInfo, type Direction, type ProjectKind, type RenderCheckResult, type SelectionContext } from '../../shared/contracts';
 import { api, errorText } from '../api';
 import { markOf, withElementMark } from '../elementMark';
 import { useUi } from '../storage';
@@ -25,7 +25,7 @@ import { FreeMoveLayer } from './FreeMoveLayer';
 import { useCanvasCommands } from '../commands/useCanvasCommands';
 import { usePreviewMenu } from '../usePreviewMenu';
 import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
-import { usePreviewFrames } from '../usePreviewFrames';
+import { PREVIEW_LAYOUT_KEY_EVENT, usePreviewFrames } from '../usePreviewFrames';
 import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
 import { usePlannedEdits } from '../usePlannedEdits';
 import type { BuildError, FilesChange } from '../useStudioData';
@@ -44,7 +44,8 @@ import { useCommentMode } from '../useCommentMode';
 import { useCanvasDraw, type DrawTool } from '../useDrawTool';
 import { DrawBar, DrawSurface } from './DrawLayer';
 import { useVectorTool, useVectorToolGuards, useVectorToolKeys } from '../vectorTool';
-import { useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
+import { QUIET_FOCUS_ATTR, useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
+import { canvasHasKeys } from '../typingTarget';
 import { useCanvasPresence } from '../useCanvasPresence';
 import { useCanvasPoint } from '../useCanvasPoint';
 import { McpPointBadge } from './McpPointBadge';
@@ -429,7 +430,9 @@ function stageCursor(pz: { panning: boolean; spaceHeld: boolean; zoomHeld: boole
   return pz.zoomHeld ? 'zoom-in' : '';
 }
 
-function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, onEscape: () => void) {
+function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, onEscape: () => void, clearSelection: () => boolean) {
+  const latest = useRef(clearSelection);
+  latest.current = clearSelection;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -437,6 +440,7 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, 
         e.preventDefault();
         setSelectMode((m) => !m);
       } else if (e.key === 'Escape') {
+        if (!e.defaultPrevented && !e.repeat && canvasHasKeys() && latest.current()) return e.preventDefault();
         setSelectMode(() => false);
         onEscape();
       }
@@ -444,7 +448,118 @@ function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+}
 
+const FIRST_SELECT_KEYS = new Set(['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft']);
+
+function firstSelectKey(e: KeyboardEvent): boolean {
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return false;
+  return selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key));
+}
+
+function useFirstSelectKeys(stage: () => HTMLElement | null, o: { on: boolean; empty: boolean; picking: boolean; selectFirst: () => void; startPicking: () => void }) {
+  const latest = useRef(o);
+  latest.current = o;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const cur = latest.current;
+      if (!cur.on || !cur.empty || e.defaultPrevented || document.activeElement !== stage() || !firstSelectKey(e)) return;
+      e.preventDefault();
+      if (!cur.picking) cur.startPicking();
+      cur.selectFirst();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [stage]);
+}
+
+const LAYOUT_WAIT_MS = 1500;
+
+function layoutSectionShown(): boolean {
+  const section = document.querySelector('.ins-layout');
+  return Boolean(section && !section.closest('[inert]') && section.getClientRects().length > 0);
+}
+
+function isAddLayoutKey(e: KeyboardEvent): boolean {
+  return e.code === 'KeyA' && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && !e.repeat;
+}
+
+function forwardLayoutKeyWhenShown(): void {
+  const until = performance.now() + LAYOUT_WAIT_MS;
+  const wait = () => {
+    if (layoutSectionShown()) window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+    else if (performance.now() < until) window.requestAnimationFrame(wait);
+  };
+  wait();
+}
+
+function useLayoutKeyFallback(o: { on: boolean; hasSelection: boolean; openEdit: (() => void | Promise<boolean>) | null }) {
+  const latest = useRef(o);
+  latest.current = o;
+  useEffect(() => {
+    const run = (): boolean => {
+      const { on, hasSelection, openEdit } = latest.current;
+      if (!on || !hasSelection || !openEdit || layoutSectionShown()) return false;
+      void Promise.resolve(openEdit()).then((moved) => {
+        if (moved !== false) forwardLayoutKeyWhenShown();
+      });
+      return true;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (isAddLayoutKey(e) && !isTypingTarget(e.target) && canvasHasKeys() && run()) e.preventDefault();
+    };
+    const onForwarded = () => void run();
+    window.addEventListener('keydown', onKey);
+    window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
+    };
+  }, []);
+}
+
+interface StageKeys {
+  stage: () => HTMLElement | null;
+  selection: SelectionContext[];
+  setSelection: Props['setSelection'];
+  setSelectMode: (update: (m: boolean) => boolean) => void;
+  offProto: () => void;
+  post: ReturnType<typeof usePreviewFrames>['post'];
+  shell: CanvasShell | undefined;
+  picking: boolean;
+  live: boolean;
+  running: boolean | undefined;
+  directionId: string | null;
+  commentMode: boolean;
+  protoOn: boolean;
+}
+
+function editOpener(shell: CanvasShell | undefined): (() => void | Promise<boolean>) | null {
+  return shell && shell.pane !== 'design' ? () => shell.onPane('design') : null;
+}
+
+function useStageKeys(o: StageKeys) {
+  const selection = useRef(o.selection);
+  selection.current = o.selection;
+  const { setSelection } = o;
+  useSelectKey(o.setSelectMode, o.offProto, () => {
+    if (selection.current.length === 0) return false;
+    setSelection(() => []);
+    return true;
+  });
+  useLayoutKeyFallback({ on: o.live && !o.running && o.directionId !== null, hasSelection: o.selection.length > 0, openEdit: editOpener(o.shell) });
+  useFirstSelectKeys(o.stage, { on: o.live && !o.commentMode && !o.protoOn, empty: o.selection.length === 0, picking: o.picking, selectFirst: () => o.post({ type: 'select-relative', selector: '', move: 'child' }), startPicking: () => o.setSelectMode(() => true) });
+}
+
+function quietOnPointer(onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void) {
+  return (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, '');
+    onPointerDown(e);
+  };
+}
+
+function dropQuietFocus(e: ReactFocusEvent<HTMLDivElement>): void {
+  if (e.target === e.currentTarget) e.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
 }
 
 function useFrameChange(key: string, onChange: (() => void) | undefined) {
@@ -557,7 +672,8 @@ function CanvasView(props: ViewProps) {
   const firstBuild = useFirstBuildGate({ projectId, directionId, kind, live, running: props.running, hasHead: headVersionId !== null, urlError, lastChange: props.lastChange, path: active.path, emptyStage: note === 'empty', url: liveUrl });
   const textEditAllowed = live && !props.running && !commentMode;
   const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
-  const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview);
+  const stageEl = useCallback(() => stageRef.current, []);
+  const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview, stageEl);
   const openMenu = useRef<(at: { x: number; y: number }) => void>(() => undefined);
 
   const frames = usePreviewFrames({
@@ -607,7 +723,7 @@ function CanvasView(props: ViewProps) {
 
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
-  useSelectKey(setSelectMode, () => setProtoOn(false));
+  useStageKeys({ stage: stageEl, selection: props.selection, setSelection: props.setSelection, setSelectMode, offProto: () => setProtoOn(false), post: frames.post, shell: props.shell, picking, live, running: props.running, directionId, commentMode, protoOn });
   useEffect(() => {
     if (selectMode || comment.on) setProtoOn(false);
   }, [selectMode, comment.on]);
@@ -724,7 +840,7 @@ function CanvasView(props: ViewProps) {
       {previewMenu.menu}
       <div className="canvas-body">
       {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
-      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={pz.onPointerDown}>
+      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={quietOnPointer(pz.onPointerDown)} onBlur={dropQuietFocus}>
         <StageMessage note={note} covered={covered} urlError={urlError} app={appCanvas.stage} />
         <div
           ref={artboardRef}

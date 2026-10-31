@@ -312,6 +312,22 @@ function isTypingElement(element: Element | null): boolean {
   return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
 }
 
+const DRAG_STYLE_ID = 'studio-drag-no-select';
+
+function holdTextSelection(on: boolean): void {
+  const style = document.getElementById(DRAG_STYLE_ID);
+  if (!on) {
+    style?.remove();
+    return;
+  }
+  if (style) return;
+  const element = document.createElement('style');
+  element.id = DRAG_STYLE_ID;
+  element.textContent = '*{-webkit-user-select:none!important;user-select:none!important}';
+  document.head.appendChild(element);
+  window.getSelection()?.removeAllRanges();
+}
+
 function isEditKey(event: KeyboardEvent): boolean {
   return event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && !event.repeat;
 }
@@ -967,10 +983,12 @@ function startBridge(session: BridgeSession): void {
   const onPointerDown = (event: PointerEvent): void => {
     block(event);
     if (textEditor.owns(eventElement(event))) return;
+    if (mode === 'select' && event.button === 0) holdTextSelection(true);
     if (!freeMove.down(event, hitOf(event))) marquee.down(event, hitOf(event));
   };
 
   const onPointerUp = (event: PointerEvent): void => {
+    holdTextSelection(false);
     if (!freeMove.up(event)) marquee.up(event);
     block(event);
   };
@@ -1049,13 +1067,24 @@ function startBridge(session: BridgeSession): void {
 
   const cancelMarquee = (event: KeyboardEvent): boolean => {
     if (event.key !== 'Escape' || !(freeMove.cancel() || marquee.cancel())) return false;
+    holdTextSelection(false);
     event.preventDefault();
     event.stopImmediatePropagation();
     return true;
   };
 
+  const clearOnEscape = (event: KeyboardEvent): boolean => {
+    if (event.key !== 'Escape' || event.repeat || mode !== 'select' || tracked.length === 0) return false;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    selected = null;
+    tracked = [];
+    void postSelectMany([], false);
+    return true;
+  };
+
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (textEditor.onKeyDown(event) || cancelMarquee(event)) return;
+    if (textEditor.onKeyDown(event) || cancelMarquee(event) || clearOnEscape(event)) return;
     if (mode !== 'select' && links.onKeyDown(event)) return;
     onAltChange(event);
     if (forwardReorderKey(event) || mode !== 'select' || forwardStructureKey(event) || forwardNudgeKey(event)) return;
@@ -1079,6 +1108,11 @@ function startBridge(session: BridgeSession): void {
     pendingHover = null;
     post({ type: 'hover', rect: null });
     post({ type: 'mode-exited' });
+  };
+
+  const selectFirstLayer = (): void => {
+    const first = moveSelection(document.body, 'child');
+    if (first) postSelect(first, false);
   };
 
   const onScroll = (): void => {
@@ -1188,6 +1222,7 @@ function startBridge(session: BridgeSession): void {
       if (element) postSelect(element, message.additive === true);
     },
     'select-relative': (message) => {
+      if (message.selector === '') return selectFirstLayer();
       const base = selected?.isConnected ? selected : typeof message.selector === 'string' ? queryElement(message.selector) : null;
       if (message.move === 'child' && textEditor.canEdit(base)) return textEditor.start(base);
       const valid = message.move === 'child' || message.move === 'parent' || message.move === 'next' || message.move === 'prev';
@@ -1253,7 +1288,10 @@ function startBridge(session: BridgeSession): void {
       });
       post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
     },
-    'move-cancel': () => void freeMove.cancel(),
+    'move-cancel': () => {
+      holdTextSelection(false);
+      void freeMove.cancel();
+    },
     nudge: (message) => void postNudge(Number(message.dx) || 0, Number(message.dy) || 0),
     'share-pointer': (message) => sharePointer.set(message.on === true),
     'request-neighbors': (message) => {
@@ -1294,6 +1332,8 @@ function startBridge(session: BridgeSession): void {
   window.addEventListener('pointerdown', onPointerDown, { capture: true });
   window.addEventListener('mousedown', block, { capture: true });
   window.addEventListener('pointerup', onPointerUp, { capture: true });
+  window.addEventListener('pointercancel', () => holdTextSelection(false), { capture: true });
+  window.addEventListener('blur', () => holdTextSelection(false));
   window.addEventListener('mouseup', block, { capture: true });
   window.addEventListener('click', onClick, { capture: true });
   window.addEventListener('dblclick', onDblClick, { capture: true });

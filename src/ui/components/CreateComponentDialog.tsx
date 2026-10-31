@@ -27,8 +27,8 @@ function targetOf(selection: SelectionContext): InsertTarget {
   return { source: selection.source, tag: selection.tag.toLowerCase(), selector: selection.selector, ...(selection.owners?.length ? { owners: selection.owners } : {}) };
 }
 
-function fileHint(folder: string, name: string): string {
-  const kebab = /(^|\/)(ui|packages)(\/|$)/.test(folder);
+function fileHint(folder: string, name: string, known: ComponentFolder | undefined): string {
+  const kebab = known?.kebab ?? /(^|\/)(ui|packages)(\/|$)/.test(folder);
   return `${folder}/${kebab ? name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase() : name}.tsx`;
 }
 
@@ -100,7 +100,7 @@ export default function CreateComponentDialog({ ids, selection, onDone, onClose 
             <span>Name</span>
             <input data-autofocus className="mono" value={name} spellCheck={false} autoComplete="off" aria-invalid={nameProblem !== null} aria-describedby="cc-name-help" onChange={(event) => setName(event.target.value.trim())} />
             <span id="cc-name-help" className={`cc-help${nameProblem ? ' error' : ''}`}>
-              {nameProblem ?? <code>{fileHint(folder || '…', name)}</code>}
+              {nameProblem ?? <code>{fileHint(folder || '…', name, folders?.find((item) => item.folder === folder))}</code>}
             </span>
           </label>
           <div className="field">

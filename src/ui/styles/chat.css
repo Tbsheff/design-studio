@@ -545,29 +545,6 @@
   box-shadow: 0 0 0 2px var(--accent);
 }
 
-.chat-search.closed {
-  left: auto;
-  right: var(--pane-inset);
-  width: auto;
-  height: auto;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.chat-search-toggle {
-  color: var(--text-3);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm), 0 0 0 1px var(--line);
-  opacity: 0;
-  transition-property: opacity, color, background-color;
-  transition-duration: var(--dur-fast);
-}
-
-.chat-wrap:hover .chat-search-toggle,
-.chat-search-toggle:focus-visible {
-  opacity: 1;
-}
 
 .chat-search-icon {
   flex: none;

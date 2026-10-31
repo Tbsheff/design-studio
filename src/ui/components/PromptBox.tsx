@@ -107,12 +107,23 @@ interface SendView {
   onClick: () => void;
 }
 
-const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (Esc)`;
+const QUEUE_TIP = `Queue (↵) · Send now (${MOD_LABEL}↵) · Stop (${MOD_LABEL}.)`;
+const STOP_KEYS = IS_MAC ? 'Meta+.' : 'Control+.';
 const SEND_CLASS: Record<SendState, string> = { send: 'icon-btn send send-btn', queue: 'icon-btn send send-btn', stop: 'icon-btn send-btn stop-btn' };
 const SEND_ICON: Record<SendState, IconName> = { send: 'arrowUp', queue: 'history', stop: 'stop' };
 
+function isPlainEscape(event: KeyboardEvent<HTMLDivElement>): boolean {
+  return event.key === 'Escape' && !event.nativeEvent.isComposing && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+}
+
+function leaveComposer(input: HTMLElement): void {
+  const stage = document.querySelector<HTMLElement>('.stage');
+  if (stage) stage.focus({ preventScroll: true });
+  else input.blur();
+}
+
 function sendView(props: SendProps): SendView {
-  if (props.running && !props.hasDraft) return { state: 'stop', busy: false, disabled: false, tip: 'Stop (Esc)', keys: 'Escape', onClick: props.onStop };
+  if (props.running && !props.hasDraft) return { state: 'stop', busy: false, disabled: false, tip: `Stop (${MOD_LABEL}.)`, keys: STOP_KEYS, onClick: props.onStop };
   if (props.running) return { state: 'queue', busy: false, disabled: !props.canQueue, tip: QUEUE_TIP, onClick: props.onQueue };
   return { state: 'send', busy: props.sending, disabled: !props.canSend, tip: props.tip, onClick: props.onSend };
 }
@@ -319,6 +330,11 @@ export function PromptBox(props: Props) {
       return;
     }
     if (inInput && (slash.onKeyDown(event) || mentions.onKeyDown(event))) return;
+    if (inInput && isPlainEscape(event)) {
+      event.preventDefault();
+      leaveComposer(event.target as HTMLElement);
+      return;
+    }
     if (inInput && isModeCycleKey(event)) {
       event.preventDefault();
       setMode(nextMode(mode));

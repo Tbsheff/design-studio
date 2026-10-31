@@ -209,7 +209,37 @@ export function errorHint(error: string): string {
   return hit ? hit[1] : 'Retry, or change your message and send it again. Details has the full log.';
 }
 
-export function RunError({ run, latest, onRetry }: { run: RunView; latest: boolean; onRetry?: () => void }) {
+interface RunUndoAction {
+  onUndo: () => void;
+  tip: string | null;
+}
+
+function undoRun(undo: RunUndoAction, button: HTMLButtonElement): void {
+  if (undo.tip !== null) return;
+  const next = button.parentElement?.querySelector<HTMLButtonElement>('.btn:not(.ghost)') ?? document.querySelector<HTMLElement>('.prompt [data-slot="composer-input"]');
+  undo.onUndo();
+  next?.focus();
+}
+
+function RunErrorActions({ retry, undo }: { retry: (() => void) | undefined; undo: RunUndoAction | undefined }) {
+  if (!retry && !undo) return null;
+  return (
+    <span className="run-retry flex items-center gap-1">
+      {undo && (
+        <button type="button" className="btn small ghost" aria-disabled={undo.tip !== null || undefined} data-tip={undo.tip ?? 'Go back to the version before this run'} data-tip-side="top" onClick={(event) => undoRun(undo, event.currentTarget)}>
+          Undo its changes
+        </button>
+      )}
+      {retry && (
+        <button type="button" className="btn small" onClick={retry}>
+          Retry
+        </button>
+      )}
+    </span>
+  );
+}
+
+export function RunError({ run, latest, onRetry, undo }: { run: RunView; latest: boolean; onRetry?: () => void; undo?: RunUndoAction }) {
   const error = run.summary?.error;
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -217,15 +247,11 @@ export function RunError({ run, latest, onRetry }: { run: RunView; latest: boole
   }, [error, latest]);
   if (!error || run.status === 'budget_exceeded') return null;
   return (
-    <Exception ref={ref} className="run-error" role="alert" data-long={error.length > 60 || undefined}>
+    <Exception ref={ref} className="run-error" role="alert" data-long={error.length > 60 || undo !== undefined || undefined}>
       <ExceptionHeader className="run-error-head">
         <ExceptionType>Error</ExceptionType>
         <ExceptionMessage className="wrap-anywhere">{error}</ExceptionMessage>
-        {latest && onRetry && run.status !== 'canceled' && (
-          <button type="button" className="btn small run-retry" onClick={onRetry}>
-            Retry
-          </button>
-        )}
+        <RunErrorActions retry={latest && run.status !== 'canceled' ? onRetry : undefined} undo={undo} />
       </ExceptionHeader>
       {run.status !== 'canceled' && <p className="run-error-hint">{errorHint(error)}</p>}
     </Exception>

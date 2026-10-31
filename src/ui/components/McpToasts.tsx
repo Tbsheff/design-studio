@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { McpApprovalOutcome } from '../../shared/contracts';
 import { useInlineApprovalProject } from '../approvalSpot';
 import { appStream } from '../appStream';
@@ -34,7 +35,34 @@ function useApprovalFeed(): [McpApprovalCard[], (id: string, outcome: McpApprova
   return [cards, mark, drop];
 }
 
-function Toast({ card, onAnswer, onDrop }: { card: McpApprovalCard; onAnswer: (allow: boolean) => void; onDrop: () => void }) {
+function topModal(): HTMLDialogElement | null {
+  const open = document.querySelectorAll<HTMLDialogElement>('dialog:modal');
+  return open[open.length - 1] ?? null;
+}
+
+function useTopModal(watch: boolean): HTMLDialogElement | null {
+  const [modal, setModal] = useState<HTMLDialogElement | null>(null);
+  useEffect(() => {
+    if (!watch) return setModal(null);
+    const check = () => setModal(topModal());
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['open'] });
+    return () => observer.disconnect();
+  }, [watch]);
+  return modal;
+}
+
+function typingFocus(): boolean {
+  const active = document.activeElement;
+  return active instanceof HTMLElement && (active.isContentEditable || active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement);
+}
+
+function showOnTop(element: HTMLDivElement | null): void {
+  if (element && !element.matches(':popover-open')) element.showPopover();
+}
+
+function Toast({ card, focus, onAnswer, onDrop }: { card: McpApprovalCard; focus: boolean; onAnswer: (allow: boolean) => void; onDrop: () => void }) {
   const dropRef = useRef(onDrop);
   dropRef.current = onDrop;
   useEffect(() => {
@@ -42,8 +70,12 @@ function Toast({ card, onAnswer, onDrop }: { card: McpApprovalCard; onAnswer: (a
     const timer = window.setTimeout(() => dropRef.current(), DONE_MS);
     return () => window.clearTimeout(timer);
   }, [card.outcome]);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (focus && !card.outcome && !typingFocus()) ref.current?.querySelector<HTMLButtonElement>('.permission-actions .btn.primary')?.focus({ preventScroll: true });
+  }, []);
   return (
-    <div className="mcp-toast" data-testid="mcp-toast">
+    <div ref={ref} className="mcp-toast" data-testid="mcp-toast">
       <div className="mcp-toast-head">
         <span>{card.outcome ? card.approval.client || 'MCP client' : `${card.approval.client || 'MCP client'} needs your answer`}</span>
         <span className="spacer" />
@@ -59,13 +91,21 @@ function Toast({ card, onAnswer, onDrop }: { card: McpApprovalCard; onAnswer: (a
 export default function McpToasts() {
   const [cards, mark, drop] = useApprovalFeed();
   const inlineProject = useInlineApprovalProject();
-  const shown = cards.filter((card) => card.approval.projectId === null || card.approval.projectId !== inlineProject);
+  const modal = useTopModal(cards.length > 0);
+  const shown = cards.filter((card) => modal !== null || card.approval.projectId === null || card.approval.projectId !== inlineProject);
   if (shown.length === 0) return null;
-  return (
-    <div className="mcp-toasts" role="status" aria-live="polite">
-      {shown.map((card) => (
-        <Toast key={card.approval.id} card={card} onAnswer={(allow) => mark(card.approval.id, allow ? 'allow' : 'deny')} onDrop={() => drop(card.approval.id)} />
-      ))}
-    </div>
+  const toasts = shown.map((card) => <Toast key={card.approval.id} card={card} focus={modal !== null} onAnswer={(allow) => mark(card.approval.id, allow ? 'allow' : 'deny')} onDrop={() => drop(card.approval.id)} />);
+  if (!modal) {
+    return (
+      <div className="mcp-toasts" role="status" aria-live="polite">
+        {toasts}
+      </div>
+    );
+  }
+  return createPortal(
+    <div ref={showOnTop} className="mcp-toasts" popover="manual" role="status" aria-live="polite">
+      {toasts}
+    </div>,
+    modal,
   );
 }

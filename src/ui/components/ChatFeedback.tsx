@@ -38,13 +38,14 @@ function fileLabel(change: FileChange): string {
   return `${change.created ? 'Created' : 'Edited'} ${baseName(change.path)}`;
 }
 
-function FileChips({ changes, quiet, onOpen }: { changes: FileChange[]; quiet: boolean; onOpen: () => void }) {
+function FileChips({ changes, quiet, onOpen, reviews }: { changes: FileChange[]; quiet: boolean; onOpen: () => void; reviews: boolean }) {
+  const action = reviews ? 'Review the changes' : 'Open run details';
   if (changes.length === 0) return quiet ? <p className="run-no-changes">No files changed.</p> : null;
   return (
     <ul className="run-changes" aria-label="Changed files" data-testid="run-changes">
       {changes.map((change) => (
         <li key={change.path} className="run-change">
-          <button type="button" className="ui-file-chip" data-tip-align="start" data-tip={`${change.path} (+${change.added} −${change.removed}). Open run details`} onClick={onOpen}>
+          <button type="button" className="ui-file-chip" data-tip-align="start" data-tip={`${change.path} (+${change.added} −${change.removed}). ${action}`} onClick={onOpen}>
             <Icon name={change.created ? 'doc' : 'file'} size={14} />
             <span className="run-change-path">{fileLabel(change)}</span>
             <DiffBadge added={change.added} removed={change.removed} />
@@ -69,14 +70,14 @@ function StopNote({ run }: { run: RunView }) {
   return note ? <p className="run-no-changes" data-testid="run-stop-note">{note}</p> : null;
 }
 
-export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: { run: RunView; onDetails: () => void }) {
+export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails, onReview }: { run: RunView; onDetails: () => void; onReview?: (() => void) | undefined }) {
   const [feedback, setFeedback] = useRunFeedback(run.runId);
   const changes = useMemo(() => (run.status === 'running' ? [] : fileChanges(run.tools)), [run.status, run.tools]);
   const summary = run.summary;
   const done = run.status === 'completed';
   return (
     <div className="run-feedback">
-      <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0 && !run.request?.plan} onOpen={onDetails} />
+      <FileChips changes={changes} quiet={run.status !== 'running' && run.tools.length > 0 && !run.request?.plan} onOpen={onReview ?? onDetails} reviews={onReview !== undefined} />
       <StopNote run={run} />
       <div className="run-foot" data-status={run.status}>
         {done && (
@@ -97,9 +98,16 @@ export const RunFeedbackRow = memo(function RunFeedbackRow({ run, onDetails }: {
             {formatMs(summary.durationMs)} · {formatUsd(summary.costUsd)}
           </span>
         )}
-        <button type="button" className="btn ghost small run-foot-details" onClick={onDetails}>
-          Details
-        </button>
+        <span className="ml-auto flex items-center gap-1">
+          {onReview && changes.length > 0 && (
+            <button type="button" className="btn ghost small run-foot-details" data-tip="Keep or undo each change" data-tip-side="top" onClick={onReview}>
+              Review
+            </button>
+          )}
+          <button type="button" className="btn ghost small run-foot-details" onClick={onDetails}>
+            Details
+          </button>
+        </span>
       </div>
     </div>
   );

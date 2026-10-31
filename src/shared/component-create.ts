@@ -32,6 +32,7 @@ export interface ComponentFolder {
   folder: string;
   kind: 'kit' | 'app';
   label: string;
+  kebab: boolean;
 }
 
 export interface ComponentFolderList {

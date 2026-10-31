@@ -118,13 +118,16 @@ function folderPath(root: string, folder: string): string {
   return absolute;
 }
 
-async function fileName(dir: string, name: string, ext: string): Promise<string> {
+async function kebabFolder(dir: string): Promise<boolean> {
   const names = await readdir(dir).catch(() => [] as string[]);
   const jsx = names.filter((item) => /\.[jt]sx$/.test(item));
   const kebab = jsx.some((item) => /^[a-z0-9]+(-[a-z0-9]+)*\.[jt]sx$/.test(item));
   const pascal = jsx.some((item) => /^[A-Z]/.test(item));
-  const useKebab = kebab && !pascal ? true : pascal ? false : /(^|\/)(ui|packages)(\/|$)/.test(dir.split(path.sep).join('/'));
-  const base = useKebab ? name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase() : name;
+  return kebab && !pascal ? true : pascal ? false : /(^|\/)(ui|packages)(\/|$)/.test(dir.split(path.sep).join('/'));
+}
+
+async function fileName(dir: string, name: string, ext: string): Promise<string> {
+  const base = (await kebabFolder(dir)) ? name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase() : name;
   return path.join(dir, `${base}${ext}`);
 }
 
@@ -341,11 +344,11 @@ export async function componentFolders(project: Project, workTree: string): Prom
   const { root, scan, entries } = await loadLibrary(project, workTree);
   const rel = (dir: string) => path.relative(root, dir).split(path.sep).join('/') || '.';
   const kits = scan.slice(0, -1).filter((dir) => entries.some((entry) => entry.absolute.startsWith(dir + path.sep)));
-  const folders: ComponentFolder[] = kits.map((dir) => ({ folder: rel(dir), kind: 'kit', label: `${packageName(dir, root) ?? rel(dir)} kit` }));
+  const folders: ComponentFolder[] = await Promise.all(kits.map(async (dir) => ({ folder: rel(dir), kind: 'kit' as const, label: `${packageName(dir, root) ?? rel(dir)} kit`, kebab: await kebabFolder(dir) })));
   const app = scan.at(-1) ?? root;
   const appBase = path.basename(app) === 'src' ? path.dirname(app) : app;
   const candidates = [path.join(appBase, 'src', 'components'), path.join(appBase, 'components')];
   const found = candidates.find((dir) => existsSync(dir)) ?? (existsSync(path.join(appBase, 'src')) ? candidates[0] : candidates[1]);
-  folders.push({ folder: rel(found as string), kind: 'app', label: 'App components' });
+  folders.push({ folder: rel(found as string), kind: 'app', label: 'App components', kebab: await kebabFolder(found as string) });
   return { folders, note: null };
 }

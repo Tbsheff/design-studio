@@ -38,7 +38,7 @@ function pasteItem(o: Options, target: SelectionContext): PreviewMenuItem[] {
   if (!o.edits.enabled || !o.ids.directionId) return [];
   const blocked = !target.source && !target.owners?.length ? 'This element has no source location' : o.edits.busy ? 'Wait for the last edit to finish' : null;
   const ids = { projectId: o.ids.projectId, directionId: o.ids.directionId };
-  return [{ id: 'paste-jsx', label: 'Paste JSX', icon: 'code', divider: true, run: () => pasteJsx(ids, target, o.edits.notify), ...disabledBy(blocked) }];
+  return [{ id: 'paste-jsx', label: 'Paste JSX or Figma', icon: 'code', divider: true, run: () => pasteJsx(ids, target, o.edits.notify), ...disabledBy(blocked) }];
 }
 
 function createItem(o: Options, open: () => void): PreviewMenuItem[] {

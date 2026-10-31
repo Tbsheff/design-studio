@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import type { FigmaImportPreview, FigmaImportResult, FigmaImportSource, FigmaImportStats } from '../../shared/figma-nodes';
-import { looksLikeFigmaLink } from '../../shared/figma-nodes';
+import { looksLikeFigmaLink, looksLikeFigmaNodes } from '../../shared/figma-nodes';
 import type { InsertTarget, JsxInsertPosition } from '../../shared/insert';
 import { ApiError, json } from '../api';
 import { useModalDialog } from '../usePopover';
@@ -73,11 +73,51 @@ interface PlainFailure {
 }
 
 function plainFailure(raw: string): PlainFailure {
-  if (/Figma API, which is off/.test(raw)) return { text: 'Design Studio cannot open Figma links here.', fix: 'Paste the frame JSON instead of the link.', details: raw };
+  if (LINKS_OFF.test(raw)) return { text: 'Design Studio cannot open Figma links here.', fix: 'Paste the frame JSON below instead of the link.', details: raw };
   const status = /Figma API answered (\d+)/.exec(raw);
   if (status) return { text: `Figma refused to share this file (error ${status[1]}).`, fix: 'Check that your Figma token can open this file.', details: raw };
   if (raw.length > 140 || /https?:\/\/|[A-Z]+_[A-Z_]+=?/.test(raw)) return { text: 'The Figma frame did not load.', fix: null, details: raw };
   return { text: raw, fix: null, details: null };
+}
+
+const LINKS_OFF = /Figma API, which is off/;
+
+function nodesUrl(link: string): string {
+  const match = /figma\.com\/(?:file|design|proto)\/([A-Za-z0-9]+)/.exec(link);
+  const node = /[?&]node-id=([^&#]+)/.exec(link)?.[1];
+  const ids = node ? decodeURIComponent(node).replace('-', ':') : '<node id>';
+  return `https://api.figma.com/v1/files/${match?.[1] ?? '<file key>'}/nodes?ids=${ids}`;
+}
+
+function JsonPaste({ link, onUse }: { link: string; onUse: (nodes: string) => void }) {
+  const [text, setText] = useState('');
+  const [bad, setBad] = useState(false);
+  const use = () => {
+    const nodes = text.trim();
+    if (!looksLikeFigmaNodes(nodes)) return setBad(true);
+    onUse(nodes);
+  };
+  return (
+    <div className="field">
+      <label className="field">
+        <span>Frame JSON</span>
+        <textarea className="mono" rows={5} value={text} spellCheck={false} placeholder={'{ "nodes": { … } }'} aria-invalid={bad} aria-describedby="fgi-json-help" onChange={(e) => { setText(e.target.value); setBad(false); }} />
+      </label>
+      <p id="fgi-json-help" className="fgi-facts">
+        {bad ? 'This is not Figma frame JSON. ' : ''}Open {nodesUrl(link)} with your Figma token (X-Figma-Token header) and paste the reply here. To use links, start the studio with STUDIO_FIGMA_FETCH=1 and FIGMA_TOKEN.
+      </p>
+      <div>
+        <button type="button" className="btn" disabled={text.trim() === ''} onClick={use}>
+          Use JSON
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function JsonFallback({ base, failure, onUse }: { base: FigmaImportSource; failure: string | null; onUse: (nodes: string) => void }) {
+  if (!failure || !('link' in base) || !LINKS_OFF.test(failure)) return null;
+  return <JsonPaste link={base.link} onUse={onUse} />;
 }
 
 function FailureNote({ failure }: { failure: string }) {
@@ -138,7 +178,7 @@ function Summary({ preview }: { preview: FigmaImportPreview }) {
 }
 
 export default function FigmaImportDialog({ ids, target, text, canNest, onDone, onClose }: Props) {
-  const [base] = useState<FigmaImportSource>(() => (looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }));
+  const [base, setBase] = useState<FigmaImportSource>(() => (looksLikeFigmaLink(text) ? { link: text.trim() } : { nodes: text }));
   const [nodeId, setNodeId] = useState('');
   const [position, setPosition] = useState<JsxInsertPosition>(canNest ? 'inside' : 'after');
   const [busy, setBusy] = useState(false);
@@ -193,6 +233,14 @@ export default function FigmaImportDialog({ ids, target, text, canNest, onDone, 
           {preview && <Summary preview={preview} />}
           {loading && !preview && !failure && <div className="fgi-loading">Reading the Figma frame…</div>}
           {failure && <FailureNote failure={failure} />}
+          <JsonFallback
+            base={base}
+            failure={failure}
+            onUse={(nodes) => {
+              setFailure(null);
+              setBase({ nodes });
+            }}
+          />
         </div>
         <div className="modal-foot">
           <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>

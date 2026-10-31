@@ -10,6 +10,7 @@ import { IS_MAC } from './commands/keys';
 import { NO_SOURCE, dropRequest, selectionTargets, type LayerDrop, type SelectionOp } from './structureEdits';
 import { canvasHasKeys, isTypingTarget } from './typingTarget';
 import { useLayerLocks } from './useLayerLocks';
+import { pasteJsx } from './pasteJsx';
 
 const RESELECT_MS = 5000;
 const NODE_WAIT_MS = 2000;
@@ -243,7 +244,10 @@ export function useLayerEdits(o: Options): LayerEdits {
   }, [notify]);
 
   const pasteInto = useCallback(() => {
-    const into = selectionTargets(live.current.selection.slice(-1))?.[0];
+    const cur = live.current;
+    const into = selectionTargets(cur.selection.slice(-1))?.[0];
+    const last = cur.selection.at(-1);
+    if (!cut && cur.enabled && cur.directionId && last) return void pasteJsx({ projectId: cur.projectId, directionId: cur.directionId }, last, notify);
     if (!cut) return notify(`Cut a layer first (${shortcutLabel('layer-cut', IS_MAC)}), then select where it goes.`);
     if (!into) return notify(NO_SOURCE);
     setCut(null);

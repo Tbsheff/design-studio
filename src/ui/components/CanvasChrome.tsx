@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState, type ComponentProps, type Rea
 import { createPortal } from 'react-dom';
 import type { ProjectKind, SelectionContext } from '../../shared/contracts';
 import { api } from '../api';
-import { canAddFrame, FRAME_PRESETS, frameName, setFrameHidden, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
+import { canAddFrame, canvasStore, FRAME_PRESETS, setFrameHidden, setFramePath, type CanvasFrame, type CanvasLayout } from '../canvasFrames';
+import { frameBaseName, framePage } from './CanvasFrames';
 import { uiStore, type UiState } from '../storage';
 import { isTypingTarget } from '../usePanZoom';
 import type { LiveStore } from '../liveStore';
@@ -104,7 +105,7 @@ interface ChromeProps {
   directionId: string | null;
   live: boolean;
   ui: UiState;
-  zoom: { zoomPercent: LiveStore<number>; zoomTo: (z: number) => void; zoomStep: (d: 1 | -1) => void; fit: () => void };
+  zoom: { zoomPercent: LiveStore<number>; zoomTo: (z: number) => void; zoomStep: (d: 1 | -1) => void; fit: () => void; zoomToActive?: () => void };
   comment: CommentTool;
   selectMode: boolean;
   setSelectMode: SetSelectMode;
@@ -120,6 +121,15 @@ interface ChromeProps {
   stage: () => HTMLElement | null;
   view: Omit<ComponentProps<typeof CanvasViewRow>, 'viewport'>;
   proto: { on: boolean; set: (on: boolean) => void; play: () => void };
+}
+
+function addAndShow(p: ChromeProps, size: { width: number; height: number }) {
+  const before = new Set((canvasStore.get(p.projectId)?.frames ?? p.layout.frames).map((frame) => frame.id));
+  p.addFrame(size);
+  const added = canvasStore.get(p.projectId)?.frames.find((frame) => !before.has(frame.id));
+  if (!added) return;
+  p.frames.activate(added);
+  p.zoom.zoomToActive?.();
 }
 
 function useFileMenu(p: ChromeProps) {
@@ -141,11 +151,12 @@ function useFileMenu(p: ChromeProps) {
         const show = () => {
           if (f.hidden) p.frames.update((l) => setFrameHidden(l, f.id, false));
           p.frames.activate(f);
+          p.zoom.zoomToActive?.();
         };
-        return { id: `frame-${f.id}`, label: `${info.number ?? i + 1}  ${info.badge?.title ?? info.title ?? frameName(f)}`, meta: f.hidden ? 'Hidden' : frameName(f), checked: f.id === p.active.id, run: show };
+        return { id: `frame-${f.id}`, label: `${info.number ?? i + 1}  ${info.badge?.title ?? frameBaseName(f)}`, meta: f.hidden ? 'Hidden' : framePage(f.path), checked: f.id === p.active.id, run: show };
       }),
     },
-    { label: 'Add frame', items: FRAME_PRESETS.map((f) => ({ id: `add-${f.preset}`, label: f.label, icon: f.preset, disabled: !canAddFrame(p.layout), run: () => p.addFrame({ width: f.width, height: f.height }) })) },
+    { label: 'Add frame', items: FRAME_PRESETS.map((f) => ({ id: `add-${f.preset}`, label: f.label, icon: f.preset, disabled: !canAddFrame(p.layout), run: () => addAndShow(p, { width: f.width, height: f.height }) })) },
   ];
   return { load, groups };
 }

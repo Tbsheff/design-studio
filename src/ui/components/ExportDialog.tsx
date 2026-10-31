@@ -3,7 +3,7 @@ import { EXPORT_SCALES, type EditorInfo, type ExportFormat, type ExportFrame, ty
 import { downloadBlob } from '../format';
 import { canRevealDownload, canvasFrameChoices, exportApi, frameRoute, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
 import { useModalDialog } from '../usePopover';
-import { pageName } from './FrameControls';
+import { canvasFrameName, framePage } from './CanvasFrames';
 import { Icon, type IconName } from './Icon';
 import '../styles/export.css';
 
@@ -213,6 +213,7 @@ function ConnectClaudeCode() {
 }
 
 interface Options {
+  projectId: string;
   format: ExportFormat;
   scale: ExportScale;
   scope: ExportScope;
@@ -236,6 +237,7 @@ function useExportOptions(target: ExportTarget): Options {
   const [picked, setPicked] = useState<Set<string>>(() => new Set(frames.map((f) => f.id)));
   const selectionOnly = Boolean(target.selector) && (format === 'png' || format === 'svg');
   return {
+    projectId: target.projectId,
     format,
     scale,
     scope,
@@ -305,8 +307,8 @@ function FrameList({ options }: { options: Options }) {
       {options.frames.map((choice) => (
         <label key={choice.id} className="export-frame">
           <input type="checkbox" checked={options.picked.has(choice.id)} onChange={() => options.toggle(choice.id)} />
-          <span className="export-frame-name">{choice.frame.name}</span>
-          <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{pageName(choice.frame.path)}</span>
+          <span className="export-frame-name">{canvasFrameName(options.projectId, choice.id, choice.frame.name)}</span>
+          <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{framePage(choice.frame.path)}</span>
           <span className="export-frame-size">
             {choice.frame.width} × {choice.frame.height}
           </span>

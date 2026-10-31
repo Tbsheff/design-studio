@@ -28,7 +28,8 @@ function relationText(spec: PlaceSpec, frames: readonly CanvasFileFrame[]): stri
 
 export function placedFrames(specs: readonly PlaceSpec[], before: readonly CanvasFileFrame[], after: readonly CanvasFileFrame[]): CanvasFileFrame[] {
   const named = specs.flatMap((spec) => (spec.frame ? [findFrame(after, spec.frame)?.id] : []));
-  const known = new Set([...before.map((frame) => frame.id), ...named]);
+  const implicitFirst = before.length === 0 && after.length > specs.length ? ['f1'] : [];
+  const known = new Set([...before.map((frame) => frame.id), ...named, ...implicitFirst]);
   const added = after.filter((frame) => !known.has(frame.id));
   let next = 0;
   return specs.flatMap((spec) => {

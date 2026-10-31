@@ -51,6 +51,39 @@ function pickHunk(entry: VersionFileDiff, index: number): PatchHunk {
   return hunk;
 }
 
+const NAME_MAX = 32;
+
+function changedSpan(before: string, after: string): string {
+  let start = 0;
+  while (start < before.length && start < after.length && before[start] === after[start]) start++;
+  let end = after.length;
+  for (let back = before.length; end > start && back > start && before[back - 1] === after[end - 1]; back--) end--;
+  const open = after.lastIndexOf('<', start - 1);
+  const insideTag = open > after.lastIndexOf('>', start - 1);
+  if (insideTag) return /^<\/?([A-Za-z][\w.-]*)/.exec(after.slice(open))?.[1] ?? '';
+  const close = after.indexOf('<', end);
+  return after.slice(after.lastIndexOf('>', start - 1) + 1, close === -1 ? after.length : close);
+}
+
+function readable(text: string): string {
+  return text.replace(/<[^>]*>?/g, ' ').replace(/[{}()[\]"'`;,=<>/]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function changedText(hunk: PatchHunk): string {
+  const removed = hunk.lines.find((line) => line.sign === '-' && line.text.trim() !== '');
+  const added = hunk.lines.find((line) => line.sign === '+' && line.text.trim() !== '');
+  if (removed && added) return readable(changedSpan(removed.text, added.text)) || readable(added.text);
+  return readable((added ?? removed)?.text ?? '');
+}
+
+function changeName(hunk: PatchHunk): string {
+  const words = changedText(hunk);
+  if (words) return `“${words.length > NAME_MAX ? `${words.slice(0, NAME_MAX - 1).trimEnd()}…` : words}”`;
+  const added = hunk.lines.filter((item) => item.sign !== '-').length;
+  const end = hunk.newStart + Math.max(0, added - 1);
+  return end > hunk.newStart ? `lines ${hunk.newStart}-${end}` : `line ${hunk.newStart}`;
+}
+
 async function readText(file: string): Promise<string> {
   try {
     return await readFile(file, 'utf8');
@@ -78,7 +111,7 @@ export async function revertHunk(deps: DirectEditDeps, project: Project, directi
   const original = await readText(target.file);
   const next = reverseHunk(original, hunk);
   await writeAtomic(target.file, next);
-  const title = `Undo change ${request.hunk} in ${target.relative.split('/').pop()}`;
+  const title = `Undo ${changeName(hunk)} in ${target.relative.split('/').pop()}`;
   const version = saveDeferred(deps, project, direction, [target.relative], title, { kind: 'manual', prompt: `${title} (${hunk.header.replace(/^(@@[^@]*@@).*$/, '$1')}), from the compare of ${from.slice(0, 7)} and ${request.to.slice(0, 7)}` });
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: title, versionId: version.id, files: [{ file: target.file, relative: target.relative, before: original, after: next }] });
   await publishVersion(deps, project, direction, version);

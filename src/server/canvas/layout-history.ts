@@ -95,8 +95,14 @@ function changedFramesLabel(changed: { from: CanvasFileFrame; to: CanvasFileFram
   return changed.length === 1 && first ? `${verb} frame${frameName(first.to)}` : `${verb} ${changed.length} frames`;
 }
 
+function withImplicitFirst(before: CanvasFileFrame[], after: CanvasFileFrame[]): CanvasFileFrame[] {
+  if (before.length > 0 || after.length < 2) return before;
+  const first = after.find((frame) => frame.id === 'f1');
+  return first ? [first] : before;
+}
+
 function canvasLabel(before: CanvasFile, after: CanvasFile): string | null {
-  const diff = diffItems(before.frames, after.frames);
+  const diff = diffItems(withImplicitFirst(before.frames, after.frames), after.frames);
   const kinds = [diff.added.length, diff.removed.length, diff.changed.length].filter((count) => count > 0).length;
   if (kinds > 1) return 'Change canvas frames';
   const [added, removed] = [diff.added[0], diff.removed[0]];

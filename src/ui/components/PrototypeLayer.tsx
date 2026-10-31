@@ -5,6 +5,7 @@ import { ACTION_LABELS, cleanLinkText, EASING_LABELS, isBackTarget, LINK_ACTIONS
 import type { CanvasFrame } from '../canvasFrames';
 import { linksApi } from '../linksApi';
 import type { LinkState } from '../useLinkRects';
+import { framePage, frameTitle } from './CanvasFrames';
 import { Icon } from './Icon';
 import { UiSelect, type UiSelectOption } from './UiSelect';
 import '../styles/prototype.css';
@@ -22,6 +23,20 @@ interface Box {
 }
 
 const PAD = 400;
+
+export function hasOutgoing(file: LinksFile, frameId: string): boolean {
+  return file.links.some((link) => link.from.frame === frameId);
+}
+
+export function playStartOf(file: LinksFile, frames: readonly CanvasFrame[], startId: string): string {
+  if (file.start || hasOutgoing(file, startId)) return startId;
+  return frames.find((frame) => !frame.hidden && hasOutgoing(file, frame.id))?.id ?? startId;
+}
+
+function protoHint(frames: readonly CanvasFrame[], hasSelection: boolean): string {
+  if (new Set(frames.map((frame) => framePage(frame.path))).size < 2) return 'Add a page first: ask in chat, or Add frame in the page menu, then pick its page.';
+  return hasSelection ? 'Drag the + handle to a frame to link it.' : 'Click an element, then drag its + handle to a frame.';
+}
 
 function boxOf(frame: CanvasFrame, active: CanvasFrame): Box {
   return { x: frame.x - active.x, y: frame.y - active.y, width: frame.width, height: frame.height };
@@ -344,21 +359,25 @@ function LinkList({ projectId, states, linkTitle, onError }: { projectId: string
   );
 }
 
-export function PrototypeBar(p: BarProps) {
+export function PrototypeBar(bar: BarProps) {
+  const p = { ...bar, frameTitle: (frame: CanvasFrame) => frameTitle(frame, bar.frames) };
   const [listOpen, setListOpen] = useState(false);
   const broken = p.states.filter((state) => state.issue !== null).length;
   const found = p.states.filter((state) => state.link.implicit).length;
   const savedCount = p.file.links.length - found;
   const fail = (error: unknown) => p.onError(error instanceof Error ? error.message : String(error));
   const starts = p.frames.map((frame) => ({ value: frame.id, label: p.frameTitle(frame) }));
+  const startId = playStartOf(p.file, p.frames, p.startId);
   return (
     <div className="proto-bar" role="toolbar" aria-label="Prototype" data-testid="proto-bar" onPointerDown={(event) => event.stopPropagation()}>
-      <UiSelect className="proto-select proto-start" aria-label="Start frame" tip="Start frame for Play" icon={<Icon name="play" size={12} />} value={p.startId} options={starts} onChange={(value) => void linksApi.setStart(p.projectId, value).catch(fail)} />
+      <UiSelect className="proto-select proto-start" aria-label="Start frame" tip="Start frame for Play" icon={<Icon name="play" size={12} />} value={startId} options={starts} onChange={(value) => void linksApi.setStart(p.projectId, value).catch(fail)} />
       <div className="toolbar-sep" />
       {p.selected ? (
         <LinkEditor projectId={p.projectId} state={p.selected} frames={p.frames} frameTitle={p.frameTitle} onError={p.onError} />
       ) : (
-        <span className="proto-hint truncate">{p.hasSelection ? 'Drag the + handle to a frame to link it.' : 'Click an element, then drag its + handle to a frame.'}</span>
+        <span className="proto-hint truncate" data-tip={protoHint(p.frames, p.hasSelection)}>
+          {protoHint(p.frames, p.hasSelection)}
+        </span>
       )}
       <div className="toolbar-sep" />
       <span className="topbar-anchor">

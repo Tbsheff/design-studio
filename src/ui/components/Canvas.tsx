@@ -803,7 +803,12 @@ function CanvasView(props: ViewProps) {
   const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
   const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
   useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check, play: proto.play });
-  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport });
+  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport, onSignIn: () => {
+    setSelectMode(false);
+    setProtoOn(false);
+    comment.setOn(false);
+    requestAnimationFrame(() => artboardRef.current?.querySelector('iframe')?.focus());
+  } });
 
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
@@ -855,7 +860,6 @@ function CanvasView(props: ViewProps) {
         >
           <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
           <StepCover steps={props.steps} covered={covered} wait={firstBuild.wait} path={active.path} />
-          {appCanvas.note}
           <LiveOverlay
             hover={frames.hover}
             picked={frames.picked}
@@ -885,7 +889,7 @@ function CanvasView(props: ViewProps) {
           <MarqueeLayer listen={frames.listen} />
           <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
           <FreeMoveSlot view={freeMove} />
-          <FrameLabel {...labelProps(active, frameDirection(active, directionId))} />
+          <FrameLabel {...labelProps(active, frameDirection(active, directionId))} note={appCanvas.note} />
           <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
           <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} steps={props.steps} />
           <FrameSnapLayer origin={active} />

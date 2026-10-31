@@ -12,6 +12,8 @@ import { formatMs } from '../format';
 import type { RunView, ToolRow } from '../runState';
 import { SKILL_TOOL, toolGroupLabel, toolSubject, toolTally, toolVerb } from '../toolLabels';
 import { Icon, type IconName } from './Icon';
+import { shortcutLabel } from '../../shared/keymap';
+import { IS_MAC } from '../commands/keys';
 
 const TOOL_ICON: Record<string, IconName> = {
   Write: 'pencil',
@@ -417,7 +419,7 @@ export function LiveStatus({ run, workTree, offline = false, onStop }: { run: Ru
       <span className="live-label min-w-0 truncate">{statusLabel(run, workTree, run.startedAt + elapsed, offline)}</span>
       <span className="live-elapsed tabular-nums">{elapsedText(elapsed)}</span>
       {onStop && (
-        <button type="button" className="icon-btn small live-stop" aria-label="Stop run" data-tip="Stop (Esc)" data-tip-align="end" onClick={onStop}>
+        <button type="button" className="icon-btn small live-stop" aria-label="Stop run" data-tip={`Stop (${shortcutLabel('stop', IS_MAC)})`} data-tip-align="end" onClick={onStop}>
           <Icon name="stop" size={12} />
         </button>
       )}

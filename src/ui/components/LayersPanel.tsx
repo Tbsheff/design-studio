@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
 import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contracts';
 import { reorderMoveOf } from '../../shared/reorder';
 import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
@@ -429,13 +429,6 @@ function usePendingSelect(selectedNode: number | null, onSelect: (id: number, ad
   return { shown: pending ?? selectedNode, select };
 }
 
-function stageOnDroppedFocus(e: FocusEvent<HTMLDivElement>): void {
-  if (e.target !== e.currentTarget || e.relatedTarget !== null) return;
-  window.requestAnimationFrame(() => {
-    if (document.activeElement === document.body && document.hasFocus()) focusStageQuietly();
-  });
-}
-
 export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover, onSelect: onSelectProp, onClose, edits, onToggleLocked, busy = false, hoveredNode = null }: Props) {
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const latestSelect = useLatest(onSelectProp);
@@ -551,7 +544,6 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
         aria-activedescendant={selectedIndex >= 0 ? `layer-${selectedNode}` : undefined}
         aria-busy={busy}
         onKeyDown={onKeyDown}
-        onBlur={stageOnDroppedFocus}
         onPointerMove={drag.onPointerMove}
         onPointerUp={drag.onPointerUp}
         onPointerCancel={drag.onPointerCancel}

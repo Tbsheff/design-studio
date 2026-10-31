@@ -10,9 +10,10 @@ interface DoctorCardProps {
   onFixed: () => void;
   onLog: () => void;
   onClose: () => void;
+  onRestart?: (() => void) | undefined;
 }
 
-export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose }: DoctorCardProps) {
+export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose, onRestart }: DoctorCardProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fix = () => {
@@ -56,6 +57,11 @@ export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose }
         {cause.fix && (
           <button type="button" className="btn small primary" disabled={busy} onClick={fix}>
             {busy ? 'Restarting…' : cause.fix.label}
+          </button>
+        )}
+        {!cause.fix && onRestart && cause.severity === 'error' && (
+          <button type="button" className="btn small primary" onClick={onRestart}>
+            Restart dev server
           </button>
         )}
       </div>

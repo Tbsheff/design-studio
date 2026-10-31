@@ -197,9 +197,16 @@ function pathOf(spec: PlaceSpec, existing: CanvasFileFrame | null): string | und
   return path || undefined;
 }
 
-function labelOf(spec: PlaceSpec, existing: CanvasFileFrame | null): string | undefined {
-  if (spec.label === undefined) return existing?.label;
-  return cleanFrameLabel(spec.label) ?? undefined;
+function nextFrameLabel(frames: readonly CanvasFileFrame[]): string {
+  let n = frames.length + 1;
+  while (frames.some((frame) => frame.label === `Frame ${n}`)) n += 1;
+  return `Frame ${n}`;
+}
+
+function labelOf(spec: PlaceSpec, existing: CanvasFileFrame | null, frames: readonly CanvasFileFrame[]): string | undefined {
+  if (spec.label !== undefined) return cleanFrameLabel(spec.label) ?? undefined;
+  if (existing) return existing.label;
+  return spec.path === undefined ? nextFrameLabel(frames) : undefined;
 }
 
 function withOptional(frame: CanvasFileFrame, extra: { directionId?: string; path?: string; label?: string; hidden?: boolean }): CanvasFileFrame {
@@ -219,7 +226,7 @@ function placeOne(frames: CanvasFileFrame[], spec: PlaceSpec, directionId: strin
   return withOptional(base, {
     directionId: existing ? existing.directionId : directionId,
     path: pathOf(spec, existing),
-    label: labelOf(spec, existing),
+    label: labelOf(spec, existing, frames),
     hidden: spec.hidden ?? existing?.hidden,
   });
 }

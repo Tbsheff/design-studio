@@ -54,7 +54,7 @@ import { useChatState } from '../useChatState';
 import { useRewind } from '../useRewind';
 import { useMcpFeed } from '../useMcpFeed';
 import { setTelemetryScope } from '../perfTelemetry';
-import { renameVersion } from '../versionsApi';
+import { openCompareInCode, renameVersion } from '../versionsApi';
 import { useExportTarget } from '../useExportTarget';
 import type { ExportTarget } from '../exportApi';
 import type { ShareTarget } from './ShareDialog';
@@ -165,6 +165,12 @@ function effortOf(effort: RunEffort | null): Pick<RunRequest, 'effort'> {
 
 function shipOpener(project: { app?: unknown }, setOpen: (open: boolean) => void): (() => void) | null {
   return project.app ? () => setOpen(true) : null;
+}
+
+function reviewPair(list: readonly Version[], versionId: string): [Version, Version] | null {
+  const v = list.find((x) => x.id === versionId);
+  const parent = v ? list.find((x) => x.id === v.parentId) : undefined;
+  return v && parent ? [parent, v] : null;
 }
 
 function exportTarget(versions: Version[], direction: { headVersionId: string | null } | null): string | null {
@@ -430,6 +436,26 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   };
 
   const openShip = shipOpener(project, setShipOpen);
+  const openReview = (pair: [Version, Version]) => {
+    openCompareInCode();
+    setCompareOpen(false);
+    setCompare(pair);
+    requestAnimationFrame(() => setCompareOpen(true));
+  };
+  const reviewVersionId = (versionId: string) => {
+    const pair = reviewPair(versions, versionId);
+    if (pair) return openReview(pair);
+    if (!did) return;
+    void api
+      .listVersions(projectId, did)
+      .then((list) => {
+        const fresh = reviewPair(list, versionId);
+        if (fresh) openReview(fresh);
+      })
+      .catch(() => undefined);
+    data.refreshVersions();
+  };
+  const reviewVersion = (v: Version) => reviewVersionId(v.id);
   commandActions.current = {
     running: Boolean(activeRun),
     directions: project.directions.map((d) => ({ id: d.id, name: d.name })),
@@ -506,7 +532,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
               <RulesSlot projectId={projectId} directionId={did} />
             </>
           }
-          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp }}
+          chat={{ lead: draftChrome.banner, offline: data.connection === 'reconnecting', onStop: runControls.onCancel, rewind, runs: directionRuns, pending: shownPending(pendingRun, directionRuns, directionId), direction, onDetails: setDetailsRunId, running: activeRun !== null, busy, onPolish: polish, onRetry: retryRun, onApprovePlan: approvePlan, mcp, onReview: reviewVersionId }}
           errors={{ errors: data.errors, onClear: data.clearErrors, onSendToAgent: (e) => draft.set(fixPrompt(e)) }}
           prompt={{
             projectId,
@@ -612,13 +638,7 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
             onToggleCompare: (v) =>
               setCompare((prev) => (prev.some((x) => x.id === v.id) ? prev.filter((x) => x.id !== v.id) : [...prev, v].slice(-2))),
             onCompare: () => setCompareOpen(true),
-            onReview: (v) => {
-              const parent = versions.find((x) => x.id === v.parentId);
-              if (!parent) return;
-              setCompareOpen(false);
-              setCompare([parent, v]);
-              requestAnimationFrame(() => setCompareOpen(true));
-            },
+            onReview: reviewVersion,
             onPolish: polish,
             active: panel.tab === 'versions',
             onRename: (v, name) =>

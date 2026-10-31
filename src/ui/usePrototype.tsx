@@ -7,7 +7,7 @@ import { frameStateOf, useCurrentFrameStates } from './frameStates';
 import { withFrameStateHost } from '../shared/frame-state';
 import { linksApi, useImplicitLinks, useLinks } from './linksApi';
 import { useLinkRects } from './useLinkRects';
-import { LinkArrows, LinkDragLine, LinkHandle, linkOfSelection, linkSourceOf, PrototypeBar, useLinkDrag } from './components/PrototypeLayer';
+import { LinkArrows, LinkDragLine, LinkHandle, linkOfSelection, linkSourceOf, playStartOf, PrototypeBar, useLinkDrag } from './components/PrototypeLayer';
 
 const PlayMode = lazy(() => import('./components/PlayMode'));
 
@@ -48,7 +48,7 @@ export function usePrototype(o: Options) {
     lastActive.current = o.active.id;
     if (on) clear.current();
   }, [o.active.id, on]);
-  const startId = startFrameOf(file, o.frames);
+  const startId = playStartOf(file, o.frames, startFrameOf(file, o.frames));
   const states = useLinkRects({
     kind: o.kind,
     file,

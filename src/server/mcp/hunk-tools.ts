@@ -24,8 +24,8 @@ const revertHunk = defineTool('revert_hunk', schema, { title: 'Undo one change o
   refuseWhileRunning(deps, project, direction);
   const result = await studioCall<HunkRevertResult>(deps, 'POST', `${base(project, direction.id)}/hunks/revert`, { to: input.versionId, from: input.from, file: input.file, hunk: input.hunk });
   return {
-    result: ok({ undid: `change ${result.hunk} in ${result.file}`, versionId: result.version.id, title: result.version.title, from: result.from, to: result.to }),
-    activity: versionActivity(project, direction, `Undid change ${result.hunk} in ${result.file}`, result.version),
+    result: ok({ undid: result.label, hunk: result.hunk, file: result.file, versionId: result.version.id, title: result.version.title, from: result.from, to: result.to }),
+    activity: versionActivity(project, direction, result.version.title, result.version),
   };
 });
 

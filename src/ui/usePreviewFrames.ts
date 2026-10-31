@@ -6,7 +6,7 @@ import { sendTelemetry } from './api';
 import { reportAppStart } from './perfTelemetry';
 import { frameSrc, postToFrame, useBridge, type BridgeFrame, type ParentMessageBody } from './bridge';
 import { randomToken } from './session';
-import { PREVIEW_ESCAPE_EVENT } from './useEscapeStop';
+import { PREVIEW_ESCAPE_EVENT, PREVIEW_STOP_EVENT } from './useEscapeStop';
 import { PREVIEW_HISTORY_EVENT } from './useUndoShortcut';
 import { PREVIEW_PAINTED_EVENT } from './useEditHistory';
 import { textEditability } from './cssValues';
@@ -30,6 +30,7 @@ function isKeyMessage(msg: BridgeToParent): msg is KeyMessage {
 function forwardAppKey(id: AppKey): void {
   if (id === 'ask-inline') void runCommand('selection.ask-inline');
   else if (id === 'project-rail') void runCommand('view.project-rail');
+  else if (id === 'stop') window.dispatchEvent(new CustomEvent(PREVIEW_STOP_EVENT));
   else if (id === 'palette' || id === 'shortcuts') openLayer(id);
   else moveRegion(id === 'next-region' ? 1 : -1);
 }

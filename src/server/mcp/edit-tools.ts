@@ -14,12 +14,13 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { STRUCTURE_OPS, TOKENS_FILE, type AppServerStatus, type CompiledTokenEntry, type SelectionContext, type DesignComment, type DesignSystemState, type DirectEditResult, type PackSummary, type SourceLoc, type Project, type StructureEditResult, type UpdateTokensResult, type Version } from '../../shared/contracts.js';
+import type { CanvasFileFrame } from '../../shared/canvas-file.js';
 import { COMMENT_TEXT_MAX, targetFromSelection } from '../../shared/comments.js';
 import { EXPORT_FRAME_MAX_SIDE, EXPORT_MAX_FRAMES, type HandoffResult } from '../../shared/export.js';
 import { canvasList, canvasPlace, findFrame, frameRef, placeSchema, type CanvasToolContext, type PlaceSpec } from '../canvas/tools.js';
 import { publishVersion } from '../direct-edit/index.js';
 import type { ActivityDraft } from './activity.js';
-import { editSummary, frameName, placedFrames, placeSummary, versionName } from './activity-text.js';
+import { editSummary, frameStepText, placedFrames, placeSummary, versionName } from './activity-text.js';
 import { approve, EditError, loadTarget, exportFolder, oneLine, refuseWhileRunning, short, studioCall, studioFile, writeUnique, type EditDeps } from './edit-deps.js';
 import { base, checkWritePath, classes, variant, directionId, hasClasses, id, ok, packId, pagePath, pageUrl, parseInput, PATH_MAX, plain, projectId, selector, sourceElement, style, versionActivity, writeText, type Done, type Meta, type ToolSpec } from './edit-kit.js';
 import { describeElement, textHintsOf } from './element.js';
@@ -249,25 +250,30 @@ async function pointFrame(deps: EditDeps, ctx: CanvasToolContext, ref: string, s
   return ok({ frame: frameId, label: frame?.label ?? null, page: frame?.path ?? '(entry page)', ...(sel ? { selector: sel } : {}), shown: false, badge, note });
 }
 
-async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string, options: { seed?: boolean } = {}): Promise<Done> {
+function addedText(placed: readonly CanvasFileFrame[]): string {
+  return placed.length === 1 ? frameStepText('Add', placed[0], 'a frame') : `Add ${placed.length} frames`;
+}
+
+async function placeWithActivity(ctx: CanvasToolContext, specs: PlaceSpec[], verb: string | null, options: { seed?: boolean } = {}): Promise<Done> {
   const before = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const result = await canvasPlace(ctx, specs, options);
   if (result.isError) return { result };
   const after = (await ctx.canvas.read(ctx.project)).canvas?.frames ?? [];
   const placed = placedFrames(specs, before, after);
-  return { result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: placeSummary(verb, specs, placed, after), frameId: placed[0]?.id ?? null } };
+  const summary = verb === null || specs.every((spec) => !spec.frame) ? addedText(placed) : placeSummary(verb, specs, placed, after);
+  return { result, activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary, frameId: placed[0]?.id ?? null } };
 }
 
 async function addFrame(deps: EditDeps, input: Input<'add_frame'>): Promise<Done> {
   const ctx = await busyCanvas(deps, input);
   const spec = { ...(input.path ? { path: input.path } : {}), viewport: input.viewport ?? 'desktop', ...(input.width ? { width: input.width } : {}), ...(input.height ? { height: input.height } : {}), ...(input.label ? { label: input.label } : {}), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
-  return placeWithActivity(ctx, [spec], 'Added');
+  return placeWithActivity(ctx, [spec], null);
 }
 
 async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promise<Done> {
   const ctx = await busyCanvas(deps, input);
   let removed: string | null = null;
-  let name = input.frame;
+  let removedText = frameStepText('Remove', null, input.frame);
   await deps.canvas.update(
     ctx.project,
     (file) => {
@@ -275,13 +281,13 @@ async function removeFrame(deps: EditDeps, input: Input<'remove_frame'>): Promis
       if (!frame) return null;
       if (file.frames.length === 1) throw new EditError('The canvas needs at least one frame.');
       removed = frame.id;
-      name = frameName(frame, input.frame);
+      removedText = frameStepText('Remove', frame, input.frame);
       return { ...file, frames: file.frames.filter((item) => item.id !== frame.id) };
     },
     { source: 'agent' },
   );
   if (!removed) throw new EditError(`No frame ${input.frame}. Call canvas_list for the ids and labels.`);
-  return { result: ok({ removed, note: 'The page file stays in the project.' }), activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: `Removed ${name}`, frameId: removed } };
+  return { result: ok({ removed, note: 'The page file stays in the project.' }), activity: { projectId: ctx.project.id, directionId: ctx.direction.id, summary: removedText, frameId: removed } };
 }
 
 const FIRST_VERSION_WAIT_MS = 20_000;
@@ -417,7 +423,7 @@ async function addRouteFrame(deps: EditDeps, input: Input<'add_route_frame'>): P
   if (route === null || /\[|\]/.test(route)) throw new EditError(`Route ${input.route} is not a page path. Fill in dynamic segments like [id] first.`);
   const spec = { path: route.replace(/^\/+/, ''), viewport: input.viewport ?? 'desktop', label: input.label ?? routeLabel(route), ...(input.rightOf ? { rightOf: input.rightOf } : {}), ...(input.below ? { below: input.below } : {}) };
   void deps.preview.apps?.ensure(ctx.project).then((upstream) => fetch(new URL(route, upstream), { redirect: 'manual', signal: AbortSignal.timeout(180_000) })).catch(() => undefined);
-  return placeWithActivity(ctx, [spec], 'Added', { seed: false });
+  return placeWithActivity(ctx, [spec], null, { seed: false });
 }
 
 async function restoreVersion(deps: EditDeps, input: Input<'restore_version'>): Promise<Done> {

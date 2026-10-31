@@ -111,9 +111,10 @@ export async function revertHunk(deps: DirectEditDeps, project: Project, directi
   const original = await readText(target.file);
   const next = reverseHunk(original, hunk);
   await writeAtomic(target.file, next);
-  const title = `Undo ${changeName(hunk)} in ${target.relative.split('/').pop()}`;
+  const label = `${changeName(hunk)} in ${target.relative.split('/').pop()}`;
+  const title = `Undo ${label}`;
   const version = saveDeferred(deps, project, direction, [target.relative], title, { kind: 'manual', prompt: `${title} (${hunk.header.replace(/^(@@[^@]*@@).*$/, '$1')}), from the compare of ${from.slice(0, 7)} and ${request.to.slice(0, 7)}` });
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: title, versionId: version.id, files: [{ file: target.file, relative: target.relative, before: original, after: next }] });
   await publishVersion(deps, project, direction, version);
-  return { version, file: target.relative, hunk: request.hunk, from, to: request.to };
+  return { version, file: target.relative, hunk: request.hunk, label, from, to: request.to };
 }

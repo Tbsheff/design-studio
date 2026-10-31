@@ -4,6 +4,7 @@ import type { AnchorQuery, Direction, EditHistoryState, SelectionContext, Versio
 import { api, errorText } from './api';
 import { useProjectEvents } from './events';
 import { historyKeyOf, type HistoryKind, type RedoShortcut } from './useUndoShortcut';
+import { historyPhrase } from './versionLabels';
 
 export const PREVIEW_PAINTED_EVENT = 'studio:preview-painted';
 
@@ -35,6 +36,8 @@ export function isHistoryStep(version: Version | undefined): boolean {
 export function stepToast(kind: HistoryKind, label: string | null): string {
   const word = kind === 'undo' ? 'Undid' : 'Redid';
   if (!label) return kind === 'undo' ? 'Undid the last edit' : 'Redid the edit';
+  const phrase = historyPhrase(label);
+  if (phrase) return `${word} ${phrase}`;
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 

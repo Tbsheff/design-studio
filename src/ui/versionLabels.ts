@@ -74,6 +74,35 @@ export function undoneOf(v: Version, index: VersionIndex): Version | null {
   return index.get(v.parentId) ?? null;
 }
 
+const EDIT_LABEL = /^Edit (.+?): (.+?)( \([^)]*\))?$/;
+const TEXT_LABEL = /^Edit text of (.+?)( \([^)]*\))?$/;
+const MANY = /^\d+ elements$/;
+const SIZE_PROPS = new Set(['width', 'height']);
+const PLACE_PROPS = /^(left|right|top|bottom|margin(-.+)?|translate)$/;
+const SPACE_PROPS = /^(padding(-.+)?|gap|row-gap|column-gap)$/;
+const COLOR_PROPS = /^(color|background(-color)?|border-color|fill|stroke)$/;
+
+function layerName(subject: string): string {
+  return MANY.test(subject) ? subject : `${subject.charAt(0).toUpperCase()}${subject.slice(1)}`;
+}
+
+function editAction(props: string[]): string {
+  if (props.every((prop) => SIZE_PROPS.has(prop))) return 'resize';
+  if (props.every((prop) => PLACE_PROPS.test(prop))) return 'move';
+  if (props.every((prop) => SPACE_PROPS.test(prop))) return 'spacing change';
+  if (props.every((prop) => COLOR_PROPS.test(prop))) return 'color change';
+  return 'edit';
+}
+
+export function historyPhrase(label: string): string | null {
+  const text = TEXT_LABEL.exec(label);
+  if (text?.[1]) return `text edit of ${layerName(text[1])}${text[2] ?? ''}`;
+  const edit = EDIT_LABEL.exec(label);
+  if (!edit?.[1] || !edit[2]) return null;
+  const props = edit[2].split(', ').map((prop) => prop.trim());
+  return `${editAction(props)} of ${layerName(edit[1])}${edit[3] ?? ''}`;
+}
+
 export function fullText(v: Version): string | null {
   const prompt = v.meta.prompt?.trim();
   return prompt ? prompt : null;

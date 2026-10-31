@@ -109,10 +109,10 @@ function AttachField({ error: listError, onAttached }: { error: string | null; o
   const waiting = attach.found !== null && !attach.appDir;
   return (
     <>
-      <label className="field">
-        <span>App folder</span>
-        <span className="port-attach-row" style={{ display: 'flex', gap: 'var(--s-2)' }}>
-          <input className="mono" style={{ flex: 1, minWidth: 0 }} value={attach.path} placeholder="~/code/my-app" spellCheck={false} autoComplete="off" aria-invalid={Boolean(attach.error)} onChange={(e) => attach.edit(e.target.value)} onKeyDown={onKeyDown} />
+      <div className="field">
+        <span id="port-attach-label">App folder</span>
+        <div className="port-attach-row" style={{ display: 'flex', gap: 'var(--s-2)' }}>
+          <input aria-labelledby="port-attach-label" className="mono" style={{ flex: 1, minWidth: 0 }} value={attach.path} placeholder="~/code/my-app" spellCheck={false} autoComplete="off" aria-invalid={Boolean(attach.error)} onChange={(e) => attach.edit(e.target.value)} onKeyDown={onKeyDown} />
           {hasNativePicker() && (
             <button type="button" className="btn" disabled={attach.busy} onClick={() => void attach.choose()}>
               Choose…
@@ -121,8 +121,8 @@ function AttachField({ error: listError, onAttached }: { error: string | null; o
           <button type="button" className="btn" disabled={attach.busy || !attach.path.trim() || waiting} onClick={() => attach.run(attach.path)}>
             {attach.busy ? 'Attaching…' : 'Attach'}
           </button>
-        </span>
-      </label>
+        </div>
+      </div>
       {attach.found && <CandidatePick found={attach.found} value={attach.appDir} onChange={attach.setAppDir} />}
       <p className={`port-note${attach.error || listError ? ' error' : ''}`}>{attach.error ?? listError ?? 'No app is attached yet. Type the folder of your Next.js app, then Attach. Your design stays open.'}</p>
     </>

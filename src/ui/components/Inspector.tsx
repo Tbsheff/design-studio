@@ -17,6 +17,7 @@ import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
 import { resetEditVariant, useEditVariant } from '../editVariant';
 import { imageKindOf } from '../../shared/image';
 import { isSvgShapeTag } from '../../shared/vector';
+import { useModalDialog } from '../usePopover';
 import '../styles/inspector-edit.css';
 
 const InspectorProps = lazy(() => import('./InspectorProps'));
@@ -130,30 +131,32 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
 }
 
 function LeavePrompt({ session }: { session: EditSession }) {
-  const first = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (session.asking) first.current?.focus();
-  }, [session.asking]);
-  if (!session.asking) return null;
+  return session.asking ? <LeaveDialog session={session} /> : null;
+}
+
+function LeaveDialog({ session }: { session: EditSession }) {
+  const dialog = useModalDialog(() => void session.answer('cancel'));
   return (
-    <div className="edit-leave" role="alertdialog" aria-modal="false" aria-labelledby="edit-leave-title" onKeyDown={(event) => event.key === 'Escape' && void session.answer('cancel')}>
-      <p id="edit-leave-title" className="edit-leave-title">
-        Save your edits?
-      </p>
-      <p className="edit-leave-text">You have {unsavedLabel(session.net).toLowerCase()}. Save version keeps them as one version. Discard removes them.</p>
-      {session.error && <p className="edit-leave-error">{session.error}</p>}
-      <div className="edit-leave-actions">
+    <dialog ref={dialog.ref} className="modal edit-leave-dialog" style={{ width: 'min(400px, 100%)' }} aria-labelledby="edit-leave-title" aria-describedby="edit-leave-text" onMouseDown={dialog.onMouseDown}>
+      <div className="modal-head">
+        <div className="titles">
+          <h2 id="edit-leave-title">Save your edits?</h2>
+          <p id="edit-leave-text">You have {unsavedLabel(session.net).toLowerCase()}. Save version keeps them as one version. Discard removes them.</p>
+          {session.error && <p className="edit-leave-error">{session.error}</p>}
+        </div>
+      </div>
+      <div className="modal-foot">
         <button type="button" className="btn ghost small" onClick={() => void session.answer('cancel')}>
           Cancel
         </button>
         <button type="button" className="btn small" disabled={session.busy !== null || session.blocked !== null} onClick={() => void session.answer('discard')}>
           Discard
         </button>
-        <button ref={first} type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.answer('save')}>
+        <button type="button" className="btn small primary" data-autofocus disabled={session.busy !== null} onClick={() => void session.answer('save')}>
           Save version
         </button>
       </div>
-    </div>
+    </dialog>
   );
 }
 

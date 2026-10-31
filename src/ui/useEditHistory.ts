@@ -11,6 +11,9 @@ export const PREVIEW_PAINTED_EVENT = 'studio:preview-painted';
 const EMPTY: EditHistoryState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null };
 const TOAST_MS = 2400;
 const REFRESH_WINDOW_MS = 3000;
+const SWAPPED_FRAME_RENDER_MS = 80;
+const CHANGE_WINDOW_MS = 8000;
+const CHANGE_RECHECK_MS = [500, 1500, 4000] as const;
 const REPLAY_SLACK_MS = 1000;
 const NOTHING_TO_UNDO = 'Nothing more to undo';
 
@@ -150,10 +153,37 @@ export function useEditHistory(o: Options) {
   return { state, toast, step, undoChain, redo };
 }
 
-export function useSelectionRefresh(selection: SelectionContext[], setSelection: Dispatch<SetStateAction<SelectionContext[]>>, describeRef: MutableRefObject<Describe | null>) {
+interface RefreshWatch {
+  change: { directionId: string; changedAt: number } | null;
+  directionId: string | null;
+  dropDrafts: () => void;
+}
+
+function sameStyles(a: Record<string, string>, b: Record<string, string>): boolean {
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+}
+
+function stylesMoved(prev: SelectionContext[], selectors: string[], contexts: (SelectionContext | null)[]): boolean {
+  return prev.some((item) => {
+    const context = contexts[selectors.indexOf(item.selector)];
+    return context !== null && context !== undefined && !sameStyles(context.styles, item.styles);
+  });
+}
+
+export function useSelectionRefresh(
+  selection: SelectionContext[],
+  setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
+  describeRef: MutableRefObject<Describe | null>,
+  watch: RefreshWatch,
+) {
+  const { change, directionId } = watch;
   const current = useRef(selection);
   current.current = selection;
+  const dropDrafts = useRef(watch.dropDrafts);
+  dropDrafts.current = watch.dropDrafts;
   const deadline = useRef(0);
+  const timers = useRef(new Set<number>());
 
   const refresh = useCallback(() => {
     if (Date.now() > deadline.current || current.current.length === 0) return;
@@ -165,12 +195,37 @@ export function useSelectionRefresh(selection: SelectionContext[], setSelection:
     const selectors = current.current.map((item) => item.selector);
     const queries = current.current.map((item, index) => anchorQueryOf({ id: String(index), target: targetFromSelection(item) }));
     describe(queries)
-      .then((contexts) => setSelection((prev) => refreshedSelection(prev, selectors, contexts)))
+      .then((contexts) => {
+        if (Date.now() > deadline.current) return;
+        if (stylesMoved(current.current, selectors, contexts)) dropDrafts.current();
+        setSelection((prev) => refreshedSelection(prev, selectors, contexts));
+      })
       .catch(() => undefined);
   }, [describeRef, setSelection]);
 
+  const later = useCallback(
+    (delays: readonly number[]) => {
+      for (const ms of delays) {
+        const id = window.setTimeout(() => {
+          timers.current.delete(id);
+          refresh();
+        }, ms);
+        timers.current.add(id);
+      }
+    },
+    [refresh],
+  );
+
   useEffect(() => {
-    const onPainted = () => refresh();
+    let paintQueued = false;
+    const onPainted = () => {
+      if (paintQueued || Date.now() > deadline.current) return;
+      paintQueued = true;
+      window.setTimeout(() => {
+        paintQueued = false;
+        refresh();
+      }, SWAPPED_FRAME_RENDER_MS);
+    };
     const onInput = (event: Event) => {
       if (event instanceof KeyboardEvent && historyKeyOf(event)) return;
       deadline.current = 0;
@@ -184,6 +239,19 @@ export function useSelectionRefresh(selection: SelectionContext[], setSelection:
       window.removeEventListener('pointerdown', onInput, true);
     };
   }, [refresh]);
+
+  useEffect(() => {
+    if (!change || change.directionId !== directionId) return;
+    deadline.current = Math.max(deadline.current, Date.now() + CHANGE_WINDOW_MS);
+    later(CHANGE_RECHECK_MS);
+  }, [change, directionId, later]);
+
+  useEffect(
+    () => () => {
+      for (const id of timers.current) window.clearTimeout(id);
+    },
+    [],
+  );
 
   return useCallback(
     (now: boolean) => {

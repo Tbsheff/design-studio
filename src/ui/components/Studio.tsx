@@ -263,7 +263,11 @@ export function Studio({ projectId, onExit }: { projectId: string; onExit: () =>
   const prefillChat = useRef<(next: CommentPrefill) => void>(() => undefined);
   const onPrefill = useCallback((next: CommentPrefill) => prefillChat.current(next), []);
   const comments = useComments(projectId, directionId, composerActive, activeRun !== null, onPrefill);
-  const refreshSelection = useSelectionRefresh(selection, setSelection, comments.describeRef);
+  const refreshSelection = useSelectionRefresh(selection, setSelection, comments.describeRef, {
+    change: data.lastChange,
+    directionId,
+    dropDrafts: () => editControl.current?.cancel(),
+  });
   const editHistory = useEditHistory({
     projectId,
     directionId,

@@ -306,6 +306,9 @@ function SizeValue({ axis, mode, used, edit, onDrag }: { axis: Axis; mode: SizeM
   useEffect(() => {
     if (editing) wrap.current?.querySelector<HTMLInputElement>('input.ins-input')?.focus();
   }, [editing]);
+  useEffect(() => {
+    if (mode !== 'fixed' && !wrap.current?.contains(document.activeElement)) setEditing(false);
+  }, [mode]);
   if (mode === 'fixed' || editing) {
     const leave = (event: FocusEvent<HTMLDivElement>) => {
       const next = event.relatedTarget;

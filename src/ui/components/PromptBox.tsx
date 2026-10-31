@@ -188,7 +188,7 @@ function sendReady(state: { running: boolean; blocked: boolean; busy: boolean; e
 
 function inputPlaceholder(mode: ComposerMode, running: boolean, waitReason: string | null | undefined): string {
   if (waitReason) return waitReason;
-  return running ? RUNNING_PLACEHOLDER : INPUT_COPY[mode].placeholder;
+  return running ? RUNNING_PLACEHOLDER : `${INPUT_COPY[mode].placeholder} (${MOD_LABEL}↵ to send)`;
 }
 
 const EMPTY_REASON = 'Type a message to send';

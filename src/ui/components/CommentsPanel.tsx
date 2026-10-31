@@ -15,15 +15,39 @@ interface Props {
   selection?: SelectionContext[];
 }
 
+const SNIPPET_MAX = 32;
+
+function shortSnippet(text: string): string {
+  return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX).trimEnd()}…` : text;
+}
+
+function targetWhere(comment: DesignComment): string {
+  const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
+  return loc ? `${loc.file.split('/').pop()}:${loc.line}` : comment.target.selector;
+}
+
 function targetLabel(comment: DesignComment): string {
   if (comment.drawing) {
     const { box } = comment.drawing;
     return `Drawing · ${box.width} × ${box.height}`;
   }
-  const loc = comment.context?.usedAt ?? comment.target.sourceLoc;
-  const where = loc ? `${loc.file.split('/').pop()}:${loc.line}` : comment.target.selector;
-  const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet.slice(0, 32)}”` : '';
-  return `${comment.target.tag}${snippet} · ${where}`;
+  const snippet = comment.target.textSnippet ? ` “${shortSnippet(comment.target.textSnippet)}”` : '';
+  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}`;
+}
+
+function targetTip(comment: DesignComment): string {
+  const page = comment.frame ? ` · Page ${comment.frame.path.replace(/^\/+/, '') || 'index'}` : '';
+  if (comment.drawing) return `${targetLabel(comment)}${page}`;
+  const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet}”` : '';
+  return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
+}
+
+function TargetLink({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
+  return (
+    <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`} data-tip={targetTip(comment)} data-tip-align="start">
+      <span className="truncate">{targetLabel(comment)}</span>
+    </button>
+  );
 }
 
 function PickNum({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
@@ -131,9 +155,7 @@ function QueuedRow({ comment, index, total, control }: { comment: DesignComment;
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
           <span className="comment-row-meta">
-            <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`}>
-              {targetLabel(comment)}
-            </button>
+            <TargetLink comment={comment} control={control} />
           </span>
           <div className="comment-row-actions">
             <button
@@ -204,9 +226,7 @@ function DoneRow({
         <div className="comment-row-foot">
           <span className="comment-row-meta">
             {comment.status === 'draft' && (
-              <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`}>
-                {targetLabel(comment)}
-              </button>
+              <TargetLink comment={comment} control={control} />
             )}
             {runId && (
               <button type="button" onClick={() => onOpenRun(runId)}>
@@ -260,7 +280,7 @@ function OrphanRow({ comment, control }: { comment: DesignComment; control: Comm
         <span className="comment-row-text">{comment.text}</span>
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
-          <span className="comment-row-meta">Element not found: {targetLabel(comment)}</span>
+          <span className="comment-row-meta clip" data-tip={targetTip(comment)} data-tip-align="start">Element not found: {targetLabel(comment)}</span>
           <div className="comment-row-actions">
             <FixButton comment={comment} control={control} />
             <button type="button" className="btn small" aria-pressed={active} onClick={() => control.setRepinId(active ? null : comment.id)}>
@@ -284,6 +304,8 @@ function SendQueuedButton({ control, className }: { control: CommentsControl; cl
     </button>
   );
 }
+
+const PICK_HINT = 'Press C or choose Comment, then click an element.';
 
 function composerTarget(selection: SelectionContext[]): string | null {
   if (selection.length === 0) return null;
@@ -315,7 +337,7 @@ function CommentsComposer({ control, selection }: { control: CommentsControl; se
         maxLength={2000}
         value={text}
         disabled={target === null}
-        placeholder={target ? `Add a comment on ${target}…` : 'Click an element on the canvas to comment.'}
+        placeholder={target ? `Add a comment on ${target}…` : PICK_HINT}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -359,7 +381,7 @@ export function CommentsPanel({ control, running, onOpenRun, onOpenVersion, sele
       )}
       <ChatPickBar control={control} />
       {empty && (
-        <p className="comments-empty">No comments yet. Click an element on the canvas to pin one. Select several by their numbers, then send them to the chat.</p>
+        <p className="comments-empty">No comments yet. Press C or choose Comment in the toolbar, then click an element to pin one. Select several by their numbers, then send them to the chat.</p>
       )}
       {resolved.length > 0 && (
         <div className="comments-filter">

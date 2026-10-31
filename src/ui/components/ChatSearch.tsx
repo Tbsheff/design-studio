@@ -156,7 +156,7 @@ export function ChatSearch({ open, query, directionId, onOpen, onClose, onQuery,
             {count}
           </span>
         )}
-        <button type="button" className="icon-btn small" aria-label="Close search" data-tip="Close (Esc)" data-tip-align="end" onClick={onClose}>
+        <button type="button" className="icon-btn small" aria-label="Close search" data-tip="Close (Esc)" data-tip-side="top" data-tip-align="end" onClick={onClose}>
           <Icon name="close" size={14} />
         </button>
       </div>

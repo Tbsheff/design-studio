@@ -93,7 +93,7 @@ function RequestChips({ run, skills }: { run: RunView; skills: string[] }) {
   const mode = req.mode === 'critique' ? 'Critique' : req.plan ? 'Plan' : null;
   return (
     <div className="msg-chips">
-      <LevelChip level={runLevel(run)} />
+      {req.task !== 'design-system' && <LevelChip level={runLevel(run)} />}
       {mode && <span className={`ui-chip mode-tag ${req.plan ? 'plan' : req.mode}`}>{mode}</span>}
       {selected > 0 && (
         <span className="ui-chip">

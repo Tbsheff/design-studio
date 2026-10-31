@@ -18,6 +18,8 @@ const CHANNEL = 'design-studio-stream';
 const LEADER_LOCK = 'design-studio-stream-leader';
 const TAB_LOCK = 'design-studio-tab-';
 const REOPEN_MS = 2000;
+const GAP_MS = 2000;
+const GAP_MAX = 2000;
 
 class VirtualSource implements EventSourceLike {
   onopen: EventSourceLike['onopen'] = null;
@@ -26,6 +28,8 @@ class VirtualSource implements EventSourceLike {
   opened = false;
   closed = false;
   private readonly typed = new Map<string, Set<EventListener>>();
+  private readonly held = new Map<number, { type: string; data: string }>();
+  private gapTimer: number | undefined;
 
   constructor(
     readonly projectId: string,
@@ -42,6 +46,8 @@ class VirtualSource implements EventSourceLike {
   close(): void {
     if (this.closed) return;
     this.closed = true;
+    window.clearTimeout(this.gapTimer);
+    this.held.clear();
     this.onClose(this);
   }
 
@@ -58,6 +64,37 @@ class VirtualSource implements EventSourceLike {
 
   deliver(type: string, seq: number, data: string): void {
     if (this.closed || seq <= this.delivered) return;
+    if (seq > this.delivered + 1) return this.hold(type, seq, data);
+    this.emit(type, seq, data);
+    this.drain();
+  }
+
+  private hold(type: string, seq: number, data: string): void {
+    this.held.set(seq, { type, data });
+    if (this.held.size >= GAP_MAX) return this.release();
+    this.gapTimer ??= window.setTimeout(() => this.release(), GAP_MS);
+  }
+
+  private drain(): void {
+    for (let next = this.held.get(this.delivered + 1); next; next = this.held.get(this.delivered + 1)) {
+      this.held.delete(this.delivered + 1);
+      this.emit(next.type, this.delivered + 1, next.data);
+    }
+    if (this.held.size > 0) return;
+    window.clearTimeout(this.gapTimer);
+    this.gapTimer = undefined;
+  }
+
+  private release(): void {
+    window.clearTimeout(this.gapTimer);
+    this.gapTimer = undefined;
+    const waiting = [...this.held.entries()].sort(([a], [b]) => a - b);
+    this.held.clear();
+    for (const [seq, item] of waiting) if (seq > this.delivered) this.emit(item.type, seq, item.data);
+  }
+
+  private emit(type: string, seq: number, data: string): void {
+    if (this.closed) return;
     this.delivered = seq;
     const msg = new MessageEvent(type, { data });
     const listeners = this.typed.get(type);

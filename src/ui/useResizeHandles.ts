@@ -141,6 +141,14 @@ function styleFor(size: Size, base: Size): Record<string, string> {
   return style;
 }
 
+export interface ResizeReadout {
+  selector: string;
+  width: number;
+  height: number;
+}
+
+export const resizeReadout = createLiveStore<ResizeReadout | null>(null);
+
 export function useResizeHandles(o: Options): ResizeHandles {
   const live = useRef(o);
   live.current = o;
@@ -154,6 +162,7 @@ export function useResizeHandles(o: Options): ResizeHandles {
     if (d.edge !== 's' || keepRatio) d.axes.add('width');
     if (d.edge !== 'e' || keepRatio) d.axes.add('height');
     setSize({ size: next, base: d.base, rect: d.target.rect, guides: d.guides });
+    resizeReadout.set({ selector: d.target.selector, width: next.w, height: next.h });
     live.current.post({ type: 'preview-style', selector: d.target.selector, style: axisStyle(d, next) });
   }, []);
 
@@ -161,6 +170,7 @@ export function useResizeHandles(o: Options): ResizeHandles {
     drag.current?.stopListen();
     drag.current = null;
     setSize(null);
+    resizeReadout.set(null);
     document.body.classList.remove('element-resizing');
     live.current.holdSwap?.(false, !committing);
   }, []);

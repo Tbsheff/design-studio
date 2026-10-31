@@ -1,11 +1,26 @@
 import { useEffect, useId, useState, type ReactNode } from 'react';
-import type { DraftSourceStatus, DraftSourcesState, Project } from '../../shared/contracts';
+import type { DraftSourceStatus, DraftSourcesState, Project, RunStatus } from '../../shared/contracts';
 import { api } from '../api';
 import { useProjectEvents } from '../events';
 import { Icon } from './Icon';
 
-export function useDraftSources(projectId: string, enabled: boolean): DraftSourcesState | null {
+type ImproveEnd = { runId: string; status: RunStatus } | null;
+
+export function useDraftSources(projectId: string, enabled: boolean): { state: DraftSourcesState | null; improveEnd: RunStatus | null } {
   const [state, setState] = useState<DraftSourcesState | null>(null);
+  const [end, setEnd] = useState<ImproveEnd>(null);
+  const runId = state?.improve.state === 'started' ? (state.improve.runId ?? null) : null;
+  useEffect(() => {
+    if (!runId) return;
+    let live = true;
+    api
+      .getRun(runId)
+      .then((run) => live && run.summary.status !== 'running' && setEnd({ runId, status: run.summary.status }))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [runId]);
   useEffect(() => {
     setState(null);
     if (!enabled) return;
@@ -20,8 +35,9 @@ export function useDraftSources(projectId: string, enabled: boolean): DraftSourc
   }, [projectId, enabled]);
   useProjectEvents(enabled ? projectId : null, (event) => {
     if (event.type === 'design-system.sources') setState(event.sources);
+    if (event.type === 'run.finished' && event.runId === runId) setEnd({ runId, status: event.summary.status });
   });
-  return state;
+  return { state, improveEnd: end && end.runId === runId ? end.status : null };
 }
 
 const KIND_ICON: Record<DraftSourceStatus['kind'], Parameters<typeof Icon>[0]['name']> = {
@@ -88,20 +104,27 @@ function summary(state: DraftSourcesState): string {
   return problems > 0 ? `${real.length - problems} of ${real.length} read` : 'All read';
 }
 
-function improveNote(state: DraftSourcesState): string | null {
+function startedNote(end: RunStatus | null): string {
+  if (end === null || end === 'running') return 'The AI step started. Follow its steps in the chat below.';
+  if (end === 'completed') return 'AI step done. Its steps are in the chat below.';
+  if (end === 'canceled') return 'The AI step was stopped. Use Improve with AI to run it again.';
+  return 'The AI step did not finish. See the chat below, then use Improve with AI.';
+}
+
+function improveNote(state: DraftSourcesState, end: RunStatus | null): string | null {
   if (!state.done) return 'When every source is read, the AI step starts by itself.';
-  if (state.improve.state === 'started') return 'The AI step started. Follow its steps in the chat below.';
+  if (state.improve.state === 'started') return startedNote(end);
   if (state.improve.state === 'skipped') return state.improve.reason ?? null;
   return null;
 }
 
 const NEEDS_LOOK = new Set<DraftSourceStatus['state']>(['thin', 'blocked', 'failed']);
 
-export function DraftSources({ state }: { state: DraftSourcesState | null }) {
+export function DraftSources({ state, improveEnd }: { state: DraftSourcesState | null; improveEnd: RunStatus | null }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
   if (!state || state.sources.length === 0) return null;
-  const note = improveNote(state);
+  const note = improveNote(state, improveEnd);
   const full = open || !state.done;
   const rows = full ? state.sources : state.sources.filter((source) => NEEDS_LOOK.has(source.state) || (source.kind === 'tokens-file' && source.note !== undefined));
   const shown = rows.length > 0;
@@ -141,10 +164,10 @@ export interface DraftChrome {
 
 export function useDraftChrome(projectId: string, project: Project | null): DraftChrome {
   const backing = Boolean(project?.designSystemFor);
-  const state = useDraftSources(projectId, backing);
+  const { state, improveEnd } = useDraftSources(projectId, backing);
   const reading = state !== null && !state.done;
   return {
-    banner: backing ? <DraftSources state={state} /> : null,
+    banner: backing ? <DraftSources state={state} improveEnd={improveEnd} /> : null,
     reading,
     waitReason: reading ? 'Wait for the sources to finish reading...' : null,
     locked: (running) => running || reading,

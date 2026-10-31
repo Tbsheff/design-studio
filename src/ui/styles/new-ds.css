@@ -164,12 +164,12 @@
   gap: 2px;
 }
 
-.nds-section-head h2 {
+.nds-section-head :is(h2, .nds-section-title) {
   font-size: var(--t-md);
   font-weight: var(--w-medium);
 }
 
-.nds-section-head p {
+.nds-section-head :is(p, .nds-section-hint) {
   color: var(--text-2);
   font-size: var(--t-xs);
 }
@@ -652,11 +652,9 @@
 .nds-advanced > summary {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--s-2);
-  min-height: 44px;
-  padding: 0 var(--s-5);
-  font-size: var(--t-md);
-  font-weight: var(--w-medium);
+  padding: var(--s-4) var(--s-5);
   list-style: none;
   cursor: pointer;
 }
@@ -679,12 +677,6 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
   border-radius: var(--r-lg);
-}
-
-.nds-advanced-hint {
-  color: var(--text-3);
-  font-size: var(--t-xs);
-  font-weight: var(--w-regular);
 }
 
 .nds-advanced-body {

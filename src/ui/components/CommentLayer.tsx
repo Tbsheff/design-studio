@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MutableRefObject } from 'react';
 import type { AnchorQuery, AnchorReport, CommentDrawing, DesignComment, ProjectKind, SelectionContext } from '../../shared/contracts';
 import { anchorQueryOf, canPickForChat, createOrphanTracker, hasPin } from '../../shared/comments';
 import { ChatPickBar } from './CommentsPanel';
@@ -47,6 +47,33 @@ export interface CommentTools {
 
 const ORPHAN_GRACE_MS = 1500;
 const PIN_SIZE = 28;
+const ADDED_MS = 2400;
+const LABEL_MAX_H = 96;
+
+let addedAt = 0;
+const addedListeners = new Set<() => void>();
+
+function markAdded(): void {
+  addedAt = Date.now();
+  addedListeners.forEach((listener) => listener());
+  window.setTimeout(() => addedListeners.forEach((listener) => listener()), ADDED_MS + 20);
+}
+
+function subscribeAdded(listener: () => void): () => void {
+  addedListeners.add(listener);
+  return () => {
+    addedListeners.delete(listener);
+  };
+}
+
+function useJustAdded(): boolean {
+  return useSyncExternalStore(subscribeAdded, () => Date.now() - addedAt < ADDED_MS);
+}
+
+function pinOffsetFor(comment: DesignComment, rect: Rect): PinOffset | undefined {
+  if (comment.drawing) return undefined;
+  return rect.height <= LABEL_MAX_H ? undefined : comment.target.offset;
+}
 
 function visible(rect: Rect, frame: { width: number; height: number }): boolean {
   return rect.y + rect.height > 0 && rect.y < frame.height && rect.x + rect.width > 0 && rect.x < frame.width;
@@ -82,7 +109,7 @@ function selectionKey(selection: SelectionContext[]): string {
 
 function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; zoom: number; initial: string | null; control: CommentsControl }) {
   if (!rect || !visible(rect, frame) || control.openId === comment.id) return null;
-  const place = pinPlacement(rect, zoom, frame, comment.drawing ? undefined : comment.target.offset);
+  const place = pinPlacement(rect, zoom, frame, pinOffsetFor(comment, rect));
   const replies = comment.replies?.length ?? 0;
   const repliesLabel = replies ? `, ${replies} ${replies === 1 ? 'reply' : 'replies'}` : '';
   return (
@@ -174,6 +201,13 @@ function withMentions(text: string, mentions: ComposerSubmit['mentions']): strin
 }
 
 export function CommentModePill({ mode, control }: { mode: { on: boolean; available: boolean }; control: CommentsControl | undefined }) {
+  const added = useJustAdded();
+  if (added && mode.available)
+    return (
+      <div className="comment-mode-pill" role="status" data-testid="comment-added">
+        Comment added · see Comments
+      </div>
+    );
   if (!mode.on || !mode.available) return null;
   const repin = control?.repinId ? control.comments.find((comment) => comment.id === control.repinId) : undefined;
   return (
@@ -382,7 +416,10 @@ export function CommentLayer(props: Props) {
       return true;
     }
     const ok = await control.add(selections, input.text, input.toClaude, { mentions: input.mentions, attachmentIds: input.attachmentIds, ...(offset ? { offset } : {}) });
-    if (ok) finish();
+    if (ok) {
+      markAdded();
+      finish();
+    }
     return ok;
   };
 

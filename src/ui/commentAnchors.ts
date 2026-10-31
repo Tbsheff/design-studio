@@ -19,10 +19,26 @@ export interface ActiveFrame {
   ids: string[];
 }
 
-export function onActiveFrame(comment: Pick<DesignComment, 'frame'>, active: ActiveFrame): boolean {
+function onPage(comment: Pick<DesignComment, 'frame'>, path: string): boolean {
   const frame = comment.frame;
-  if (frame?.id && active.ids.includes(frame.id)) return frame.id === active.id;
-  return matchesFrame(frame ? { frame: { path: frame.path } } : {}, '', { path: active.path });
+  return matchesFrame(frame ? { frame: { path: frame.path } } : {}, '', { path });
+}
+
+export function onActiveFrame(comment: Pick<DesignComment, 'frame' | 'drawing'>, active: ActiveFrame): boolean {
+  const id = comment.frame?.id;
+  if (comment.drawing && id && active.ids.includes(id)) return id === active.id;
+  return onPage(comment, active.path);
+}
+
+export function pageShown(comment: Pick<DesignComment, 'frame' | 'drawing'>, paths: readonly string[] | null): boolean {
+  if (paths === null || comment.drawing || !comment.frame) return true;
+  return paths.some((path) => onPage(comment, path));
+}
+
+export function commentPageName(comment: Pick<DesignComment, 'frame'>): string {
+  const path = (comment.frame?.path ?? '').replace(/^\/+/, '');
+  if (path === '' || /\.html?$/i.test(path)) return path.replace(/^.*\//, '').replace(/\.html?$/i, '') || 'index';
+  return `/${path}`;
 }
 
 export function parseLoc(value: string | null | undefined): SourceLoc | null {

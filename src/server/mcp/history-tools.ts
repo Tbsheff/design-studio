@@ -30,11 +30,11 @@ async function step(deps: EditDeps, input: z.output<typeof target>, kind: 'undo'
   if (!label) throw new EditError(kind === 'undo' ? 'Nothing to undo in this direction. Use list_versions and restore_version for older changes.' : 'Nothing to redo in this direction.');
   const result = await studioCall<{ state: EditHistoryState; version: Version }>(deps, 'POST', `${base(project, direction.id)}/edit-history/${kind}`);
   const verb = kind === 'undo' ? 'Undid' : 'Redid';
-  const output = ok({ [kind === 'undo' ? 'undid' : 'redid']: label, versionId: result.version.id, title: result.version.title, canUndo: result.state.canUndo, undoLabel: result.state.undoLabel, canRedo: result.state.canRedo, redoLabel: result.state.redoLabel });
+  const output = ok({ [kind === 'undo' ? 'undid' : 'redid']: label, versionId: result.version.id, title: label, headTitle: result.version.title, canUndo: result.state.canUndo, undoLabel: result.state.undoLabel, canRedo: result.state.canRedo, redoLabel: result.state.redoLabel });
   return { result: output, activity: versionActivity(project, direction, `${verb} “${oneLine(label, 80)}”`, result.version) };
 }
 
-const undo = defineTool('undo', target, { title: 'Undo last edit', description: `Undo the newest edit in the direction's edit history and save the result as a version. ${HISTORY_NOTE} The result names the edit it undid.` }, (deps, input) => step(deps, input, 'undo'));
+const undo = defineTool('undo', target, { title: 'Undo last edit', description: `Undo the newest edit in the direction's edit history and save the result as a version. ${HISTORY_NOTE} The result names the edit it undid (undid and title); headTitle is the title of the version the direction is on now.` }, (deps, input) => step(deps, input, 'undo'));
 
 const redo = defineTool('redo', target, { title: 'Redo edit', description: `Redo the newest undone edit in the direction's edit history. ${HISTORY_NOTE} A new edit clears the redo list.` }, (deps, input) => step(deps, input, 'redo'));
 

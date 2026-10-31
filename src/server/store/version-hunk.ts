@@ -51,6 +51,18 @@ function pickHunk(entry: VersionFileDiff, index: number): PatchHunk {
   return hunk;
 }
 
+const NAME_MAX = 32;
+
+function changeName(hunk: PatchHunk): string {
+  const changed = hunk.lines.filter((line) => line.sign !== ' ');
+  const line = changed.find((item) => item.sign === '+' && item.text.trim() !== '') ?? changed.find((item) => item.text.trim() !== '');
+  const words = (line?.text ?? '').replace(/<[^>]*>?/g, ' ').replace(/[{}()[\]"'`;,=]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (words) return `“${words.length > NAME_MAX ? `${words.slice(0, NAME_MAX - 1).trimEnd()}…` : words}”`;
+  const added = hunk.lines.filter((item) => item.sign !== '-').length;
+  const end = hunk.newStart + Math.max(0, added - 1);
+  return end > hunk.newStart ? `lines ${hunk.newStart}-${end}` : `line ${hunk.newStart}`;
+}
+
 async function readText(file: string): Promise<string> {
   try {
     return await readFile(file, 'utf8');
@@ -78,7 +90,7 @@ export async function revertHunk(deps: DirectEditDeps, project: Project, directi
   const original = await readText(target.file);
   const next = reverseHunk(original, hunk);
   await writeAtomic(target.file, next);
-  const title = `Undo change ${request.hunk} in ${target.relative.split('/').pop()}`;
+  const title = `Undo ${changeName(hunk)} in ${target.relative.split('/').pop()}`;
   const version = saveDeferred(deps, project, direction, [target.relative], title, { kind: 'manual', prompt: `${title} (${hunk.header.replace(/^(@@[^@]*@@).*$/, '$1')}), from the compare of ${from.slice(0, 7)} and ${request.to.slice(0, 7)}` });
   deps.history?.record({ projectId: project.id, directionId: direction.id, label: title, versionId: version.id, files: [{ file: target.file, relative: target.relative, before: original, after: next }] });
   await publishVersion(deps, project, direction, version);

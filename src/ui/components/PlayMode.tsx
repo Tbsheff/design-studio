@@ -5,6 +5,8 @@ import { frameSrc, postToFrame, useBridge, type BridgeFrame } from '../bridge';
 import type { CanvasFrame } from '../canvasFrames';
 import { randomToken } from '../session';
 import { linkQuery } from '../useLinkRects';
+import { frameTitle } from './CanvasFrames';
+import { hasOutgoing, playStartOf } from './PrototypeLayer';
 import { Icon } from './Icon';
 import '../styles/prototype.css';
 
@@ -182,7 +184,11 @@ function usePlay(p: Props) {
     return true;
   };
 
-  const restart = useCallback(() => show(props.current.startId, { ...INSTANT, transition: 'dissolve' }, [props.current.startId]), [show]);
+  const restart = useCallback(() => {
+    const { file, frames, startId } = props.current;
+    const start = playStartOf(file, frames, startId);
+    show(start, { ...INSTANT, transition: 'dissolve' }, [start]);
+  }, [show]);
 
   const back = () => {
     if (closeOverlay()) return;
@@ -278,11 +284,32 @@ function SlotView({ slot, leaving, timing, stage, sandbox, bind }: { slot: Slot;
   );
 }
 
+function playHint(p: Props, overlay: boolean, shown: CanvasFrame | undefined): string {
+  if (p.file.links.length === 0) return 'No links yet. Use the Prototype tool to link frames.';
+  if (overlay) return 'Click outside or press Esc to close';
+  if (shown && !hasOutgoing(p.file, shown.id)) return 'No links here. Esc, then link elements in Prototype.';
+  return 'Click a linked element';
+}
+
+function useFocusReturn(root: { current: HTMLElement | null }) {
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
+    root.current?.focus();
+    return () => {
+      window.requestAnimationFrame(() => {
+        if (document.activeElement && document.activeElement !== document.body) return;
+        const target = opener?.isConnected ? opener : document.querySelector<HTMLElement>('.stage');
+        target?.focus({ preventScroll: true });
+      });
+    };
+  }, [root]);
+}
+
 export default function PlayMode(p: Props) {
   const play = usePlay(p);
   const stage = useStageSize();
   const root = useRef<HTMLDivElement>(null);
-  useEffect(() => root.current?.focus(), []);
+  useFocusReturn(root);
   const base = baseOf(play.slots);
   const overlay = overlayOf(play.slots);
   const current = base.at(-1);
@@ -297,9 +324,9 @@ export default function PlayMode(p: Props) {
           <Icon name="arrowLeft" size={14} />
         </button>
         <span className="play-title" data-testid="play-title">
-          {shownFrame ? p.frameTitle(shownFrame) : 'Loading…'}
+          {shownFrame ? frameTitle(shownFrame, p.frames) : 'Loading…'}
         </span>
-        <span className="play-hint">{p.file.links.length === 0 ? 'No links yet. Use the Prototype tool to link frames.' : overlay ? 'Click outside or press Esc to close' : 'Click a linked element'}</span>
+        <span className="play-hint">{playHint(p, Boolean(overlay), shownFrame)}</span>
         <button type="button" className="btn small ghost" onClick={play.restart}>
           <Icon name="restore" size={12} />
           Restart <kbd>R</kbd>

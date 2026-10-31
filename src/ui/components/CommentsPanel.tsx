@@ -1,7 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import type { DesignComment, SelectionContext } from '../../shared/contracts';
 import type { CommentsControl } from '../useComments';
 import { canPickForChat } from '../../shared/comments';
+import { canvasStore, shownFrames } from '../canvasFrames';
+import { commentPageName, pageShown } from '../commentAnchors';
+import { projectFromPath } from '../route';
 import { CommentAuthor } from './CommentAvatar';
 import { CommentReplies } from './CommentPopover';
 import { Icon } from './Icon';
@@ -44,10 +47,26 @@ function targetTip(comment: DesignComment): string {
   return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
 }
 
+function shownPathsKey(): string {
+  const projectId = projectFromPath(window.location.pathname);
+  const layout = projectId ? canvasStore.get(projectId) : undefined;
+  return layout ? JSON.stringify(shownFrames(layout).map((frame) => frame.path ?? '')) : '';
+}
+
+function useShownPaths(): string[] | null {
+  const key = useSyncExternalStore(canvasStore.subscribe, shownPathsKey);
+  return key ? (JSON.parse(key) as string[]) : null;
+}
+
+function notShownText(comment: DesignComment, paths: string[] | null): string | null {
+  return pageShown(comment, paths) ? null : `On ${commentPageName(comment)}, not shown`;
+}
+
 function TargetLink({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
+  const away = notShownText(comment, useShownPaths());
   return (
-    <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`} data-tip={targetTip(comment)} data-tip-align="start">
-      <span className="truncate">{targetLabel(comment)}</span>
+    <button type="button" onClick={() => control.setOpenId(comment.id)} aria-label={`Show comment ${comment.n} on the canvas`} data-tip={away ? `${away}. Set a frame to this page to see the pin.` : targetTip(comment)} data-tip-align="start">
+      <span className="truncate">{away ?? targetLabel(comment)}</span>
     </button>
   );
 }
@@ -275,6 +294,7 @@ function DoneRow({
 
 function OrphanRow({ comment, control }: { comment: DesignComment; control: CommentsControl }) {
   const active = control.repinId === comment.id;
+  const away = notShownText(comment, useShownPaths());
   return (
     <li className="comment-row" data-testid="comment-row" data-status="orphaned">
       <PickNum comment={comment} control={control} />
@@ -282,7 +302,7 @@ function OrphanRow({ comment, control }: { comment: DesignComment; control: Comm
         <span className="comment-row-text">{comment.text}</span>
         <CommentReplies comment={comment} onDelete={(replyId) => void control.removeReply(comment.id, replyId)} />
         <div className="comment-row-foot">
-          <span className="comment-row-meta clip" data-tip={targetTip(comment)} data-tip-align="start">Element not found: {targetLabel(comment)}</span>
+          <span className="comment-row-meta clip" data-tip={targetTip(comment)} data-tip-align="start">{away ?? `Element not found: ${targetLabel(comment)}`}</span>
           <div className="comment-row-actions">
             <FixButton comment={comment} control={control} />
             <button type="button" className="btn small" aria-pressed={active} onClick={() => control.setRepinId(active ? null : comment.id)}>

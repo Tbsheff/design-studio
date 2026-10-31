@@ -16,6 +16,7 @@ interface Props {
 }
 
 const SNIPPET_MAX = 32;
+const SHARED_TEXT_SNIPPET_MAX = 80;
 
 function shortSnippet(text: string): string {
   return text.length > SNIPPET_MAX ? `${text.slice(0, SNIPPET_MAX).trimEnd()}…` : text;
@@ -38,7 +39,8 @@ function targetLabel(comment: DesignComment): string {
 function targetTip(comment: DesignComment): string {
   const page = comment.frame ? ` · Page ${comment.frame.path.replace(/^\/+/, '') || 'index'}` : '';
   if (comment.drawing) return `${targetLabel(comment)}${page}`;
-  const snippet = comment.target.textSnippet ? ` “${comment.target.textSnippet}”` : '';
+  const text = comment.target.textSnippet;
+  const snippet = text ? ` “${text}${text.length >= SHARED_TEXT_SNIPPET_MAX ? '…' : ''}”` : '';
   return `${comment.target.tag}${snippet} · ${targetWhere(comment)}${page}`;
 }
 

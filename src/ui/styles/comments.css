@@ -1007,7 +1007,7 @@
   color: var(--accent-text);
 }
 
-.pane-left:not([data-mode='chat']) > .comments-queue-bar {
+.pane-left:not([data-mode='chat']) > .comments-queue-bar:not(:has(.notice)) {
   display: none;
 }
 

@@ -53,10 +53,31 @@ function pickHunk(entry: VersionFileDiff, index: number): PatchHunk {
 
 const NAME_MAX = 32;
 
+function changedSpan(before: string, after: string): string {
+  let start = 0;
+  while (start < before.length && start < after.length && before[start] === after[start]) start++;
+  let end = after.length;
+  for (let back = before.length; end > start && back > start && before[back - 1] === after[end - 1]; back--) end--;
+  const open = after.lastIndexOf('<', start - 1);
+  const insideTag = open > after.lastIndexOf('>', start - 1);
+  if (insideTag) return /^<\/?([A-Za-z][\w.-]*)/.exec(after.slice(open))?.[1] ?? '';
+  const close = after.indexOf('<', end);
+  return after.slice(after.lastIndexOf('>', start - 1) + 1, close === -1 ? after.length : close);
+}
+
+function readable(text: string): string {
+  return text.replace(/<[^>]*>?/g, ' ').replace(/[{}()[\]"'`;,=<>/]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function changedText(hunk: PatchHunk): string {
+  const removed = hunk.lines.find((line) => line.sign === '-' && line.text.trim() !== '');
+  const added = hunk.lines.find((line) => line.sign === '+' && line.text.trim() !== '');
+  if (removed && added) return readable(changedSpan(removed.text, added.text)) || readable(added.text);
+  return readable((added ?? removed)?.text ?? '');
+}
+
 function changeName(hunk: PatchHunk): string {
-  const changed = hunk.lines.filter((line) => line.sign !== ' ');
-  const line = changed.find((item) => item.sign === '+' && item.text.trim() !== '') ?? changed.find((item) => item.text.trim() !== '');
-  const words = (line?.text ?? '').replace(/<[^>]*>?/g, ' ').replace(/[{}()[\]"'`;,=]/g, ' ').replace(/\s+/g, ' ').trim();
+  const words = changedText(hunk);
   if (words) return `“${words.length > NAME_MAX ? `${words.slice(0, NAME_MAX - 1).trimEnd()}…` : words}”`;
   const added = hunk.lines.filter((item) => item.sign !== '-').length;
   const end = hunk.newStart + Math.max(0, added - 1);

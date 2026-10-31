@@ -70,9 +70,11 @@ function useJustAdded(): boolean {
   return useSyncExternalStore(subscribeAdded, () => Date.now() - addedAt < ADDED_MS);
 }
 
-function pinOffsetFor(comment: DesignComment, rect: Rect): PinOffset | undefined {
-  if (comment.drawing) return undefined;
-  return rect.height <= LABEL_MAX_H ? undefined : comment.target.offset;
+function pinTarget(comment: DesignComment, rect: Rect, zoom: number, frame: { width: number }): { rect: Rect; offset?: PinOffset } {
+  if (comment.drawing) return { rect };
+  if (rect.height > LABEL_MAX_H) return { rect, offset: comment.target.offset };
+  const fitsRight = rect.x + rect.width + PIN_SIZE / zoom <= frame.width;
+  return fitsRight ? { rect } : { rect: { ...rect, x: rect.x + rect.width - 1, width: 1 } };
 }
 
 function visible(rect: Rect, frame: { width: number; height: number }): boolean {
@@ -109,7 +111,8 @@ function selectionKey(selection: SelectionContext[]): string {
 
 function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; zoom: number; initial: string | null; control: CommentsControl }) {
   if (!rect || !visible(rect, frame) || control.openId === comment.id) return null;
-  const place = pinPlacement(rect, zoom, frame, pinOffsetFor(comment, rect));
+  const pin = pinTarget(comment, rect, zoom, frame);
+  const place = pinPlacement(pin.rect, zoom, frame, pin.offset);
   const replies = comment.replies?.length ?? 0;
   const repliesLabel = replies ? `, ${replies} ${replies === 1 ? 'reply' : 'replies'}` : '';
   return (
@@ -205,7 +208,7 @@ export function CommentModePill({ mode, control }: { mode: { on: boolean; availa
   if (added && mode.available)
     return (
       <div className="comment-mode-pill" role="status" data-testid="comment-added">
-        Comment added · see Comments
+        Comment added
       </div>
     );
   if (!mode.on || !mode.available) return null;
@@ -406,7 +409,7 @@ export function CommentLayer(props: Props) {
 
   const finishPick = () => {
     setPick(null);
-    focusLater('.comment-toggle');
+    focusLater('.stage');
   };
 
   const submitFor = (selections: SelectionContext[], finish: () => void, offset?: PinOffset) => async (input: ComposerSubmit) => {

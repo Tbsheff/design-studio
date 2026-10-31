@@ -151,6 +151,7 @@ function useFileMenu(p: ChromeProps) {
         const show = () => {
           if (f.hidden) p.frames.update((l) => setFrameHidden(l, f.id, false));
           p.frames.activate(f);
+          p.zoom.zoomToActive?.();
         };
         return { id: `frame-${f.id}`, label: `${info.number ?? i + 1}  ${info.badge?.title ?? frameBaseName(f)}`, meta: f.hidden ? 'Hidden' : framePage(f.path), checked: f.id === p.active.id, run: show };
       }),

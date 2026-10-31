@@ -260,7 +260,7 @@ function ToolItem({ group, workTree, running }: { group: RowGroup; workTree: str
       open={open ?? state === 'error'}
       onOpenChange={(next) => setOpen(next)}
     >
-      <ActionTrigger className="tool-trigger max-w-full min-w-0 py-0.5 text-xs" data-tip={tool.summary || target || tool.name}>
+      <ActionTrigger className="tool-trigger max-w-full min-w-0 min-h-6 text-xs" data-tip={tool.summary || target || tool.name}>
         <ActionIcon className={STATE_TONE[state]}>
           <ToolStateIcon tool={edits.length > 0 ? { ...tool, name: 'Edit' } : tool} state={state} />
         </ActionIcon>

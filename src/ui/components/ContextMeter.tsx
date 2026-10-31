@@ -7,11 +7,13 @@ export function contextShare(tokens: number, model: string): number {
 }
 
 const R = 6;
+const SHOW_FROM = 0.5;
 const C = 2 * Math.PI * R;
 
 export function ContextMeter({ tokens, model }: { tokens: number | null; model: string }) {
   if (tokens === null || tokens <= 0) return null;
   const share = contextShare(tokens, model);
+  if (share < SHOW_FROM) return null;
   const percent = Math.round(share * 100);
   const window = contextWindowFor(model);
   const tone = share >= 0.9 ? 'danger' : share >= 0.7 ? 'warn' : '';

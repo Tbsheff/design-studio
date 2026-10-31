@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { chordMatches } from '../../shared/keymap';
 import { errorText, api } from '../api';
 import { Icon } from '../components/Icon';
 import { HealthDot, ProjectThumb } from '../components/ProjectThumb';
@@ -7,7 +8,7 @@ import { useProjectHits, useRouteHits } from '../projectHits';
 import { projectsApi } from '../projectsStore';
 import { uiStore } from '../storage';
 import { globalCommands } from './globalCommands';
-import { Keys } from './keys';
+import { IS_MAC, Keys } from './keys';
 import { buildRows, typePair, type Row } from './paletteRows';
 import { collectCommands } from './registry';
 
@@ -81,10 +82,8 @@ function stepOf(event: ReactKeyboardEvent): number {
   return 0;
 }
 
-function digitOf(event: ReactKeyboardEvent): number | null {
-  if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return null;
-  const n = Number(event.key);
-  return Number.isInteger(n) && n >= 1 && n <= 9 ? n : null;
+function recentRowFor(event: ReactKeyboardEvent, rows: Row[]): Row | undefined {
+  return rows.find((row) => row.group === 'Recent' && row.keys !== undefined && chordMatches(row.keys, event.nativeEvent, IS_MAC));
 }
 
 function usePaletteRows(query: string, onShortcuts: () => void, onClose: () => void, setError: (error: string | null) => void) {
@@ -122,7 +121,7 @@ function usePaletteRows(query: string, onShortcuts: () => void, onClose: () => v
     [onClose, setError],
   );
   const rows = useMemo(
-    () => buildRows({ query, commands, projects: hits?.projects ?? [], routes, recent, current, desktop: DESKTOP, actions }),
+    () => buildRows({ query, commands, projects: hits?.projects ?? [], routes, recent, current, desktop: DESKTOP, mac: IS_MAC, actions }),
     [query, commands, hits, routes, recent, current, actions],
   );
   return { rows, busy, loading: hits === null };
@@ -155,14 +154,14 @@ export function Palette({ onClose, onShortcuts }: { onClose: () => void; onShort
 
   const onKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
     const step = stepOf(event);
-    const digit = typing ? null : digitOf(event);
+    const recentRow = typing ? undefined : recentRowFor(event, rows);
     if (step !== 0 && rows.length > 0) {
       event.preventDefault();
       setActive((current + step + rows.length) % rows.length);
-    } else if (digit !== null) {
+    } else if (recentRow) {
       event.preventDefault();
       event.stopPropagation();
-      run(rows.find((row) => row.keys === `Mod+${digit}` && row.group === 'Recent'));
+      run(recentRow);
     } else if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
       event.preventDefault();
       run(rows[current]);

@@ -23,7 +23,7 @@ export const KEYMAP = [
   { id: 'prev-direction', label: 'Previous direction', keys: ['Mod+Alt+['], group: 'General' },
 
   { id: 'run', label: 'Send', keys: ['Mod+Enter'], group: 'Run and chat' },
-  { id: 'stop', label: 'Stop the run', keys: ['Esc', 'Mod+.'], group: 'Run and chat' },
+  { id: 'stop', label: 'Stop the run', keys: ['Mod+.'], group: 'Run and chat' },
   { id: 'composer-mode', label: 'Next run mode (Edit, Plan, Critique)', keys: ['Mod+Shift+M'], group: 'Run and chat' },
   { id: 'slash', label: 'Commands and skills', keys: ['/'], group: 'Run and chat' },
   { id: 'mention', label: 'Mention a file or token', keys: ['@'], group: 'Run and chat' },
@@ -34,7 +34,10 @@ export const KEYMAP = [
 
   { id: 'tool-select', label: 'Select tool', keys: ['V'], group: 'Canvas' },
   { id: 'tool-comment', label: 'Comment tool', keys: ['C'], group: 'Canvas' },
-  { id: 'tool-draw', label: 'Pen tool', keys: ['P'], group: 'Canvas' },
+  { id: 'tool-draw', label: 'Draw tool', keys: ['P'], group: 'Canvas' },
+  { id: 'tool-rect', label: 'Rectangle', keys: ['R'], group: 'Canvas' },
+  { id: 'tool-ellipse', label: 'Ellipse', keys: ['O'], group: 'Canvas' },
+  { id: 'tool-pen', label: 'Pen (vector path)', keys: ['Shift+P'], group: 'Canvas' },
   { id: 'layers', label: 'Edit mode and layers', keys: ['Alt+1'], group: 'Canvas' },
   { id: 'pan', label: 'Pan', keys: ['Space'], group: 'Canvas', hold: true },
   { id: 'zoom-click', label: 'Zoom where you click', keys: ['Z'], group: 'Canvas', hold: true },

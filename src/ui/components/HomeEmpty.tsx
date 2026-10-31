@@ -52,7 +52,7 @@ function FoundList({ onUse }: { onUse: (path: string) => void }) {
           <span className="home-found-name truncate">{app.name}</span>
           <span className="home-found-path truncate">{found ? shortenHome(app.path, found.home) : app.path}</span>
           <span className={`home-badge ${KIND_TONE[app.kind]}`}>{foundBadge(app)}</span>
-          <button type="button" className="btn small" aria-label={`Use ${app.name}`} data-tip="Put this folder on the prompt" onClick={() => onUse(app.path)}>
+          <button type="button" className="btn small" aria-label={`Use ${app.name}`} data-tip="Pick this app to design in. Return opens it." onClick={() => onUse(app.path)}>
             Use
           </button>
         </div>
@@ -101,7 +101,7 @@ export default function HomeEmpty({ busy, onUse, onSample, onStarter }: { busy: 
         <FoundList onUse={onUse} />
         <StartCards busy={busy} onSample={onSample} onStarter={onStarter} />
       </div>
-      <p className="home-empty-note">“Use” puts the folder on the prompt as context. Recent work shows here after your first project.</p>
+      <p className="home-empty-note">“Use” picks the app. Return opens it in the studio, and your changes go to its files. Recent work shows here after your first project.</p>
     </div>
   );
 }

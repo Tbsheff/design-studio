@@ -5,6 +5,7 @@ import { canvasFrameChoices, frameRoute } from '../exportApi';
 import { shareApi, sharesChanged } from '../shareApi';
 import { useModalDialog } from '../usePopover';
 import { CopyButton, copyText } from './CopyButton';
+import { pageName } from './FrameControls';
 import { Icon } from './Icon';
 import '../styles/export.css';
 import '../styles/share.css';
@@ -271,7 +272,7 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
               <label key={choice.id} className="export-frame">
                 <input type="checkbox" checked={picked.has(choice.id)} onChange={() => toggle(choice.id)} />
                 <span className="export-frame-name">{choice.frame.name}</span>
-                <span className="export-frame-path truncate">{frameRoute(choice.frame)}</span>
+                <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{pageName(choice.frame.path)}</span>
                 <span className="export-frame-size">
                   {choice.frame.width} × {choice.frame.height}
                 </span>

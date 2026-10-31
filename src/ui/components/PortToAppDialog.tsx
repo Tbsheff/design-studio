@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Project } from '../../shared/contracts';
-import { cleanPortRoute, PORT_LEVEL_LABEL, suggestPortRoute, type PortFlowPage, type PortFlowPlan, type PortKitMatch, type PortStartResult } from '../../shared/port';
+import { cleanPortRoute, PORT_LEVEL_LABEL, type PortFlowPage, type PortFlowPlan, type PortKitMatch, type PortStartResult } from '../../shared/port';
 import { api, errorText } from '../api';
 import { canvasFrameChoices, frameRoute, type FrameChoice } from '../exportApi';
 import { portApi } from '../portApi';
@@ -184,12 +184,13 @@ function usePagePicks(flow: PortFlowPlan | null) {
   return { all, picked, toggle, links };
 }
 
-function useEntryTitle(flow: PortFlowPlan | null, setTitle: (title: { path: string; title: string | null }) => void): void {
-  const entry = flow?.source.entry;
-  const entryTitle = flow?.pages.find((page) => page.path === entry)?.title ?? null;
-  useEffect(() => {
-    if (entry) setTitle({ path: entry, title: entryTitle });
-  }, [entry, entryTitle, setTitle]);
+function shownRoute(typed: string | null, flow: PortFlowPlan | null, path: string): string {
+  if (typed !== null) return typed;
+  return flow?.source.entry === path ? (flow.base ?? '') : '';
+}
+
+function routeProblem(typed: string | null, shown: string, picked: PortFlowPage[]): string | null {
+  return typed === null && !shown ? null : routeError(shown, picked);
 }
 
 function usePortForm(target: PortDialogTarget) {
@@ -200,14 +201,12 @@ function usePortForm(target: PortDialogTarget) {
   const [appId, setAppId] = useState('');
   const chosenApp = appId || (targets.apps?.[0]?.id ?? '');
   const [route, setRoute] = useState<string | null>(null);
-  const [title, setTitle] = useState<{ path: string; title: string | null } | null>(null);
-  const routeText = route ?? suggestPortRoute(path, title?.path === path ? title.title : null);
+  const plan = usePlan({ sourceProjectId: target.projectId, sourceDirectionId: target.directionId, path, targetProjectId: chosenApp, route: route === null ? null : cleanPortRoute(route) });
+  const routeText = shownRoute(route, plan.flow, path);
   const cleanRoute = cleanPortRoute(routeText);
-  const plan = usePlan({ sourceProjectId: target.projectId, sourceDirectionId: target.directionId, path, targetProjectId: chosenApp, route: cleanRoute });
-  useEntryTitle(plan.flow, setTitle);
   const pages = usePagePicks(plan.flow);
   const htmlSource = !targets.source || (targets.source.kind === 'html' && !targets.source.app);
-  const badRoute = routeError(routeText, pages.picked);
+  const badRoute = routeProblem(route, routeText, pages.picked);
   const ready = Boolean(chosenApp && cleanRoute) && pages.picked.length > 0 && htmlSource && !badRoute && !plan.loading && !plan.error;
   return { frames, frameId, setFrameId, path, targets, chosenApp, setAppId, routeText, setRoute, cleanRoute, plan, pages, htmlSource, badRoute, ready };
 }
@@ -245,7 +244,7 @@ function PageList({ form }: { form: PortForm }) {
   if (all.length < 2) return null;
   const on = new Set(picked.map((page) => page.path));
   return (
-    <fieldset className="export-field port-pages">
+    <fieldset className="export-field port-pages" aria-busy={form.plan.loading}>
       <legend className="export-label">
         Pages in this flow · {picked.length} of {all.length}
       </legend>
@@ -269,7 +268,7 @@ function FormBody({ form, error }: { form: PortForm; error: string | null }) {
       <AppField form={form} />
       <label className="field">
         <span>{multi ? 'Base route' : 'Route path'}</span>
-        <input className="mono" value={form.routeText} spellCheck={false} aria-invalid={Boolean(form.badRoute)} onChange={(e) => form.setRoute(e.target.value)} />
+        <input className="mono" value={form.routeText} placeholder={form.plan.loading ? 'Reading the page…' : '/classes'} spellCheck={false} aria-invalid={Boolean(form.badRoute)} onChange={(e) => form.setRoute(e.target.value)} />
       </label>
       {form.badRoute && <p className="port-note error">{form.badRoute}</p>}
       {form.chosenApp && <PageList form={form} />}

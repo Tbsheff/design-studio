@@ -3,6 +3,7 @@ import { EXPORT_SCALES, type EditorInfo, type ExportFormat, type ExportFrame, ty
 import { downloadBlob } from '../format';
 import { canRevealDownload, canvasFrameChoices, exportApi, frameRoute, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
 import { useModalDialog } from '../usePopover';
+import { pageName } from './FrameControls';
 import { Icon, type IconName } from './Icon';
 import '../styles/export.css';
 
@@ -305,7 +306,7 @@ function FrameList({ options }: { options: Options }) {
         <label key={choice.id} className="export-frame">
           <input type="checkbox" checked={options.picked.has(choice.id)} onChange={() => options.toggle(choice.id)} />
           <span className="export-frame-name">{choice.frame.name}</span>
-          <span className="export-frame-path truncate">{frameRoute(choice.frame)}</span>
+          <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{pageName(choice.frame.path)}</span>
           <span className="export-frame-size">
             {choice.frame.width} × {choice.frame.height}
           </span>

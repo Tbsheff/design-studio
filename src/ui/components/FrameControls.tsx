@@ -270,6 +270,11 @@ export function VariationControls({ variation, active, element, onMixed }: { var
   );
 }
 
+export function pageName(path: string | undefined): string {
+  const clean = (path ?? '').replace(/^\/+/, '').replace(/\.html$/, '');
+  return clean || 'index';
+}
+
 function pageLabel(page: string, routes: boolean): string {
   return routes ? `/${page}` : page;
 }
@@ -320,13 +325,13 @@ export function FramePageMenu({ path, listPages, onPath, routes = false }: { pat
         className={`frame-chip page${path ? ' set' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={menu.open}
-        aria-label={`Page: ${path || 'home'}`}
+        aria-label={`Page: ${pageName(path)}`}
         onPointerDown={stop}
         onClick={() => menu.setOpen((v) => !v)}
-        data-tip={menu.open ? undefined : 'Show another page in this frame'}
+        data-tip={menu.open ? undefined : `/${path} · Show another page in this frame`}
       >
         <Icon name="file" size={12} />
-        <span className="frame-path">/{path}</span>
+        <span className="frame-path">{pageName(path)}</span>
       </button>
       {menu.open && (
         <div className="project-menu canvas-menu frame-menu frame-page-menu" role="dialog" aria-label="Frame page">

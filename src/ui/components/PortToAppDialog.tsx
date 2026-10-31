@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { Project } from '../../shared/contracts';
 import { cleanPortRoute, PORT_LEVEL_LABEL, type PortFlowPage, type PortFlowPlan, type PortKitMatch, type PortStartResult } from '../../shared/port';
 import { api, errorText } from '../api';
-import { canvasFrameChoices, frameRoute, type FrameChoice } from '../exportApi';
+import { canvasFrameChoices, type FrameChoice } from '../exportApi';
 import { portApi } from '../portApi';
 import { uiStore } from '../storage';
 import { useModalDialog } from '../usePopover';
+import { pageName } from './FrameControls';
 import { Icon } from './Icon';
 import { UiSelect, type UiSelectOption } from './UiSelect';
 import '../styles/export.css';
@@ -220,7 +221,7 @@ function AppField({ form }: { form: PortForm }) {
     <div className="field">
       <span id="port-app-label">Target app</span>
       {apps?.length === 0 ? (
-        <p className="port-note">{error ?? 'No app is attached. On Home, choose Open your app and pick your repository, then come back.'}</p>
+        <p className="port-note">{error ?? 'No app is attached. On Home, choose Add app folder, then come back.'}</p>
       ) : (
         <UiSelect aria-labelledby="port-app-label" value={form.chosenApp} options={options} onChange={form.setAppId} placeholder="Loading apps…" disabled={!apps} />
       )}
@@ -256,7 +257,7 @@ function PageList({ form }: { form: PortForm }) {
 }
 
 function FormBody({ form, error }: { form: PortForm; error: string | null }) {
-  const frameOptions: UiSelectOption[] = form.frames.map((f) => ({ value: f.id, label: `${f.frame.name} · ${frameRoute(f.frame)}` }));
+  const frameOptions: UiSelectOption[] = form.frames.map((f) => ({ value: f.id, label: `${f.frame.name} · ${pageName(f.frame.path)}` }));
   const multi = form.pages.all.length > 1;
   return (
     <div className="modal-body port-body">
@@ -268,7 +269,7 @@ function FormBody({ form, error }: { form: PortForm; error: string | null }) {
       <AppField form={form} />
       <label className="field">
         <span>{multi ? 'Base route' : 'Route path'}</span>
-        <input className="mono" value={form.routeText} placeholder={form.plan.loading ? 'Reading the page…' : '/classes'} spellCheck={false} aria-invalid={Boolean(form.badRoute)} onChange={(e) => form.setRoute(e.target.value)} />
+        <input className="mono" value={form.routeText} placeholder={form.plan.loading ? 'Reading the page…' : 'Example: /classes'} spellCheck={false} aria-invalid={Boolean(form.badRoute)} onChange={(e) => form.setRoute(e.target.value)} />
       </label>
       {form.badRoute && <p className="port-note error">{form.badRoute}</p>}
       {form.chosenApp && <PageList form={form} />}

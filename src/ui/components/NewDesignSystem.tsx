@@ -314,9 +314,11 @@ function Advanced({ form, set }: { form: DraftForm; set: (patch: Patch) => void 
   return (
     <details className="nds-advanced" open={count > 0 ? true : undefined}>
       <summary>
+        <span className="nds-section-head">
+          <span className="nds-section-title">Advanced</span>
+          <span className="nds-section-hint">Code folder and import options</span>
+        </span>
         <Icon name="chevronRight" size={14} />
-        Advanced
-        <span className="nds-advanced-hint">Tokens file, code folder, DESIGN.md</span>
       </summary>
       <div className="nds-advanced-body">
         <div className="nds-field">

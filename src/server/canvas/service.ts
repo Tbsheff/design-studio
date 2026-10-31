@@ -6,6 +6,7 @@ import type { CanvasPresence, CanvasWriteSource, Direction, LegacyCanvasNotice, 
 import { ConflictError } from '../store/errors.js';
 import { createKeyedMutex } from '../store/mutex.js';
 import type { EventBus } from '../types.js';
+import type { LayoutListener } from './layout-history.js';
 import { createLinksService, type LinksService } from './links.js';
 
 export interface CanvasSnapshot {
@@ -28,6 +29,7 @@ export interface CanvasService {
   setPresence(projectId: string, presence: CanvasPresence): void;
   presence(projectId: string): CanvasPresence | null;
   point(project: Project, frameId: string, selector?: string): void;
+  onLayoutChange?(listener: LayoutListener): void;
   links: LinksService;
 }
 
@@ -105,7 +107,10 @@ export async function writeAtomic(target: string, text: string): Promise<void> {
 export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | null = null): CanvasService {
   const lock = createKeyedMutex();
   const presences = new Map<string, CanvasPresence>();
-  const links = createLinksService(bus);
+  const listeners = new Set<LayoutListener>();
+  const links = createLinksService(bus, (project, before, after, source) => {
+    for (const listener of listeners) listener(project, { kind: 'links', before, after }, source);
+  });
 
   const snapshotOf = async (project: Project): Promise<CanvasSnapshot> => {
     const { canvas, text } = await readProjectCanvas(project, projectDir);
@@ -134,6 +139,8 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
     if (current === text) return snapshot;
     await writeAtomic(file, text);
     emit(project, snapshot, write);
+    const before = (current === null ? null : parseCanvasText(current)) ?? emptyCanvasFile();
+    for (const listener of listeners) listener(project, { kind: 'canvas', before, after: saved }, write.source);
     return snapshot;
   };
 
@@ -179,6 +186,10 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
       const found = presences.get(projectId);
       if (!found || Date.now() - found.at > PRESENCE_TTL_MS) return null;
       return found;
+    },
+
+    onLayoutChange(listener) {
+      listeners.add(listener);
     },
 
     point(project, frameId, selector) {

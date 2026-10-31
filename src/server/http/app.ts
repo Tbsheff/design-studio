@@ -106,6 +106,7 @@ import { cleanFramePath, isFrameId } from '../../shared/canvas-file.js';
 import { resolveRunTarget } from '../agent/run-target.js';
 import { withLofi } from '../../shared/lofi.js';
 import { createCanvasService, type CanvasService } from '../canvas/service.js';
+import { recordLayout, stepLayout } from '../canvas/layout-steps.js';
 import { registerFrameStateRoutes } from './frame-state-routes.js';
 import { registerFlowRoutes } from './flow-routes.js';
 import { registerCanvasRoutes } from './canvas-routes.js';
@@ -361,12 +362,13 @@ export function createApp(deps: AppDeps): Hono {
   const allowedOrigins = new Set([config.studioOrigin, ...(resourcesDir() ? [] : DEV_UI_ORIGINS)]);
   const runProjectIndex = new Map<string, string>();
   const directionLock = createKeyedMutex();
-  const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree) });
+  const editHistory = deps.editHistory ?? createEditHistory({ bus, onRestored: (workTree) => invalidateTokenSource(workTree), layout: (project, change, kind) => stepLayout(canvas, project, change, kind) });
   const editDeps = { bus, projects, versions, runner, history: editHistory, previewOrigin: (project: Project, direction: Direction) => previewOrigin(preview, project, direction) };
   onPlannedEdit((edit) =>
     bus.emit(edit.kind === 'planned' ? { type: 'edit.planned', projectId: edit.projectId, directionId: edit.directionId, id: edit.id, patches: edit.patches } : { type: 'edit.unplanned', projectId: edit.projectId, directionId: edit.directionId, id: edit.id }),
   );
   const canvas = deps.canvas ?? createCanvasService(bus, (projectId) => projects.projectDir(projectId));
+  canvas.onLayoutChange?.((project, change, source) => recordLayout(editHistory, canvas, project, change, source));
   const announceCanvas = (project: Project): void => {
     void canvas.announce(project).catch((error: unknown) => console.error('[http] canvas announce failed', error));
   };
@@ -957,6 +959,7 @@ export function createApp(deps: AppDeps): Hono {
     const version = await withDirection(c.req.param('pid'), c.req.param('did'), async (project, direction) => {
       const restored = await versions.restore(project, direction, versionId, 'restore');
       await recordVersion(project, direction, restored, 'restore');
+      await recordRunInHistory(editHistory, versions, project, direction, restored.id).catch(() => editHistory.clear(project.id, direction.id));
       await syncPackId(project, direction);
       await emitStatus(project, direction);
       return restored;

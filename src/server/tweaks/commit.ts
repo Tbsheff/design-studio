@@ -3,11 +3,11 @@ import path from 'node:path';
 import { z } from 'zod';
 import type { Direction, Project, TokenChange, Version, VersionMeta } from '../../shared/contracts.js';
 import { TWEAKS_FILE, parseTweakCss, tweakCss, type CommitTweaksResult, type TweakControl, type TweakValue } from '../../shared/tweaks.js';
-import { DESIGN_FILES, readSnapshot, restoreSnapshots } from '../design-system/create-token.js';
+import { DESIGN_FILES, readSnapshot, restoreSnapshots, type FileSnapshot } from '../design-system/create-token.js';
 import { writeFileAtomic } from '../design-system/packs.js';
 import { invalidateTokenSource } from '../design-system/token-preview.js';
 import { plannedTokensText, writeTokensText } from '../design-system/update-tokens.js';
-import { DirectEditError, assertCanEdit, publishVersion, writeAtomic, type DirectEditDeps } from '../direct-edit/index.js';
+import { DirectEditError, assertCanEdit, publishVersion, writeAtomic, type DirectEditDeps, type EditFileChange } from '../direct-edit/index.js';
 import { applyEdits, type CssEdit } from './css-vars.js';
 import { describeZodError } from './schema.js';
 import { declarationsFor, loadStyleSources, type StyleSource } from './sources.js';
@@ -116,8 +116,9 @@ export async function commitTweaks(deps: DirectEditDeps, project: Project, direc
   const touched = [TWEAKS_FILE, ...plan.cssWrites.map((write) => write.relative), ...(tokensText === null ? [] : DESIGN_FILES)];
   const snapshots = await Promise.all(touched.map((relative) => readSnapshot(workTree, relative)));
   let version: Version | null;
+  let paths: string[];
   try {
-    const paths = await writePlan(workTree, plan, tokensText);
+    paths = await writePlan(workTree, plan, tokensText);
     version = await deps.versions.commitFile(project, direction, paths, commitTitle(plan.values.map((item) => item.control)), commitMeta(plan.values));
     if (version === null) throw new DirectEditError('no_change', 'The tweaks did not change any tracked file');
   } catch (error) {
@@ -127,5 +128,19 @@ export async function commitTweaks(deps: DirectEditDeps, project: Project, direc
     if (tokensText !== null) invalidateTokenSource(workTree);
   }
   await publishVersion(deps, project, direction, version);
+  const files = await changesOf(workTree, paths, snapshots);
+  deps.history?.record({ projectId: project.id, directionId: direction.id, label: version.title, versionId: version.id, files });
   return { state: await readTweaksState(workTree), version };
+}
+
+async function changesOf(workTree: string, paths: string[], snapshots: FileSnapshot[]): Promise<EditFileChange[]> {
+  const changes = await Promise.all(
+    paths.map(async (relative): Promise<EditFileChange | null> => {
+      const after = (await readSnapshot(workTree, relative)).content;
+      if (after === null) return null;
+      const before = snapshots.find((snapshot) => snapshot.relative === relative)?.content ?? null;
+      return { file: path.join(workTree, relative), relative, before: before ?? '', after, ...(before === null ? { created: true } : {}) };
+    }),
+  );
+  return changes.filter((change): change is EditFileChange => change !== null);
 }

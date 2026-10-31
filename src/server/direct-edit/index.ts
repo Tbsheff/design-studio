@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import type { LayoutChange } from '../canvas/layout-history.js';
 import { mkdir, readFile, realpath, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Direction, DirectEditRequest, DirectEditResult, Project, Version, VersionMeta } from '../../shared/contracts.js';
@@ -36,6 +37,7 @@ export interface EditRecord {
   label: string;
   versionId: string;
   files: EditFileChange[];
+  layout?: LayoutChange;
 }
 
 export interface EditRecorder {

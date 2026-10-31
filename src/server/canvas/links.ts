@@ -21,7 +21,9 @@ export async function readLinksAt(workTree: string): Promise<LinksFile> {
   return (text === null ? null : parseLinksText(text)) ?? emptyLinksFile();
 }
 
-export function createLinksService(bus: EventBus): LinksService {
+export type LinksWritten = (project: Project, before: LinksFile, after: LinksFile, source: CanvasWriteSource) => void;
+
+export function createLinksService(bus: EventBus, written?: LinksWritten): LinksService {
   const lock = createKeyedMutex();
   const keyOf = (project: Project): string => `${project.id}/${canvasOwner(project).id}/links`;
   const read = (project: Project): Promise<LinksFile> => readLinksAt(canvasOwner(project).workTree);
@@ -43,6 +45,7 @@ export function createLinksService(bus: EventBus): LinksService {
         if (text === serializeLinksFile(current)) return saved;
         await writeAtomic(linksPath(canvasOwner(project).workTree), text);
         emit(project, saved, source);
+        written?.(project, current, saved, source);
         return saved;
       });
     },

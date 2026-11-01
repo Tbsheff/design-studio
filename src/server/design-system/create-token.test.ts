@@ -319,7 +319,7 @@ describe("create token", { timeout: 60_000 }, () => {
       expect([...result.version.changedFiles].sort()).toEqual(
         [...DESIGN_FILES].sort()
       );
-      expect((await listVersions(project)).length).toBe(count + 1);
+      await expect(listVersions(project)).resolves.toHaveLength(count + 1);
       const after = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");
       expectPureInsertion(before, after);
       expect(after).toContain(
@@ -527,7 +527,7 @@ describe("create token", { timeout: 60_000 }, () => {
       version: result.version,
       applied: { style: ["color"], text: false },
     });
-    expect((await listVersions(project)).length).toBe(count + 1);
+    await expect(listVersions(project)).resolves.toHaveLength(count + 1);
     await expect(
       readFile(path.join(workTree, "index.html"), "utf-8")
     ).resolves.toContain('<h1 style="color: var(--brand-2);" class="t">');

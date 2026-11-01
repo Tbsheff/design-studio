@@ -205,8 +205,8 @@ describe("edit history", { timeout: 30_000 }, () => {
       canRedo: false,
     });
     expect(
-      seen.filter((event) => event.type === "edit-history.changed").length
-    ).toBe(9);
+      seen.filter((event) => event.type === "edit-history.changed")
+    ).toHaveLength(9);
   });
 
   it("refuses when someone else changed the file and clears the stacks", async () => {

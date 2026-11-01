@@ -398,7 +398,7 @@ describe("token update", { timeout: 30_000 }, () => {
     expect(diff.added.filter((line) => line.includes("#ff0000"))).toHaveLength(
       1
     );
-    expect(before.split("\n").length).toBe(after.split("\n").length);
+    expect(before.split("\n")).toHaveLength(after.split("\n").length);
 
     const changed = before
       .split("\n")

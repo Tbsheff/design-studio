@@ -174,7 +174,7 @@ describe("comment store", () => {
       status: "completed",
       versionId: null,
     });
-    expect(events.length).toBe(count);
+    expect(events).toHaveLength(count);
     expect(a.status).toBe("queued");
   });
 });

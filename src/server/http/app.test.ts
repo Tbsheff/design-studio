@@ -169,7 +169,7 @@ describe("http app", { timeout: 20_000 }, () => {
       startRun: "no",
     });
     expect(bad.status).toBe(400);
-    expect((await projects.list()).length).toBe(before);
+    await expect(projects.list()).resolves.toHaveLength(before);
   });
 
   it("rejects settings out of range at create time", async () => {

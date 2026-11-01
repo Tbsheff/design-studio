@@ -112,7 +112,7 @@ describe("patchHtml move", () => {
     expect(
       result.code.slice(start + two.length + between.length + one.length)
     ).toBe(PAGE.slice(PAGE.indexOf(two) + two.length));
-    expect(result.code.length).toBe(PAGE.length);
+    expect(result.code).toHaveLength(PAGE.length);
     expect(sortedChars(result.code)).toBe(sortedChars(PAGE));
     expect(result.moved).toEqual(
       htmlLoc(result.code, 'article class="card" id="one"')

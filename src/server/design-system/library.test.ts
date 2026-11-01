@@ -69,7 +69,7 @@ afterEach(async () => {
 describe("pack registry with user packs", () => {
   it("lists built-in packs first, then valid user packs marked as user", async () => {
     const builtins = await registry.list();
-    expect(builtins.length).toBe(8);
+    expect(builtins).toHaveLength(8);
     expect(builtins.every((pack) => pack.source === "builtin")).toBe(true);
     await library.createUserPack(await fixtureInput());
     const all = await registry.list();

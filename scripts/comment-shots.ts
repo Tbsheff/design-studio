@@ -201,7 +201,7 @@ type Row = {
 async function until<T>(
   read: () => Promise<T>,
   ok: (value: T) => boolean,
-  ms = 20000
+  ms = 20_000
 ): Promise<T> {
   const end = Date.now() + ms;
   let value = await read();
@@ -240,7 +240,11 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
     ).map((run) => ({ status: run.status, prompt: run.request.prompt }));
 
   const idle = async () =>
-    until(runs, (rows) => rows.every((run) => run.status !== "running"), 30000);
+    until(
+      runs,
+      (rows) => rows.every((run) => run.status !== "running"),
+      30_000
+    );
 
   const compose = page.getByTestId("comment-compose");
 
@@ -264,7 +268,7 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
     (rows) =>
       rows.find((row) => row.text.startsWith("Make the headline one line"))
         ?.status === "resolved",
-    30000
+    30_000
   );
 
   console.log(
@@ -288,7 +292,7 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
     list,
     (rows) =>
       rows.find((row) => row.text.includes("hero type"))?.status === "resolved",
-    30000
+    30_000
   );
 
   const withMention = mentioned.find((row) => row.text.includes("hero type"));
@@ -377,7 +381,7 @@ async function verify(page: Page, id: string, did: string): Promise<void> {
   const steered = await until(
     runs,
     (rows) => rows.some((run) => run.prompt.startsWith("About Page ›")),
-    30000
+    30_000
   );
 
   console.log(

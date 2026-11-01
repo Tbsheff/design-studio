@@ -150,7 +150,7 @@ afterEach(async () => {
   await rm(parent, { recursive: true, force: true });
 });
 
-describe("create a project in a chosen folder", { timeout: 30000 }, () => {
+describe("create a project in a chosen folder", { timeout: 30_000 }, () => {
   it("writes only a new subfolder and keeps the shadow git in the data dir", async () => {
     const before = snapshot(parent);
     const { response, project } = await createIn({
@@ -256,7 +256,7 @@ describe("create a project in a chosen folder", { timeout: 30000 }, () => {
   });
 });
 
-describe("the default projects folder", { timeout: 30000 }, () => {
+describe("the default projects folder", { timeout: 30_000 }, () => {
   const createDefault = async (prompt: string): Promise<Project> => {
     const response = await call("POST", "/api/projects", {
       prompt,

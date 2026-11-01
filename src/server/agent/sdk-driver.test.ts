@@ -463,7 +463,7 @@ describe("sdk driver run accounting", () => {
   });
 
   it("caps model time at the run duration when no earlier session total is known", async () => {
-    const t = await setup([{ messages: [init(), result(0.05, 54721, 5600)] }]);
+    const t = await setup([{ messages: [init(), result(0.05, 54_721, 5600)] }]);
     await t.projects.updateDirection("p1", "d1", {
       sessionId: SESSION,
       sessionCostUsd: 0.04,

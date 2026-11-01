@@ -49,7 +49,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("version store", { timeout: 20000 }, () => {
+describe("version store", { timeout: 20_000 }, () => {
   it("commits, lists newest first, and reports changed files", async () => {
     const main = projects.mainDirection(project);
     await write(main.workTree, "index.html", "<h1>one</h1>");

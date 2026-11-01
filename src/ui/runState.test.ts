@@ -111,7 +111,7 @@ describe("shownPending", () => {
   it("shows the pending send until a run with the same prompt starts in the direction", () => {
     expect(shownPending(pending, [], "main")).toBe(pending);
     expect(
-      shownPending(pending, [emptyRun("old", "main", 2_000, request)], "main")
+      shownPending(pending, [emptyRun("old", "main", 2000, request)], "main")
     ).toBe(pending);
     expect(
       shownPending(
@@ -124,7 +124,7 @@ describe("shownPending", () => {
       shownPending(pending, [emptyRun("r1", "main", 10_050, request)], "main")
     ).toBeNull();
     expect(
-      shownPending(pending, [emptyRun("r1", "main", 9_500, request)], "main")
+      shownPending(pending, [emptyRun("r1", "main", 9500, request)], "main")
     ).toBeNull();
   });
 

@@ -144,7 +144,7 @@ function startServer(dataDir: string, uiDir: string): ChildProcess {
         STUDIO_CLAUDE_HOME: path.join(dataDir, "claude-home"),
         STUDIO_PORT: String(PORT),
         STUDIO_PREVIEW_PORT: String(PORT + 1),
-        STUDIO_VITE_PORT_BASE: String(38000),
+        STUDIO_VITE_PORT_BASE: String(38_000),
         PERF_UI_DIR: uiDir,
       },
       stdio: ["ignore", "ignore", "inherit"],

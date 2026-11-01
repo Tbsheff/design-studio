@@ -78,8 +78,8 @@ const target = z
   })
   .strict();
 
-const coord = z.number().finite().min(-100000).max(100000);
-const size = z.number().finite().min(0).max(100000);
+const coord = z.number().finite().min(-100_000).max(100_000);
+const size = z.number().finite().min(0).max(100_000);
 
 const box = z
   .object({ x: coord, y: coord, width: size, height: size })

@@ -24,7 +24,7 @@ export async function readMcpSettings(dataDir: string): Promise<McpSettings> {
     const port =
       Number.isInteger(parsed.port) &&
       (parsed.port as number) > 1023 &&
-      (parsed.port as number) < 65536
+      (parsed.port as number) < 65_536
         ? (parsed.port as number)
         : DEFAULT_MCP_PORT;
     const token =

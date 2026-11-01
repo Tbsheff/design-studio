@@ -148,7 +148,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("edit history", { timeout: 30000 }, () => {
+describe("edit history", { timeout: 30_000 }, () => {
   it("undoes three edits to the exact start bytes and redoes them to the exact end bytes", async () => {
     const { project, file } = await setupProject();
     const seen: StudioEvent[] = [];

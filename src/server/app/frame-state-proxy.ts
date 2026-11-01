@@ -228,9 +228,9 @@ function errorBody(pathname: string): unknown {
 
     return {
       error: {
-        json: { message, code: -32603, data },
+        json: { message, code: -32_603, data },
         message,
-        code: -32603,
+        code: -32_603,
         data,
       },
     };

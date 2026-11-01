@@ -167,7 +167,7 @@ async function main(): Promise<void> {
     }
 
     await tab.click(SHORT);
-    await page.locator(".cmp-thumb img").first().waitFor({ timeout: 20000 });
+    await page.locator(".cmp-thumb img").first().waitFor({ timeout: 20_000 });
     await page.getByRole("button", { name: "Mention Card" }).click();
     await shot(page, "components-panel");
   });

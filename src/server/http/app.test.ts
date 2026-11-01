@@ -95,7 +95,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("http app", { timeout: 20000 }, () => {
+describe("http app", { timeout: 20_000 }, () => {
   it("accepts every setting at create time", async () => {
     const settings = {
       model: "claude-haiku-5-5",
@@ -348,7 +348,7 @@ describe("http app", { timeout: 20000 }, () => {
 
   it(
     "serializes direct edits and undo on one direction",
-    { timeout: 60000 },
+    { timeout: 60_000 },
     async () => {
       const project = await createHtml();
       const workTree = projects.mainDirection(project).workTree;

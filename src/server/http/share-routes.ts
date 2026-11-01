@@ -50,7 +50,9 @@ export interface ShareRouteDeps extends ExportDeps {
 
 function sharePort(studioPort: number): number {
   const raw = Number(process.env.STUDIO_SHARE_PORT);
-  return Number.isInteger(raw) && raw > 0 && raw < 65536 ? raw : studioPort + 5;
+  return Number.isInteger(raw) && raw > 0 && raw < 65_536
+    ? raw
+    : studioPort + 5;
 }
 
 function expiryOf(raw: unknown): ShareExpiryHours {
@@ -152,7 +154,7 @@ async function createLink(
       : direction.headVersionId;
   if (!versionId)
     throw new BadRequestError("Save a version before you share it.");
-  const expiresAt = Date.now() + expiryOf(input.expiresInHours) * 3600_000;
+  const expiresAt = Date.now() + expiryOf(input.expiresInHours) * 3_600_000;
   const source = await resolveSource(deps, project.id, versionId);
   const { frames, ids } = await framesOf(
     deps,

@@ -183,7 +183,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("direct edit token references", { timeout: 30000 }, () => {
+describe("direct edit token references", { timeout: 30_000 }, () => {
   it("accepts a known token and a token with a fallback", async () => {
     const { project, workTree } = await setup();
 
@@ -263,7 +263,7 @@ describe("direct edit token references", { timeout: 30000 }, () => {
   });
 });
 
-describe("create token", { timeout: 60000 }, () => {
+describe("create token", { timeout: 60_000 }, () => {
   it("adds a token to each group and recompiles tokens.css and DESIGN.md in one version", async () => {
     const { project, workTree } = await setup();
 

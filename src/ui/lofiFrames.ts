@@ -12,7 +12,7 @@ let cssLoad: Promise<string> | null = null;
 
 function toBase64(bytes: Uint8Array): string {
   let text = "";
-  const step = 0x8000;
+  const step = 0x80_00;
 
   for (let i = 0; i < bytes.length; i += step) {
     text += String.fromCharCode(...bytes.subarray(i, i + step));

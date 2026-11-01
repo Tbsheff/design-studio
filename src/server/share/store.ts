@@ -57,7 +57,7 @@ export interface ShareStore {
 }
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
-const KEEP_REVOKED_MS = 7 * 24 * 3600_000;
+const KEEP_REVOKED_MS = 7 * 24 * 3_600_000;
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

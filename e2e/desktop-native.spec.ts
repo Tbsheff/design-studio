@@ -604,7 +604,7 @@ test("R3-2: Esc in the desktop window stops a run, with focus in the studio and 
     ).toBeVisible({ timeout: 20_000 });
     await press();
     await expect(card.locator(".run-foot .status.canceled")).toBeVisible({
-      timeout: 2_000,
+      timeout: 2000,
     });
     await expect
       .poll(

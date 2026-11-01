@@ -168,7 +168,7 @@ function pagePoint(
 
 const SWAP_FALLBACK_MS = 1500;
 const LOAD_GRACE_MS = 500;
-const REACT_LATENCY_WINDOW_MS = 10000;
+const REACT_LATENCY_WINDOW_MS = 10_000;
 const HMR_FALLBACK_MS = 2500;
 
 function releaseToolbarFocus(): void {

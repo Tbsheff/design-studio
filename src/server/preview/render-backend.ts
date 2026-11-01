@@ -32,7 +32,7 @@ export interface RenderBackend {
 }
 
 export const NAVIGATION_TIMEOUT_MS = 30_000;
-export const SETTLE_TIMEOUT_MS = 5_000;
+export const SETTLE_TIMEOUT_MS = 5000;
 
 export function chooseBackend(
   env: NodeJS.ProcessEnv = process.env

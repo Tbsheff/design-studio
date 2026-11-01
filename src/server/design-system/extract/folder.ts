@@ -324,7 +324,7 @@ const TAILWIND_RADIUS: Record<string, string> = {
 function remTimes(base: string, steps: number): string | null {
   const match = /^(\d*\.?\d+)rem$/.exec(base.trim());
   return match
-    ? `${Math.round(Number(match[1]) * steps * 10000) / 10000}rem`
+    ? `${Math.round(Number(match[1]) * steps * 10_000) / 10_000}rem`
     : null;
 }
 

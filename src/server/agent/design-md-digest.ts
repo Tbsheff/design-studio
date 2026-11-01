@@ -1,5 +1,5 @@
 const SECTION_MAX_CHARS = 4500;
-const DIGEST_MIN_CHARS = 12000;
+const DIGEST_MIN_CHARS = 12_000;
 
 function cutSection(section: string): string {
   if (section.length <= SECTION_MAX_CHARS) {

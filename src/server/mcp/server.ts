@@ -308,7 +308,7 @@ async function dispatch(
       ? null
       : { jsonrpc: "2.0", id, error: { code, message: text } };
   if (message.jsonrpc !== "2.0" || typeof message.method !== "string")
-    return fail(-32600, "invalid request");
+    return fail(-32_600, "invalid request");
   switch (message.method) {
     case "initialize": {
       const asked =
@@ -335,12 +335,12 @@ async function dispatch(
       const name =
         typeof message.params?.name === "string" ? message.params.name : "";
       if (!EDIT_NAMES.has(name) && !TOOLS.some((tool) => tool.name === name))
-        return fail(-32602, `unknown tool ${name}`);
+        return fail(-32_602, `unknown tool ${name}`);
       return reply(await callAny(ctx, edits, name, message.params?.arguments));
     }
     default:
       if (message.method.startsWith("notifications/")) return null;
-      return fail(-32601, `method ${message.method} is not supported`);
+      return fail(-32_601, `method ${message.method} is not supported`);
   }
 }
 
@@ -378,7 +378,7 @@ function createMcpApp(
         {
           jsonrpc: "2.0",
           id: null,
-          error: { code: -32700, message: "parse error" },
+          error: { code: -32_700, message: "parse error" },
         },
         400
       );

@@ -82,7 +82,7 @@ function endsText(link: ShareLink, now: number): string {
     return "Ended";
   }
 
-  const hours = Math.round(left / 3600_000);
+  const hours = Math.round(left / 3_600_000);
 
   if (hours >= 48) {
     return `Ends in ${Math.round(hours / 24)} days`;

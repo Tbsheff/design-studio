@@ -70,7 +70,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("telemetry routes", { timeout: 30000 }, () => {
+describe("telemetry routes", { timeout: 30_000 }, () => {
   it("keeps app samples without a project apart from project samples", async () => {
     const { project } = await call<{ project: Project }>(
       "POST",

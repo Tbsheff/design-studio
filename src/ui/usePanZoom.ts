@@ -73,7 +73,9 @@ function wheelZoomFactor(dy: number): number {
 }
 
 function clampZoom(z: number): number {
-  return Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 10000) / 10000;
+  return (
+    Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z)) * 10_000) / 10_000
+  );
 }
 
 function fitZoomFor(stage: Stage, bounds: Box): number {

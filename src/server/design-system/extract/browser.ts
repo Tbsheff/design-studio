@@ -25,7 +25,7 @@ export const NO_BROWSER_NOTE =
   "Install Google Chrome to read sites that build their styles in JavaScript.";
 
 export const BROWSER_TOTAL_MS = 20_000;
-const IDLE_MS = 8_000;
+const IDLE_MS = 8000;
 const MAX_REQUESTS = 300;
 const MAX_TOTAL_BYTES = 20 * 1024 * 1024;
 const REQUEST_MS = 10_000;

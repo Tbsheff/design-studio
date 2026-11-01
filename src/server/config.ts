@@ -27,7 +27,7 @@ function readPort(name: string, fallback: number): number {
 
   const value = Number(raw);
 
-  if (!Number.isInteger(value) || value <= 0 || value > 65535) {
+  if (!Number.isInteger(value) || value <= 0 || value > 65_535) {
     throw new Error(`${name} must be a port number, got "${raw}"`);
   }
 

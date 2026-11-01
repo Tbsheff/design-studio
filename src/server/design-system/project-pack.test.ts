@@ -137,7 +137,7 @@ afterEach(async () => {
   }
 });
 
-describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
+describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
   it("switches packs as one version, keeps project notes, and undo restores the old pack", async () => {
     const project = await create({
       packId: "editorial",
@@ -259,7 +259,7 @@ describe("apply or switch a pack on a project", { timeout: 30000 }, () => {
 
 describe(
   "save a project design system to the library",
-  { timeout: 30000 },
+  { timeout: 30_000 },
   () => {
     it("round-trips: save, then apply to another project gives the same tokens", async () => {
       const source = await create({
@@ -409,7 +409,7 @@ describe(
   }
 );
 
-describe("library routes", { timeout: 30000 }, () => {
+describe("library routes", { timeout: 30_000 }, () => {
   it("duplicates, renames, deletes and exports over HTTP", async () => {
     const copy = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", {})

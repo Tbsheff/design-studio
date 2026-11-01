@@ -55,7 +55,7 @@ export const JSX_INSERT_POSITIONS: readonly JsxInsertPosition[] = [
   "after",
   "replace",
 ];
-export const JSX_SNIPPET_MAX = 20000;
+export const JSX_SNIPPET_MAX = 20_000;
 export const JSX_IMPORTS_MAX = 40;
 
 export interface InsertJsxRequest {

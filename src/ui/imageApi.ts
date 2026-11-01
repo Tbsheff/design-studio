@@ -32,7 +32,7 @@ export async function fileData(
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   let binary = "";
-  const step = 0x8000;
+  const step = 0x80_00;
 
   for (let at = 0; at < bytes.length; at += step) {
     binary += String.fromCharCode(...bytes.subarray(at, at + step));

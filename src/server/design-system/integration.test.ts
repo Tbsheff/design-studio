@@ -263,7 +263,7 @@ describe("packs", () => {
   });
 });
 
-describe("apply a pack on create", { timeout: 30000 }, () => {
+describe("apply a pack on create", { timeout: 30_000 }, () => {
   it("rejects an unknown or invalid packId without creating a project", async () => {
     expect(
       (
@@ -499,7 +499,7 @@ describe("html preview link", () => {
   });
 });
 
-describe("recompile", { timeout: 20000 }, () => {
+describe("recompile", { timeout: 20_000 }, () => {
   it("writes tokens.css and the DESIGN.md block only when they change", async () => {
     const root = await copyFixtureWorkTree();
     expect((await syncDesignSystem(root)).changed).toEqual([

@@ -4,7 +4,7 @@ export const REPO_CONTEXT_FILES = [
   "DESIGN.md",
   "PRODUCT.md",
 ] as const;
-export const REPO_CONTEXT_MAX_BYTES = 32768;
+export const REPO_CONTEXT_MAX_BYTES = 32_768;
 
 export type RepoContextScope = "app" | "workspace";
 export type RepoContextUse =

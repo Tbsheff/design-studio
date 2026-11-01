@@ -137,7 +137,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("POST /api/packs/import", { timeout: 30000 }, () => {
+describe("POST /api/packs/import", { timeout: 30_000 }, () => {
   it("imports an exported zip as a new user pack with imported provenance", async () => {
     const result = await ok<ImportPackResult>(
       importZip(await exportZip("editorial"))
@@ -490,7 +490,7 @@ describe("GET /api/packs/:id/check", () => {
   });
 });
 
-describe("POST /api/packs/:id/editor", { timeout: 30000 }, () => {
+describe("POST /api/packs/:id/editor", { timeout: 30_000 }, () => {
   it("creates one backing project from the pack files, then opens the same one again", async () => {
     const copy = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", { name: "Ink" })
@@ -580,7 +580,7 @@ describe("POST /api/packs/:id/editor", { timeout: 30000 }, () => {
   });
 });
 
-describe("POST .../design-system/save with asNew", { timeout: 30000 }, () => {
+describe("POST .../design-system/save with asNew", { timeout: 30_000 }, () => {
   it("saves a copy as a new user pack and points the project at it", async () => {
     const house = await ok<PackSummary>(
       call("POST", "/api/packs/editorial/duplicate", { name: "House" })

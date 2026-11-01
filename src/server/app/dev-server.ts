@@ -52,7 +52,7 @@ export interface AppServerDeps {
 const DEFAULT_PORT_COUNT = 200;
 
 function freePort(start: number, count: number): Promise<number> {
-  const last = Math.min(65535, start + count - 1);
+  const last = Math.min(65_535, start + count - 1);
 
   const tryPort = (port: number): Promise<number> =>
     new Promise((resolve, reject) => {

@@ -41,7 +41,7 @@ beforeAll(async () => {
   await writeFile(path.join(root, "vite.config.mjs"), CONFIG);
   manager = new ViteManager({
     bus,
-    vitePortBase: 46100,
+    vitePortBase: 46_100,
     bridgeScript: async () => "window.__bridgeLoaded = true;",
   });
 });
@@ -52,7 +52,7 @@ afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-describe("ViteManager child process", { timeout: 60000 }, () => {
+describe("ViteManager child process", { timeout: 60_000 }, () => {
   it("runs the project vite.config in a child with a scrubbed env and serves the bridge", async () => {
     const target = {
       key: "d:p:main",

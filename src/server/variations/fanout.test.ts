@@ -171,7 +171,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("variations fan-out", { timeout: 30000 }, () => {
+describe("variations fan-out", { timeout: 30_000 }, () => {
   it("creates N directions from the head and starts N runs at the same time", async () => {
     const project = await createProject();
     const head = project.directions[0]?.headVersionId;
@@ -327,7 +327,7 @@ describe("variations fan-out", { timeout: 30000 }, () => {
     expect(((await response.json()) as { error: string }).error).toMatch(
       /React/
     );
-  }, 120000);
+  }, 120_000);
 
   it("mixes an element from B into A as a reference, not a selection", async () => {
     const project = await createProject();

@@ -315,7 +315,7 @@ describe("tiles", () => {
       { y: 900, height: 900 },
       { y: 1800, height: 200 },
     ]);
-    expect(planTiles(10000, 900, 1000, 2)).toEqual([
+    expect(planTiles(10_000, 900, 1000, 2)).toEqual([
       { y: 1000, height: 900 },
       { y: 1900, height: 900 },
     ]);

@@ -25,7 +25,7 @@ export const SHIP_TEXT_MAX = {
   issueId: 40,
   title: 200,
   commitMessage: 4000,
-  body: 20000,
+  body: 20_000,
   branch: 200,
 };
 

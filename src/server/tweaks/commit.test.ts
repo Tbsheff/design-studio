@@ -211,7 +211,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("tweaks state", { timeout: 30000 }, () => {
+describe("tweaks state", { timeout: 30_000 }, () => {
   it("reads controls with the current :root values from the source", async () => {
     const { project, workTree } = await create("html");
     await writeFile(path.join(workTree, "index.html"), PAGE);
@@ -233,7 +233,7 @@ describe("tweaks state", { timeout: 30000 }, () => {
   });
 });
 
-describe("tweaks commit: HTML", { timeout: 30000 }, () => {
+describe("tweaks commit: HTML", { timeout: 30_000 }, () => {
   it("rewrites only the value bytes of the last :root declaration in each style block, in one version", async () => {
     const { project, workTree } = await create("html");
     await writeFile(path.join(workTree, "index.html"), PAGE);
@@ -337,7 +337,7 @@ describe("tweaks commit: HTML", { timeout: 30000 }, () => {
   });
 });
 
-describe("tweaks commit: React", { timeout: 30000 }, () => {
+describe("tweaks commit: React", { timeout: 30_000 }, () => {
   it("rewrites the :root declaration in the CSS file", async () => {
     const { project, workTree } = await create("react");
     const cssPath = "src/App.css";
@@ -365,7 +365,7 @@ describe("tweaks commit: React", { timeout: 30000 }, () => {
   });
 });
 
-describe("tweaks commit: design-system token", { timeout: 30000 }, () => {
+describe("tweaks commit: design-system token", { timeout: 30_000 }, () => {
   it("updates tokens.json and regenerates tokens.css instead of the page", async () => {
     const { project, workTree } = await create("html", "test-pack");
 
@@ -404,7 +404,7 @@ describe("tweaks commit: design-system token", { timeout: 30000 }, () => {
 
 describe(
   "tweaks commit: token also declared in the page",
-  { timeout: 30000 },
+  { timeout: 30_000 },
   () => {
     it("updates tokens.json and the page :root override together", async () => {
       const { project, workTree } = await create("html", "test-pack");

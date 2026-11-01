@@ -14,7 +14,7 @@ export interface Move {
   to: string | null;
 }
 
-const IDS_MAX = 50000;
+const IDS_MAX = 50_000;
 const GONE = "\u0000gone";
 const LOC_IN_KEY = /(^|\|)([^|#]+):(\d+):(\d+)(?=[|#])/g;
 const registries = new Map<string, Ids>();

@@ -13,7 +13,7 @@ import type { ParentToRunner, RunnerToParent } from "./vite-runner.js";
 const MAX_PORT_ATTEMPTS = 200;
 const MAX_START_ATTEMPTS = 3;
 const START_TIMEOUT_MS = 60_000;
-const CLOSE_TIMEOUT_MS = 3_000;
+const CLOSE_TIMEOUT_MS = 3000;
 const MAX_TEXT = 20_000;
 const OWN_URL = fileURLToPath(import.meta.url);
 

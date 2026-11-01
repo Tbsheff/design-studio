@@ -19,7 +19,7 @@ export const TREE_MODE = "40000";
 export const GITLINK_MODE = "160000";
 export const SYMLINK_MODE = "120000";
 const ZERO_SHA = "0".repeat(40);
-const MAX_CACHED = 20000;
+const MAX_CACHED = 20_000;
 
 export interface TreeEntry {
   mode: string;

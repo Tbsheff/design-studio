@@ -31,7 +31,7 @@ const FRAME_TYPES = new Set([
 ]);
 
 const CONTAINER_TYPES = new Set(["DOCUMENT", "CANVAS"]);
-const FETCH_TIMEOUT_MS = 20000;
+const FETCH_TIMEOUT_MS = 20_000;
 
 function isJson(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);

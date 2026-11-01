@@ -51,7 +51,7 @@ export const SVG_SHAPE_TAGS = [
   "g",
 ] as const;
 
-export const VECTOR_PATH_MAX = 20000;
+export const VECTOR_PATH_MAX = 20_000;
 
 export const VECTOR_COLOR =
   /^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgb|rgba|hsl|hsla|oklch|oklab)\([^()]{1,80}\)|var\(--[\w-]{1,60}\))$/;

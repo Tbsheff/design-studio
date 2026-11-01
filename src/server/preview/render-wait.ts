@@ -1,5 +1,5 @@
 const WATCH_DELAY_MS = 300;
-const SETTLE_MAX_MS = 60000;
+const SETTLE_MAX_MS = 60_000;
 const PAGES_MAX = 6;
 
 interface RenderJob {

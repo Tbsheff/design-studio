@@ -31,7 +31,7 @@ interface Size {
 }
 
 function pngSize(bytes: Buffer): Size | null {
-  return bytes.length > 24 && bytes.readUInt32BE(12) === 0x49484452
+  return bytes.length > 24 && bytes.readUInt32BE(12) === 0x49_48_44_52
     ? { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
     : null;
 }
@@ -85,13 +85,16 @@ function webpSize(bytes: Buffer): Size | null {
   if (chunk === "VP8L") {
     const bits = bytes.readUInt32LE(21);
 
-    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
+    return {
+      width: (bits & 0x3f_ff) + 1,
+      height: ((bits >> 14) & 0x3f_ff) + 1,
+    };
   }
 
   if (chunk === "VP8 ") {
     return {
-      width: bytes.readUInt16LE(26) & 0x3fff,
-      height: bytes.readUInt16LE(28) & 0x3fff,
+      width: bytes.readUInt16LE(26) & 0x3f_ff,
+      height: bytes.readUInt16LE(28) & 0x3f_ff,
     };
   }
 

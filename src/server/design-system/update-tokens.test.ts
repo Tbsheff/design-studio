@@ -215,7 +215,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("token preview", { timeout: 30000 }, () => {
+describe("token preview", { timeout: 30_000 }, () => {
   it("returns only the changed property in every block the full css uses, and writes nothing", async () => {
     const { project, workTree } = await setup();
     const before = await readAll(workTree);
@@ -378,7 +378,7 @@ describe("token preview", { timeout: 30000 }, () => {
   });
 });
 
-describe("token update", { timeout: 30000 }, () => {
+describe("token update", { timeout: 30_000 }, () => {
   it("edits only the changed lines and commits one version with a title", async () => {
     const { project, workTree } = await setup();
     const before = await readFile(path.join(workTree, TOKENS_FILE), "utf-8");

@@ -225,7 +225,7 @@ const NAMED_ENTITIES: Record<string, string> = {
 };
 
 function codePoint(value: number): string {
-  return Number.isInteger(value) && value > 0 && value <= 0x10ffff
+  return Number.isInteger(value) && value > 0 && value <= 0x10_ff_ff
     ? String.fromCodePoint(value)
     : "";
 }

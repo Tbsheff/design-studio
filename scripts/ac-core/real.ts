@@ -671,7 +671,7 @@ async function main(): Promise<void> {
 
               return agentsWhileRunning.length ? true : null;
             },
-            2_500,
+            2500,
             100
           ).catch(() => undefined);
           const wait = 1500 - (Date.now() - t0);

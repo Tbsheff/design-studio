@@ -19,11 +19,11 @@ export function formatMs(ms: number | null | undefined): string {
     return `${Math.round(ms)}ms`;
   }
 
-  if (ms < 60000) {
+  if (ms < 60_000) {
     return `${(ms / 1000).toFixed(1)}s`;
   }
 
-  return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+  return `${Math.floor(ms / 60_000)}m ${Math.round((ms % 60_000) / 1000)}s`;
 }
 
 export function formatUsd(n: number): string {
@@ -47,7 +47,7 @@ export function downloadBlob(blob: Blob, name: string): void {
 
 export function formatRelative(ts: number, now = Date.now()): string {
   const diff = Math.max(0, now - ts);
-  const min = Math.floor(diff / 60000);
+  const min = Math.floor(diff / 60_000);
 
   if (min < 1) {
     return "Just now";

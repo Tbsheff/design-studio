@@ -82,18 +82,18 @@ export const drawVectorShape = {
     .describe("rect or ellipse: pass x, y, width, height. path: pass d."),
   x: z
     .number()
-    .min(-100000)
-    .max(100000)
+    .min(-100_000)
+    .max(100_000)
     .default(0)
     .describe("Left edge in px from the parent padding box."),
   y: z
     .number()
-    .min(-100000)
-    .max(100000)
+    .min(-100_000)
+    .max(100_000)
     .default(0)
     .describe("Top edge in px from the parent padding box."),
-  width: z.number().min(1).max(100000).optional(),
-  height: z.number().min(1).max(100000).optional(),
+  width: z.number().min(1).max(100_000).optional(),
+  height: z.number().min(1).max(100_000).optional(),
   d: z
     .string()
     .trim()

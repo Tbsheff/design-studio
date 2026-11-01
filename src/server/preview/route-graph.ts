@@ -51,7 +51,7 @@ interface SavedGraph {
 
 const STYLE_FILE = /\.(css|scss|sass|less)$/;
 const CODE_FILE = /\.(tsx?|jsx?|mjs|cjs)$/;
-const GRAPH_CAP = 40000;
+const GRAPH_CAP = 40_000;
 const SAVED_VERSION = 2;
 const SAVE_DELAY_MS = 2000;
 

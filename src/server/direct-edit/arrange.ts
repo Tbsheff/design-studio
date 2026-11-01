@@ -62,8 +62,8 @@ type Viewport = { width: number; height: number };
 
 const viewportSchema = z
   .object({
-    width: z.number().int().min(100).max(10000),
-    height: z.number().int().min(100).max(20000),
+    width: z.number().int().min(100).max(10_000),
+    height: z.number().int().min(100).max(20_000),
   })
   .strict();
 const actionSchema = z.union([

@@ -39,7 +39,7 @@ export function pngDimensions(bytes: Buffer): {
   width: number;
   height: number;
 } {
-  if (bytes.length < 24 || bytes.readUInt32BE(12) !== 0x49484452)
+  if (bytes.length < 24 || bytes.readUInt32BE(12) !== 0x49_48_44_52)
     throw new Error("not a PNG");
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 }

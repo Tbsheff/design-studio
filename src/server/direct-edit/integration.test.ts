@@ -125,7 +125,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("direct edit route", { timeout: 30000 }, () => {
+describe("direct edit route", { timeout: 30_000 }, () => {
   it("commits a manual version and undo restores the original bytes", async () => {
     const { project, workTree, base } = await setupProject();
     const seen: StudioEvent[] = [];

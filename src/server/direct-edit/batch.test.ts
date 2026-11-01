@@ -138,7 +138,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("direct edit batch", { timeout: 30000 }, () => {
+describe("direct edit batch", { timeout: 30_000 }, () => {
   it("applies three edits in one HTML file as one version and keeps other bytes", async () => {
     const { project, workTree, base } = await setupProject();
     const before = await versionCount(project);

@@ -238,7 +238,7 @@ describe("mock agent run", () => {
       handle.runId
     );
     expect(persisted.summary.status).toBe("canceled");
-  }, 10000);
+  }, 10_000);
 
   it("marks a [fail] run as failed without committing", async () => {
     const env = await setup();

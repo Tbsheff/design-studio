@@ -194,7 +194,7 @@ afterEach(async () => {
   await cleanup();
 });
 
-describe("comment routes", { timeout: 20000 }, () => {
+describe("comment routes", { timeout: 20_000 }, () => {
   it("validates bodies with zod", async () => {
     expect((await call("POST", base, { text: "", target: {} })).status).toBe(
       400
@@ -347,7 +347,7 @@ describe("comment routes", { timeout: 20000 }, () => {
   });
 });
 
-describe("comment drawings and replies", { timeout: 20000 }, () => {
+describe("comment drawings and replies", { timeout: 20_000 }, () => {
   const box = { x: 40, y: 60, width: 200, height: 80 };
 
   const drawing = {

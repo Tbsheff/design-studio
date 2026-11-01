@@ -134,7 +134,7 @@ test("AC-25 click nested span, image, button and links to select them", async ({
       .toHaveAttribute(
         "title",
         new RegExp(`${tag}(:nth-of-type\\(\\d+\\))?$`),
-        { timeout: 5_000 }
+        { timeout: 5000 }
       )
       .catch(() => undefined);
     const chip = await page.locator(".chip").first().getAttribute("title");

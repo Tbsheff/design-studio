@@ -408,7 +408,7 @@ async function checkSelect(
   }, BRIDGE_TOKEN);
   await new Promise((resolve) => setTimeout(resolve, 50));
   await frame.locator("#title").click();
-  const message = await waitForMessage(page, "select", before, 5_000);
+  const message = await waitForMessage(page, "select", before, 5000);
 
   const selection = message.data.selection as {
     selector: string;
@@ -582,7 +582,7 @@ async function main(): Promise<void> {
         bus,
         htmlProject.id,
         (event) => event.type === "files.changed",
-        3_000
+        3000
       );
 
       const writtenAt = Date.now();
@@ -689,7 +689,7 @@ async function main(): Promise<void> {
         () =>
           (window as unknown as { __seenAt?: number }).__seenAt !== undefined,
         undefined,
-        { timeout: 5_000, polling: 10 }
+        { timeout: 5000, polling: 10 }
       );
 
       const seenAt = await reactOpen.frame.evaluate(
@@ -737,7 +737,7 @@ async function main(): Promise<void> {
       bus,
       reactProject.id,
       (event) => event.type === "preview.build-error",
-      5_000
+      5000
     ).catch(() => null);
 
     await writeFile(

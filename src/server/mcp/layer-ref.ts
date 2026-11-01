@@ -54,7 +54,7 @@ interface Memo {
   page: string | undefined;
 }
 
-const MEMO_MAX = 20000;
+const MEMO_MAX = 20_000;
 const memo = new Map<string, Memo>();
 
 const SCAN_SOURCE = String.raw`async (input) => {

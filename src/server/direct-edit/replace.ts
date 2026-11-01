@@ -56,7 +56,7 @@ const matchSchema = z
     property: z.enum(
       SEARCH_PROPERTIES as [SearchProperty, ...SearchProperty[]]
     ),
-    repeats: z.number().int().min(1).max(100000).optional(),
+    repeats: z.number().int().min(1).max(100_000).optional(),
   })
   .strict();
 

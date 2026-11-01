@@ -9,20 +9,20 @@ const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
 
   for (let k = 0; k < 8; k += 1) {
-    c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    c = c & 1 ? 0xed_b8_83_20 ^ (c >>> 1) : c >>> 1;
   }
 
   return c >>> 0;
 });
 
 function crc32(data: Buffer): number {
-  let crc = 0xffffffff;
+  let crc = 0xff_ff_ff_ff;
 
   for (const byte of data) {
     crc = (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0) ^ (crc >>> 8);
   }
 
-  return (crc ^ 0xffffffff) >>> 0;
+  return (crc ^ 0xff_ff_ff_ff) >>> 0;
 }
 
 function dosTime(date: Date): { time: number; day: number } {
@@ -50,9 +50,9 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
     const packed = deflateRawSync(entry.data);
     const crc = crc32(entry.data);
     const local = Buffer.alloc(30);
-    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt32LE(0x04_03_4b_50, 0);
     local.writeUInt16LE(20, 4);
-    local.writeUInt16LE(0x0800, 6);
+    local.writeUInt16LE(0x08_00, 6);
     local.writeUInt16LE(8, 8);
     local.writeUInt16LE(time, 10);
     local.writeUInt16LE(day, 12);
@@ -62,10 +62,10 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
     local.writeUInt16LE(name.length, 26);
     local.writeUInt16LE(0, 28);
     const central = Buffer.alloc(46);
-    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt32LE(0x02_01_4b_50, 0);
     central.writeUInt16LE(20, 4);
     central.writeUInt16LE(20, 6);
-    central.writeUInt16LE(0x0800, 8);
+    central.writeUInt16LE(0x08_00, 8);
     central.writeUInt16LE(8, 10);
     central.writeUInt16LE(time, 12);
     central.writeUInt16LE(day, 14);
@@ -73,7 +73,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
     central.writeUInt32LE(packed.length, 20);
     central.writeUInt32LE(entry.data.length, 24);
     central.writeUInt16LE(name.length, 28);
-    central.writeUInt32LE((0o100644 << 16) >>> 0, 38);
+    central.writeUInt32LE((0o10_0644 << 16) >>> 0, 38);
     central.writeUInt32LE(offset, 42);
     locals.push(local, name, packed);
     centrals.push(central, name);
@@ -82,7 +82,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
 
   const centralSize = centrals.reduce((sum, part) => sum + part.length, 0);
   const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt32LE(0x06_05_4b_50, 0);
   end.writeUInt16LE(entries.length, 8);
   end.writeUInt16LE(entries.length, 10);
   end.writeUInt32LE(centralSize, 12);
@@ -99,13 +99,13 @@ export interface UnzipLimits {
 
 export class ZipError extends Error {}
 
-const EOCD_SIGNATURE = 0x06054b50;
-const CENTRAL_SIGNATURE = 0x02014b50;
-const LOCAL_SIGNATURE = 0x04034b50;
+const EOCD_SIGNATURE = 0x06_05_4b_50;
+const CENTRAL_SIGNATURE = 0x02_01_4b_50;
+const LOCAL_SIGNATURE = 0x04_03_4b_50;
 const EOCD_MIN = 22;
-const MAX_COMMENT = 0xffff;
-const S_IFMT = 0o170000;
-const S_IFREG = 0o100000;
+const MAX_COMMENT = 0xff_ff;
+const S_IFMT = 0o17_0000;
+const S_IFREG = 0o10_0000;
 
 function findEnd(bytes: Buffer): number {
   const stop = Math.max(0, bytes.length - EOCD_MIN - MAX_COMMENT);
@@ -253,8 +253,8 @@ function readDirectory(
   const centralStart = bytes.readUInt32LE(end + 16);
 
   if (
-    count === 0xffff ||
-    centralStart === 0xffffffff ||
+    count === 0xff_ff ||
+    centralStart === 0xff_ff_ff_ff ||
     bytes.readUInt16LE(end + 4) !== 0 ||
     bytes.readUInt16LE(end + 8) !== count
   ) {

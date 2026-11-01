@@ -10,7 +10,7 @@ import { McpApproval } from "./McpFeed";
 
 import "../styles/mcp.css";
 
-const DONE_MS = 5_000;
+const DONE_MS = 5000;
 
 function useApprovalFeed(): [
   McpApprovalCard[],

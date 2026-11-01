@@ -6,7 +6,7 @@ export interface XmlPatch {
   geom?: string;
 }
 
-const EMU_PER_PX = 914400 / 96;
+const EMU_PER_PX = 914_400 / 96;
 const SLIDE = /^ppt\/slides\/slide\d+\.xml$/;
 const BLOCK = /<p:(sp|pic)>[\s\S]*?<\/p:\1>/g;
 const FILL = /^(<a:solidFill>[\s\S]*?<\/a:solidFill>|<a:noFill\/>)/;
@@ -14,20 +14,20 @@ const FILL = /^(<a:solidFill>[\s\S]*?<\/a:solidFill>|<a:noFill\/>)/;
 function colorXml(color: ScanColor, opacity: number): string {
   const alpha = color.alpha * opacity;
 
-  return `<a:srgbClr val="${color.hex.toUpperCase()}">${alpha < 0.99 ? `<a:alpha val="${Math.round(alpha * 100000)}"/>` : ""}</a:srgbClr>`;
+  return `<a:srgbClr val="${color.hex.toUpperCase()}">${alpha < 0.99 ? `<a:alpha val="${Math.round(alpha * 100_000)}"/>` : ""}</a:srgbClr>`;
 }
 
 export function gradientXml(gradient: ScanGradient, opacity: number): string {
   const stops = gradient.stops
     .map(
       (stop) =>
-        `<a:gs pos="${Math.round(stop.pos * 100000)}">${colorXml(stop.color, opacity)}</a:gs>`
+        `<a:gs pos="${Math.round(stop.pos * 100_000)}">${colorXml(stop.color, opacity)}</a:gs>`
     )
     .join("");
 
   const angle = (((gradient.angle - 90) % 360) + 360) % 360;
 
-  return `<a:gradFill rotWithShape="1"><a:gsLst>${stops}</a:gsLst><a:lin ang="${Math.round(angle * 60000)}" scaled="0"/></a:gradFill>`;
+  return `<a:gradFill rotWithShape="1"><a:gsLst>${stops}</a:gsLst><a:lin ang="${Math.round(angle * 60_000)}" scaled="0"/></a:gradFill>`;
 }
 
 export function shadowXml(
@@ -49,10 +49,10 @@ export function shadowXml(
 
   const scale = (side: number): number =>
     Math.round(
-      (Math.max(1, side + shadow.spread * 2) / Math.max(1, side)) * 100000
+      (Math.max(1, side + shadow.spread * 2) / Math.max(1, side)) * 100_000
     );
 
-  return `<a:effectLst><a:outerShdw blurRad="${emu(shadow.blur)}" dist="${emu(dist)}" dir="${Math.round(dir * 60000)}" sx="${scale(box.width)}" sy="${scale(box.height)}" algn="ctr" rotWithShape="0">${colorXml(shadow.color, opacity)}</a:outerShdw></a:effectLst>`;
+  return `<a:effectLst><a:outerShdw blurRad="${emu(shadow.blur)}" dist="${emu(dist)}" dir="${Math.round(dir * 60_000)}" sx="${scale(box.width)}" sy="${scale(box.height)}" algn="ctr" rotWithShape="0">${colorXml(shadow.color, opacity)}</a:outerShdw></a:effectLst>`;
 }
 
 export function roundGeomXml(
@@ -61,8 +61,8 @@ export function roundGeomXml(
 ): string {
   const adj = Math.round(
     Math.min(
-      50000,
-      (radius / Math.max(1, Math.min(box.width, box.height))) * 100000
+      50_000,
+      (radius / Math.max(1, Math.min(box.width, box.height))) * 100_000
     )
   );
 

@@ -1,16 +1,3 @@
-import type { DesignRule } from "../shared/design-rules.js";
-import type { RunTarget } from "./agent/run-target.js";
-import type {
-  InspectResult,
-  RenderCheckOptions,
-  TileRequest,
-  TileResult,
-} from "./preview/browser.js";
-import type { RenderPage } from "./preview/render-backend.js";
-
-export interface PeekOptions {
-  layoutOnly?: boolean;
-}
 import type {
   AppLogLine,
   AppServerStatus,
@@ -32,7 +19,27 @@ import type {
   VersionMeta,
   WorkTreeStatus,
 } from "../shared/contracts.js";
+import type { DesignRule } from "../shared/design-rules.js";
+import type { RunTarget } from "./agent/run-target.js";
 import type { DesignSystemPromptContext } from "./design-system/state.js";
+import type {
+  InspectResult,
+  PeekOptions,
+  RenderCheckOptions,
+  RenderPage,
+  TileRequest,
+  TileResult,
+} from "./preview/ports.js";
+
+export type {
+  InspectResult,
+  PeekOptions,
+  RenderBackend,
+  RenderCheckOptions,
+  RenderPage,
+  TileRequest,
+  TileResult,
+} from "./preview/ports.js";
 
 export interface ServerConfig {
   dataDir: string;

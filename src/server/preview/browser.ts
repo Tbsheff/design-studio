@@ -12,9 +12,7 @@ import type {
   RenderCheckResult,
 } from "../../shared/contracts.js";
 import type { RenderClip } from "../../shared/render-rpc.js";
-import type { PlaceholderMode } from "../../shared/run-levels.js";
 import { waitForPage } from "../export/capture.js";
-import type { PeekOptions } from "../types.js";
 import { dropOutsideApp } from "./app-source-filter.js";
 import { runAxe, runSharedAxe } from "./axe.js";
 import type { AxeViolation } from "./axe.js";
@@ -24,6 +22,15 @@ import { layoutProbeExpression } from "./layout-probe.js";
 import type { LayoutProbeResult } from "./layout-probe.js";
 import { WarmPages } from "./page-pool.js";
 import { PeekPages } from "./peek-pages.js";
+import type {
+  InspectResult,
+  PeekOptions,
+  RenderBackend,
+  RenderCheckOptions,
+  RenderPage,
+  TileRequest,
+  TileResult,
+} from "./ports.js";
 import { qualityProbeExpression } from "./quality-probe.js";
 import type { ProbeRect, QualityProbeResult } from "./quality-probe.js";
 import {
@@ -33,9 +40,16 @@ import {
   tapFindings,
 } from "./quality.js";
 import { createRenderBackend } from "./render-backend.js";
-import type { RenderBackend, RenderPage } from "./render-backend.js";
 import { projectOfUrl } from "./render-wait.js";
 import { expandScrollRoot } from "./scroll-root.js";
+
+export type {
+  InspectResult,
+  PeekOptions,
+  RenderCheckOptions,
+  TileRequest,
+  TileResult,
+} from "./ports.js";
 
 const SERVER_TOKEN = "server";
 
@@ -83,18 +97,6 @@ const RENDER_VIEWPORTS: ViewportSpec[] = [
   VIEWPORT_SPECS.mobile,
 ];
 
-export interface RenderCheckOptions {
-  viewports?: CheckViewport[];
-  quality?: boolean;
-  placeholder?: PlaceholderMode;
-  selectionLocs?: string[];
-  url?: string;
-  filePrefix?: string;
-  prepare?: string;
-  fresh?: boolean;
-  appOnly?: boolean;
-}
-
 interface PageInspection {
   quality: QualityFinding[];
   nav: QualityProbeResult["nav"];
@@ -105,12 +107,6 @@ interface PageInspection {
 const PROBE_CAP = 8;
 const APP_PROBE_CAP_BEFORE_FILTER = 120;
 const CAPPED_AFTER_FILTER = new Set(["tap-target", "placeholder"]);
-
-export interface InspectResult {
-  path: string;
-  selectionRects: ProbeRect[];
-  nav: QualityProbeResult["nav"];
-}
 
 async function timed<T>(
   timings: Record<string, number>,
@@ -200,28 +196,6 @@ async function inspectQuality(
     selectionRects: probe.selectionRects,
     timingsMs: timings,
   };
-}
-
-export interface TileRequest {
-  viewport: { width: number; height: number };
-  tileHeight: number;
-  from: number;
-  maxTiles: number;
-  outPrefix: string;
-  theme?: "light" | "dark";
-  still?: boolean;
-  prepare?: string;
-  format?: "png" | "jpeg";
-  fresh?: boolean;
-  oneOff?: boolean;
-}
-
-export interface TileResult {
-  paths: string[];
-  pageHeight: number;
-  from: number;
-  to: number;
-  cached?: boolean;
 }
 
 export function planTiles(

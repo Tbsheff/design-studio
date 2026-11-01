@@ -275,6 +275,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/direct-edit/change-feed.ts",
       "src/server/direct-edit/planned-feed.ts",
       "src/server/preview/render-wait.ts",
+      "src/server/preview/ports.ts",
       "src/server/store/git-objects.ts",
       "src/server/store/default-folder.ts",
       "src/server/git/user-git.ts",

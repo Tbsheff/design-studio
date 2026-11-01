@@ -185,7 +185,7 @@ function JsonPaste({
           rows={5}
           value={text}
           spellCheck={false}
-          placeholder={'{ "nodes": { … } }'}
+          placeholder='{ "nodes": { … } }'
           aria-invalid={bad}
           aria-describedby="fgi-json-help"
           onChange={(e) => {

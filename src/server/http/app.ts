@@ -114,6 +114,7 @@ import { registerMcpRoutes } from './mcp-routes.js';
 import { registerStreamRoutes, type StreamTracker } from './stream-routes.js';
 import { registerShipRoutes } from './ship-routes.js';
 import { registerShareRoutes } from './share-routes.js';
+import { registerPublishRoutes } from './publish-routes.js';
 import { registerComponentCreateRoutes } from './component-create-routes.js';
 import { registerLayerStateRoutes } from './layer-state-routes.js';
 import { isLeanRun, leanContext } from '../agent/lean-run.js';
@@ -1229,6 +1230,7 @@ export function createApp(deps: AppDeps): Hono {
   registerShipRoutes(app, { projects, runner, dataDir: config.dataDir, activity: mcpRoutes.activity, readBody });
   registerDoctorRoutes(app, { projects, preview, readBody });
   registerShareRoutes(app, { projects, versions, preview, comments, dataDir: config.dataDir, studioPort: config.studioPort, readBody });
+  registerPublishRoutes(app, { projects, versions, preview, comments, dataDir: config.dataDir, secrets: [config.studioToken], readBody });
   registerComponentCreateRoutes(app, { editDeps, preview, readBody, loadDirection, withDirection });
   registerLayerStateRoutes(app, { projects, bus, readBody });
   registerPortRoutes(app, { projects, readBody, isRunning: (pid, did) => runner.isRunning(pid, did), startRun });

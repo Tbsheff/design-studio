@@ -33,13 +33,13 @@ function expiryOf(raw: unknown): ShareExpiryHours {
   return raw as ShareExpiryHours;
 }
 
-async function canvasFrames(deps: ShareRouteDeps, project: Project, direction: Direction): Promise<{ frames: ExportFrame[]; ids: string[] }> {
+async function canvasFrames(deps: ExportDeps, project: Project, direction: Direction): Promise<{ frames: ExportFrame[]; ids: string[] }> {
   const frames = (await readProjectCanvas(project, (id) => deps.projects.projectDir(id)).catch(() => null))?.canvas?.frames ?? [];
   const own = frames.filter((f) => !f.hidden && (!f.directionId || f.directionId === direction.id)).sort((a, b) => a.order - b.order);
   return { frames: own.map((f) => ({ name: f.label?.trim() || `${f.width} × ${f.height}`, width: f.width, height: f.height, ...(f.path ? { path: f.path } : {}) })), ids: own.map((f) => f.id) };
 }
 
-async function framesOf(deps: ShareRouteDeps, project: Project, direction: Direction, raw: unknown, rawIds: unknown): Promise<{ frames: ExportFrame[]; ids: (string | undefined)[] }> {
+export async function framesOf(deps: ExportDeps, project: Project, direction: Direction, raw: unknown, rawIds: unknown): Promise<{ frames: ExportFrame[]; ids: (string | undefined)[] }> {
   const given = Array.isArray(raw) && raw.length > 0;
   const picked = given ? { frames: parseFrames(raw), ids: [] as string[] } : await canvasFrames(deps, project, direction);
   const frames = picked.frames.length > 0 ? picked.frames : parseFrames(undefined);

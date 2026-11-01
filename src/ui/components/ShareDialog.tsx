@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import type { PublishKind } from '../../shared/publish';
 import { SHARE_DEFAULT_EXPIRY_HOURS, SHARE_MAX_FRAMES, shareUrl, type ShareExpiryHours, type ShareLink, type ShareServerState } from '../../shared/share';
 import { errorText } from '../api';
 import { canvasFrameChoices, frameRoute } from '../exportApi';
@@ -7,6 +8,7 @@ import { useModalDialog } from '../usePopover';
 import { CopyButton, copyText } from './CopyButton';
 import { canvasFrameName, framePage } from './CanvasFrames';
 import { Icon } from './Icon';
+import PublishPane from './PublishPane';
 import '../styles/export.css';
 import '../styles/share.css';
 
@@ -14,6 +16,21 @@ export interface ShareTarget {
   projectId: string;
   directionId: string | null;
   versionId: string | null;
+  kind: PublishKind;
+}
+
+type ShareMode = 'link' | 'publish';
+
+function ShareTabs({ mode, onMode }: { mode: ShareMode; onMode: (mode: ShareMode) => void }) {
+  return (
+    <div className="segmented share-tabs" role="tablist" aria-label="Share as">
+      {(['link', 'publish'] as const).map((id) => (
+        <button key={id} type="button" role="tab" aria-selected={mode === id} className={mode === id ? 'on' : ''} onClick={() => onMode(id)}>
+          {id === 'link' ? 'Local link' : 'Publish'}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 const EXPIRIES: { id: ShareExpiryHours; label: string }[] = [
@@ -221,6 +238,32 @@ function ExpiryPicker({ value, onChange }: { value: ShareExpiryHours; onChange: 
 
 export default function ShareDialog({ target, onClose }: { target: ShareTarget; onClose: () => void }) {
   const dialog = useModalDialog(onClose);
+  const [mode, setMode] = useState<ShareMode>('link');
+  const tabs = <ShareTabs mode={mode} onMode={setMode} />;
+  return (
+    <dialog ref={dialog.ref} className="modal share-dialog" aria-label={mode === 'link' ? 'Share a read-only link' : 'Publish on Cloudflare'} onMouseDown={dialog.onMouseDown}>
+      {mode === 'link' ? (
+        <LinkShare target={target} onClose={onClose} tabs={tabs} />
+      ) : (
+        <>
+          <div className="modal-head">
+            <div className="titles">
+              <h2>Publish on Cloudflare</h2>
+              <p>Put a saved version on a public workers.dev address that works when this Mac is off.</p>
+            </div>
+            {tabs}
+            <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+              <Icon name="close" />
+            </button>
+          </div>
+          <PublishPane target={target} onClose={onClose} />
+        </>
+      )}
+    </dialog>
+  );
+}
+
+function LinkShare({ target, onClose, tabs }: { target: ShareTarget; onClose: () => void; tabs: ReactNode }) {
   const frames = useMemo(() => canvasFrameChoices(target.projectId, target.directionId), [target.projectId, target.directionId]);
   const [picked, setPicked] = useState<Set<string>>(() => new Set(frames.slice(0, SHARE_MAX_FRAMES).map((f) => f.id)));
   const [expiry, setExpiry] = useState<ShareExpiryHours>(SHARE_DEFAULT_EXPIRY_HOURS);
@@ -254,70 +297,69 @@ export default function ShareDialog({ target, onClose }: { target: ShareTarget; 
   };
 
   return (
-    <dialog ref={dialog.ref} className="modal share-dialog" aria-label="Share a read-only link" onMouseDown={dialog.onMouseDown}>
-      <form className="modal-form" onSubmit={submit} noValidate>
-        <div className="modal-head">
-          <div className="titles">
-            <h2>Share a read-only link</h2>
-            <p>Viewers see images of the frames and can comment. They cannot edit, run the app or reach the studio.</p>
-          </div>
-          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
-            <Icon name="close" />
-          </button>
+    <form className="modal-form" onSubmit={submit} noValidate>
+      <div className="modal-head">
+        <div className="titles">
+          <h2>Share a read-only link</h2>
+          <p>Viewers see images of the frames and can comment. They cannot edit, run the app or reach the studio.</p>
         </div>
-        <div className="modal-body share-body">
-          <fieldset className="export-field export-frames">
-            <legend className="export-label">Frames</legend>
-            {frames.map((choice) => (
-              <label key={choice.id} className="export-frame">
-                <input type="checkbox" checked={picked.has(choice.id)} onChange={() => toggle(choice.id)} />
-                <span className="export-frame-name">{canvasFrameName(target.projectId, choice.id, choice.frame.name)}</span>
-                <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{framePage(choice.frame.path)}</span>
-                <span className="export-frame-size">
-                  {choice.frame.width} × {choice.frame.height}
-                </span>
-              </label>
-            ))}
-          </fieldset>
-          <div className="export-field">
-            <span className="export-label">Link ends after</span>
-            <ExpiryPicker value={expiry} onChange={setExpiry} />
-          </div>
-          <div className="share-lan-row">
-            <div className="share-lan-text">
-              <span className="share-lan-title">Live</span>
-              <span className="share-lan-help">{liveView ? 'Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas.' : 'Off: viewers see the images from when you made the link.'}</span>
-            </div>
-            <Switch on={liveView} label="Live" disabled={shares.busy} onChange={setLiveView} />
-          </div>
-          {!versionId && <p className="share-link-note">Save a version first. A link shares a saved version.</p>}
-          {shares.error && (
-            <div className="alert error small" role="alert">
-              {shares.error}
-            </div>
-          )}
-          <LinkList
-            links={shown}
-            server={shares.server}
-            now={now}
-            busy={shares.busy}
-            copied={copied.id}
-            onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
-            onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
-          />
-          <LanSwitch server={shares.server} hasLive={live.length > 0} busy={shares.busy} onChange={(on) => void shares.act(() => shareApi.setLan(on))} />
+        {tabs}
+        <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+          <Icon name="close" />
+        </button>
+      </div>
+      <div className="modal-body share-body">
+        <fieldset className="export-field export-frames">
+          <legend className="export-label">Frames</legend>
+          {frames.map((choice) => (
+            <label key={choice.id} className="export-frame">
+              <input type="checkbox" checked={picked.has(choice.id)} onChange={() => toggle(choice.id)} />
+              <span className="export-frame-name">{canvasFrameName(target.projectId, choice.id, choice.frame.name)}</span>
+              <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{framePage(choice.frame.path)}</span>
+              <span className="export-frame-size">
+                {choice.frame.width} × {choice.frame.height}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+        <div className="export-field">
+          <span className="export-label">Link ends after</span>
+          <ExpiryPicker value={expiry} onChange={setExpiry} />
         </div>
-        <div className="modal-foot">
-          <span className="share-foot-note">No upload: links work only while Design Studio is open on this computer.</span>
-          <span className="share-spacer" />
-          <button type="button" className="btn ghost" onClick={onClose}>
-            Close
-          </button>
-          <button type="submit" className="btn primary" disabled={!canCreate} data-autofocus>
-            {shares.busy ? 'Working…' : 'Create link'}
-          </button>
+        <div className="share-lan-row">
+          <div className="share-lan-text">
+            <span className="share-lan-title">Live</span>
+            <span className="share-lan-help">{liveView ? 'Viewers get a new image of each frame each time you save a version, and you see their cursors on the canvas.' : 'Off: viewers see the images from when you made the link.'}</span>
+          </div>
+          <Switch on={liveView} label="Live" disabled={shares.busy} onChange={setLiveView} />
         </div>
-      </form>
-    </dialog>
+        {!versionId && <p className="share-link-note">Save a version first. A link shares a saved version.</p>}
+        {shares.error && (
+          <div className="alert error small" role="alert">
+            {shares.error}
+          </div>
+        )}
+        <LinkList
+          links={shown}
+          server={shares.server}
+          now={now}
+          busy={shares.busy}
+          copied={copied.id}
+          onRevoke={(id) => void shares.act(() => shareApi.revoke(target.projectId, id))}
+          onCursor={(id, on) => void shares.act(() => shareApi.setStudioCursor(target.projectId, id, on))}
+        />
+        <LanSwitch server={shares.server} hasLive={live.length > 0} busy={shares.busy} onChange={(on) => void shares.act(() => shareApi.setLan(on))} />
+      </div>
+      <div className="modal-foot">
+        <span className="share-foot-note">No upload: links work only while Design Studio is open on this computer.</span>
+        <span className="share-spacer" />
+        <button type="button" className="btn ghost" onClick={onClose}>
+          Close
+        </button>
+        <button type="submit" className="btn primary" disabled={!canCreate} data-autofocus>
+          {shares.busy ? 'Working…' : 'Create link'}
+        </button>
+      </div>
+    </form>
   );
 }

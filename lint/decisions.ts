@@ -350,6 +350,10 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
+    files: ["src/ui/platform/session.ts"],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/mcp/legacy/frame-target.ts"],
     rules: { "eslint/id-length": "off" },
   },

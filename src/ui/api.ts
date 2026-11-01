@@ -89,18 +89,11 @@ import type {
   TweaksState,
   TweakValue,
 } from "../shared/tweaks";
+import { ApiError } from "./platform/http";
+import type { WireFields } from "./platform/http";
 import { getSession } from "./session";
 
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public code?: string,
-    public data?: unknown
-  ) {
-    super(message);
-  }
-}
+export { ApiError } from "./platform/http";
 
 type ErrorPick = (data: {
   error?: string;
@@ -133,19 +126,19 @@ async function request(
 
   if (!res.ok) {
     let message = `${method} ${path} failed: ${res.status}`;
-    let code: string | undefined;
-    let data: unknown;
+    let parsed: (WireFields & { error?: string; message?: string }) | undefined;
 
     try {
-      const parsed = (await res.json()) as { error?: string; message?: string };
-      data = parsed;
+      parsed = (await res.json()) as WireFields & {
+        error?: string;
+        message?: string;
+      };
       message = pick(parsed) ?? message;
-      code = parsed.error;
     } catch {
       message = `${message} ${res.statusText}`;
     }
 
-    throw new ApiError(res.status, message, code, data);
+    throw new ApiError(res.status, message, parsed?.error, parsed);
   }
 
   return res;
@@ -201,10 +194,11 @@ export async function json<T>(
   return (await res.json()) as T;
 }
 
-const p = (pid: string) => `/api/projects/${encodeURIComponent(pid)}`;
+const enc = encodeURIComponent;
 
-const d = (pid: string, did: string) =>
-  `${p(pid)}/d/${encodeURIComponent(did)}`;
+const p = (pid: string) => `/api/projects/${enc(pid)}`;
+
+const d = (pid: string, did: string) => `${p(pid)}/d/${enc(did)}`;
 
 const treeInFlight = new Map<string, Promise<{ files: string[] }>>();
 
@@ -224,7 +218,7 @@ function sharedTree(url: string): Promise<{ files: string[] }> {
   return next;
 }
 
-const pk = (id: string) => `/api/packs/${encodeURIComponent(id)}`;
+const pk = (id: string) => `/api/packs/${enc(id)}`;
 
 export function warmProject(pid: string, directionId: string | null): void {
   warmGet(p(pid));
@@ -280,17 +274,9 @@ export const api = {
     json<{ project: Project }>("POST", `${p(pid)}/duplicate`),
   trashProject: (pid: string) => json<TrashedProject>("DELETE", p(pid)),
   restoreProject: (trashId: string) =>
-    json<{ project: Project }>(
-      "POST",
-      `/api/trash/${encodeURIComponent(trashId)}/restore`
-    ),
+    json<{ project: Project }>("POST", `/api/trash/${enc(trashId)}/restore`),
   thumbnail: async (pid: string, versionId: string) =>
-    (
-      await request(
-        "GET",
-        `${p(pid)}/thumbnail/${encodeURIComponent(versionId)}`
-      )
-    ).blob(),
+    (await request("GET", `${p(pid)}/thumbnail/${enc(versionId)}`)).blob(),
   clarify: (prompt: string) =>
     json<{ questions: ClarifyQuestion[] }>("POST", "/api/clarify", { prompt }),
   onboarding: () => json<{ dismissed: boolean }>("GET", "/api/onboarding"),
@@ -456,13 +442,9 @@ export const api = {
       ...(label ? { label } : {}),
     }),
   renameWorkspace: (id: string, label: string) =>
-    json<WorkspaceFolder>(
-      "PATCH",
-      `/api/workspaces/${encodeURIComponent(id)}`,
-      { label }
-    ),
+    json<WorkspaceFolder>("PATCH", `/api/workspaces/${enc(id)}`, { label }),
   removeWorkspace: (id: string) =>
-    json<{ ok: true }>("DELETE", `/api/workspaces/${encodeURIComponent(id)}`),
+    json<{ ok: true }>("DELETE", `/api/workspaces/${enc(id)}`),
   setDefaultFolder: (path: string) =>
     json<WorkspaceList>("PUT", "/api/workspaces/default", { path }),
   hiddenProjects: () =>
@@ -491,10 +473,7 @@ export const api = {
   putDesignMd: (pid: string, content: string) =>
     json<{ ok: boolean }>("PUT", `${p(pid)}/design-md`, { content }),
   projectFile: async (pid: string, filePath: string) => {
-    const res = await request(
-      "GET",
-      `${p(pid)}/files?path=${encodeURIComponent(filePath)}`
-    );
+    const res = await request("GET", `${p(pid)}/files?path=${enc(filePath)}`);
 
     return res.blob();
   },
@@ -513,10 +492,7 @@ export const api = {
   undo: (pid: string, did: string) =>
     json<Version>("POST", `${d(pid, did)}/undo`),
   editHistory: (pid: string, did: string) =>
-    json<EditHistoryState>(
-      "GET",
-      `${p(pid)}/edit-history?did=${encodeURIComponent(did)}`
-    ),
+    json<EditHistoryState>("GET", `${p(pid)}/edit-history?did=${enc(did)}`),
   editHistoryStep: async (pid: string, did: string, kind: "undo" | "redo") => {
     const res = await request(
       "POST",
@@ -530,7 +506,7 @@ export const api = {
   editSession: (pid: string, did: string, base?: string) =>
     json<EditSessionState>(
       "GET",
-      `${d(pid, did)}/edit-session${base ? `?base=${encodeURIComponent(base)}` : ""}`
+      `${d(pid, did)}/edit-session${base ? `?base=${enc(base)}` : ""}`
     ),
   endEditSession: async (
     pid: string,
@@ -559,7 +535,7 @@ export const api = {
       variants?: VariantSupport;
     }>(
       "GET",
-      `${d(pid, did)}/classes?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${encodeURIComponent(variant)}` : ""}`
+      `${d(pid, did)}/classes?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}${variant ? `&variant=${enc(variant)}` : ""}`
     ),
   textSource: (
     pid: string,
@@ -578,7 +554,7 @@ export const api = {
   ) =>
     json<{ file: string; line: number; code: string | null }>(
       "GET",
-      `${d(pid, did)}/source?file=${encodeURIComponent(loc.file)}&line=${loc.line}&col=${loc.col}`
+      `${d(pid, did)}/source?file=${enc(loc.file)}&line=${loc.line}&col=${loc.col}`
     ),
   restore: (pid: string, did: string, versionId: string) =>
     json<Version>("POST", `${d(pid, did)}/restore`, { versionId }),
@@ -631,40 +607,23 @@ export const api = {
   renderCheck: (pid: string, did: string) =>
     json<RenderCheckResult[]>("POST", `${d(pid, did)}/check`),
   versionPreview: (pid: string, vid: string) =>
-    json<{ url: string }>(
-      "GET",
-      `${p(pid)}/versions/${encodeURIComponent(vid)}/preview`
-    ),
+    json<{ url: string }>("GET", `${p(pid)}/versions/${enc(vid)}/preview`),
   exportVersion: async (pid: string, vid: string) => {
-    const res = await request(
-      "GET",
-      `${p(pid)}/versions/${encodeURIComponent(vid)}/export`
-    );
+    const res = await request("GET", `${p(pid)}/versions/${enc(vid)}/export`);
 
     return res.blob();
   },
   getRun: (runId: string) =>
     json<{ summary: RunSummary; events: StudioEvent[] }>(
       "GET",
-      `/api/runs/${encodeURIComponent(runId)}`
+      `/api/runs/${enc(runId)}`
     ),
   cancelRun: (runId: string) =>
-    json<{ ok: boolean }>(
-      "POST",
-      `/api/runs/${encodeURIComponent(runId)}/cancel`
-    ),
+    json<{ ok: boolean }>("POST", `/api/runs/${enc(runId)}/cancel`),
   setQueue: (runId: string, items: QueuedMessage[]) =>
-    json<{ ok: boolean }>(
-      "PUT",
-      `/api/runs/${encodeURIComponent(runId)}/queue`,
-      { items }
-    ),
+    json<{ ok: boolean }>("PUT", `/api/runs/${enc(runId)}/queue`, { items }),
   steerRun: (runId: string, text: string) =>
-    json<{ ok: boolean }>(
-      "POST",
-      `/api/runs/${encodeURIComponent(runId)}/steer`,
-      { text }
-    ),
+    json<{ ok: boolean }>("POST", `/api/runs/${enc(runId)}/steer`, { text }),
   answerPermission: (
     runId: string,
     requestId: string,
@@ -672,16 +631,13 @@ export const api = {
   ) =>
     json<{ ok: boolean }>(
       "POST",
-      `/api/runs/${encodeURIComponent(runId)}/permissions/${encodeURIComponent(requestId)}`,
+      `/api/runs/${enc(runId)}/permissions/${enc(requestId)}`,
       decision
     ),
   postTelemetry: (sample: TelemetrySample) =>
     json<{ ok: boolean }>("POST", "/api/telemetry", sample),
   getTelemetry: (pid: string) =>
-    json<TelemetrySample[]>(
-      "GET",
-      `/api/telemetry?projectId=${encodeURIComponent(pid)}`
-    ),
+    json<TelemetrySample[]>("GET", `/api/telemetry?projectId=${enc(pid)}`),
   review: (pid: string, did: string, body: ReviewRequest) =>
     json<ReviewResult>("POST", `${d(pid, did)}/review`, body),
   reviewFix: (pid: string, did: string, findingIds: string[]) =>

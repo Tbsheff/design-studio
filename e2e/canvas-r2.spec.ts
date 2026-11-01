@@ -622,33 +622,34 @@ test("R2-4: the layers tree opens fast on a 1,000-node page; hover, click and ar
       const r = el.getBoundingClientRect();
       return { x: r.x, y: r.y, width: r.width, height: r.height };
     });
-  const clickMs = await page.evaluate(() => {
-    return new Promise<number>((resolve) => {
-      let start = 0;
-      const rowEl = Array.from(
-        document.querySelectorAll<HTMLElement>(".layers-row")
-      ).find((el) => el.textContent?.includes("#b2"));
-      if (!rowEl) throw new Error("no row");
-      const observer = new MutationObserver(() => {
-        if (document.querySelector(".overlay .box.selected")) {
-          observer.disconnect();
-          resolve(performance.now() - start);
-        }
-      });
-      observer.observe(document.querySelector(".overlay") as Node, {
-        childList: true,
-        subtree: true,
-      });
-      start = performance.now();
-      rowEl.dispatchEvent(
-        new PointerEvent("pointerdown", {
-          bubbles: true,
-          button: 0,
-          isPrimary: true,
-        })
-      );
-    });
-  });
+  const clickMs = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let start = 0;
+        const rowEl = Array.from(
+          document.querySelectorAll<HTMLElement>(".layers-row")
+        ).find((el) => el.textContent?.includes("#b2"));
+        if (!rowEl) throw new Error("no row");
+        const observer = new MutationObserver(() => {
+          if (document.querySelector(".overlay .box.selected")) {
+            observer.disconnect();
+            resolve(performance.now() - start);
+          }
+        });
+        observer.observe(document.querySelector(".overlay") as Node, {
+          childList: true,
+          subtree: true,
+        });
+        start = performance.now();
+        rowEl.dispatchEvent(
+          new PointerEvent("pointerdown", {
+            bubbles: true,
+            button: 0,
+            isPrimary: true,
+          })
+        );
+      })
+  );
   const selected = page.locator(".overlay .box.selected");
   await expect(selected).toHaveAttribute(
     "style",

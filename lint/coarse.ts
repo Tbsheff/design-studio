@@ -138,18 +138,22 @@ const NEW_DOMAIN_AREAS = [
   "ship",
 ];
 
-const domainRows = NEW_DOMAIN_AREAS.filter(
-  (area) => !LEGACY_GLOBS.includes(`src/server/${area}/**`)
-).flatMap((area) => [
-  restrict(
-    [`src/server/${area}/**`],
-    [...SERVER, SERVER_ONLY_TEST, DOMAIN_ADAPTERS, CHILD_PROCESS]
-  ),
-  restrict(
-    [`src/server/${area}/**/*.test.ts`],
-    [...SERVER, DOMAIN_ADAPTERS, CHILD_PROCESS]
-  ),
-]);
+const domainRows = NEW_DOMAIN_AREAS.flatMap((area) => {
+  if (LEGACY_GLOBS.includes(`src/server/${area}/**`)) {
+    return [];
+  }
+
+  return [
+    restrict(
+      [`src/server/${area}/**`],
+      [...SERVER, SERVER_ONLY_TEST, DOMAIN_ADAPTERS, CHILD_PROCESS]
+    ),
+    restrict(
+      [`src/server/${area}/**/*.test.ts`],
+      [...SERVER, DOMAIN_ADAPTERS, CHILD_PROCESS]
+    ),
+  ];
+});
 
 const serverRows = [
   restrict(["src/server/**"], [...SERVER, SERVER_ONLY_TEST]),

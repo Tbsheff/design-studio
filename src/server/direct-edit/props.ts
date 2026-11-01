@@ -168,7 +168,7 @@ export function quoteOf(source: string, element: t.JSXElement): string {
     )
       return source[rangeOf(attribute.value).start] === "'" ? "'" : '"';
   }
-  return /=\s*'/.test(source) && !/=\s*"/.test(source) ? "'" : '"';
+  return /[=]\s*'/.test(source) && !/[=]\s*"/.test(source) ? "'" : '"';
 }
 
 export function attributeText(

@@ -33,6 +33,7 @@ async function framesFor(deps: EditDeps, target: Loaded, refs: string[] | undefi
   if (refs) {
     return refs.map((ref) => {
       const found = findFrame(all, ref);
+      if (!found && all.length === 0 && ref === 'f1') return DEFAULT_FRAME;
       if (!found) throw new EditError(`No frame ${ref} on the canvas. Call canvas_list for frame ids.`);
       return toExport(found);
     });

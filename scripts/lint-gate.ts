@@ -26,7 +26,7 @@ const BUDGET_ZERO = [
 ];
 
 const lint = (): Diagnostic[] => {
-  const run = spawnSync("node_modules/.bin/oxlint", ["--format=json"], { encoding: "utf8", maxBuffer: 2 ** 31 - 1 });
+  const run = spawnSync("node_modules/.bin/oxlint", ["-c", "oxlint.config.ts", "--format=json"], { encoding: "utf8", maxBuffer: 2 ** 31 - 1 });
   const parsed: { diagnostics?: Diagnostic[] } = JSON.parse(run.stdout || "{}");
   return parsed.diagnostics ?? [];
 };

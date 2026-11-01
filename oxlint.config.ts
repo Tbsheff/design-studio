@@ -33,6 +33,7 @@ export const BOUNDARY_SETTINGS = {
 export const TEST_OVERRIDES: OxlintOverride[] = [
   { files: ["src/**/*.test.ts", "desktop/**/*.test.ts", "e2e/support/**/*.test.ts"], plugins: ["vitest"], rules: vitestAll },
   { files: ["e2e/**/*.spec.ts"], rules: playwrightAll },
+  { files: ["oxlint.*.config.ts"], rules: { "github/filenames-match-regex": "off" } },
 ];
 
 export const BOUNDARY_OVERRIDES: OxlintOverride[] = [...coarse, ...serverOrder, ...legacy];

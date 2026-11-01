@@ -1,4 +1,5 @@
 import { memo } from "react";
+
 const PATHS = {
   desktop: "M2.5 3.5h11v7.5h-11zM6 13.5h4M8 11v2.5",
   tablet:

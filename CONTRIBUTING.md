@@ -14,18 +14,27 @@ Thanks for helping with Design Studio.
 - Keep files small. Split a file before it grows past about 1,000 lines.
 - Do not add a new model client. All model calls go through the Claude Agent SDK.
 
+## Setup
+
+This repo uses pnpm 11. Do not use npm or npx. Install the dependencies:
+
+```sh
+pnpm install
+```
+
 ## Checks
 
 Run these before you open a pull request:
 
 ```sh
-npm run typecheck
-npm test
-npm run build:ui
-npm run e2e
+pnpm run typecheck
+pnpm run typecheck:tsrs
+pnpm test
+pnpm run build:ui
+pnpm run e2e
 ```
 
-Run `npm run e2e:desktop` too when you change `desktop/`.
+Run `pnpm run e2e:desktop` too when you change `desktop/`.
 
 ## Pull requests
 

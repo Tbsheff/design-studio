@@ -26,6 +26,7 @@ Screenshots will go here.
 
 - macOS (the desktop app is macOS only; the web studio is tested on macOS)
 - Node.js 24 or later
+- pnpm 11 (`corepack enable` picks the version in `package.json`, or install pnpm 11 yourself)
 - git
 - Google Chrome (the studio uses the installed Chrome for render checks and screenshots)
 - Claude Code installed and logged in (`npm i -g @anthropic-ai/claude-code` or the installer at claude.ai, then run `claude` and sign in), or an `ANTHROPIC_API_KEY`. The desktop app does not ship Claude Code; it uses yours.
@@ -33,25 +34,27 @@ Screenshots will go here.
 ## Quick start
 
 ```sh
-npm ci
-npm start
+pnpm install --frozen-lockfile
+pnpm start
 ```
+
+Use `pnpm install` without the flag when you change dependencies.
 
 Then open http://127.0.0.1:4170. Projects are saved in `studio-data/` in the repository folder. Set `STUDIO_DATA_DIR` to use a different folder.
 
 To try the studio without a Claude account, start it with the mock agent:
 
 ```sh
-STUDIO_AGENT=mock npm start
+STUDIO_AGENT=mock pnpm start
 ```
 
-For development with UI hot reload, use `npm run dev`.
+For development with UI hot reload, use `pnpm run dev`.
 
 ## Desktop app
 
 ```sh
-npm run electron:dev    # run the desktop shell from source
-npm run desktop:pack    # build an arm64 .app, .dmg and .zip in dist/
+pnpm run electron:dev  # run the desktop shell from source
+pnpm run desktop:pack  # build an arm64 .app, .dmg and .zip in dist/
 ```
 
 Builds are signed ad hoc unless `STUDIO_SIGN_IDENTITY` names a Developer ID. See `DESKTOP_PLAN.md` for signing, notarization and updates.
@@ -59,11 +62,12 @@ Builds are signed ad hoc unless `STUDIO_SIGN_IDENTITY` names a Developer ID. See
 ## Tests
 
 ```sh
-npm run typecheck
-npm test               # vitest
-npm run build:ui
-npm run e2e            # Playwright, uses the installed Chrome and the mock agent
-npm run e2e:desktop    # Electron tests
+pnpm run typecheck
+pnpm run typecheck:tsrs
+pnpm test              # vitest
+pnpm run build:ui
+pnpm run e2e           # Playwright, uses the installed Chrome and the mock agent
+pnpm run e2e:desktop   # Electron tests
 ```
 
 The end-to-end tests start their own server with a temporary data folder. They never use your `studio-data/` or your `~/.claude` folder. Set `STUDIO_E2E_PORT_OFFSET` to move their ports.

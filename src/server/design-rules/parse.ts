@@ -29,7 +29,7 @@ export const RULE_TARGETS: Record<string, string> = {
 };
 
 const CLASS_TOKEN =
-  /^(?:[a-z0-9-]+:)*!?-?[a-z][a-z0-9-]*(?:-[a-z0-9.\/%]+|\[[^\]\s]+\])*$/i;
+  /^(?:[a-z0-9-]+:)*!?-?[a-z][a-z0-9-]*(?:-[a-z0-9./%]+|\[[^\]\s]+\])*$/i;
 
 const BARE_CLASSES = new Set([
   "border",

@@ -7,7 +7,7 @@ function isBoundary(text: string, index: number): boolean {
   const here = text[index] ?? "";
 
   return (
-    /[\s/._\-]/.test(before) ||
+    /[\s/._-]/.test(before) ||
     (before === before.toLowerCase() && here !== here.toLowerCase())
   );
 }

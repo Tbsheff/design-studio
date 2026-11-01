@@ -20,6 +20,7 @@ import { RenderHost, serveChild } from './render-rpc-host.js';
 import { RENDER_IPC_ENV } from '../src/shared/render-rpc.js';
 import { NativeShell } from './native.js';
 import { ServerLink } from './server-link.js';
+import { attachVault } from './vault-host.js';
 import { Updater } from './updater.js';
 
 declare const __STUDIO_RELEASE__: boolean | undefined;
@@ -162,6 +163,7 @@ async function launchServer(current: Prepared): Promise<Runtime> {
   writeServerPid(userDataFile('server.pid'), server.pid);
   serveChild(renderHost, server.child);
   serverLink.attach(server.child, url);
+  attachVault(server.child);
   const next: Runtime = { ports, url, server, ready: false, claudePath };
   runtime = next;
   void server.exited.then((exit) => onServerExit(next, exit));

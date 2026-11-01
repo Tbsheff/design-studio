@@ -17,6 +17,7 @@ export interface ViewerPage {
   publishedAt: number;
   frames: ShareFrame[];
   comments: ViewerComment[];
+  commentsHref?: string;
 }
 
 function escapeHtml(text: string): string {
@@ -29,7 +30,7 @@ const STYLE = `:root{color-scheme:light dark;--bg:#faf9f5;--panel:#fff;--line:rg
 header{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
 header h1{margin:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;white-space:nowrap}
-.spacer{flex:1}nav{display:flex;gap:4px;overflow:auto}nav a{color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:6px;white-space:nowrap}nav a:hover{color:var(--text);background:var(--bg)}
+.spacer{flex:1}a.badge{text-decoration:none;color:var(--text)}nav{display:flex;gap:4px;overflow:auto}nav a{color:var(--muted);text-decoration:none;padding:4px 8px;border-radius:6px;white-space:nowrap}nav a:hover{color:var(--text);background:var(--bg)}
 main{display:grid;grid-template-columns:minmax(0,1fr);min-height:calc(100vh - 48px)}main.with-notes{grid-template-columns:minmax(0,1fr) 300px}
 .frames{padding:24px;display:flex;flex-direction:column;align-items:center;gap:32px}
 figure{margin:0;max-width:100%}figcaption{margin-bottom:8px;color:var(--muted);font-size:12px}
@@ -57,7 +58,7 @@ export function viewerHtml(page: ViewerPage): string {
   const nav = page.frames.length > 1 ? `<nav aria-label="Frames">${page.frames.map((f, i) => `<a href="#f${i + 1}">${escapeHtml(f.name)}</a>`).join('')}</nav>` : '';
   const notes = page.comments.length > 0 ? `<aside aria-label="Comments"><h2>Comments (${page.comments.length})</h2><ol>${page.comments.map(comment).join('')}</ol></aside>` : '';
   const when = new Date(page.publishedAt).toISOString().slice(0, 10);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><link rel="icon" href="data:,"><title>${escapeHtml(page.title)}</title><link rel="stylesheet" href="viewer.css"></head><body><header><h1>${escapeHtml(page.title)}</h1><span class="badge">${escapeHtml(page.versionLabel)} · ${when}</span><span class="spacer"></span>${nav}</header><main class="${notes ? 'with-notes' : ''}"><section class="frames">${page.frames.map(figure).join('')}</section>${notes}</main></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><link rel="icon" href="data:,"><title>${escapeHtml(page.title)}</title><link rel="stylesheet" href="viewer.css"></head><body><header><h1>${escapeHtml(page.title)}</h1><span class="badge">${escapeHtml(page.versionLabel)} · ${when}</span><span class="spacer"></span>${nav}${page.commentsHref ? `<a class="badge" href="${escapeHtml(page.commentsHref)}">Leave a comment</a>` : ''}</header><main class="${notes ? 'with-notes' : ''}"><section class="frames">${page.frames.map(figure).join('')}</section>${notes}</main></body></html>`;
 }
 
 export function viewerComments(list: DesignComment[], frames: ShareFrame[]): ViewerComment[] {

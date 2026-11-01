@@ -5,7 +5,7 @@ import { findFrame } from '../canvas/tools.js';
 import { approve, EditError, loadTarget, oneLine, studioCall, type EditDeps } from './edit-deps.js';
 import { defineTool, directionId, id, ok, projectId } from './edit-kit.js';
 
-const PUBLISH_NOTE = 'Publish puts a static copy of one saved version on the public internet as a Cloudflare Worker at https://<name>.<account-subdomain>.workers.dev, through the cf CLI the user signed in to in Settings → Publishing. An HTML prototype goes up as its own pages, styles, scripts, images and fonts (no source files, .env, node_modules, git data or studio scripts); an attached app or React project goes up as PNG images of its frames, never its code. The Worker adds noindex and no-referrer headers, and can ask for a password and stop on an end date. The user must click Allow in Design Studio for each publish and unpublish. These tools never sign in, never show a token and never start a studio run.';
+const PUBLISH_NOTE = 'Publish puts a static copy of one saved version on the public internet through the user\'s own publish Worker (one Cloudflare Worker with R2 and D1, set up once in Settings → Publishing), at https://design-studio-publish.<account-subdomain>.workers.dev/d/<name>-<6 letters>/. An HTML prototype goes up as its own pages, styles, scripts, images and fonts (no source files, .env, node_modules, repository data or studio scripts); an attached app or React project goes up as PNG images of its frames, never its code. Republish uploads only changed files and keeps older versions for rollback. The Worker adds noindex and no-referrer headers, runs prototype pages in a CSP sandbox, and can ask for a password, stop on an end date and take viewer comments. The user must click Allow in Design Studio for each publish, rollback and unpublish. These tools never set up the Worker, never sign in, never show a key and never start a studio run.';
 
 const publishInput = z
   .object({
@@ -17,12 +17,15 @@ const publishInput = z
     password: z.string().min(PUBLISH_PASSWORD_MIN).max(PUBLISH_PASSWORD_MAX).optional().describe('Password viewers must type (HTTP Basic, any user name). Only a salted hash goes into the Worker; the reply never repeats it. Leave out for no password, or to keep the password of the publication you republish.'),
     expiresInDays: z.union([z.literal(0), z.literal(1), z.literal(7), z.literal(30)]).optional().describe(`Days until the link stops working: 1, 7 or 30, or 0 for no end date. Default ${PUBLISH_DEFAULT_EXPIRY_DAYS} for a new publication; a republish keeps the old end date.`),
     comments: z.boolean().optional().describe('Attached app or React project only: show the open comments next to the frames as read-only text.'),
+    viewerComments: z.boolean().optional().describe('Let viewers leave comments on a comments page (rate limited, owner can delete). Leave out for off on a new publication; a republish keeps the old value.'),
+    noindex: z.boolean().optional().describe('Send noindex so search engines skip it. Default true.'),
     publicationId: id('Publication id from list_publications to republish into the same URL.').optional(),
   })
   .strict();
 
 const listInput = z.object({ projectId }).strict();
 const unpublishInput = z.object({ projectId, publicationId: id('Publication id from list_publications.') }).strict();
+const rollbackInput = z.object({ projectId, publicationId: id('Publication id from list_publications.'), versionId: id('Published version id from list_publications versions[].id.') }).strict();
 
 async function frameRefs(deps: EditDeps, input: z.output<typeof publishInput>, project: Awaited<ReturnType<typeof loadTarget>>['project']) {
   if (!input.frames) return {};
@@ -38,29 +41,50 @@ async function frameRefs(deps: EditDeps, input: z.output<typeof publishInput>, p
 export function planDetail(plan: PublishPlan): string {
   const pages = plan.pages.length > 4 ? `${plan.pages.slice(0, 4).join(', ')} and ${plan.pages.length - 4} more` : plan.pages.join(', ');
   const what = plan.kind === 'site' ? `${plan.pages.length} page${plan.pages.length === 1 ? '' : 's'} (${pages})` : `PNG images of ${plan.pages.length} frame${plan.pages.length === 1 ? '' : 's'} (${pages})${plan.comments ? ` and ${plan.comments} comment${plan.comments === 1 ? '' : 's'}` : ''}`;
-  return `Anyone with the URL can open ${oneLine(what, 220)}: ${plan.fileCount} files, ${publishSize(plan.bytes)}, at ${plan.url ?? plan.urlPattern}. Password ${plan.password ? 'on' : 'off'}. ${publishExpiryText(plan.expiresAt)}. Version ${plan.versionId.slice(0, 7)}.`;
+  const changed = plan.changedFiles === null ? '' : ` (${plan.changedFiles} changed)`;
+  return `Anyone with the URL can open ${oneLine(what, 220)}: ${plan.fileCount} files${changed}, ${publishSize(plan.bytes)}, at ${plan.url ?? plan.urlPattern}. Password ${plan.password ? 'on' : 'off'}. ${publishExpiryText(plan.expiresAt)}. Viewer comments ${plan.viewerComments ? 'on' : 'off'}. ${plan.noindex ? 'noindex' : 'Search engines may list it'}. Version ${plan.versionId.slice(0, 7)}.${plan.backend === 'local' ? ' Target: local test server.' : ''}`;
 }
 
 function publicationView(p: Publication) {
-  return { id: p.id, title: p.title, status: p.status, url: p.url, kind: p.kind, versionId: p.versionId, pages: p.pages, files: p.fileCount, bytes: p.bytes, password: p.password, expiresAt: p.expiresAt === null ? null : new Date(p.expiresAt).toISOString(), publishedAt: new Date(p.updatedAt).toISOString(), error: p.error };
+  return {
+    id: p.id,
+    title: p.title,
+    status: p.status,
+    url: p.url,
+    kind: p.kind,
+    backend: p.backend,
+    versionId: p.versionId,
+    pages: p.pages,
+    files: p.fileCount,
+    bytes: p.bytes,
+    password: p.password,
+    expiresAt: p.expiresAt === null ? null : new Date(p.expiresAt).toISOString(),
+    publishedAt: new Date(p.updatedAt).toISOString(),
+    viewerComments: p.viewerComments,
+    commentCount: p.commentCount,
+    views: p.views ? { total: p.views.total, last7: p.views.last7 } : null,
+    versions: p.versions.map((v) => ({ id: v.id, sourceVersion: v.sourceVersion, files: v.fileCount, publishedAt: v.committedAt === null ? null : new Date(v.committedAt).toISOString(), live: v.live })),
+    lastUpload: p.lastUpload,
+    error: p.error,
+  };
 }
 
 const publishDesign = defineTool(
   'publish_design',
   publishInput,
-  { title: 'Publish design', description: `Publish a saved version to a public Cloudflare Workers URL, or republish into an old one (publicationId). It first builds the exact files and checks them with cf, then the user must click Allow in Design Studio on a prompt that shows the pages, file count, size, URL, password and end date; without the window open it is refused. Returns the URL. ${PUBLISH_NOTE}` },
+  { title: 'Publish design', description: `Publish a saved version to a public URL on the user's publish Worker, or republish into an old one (publicationId) as a new version. It first builds the exact files and hashes them, then the user must click Allow in Design Studio on a prompt that shows the pages, file count, size, URL, password and end date; without the window open it is refused. Returns the URL. ${PUBLISH_NOTE}` },
   async (deps, input, client) => {
     const { project, direction } = await loadTarget(deps, input.projectId, input.directionId);
     if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this publish. Ask the user to open the project in Design Studio, or to click Share > Publish there.');
     const refs = await frameRefs(deps, input, project);
     const base = `/api/projects/${encodeURIComponent(project.id)}`;
-    const plan = await studioCall<PublishPlan>(deps, 'POST', `${base}/publish/plan`, { directionId: direction.id, versionId: input.versionId, title: input.title, password: input.password, expiresInDays: input.expiresInDays, comments: input.comments, publicationId: input.publicationId, ...refs });
+    const plan = await studioCall<PublishPlan>(deps, 'POST', `${base}/publish/plan`, { directionId: direction.id, versionId: input.versionId, title: input.title, password: input.password, expiresInDays: input.expiresInDays, comments: input.comments, viewerComments: input.viewerComments, noindex: input.noindex, publicationId: input.publicationId, ...refs });
     await approve(deps, {
       tool: 'publish_design',
       action: plan.republishOf ? 'Republish a design on the internet' : 'Publish a design on the internet',
       projectId: project.id,
       client,
-      title: `${client} wants to publish “${oneLine(plan.title, 80)}” on a public Cloudflare URL`,
+      title: `${client} wants to publish “${oneLine(plan.title, 80)}” on a public URL`,
       detail: planDetail(plan),
     });
     const done = await studioCall<{ publication: Publication }>(deps, 'POST', `${base}/publish`, { planId: plan.id });
@@ -72,7 +96,7 @@ const publishDesign = defineTool(
 const listPublications = defineTool(
   'list_publications',
   listInput,
-  { title: 'List publications', description: `List the Cloudflare publications of a project: id, title, URL, status (live, failed, removed), version, pages, size, password on or off and end date. Read only. ${PUBLISH_NOTE}`, readOnly: true, idempotent: true },
+  { title: 'List publications', description: `List the publications of a project: id, title, URL, status (live, failed, ended, removed), source version, pages, size, password on or off, end date, view counts (total and last 7 days, no personal data), viewer comment count and published versions for rollback_publication. Read only. ${PUBLISH_NOTE}`, readOnly: true, idempotent: true },
   async (deps, input) => {
     const { project } = await loadTarget(deps, input.projectId);
     const list = await studioCall<PublicationList>(deps, 'GET', `/api/projects/${encodeURIComponent(project.id)}/publications`);
@@ -80,22 +104,51 @@ const listPublications = defineTool(
   },
 );
 
+function unpublishDetail(p: Publication): string {
+  if (p.backend === 'app') return `${p.url ?? 'Its URL'} stops working at once (410) and its files are deleted from R2. View counts and comments stay.`;
+  return `This deletes the old Cloudflare Worker ${p.workerName ?? ''}. ${p.url ?? 'Its URL'} stops working at once.`;
+}
+
+async function findPublication(deps: EditDeps, projectIdValue: string, publicationId: string): Promise<Publication> {
+  const list = await studioCall<PublicationList>(deps, 'GET', `/api/projects/${encodeURIComponent(projectIdValue)}/publications`);
+  const found = list.publications.find((p) => p.id === publicationId);
+  if (!found) throw new EditError(`No publication ${publicationId}. Call list_publications.`);
+  return found;
+}
+
 const unpublishDesign = defineTool(
   'unpublish_design',
   unpublishInput,
-  { title: 'Unpublish design', description: 'Delete the Cloudflare Worker of a publication so its URL stops working. The user must click Allow in Design Studio first. The publication stays in list_publications as removed.', destructive: true, idempotent: true },
+  { title: 'Unpublish design', description: 'Turn off a publication so its URL answers 410, and delete its files. The user must click Allow in Design Studio first. The publication stays in list_publications as removed.', destructive: true, idempotent: true },
   async (deps, input, client) => {
     const { project } = await loadTarget(deps, input.projectId);
-    const base = `/api/projects/${encodeURIComponent(project.id)}`;
-    const found = (await studioCall<PublicationList>(deps, 'GET', `${base}/publications`)).publications.find((p) => p.id === input.publicationId);
-    if (!found) throw new EditError(`No publication ${input.publicationId}. Call list_publications.`);
+    const found = await findPublication(deps, project.id, input.publicationId);
     if (found.status !== 'removed') {
       if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this unpublish.');
-      await approve(deps, { tool: 'unpublish_design', action: 'Unpublish a design', projectId: project.id, client, title: `${client} wants to unpublish “${oneLine(found.title, 80)}”`, detail: `This deletes the Cloudflare Worker ${found.workerName}. ${found.url ?? 'Its URL'} stops working at once.` });
+      await approve(deps, { tool: 'unpublish_design', action: 'Unpublish a design', projectId: project.id, client, title: `${client} wants to unpublish “${oneLine(found.title, 80)}”`, detail: unpublishDetail(found) });
     }
-    const done = await studioCall<{ publication: Publication }>(deps, 'DELETE', `${base}/publications/${encodeURIComponent(found.id)}`);
+    const done = await studioCall<{ publication: Publication }>(deps, 'DELETE', `/api/projects/${encodeURIComponent(project.id)}/publications/${encodeURIComponent(found.id)}`);
     return { result: ok({ publication: publicationView(done.publication) }) };
   },
 );
 
-export const PUBLISH_TOOLS = [publishDesign, listPublications, unpublishDesign];
+const rollbackPublication = defineTool(
+  'rollback_publication',
+  rollbackInput,
+  { title: 'Roll back publication', description: 'Make an older published version live again at the same URL. Nothing uploads; the newer version stays for a later rollback. The user must click Allow in Design Studio first.', idempotent: true },
+  async (deps, input, client) => {
+    const { project } = await loadTarget(deps, input.projectId);
+    const found = await findPublication(deps, project.id, input.publicationId);
+    const version = found.versions.find((v) => v.id === input.versionId);
+    if (!version) throw new EditError(`Publication ${found.id} has no published version ${input.versionId}. Call list_publications for versions.`);
+    if (!version.live) {
+      if (!deps.approvals.windowOpen()) throw new EditError('Design Studio is not open, so nobody can approve this rollback.');
+      const when = version.committedAt ? new Date(version.committedAt).toISOString().slice(0, 16).replace('T', ' ') : 'an earlier time';
+      await approve(deps, { tool: 'rollback_publication', action: 'Roll back a published design', projectId: project.id, client, title: `${client} wants to roll back “${oneLine(found.title, 80)}”`, detail: `${found.url ?? 'Its URL'} goes back to the version published ${when} (source version ${version.sourceVersion.slice(0, 7)}, ${version.fileCount} files). Anyone with the URL sees it at once.` });
+    }
+    const done = await studioCall<{ publication: Publication }>(deps, 'POST', `/api/projects/${encodeURIComponent(project.id)}/publications/${encodeURIComponent(found.id)}/rollback`, { versionId: version.id });
+    return { result: ok({ publication: publicationView(done.publication) }) };
+  },
+);
+
+export const PUBLISH_TOOLS = [publishDesign, listPublications, unpublishDesign, rollbackPublication];

@@ -2,21 +2,29 @@ import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ExportFrame } from '../../shared/export.js';
-import type { Publication } from '../../shared/publish.js';
+import type { Publication, PublishBackendMode } from '../../shared/publish.js';
 import { createKeyedMutex } from '../store/mutex.js';
-import type { PasswordHash } from './worker-script.js';
 
 export interface PublicationRecord extends Publication {
-  pass: PasswordHash | null;
   frames: ExportFrame[] | null;
   frameIds: string[] | null;
   withComments: boolean;
+  hashes?: string[];
+}
+
+export interface BackendSettings {
+  mode: PublishBackendMode;
+  url: string;
+  accountId: string | null;
+  databaseId: string;
+  setUpAt: number;
 }
 
 export interface PublishSettings {
   accountId: string | null;
   keyring: boolean;
   subdomains: Record<string, string>;
+  backend: BackendSettings | null;
 }
 
 export interface PublishStore {
@@ -28,11 +36,38 @@ export interface PublishStore {
   saveSettings(patch: Partial<PublishSettings>): Promise<PublishSettings>;
 }
 
-const DEFAULT_SETTINGS: PublishSettings = { accountId: null, keyring: true, subdomains: {} };
+const DEFAULT_SETTINGS: PublishSettings = { accountId: null, keyring: true, subdomains: {}, backend: null };
 
-export function toPublication(record: PublicationRecord): Publication {
-  const { pass: _pass, frames: _frames, frameIds: _ids, withComments: _c, ...rest } = record;
-  return rest;
+export function toPublication(r: PublicationRecord): Publication {
+  return {
+    id: r.id,
+    projectId: r.projectId,
+    directionId: r.directionId,
+    versionId: r.versionId,
+    kind: r.kind,
+    title: r.title,
+    backend: r.backend ?? 'legacy-worker',
+    workerName: r.workerName ?? null,
+    accountId: r.accountId ?? null,
+    url: r.url,
+    commentsUrl: r.commentsUrl ?? null,
+    pages: r.pages ?? [],
+    fileCount: r.fileCount,
+    bytes: r.bytes,
+    password: r.password,
+    expiresAt: r.expiresAt,
+    noindex: r.noindex ?? true,
+    viewerComments: r.viewerComments ?? false,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    status: r.status,
+    error: r.error,
+    log: r.log ?? '',
+    versions: r.versions ?? [],
+    views: r.views ?? null,
+    commentCount: r.commentCount ?? 0,
+    lastUpload: r.lastUpload ?? null,
+  };
 }
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {

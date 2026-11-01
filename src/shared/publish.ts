@@ -52,6 +52,8 @@ export interface PublishPlanInput {
   keepPassword?: boolean;
   expiresInDays?: PublishExpiryDays;
   comments?: boolean;
+  viewerComments?: boolean;
+  noindex?: boolean;
   publicationId?: string;
 }
 
@@ -62,23 +64,41 @@ export interface PublishPlan {
   versionId: string;
   kind: PublishKind;
   title: string;
-  workerName: string;
   url: string | null;
   urlPattern: string;
   pages: string[];
   fileCount: number;
   bytes: number;
+  changedFiles: number | null;
   password: boolean;
   expiresAt: number | null;
   comments: number;
+  viewerComments: boolean;
+  noindex: boolean;
+  warnings: string[];
   createdAt: number;
   planExpiresAt: number;
-  check: string;
   republishOf: string | null;
-  accountId: string;
+  backend: PublishBackendMode;
 }
 
-export type PublicationStatus = 'publishing' | 'live' | 'failed' | 'removed';
+export type PublicationStatus = 'publishing' | 'live' | 'failed' | 'removed' | 'ended';
+
+export interface PublishedVersion {
+  id: string;
+  label: string;
+  sourceVersion: string;
+  fileCount: number;
+  bytes: number;
+  committedAt: number | null;
+  live: boolean;
+}
+
+export interface PublicationViews {
+  total: number;
+  last7: number;
+  days: { day: string; views: number }[];
+}
 
 export interface Publication {
   id: string;
@@ -87,23 +107,66 @@ export interface Publication {
   versionId: string;
   kind: PublishKind;
   title: string;
-  workerName: string;
-  accountId: string;
+  backend: 'app' | 'legacy-worker';
+  workerName: string | null;
+  accountId: string | null;
   url: string | null;
+  commentsUrl: string | null;
   pages: string[];
   fileCount: number;
   bytes: number;
   password: boolean;
   expiresAt: number | null;
+  noindex: boolean;
+  viewerComments: boolean;
   createdAt: number;
   updatedAt: number;
   status: PublicationStatus;
   error: string | null;
   log: string;
+  versions: PublishedVersion[];
+  views: PublicationViews | null;
+  commentCount: number;
+  lastUpload: { sent: number; reused: number } | null;
 }
 
 export interface PublicationList {
   publications: Publication[];
+  backendError: string | null;
+}
+
+export interface PublicationComment {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: number;
+}
+
+export type PublishBackendMode = 'cloudflare' | 'local';
+
+export type SetupStepId = 'cli' | 'bucket' | 'database' | 'migrations' | 'key' | 'deploy' | 'health';
+export type SetupStepStatus = 'pending' | 'running' | 'done' | 'skipped' | 'failed';
+
+export interface SetupStep {
+  id: SetupStepId;
+  label: string;
+  status: SetupStepStatus;
+  command: string | null;
+  detail: string | null;
+}
+
+export interface PublishBackendState {
+  mode: PublishBackendMode | null;
+  ready: boolean;
+  url: string | null;
+  accountId: string | null;
+  databaseId: string | null;
+  keyStore: 'keychain' | 'file' | null;
+  localAllowed: boolean;
+  running: boolean;
+  steps: SetupStep[];
+  setUpAt: number | null;
+  error: string | null;
 }
 
 export function publishSize(bytes: number): string {

@@ -197,6 +197,14 @@ function describePrune(stats: PruneStats[]): string {
   return `${files} files, ${(bytes / 1024 ** 2).toFixed(1)} MiB`;
 }
 
+async function stagePublishWorker(serverDir: string): Promise<void> {
+  const source = path.join(ROOT, 'cloud', 'publish-worker');
+  const target = path.join(serverDir, 'publish-worker');
+  mkdirSync(target, { recursive: true });
+  await build({ entryPoints: [path.join(source, 'src', 'index.ts')], outfile: path.join(target, 'worker.js'), bundle: true, format: 'esm', platform: 'neutral', target: 'es2023', legalComments: 'none', logLevel: 'warning' });
+  cpSync(path.join(source, 'migrations'), path.join(target, 'migrations'), { recursive: true });
+}
+
 export async function stagePackage(): Promise<void> {
   ensureUi();
   rmSync(STAGE, { recursive: true, force: true });
@@ -205,6 +213,7 @@ export async function stagePackage(): Promise<void> {
   writeAppPackage(STAGE_APP);
   const serverDir = path.join(STAGE_RESOURCES, 'server');
   const metafiles = await buildServer(serverDir);
+  await stagePublishWorker(serverDir);
   await buildBridge(path.join(STAGE_RESOURCES, 'bridge.js'));
   copyStatic(STAGE_RESOURCES);
   copySlimGit(path.join(STAGE_RESOURCES, 'git'));

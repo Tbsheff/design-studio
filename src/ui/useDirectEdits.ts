@@ -1,11 +1,37 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { DirectStyleProperty, SelectionContext } from '../shared/contracts';
-import { ApiError, api, errorText } from './api';
-import type { PreviewPort } from './bridge';
-import { changedProps, valuesFromStyles, type StyleValues } from './cssValues';
-import { addShift, mergeValues, multiBlockReason, ownEdits, shiftedStyle, withoutShifts, type Shift, type ShiftPart, type Shifts } from './mixedValues';
-import type { DirectEdit, DirectEditCommit, DirectEditControl, SaveStatus } from './useDirectEdit';
-import { startOptimistic } from './optimisticEdit';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
+
+import type {
+  DirectStyleProperty,
+  SelectionContext,
+} from "../shared/contracts";
+import { ApiError, api, errorText } from "./api";
+import type { PreviewPort } from "./bridge";
+import { changedProps, valuesFromStyles, type StyleValues } from "./cssValues";
+import {
+  addShift,
+  mergeValues,
+  multiBlockReason,
+  ownEdits,
+  shiftedStyle,
+  withoutShifts,
+  type Shift,
+  type ShiftPart,
+  type Shifts,
+} from "./mixedValues";
+import { startOptimistic } from "./optimisticEdit";
+import type {
+  DirectEdit,
+  DirectEditCommit,
+  DirectEditControl,
+  SaveStatus,
+} from "./useDirectEdit";
 
 interface Options {
   projectId: string;
@@ -21,14 +47,20 @@ interface Options {
 const DEBOUNCE_MS = 250;
 
 function failureText(err: unknown): string {
-  if (err instanceof ApiError && err.status === 409) return 'Agent is running. Wait or cancel.';
+  if (err instanceof ApiError && err.status === 409)
+    return "Agent is running. Wait or cancel.";
   return errorText(err);
 }
 
-export function useDirectEdits(o: Options): DirectEdit & { blocked: string | null } {
+export function useDirectEdits(
+  o: Options
+): DirectEdit & { blocked: string | null } {
   const opts = useRef(o);
   opts.current = o;
-  const bases = useMemo(() => o.selections.map((s) => valuesFromStyles(s.styles)), [o.selections]);
+  const bases = useMemo(
+    () => o.selections.map((s) => valuesFromStyles(s.styles)),
+    [o.selections]
+  );
   const basesRef = useRef(bases);
   basesRef.current = bases;
   const merged = useMemo(() => mergeValues(bases), [bases]);
@@ -37,7 +69,7 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   const blocked = useMemo(() => multiBlockReason(o.selections), [o.selections]);
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
-  const [status, setStatus] = useState<SaveStatus>({ kind: 'idle' });
+  const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
   const again = useRef(false);
@@ -56,10 +88,14 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
 
   const postAll = useCallback((style: Record<string, string | null>) => {
     const port = opts.current.port.current;
-    for (const s of opts.current.selections) port?.post({ type: 'preview-style', selector: s.selector, style });
+    for (const s of opts.current.selections)
+      port?.post({ type: "preview-style", selector: s.selector, style });
   }, []);
 
-  const resetPreview = useCallback(() => opts.current.port.current?.post({ type: 'preview-reset' }), []);
+  const resetPreview = useCallback(
+    () => opts.current.port.current?.post({ type: "preview-reset" }),
+    []
+  );
 
   const cancel = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
@@ -71,18 +107,22 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
 
   const fail = useCallback(
     (err: unknown) => {
-      if (err instanceof ApiError && err.status === 422 && err.code === 'stale_selection') {
+      if (
+        err instanceof ApiError &&
+        err.status === 422 &&
+        err.code === "stale_selection"
+      ) {
         cancel();
-        opts.current.port.current?.post({ type: 'preview-reset' });
+        opts.current.port.current?.post({ type: "preview-reset" });
         opts.current.onStale(err.message);
         return;
       }
       resetPreview();
       setDraft({});
       setShifts({});
-      setStatus({ kind: 'error', message: failureText(err) });
+      setStatus({ kind: "error", message: failureText(err) });
     },
-    [cancel, resetPreview, setDraft, setShifts],
+    [cancel, resetPreview, setDraft, setShifts]
   );
 
   const pendingStyle = useCallback(() => {
@@ -111,16 +151,22 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
     const items = ownEdits(cur.selections, basesRef.current, style, sent);
     const edits = items.map((item) => item.edit);
     if (edits.length === 0) return;
-    setStatus({ kind: 'saving' });
-    const problem = (message: string) => setStatus({ kind: 'error', message, code: 'optimistic_mismatch' });
-    const optimistic = edits.map((edit) => startOptimistic(cur.port.current, edit, problem));
+    setStatus({ kind: "saving" });
+    const problem = (message: string) =>
+      setStatus({ kind: "error", message, code: "optimistic_mismatch" });
+    const optimistic = edits.map((edit) =>
+      startOptimistic(cur.port.current, edit, problem)
+    );
     const request = api
       .directEditBatch(cur.projectId, cur.directionId, { edits })
       .then((result) => {
-        optimistic.forEach((one, index) => one.saved(result.applied[index]?.tailwind));
-        for (const item of items) cur.onCommitted({ selector: item.edit.selector, style: item.style });
+        optimistic.forEach((one, index) =>
+          one.saved(result.applied[index]?.tailwind)
+        );
+        for (const item of items)
+          cur.onCommitted({ selector: item.edit.selector, style: item.style });
         setShifts(withoutShifts(shifts.current, [], sent));
-        setStatus({ kind: 'saved', at: Date.now() });
+        setStatus({ kind: "saved", at: Date.now() });
       })
       .catch((err: unknown) => {
         for (const one of optimistic) one.failed(failureText(err));
@@ -148,16 +194,22 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   const preview = useCallback(
     (patch: Partial<StyleValues>) => {
       if (blocked) return;
-      if (Object.keys(patch).some((prop) => prop in shifts.current)) setShifts(withoutShifts(shifts.current, Object.keys(patch)));
+      if (Object.keys(patch).some((prop) => prop in shifts.current))
+        setShifts(withoutShifts(shifts.current, Object.keys(patch)));
       setDraft({ ...draftRef.current, ...patch });
       postAll(patch);
-      setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s));
+      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
     },
-    [blocked, postAll, setDraft, setShifts],
+    [blocked, postAll, setDraft, setShifts]
   );
 
   const shift = useCallback(
-    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}, part?: ShiftPart) => {
+    (
+      props: readonly DirectStyleProperty[],
+      delta: number,
+      bounds: Omit<Shift, "delta"> = {},
+      part?: ShiftPart
+    ) => {
       if (blocked) return;
       const next = addShift(shifts.current, props, delta, bounds, part);
       setShifts(next);
@@ -165,15 +217,18 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
       for (const prop of props) delete draft[prop];
       setDraft(draft);
       const port = opts.current.port.current;
-      const only = Object.fromEntries(props.flatMap((prop) => (next[prop] ? [[prop, next[prop]]] : []))) as Shifts;
+      const only = Object.fromEntries(
+        props.flatMap((prop) => (next[prop] ? [[prop, next[prop]]] : []))
+      ) as Shifts;
       opts.current.selections.forEach((s, i) => {
         const own = basesRef.current[i];
         const style = own ? shiftedStyle(own, only) : {};
-        if (Object.keys(style).length > 0) port?.post({ type: 'preview-style', selector: s.selector, style });
+        if (Object.keys(style).length > 0)
+          port?.post({ type: "preview-style", selector: s.selector, style });
       });
-      setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s));
+      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
     },
-    [blocked, setDraft, setShifts],
+    [blocked, setDraft, setShifts]
   );
 
   const revert = useCallback(
@@ -185,17 +240,19 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
       const port = opts.current.port.current;
       opts.current.selections.forEach((s, i) => {
         const own = basesRef.current[i];
-        const style = Object.fromEntries(props.map((prop) => [prop, own?.[prop] ? own[prop] : null]));
-        port?.post({ type: 'preview-style', selector: s.selector, style });
+        const style = Object.fromEntries(
+          props.map((prop) => [prop, own?.[prop] ? own[prop] : null])
+        );
+        port?.post({ type: "preview-style", selector: s.selector, style });
       });
     },
-    [setDraft, setShifts],
+    [setDraft, setShifts]
   );
 
   const reset = useCallback(() => {
     cancel();
     resetPreview();
-    setStatus({ kind: 'idle' });
+    setStatus({ kind: "idle" });
   }, [cancel, resetPreview]);
 
   const settle = useCallback(async () => {
@@ -214,12 +271,13 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
   const absorb = useCallback(
     (style: Partial<StyleValues>) => {
       const next = { ...draftRef.current };
-      for (const prop of Object.keys(style) as DirectStyleProperty[]) delete next[prop];
+      for (const prop of Object.keys(style) as DirectStyleProperty[])
+        delete next[prop];
       setDraft(next);
       setShifts(withoutShifts(shifts.current, Object.keys(style)));
-      setStatus({ kind: 'saved', at: Date.now() });
+      setStatus({ kind: "saved", at: Date.now() });
     },
-    [setDraft, setShifts],
+    [setDraft, setShifts]
   );
 
   const commitText = useCallback(() => false, []);
@@ -236,13 +294,49 @@ export function useDirectEdits(o: Options): DirectEdit & { blocked: string | nul
     };
   }, [cancel, settle, commitText, flush, o.control]);
 
-  const values = useMemo(() => ({ ...merged.values, ...draft }), [merged, draft]);
+  const values = useMemo(
+    () => ({ ...merged.values, ...draft }),
+    [merged, draft]
+  );
   const mixed = useMemo(() => {
     const set = new Set(merged.mixed);
-    for (const prop of Object.keys(draft) as DirectStyleProperty[]) set.delete(prop);
+    for (const prop of Object.keys(draft) as DirectStyleProperty[])
+      set.delete(prop);
     return set as ReadonlySet<DirectStyleProperty>;
   }, [merged, draft]);
-  const dirty = useMemo(() => [...new Set([...(Object.keys(draft) as DirectStyleProperty[]), ...shifted])], [draft, shifted]);
-  const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed, each: bases, text: '', status, tailwind: null, preview, shift, revert, commit, commitSoon, previewText: noop, revertText: noop, reset, drain, absorb, dirty, blocked, scope, reselect: noop };
+  const dirty = useMemo(
+    () => [
+      ...new Set([
+        ...(Object.keys(draft) as DirectStyleProperty[]),
+        ...shifted,
+      ]),
+    ],
+    [draft, shifted]
+  );
+  const scope = useMemo(
+    () => ({ projectId: o.projectId, directionId: o.directionId }),
+    [o.projectId, o.directionId]
+  );
+  return {
+    values,
+    mixed,
+    each: bases,
+    text: "",
+    status,
+    tailwind: null,
+    preview,
+    shift,
+    revert,
+    commit,
+    commitSoon,
+    previewText: noop,
+    revertText: noop,
+    reset,
+    drain,
+    absorb,
+    dirty,
+    blocked,
+    scope,
+    reselect: noop,
+  };
 }

@@ -1,13 +1,18 @@
-import { existsSync } from 'node:fs';
-import { readdir, readFile, realpath, stat } from 'node:fs/promises';
-import path from 'node:path';
-import type * as t from '@babel/types';
-import type { Project } from '../../shared/contracts.js';
-import type { InsertableComponent, InsertableList } from '../../shared/insert.js';
-import type { ExportKind } from '../direct-edit/imports.js';
-import { treeChangesSince, treeStamp } from '../direct-edit/change-feed.js';
-import { listFiles } from './inventory.js';
-import { declaredComponents, parseModuleFile } from './props-schema.js';
+import { existsSync } from "node:fs";
+import { readdir, readFile, realpath, stat } from "node:fs/promises";
+import path from "node:path";
+
+import type * as t from "@babel/types";
+
+import type { Project } from "../../shared/contracts.js";
+import type {
+  InsertableComponent,
+  InsertableList,
+} from "../../shared/insert.js";
+import { treeChangesSince, treeStamp } from "../direct-edit/change-feed.js";
+import type { ExportKind } from "../direct-edit/imports.js";
+import { listFiles } from "./inventory.js";
+import { declaredComponents, parseModuleFile } from "./props-schema.js";
 
 export interface LibraryEntry extends InsertableComponent {
   local: string;
@@ -33,43 +38,72 @@ export interface NamedImport {
 interface FileInfo {
   stamp: string;
   text: string;
-  entries: (Omit<LibraryEntry, 'uses' | 'file' | 'folder' | 'absolute' | 'id'> & { exported: boolean })[];
+  entries: (Omit<
+    LibraryEntry,
+    "uses" | "file" | "folder" | "absolute" | "id"
+  > & { exported: boolean })[];
   specifiers: string[];
   named: NamedImport[];
 }
 
 const LIST_MAX = 300;
 const SKIP_FILE = /\.(test|spec|stories|story)\.[jt]sx$/i;
-const NEXT_FILES = new Set(['page', 'layout', 'loading', 'error', 'not-found', 'template', 'default', 'route', 'global-error']);
-const VOID_ROOT = /<(input|img|hr|br|textarea|select|meta|link|source|track|wbr|col|area|embed)\b/;
+const NEXT_FILES = new Set([
+  "page",
+  "layout",
+  "loading",
+  "error",
+  "not-found",
+  "template",
+  "default",
+  "route",
+  "global-error",
+]);
+const VOID_ROOT =
+  /<(input|img|hr|br|textarea|select|meta|link|source|track|wbr|col|area|embed)\b/;
 const SPREAD = /\{\s*\.\.\.\s*[A-Za-z_$][\w$]*\s*\}/;
 const IMPORT_FROM = /\bfrom\s+['"]([^'"\n]+)['"]/g;
 const cache = new Map<string, FileInfo>();
 
 function defaultLocal(statement: t.ExportDefaultDeclaration): string | null {
   const decl = statement.declaration;
-  if (decl.type === 'Identifier') return decl.name;
-  return (decl.type === 'FunctionDeclaration' || decl.type === 'ClassDeclaration') && decl.id ? decl.id.name : null;
+  if (decl.type === "Identifier") return decl.name;
+  return (decl.type === "FunctionDeclaration" ||
+    decl.type === "ClassDeclaration") &&
+    decl.id
+    ? decl.id.name
+    : null;
 }
 
-function namedExports(statement: t.ExportNamedDeclaration, out: Map<string, string>): void {
+function namedExports(
+  statement: t.ExportNamedDeclaration,
+  out: Map<string, string>
+): void {
   const decl = statement.declaration;
-  if (decl?.type === 'FunctionDeclaration' && decl.id) out.set(decl.id.name, decl.id.name);
-  if (decl?.type === 'VariableDeclaration') for (const item of decl.declarations) if (item.id.type === 'Identifier') out.set(item.id.name, item.id.name);
+  if (decl?.type === "FunctionDeclaration" && decl.id)
+    out.set(decl.id.name, decl.id.name);
+  if (decl?.type === "VariableDeclaration")
+    for (const item of decl.declarations)
+      if (item.id.type === "Identifier") out.set(item.id.name, item.id.name);
   for (const specifier of statement.specifiers) {
-    if (specifier.type !== 'ExportSpecifier') continue;
-    const exported = specifier.exported.type === 'Identifier' ? specifier.exported.name : specifier.exported.value;
-    if (!out.has(specifier.local.name) || exported !== 'default') out.set(specifier.local.name, exported);
+    if (specifier.type !== "ExportSpecifier") continue;
+    const exported =
+      specifier.exported.type === "Identifier"
+        ? specifier.exported.name
+        : specifier.exported.value;
+    if (!out.has(specifier.local.name) || exported !== "default")
+      out.set(specifier.local.name, exported);
   }
 }
 
 function exportNames(ast: t.File): Map<string, string> {
   const out = new Map<string, string>();
   for (const statement of ast.program.body) {
-    if (statement.type === 'ExportDefaultDeclaration') {
+    if (statement.type === "ExportDefaultDeclaration") {
       const local = defaultLocal(statement);
-      if (local) out.set(local, 'default');
-    } else if (statement.type === 'ExportNamedDeclaration' && !statement.source) namedExports(statement, out);
+      if (local) out.set(local, "default");
+    } else if (statement.type === "ExportNamedDeclaration" && !statement.source)
+      namedExports(statement, out);
   }
   return out;
 }
@@ -77,10 +111,25 @@ function exportNames(ast: t.File): Map<string, string> {
 function namedImports(ast: t.File): NamedImport[] {
   const out: NamedImport[] = [];
   for (const statement of ast.program.body) {
-    if (statement.type !== 'ImportDeclaration' || statement.source.value.startsWith('.')) continue;
+    if (
+      statement.type !== "ImportDeclaration" ||
+      statement.source.value.startsWith(".")
+    )
+      continue;
     for (const specifier of statement.specifiers) {
-      if (specifier.type === 'ImportSpecifier') out.push({ name: specifier.imported.type === 'Identifier' ? specifier.imported.name : specifier.imported.value, specifier: statement.source.value });
-      else if (specifier.type === 'ImportDefaultSpecifier') out.push({ name: `default:${specifier.local.name}`, specifier: statement.source.value });
+      if (specifier.type === "ImportSpecifier")
+        out.push({
+          name:
+            specifier.imported.type === "Identifier"
+              ? specifier.imported.name
+              : specifier.imported.value,
+          specifier: statement.source.value,
+        });
+      else if (specifier.type === "ImportDefaultSpecifier")
+        out.push({
+          name: `default:${specifier.local.name}`,
+          specifier: statement.source.value,
+        });
     }
   }
   return out;
@@ -97,18 +146,35 @@ async function fileInfo(file: string): Promise<FileInfo | null> {
   const stamp = `${info.mtimeMs}:${info.size}`;
   const known = cache.get(file);
   if (known?.stamp === stamp) return known;
-  const text = await readFile(file, 'utf8').catch(() => null);
+  const text = await readFile(file, "utf8").catch(() => null);
   if (text === null) return null;
   const ast = parseModuleFile(text, file);
   const exported = ast ? exportNames(ast) : new Map<string, string>();
   const entries = (ast ? declaredComponents(ast) : []).flatMap((item) => {
-    if (item.name === 'App') return [];
+    if (item.name === "App") return [];
     const name = exported.get(item.name);
-    const kind: ExportKind = name === 'default' ? 'default' : 'named';
-    return [{ name: !name || kind === 'default' ? item.name : name, local: item.name, kind, line: item.line, children: takesChildren(text.slice(item.start, item.end)), exported: name !== undefined }];
+    const kind: ExportKind = name === "default" ? "default" : "named";
+    return [
+      {
+        name: !name || kind === "default" ? item.name : name,
+        local: item.name,
+        kind,
+        line: item.line,
+        children: takesChildren(text.slice(item.start, item.end)),
+        exported: name !== undefined,
+      },
+    ];
   });
-  const specifiers = [...text.matchAll(IMPORT_FROM)].map((match) => match[1] as string).filter((spec) => !spec.startsWith('.'));
-  const next = { stamp, text, entries, specifiers, named: ast ? namedImports(ast) : [] };
+  const specifiers = [...text.matchAll(IMPORT_FROM)]
+    .map((match) => match[1] as string)
+    .filter((spec) => !spec.startsWith("."));
+  const next = {
+    stamp,
+    text,
+    entries,
+    specifiers,
+    named: ast ? namedImports(ast) : [],
+  };
   if (cache.size > 2000) cache.clear();
   cache.set(file, next);
   return next;
@@ -116,40 +182,68 @@ async function fileInfo(file: string): Promise<FileInfo | null> {
 
 function acceptFile(name: string): boolean {
   if (!/\.(tsx|jsx)$/i.test(name) || SKIP_FILE.test(name)) return false;
-  return !NEXT_FILES.has(name.replace(/\.(tsx|jsx)$/i, ''));
+  return !NEXT_FILES.has(name.replace(/\.(tsx|jsx)$/i, ""));
 }
 
 async function packageNames(root: string): Promise<Map<string, string>> {
   const out = new Map<string, string>();
-  for (const group of ['packages', 'apps']) {
-    const items = await readdir(path.join(root, group), { withFileTypes: true }).catch(() => []);
+  for (const group of ["packages", "apps"]) {
+    const items = await readdir(path.join(root, group), {
+      withFileTypes: true,
+    }).catch(() => []);
     for (const item of items) {
       if (!item.isDirectory()) continue;
       const dir = path.join(root, group, item.name);
-      const pkg = await readFile(path.join(dir, 'package.json'), 'utf8').then((raw) => JSON.parse(raw) as { name?: unknown }, () => null);
-      if (typeof pkg?.name === 'string') out.set(pkg.name, dir);
+      const pkg = await readFile(path.join(dir, "package.json"), "utf8").then(
+        (raw) => JSON.parse(raw) as { name?: unknown },
+        () => null
+      );
+      if (typeof pkg?.name === "string") out.set(pkg.name, dir);
     }
   }
   return out;
 }
 
 async function workspaceRoots(root: string, appDir: string): Promise<string[]> {
-  const pkg = await readFile(path.join(root, appDir, 'package.json'), 'utf8').then((raw) => JSON.parse(raw) as Record<string, Record<string, string> | undefined>, () => null);
-  const deps = Object.keys({ ...(pkg?.dependencies ?? {}), ...(pkg?.devDependencies ?? {}) });
+  const pkg = await readFile(
+    path.join(root, appDir, "package.json"),
+    "utf8"
+  ).then(
+    (raw) =>
+      JSON.parse(raw) as Record<string, Record<string, string> | undefined>,
+    () => null
+  );
+  const deps = Object.keys({
+    ...(pkg?.dependencies ?? {}),
+    ...(pkg?.devDependencies ?? {}),
+  });
   const names = await packageNames(root);
   return deps.flatMap((dep) => {
     const dir = names.get(dep);
     if (!dir || dir === path.join(root, appDir)) return [];
-    const components = path.join(dir, 'src', 'components');
-    return [existsSync(components) ? components : existsSync(path.join(dir, 'src')) ? path.join(dir, 'src') : dir];
+    const components = path.join(dir, "src", "components");
+    return [
+      existsSync(components)
+        ? components
+        : existsSync(path.join(dir, "src"))
+          ? path.join(dir, "src")
+          : dir,
+    ];
   });
 }
 
-export async function libraryRoots(project: Project, workTree: string): Promise<{ root: string; scan: string[] }> {
+export async function libraryRoots(
+  project: Project,
+  workTree: string
+): Promise<{ root: string; scan: string[] }> {
   const root = await realpath(workTree);
   const appDir = project.app?.appDir;
-  if (appDir && appDir !== '.' && existsSync(path.join(root, appDir))) return { root, scan: [...(await workspaceRoots(root, appDir)), path.join(root, appDir)] };
-  const src = path.join(root, 'src');
+  if (appDir && appDir !== "." && existsSync(path.join(root, appDir)))
+    return {
+      root,
+      scan: [...(await workspaceRoots(root, appDir)), path.join(root, appDir)],
+    };
+  const src = path.join(root, "src");
   return { root, scan: [existsSync(src) ? src : root] };
 }
 
@@ -167,11 +261,24 @@ function countTags(texts: string[], names: Set<string>): Map<string, number> {
 const ROUTE_LOCAL = /^(?:src\/)?(?:app|pages)\//;
 
 function rankFiles(scan: string[]): (file: string) => number {
-  const appRoot = scan.at(-1) ?? '';
+  const appRoot = scan.at(-1) ?? "";
   return (file: string) => {
     const index = scan.findIndex((dir) => file.startsWith(dir + path.sep));
-    if (index === scan.length - 1) return (ROUTE_LOCAL.test(path.relative(appRoot, file).split(path.sep).join('/')) ? 2 : 1) * scan.length + index;
-    return (path.basename(scan[index] ?? '') === 'components' ? 0 : 3) * scan.length + index;
+    if (index === scan.length - 1)
+      return (
+        (ROUTE_LOCAL.test(
+          path.relative(appRoot, file).split(path.sep).join("/")
+        )
+          ? 2
+          : 1) *
+          scan.length +
+        index
+      );
+    return (
+      (path.basename(scan[index] ?? "") === "components" ? 0 : 3) *
+        scan.length +
+      index
+    );
   };
 }
 
@@ -179,33 +286,67 @@ type LoadedLibrary = Library & { specifiers: Map<string, string[]> };
 
 const LIBRARY_CACHE_MAX = 8;
 const LIBRARY_TTL_MS = 120_000;
-const libraries = new Map<string, { stamp: number; at: number; library: Promise<LoadedLibrary> }>();
+const libraries = new Map<
+  string,
+  { stamp: number; at: number; library: Promise<LoadedLibrary> }
+>();
 
-export function loadLibrary(project: Project, workTree: string): Promise<LoadedLibrary> {
-  const key = `${project.id}\u0000${project.app?.appDir ?? ''}\u0000${workTree}`;
+export function loadLibrary(
+  project: Project,
+  workTree: string
+): Promise<LoadedLibrary> {
+  const key = `${project.id}\u0000${project.app?.appDir ?? ""}\u0000${workTree}`;
   const stamp = treeStamp(path.resolve(workTree));
   const known = libraries.get(key);
   const fresh = known !== undefined && Date.now() - known.at < LIBRARY_TTL_MS;
   if (known && fresh && known.stamp === stamp) return known.library;
   if (libraries.size >= LIBRARY_CACHE_MAX) libraries.clear();
-  const library = readLibrary(project, workTree, known && fresh ? sameFiles(known.library, treeChangesSince(path.resolve(workTree), known.stamp)) : null);
+  const library = readLibrary(
+    project,
+    workTree,
+    known && fresh
+      ? sameFiles(
+          known.library,
+          treeChangesSince(path.resolve(workTree), known.stamp)
+        )
+      : null
+  );
   libraries.set(key, { stamp, at: Date.now(), library });
-  library.catch(() => libraries.get(key)?.library === library && libraries.delete(key));
+  library.catch(
+    () => libraries.get(key)?.library === library && libraries.delete(key)
+  );
   return library;
 }
 
-async function sameFiles(previous: Promise<LoadedLibrary>, changed: string[] | null): Promise<string[] | null> {
+async function sameFiles(
+  previous: Promise<LoadedLibrary>,
+  changed: string[] | null
+): Promise<string[] | null> {
   const before = await previous.catch(() => null);
   if (!before || changed === null) return null;
   const known = new Set(before.files);
-  const listed = changed.every((file) => known.has(file) ? existsSync(file) : !acceptFile(path.basename(file)) && path.extname(file) !== '');
+  const listed = changed.every((file) =>
+    known.has(file)
+      ? existsSync(file)
+      : !acceptFile(path.basename(file)) && path.extname(file) !== ""
+  );
   return listed ? before.files : null;
 }
 
-async function readLibrary(project: Project, workTree: string, reuse: Promise<string[] | null> | null): Promise<LoadedLibrary> {
+async function readLibrary(
+  project: Project,
+  workTree: string,
+  reuse: Promise<string[] | null> | null
+): Promise<LoadedLibrary> {
   const { root, scan } = await libraryRoots(project, workTree);
-  const files = (await reuse) ?? [...new Set((await Promise.all(scan.map((dir) => listFiles(dir, acceptFile)))).flat())];
-  const infos = await Promise.all(files.map(async (file) => ({ file, info: await fileInfo(file) })));
+  const files = (await reuse) ?? [
+    ...new Set(
+      (await Promise.all(scan.map((dir) => listFiles(dir, acceptFile)))).flat()
+    ),
+  ];
+  const infos = await Promise.all(
+    files.map(async (file) => ({ file, info: await fileInfo(file) }))
+  );
   const rank = rankFiles(scan);
   const entries: LibraryEntry[] = [];
   const locals: LibraryEntry[] = [];
@@ -221,20 +362,63 @@ async function readLibrary(project: Project, workTree: string, reuse: Promise<st
       byFile.set(file, item.specifier);
       imports.set(item.name, byFile);
     }
-    const relative = path.relative(root, file).split(path.sep).join('/');
-    for (const { exported, ...entry } of info.entries) (exported ? entries : locals).push({ ...entry, id: `${relative}#${entry.name}`, file: relative, folder: path.posix.dirname(relative), absolute: file, uses: 0 });
+    const relative = path.relative(root, file).split(path.sep).join("/");
+    for (const { exported, ...entry } of info.entries)
+      (exported ? entries : locals).push({
+        ...entry,
+        id: `${relative}#${entry.name}`,
+        file: relative,
+        folder: path.posix.dirname(relative),
+        absolute: file,
+        uses: 0,
+      });
   }
-  const counts = countTags(infos.map((item) => item.info?.text ?? ''), new Set([...entries, ...locals].map((entry) => entry.local)));
-  for (const entry of [...entries, ...locals]) entry.uses = counts.get(entry.local) ?? 0;
-  const app = scan.length > 1 ? (scan.at(-1) ?? '') + path.sep : null;
-  const outsideKit = (entry: LibraryEntry) => Number(app !== null && entry.absolute.startsWith(app));
-  entries.sort((a, b) => Number(a.uses === 0) - Number(b.uses === 0) || outsideKit(a) - outsideKit(b) || rank(a.absolute) - rank(b.absolute) || a.folder.localeCompare(b.folder) || b.uses - a.uses || a.name.localeCompare(b.name));
+  const counts = countTags(
+    infos.map((item) => item.info?.text ?? ""),
+    new Set([...entries, ...locals].map((entry) => entry.local))
+  );
+  for (const entry of [...entries, ...locals])
+    entry.uses = counts.get(entry.local) ?? 0;
+  const app = scan.length > 1 ? (scan.at(-1) ?? "") + path.sep : null;
+  const outsideKit = (entry: LibraryEntry) =>
+    Number(app !== null && entry.absolute.startsWith(app));
+  entries.sort(
+    (a, b) =>
+      Number(a.uses === 0) - Number(b.uses === 0) ||
+      outsideKit(a) - outsideKit(b) ||
+      rank(a.absolute) - rank(b.absolute) ||
+      a.folder.localeCompare(b.folder) ||
+      b.uses - a.uses ||
+      a.name.localeCompare(b.name)
+  );
   return { root, scan, entries, locals, files, imports, texts, specifiers };
 }
 
-export async function listInsertable(project: Project, workTree: string): Promise<InsertableList> {
-  if (project.kind !== 'react') return { components: [], truncated: false, note: 'This is an HTML project. It has no component kit to insert from.' };
+export async function listInsertable(
+  project: Project,
+  workTree: string
+): Promise<InsertableList> {
+  if (project.kind !== "react")
+    return {
+      components: [],
+      truncated: false,
+      note: "This is an HTML project. It has no component kit to insert from.",
+    };
   const library = await loadLibrary(project, workTree);
-  const components = library.entries.slice(0, LIST_MAX).map(({ id, name, file, folder, line, uses, children }) => ({ id, name, file, folder, line, uses, children }));
-  return { components, truncated: library.entries.length > LIST_MAX, note: null };
+  const components = library.entries
+    .slice(0, LIST_MAX)
+    .map(({ id, name, file, folder, line, uses, children }) => ({
+      id,
+      name,
+      file,
+      folder,
+      line,
+      uses,
+      children,
+    }));
+  return {
+    components,
+    truncated: library.entries.length > LIST_MAX,
+    note: null,
+  };
 }

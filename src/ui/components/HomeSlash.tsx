@@ -1,9 +1,14 @@
-import { useLayoutEffect, type KeyboardEvent, type RefObject } from 'react';
-import type { RunLevel } from '../../shared/contracts';
-import { SlashMenu, useSlashMenu } from './SlashMenu';
-import { levelGroup, modelGroup } from './slashGroups';
+import { useLayoutEffect, type KeyboardEvent, type RefObject } from "react";
 
-const INPUT_ATTRS = ['aria-controls', 'aria-autocomplete', 'aria-activedescendant'] as const;
+import type { RunLevel } from "../../shared/contracts";
+import { levelGroup, modelGroup } from "./slashGroups";
+import { SlashMenu, useSlashMenu } from "./SlashMenu";
+
+const INPUT_ATTRS = [
+  "aria-controls",
+  "aria-autocomplete",
+  "aria-activedescendant",
+] as const;
 
 interface Props {
   prompt: string;
@@ -16,10 +21,27 @@ interface Props {
   home: RefObject<HTMLElement | null>;
 }
 
-export function HomeSlashMenu({ prompt, setPrompt, level, onLevel, model, onModel, keys, home }: Props) {
-  const slash = useSlashMenu({ draft: prompt, setDraft: setPrompt, groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)], label: 'Settings' });
+export function HomeSlashMenu({
+  prompt,
+  setPrompt,
+  level,
+  onLevel,
+  model,
+  onModel,
+  keys,
+  home,
+}: Props) {
+  const slash = useSlashMenu({
+    draft: prompt,
+    setDraft: setPrompt,
+    groups: [levelGroup(level, onLevel), modelGroup(model, null, onModel)],
+    label: "Settings",
+  });
   keys.current = slash.onKeyDown;
-  const input = () => home.current?.querySelector<HTMLElement>('[aria-label="Describe the design"]') ?? null;
+  const input = () =>
+    home.current?.querySelector<HTMLElement>(
+      '[aria-label="Describe the design"]'
+    ) ?? null;
   const attrs: Record<string, string | undefined> = slash.inputProps;
   useLayoutEffect(() => {
     const area = input();
@@ -31,5 +53,14 @@ export function HomeSlashMenu({ prompt, setPrompt, level, onLevel, model, onMode
     }
   });
   if (!slash.open) return null;
-  return <SlashMenu view={slash.view} anchor={() => home.current?.querySelector<HTMLElement>('.home-composer') ?? null} input={input} onClose={slash.close} />;
+  return (
+    <SlashMenu
+      view={slash.view}
+      anchor={() =>
+        home.current?.querySelector<HTMLElement>(".home-composer") ?? null
+      }
+      input={input}
+      onClose={slash.close}
+    />
+  );
 }

@@ -1,7 +1,12 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import net from 'node:net';
-import path from 'node:path';
-import { DEFAULT_PREVIEW_PORT, DEFAULT_STUDIO_PORT, DEFAULT_VITE_PORT_BASE } from '../src/shared/contracts.js';
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+
+import {
+  DEFAULT_PREVIEW_PORT,
+  DEFAULT_STUDIO_PORT,
+  DEFAULT_VITE_PORT_BASE,
+} from "../src/shared/contracts.js";
 
 export interface PortSet {
   studio: number;
@@ -10,7 +15,11 @@ export interface PortSet {
 }
 
 export const VITE_PORT_RANGE = 200;
-export const DEFAULT_PORTS: PortSet = { studio: DEFAULT_STUDIO_PORT, preview: DEFAULT_PREVIEW_PORT, viteBase: DEFAULT_VITE_PORT_BASE };
+export const DEFAULT_PORTS: PortSet = {
+  studio: DEFAULT_STUDIO_PORT,
+  preview: DEFAULT_PREVIEW_PORT,
+  viteBase: DEFAULT_VITE_PORT_BASE,
+};
 const FALLBACK_COUNT = 40;
 const FALLBACK_STUDIO_START = 4570;
 const FALLBACK_VITE_START = 8200;
@@ -19,8 +28,8 @@ export function portIsFree(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const probe = net.createServer();
     probe.unref();
-    probe.once('error', () => resolve(false));
-    probe.listen({ port, host: '127.0.0.1', exclusive: true }, () => {
+    probe.once("error", () => resolve(false));
+    probe.listen({ port, host: "127.0.0.1", exclusive: true }, () => {
       probe.close(() => resolve(true));
     });
   });
@@ -52,14 +61,16 @@ export function fallbackSets(): PortSet[] {
 }
 
 function isPortSet(value: unknown): value is PortSet {
-  if (typeof value !== 'object' || value === null) return false;
+  if (typeof value !== "object" || value === null) return false;
   const record = value as Record<string, unknown>;
-  return ['studio', 'preview', 'viteBase'].every((key) => Number.isInteger(record[key]));
+  return ["studio", "preview", "viteBase"].every((key) =>
+    Number.isInteger(record[key])
+  );
 }
 
 export function readSavedPorts(file: string): PortSet | null {
   try {
-    const parsed: unknown = JSON.parse(readFileSync(file, 'utf8'));
+    const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
     return isPortSet(parsed) ? parsed : null;
   } catch {
     return null;
@@ -72,9 +83,13 @@ export function savePorts(file: string, set: PortSet): void {
 }
 
 export async function pickPorts(saved: PortSet | null): Promise<PortSet> {
-  const candidates = [...(saved ? [saved] : []), DEFAULT_PORTS, ...fallbackSets()];
+  const candidates = [
+    ...(saved ? [saved] : []),
+    DEFAULT_PORTS,
+    ...fallbackSets(),
+  ];
   for (const candidate of candidates) {
     if (await setIsFree(candidate)) return candidate;
   }
-  throw new Error('No free studio port pair found');
+  throw new Error("No free studio port pair found");
 }

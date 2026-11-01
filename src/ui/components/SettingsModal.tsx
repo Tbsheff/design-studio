@@ -1,13 +1,14 @@
-import { lazy, Suspense, useRef, useState } from 'react';
-import type { Project } from '../../shared/contracts';
-import { api, errorText } from '../api';
-import { useModalDialog } from '../usePopover';
-import { CommandRules } from './CommandRules';
-import { Icon } from './Icon';
-import { parseDraft, SettingsFields, toDraft } from './SettingsFields';
-import { ShipTemplates } from './ShipTemplates';
+import { lazy, Suspense, useRef, useState } from "react";
 
-const PublishSetup = lazy(() => import('./PublishSetup'));
+import type { Project } from "../../shared/contracts";
+import { api, errorText } from "../api";
+import { useModalDialog } from "../usePopover";
+import { CommandRules } from "./CommandRules";
+import { Icon } from "./Icon";
+import { parseDraft, SettingsFields, toDraft } from "./SettingsFields";
+import { ShipTemplates } from "./ShipTemplates";
+
+const PublishSetup = lazy(() => import("./PublishSetup"));
 
 interface Props {
   project: Project;
@@ -25,7 +26,7 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
 
   const save = async () => {
     const parsed = parseDraft(draft);
-    if ('error' in parsed) {
+    if ("error" in parsed) {
       setError(parsed.error);
       return;
     }
@@ -43,19 +44,34 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
   };
 
   return (
-    <dialog ref={dialog.ref} className="modal settings-modal" aria-label="Project settings" onMouseDown={dialog.onMouseDown}>
+    <dialog
+      ref={dialog.ref}
+      className="modal settings-modal"
+      aria-label="Project settings"
+      onMouseDown={dialog.onMouseDown}
+    >
       <div className="modal-head">
         <div className="titles">
           <h2>Project settings</h2>
           <p>Applies to the next run.</p>
         </div>
-        <button className="icon-btn" aria-label="Close settings" onClick={onClose}>
+        <button
+          className="icon-btn"
+          aria-label="Close settings"
+          onClick={onClose}
+        >
           <Icon name="close" />
         </button>
       </div>
       <div className="modal-body">
-        <SettingsFields draft={draft} onChange={setDraft} shellExtra={<CommandRules projectId={project.id} />} />
-        {project.app && <ShipTemplates projectId={project.id} saveRef={saveShip} />}
+        <SettingsFields
+          draft={draft}
+          onChange={setDraft}
+          shellExtra={<CommandRules projectId={project.id} />}
+        />
+        {project.app && (
+          <ShipTemplates projectId={project.id} saveRef={saveShip} />
+        )}
         <Suspense fallback={null}>
           <PublishSetup />
         </Suspense>
@@ -69,8 +85,12 @@ export function SettingsModal({ project, onSaved, onClose }: Props) {
         <button className="btn ghost" onClick={onClose}>
           Cancel
         </button>
-        <button className="btn primary" onClick={() => void save()} disabled={saving}>
-          {saving ? 'Saving…' : 'Save'}
+        <button
+          className="btn primary"
+          onClick={() => void save()}
+          disabled={saving}
+        >
+          {saving ? "Saving…" : "Save"}
         </button>
       </div>
     </dialog>

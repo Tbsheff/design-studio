@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from "react";
 
 let inlineProject: string | null = null;
 const listeners = new Set<() => void>();
@@ -16,8 +16,12 @@ function subscribe(l: () => void): () => void {
   };
 }
 
-export function useInlineApprovals(projectId: string, paneCollapsed: boolean, tab: string): void {
-  const shown = !paneCollapsed && tab === 'chat';
+export function useInlineApprovals(
+  projectId: string,
+  paneCollapsed: boolean,
+  tab: string
+): void {
+  const shown = !paneCollapsed && tab === "chat";
   useEffect(() => {
     setInline(shown ? projectId : null);
     return () => setInline(null);

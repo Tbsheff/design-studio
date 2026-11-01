@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AppTokenSource, CompiledTokenEntry, DesignSystemState, Project, TokenFile } from '../shared/contracts';
-import type { TokenMode } from '../shared/token-match';
-import { api } from './api';
-import type { FilesChange } from './useStudioData';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type {
+  AppTokenSource,
+  CompiledTokenEntry,
+  DesignSystemState,
+  Project,
+  TokenFile,
+} from "../shared/contracts";
+import type { TokenMode } from "../shared/token-match";
+import { api } from "./api";
+import type { FilesChange } from "./useStudioData";
 
 export interface DesignTokens {
   entries: CompiledTokenEntry[];
@@ -12,9 +19,17 @@ export interface DesignTokens {
   replace: (state: DesignSystemState) => void;
 }
 
-function touchesDesignSystem(change: FilesChange | null, directionId: string | null, sourceFile: string | null): number {
+function touchesDesignSystem(
+  change: FilesChange | null,
+  directionId: string | null,
+  sourceFile: string | null
+): number {
   if (!change || change.directionId !== directionId) return 0;
-  return change.paths.some((file) => file.startsWith('design-system/') || file === sourceFile) ? change.receivedAt : 0;
+  return change.paths.some(
+    (file) => file.startsWith("design-system/") || file === sourceFile
+  )
+    ? change.receivedAt
+    : 0;
 }
 
 export interface DesignSystemView {
@@ -22,12 +37,23 @@ export interface DesignSystemView {
   state: DesignSystemState | null;
 }
 
-export function useDesignSystemState(projectId: string, project: Project | null, directionId: string | null, lastChange: FilesChange | null): DesignSystemView {
-  const [loaded, setLoaded] = useState<{ key: string; state: DesignSystemState } | null>(null);
+export function useDesignSystemState(
+  projectId: string,
+  project: Project | null,
+  directionId: string | null,
+  lastChange: FilesChange | null
+): DesignSystemView {
+  const [loaded, setLoaded] = useState<{
+    key: string;
+    state: DesignSystemState;
+  } | null>(null);
   const packId = project?.packId ?? null;
-  const headVersionId = project?.directions.find((x) => x.id === directionId)?.headVersionId ?? null;
+  const headVersionId =
+    project?.directions.find((x) => x.id === directionId)?.headVersionId ??
+    null;
   const key = `${projectId}:${directionId}`;
-  const sourceFile = loaded?.key === key ? (loaded.state.source?.file ?? null) : null;
+  const sourceFile =
+    loaded?.key === key ? (loaded.state.source?.file ?? null) : null;
   const stamp = touchesDesignSystem(lastChange, directionId, sourceFile);
   const live = useRef(key);
   live.current = key;
@@ -41,12 +67,21 @@ export function useDesignSystemState(projectId: string, project: Project | null,
       .catch(() => undefined);
   }, [projectId, directionId, packId, headVersionId, stamp]);
 
-  const replace = useCallback((state: DesignSystemState) => setLoaded({ key: live.current, state }), []);
+  const replace = useCallback(
+    (state: DesignSystemState) => setLoaded({ key: live.current, state }),
+    []
+  );
 
   return useMemo(() => {
     const state = loaded?.key === key ? loaded.state : null;
     if (!state || state.entries.length === 0) return { tokens: null, state };
-    const tokens: DesignTokens = { entries: state.entries, mode: state.manifest?.mode === 'dark' ? 'dark' : 'light', file: state.tokens, source: state.source ?? null, replace };
+    const tokens: DesignTokens = {
+      entries: state.entries,
+      mode: state.manifest?.mode === "dark" ? "dark" : "light",
+      file: state.tokens,
+      source: state.source ?? null,
+      replace,
+    };
     return { tokens, state };
   }, [loaded, key, replace]);
 }

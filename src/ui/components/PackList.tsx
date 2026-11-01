@@ -1,19 +1,28 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import type { PackSummary } from '../../shared/contracts';
-import { findPack, fontStack, keySwatches, loadPackFonts } from '../packs';
-import { Icon } from './Icon';
-import { Swatches } from './Swatches';
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
-const NONE = 'none';
-const SERIF = 'Georgia, serif';
-const SANS = 'system-ui, sans-serif';
+import type { PackSummary } from "../../shared/contracts";
+import { findPack, fontStack, keySwatches, loadPackFonts } from "../packs";
+import { Icon } from "./Icon";
+import { Swatches } from "./Swatches";
+
+const NONE = "none";
+const SERIF = "Georgia, serif";
+const SANS = "system-ui, sans-serif";
 
 function columnsOf(list: HTMLElement | null): number {
   if (!list) return 1;
-  return Math.max(1, getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length);
+  return Math.max(
+    1,
+    getComputedStyle(list).gridTemplateColumns.split(" ").filter(Boolean).length
+  );
 }
 
-function nextIndex(key: string, index: number, count: number, cols: number): number | null {
+function nextIndex(
+  key: string,
+  index: number,
+  count: number,
+  cols: number
+): number | null {
   const moves: Record<string, number> = {
     ArrowRight: index + 1,
     ArrowLeft: index - 1,
@@ -35,7 +44,9 @@ function NoneCard() {
       </span>
       <span className="pack-text">
         <span className="pack-name">No design system</span>
-        <span className="pack-desc">The agent picks colors and type for each project.</span>
+        <span className="pack-desc">
+          The agent picks colors and type for each project.
+        </span>
       </span>
     </>
   );
@@ -46,21 +57,30 @@ function swatchValue(pack: PackSummary, name: string): string | undefined {
 }
 
 function PackCard({ pack }: { pack: PackSummary }) {
-  const colors = { background: swatchValue(pack, 'bg'), color: swatchValue(pack, 'fg') };
+  const colors = {
+    background: swatchValue(pack, "bg"),
+    color: swatchValue(pack, "fg"),
+  };
   return (
     <>
       <span className="pack-specimen" style={colors} aria-hidden="true">
-        <span className="pack-aa" style={{ fontFamily: fontStack(pack.fonts.display, SERIF) }}>
+        <span
+          className="pack-aa"
+          style={{ fontFamily: fontStack(pack.fonts.display, SERIF) }}
+        >
           Aa
         </span>
-        <span className="pack-line" style={{ fontFamily: fontStack(pack.fonts.body, SANS) }}>
+        <span
+          className="pack-line"
+          style={{ fontFamily: fontStack(pack.fonts.body, SANS) }}
+        >
           Quick brown fox
         </span>
       </span>
       <span className="pack-text" data-tip={pack.description}>
         <span className="pack-name">
           <span className="truncate">{pack.name}</span>
-          {pack.source === 'user' && <span className="pack-yours">Yours</span>}
+          {pack.source === "user" && <span className="pack-yours">Yours</span>}
         </span>
         <span className="pack-desc">{pack.description}</span>
         <Swatches swatches={pack.swatches} max={7} />
@@ -77,13 +97,23 @@ interface ListProps {
   onTab?: () => void;
 }
 
-export function PackList({ packs, value, includeNone, onChoose, onTab }: ListProps) {
-  const options: (PackSummary | null)[] = includeNone ? [null, ...(packs ?? [])] : (packs ?? []);
+export function PackList({
+  packs,
+  value,
+  includeNone,
+  onChoose,
+  onTab,
+}: ListProps) {
+  const options: (PackSummary | null)[] = includeNone
+    ? [null, ...(packs ?? [])]
+    : (packs ?? []);
   const selected = findPack(packs, value);
   const [active, setActive] = useState(0);
   const list = useRef<HTMLDivElement>(null);
   const ready = packs !== null;
-  const selectedIndex = options.findIndex((pack) => (pack?.id ?? null) === (selected?.id ?? null));
+  const selectedIndex = options.findIndex(
+    (pack) => (pack?.id ?? null) === (selected?.id ?? null)
+  );
 
   useEffect(() => {
     if (ready) setActive(Math.max(0, selectedIndex));
@@ -95,36 +125,49 @@ export function PackList({ packs, value, includeNone, onChoose, onTab }: ListPro
 
   useEffect(() => {
     if (!ready) return;
-    list.current?.parentElement?.scrollIntoView({ block: 'nearest' });
-    list.current?.querySelector<HTMLElement>(`[data-index="${active}"]`)?.focus({ preventScroll: false });
+    list.current?.parentElement?.scrollIntoView({ block: "nearest" });
+    list.current
+      ?.querySelector<HTMLElement>(`[data-index="${active}"]`)
+      ?.focus({ preventScroll: false });
   }, [active, ready]);
 
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       if (options.length > 0) onChoose(options[active] ?? null);
       return;
     }
-    if (e.key === 'Tab') return onTab?.();
-    const next = nextIndex(e.key, active, options.length, columnsOf(list.current));
+    if (e.key === "Tab") return onTab?.();
+    const next = nextIndex(
+      e.key,
+      active,
+      options.length,
+      columnsOf(list.current)
+    );
     if (next === null) return;
     e.preventDefault();
     setActive(next);
   };
 
   return (
-    <div ref={list} className="pack-list" role="listbox" aria-label="Design systems" onKeyDown={onKey}>
+    <div
+      ref={list}
+      className="pack-list"
+      role="listbox"
+      aria-label="Design systems"
+      onKeyDown={onKey}
+    >
       {options.map((pack, index) => {
         const isSelected = (pack?.id ?? null) === (selected?.id ?? null);
         return (
           <div
             key={pack?.id ?? NONE}
             role="option"
-            aria-label={pack?.name ?? 'No design system'}
+            aria-label={pack?.name ?? "No design system"}
             aria-selected={isSelected}
             tabIndex={index === active ? 0 : -1}
             data-index={index}
-            className={`pack-card ${isSelected ? 'selected' : ''}`}
+            className={`pack-card ${isSelected ? "selected" : ""}`}
             onClick={() => onChoose(pack)}
             onMouseMove={() => index !== active && setActive(index)}
           >
@@ -137,8 +180,9 @@ export function PackList({ packs, value, includeNone, onChoose, onTab }: ListPro
           </div>
         );
       })}
-      {packs === null && <div className="pack-card skeleton" aria-hidden="true" />}
+      {packs === null && (
+        <div className="pack-card skeleton" aria-hidden="true" />
+      )}
     </div>
   );
 }
-

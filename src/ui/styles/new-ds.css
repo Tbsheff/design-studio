@@ -6,12 +6,12 @@
   margin-left: -10px;
 }
 
-.nds-form input:not([type='file'], [type='checkbox'], [type='radio']),
+.nds-form input:not([type="file"], [type="checkbox"], [type="radio"]),
 .nds-form select {
   height: 30px;
 }
 
-.nds-form[aria-busy='true'] :is(.nds-basics, .nds-section) {
+.nds-form[aria-busy="true"] :is(.nds-basics, .nds-section) {
   opacity: 0.6;
   pointer-events: none;
   transition: opacity var(--dur) var(--ease);
@@ -28,8 +28,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   grid-template-areas:
-    'head head'
-    'sources side';
+    "head head"
+    "sources side";
   align-items: start;
   column-gap: var(--s-6);
   row-gap: var(--s-6);
@@ -118,9 +118,9 @@
   .nds-form {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      'head'
-      'side'
-      'sources';
+      "head"
+      "side"
+      "sources";
   }
 
   .nds-side {
@@ -175,7 +175,7 @@
 }
 
 .nds-section textarea,
-.nds-section input:not([type='file']) {
+.nds-section input:not([type="file"]) {
   width: 100%;
 }
 
@@ -316,7 +316,6 @@
   color: var(--text-2);
 }
 
-
 .draft-fallbacks {
   flex: none;
   white-space: nowrap;
@@ -368,15 +367,21 @@
   background: var(--bg);
   border: 0;
   border-radius: var(--r-control-sm);
-  box-shadow: inset 0 0 0 1px var(--line), inset 0 1px 2px rgb(0 0 0 / 0.12);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    inset 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
 .draft-focus:hover {
-  box-shadow: inset 0 0 0 1px var(--line-strong), inset 0 1px 2px rgb(0 0 0 / 0.12);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    inset 0 1px 2px rgb(0 0 0 / 0.12);
 }
 
 .draft-focus:focus {
-  box-shadow: inset 0 0 0 1px var(--accent), var(--ring-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    var(--ring-soft);
 }
 
 .draft-check {
@@ -492,7 +497,6 @@
   max-width: 16em;
 }
 
-
 .nds-section-drop {
   position: relative;
   padding: var(--s-2);
@@ -515,7 +519,9 @@
   padding: var(--s-4);
   border: 1px dashed var(--line-strong);
   border-radius: var(--r-md);
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
 }
 
 .nds-dropzone.over {
@@ -619,7 +625,7 @@
   color: var(--text);
 }
 
-.nds-preset[aria-pressed='true'] {
+.nds-preset[aria-pressed="true"] {
   color: var(--text);
   background: var(--surface-active);
   box-shadow: inset 0 0 0 1px var(--accent-line);
@@ -795,16 +801,16 @@
   font-size: var(--t-xs);
 }
 
-.ds-src-state[data-state='read'] {
+.ds-src-state[data-state="read"] {
   color: var(--ok);
 }
 
-.ds-src-state[data-state='thin'] {
+.ds-src-state[data-state="thin"] {
   color: var(--warn);
 }
 
-.ds-src-state[data-state='blocked'],
-.ds-src-state[data-state='failed'] {
+.ds-src-state[data-state="blocked"],
+.ds-src-state[data-state="failed"] {
   color: var(--danger);
 }
 
@@ -820,7 +826,7 @@
   background: currentColor;
 }
 
-.ds-src-state[data-state='queued'] .ds-src-dot {
+.ds-src-state[data-state="queued"] .ds-src-dot {
   background: transparent;
   box-shadow: inset 0 0 0 1px currentColor;
 }
@@ -833,7 +839,7 @@
   text-wrap: pretty;
 }
 
-.ds-src-row:is([data-state='blocked'], [data-state='failed']) .ds-src-detail {
+.ds-src-row:is([data-state="blocked"], [data-state="failed"]) .ds-src-detail {
   color: var(--text);
 }
 

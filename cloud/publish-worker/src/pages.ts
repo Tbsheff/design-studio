@@ -1,4 +1,4 @@
-import type { RemoteComment } from './protocol';
+import type { RemoteComment } from "./protocol";
 
 export function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
@@ -19,16 +19,41 @@ function shell(title: string, body: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><link rel="icon" href="data:,"><title>${escapeHtml(title)}</title><style>${STYLE}</style></head><body><main>${body}</main></body></html>`;
 }
 
-function html(status: number, text: string, extra: Record<string, string> = {}): Response {
-  return new Response(text, { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', ...extra } });
+function html(
+  status: number,
+  text: string,
+  extra: Record<string, string> = {}
+): Response {
+  return new Response(text, {
+    status,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+      ...extra,
+    },
+  });
 }
 
-export function messagePage(status: number, heading: string, text: string): Response {
-  return html(status, shell(heading, `<h1>${escapeHtml(heading)}</h1><p>${escapeHtml(text)}</p>`));
+export function messagePage(
+  status: number,
+  heading: string,
+  text: string
+): Response {
+  return html(
+    status,
+    shell(heading, `<h1>${escapeHtml(heading)}</h1><p>${escapeHtml(text)}</p>`)
+  );
 }
 
-export function gatePage(title: string, action: string, error: string | null, status = 401): Response {
-  const err = error ? `<p class="err" role="alert">${escapeHtml(error)}</p>` : '';
+export function gatePage(
+  title: string,
+  action: string,
+  error: string | null,
+  status = 401
+): Response {
+  const err = error
+    ? `<p class="err" role="alert">${escapeHtml(error)}</p>`
+    : "";
   const body = `<h1>${escapeHtml(title)}</h1><p>This design needs a password. Ask the owner for it.</p>${err}<form method="post" action="${escapeHtml(action)}"><label>Password<input type="password" name="password" autocomplete="current-password" required autofocus maxlength="128"></label><button type="submit">Open design</button></form>`;
   return html(status, shell(title, body));
 }
@@ -43,8 +68,17 @@ export interface CommentsPageInput {
 }
 
 export function commentsPage(input: CommentsPageInput, status = 200): Response {
-  const list = input.comments.map((c) => `<li><span class="who">${escapeHtml(c.author)}</span><span class="when">${new Date(c.createdAt).toISOString().slice(0, 10)}</span><p>${escapeHtml(c.body)}</p></li>`).join('');
-  const note = input.error ? `<p class="err" role="alert">${escapeHtml(input.error)}</p>` : input.sent ? '<p role="status">Thanks. The owner can see your comment now.</p>' : '';
+  const list = input.comments
+    .map(
+      (c) =>
+        `<li><span class="who">${escapeHtml(c.author)}</span><span class="when">${new Date(c.createdAt).toISOString().slice(0, 10)}</span><p>${escapeHtml(c.body)}</p></li>`
+    )
+    .join("");
+  const note = input.error
+    ? `<p class="err" role="alert">${escapeHtml(input.error)}</p>`
+    : input.sent
+      ? '<p role="status">Thanks. The owner can see your comment now.</p>'
+      : "";
   const body = `<h1>Comments on ${escapeHtml(input.title)}</h1><p><a href="${escapeHtml(input.designHref)}">Back to the design</a></p>${note}<form method="post" action="${escapeHtml(input.action)}"><label>Your name<input name="author" required maxlength="60"></label><label>Comment<textarea name="body" required maxlength="2000"></textarea></label><button type="submit">Send comment</button></form><ol>${list}</ol>`;
   return html(status, shell(`Comments on ${input.title}`, body));
 }

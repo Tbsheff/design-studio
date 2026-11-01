@@ -1,18 +1,26 @@
-import type { DirectEditRequest, Version } from './contracts.js';
+import type { DirectEditRequest, Version } from "./contracts.js";
 
-export const REVIEW_KINDS = ['contrast', 'tap-target', 'alt-text', 'a11y', 'off-token', 'clipped', 'rule'] as const;
+export const REVIEW_KINDS = [
+  "contrast",
+  "tap-target",
+  "alt-text",
+  "a11y",
+  "off-token",
+  "clipped",
+  "rule",
+] as const;
 export type ReviewKind = (typeof REVIEW_KINDS)[number];
 
-export type ReviewSeverity = 'high' | 'medium' | 'low';
+export type ReviewSeverity = "high" | "medium" | "low";
 
 export const REVIEW_KIND_LABEL: Record<ReviewKind, string> = {
-  contrast: 'Color contrast',
-  'tap-target': 'Tap target size',
-  'alt-text': 'Missing alt text',
-  a11y: 'Accessibility',
-  'off-token': 'Off-token values',
-  clipped: 'Clipped or overflowing',
-  rule: 'Design rules',
+  contrast: "Color contrast",
+  "tap-target": "Tap target size",
+  "alt-text": "Missing alt text",
+  a11y: "Accessibility",
+  "off-token": "Off-token values",
+  clipped: "Clipped or overflowing",
+  rule: "Design rules",
 };
 
 export const REVIEW_FIX_MAX = 50;

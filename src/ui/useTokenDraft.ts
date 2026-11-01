@@ -1,13 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CompiledTokenEntry, TokenChange, Version } from '../shared/contracts';
-import { ApiError, api, errorText } from './api';
-import { broadcastTheme, broadcastTokenCss, holdTokenCssUntilReload, useCanvasTheme, type ThemeChoice } from './tokenFrames';
-import { errorPaths, overlayTokens, rawToken, setPending, toChanges, withField, type PendingMap, type PendingToken, type TokenField } from './tokenDraft';
-import type { DesignTokens } from './useDesignSystemState';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type {
+  CompiledTokenEntry,
+  TokenChange,
+  Version,
+} from "../shared/contracts";
+import { ApiError, api, errorText } from "./api";
+import {
+  errorPaths,
+  overlayTokens,
+  rawToken,
+  setPending,
+  toChanges,
+  withField,
+  type PendingMap,
+  type PendingToken,
+  type TokenField,
+} from "./tokenDraft";
+import {
+  broadcastTheme,
+  broadcastTokenCss,
+  holdTokenCssUntilReload,
+  useCanvasTheme,
+  type ThemeChoice,
+} from "./tokenFrames";
+import type { DesignTokens } from "./useDesignSystemState";
 
 const PREVIEW_THROTTLE_MS = 60;
 const MAX_PREVIEW_TRIES = 4;
-export const AGENT_BUSY_MESSAGE = 'Agent is running. Wait or cancel.';
+export const AGENT_BUSY_MESSAGE = "Agent is running. Wait or cancel.";
 
 interface Step {
   path: string;
@@ -24,16 +45,28 @@ interface Options {
 
 type PreviewOutcome = { css: string | null; errors: Record<string, string> };
 
-function substitute(changes: TokenChange[], bad: Record<string, string>, good: PendingMap): TokenChange[] {
+function substitute(
+  changes: TokenChange[],
+  bad: Record<string, string>,
+  good: PendingMap
+): TokenChange[] {
   return changes.flatMap((change) => {
     if (bad[change.path] === undefined) return [change];
     const last = good[change.path];
-    const same = last && last.value === change.value && last.darkValue === change.darkValue;
+    const same =
+      last &&
+      last.value === change.value &&
+      last.darkValue === change.darkValue;
     return last && !same ? [{ path: change.path, ...last }] : [];
   });
 }
 
-async function previewWithFallback(pid: string, did: string, changes: TokenChange[], good: PendingMap): Promise<PreviewOutcome> {
+async function previewWithFallback(
+  pid: string,
+  did: string,
+  changes: TokenChange[],
+  good: PendingMap
+): Promise<PreviewOutcome> {
   const errors: Record<string, string> = {};
   let rest = changes;
   for (let i = 0; i < MAX_PREVIEW_TRIES && rest.length > 0; i += 1) {
@@ -41,7 +74,11 @@ async function previewWithFallback(pid: string, did: string, changes: TokenChang
     try {
       const result = await api.previewTokens(pid, did, rest);
       if (result.errors.length === 0) {
-        for (const change of rest) good[change.path] = { value: change.value, darkValue: change.darkValue };
+        for (const change of rest)
+          good[change.path] = {
+            value: change.value,
+            darkValue: change.darkValue,
+          };
         return { css: result.css, errors };
       }
       messages = result.errors;
@@ -49,15 +86,18 @@ async function previewWithFallback(pid: string, did: string, changes: TokenChang
       messages = [errorText(err)];
     }
     const bad = errorPaths(messages, rest);
-    if (Object.keys(bad).length === 0) return { css: null, errors: { ...errors, '': messages.join('; ') } };
+    if (Object.keys(bad).length === 0)
+      return { css: null, errors: { ...errors, "": messages.join("; ") } };
     Object.assign(errors, bad);
     rest = substitute(rest, bad, good);
   }
-  return { css: rest.length === 0 ? '' : null, errors };
+  return { css: rest.length === 0 ? "" : null, errors };
 }
 
 function commitMessage(err: unknown): string {
-  return err instanceof ApiError && err.status === 409 ? AGENT_BUSY_MESSAGE : errorText(err);
+  return err instanceof ApiError && err.status === 409
+    ? AGENT_BUSY_MESSAGE
+    : errorText(err);
 }
 
 export function useTokenDraft(o: Options) {
@@ -90,10 +130,15 @@ export function useTokenDraft(o: Options) {
     const changes = toChanges(pendingRef.current);
     if (changes.length === 0 || !directionId) {
       setErrors({});
-      broadcastTokenCss('');
+      broadcastTokenCss("");
       return;
     }
-    const outcome = await previewWithFallback(projectId, directionId, changes, good.current);
+    const outcome = await previewWithFallback(
+      projectId,
+      directionId,
+      changes,
+      good.current
+    );
     if (my !== seq.current) return;
     setErrors(outcome.errors);
     if (outcome.css !== null) broadcastTokenCss(outcome.css);
@@ -101,7 +146,10 @@ export function useTokenDraft(o: Options) {
 
   const schedule = useCallback(() => {
     if (timer.current !== null) return;
-    const wait = Math.max(0, PREVIEW_THROTTLE_MS - (Date.now() - lastSent.current));
+    const wait = Math.max(
+      0,
+      PREVIEW_THROTTLE_MS - (Date.now() - lastSent.current)
+    );
     timer.current = window.setTimeout(() => void runPreview(), wait);
   }, [runPreview]);
 
@@ -117,7 +165,7 @@ export function useTokenDraft(o: Options) {
 
   const reset = useCallback(() => {
     clearDraft();
-    broadcastTokenCss('');
+    broadcastTokenCss("");
   }, [clearDraft]);
 
   const scope = `${o.projectId}:${o.directionId}`;
@@ -130,18 +178,29 @@ export function useTokenDraft(o: Options) {
       setCommitError(null);
       schedule();
     },
-    [schedule],
+    [schedule]
   );
 
   const edit = useCallback(
     (entry: CompiledTokenEntry, field: TokenField, value: string | null) => {
       const map = pendingRef.current;
       const last = history.current[history.current.length - 1];
-      if (!last || last.path !== entry.path || last.field !== field) history.current.push({ path: entry.path, field, before: map[entry.path] });
+      if (!last || last.path !== entry.path || last.field !== field)
+        history.current.push({
+          path: entry.path,
+          field,
+          before: map[entry.path],
+        });
       const base = rawToken(opts.current.tokens?.file ?? null, entry);
-      apply(setPending(map, entry.path, withField(map[entry.path], field, value, base)));
+      apply(
+        setPending(
+          map,
+          entry.path,
+          withField(map[entry.path], field, value, base)
+        )
+      );
     },
-    [apply],
+    [apply]
   );
 
   const revert = useCallback(
@@ -149,7 +208,7 @@ export function useTokenDraft(o: Options) {
       history.current = history.current.filter((step) => step.path !== path);
       apply(setPending(pendingRef.current, path, undefined));
     },
-    [apply],
+    [apply]
   );
 
   const undoLast = useCallback(() => {
@@ -175,7 +234,10 @@ export function useTokenDraft(o: Options) {
       opts.current.onCommitted(result.version);
     } catch (err) {
       setCommitError(commitMessage(err));
-      setErrors((prev) => ({ ...prev, ...errorPaths([errorText(err)], changes) }));
+      setErrors((prev) => ({
+        ...prev,
+        ...errorPaths([errorText(err)], changes),
+      }));
     } finally {
       setCommitting(false);
     }
@@ -184,15 +246,35 @@ export function useTokenDraft(o: Options) {
   const confirmLeave = useCallback(() => {
     const count = Object.keys(pendingRef.current).length;
     if (count === 0) return true;
-    const ok = window.confirm(`Discard ${count} token ${count === 1 ? 'change' : 'changes'}?`);
+    const ok = window.confirm(
+      `Discard ${count} token ${count === 1 ? "change" : "changes"}?`
+    );
     if (ok) reset();
     return ok;
   }, [reset]);
 
   const count = Object.keys(pending).length;
-  const effective = useMemo(() => overlayTokens(o.tokens, pending), [o.tokens, pending]);
+  const effective = useMemo(
+    () => overlayTokens(o.tokens, pending),
+    [o.tokens, pending]
+  );
 
-  return { pending, errors, count, theme, committing, commitError, effective, edit, revert, undoLast, setTheme, commit, discard: reset, confirmLeave };
+  return {
+    pending,
+    errors,
+    count,
+    theme,
+    committing,
+    commitError,
+    effective,
+    edit,
+    revert,
+    undoLast,
+    setTheme,
+    commit,
+    discard: reset,
+    confirmLeave,
+  };
 }
 
 export type TokenDraft = ReturnType<typeof useTokenDraft>;

@@ -82,7 +82,7 @@
 }
 
 @property --fgi-fade {
-  syntax: '<length>';
+  syntax: "<length>";
   inherits: false;
   initial-value: 0px;
 }
@@ -99,7 +99,11 @@
 }
 
 .fgi-code {
-  mask-image: linear-gradient(to right, #000 calc(100% - var(--fgi-fade)), transparent);
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--fgi-fade)),
+    transparent
+  );
   animation: fgi-fade-out linear both;
   animation-timeline: scroll(self inline);
   max-height: 180px;

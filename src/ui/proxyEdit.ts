@@ -1,6 +1,6 @@
-import type { DirectStyleProperty } from '../shared/contracts';
-import type { ShiftPart, StyleValues } from './cssValues';
-import type { DirectEdit } from './useDirectEdit';
+import type { DirectStyleProperty } from "../shared/contracts";
+import type { ShiftPart, StyleValues } from "./cssValues";
+import type { DirectEdit } from "./useDirectEdit";
 
 export interface ProxyOptions {
   part?: ShiftPart;
@@ -13,7 +13,7 @@ export function proxyEdit(
   value: string,
   write: (next: string) => Partial<StyleValues>,
   real: DirectStyleProperty[],
-  options: ProxyOptions = {},
+  options: ProxyOptions = {}
 ): DirectEdit {
   const realMixed = real.some((prop) => edit.mixed.has(prop));
   const part = realMixed ? options.part : undefined;

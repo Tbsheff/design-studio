@@ -1,4 +1,11 @@
-import { RENDER_BACKEND_ENV, RENDER_IPC_ENV, RENDER_SOCKET_ENV, type RenderBackendName, type RenderClip, type RenderErrors } from '../../shared/render-rpc.js';
+import {
+  RENDER_BACKEND_ENV,
+  RENDER_IPC_ENV,
+  RENDER_SOCKET_ENV,
+  type RenderBackendName,
+  type RenderClip,
+  type RenderErrors,
+} from "../../shared/render-rpc.js";
 
 export interface RenderPage {
   goto(url: string): Promise<void>;
@@ -8,13 +15,17 @@ export interface RenderPage {
   close(): Promise<void>;
   lastNav?(): { loadMs: number; idleMs: number } | null;
   reset?(): Promise<void>;
-  axe?(): Promise<import('./axe.js').AxeViolation[]>;
+  axe?(): Promise<import("./axe.js").AxeViolation[]>;
 }
 
 export interface RenderBackend {
   readonly name: RenderBackendName;
   readonly reusablePages?: boolean;
-  open(viewport: { width: number; height: number; scale?: number }): Promise<RenderPage>;
+  open(viewport: {
+    width: number;
+    height: number;
+    scale?: number;
+  }): Promise<RenderPage>;
   close(): Promise<void>;
   warm?(): Promise<void>;
 }
@@ -22,18 +33,27 @@ export interface RenderBackend {
 export const NAVIGATION_TIMEOUT_MS = 30_000;
 export const SETTLE_TIMEOUT_MS = 5_000;
 
-export function chooseBackend(env: NodeJS.ProcessEnv = process.env): RenderBackendName {
+export function chooseBackend(
+  env: NodeJS.ProcessEnv = process.env
+): RenderBackendName {
   const forced = env[RENDER_BACKEND_ENV];
-  if (forced === 'playwright' || forced === 'electron') return forced;
-  if (forced) throw new Error(`${RENDER_BACKEND_ENV} must be "playwright" or "electron", got "${forced}"`);
-  return env[RENDER_IPC_ENV] === '1' || env[RENDER_SOCKET_ENV] ? 'electron' : 'playwright';
+  if (forced === "playwright" || forced === "electron") return forced;
+  if (forced)
+    throw new Error(
+      `${RENDER_BACKEND_ENV} must be "playwright" or "electron", got "${forced}"`
+    );
+  return env[RENDER_IPC_ENV] === "1" || env[RENDER_SOCKET_ENV]
+    ? "electron"
+    : "playwright";
 }
 
-export async function createRenderBackend(env: NodeJS.ProcessEnv = process.env): Promise<RenderBackend> {
-  if (chooseBackend(env) === 'electron') {
-    const { createElectronBackend } = await import('./render-electron.js');
+export async function createRenderBackend(
+  env: NodeJS.ProcessEnv = process.env
+): Promise<RenderBackend> {
+  if (chooseBackend(env) === "electron") {
+    const { createElectronBackend } = await import("./render-electron.js");
     return createElectronBackend(env);
   }
-  const { createPlaywrightBackend } = await import('./render-playwright.js');
+  const { createPlaywrightBackend } = await import("./render-playwright.js");
   return createPlaywrightBackend();
 }

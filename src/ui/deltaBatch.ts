@@ -1,7 +1,10 @@
-import type { StudioEvent } from '../shared/contracts';
-import { applyRunEvent, type RunMap } from './runState';
+import type { StudioEvent } from "../shared/contracts";
+import { applyRunEvent, type RunMap } from "./runState";
 
-type DeltaEvent = Extract<StudioEvent, { type: 'run.text.delta' | 'run.thinking.delta' }>;
+type DeltaEvent = Extract<
+  StudioEvent,
+  { type: "run.text.delta" | "run.thinking.delta" }
+>;
 type RunsUpdate = (update: (runs: RunMap) => RunMap) => void;
 export type Schedule = (fn: () => void) => () => void;
 
@@ -11,13 +14,20 @@ export interface DeltaBatcher {
   dispose(): void;
 }
 
-export function mergeDeltas(pending: DeltaEvent[], event: DeltaEvent): DeltaEvent[] {
+export function mergeDeltas(
+  pending: DeltaEvent[],
+  event: DeltaEvent
+): DeltaEvent[] {
   const last = pending.at(-1);
-  if (!last || last.runId !== event.runId || last.type !== event.type) return [...pending, event];
+  if (!last || last.runId !== event.runId || last.type !== event.type)
+    return [...pending, event];
   return [...pending.slice(0, -1), { ...event, text: last.text + event.text }];
 }
 
-export function createDeltaBatcher(update: RunsUpdate, schedule: Schedule): DeltaBatcher {
+export function createDeltaBatcher(
+  update: RunsUpdate,
+  schedule: Schedule
+): DeltaBatcher {
   let pending: DeltaEvent[] = [];
   let cancel: (() => void) | null = null;
 
@@ -36,13 +46,16 @@ export function createDeltaBatcher(update: RunsUpdate, schedule: Schedule): Delt
 
   return {
     push(event) {
-      if (event.type === 'run.text.delta' || event.type === 'run.thinking.delta') {
+      if (
+        event.type === "run.text.delta" ||
+        event.type === "run.thinking.delta"
+      ) {
         pending = mergeDeltas(pending, event);
         cancel ??= schedule(flush);
         return;
       }
       const batch = take();
-      if (batch.length === 0 && !event.type.startsWith('run.')) return;
+      if (batch.length === 0 && !event.type.startsWith("run.")) return;
       update((runs) => applyRunEvent(batch.reduce(applyRunEvent, runs), event));
     },
     flush,

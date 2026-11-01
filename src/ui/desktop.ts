@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import type { DesktopCommand, DesktopContext } from '../shared/desktop-link';
+import { useEffect, useRef } from "react";
+
+import type { DesktopCommand, DesktopContext } from "../shared/desktop-link";
 
 interface DesktopBridge {
   platform: string;
@@ -27,16 +28,17 @@ function isDesktop(): boolean {
 function shortcutName(event: KeyboardEvent): string | null {
   if (!(event.metaKey || event.ctrlKey)) return null;
   const key = event.key.toLowerCase();
-  if (key === 'z') return event.shiftKey ? 'redo' : 'undo';
-  if (key === 'enter') return 'run';
-  if (key === '.') return 'stop';
+  if (key === "z") return event.shiftKey ? "redo" : "undo";
+  if (key === "enter") return "run";
+  if (key === ".") return "stop";
   return null;
 }
 
 function dispatchDesktopCommand(command: DesktopCommand): void {
   recentCommands.set(command.type, Date.now());
   const pressed = recentKeys.get(command.type);
-  if (pressed && pressed.handled() && Date.now() - pressed.at < KEY_ECHO_MS) return;
+  if (pressed && pressed.handled() && Date.now() - pressed.at < KEY_ECHO_MS)
+    return;
   for (const handler of [...handlers].reverse()) if (handler(command)) return;
 }
 
@@ -44,17 +46,21 @@ function install(): void {
   if (installed) return;
   installed = true;
   window.addEventListener(
-    'keydown',
+    "keydown",
     (event) => {
       const name = shortcutName(event);
-      if (name) recentKeys.set(name, { at: Date.now(), handled: () => event.defaultPrevented });
+      if (name)
+        recentKeys.set(name, {
+          at: Date.now(),
+          handled: () => event.defaultPrevented,
+        });
     },
-    true,
+    true
   );
   bridge()?.onCommand?.(dispatchDesktopCommand);
 }
 
-export function noteHandledShortcut(name: 'undo' | 'redo'): void {
+export function noteHandledShortcut(name: "undo" | "redo"): void {
   recentKeys.set(name, { at: Date.now(), handled: () => true });
 }
 
@@ -78,7 +84,10 @@ export function useDesktopCommand(handler: Handler): void {
   }, []);
 }
 
-export function useDesktopContext(context: DesktopContext, enabled = true): void {
+export function useDesktopContext(
+  context: DesktopContext,
+  enabled = true
+): void {
   const { projectId, directionId, running } = context;
   useEffect(() => {
     if (enabled) bridge()?.setContext?.({ projectId, directionId, running });

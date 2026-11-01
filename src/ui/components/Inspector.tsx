@@ -1,30 +1,49 @@
-import { Suspense, lazy, memo, useEffect, useRef, useState, type ComponentProps, type KeyboardEvent, type MutableRefObject, type ReactNode } from 'react';
-import { sharedSourceOf } from '../../shared/app';
-import type { EditSessionEnd, SelectionContext } from '../../shared/contracts';
-import type { PreviewPort } from '../bridge';
-import type { DesignTokens } from '../useDesignSystemState';
-import type { DirectEditCommit, DirectEditControl } from '../useDirectEdit';
-import { unsavedLabel, useEditSession, type EditSession, type EditSessionHandle, type SessionAction } from '../useEditSession';
-import { ComponentsPanel } from './ComponentsPanel';
-import { Icon } from './Icon';
-import { useElementClasses } from './InspectorClasses';
-import { InspectorCode } from './InspectorCode';
-import { InspectorAppContext } from './InspectorShared';
-import { SimpleEditor, SimpleMultiEditor } from './InspectorSimple';
-import { InspectorArrange } from './InspectorArrange';
-import { InspectorTools } from './InspectorTools';
-import { InspectorTweaks, type InspectorTweaksProps } from './InspectorTweaks';
-import { resetEditVariant, useEditVariant } from '../editVariant';
-import { imageKindOf } from '../../shared/image';
-import { isSvgShapeTag } from '../../shared/vector';
-import { useModalDialog } from '../usePopover';
-import '../styles/inspector-edit.css';
+import {
+  Suspense,
+  lazy,
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+  type KeyboardEvent,
+  type MutableRefObject,
+  type ReactNode,
+} from "react";
 
-const InspectorProps = lazy(() => import('./InspectorProps'));
-const InspectorImage = lazy(() => import('./InspectorImage'));
-const InspectorVector = lazy(() => import('./InspectorVector'));
+import { sharedSourceOf } from "../../shared/app";
+import type { EditSessionEnd, SelectionContext } from "../../shared/contracts";
+import { imageKindOf } from "../../shared/image";
+import { isSvgShapeTag } from "../../shared/vector";
+import type { PreviewPort } from "../bridge";
+import { resetEditVariant, useEditVariant } from "../editVariant";
+import type { DesignTokens } from "../useDesignSystemState";
+import type { DirectEditCommit, DirectEditControl } from "../useDirectEdit";
+import {
+  unsavedLabel,
+  useEditSession,
+  type EditSession,
+  type EditSessionHandle,
+  type SessionAction,
+} from "../useEditSession";
+import { useModalDialog } from "../usePopover";
+import { ComponentsPanel } from "./ComponentsPanel";
+import { Icon } from "./Icon";
+import { InspectorArrange } from "./InspectorArrange";
+import { useElementClasses } from "./InspectorClasses";
+import { InspectorCode } from "./InspectorCode";
+import { InspectorAppContext } from "./InspectorShared";
+import { SimpleEditor, SimpleMultiEditor } from "./InspectorSimple";
+import { InspectorTools } from "./InspectorTools";
+import { InspectorTweaks, type InspectorTweaksProps } from "./InspectorTweaks";
 
-export type InspectorTab = 'simple' | 'pro' | 'components' | 'code' | 'tweaks';
+import "../styles/inspector-edit.css";
+
+const InspectorProps = lazy(() => import("./InspectorProps"));
+const InspectorImage = lazy(() => import("./InspectorImage"));
+const InspectorVector = lazy(() => import("./InspectorVector"));
+
+export type InspectorTab = "simple" | "pro" | "components" | "code" | "tweaks";
 
 interface InspectorProps {
   projectId: string;
@@ -54,27 +73,41 @@ interface InspectorProps {
 }
 
 const TABS: { id: InspectorTab; label: string }[] = [
-  { id: 'simple', label: 'Simple' },
-  { id: 'pro', label: 'Layers' },
-  { id: 'components', label: 'Components' },
-  { id: 'code', label: 'Code' },
-  { id: 'tweaks', label: 'Tweaks' },
+  { id: "simple", label: "Simple" },
+  { id: "pro", label: "Layers" },
+  { id: "components", label: "Components" },
+  { id: "code", label: "Code" },
+  { id: "tweaks", label: "Tweaks" },
 ];
 
-const EMPTY_HINT = 'Click any element on the canvas to edit it. Shift-click to select more.';
+const EMPTY_HINT =
+  "Click any element on the canvas to edit it. Shift-click to select more.";
 
-export function isDirectEditable(source: { kind: string }, compareOpen: boolean): boolean {
-  return source.kind === 'live' && !compareOpen;
+export function isDirectEditable(
+  source: { kind: string },
+  compareOpen: boolean
+): boolean {
+  return source.kind === "live" && !compareOpen;
 }
 
-export function inspectorEmptyReason(selection: SelectionContext[], editable: boolean): string | null {
+export function inspectorEmptyReason(
+  selection: SelectionContext[],
+  editable: boolean
+): string | null {
   if (selection.length === 0) return EMPTY_HINT;
-  if (selection.length === 1 && !selection[0]?.source) return 'This element has no source location. Ask the agent to change it in Chat.';
-  if (!editable) return 'Switch the canvas to Live to edit styles directly.';
+  if (selection.length === 1 && !selection[0]?.source)
+    return "This element has no source location. Ask the agent to change it in Chat.";
+  if (!editable) return "Switch the canvas to Live to edit styles directly.";
   return null;
 }
 
-function EmptyState({ reason, notice }: { reason: string; notice: string | null }) {
+function EmptyState({
+  reason,
+  notice,
+}: {
+  reason: string;
+  notice: string | null;
+}) {
   return (
     <div className="ins-empty">
       {notice ? (
@@ -89,7 +122,9 @@ function EmptyState({ reason, notice }: { reason: string; notice: string | null 
             <Icon name="pointer" size={16} />
           </span>
           <p className="ins-empty-title">Select an element</p>
-          <p className="ins-empty-text">Click it on the canvas or in Layers. Shift-click to add more.</p>
+          <p className="ins-empty-text">
+            Click it on the canvas or in Layers. Shift-click to add more.
+          </p>
         </div>
       ) : (
         <p className="ins-hint">{reason}</p>
@@ -98,16 +133,27 @@ function EmptyState({ reason, notice }: { reason: string; notice: string | null 
   );
 }
 
-function SessionHeader({ session, onDone }: { session: EditSession; onDone: (action: SessionAction) => void }) {
+function SessionHeader({
+  session,
+  onDone,
+}: {
+  session: EditSession;
+  onDone: (action: SessionAction) => void;
+}) {
   const blockedDiscard = session.blocked !== null;
   const run = async (action: SessionAction) => {
-    if (await (action === 'save' ? session.save() : session.discard())) onDone(action);
+    if (await (action === "save" ? session.save() : session.discard()))
+      onDone(action);
   };
   return (
     <div className="edit-head">
       <h2 className="edit-title">Edit</h2>
       {session.dirty && session.net > 0 && (
-        <span className="edit-count" role="status" data-tip={unsavedLabel(session.net)}>
+        <span
+          className="edit-count"
+          role="status"
+          data-tip={unsavedLabel(session.net)}
+        >
           {session.net}
           <span className="sr-only"> unsaved edits</span>
         </span>
@@ -116,15 +162,28 @@ function SessionHeader({ session, onDone }: { session: EditSession; onDone: (act
       <button
         type="button"
         className="btn ghost small"
-        disabled={session.busy !== null || session.count === 0 || blockedDiscard}
-        data-tip={blockedDiscard ? (session.blocked ?? undefined) : 'Undo every edit since you entered Edit mode'}
+        disabled={
+          session.busy !== null || session.count === 0 || blockedDiscard
+        }
+        data-tip={
+          blockedDiscard
+            ? (session.blocked ?? undefined)
+            : "Undo every edit since you entered Edit mode"
+        }
         data-tip-align="end"
-        onClick={() => void run('discard')}
+        onClick={() => void run("discard")}
       >
-        {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
+        {session.busy === "discard" ? "Discarding…" : "Discard"}
       </button>
-      <button type="button" className="btn small primary" disabled={session.busy !== null} data-tip="Keep the edits as one version" data-tip-align="end" onClick={() => void run('save')}>
-        {session.busy === 'save' ? 'Saving…' : 'Save version'}
+      <button
+        type="button"
+        className="btn small primary"
+        disabled={session.busy !== null}
+        data-tip="Keep the edits as one version"
+        data-tip-align="end"
+        onClick={() => void run("save")}
+      >
+        {session.busy === "save" ? "Saving…" : "Save version"}
       </button>
     </div>
   );
@@ -135,24 +194,49 @@ function LeavePrompt({ session }: { session: EditSession }) {
 }
 
 function LeaveDialog({ session }: { session: EditSession }) {
-  const dialog = useModalDialog(() => void session.answer('cancel'));
+  const dialog = useModalDialog(() => void session.answer("cancel"));
   return (
-    <dialog ref={dialog.ref} className="modal edit-leave-dialog" style={{ width: 'min(400px, 100%)' }} aria-labelledby="edit-leave-title" aria-describedby="edit-leave-text" onMouseDown={dialog.onMouseDown}>
+    <dialog
+      ref={dialog.ref}
+      className="modal edit-leave-dialog"
+      style={{ width: "min(400px, 100%)" }}
+      aria-labelledby="edit-leave-title"
+      aria-describedby="edit-leave-text"
+      onMouseDown={dialog.onMouseDown}
+    >
       <div className="modal-head">
         <div className="titles">
           <h2 id="edit-leave-title">Save your edits?</h2>
-          <p id="edit-leave-text">You have {unsavedLabel(session.net).toLowerCase()}. Save version keeps them as one version. Discard removes them.</p>
+          <p id="edit-leave-text">
+            You have {unsavedLabel(session.net).toLowerCase()}. Save version
+            keeps them as one version. Discard removes them.
+          </p>
           {session.error && <p className="edit-leave-error">{session.error}</p>}
         </div>
       </div>
       <div className="modal-foot">
-        <button type="button" className="btn ghost small" onClick={() => void session.answer('cancel')}>
+        <button
+          type="button"
+          className="btn ghost small"
+          onClick={() => void session.answer("cancel")}
+        >
           Cancel
         </button>
-        <button type="button" className="btn small" disabled={session.busy !== null || session.blocked !== null} onClick={() => void session.answer('discard')}>
+        <button
+          type="button"
+          className="btn small"
+          disabled={session.busy !== null || session.blocked !== null}
+          onClick={() => void session.answer("discard")}
+        >
           Discard
         </button>
-        <button type="button" className="btn small primary" data-autofocus disabled={session.busy !== null} onClick={() => void session.answer('save')}>
+        <button
+          type="button"
+          className="btn small primary"
+          data-autofocus
+          disabled={session.busy !== null}
+          onClick={() => void session.answer("save")}
+        >
           Save version
         </button>
       </div>
@@ -163,32 +247,63 @@ function LeaveDialog({ session }: { session: EditSession }) {
 function TweaksNote({ session }: { session: EditSession }) {
   return (
     <div className="edit-tweaks-note">
-      <p className="ins-note">Save or discard your edits before you ask for a tweaks panel.</p>
+      <p className="ins-note">
+        Save or discard your edits before you ask for a tweaks panel.
+      </p>
       <div className="edit-leave-actions">
-        <button type="button" className="btn ghost small" disabled={session.busy !== null || session.blocked !== null} data-tip={session.blocked ?? undefined} onClick={() => void session.discard()}>
-          {session.busy === 'discard' ? 'Discarding…' : 'Discard'}
+        <button
+          type="button"
+          className="btn ghost small"
+          disabled={session.busy !== null || session.blocked !== null}
+          data-tip={session.blocked ?? undefined}
+          onClick={() => void session.discard()}
+        >
+          {session.busy === "discard" ? "Discarding…" : "Discard"}
         </button>
-        <button type="button" className="btn small primary" disabled={session.busy !== null} onClick={() => void session.save()}>
-          {session.busy === 'save' ? 'Saving…' : 'Save version'}
+        <button
+          type="button"
+          className="btn small primary"
+          disabled={session.busy !== null}
+          onClick={() => void session.save()}
+        >
+          {session.busy === "save" ? "Saving…" : "Save version"}
         </button>
       </div>
     </div>
   );
 }
 
-function Tabs({ tab, onTab }: { tab: InspectorTab; onTab: (tab: InspectorTab) => void }) {
-  const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>({});
+function Tabs({
+  tab,
+  onTab,
+}: {
+  tab: InspectorTab;
+  onTab: (tab: InspectorTab) => void;
+}) {
+  const refs = useRef<Partial<Record<InspectorTab, HTMLButtonElement | null>>>(
+    {}
+  );
   const onKeyDown = (event: KeyboardEvent) => {
     const at = TABS.findIndex((t) => t.id === tab);
-    const target = { ArrowRight: at + 1, ArrowLeft: at - 1, Home: 0, End: TABS.length - 1 }[event.key];
+    const target = {
+      ArrowRight: at + 1,
+      ArrowLeft: at - 1,
+      Home: 0,
+      End: TABS.length - 1,
+    }[event.key];
     if (target === undefined) return;
     event.preventDefault();
-    const next = TABS[(target + TABS.length) % TABS.length]?.id ?? 'simple';
+    const next = TABS[(target + TABS.length) % TABS.length]?.id ?? "simple";
     onTab(next);
     refs.current[next]?.focus();
   };
   return (
-    <div className="edit-tabs" role="tablist" aria-label="Edit mode" onKeyDown={onKeyDown}>
+    <div
+      className="edit-tabs"
+      role="tablist"
+      aria-label="Edit mode"
+      onKeyDown={onKeyDown}
+    >
       {TABS.map((t) => (
         <button
           key={t.id}
@@ -201,7 +316,7 @@ function Tabs({ tab, onTab }: { tab: InspectorTab; onTab: (tab: InspectorTab) =>
           aria-selected={tab === t.id}
           aria-controls={`edit-pane-${t.id}`}
           tabIndex={tab === t.id ? 0 : -1}
-          className={`edit-tab ${tab === t.id ? 'on' : ''}`}
+          className={`edit-tab ${tab === t.id ? "on" : ""}`}
           onClick={() => onTab(t.id)}
         >
           {t.label}
@@ -213,20 +328,45 @@ function Tabs({ tab, onTab }: { tab: InspectorTab; onTab: (tab: InspectorTab) =>
 
 function ComponentSection(props: InspectorProps) {
   const target = props.selection[0];
-  if (props.selection.length !== 1 || !target || !props.directionId || (!target.owners?.length && !target.usedAt)) return null;
+  if (
+    props.selection.length !== 1 ||
+    !target ||
+    !props.directionId ||
+    (!target.owners?.length && !target.usedAt)
+  )
+    return null;
   return (
     <Suspense fallback={null}>
-      <InspectorProps key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} />
+      <InspectorProps
+        key={target.selector}
+        projectId={props.projectId}
+        directionId={props.directionId}
+        selection={target}
+        editable={props.editable}
+      />
     </Suspense>
   );
 }
 
 function ImageSection(props: InspectorProps) {
   const target = props.selection[0];
-  if (props.selection.length !== 1 || !target || !props.directionId || !imageKindOf(target)) return null;
+  if (
+    props.selection.length !== 1 ||
+    !target ||
+    !props.directionId ||
+    !imageKindOf(target)
+  )
+    return null;
   return (
     <Suspense fallback={null}>
-      <InspectorImage key={target.selector} projectId={props.projectId} directionId={props.directionId} selection={target} editable={props.editable} port={props.port} />
+      <InspectorImage
+        key={target.selector}
+        projectId={props.projectId}
+        directionId={props.directionId}
+        selection={target}
+        editable={props.editable}
+        port={props.port}
+      />
     </Suspense>
   );
 }
@@ -234,13 +374,31 @@ function ImageSection(props: InspectorProps) {
 function useUseSite(props: InspectorProps) {
   const [componentFor, setComponentFor] = useState<string | null>(null);
   const target = props.selection.length === 1 ? props.selection[0] : undefined;
-  const shared = target && props.appDir ? sharedSourceOf(target, props.appDir) : null;
-  const use = shared?.use && shared.name ? { source: shared.use, component: shared.name } : null;
-  const component = useElementClasses(props.projectId, props.directionId, use ? (target?.source ?? null) : null, 0);
-  const editingUse = Boolean(use) && component.element?.forwardsClassName !== false && componentFor !== target?.selector;
-  const effective = target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
-  const toggle = () => setComponentFor(editingUse ? (target?.selector ?? null) : null);
-  return { editingUse, effective, sharedEditing: shared ? { shared, editingUse, onToggle: toggle } : null };
+  const shared =
+    target && props.appDir ? sharedSourceOf(target, props.appDir) : null;
+  const use =
+    shared?.use && shared.name
+      ? { source: shared.use, component: shared.name }
+      : null;
+  const component = useElementClasses(
+    props.projectId,
+    props.directionId,
+    use ? (target?.source ?? null) : null,
+    0
+  );
+  const editingUse =
+    Boolean(use) &&
+    component.element?.forwardsClassName !== false &&
+    componentFor !== target?.selector;
+  const effective =
+    target && use && editingUse ? { ...target, ...use, usedAt: null } : target;
+  const toggle = () =>
+    setComponentFor(editingUse ? (target?.selector ?? null) : null);
+  return {
+    editingUse,
+    effective,
+    sharedEditing: shared ? { shared, editingUse, onToggle: toggle } : null,
+  };
 }
 
 function SimpleTab(props: InspectorProps) {
@@ -248,20 +406,42 @@ function SimpleTab(props: InspectorProps) {
   const site = useUseSite(props);
   const reason = inspectorEmptyReason(props.selection, props.editable);
   const target = props.selection[0];
-  if (reason && target && props.editable && props.selection.length === 1 && imageKindOf(target)) {
+  if (
+    reason &&
+    target &&
+    props.editable &&
+    props.selection.length === 1 &&
+    imageKindOf(target)
+  ) {
     return (
       <div className="inspector ins-simple">
         <div className="ins-scroll">
           <ImageSection {...props} />
-          <EmptyState reason="The other styles of this image come from a component outside the project. Ask the agent to change them in Chat." notice={props.notice} />
+          <EmptyState
+            reason="The other styles of this image come from a component outside the project. Ask the agent to change them in Chat."
+            notice={props.notice}
+          />
         </div>
       </div>
     );
   }
-  if (reason || !target) return <EmptyState reason={reason ?? ''} notice={props.notice} />;
-  if (props.selection.length > 1) return <SimpleMultiEditor key={props.selection.map((s) => s.selector).join('\n')} {...props} component={<VectorSection {...props} />} />;
+  if (reason || !target)
+    return <EmptyState reason={reason ?? ""} notice={props.notice} />;
+  if (props.selection.length > 1)
+    return (
+      <SimpleMultiEditor
+        key={props.selection.map((s) => s.selector).join("\n")}
+        {...props}
+        component={<VectorSection {...props} />}
+      />
+    );
   return (
-    <SimpleEditor key={`${target.selector}|${variant}${site.editingUse ? '|use' : ''}`} {...props} target={site.effective ?? target} sharedEditing={site.sharedEditing} component={
+    <SimpleEditor
+      key={`${target.selector}|${variant}${site.editingUse ? "|use" : ""}`}
+      {...props}
+      target={site.effective ?? target}
+      sharedEditing={site.sharedEditing}
+      component={
         <>
           <VectorSection {...props} />
           <ImageSection {...props} />
@@ -273,14 +453,23 @@ function SimpleTab(props: InspectorProps) {
 }
 
 function vectorShown(selection: SelectionContext[]): boolean {
-  return selection.length > 0 && selection.length <= 2 && selection.every((item) => isSvgShapeTag(item.tag));
+  return (
+    selection.length > 0 &&
+    selection.length <= 2 &&
+    selection.every((item) => isSvgShapeTag(item.tag))
+  );
 }
 
 function VectorSection(props: InspectorProps) {
   if (!vectorShown(props.selection)) return null;
   return (
     <Suspense fallback={null}>
-      <InspectorVector projectId={props.projectId} directionId={props.directionId} selection={props.selection} editable={props.editable} />
+      <InspectorVector
+        projectId={props.projectId}
+        directionId={props.directionId}
+        selection={props.selection}
+        editable={props.editable}
+      />
     </Suspense>
   );
 }
@@ -288,14 +477,30 @@ function VectorSection(props: InspectorProps) {
 function ProTab(props: InspectorProps) {
   return (
     <div className="edit-pro">
-      <div className="edit-pro-layers">{props.layers ?? <p className="ins-hint">Layers show for the live preview. Press ⌥1 to open them on the canvas.</p>}</div>
+      <div className="edit-pro-layers">
+        {props.layers ?? (
+          <p className="ins-hint">
+            Layers show for the live preview. Press ⌥1 to open them on the
+            canvas.
+          </p>
+        )}
+      </div>
       {props.selection.length === 0 && <p className="ins-hint">{EMPTY_HINT}</p>}
     </div>
   );
 }
 
-function ComponentsTab({ components }: { components: InspectorProps['components'] }) {
-  if (!components) return <p className="ins-hint edit-tab-empty">Components show for projects with a component list.</p>;
+function ComponentsTab({
+  components,
+}: {
+  components: InspectorProps["components"];
+}) {
+  if (!components)
+    return (
+      <p className="ins-hint edit-tab-empty">
+        Components show for projects with a component list.
+      </p>
+    );
   return (
     <div className="edit-components">
       <ComponentsPanel {...components} active />
@@ -303,14 +508,24 @@ function ComponentsTab({ components }: { components: InspectorProps['components'
   );
 }
 
-const UNSHARED_PROPS = new Set(['layers', 'tweaks', 'components', 'tab', 'onTab', 'session', 'onExit', 'onSessionEnd']);
+const UNSHARED_PROPS = new Set([
+  "layers",
+  "tweaks",
+  "components",
+  "tab",
+  "onTab",
+  "session",
+  "onExit",
+  "onSessionEnd",
+]);
 
 function sameButRect(a: SelectionContext, b: SelectionContext): boolean {
   if (a === b) return true;
   const left = a as unknown as Record<string, unknown>;
   const right = b as unknown as Record<string, unknown>;
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
-  for (const key of keys) if (key !== 'rect' && left[key] !== right[key]) return false;
+  for (const key of keys)
+    if (key !== "rect" && left[key] !== right[key]) return false;
   return true;
 }
 
@@ -326,7 +541,14 @@ function sameShared(a: object, b: object): boolean {
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
   for (const key of keys) {
     if (UNSHARED_PROPS.has(key) || left[key] === right[key]) continue;
-    if (key === 'selection' && sameSelection(left[key] as SelectionContext[], right[key] as SelectionContext[])) continue;
+    if (
+      key === "selection" &&
+      sameSelection(
+        left[key] as SelectionContext[],
+        right[key] as SelectionContext[]
+      )
+    )
+      continue;
     return false;
   }
   return true;
@@ -340,13 +562,14 @@ function useStableCallbacks<P extends object>(props: P): P {
   const wrappers = useRef(new Map<string, AnyFn>());
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(props)) {
-    if (typeof value !== 'function') {
+    if (typeof value !== "function") {
       out[key] = value;
       continue;
     }
     let wrapper = wrappers.current.get(key);
     if (!wrapper) {
-      wrapper = (...args: never[]) => (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
+      wrapper = (...args: never[]) =>
+        (latest.current as Record<string, AnyFn | undefined>)[key]?.(...args);
       wrappers.current.set(key, wrapper);
     }
     out[key] = wrapper;
@@ -358,22 +581,32 @@ const SimpleTabMemo = memo(SimpleTab, sameShared);
 const ToolsMemo = memo(InspectorTools, sameShared);
 const ArrangeMemo = memo(InspectorArrange, sameShared);
 
-function useSessionHandle(ref: MutableRefObject<EditSessionHandle | null> | undefined, session: EditSession) {
+function useSessionHandle(
+  ref: MutableRefObject<EditSessionHandle | null> | undefined,
+  session: EditSession
+) {
   useEffect(() => {
     if (!ref) return;
-    ref.current = { dirty: session.dirty, count: session.count, net: session.net, requestExit: session.requestExit, save: session.save, discard: session.discard };
+    ref.current = {
+      dirty: session.dirty,
+      count: session.count,
+      net: session.net,
+      requestExit: session.requestExit,
+      save: session.save,
+      discard: session.discard,
+    };
   });
   useEffect(
     () => () => {
       if (ref) ref.current = null;
     },
-    [ref],
+    [ref]
   );
 }
 
 export function Inspector(raw: InspectorProps) {
   const props = useStableCallbacks(raw);
-  const [ownTab, setOwnTab] = useState<InspectorTab>('simple');
+  const [ownTab, setOwnTab] = useState<InspectorTab>("simple");
   const tab = props.tab ?? ownTab;
   const onTab = props.onTab ?? setOwnTab;
   const session = useEditSession({
@@ -383,38 +616,68 @@ export function Inspector(raw: InspectorProps) {
     port: props.port,
     onEnded: (action, result) => {
       if (props.onSessionEnd) props.onSessionEnd(action, result);
-      else if (action === 'discard' && props.selection.length > 0) props.onStale('');
+      else if (action === "discard" && props.selection.length > 0)
+        props.onStale("");
     },
   });
   useSessionHandle(props.session, session);
   const port = props.port;
   useEffect(() => () => resetEditVariant(port.current), [port]);
   return (
-    <InspectorAppContext.Provider value={{ appDir: props.appDir ?? null, ask: props.onAskAgent ?? null, element: null }}>
+    <InspectorAppContext.Provider
+      value={{
+        appDir: props.appDir ?? null,
+        ask: props.onAskAgent ?? null,
+        element: null,
+      }}
+    >
       <div className="edit-pane" aria-label="Edit">
         <SessionHeader session={session} onDone={() => props.onExit?.()} />
         {session.error && !session.asking && (
           <div className="ins-error" role="alert">
             <Icon name="alert" size={14} />
             <span>{session.error}</span>
-            <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={session.clearError}>
+            <button
+              type="button"
+              className="icon-btn small"
+              aria-label="Dismiss"
+              onClick={session.clearError}
+            >
               <Icon name="close" size={12} />
             </button>
           </div>
         )}
         <LeavePrompt session={session} />
         <Tabs tab={tab} onTab={onTab} />
-        {(tab === 'simple' || tab === 'pro') && <ToolsMemo {...props} />}
-        <ArrangeMemo {...props} showBar={tab === 'simple'} />
-        <div className="edit-body" role="tabpanel" id={`edit-pane-${tab}`} aria-labelledby={`edit-tab-${tab}`}>
-          {tab === 'simple' && <SimpleTabMemo {...props} />}
-          {tab === 'pro' && <ProTab {...props} />}
-          {tab === 'components' && <ComponentsTab components={props.components} />}
-          {tab === 'code' && <InspectorCode projectId={props.projectId} directionId={props.directionId} selection={props.selection.at(-1) ?? null} />}
-          {tab === 'tweaks' && (
+        {(tab === "simple" || tab === "pro") && <ToolsMemo {...props} />}
+        <ArrangeMemo {...props} showBar={tab === "simple"} />
+        <div
+          className="edit-body"
+          role="tabpanel"
+          id={`edit-pane-${tab}`}
+          aria-labelledby={`edit-tab-${tab}`}
+        >
+          {tab === "simple" && <SimpleTabMemo {...props} />}
+          {tab === "pro" && <ProTab {...props} />}
+          {tab === "components" && (
+            <ComponentsTab components={props.components} />
+          )}
+          {tab === "code" && (
+            <InspectorCode
+              projectId={props.projectId}
+              directionId={props.directionId}
+              selection={props.selection.at(-1) ?? null}
+            />
+          )}
+          {tab === "tweaks" && (
             <>
-              {props.tweaks && session.count > 0 && <TweaksNote session={session} />}
-              <InspectorTweaks tweaks={props.tweaks} blocked={session.count > 0} />
+              {props.tweaks && session.count > 0 && (
+                <TweaksNote session={session} />
+              )}
+              <InspectorTweaks
+                tweaks={props.tweaks}
+                blocked={session.count > 0}
+              />
             </>
           )}
         </div>

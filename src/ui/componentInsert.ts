@@ -1,16 +1,33 @@
-import type { InsertComponentRequest, InsertComponentResult, InsertJsxRequest, InsertJsxResult, InsertPosition, InsertableComponent, InsertableList } from '../shared/insert';
-import { ApiError, json } from './api';
+import type {
+  InsertComponentRequest,
+  InsertComponentResult,
+  InsertJsxRequest,
+  InsertJsxResult,
+  InsertPosition,
+  InsertableComponent,
+  InsertableList,
+} from "../shared/insert";
+import { ApiError, json } from "./api";
 
-const d = (pid: string, did: string) => `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
+const d = (pid: string, did: string) =>
+  `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}`;
 
 export const insertApi = {
-  list: (pid: string, did: string) => json<InsertableList>('GET', `${d(pid, did)}/insert/components`),
-  insert: (pid: string, did: string, request: InsertComponentRequest) => json<InsertComponentResult>('POST', `${d(pid, did)}/insert`, request),
-  insertJsx: (pid: string, did: string, request: InsertJsxRequest) => json<InsertJsxResult>('POST', `${d(pid, did)}/insert/jsx`, request),
+  list: (pid: string, did: string) =>
+    json<InsertableList>("GET", `${d(pid, did)}/insert/components`),
+  insert: (pid: string, did: string, request: InsertComponentRequest) =>
+    json<InsertComponentResult>("POST", `${d(pid, did)}/insert`, request),
+  insertJsx: (pid: string, did: string, request: InsertJsxRequest) =>
+    json<InsertJsxResult>("POST", `${d(pid, did)}/insert/jsx`, request),
 };
 
 export function insertError(error: unknown): string {
-  if (error instanceof ApiError && error.data && typeof (error.data as { message?: unknown }).message === 'string') return (error.data as { message: string }).message;
+  if (
+    error instanceof ApiError &&
+    error.data &&
+    typeof (error.data as { message?: unknown }).message === "string"
+  )
+    return (error.data as { message: string }).message;
   return error instanceof Error ? error.message : String(error);
 }
 

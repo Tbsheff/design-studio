@@ -1,10 +1,17 @@
-import type { McpActivity, McpApprovalRecord } from './contracts.js';
+import type { McpActivity, McpApprovalRecord } from "./contracts.js";
 
-export type ExportFormat = 'png' | 'pdf' | 'html' | 'zip' | 'handoff' | 'svg' | 'pptx';
+export type ExportFormat =
+  | "png"
+  | "pdf"
+  | "html"
+  | "zip"
+  | "handoff"
+  | "svg"
+  | "pptx";
 export type ExportScale = 1 | 2 | 3;
-export type ExportScope = 'page' | 'frame';
-export type CopyCodeFormat = 'html' | 'tailwind';
-export type EditorId = 'cursor' | 'vscode' | 'zed';
+export type ExportScope = "page" | "frame";
+export type CopyCodeFormat = "html" | "tailwind";
+export type EditorId = "cursor" | "vscode" | "zed";
 
 export const EXPORT_SCALES: readonly ExportScale[] = [1, 2, 3];
 export const EXPORT_MAX_FRAMES = 12;
@@ -19,7 +26,7 @@ export interface ExportFrame {
 }
 
 export interface ExportRequest {
-  format: Exclude<ExportFormat, 'handoff'>;
+  format: Exclude<ExportFormat, "handoff">;
   versionId: string;
   frames: ExportFrame[];
   scale: ExportScale;
@@ -75,16 +82,23 @@ export interface McpActivityList {
   activity: McpActivity[];
 }
 
-export const EXPORT_NOTE_HEADER = 'x-studio-export-note';
+export const EXPORT_NOTE_HEADER = "x-studio-export-note";
 
 export function cleanExportPath(raw: string): string | null {
-  const value = raw.trim().replace(/^\/+/, '');
-  if (value === '') return '';
-  if (value.length > EXPORT_PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(value)) return null;
-  if (value.split('/').some((part) => part === '..' || part === '.')) return null;
+  const value = raw.trim().replace(/^\/+/, "");
+  if (value === "") return "";
+  if (value.length > EXPORT_PATH_MAX || /[\\\s#?:]|%2e|%2f|%5c/i.test(value))
+    return null;
+  if (value.split("/").some((part) => part === ".." || part === "."))
+    return null;
   return value;
 }
 
 export function exportFileStem(name: string): string {
-  return name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'design';
+  return (
+    name
+      .replace(/[^A-Za-z0-9._-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "design"
+  );
 }

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import type { Project, RunLevel } from '../shared/contracts';
-import { api, errorText } from './api';
+import { useEffect, useRef, useState } from "react";
+
+import type { Project, RunLevel } from "../shared/contracts";
+import { api, errorText } from "./api";
 
 interface RunLevelState {
   level: RunLevel;
@@ -9,8 +10,12 @@ interface RunLevelState {
   clearError: () => void;
 }
 
-export function useRunLevel(projectId: string, saved: RunLevel | undefined, onSaved: (project: Project) => void): RunLevelState {
-  const [level, setLevel] = useState<RunLevel>(saved ?? 'prototype');
+export function useRunLevel(
+  projectId: string,
+  saved: RunLevel | undefined,
+  onSaved: (project: Project) => void
+): RunLevelState {
+  const [level, setLevel] = useState<RunLevel>(saved ?? "prototype");
   const [error, setError] = useState<string | null>(null);
   const seq = useRef(0);
 

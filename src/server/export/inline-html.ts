@@ -1,9 +1,13 @@
-import type { ProjectKind } from '../../shared/contracts.js';
-import { BRIDGE_SCRIPT_PATH, BRIDGE_TOKEN_PARAM, SOURCE_LOC_ATTR } from '../../shared/contracts.js';
-import type { PreviewService } from '../types.js';
-import { waitForPage } from './capture.js';
-import type { ExportFrame } from '../../shared/export.js';
-import { withPagePath } from './source.js';
+import type { ProjectKind } from "../../shared/contracts.js";
+import {
+  BRIDGE_SCRIPT_PATH,
+  BRIDGE_TOKEN_PARAM,
+  SOURCE_LOC_ATTR,
+} from "../../shared/contracts.js";
+import type { ExportFrame } from "../../shared/export.js";
+import type { PreviewService } from "../types.js";
+import { waitForPage } from "./capture.js";
+import { withPagePath } from "./source.js";
 
 export interface InlinedHtml {
   html: string;
@@ -115,14 +119,26 @@ function inlineExpression(kind: ProjectKind): string {
 })()`;
 }
 
-export async function inlineHtml(preview: PreviewService, url: string, frame: ExportFrame, kind: ProjectKind, secrets: string[]): Promise<InlinedHtml> {
-  if (!preview.withPage) throw new Error('this preview backend cannot export HTML');
-  const result = await preview.withPage(withPagePath(url, frame.path), { width: frame.width, height: frame.height }, async (page) => {
-    await waitForPage(page);
-    return page.evaluate<InlinedHtml>(inlineExpression(kind));
-  });
+export async function inlineHtml(
+  preview: PreviewService,
+  url: string,
+  frame: ExportFrame,
+  kind: ProjectKind,
+  secrets: string[]
+): Promise<InlinedHtml> {
+  if (!preview.withPage)
+    throw new Error("this preview backend cannot export HTML");
+  const result = await preview.withPage(
+    withPagePath(url, frame.path),
+    { width: frame.width, height: frame.height },
+    async (page) => {
+      await waitForPage(page);
+      return page.evaluate<InlinedHtml>(inlineExpression(kind));
+    }
+  );
   for (const secret of secrets) {
-    if (secret && result.html.includes(secret)) throw new Error('export stopped: the page holds a studio secret');
+    if (secret && result.html.includes(secret))
+      throw new Error("export stopped: the page holds a studio secret");
   }
   return result;
 }

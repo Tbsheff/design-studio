@@ -1,9 +1,16 @@
-import { useEffect, useRef, type RefObject } from 'react';
-import { REVIEW_KIND_LABEL, REVIEW_KINDS, type ReviewFinding, type ReviewKind, type ReviewSeverity } from '../../shared/review';
-import type { ReviewState } from '../useReview';
-import { Icon } from './Icon';
-import { isTypingTarget } from '../typingTarget';
-import { PREVIEW_ESCAPE_EVENT } from '../useEscapeStop';
+import { useEffect, useRef, type RefObject } from "react";
+
+import {
+  REVIEW_KIND_LABEL,
+  REVIEW_KINDS,
+  type ReviewFinding,
+  type ReviewKind,
+  type ReviewSeverity,
+} from "../../shared/review";
+import { isTypingTarget } from "../typingTarget";
+import { PREVIEW_ESCAPE_EVENT } from "../useEscapeStop";
+import type { ReviewState } from "../useReview";
+import { Icon } from "./Icon";
 
 interface Props {
   review: ReviewState;
@@ -25,37 +32,89 @@ interface Actions {
   onFix: (findings: ReviewFinding[]) => void;
 }
 
-const SEVERITY_WORD: Record<ReviewSeverity, string> = { high: 'High', medium: 'Medium', low: 'Low' };
+const SEVERITY_WORD: Record<ReviewSeverity, string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
 
 function fixBlocked(live: boolean, running: boolean): string | null {
-  if (!live) return 'Fixes work on the live design';
-  return running ? 'A run is editing this design' : null;
+  if (!live) return "Fixes work on the live design";
+  return running ? "A run is editing this design" : null;
 }
 
 function grouped(findings: ReviewFinding[]): [ReviewKind, ReviewFinding[]][] {
-  return REVIEW_KINDS.map((kind) => [kind, findings.filter((finding) => finding.kind === kind)] as [ReviewKind, ReviewFinding[]]).filter(([, list]) => list.length > 0);
+  return REVIEW_KINDS.map(
+    (kind) =>
+      [kind, findings.filter((finding) => finding.kind === kind)] as [
+        ReviewKind,
+        ReviewFinding[],
+      ]
+  ).filter(([, list]) => list.length > 0);
 }
 
 function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
   const busy = a.fixing?.includes(finding.id) ?? false;
   return (
     <li className="review-row">
-      <button type="button" className="review-target" disabled={!finding.selector} data-tip={finding.selector ? 'Select on the canvas' : undefined} onClick={() => a.onSelect(finding)}>
-        <span className={`review-sev ${finding.severity}`} aria-label={SEVERITY_WORD[finding.severity]} />
+      <button
+        type="button"
+        className="review-target"
+        disabled={!finding.selector}
+        data-tip={finding.selector ? "Select on the canvas" : undefined}
+        onClick={() => a.onSelect(finding)}
+      >
+        <span
+          className={`review-sev ${finding.severity}`}
+          aria-label={SEVERITY_WORD[finding.severity]}
+        />
         <span className="truncate">{finding.element}</span>
-        {finding.copies && finding.copies > 1 && !finding.element.startsWith('in ') && <span className="review-copies">{finding.copies} copies</span>}
+        {finding.copies &&
+          finding.copies > 1 &&
+          !finding.element.startsWith("in ") && (
+            <span className="review-copies">{finding.copies} copies</span>
+          )}
         {finding.shared && <span className="review-copies">shared</span>}
       </button>
       <p className="review-msg">{finding.message}</p>
       <div className="review-actions">
-        {finding.source && <code className="review-src truncate">{finding.source}</code>}
+        {finding.source && (
+          <code className="review-src truncate">{finding.source}</code>
+        )}
         {finding.fix ? (
-          <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? (finding.shared ? `Changes the shared file ${finding.shared}, so other pages change too. One version you can undo` : 'Apply this fix as one version you can undo')} data-tip-align="end" onClick={() => a.onFix([finding])}>
-            {busy ? <span className="spinner" /> : <Icon name="check" size={12} />}
+          <button
+            type="button"
+            className="btn small"
+            disabled={a.fixBlocked !== null || a.fixing !== null}
+            data-tip={
+              a.fixBlocked ??
+              (finding.shared
+                ? `Changes the shared file ${finding.shared}, so other pages change too. One version you can undo`
+                : "Apply this fix as one version you can undo")
+            }
+            data-tip-align="end"
+            onClick={() => a.onFix([finding])}
+          >
+            {busy ? (
+              <span className="spinner" />
+            ) : (
+              <Icon name="check" size={12} />
+            )}
             <span>{finding.fix.label}</span>
           </button>
         ) : (
-          <button type="button" className="btn small" disabled={!a.canAsk} data-tip={a.canAsk ? 'Put this finding in the chat box. You send it.' : 'Chat is not available here'} data-tip-align="end" onClick={() => a.onAsk(finding)}>
+          <button
+            type="button"
+            className="btn small"
+            disabled={!a.canAsk}
+            data-tip={
+              a.canAsk
+                ? "Put this finding in the chat box. You send it."
+                : "Chat is not available here"
+            }
+            data-tip-align="end"
+            onClick={() => a.onAsk(finding)}
+          >
             <Icon name="chat" size={12} />
             Ask agent
           </button>
@@ -65,7 +124,15 @@ function FindingRow({ finding, a }: { finding: ReviewFinding; a: Actions }) {
   );
 }
 
-function Group({ kind, list, a }: { kind: ReviewKind; list: ReviewFinding[]; a: Actions }) {
+function Group({
+  kind,
+  list,
+  a,
+}: {
+  kind: ReviewKind;
+  list: ReviewFinding[];
+  a: Actions;
+}) {
   const fixable = list.filter((finding) => finding.fix);
   return (
     <section className="review-group" aria-label={REVIEW_KIND_LABEL[kind]}>
@@ -74,7 +141,16 @@ function Group({ kind, list, a }: { kind: ReviewKind; list: ReviewFinding[]; a: 
         <span className="review-count num">{list.length}</span>
         <div className="spacer" />
         {fixable.length > 1 && (
-          <button type="button" className="btn small" disabled={a.fixBlocked !== null || a.fixing !== null} data-tip={a.fixBlocked ?? `Apply ${fixable.length} fixes as one version`} data-tip-align="end" onClick={() => a.onFix(fixable)}>
+          <button
+            type="button"
+            className="btn small"
+            disabled={a.fixBlocked !== null || a.fixing !== null}
+            data-tip={
+              a.fixBlocked ?? `Apply ${fixable.length} fixes as one version`
+            }
+            data-tip-align="end"
+            onClick={() => a.onFix(fixable)}
+          >
             Fix all {fixable.length}
           </button>
         )}
@@ -91,10 +167,12 @@ function Group({ kind, list, a }: { kind: ReviewKind; list: ReviewFinding[]; a: 
 function Summary({ review }: { review: ReviewState }) {
   const result = review.result;
   if (!result) return null;
-  const parts = (['high', 'medium', 'low'] as const).filter((sev) => result.counts[sev] > 0).map((sev) => `${result.counts[sev]} ${sev}`);
+  const parts = (["high", "medium", "low"] as const)
+    .filter((sev) => result.counts[sev] > 0)
+    .map((sev) => `${result.counts[sev]} ${sev}`);
   return (
     <div className="review-summary">
-      <span>{parts.length > 0 ? parts.join(' · ') : 'No findings'}</span>
+      <span>{parts.length > 0 ? parts.join(" · ") : "No findings"}</span>
       {review.stale && <span className="badge warn">Out of date</span>}
       {result.notes.map((note) => (
         <span key={note} className="muted">
@@ -105,38 +183,59 @@ function Summary({ review }: { review: ReviewState }) {
   );
 }
 
-function Body({ review, live, a }: { review: ReviewState; live: boolean; a: Actions }) {
+function Body({
+  review,
+  live,
+  a,
+}: {
+  review: ReviewState;
+  live: boolean;
+  a: Actions;
+}) {
   const result = review.result;
   return (
     <div className="review-body">
-      {!live && <div className="alert">Review checks the live design. Switch the canvas source to Live.</div>}
+      {!live && (
+        <div className="alert">
+          Review checks the live design. Switch the canvas source to Live.
+        </div>
+      )}
       {review.error && <div className="alert error">{review.error}</div>}
       {review.busy && !result && (
         <div className="review-wait">
           <span className="spinner" /> Checking the frame…
         </div>
       )}
-      {result && result.findings.length === 0 && <div className="review-wait">This frame passes every check.</div>}
-      {result && grouped(result.findings).map(([kind, list]) => <Group key={kind} kind={kind} list={list} a={a} />)}
+      {result && result.findings.length === 0 && (
+        <div className="review-wait">This frame passes every check.</div>
+      )}
+      {result &&
+        grouped(result.findings).map(([kind, list]) => (
+          <Group key={kind} kind={kind} list={list} a={a} />
+        ))}
     </div>
   );
 }
 
-function useEscapeClose(panel: RefObject<HTMLDivElement | null>, onClose: () => void) {
+function useEscapeClose(
+  panel: RefObject<HTMLDivElement | null>,
+  onClose: () => void
+) {
   const latest = useRef(onClose);
   latest.current = onClose;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return;
-      const inPanel = e.target instanceof Node && panel.current?.contains(e.target);
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      const inPanel =
+        e.target instanceof Node && panel.current?.contains(e.target);
       if (!inPanel && isTypingTarget(e.target)) return;
       latest.current();
     };
     const onFrameEscape = () => latest.current();
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_ESCAPE_EVENT, onFrameEscape);
     };
   }, [panel]);
@@ -145,7 +244,14 @@ function useEscapeClose(panel: RefObject<HTMLDivElement | null>, onClose: () => 
 export default function ReviewPanel(p: Props) {
   const panel = useRef<HTMLDivElement>(null);
   useEscapeClose(panel, p.onClose);
-  const a: Actions = { fixBlocked: fixBlocked(p.live, p.running), fixing: p.review.fixing, canAsk: p.canAsk, onSelect: p.onSelect, onAsk: p.onAsk, onFix: (list) => void p.review.fix(list) };
+  const a: Actions = {
+    fixBlocked: fixBlocked(p.live, p.running),
+    fixing: p.review.fixing,
+    canAsk: p.canAsk,
+    onSelect: p.onSelect,
+    onAsk: p.onAsk,
+    onFix: (list) => void p.review.fix(list),
+  };
   return (
     <div ref={panel} className="review-panel" role="region" aria-label="Review">
       <div className="review-head">
@@ -153,10 +259,28 @@ export default function ReviewPanel(p: Props) {
         <strong>Review</strong>
         <span className="muted truncate">{p.frameLabel}</span>
         <div className="spacer" />
-        <button type="button" className="icon-btn" aria-label="Run the review again" data-tip="Run again" disabled={p.review.busy || !p.live} onClick={p.review.run}>
-          {p.review.busy ? <span className="spinner" /> : <Icon name="reload" size={14} />}
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Run the review again"
+          data-tip="Run again"
+          disabled={p.review.busy || !p.live}
+          onClick={p.review.run}
+        >
+          {p.review.busy ? (
+            <span className="spinner" />
+          ) : (
+            <Icon name="reload" size={14} />
+          )}
         </button>
-        <button type="button" className="icon-btn" aria-label="Close" data-tip="Close" data-tip-align="end" onClick={p.onClose}>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Close"
+          data-tip="Close"
+          data-tip-align="end"
+          onClick={p.onClose}
+        >
           <Icon name="close" />
         </button>
       </div>

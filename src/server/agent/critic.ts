@@ -1,26 +1,39 @@
-import { readFile } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import type { Options, SDKMessage, SDKUserMessage, query } from '@anthropic-ai/claude-agent-sdk';
-import { z } from 'zod';
-import type { QualityFinding } from '../../shared/contracts.js';
-import { diffImages, readPng } from '../preview/visual-diff.js';
-import type { PreviewService } from '../types.js';
-import type { RunToolState } from './check-tool.js';
-import { changedSince, type RunScreen } from './screens.js';
-import type { TasteRule } from './taste.js';
+import { readFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import type {
+  Options,
+  SDKMessage,
+  SDKUserMessage,
+  query,
+} from "@anthropic-ai/claude-agent-sdk";
+import { z } from "zod";
+
+import type { QualityFinding } from "../../shared/contracts.js";
+import { diffImages, readPng } from "../preview/visual-diff.js";
+import type { PreviewService } from "../types.js";
+import type { RunToolState } from "./check-tool.js";
+import { changedSince, type RunScreen } from "./screens.js";
+import type { TasteRule } from "./taste.js";
 
 type QueryFn = typeof query;
 
-const CRITIC_TILES = { desktop: { width: 1440, height: 900, tileHeight: 900, maxTiles: 3 }, mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 2 } } as const;
-const SCREEN_TILES = { desktop: { width: 1440, height: 900, tileHeight: 1200, maxTiles: 1 }, mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 1 } } as const;
+const CRITIC_TILES = {
+  desktop: { width: 1440, height: 900, tileHeight: 900, maxTiles: 3 },
+  mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 2 },
+} as const;
+const SCREEN_TILES = {
+  desktop: { width: 1440, height: 900, tileHeight: 1200, maxTiles: 1 },
+  mobile: { width: 390, height: 844, tileHeight: 1560, maxTiles: 1 },
+} as const;
 const CHANGED_FILES = 4;
 const CHANGED_FILE_CHARS = 6000;
 const CHANGED_TOTAL_CHARS = 14_000;
 const REGRESSION_MIN_PCT = 0.2;
 
 const CriticIssueSchema = z.object({
-  severity: z.enum(['high', 'medium', 'low']),
+  severity: z.enum(["high", "medium", "low"]),
   area: z.string().min(1),
   screen: z.string().optional(),
   where: z.string().min(1),
@@ -30,7 +43,12 @@ const CriticIssueSchema = z.object({
 
 export type CriticIssue = z.infer<typeof CriticIssueSchema>;
 
-const CriticReplySchema = z.union([z.array(CriticIssueSchema), z.object({ issues: z.array(CriticIssueSchema) }).transform((value) => value.issues)]);
+const CriticReplySchema = z.union([
+  z.array(CriticIssueSchema),
+  z
+    .object({ issues: z.array(CriticIssueSchema) })
+    .transform((value) => value.issues),
+]);
 
 const SCREEN_RULE = `- The images can show several screens of one flow (views of one page, canvas frames or app routes). Review EVERY screen, not only the first, and set "screen" in each issue to the screen name from the image label. A screen marked "opened by the studio without its click path" can have empty text that a script fills in the real flow: do not file empty dynamic text on it.`;
 
@@ -69,16 +87,20 @@ This run changed an existing app. Also check these, and file each problem as an 
 - Code ("area": "code", from <changed-source>): unused imports, hard-coded dates, IDs, names or strings that should come from props or the page's data, sample data where the page already has real data, and leftover code comments. Name the file and the line.
 </app-rules>`;
 
-export type CriticKind = 'full' | 'quick' | 'regression';
+export type CriticKind = "full" | "quick" | "regression";
 
-const SYSTEMS: Record<CriticKind, string> = { full: CRITIC_SYSTEM, quick: QUICK_SYSTEM, regression: REGRESSION_SYSTEM };
+const SYSTEMS: Record<CriticKind, string> = {
+  full: CRITIC_SYSTEM,
+  quick: QUICK_SYSTEM,
+  regression: REGRESSION_SYSTEM,
+};
 
 export interface CriticImage {
   label: string;
   data: string;
   key?: string;
   screen?: string;
-  viewport?: 'desktop' | 'mobile';
+  viewport?: "desktop" | "mobile";
   path?: string;
 }
 
@@ -111,8 +133,8 @@ export function extractJson(text: string): unknown {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   const body = fenced?.[1] ?? text;
   const start = body.search(/[[{]/);
-  if (start === -1) throw new Error('no JSON in critic reply');
-  const end = Math.max(body.lastIndexOf(']'), body.lastIndexOf('}'));
+  if (start === -1) throw new Error("no JSON in critic reply");
+  const end = Math.max(body.lastIndexOf("]"), body.lastIndexOf("}"));
   return JSON.parse(body.slice(start, end + 1));
 }
 
@@ -121,61 +143,92 @@ export function parseCriticReply(text: string): CriticIssue[] {
 }
 
 function findingLine(finding: QualityFinding): string {
-  return `- [${finding.severity}] ${finding.check}${finding.viewport ? ` @${finding.viewport}` : ''}${finding.screen ? ` on "${finding.screen}"` : ''}: ${finding.message}`;
+  return `- [${finding.severity}] ${finding.check}${finding.viewport ? ` @${finding.viewport}` : ""}${finding.screen ? ` on "${finding.screen}"` : ""}: ${finding.message}`;
 }
 
 function criticFindings(findings: QualityFinding[]): QualityFinding[] {
-  return findings.filter((finding) => finding.check !== 'visual-diff');
+  return findings.filter((finding) => finding.check !== "visual-diff");
 }
 
 function sourceBlock(files: ChangedSource[] | undefined): string | null {
   if (!files?.length) return null;
-  return `<changed-source>\n${files.map((file) => `--- ${file.file}\n${file.text}`).join('\n')}\n</changed-source>`;
+  return `<changed-source>\n${files.map((file) => `--- ${file.file}\n${file.text}`).join("\n")}\n</changed-source>`;
 }
 
-function closingLine(input: Omit<CriticInput, 'images'>): string {
-  if (input.kind === 'regression') return 'The images come in pairs per screen, desktop 1440 px: BEFORE, then AFTER. Reply with the JSON array only.';
-  const before = input.before?.length ? ' The images marked BEFORE are desktop shots from the previous review, taken before the last fixes. Also file each regression ("area": "regression") where the current desktop shot is worse than its BEFORE shot.' : '';
+function closingLine(input: Omit<CriticInput, "images">): string {
+  if (input.kind === "regression")
+    return "The images come in pairs per screen, desktop 1440 px: BEFORE, then AFTER. Reply with the JSON array only.";
+  const before = input.before?.length
+    ? ' The images marked BEFORE are desktop shots from the previous review, taken before the last fixes. Also file each regression ("area": "regression") where the current desktop shot is worse than its BEFORE shot.'
+    : "";
   return `Each image label names its screen and size (desktop 1440 px, mobile 390 px).${before} Reply with the JSON array only.`;
 }
 
-export function criticText(input: Omit<CriticInput, 'images'>): string {
+export function criticText(input: Omit<CriticInput, "images">): string {
   const relevant = criticFindings(input.findings);
-  const findings = relevant.length ? relevant.slice(0, 20).map(findingLine).join('\n') : '- none reported yet';
-  const taste = input.tasteRules.length ? input.tasteRules.map((rule) => `- ${rule.kind} (${rule.area}): ${rule.rule}`).join('\n') : '- none';
+  const findings = relevant.length
+    ? relevant.slice(0, 20).map(findingLine).join("\n")
+    : "- none reported yet";
+  const taste = input.tasteRules.length
+    ? input.tasteRules
+        .map((rule) => `- ${rule.kind} (${rule.area}): ${rule.rule}`)
+        .join("\n")
+    : "- none";
   const blocks = [
     `<request>\n${input.request}\n</request>`,
     `<check-findings>\n${findings}\n</check-findings>`,
     `<taste>\n${taste}\n</taste>`,
-    input.designRules?.length ? `<design-rules>\n${input.designRules.map((rule) => `- ${rule}`).join('\n')}\n</design-rules>` : null,
+    input.designRules?.length
+      ? `<design-rules>\n${input.designRules.map((rule) => `- ${rule}`).join("\n")}\n</design-rules>`
+      : null,
     input.screens ? `<screens>\n${input.screens}\n</screens>` : null,
-    input.app && input.kind !== 'regression' ? APP_RULES : null,
-    input.kind !== 'regression' ? sourceBlock(input.changedSource) : null,
+    input.app && input.kind !== "regression" ? APP_RULES : null,
+    input.kind !== "regression" ? sourceBlock(input.changedSource) : null,
     closingLine(input),
   ];
-  return blocks.filter(Boolean).join('\n\n');
+  return blocks.filter(Boolean).join("\n\n");
 }
 
-export function mediaType(base64: string): 'image/png' | 'image/jpeg' {
-  return base64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
+export function mediaType(base64: string): "image/png" | "image/jpeg" {
+  return base64.startsWith("/9j/") ? "image/jpeg" : "image/png";
 }
 
 function imageBlocks(images: CriticImage[]) {
   return images.flatMap((image) => [
-    { type: 'text' as const, text: image.label },
-    { type: 'image' as const, source: { type: 'base64' as const, media_type: mediaType(image.data), data: image.data } },
+    { type: "text" as const, text: image.label },
+    {
+      type: "image" as const,
+      source: {
+        type: "base64" as const,
+        media_type: mediaType(image.data),
+        data: image.data,
+      },
+    },
   ]);
 }
 
 function criticPrompt(input: CriticInput): AsyncIterable<SDKUserMessage> {
-  const content = [...imageBlocks(input.images), ...imageBlocks(input.before ?? []), { type: 'text' as const, text: criticText(input) }];
-  const message: SDKUserMessage = { type: 'user', parent_tool_use_id: null, message: { role: 'user', content } };
+  const content = [
+    ...imageBlocks(input.images),
+    ...imageBlocks(input.before ?? []),
+    { type: "text" as const, text: criticText(input) },
+  ];
+  const message: SDKUserMessage = {
+    type: "user",
+    parent_tool_use_id: null,
+    message: { role: "user", content },
+  };
   return (async function* single() {
     yield message;
   })();
 }
 
-function criticOptions(kind: CriticKind, model: string, budgetUsd: number | null, env?: Record<string, string | undefined>): Options {
+function criticOptions(
+  kind: CriticKind,
+  model: string,
+  budgetUsd: number | null,
+  env?: Record<string, string | undefined>
+): Options {
   return {
     ...(env ? { env } : {}),
     model,
@@ -186,10 +239,14 @@ function criticOptions(kind: CriticKind, model: string, budgetUsd: number | null
     strictMcpConfig: true,
     mcpServers: {},
     persistSession: false,
-    permissionMode: 'default',
+    permissionMode: "default",
     cwd: os.tmpdir(),
     systemPrompt: SYSTEMS[kind],
-    settings: { disableBundledSkills: true, syncClaudeAiSkills: false, syncClaudeAiPlugins: false },
+    settings: {
+      disableBundledSkills: true,
+      syncClaudeAiSkills: false,
+      syncClaudeAiPlugins: false,
+    },
     skills: [],
   };
 }
@@ -200,78 +257,184 @@ interface CriticStream {
 }
 
 async function drain(stream: AsyncIterable<SDKMessage>): Promise<CriticStream> {
-  let text = '';
+  let text = "";
   let costUsd = 0;
   for await (const message of stream) {
-    if (message.type === 'assistant') {
-      for (const block of message.message.content) if (block.type === 'text') text += block.text;
-    } else if (message.type === 'result') {
+    if (message.type === "assistant") {
+      for (const block of message.message.content)
+        if (block.type === "text") text += block.text;
+    } else if (message.type === "result") {
       costUsd = message.total_cost_usd ?? 0;
-      if (message.subtype === 'success' && message.result) text = message.result;
+      if (message.subtype === "success" && message.result)
+        text = message.result;
     }
   }
   return { text, costUsd };
 }
 
-export async function runCritic(queryFn: QueryFn, input: CriticInput, model: string, budgetUsd: number | null, env?: Record<string, string | undefined>): Promise<CriticResult> {
-  const stream = queryFn({ prompt: criticPrompt(input), options: criticOptions(input.kind ?? 'full', model, budgetUsd, env) });
-  let drained: CriticStream = { text: '', costUsd: 0 };
+export async function runCritic(
+  queryFn: QueryFn,
+  input: CriticInput,
+  model: string,
+  budgetUsd: number | null,
+  env?: Record<string, string | undefined>
+): Promise<CriticResult> {
+  const stream = queryFn({
+    prompt: criticPrompt(input),
+    options: criticOptions(input.kind ?? "full", model, budgetUsd, env),
+  });
+  let drained: CriticStream = { text: "", costUsd: 0 };
   try {
     drained = await drain(stream);
-    return { issues: parseCriticReply(drained.text), costUsd: drained.costUsd, raw: drained.text, error: null };
+    return {
+      issues: parseCriticReply(drained.text),
+      costUsd: drained.costUsd,
+      raw: drained.text,
+      error: null,
+    };
   } catch (error) {
-    return { issues: [], costUsd: drained.costUsd, raw: drained.text, error: error instanceof Error ? error.message : String(error) };
+    return {
+      issues: [],
+      costUsd: drained.costUsd,
+      raw: drained.text,
+      error: error instanceof Error ? error.message : String(error),
+    };
   } finally {
     stream.close();
   }
 }
 
-type TilePlan = Record<'desktop' | 'mobile', { width: number; height: number; tileHeight: number; maxTiles: number }>;
+type TilePlan = Record<
+  "desktop" | "mobile",
+  { width: number; height: number; tileHeight: number; maxTiles: number }
+>;
 
 function screenTitle(screen: RunScreen, index: number, total: number): string {
-  if (total <= 1) return screen.label ? `Screen "${screen.label}"` : 'Screen 1';
-  return `Screen ${index + 1} of ${total} "${screen.label}"${screen.forced ? ' (opened by the studio without its click path, so text that a script fills may be empty)' : ''}`;
+  if (total <= 1) return screen.label ? `Screen "${screen.label}"` : "Screen 1";
+  return `Screen ${index + 1} of ${total} "${screen.label}"${screen.forced ? " (opened by the studio without its click path, so text that a script fills may be empty)" : ""}`;
 }
 
-async function viewportImages(preview: PreviewService, screen: RunScreen, title: string, name: 'desktop' | 'mobile', plan: TilePlan, outPrefix: string, fresh: boolean): Promise<CriticImage[]> {
+async function viewportImages(
+  preview: PreviewService,
+  screen: RunScreen,
+  title: string,
+  name: "desktop" | "mobile",
+  plan: TilePlan,
+  outPrefix: string,
+  fresh: boolean
+): Promise<CriticImage[]> {
   const tile = plan[name];
-  const format = name === 'mobile' ? ('jpeg' as const) : ('png' as const);
-  const tiles = await preview.screenshotTiles(screen.url, { viewport: { width: tile.width, height: tile.height }, tileHeight: tile.tileHeight, maxTiles: tile.maxTiles, from: 0, outPrefix: `${outPrefix}-${name}`, format, ...(fresh ? { fresh } : {}), ...(screen.prepare ? { prepare: screen.prepare } : {}) });
+  const format = name === "mobile" ? ("jpeg" as const) : ("png" as const);
+  const tiles = await preview.screenshotTiles(screen.url, {
+    viewport: { width: tile.width, height: tile.height },
+    tileHeight: tile.tileHeight,
+    maxTiles: tile.maxTiles,
+    from: 0,
+    outPrefix: `${outPrefix}-${name}`,
+    format,
+    ...(fresh ? { fresh } : {}),
+    ...(screen.prepare ? { prepare: screen.prepare } : {}),
+  });
   return Promise.all(
-    tiles.paths.map(async (file, index) => ({ label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`, data: (await readFile(file)).toString('base64'), ...(screen.key ? { key: screen.key } : {}), screen: screen.label, viewport: name, path: file })),
+    tiles.paths.map(async (file, index) => ({
+      label: `${title}, ${name} ${tile.width} px, image ${index + 1} of ${tiles.paths.length} (page height ${tiles.pageHeight}px)`,
+      data: (await readFile(file)).toString("base64"),
+      ...(screen.key ? { key: screen.key } : {}),
+      screen: screen.label,
+      viewport: name,
+      path: file,
+    }))
   );
 }
 
-async function screenImages(preview: PreviewService, screen: RunScreen, title: string, plan: TilePlan, outPrefix: string, fresh: boolean): Promise<CriticImage[]> {
-  const [desktop, mobile] = await Promise.all((['desktop', 'mobile'] as const).map((name) => viewportImages(preview, screen, title, name, plan, outPrefix, fresh)));
+async function screenImages(
+  preview: PreviewService,
+  screen: RunScreen,
+  title: string,
+  plan: TilePlan,
+  outPrefix: string,
+  fresh: boolean
+): Promise<CriticImage[]> {
+  const [desktop, mobile] = await Promise.all(
+    (["desktop", "mobile"] as const).map((name) =>
+      viewportImages(preview, screen, title, name, plan, outPrefix, fresh)
+    )
+  );
   return [...(desktop ?? []), ...(mobile ?? [])];
 }
 
-export async function criticImages(preview: PreviewService, screens: readonly RunScreen[], outPrefix: string, maxImages = 5, fresh = false): Promise<CriticImage[]> {
+export async function criticImages(
+  preview: PreviewService,
+  screens: readonly RunScreen[],
+  outPrefix: string,
+  maxImages = 5,
+  fresh = false
+): Promise<CriticImage[]> {
   const shown = screens.slice(0, Math.max(1, Math.floor(maxImages / 2)));
   if (shown.length <= 1) {
     const screen = shown[0];
     if (!screen) return [];
-    const plan: TilePlan = { desktop: { ...CRITIC_TILES.desktop, maxTiles: Math.min(CRITIC_TILES.desktop.maxTiles, Math.max(1, maxImages - 2)) }, mobile: CRITIC_TILES.mobile };
-    return screenImages(preview, screen, screenTitle(screen, 0, 1), plan, outPrefix, fresh);
+    const plan: TilePlan = {
+      desktop: {
+        ...CRITIC_TILES.desktop,
+        maxTiles: Math.min(
+          CRITIC_TILES.desktop.maxTiles,
+          Math.max(1, maxImages - 2)
+        ),
+      },
+      mobile: CRITIC_TILES.mobile,
+    };
+    return screenImages(
+      preview,
+      screen,
+      screenTitle(screen, 0, 1),
+      plan,
+      outPrefix,
+      fresh
+    );
   }
-  const groups = await Promise.all(shown.map((screen, index) => screenImages(preview, screen, screenTitle(screen, index, shown.length), SCREEN_TILES, `${outPrefix}-s${index + 1}`, fresh)));
+  const groups = await Promise.all(
+    shown.map((screen, index) =>
+      screenImages(
+        preview,
+        screen,
+        screenTitle(screen, index, shown.length),
+        SCREEN_TILES,
+        `${outPrefix}-s${index + 1}`,
+        fresh
+      )
+    )
+  );
   return groups.flat();
 }
 
-export async function changedSourceFor(workTree: string, appDir: string, since: number | undefined): Promise<ChangedSource[]> {
+export async function changedSourceFor(
+  workTree: string,
+  appDir: string,
+  since: number | undefined
+): Promise<ChangedSource[]> {
   if (since === undefined) return [];
-  const files = (await changedSince(workTree, appDir, since)).filter((file) => /\.(tsx?|jsx?)$/.test(file)).slice(0, CHANGED_FILES);
+  const files = (await changedSince(workTree, appDir, since))
+    .filter((file) => /\.(tsx?|jsx?)$/.test(file))
+    .slice(0, CHANGED_FILES);
   const out: ChangedSource[] = [];
   let left = CHANGED_TOTAL_CHARS;
   for (const file of files) {
     if (left <= 0) break;
-    const text = await readFile(path.join(workTree, file), 'utf8').catch(() => null);
+    const text = await readFile(path.join(workTree, file), "utf8").catch(
+      () => null
+    );
     if (text === null) continue;
-    const numbered = text.split('\n').map((line, index) => `${index + 1}| ${line}`).join('\n');
+    const numbered = text
+      .split("\n")
+      .map((line, index) => `${index + 1}| ${line}`)
+      .join("\n");
     const cut = numbered.slice(0, Math.min(CHANGED_FILE_CHARS, left));
     left -= cut.length;
-    out.push({ file, text: cut.length < numbered.length ? `${cut}\n… (cut)` : cut });
+    out.push({
+      file,
+      text: cut.length < numbered.length ? `${cut}\n… (cut)` : cut,
+    });
   }
   return out;
 }
@@ -279,47 +442,104 @@ export async function changedSourceFor(workTree: string, appDir: string, since: 
 function firstDesktop(images: readonly CriticImage[]): CriticImage[] {
   const seen = new Set<string>();
   return images.filter((image) => {
-    const key = image.key ?? image.screen ?? '';
-    if (image.viewport !== 'desktop' || !image.path || seen.has(key)) return false;
+    const key = image.key ?? image.screen ?? "";
+    if (image.viewport !== "desktop" || !image.path || seen.has(key))
+      return false;
     seen.add(key);
     return true;
   });
 }
 
-async function changedPct(beforePath: string, afterPath: string): Promise<number> {
-  const [before, after] = await Promise.all([readPng(beforePath), readPng(afterPath)]);
-  return before.height === after.height ? diffImages(before, after, []).changedPct : 100;
+async function changedPct(
+  beforePath: string,
+  afterPath: string
+): Promise<number> {
+  const [before, after] = await Promise.all([
+    readPng(beforePath),
+    readPng(afterPath),
+  ]);
+  return before.height === after.height
+    ? diffImages(before, after, []).changedPct
+    : 100;
 }
 
-export async function regressionPairs(preview: PreviewService, before: readonly CriticImage[], screens: readonly RunScreen[], outPrefix: string): Promise<{ before: CriticImage; after: CriticImage }[]> {
+export async function regressionPairs(
+  preview: PreviewService,
+  before: readonly CriticImage[],
+  screens: readonly RunScreen[],
+  outPrefix: string
+): Promise<{ before: CriticImage; after: CriticImage }[]> {
   const pairs: { before: CriticImage; after: CriticImage }[] = [];
   for (const [index, shot] of firstDesktop(before).entries()) {
-    const screen = screens.find((candidate) => shot.key !== undefined && candidate.key === shot.key) ?? screens.find((candidate) => candidate.label === shot.screen) ?? (screens.length === 1 ? screens[0] : undefined);
+    const screen =
+      screens.find(
+        (candidate) => shot.key !== undefined && candidate.key === shot.key
+      ) ??
+      screens.find((candidate) => candidate.label === shot.screen) ??
+      (screens.length === 1 ? screens[0] : undefined);
     if (!screen || !shot.path) continue;
     const tile = SCREEN_TILES.desktop;
-    const tileHeight = (await readPng(shot.path).catch(() => null))?.height ?? tile.tileHeight;
-    const tiles = await preview.screenshotTiles(screen.url, { viewport: { width: tile.width, height: tile.height }, tileHeight, maxTiles: 1, from: 0, outPrefix: `${outPrefix}-s${index + 1}-desktop`, ...(screen.prepare ? { prepare: screen.prepare } : {}) });
+    const tileHeight =
+      (await readPng(shot.path).catch(() => null))?.height ?? tile.tileHeight;
+    const tiles = await preview.screenshotTiles(screen.url, {
+      viewport: { width: tile.width, height: tile.height },
+      tileHeight,
+      maxTiles: 1,
+      from: 0,
+      outPrefix: `${outPrefix}-s${index + 1}-desktop`,
+      ...(screen.prepare ? { prepare: screen.prepare } : {}),
+    });
     const afterPath = tiles.paths[0];
-    if (!afterPath || (await changedPct(shot.path, afterPath).catch(() => 100)) < REGRESSION_MIN_PCT) continue;
+    if (
+      !afterPath ||
+      (await changedPct(shot.path, afterPath).catch(() => 100)) <
+        REGRESSION_MIN_PCT
+    )
+      continue;
     const name = shot.screen ?? screen.label;
-    pairs.push({ before: { ...shot, label: `BEFORE: screen "${name}", desktop 1440 px` }, after: { label: `AFTER: screen "${name}", desktop 1440 px`, data: (await readFile(afterPath)).toString('base64'), screen: name, viewport: 'desktop', path: afterPath } });
+    pairs.push({
+      before: { ...shot, label: `BEFORE: screen "${name}", desktop 1440 px` },
+      after: {
+        label: `AFTER: screen "${name}", desktop 1440 px`,
+        data: (await readFile(afterPath)).toString("base64"),
+        screen: name,
+        viewport: "desktop",
+        path: afterPath,
+      },
+    });
   }
   return pairs;
 }
 
 export function beforeImages(before: readonly CriticImage[]): CriticImage[] {
-  return firstDesktop(before).map((image) => ({ ...image, label: `BEFORE (previous review, before the last fixes): screen "${image.screen ?? ''}", desktop 1440 px` }));
+  return firstDesktop(before).map((image) => ({
+    ...image,
+    label: `BEFORE (previous review, before the last fixes): screen "${image.screen ?? ""}", desktop 1440 px`,
+  }));
 }
 
-export function describeCriticResult(result: CriticResult, state: Pick<RunToolState, 'criticCalls' | 'config'>): string {
-  if (result.error) return `design_review could not parse the critic reply (${result.error}). Continue with your own checks.`;
-  const high = result.issues.filter((issue) => issue.severity === 'high').length;
-  const medium = result.issues.filter((issue) => issue.severity === 'medium').length;
-  if (state.config.preset.quickCritic) return `${JSON.stringify(result.issues, null, 2)}\n\n${high} high, ${medium} medium. In your one fix loop, fix every high issue and the medium ones you can fix quickly with Edit, then run render_check again. This was the only design_review call of this run.`;
+export function describeCriticResult(
+  result: CriticResult,
+  state: Pick<RunToolState, "criticCalls" | "config">
+): string {
+  if (result.error)
+    return `design_review could not parse the critic reply (${result.error}). Continue with your own checks.`;
+  const high = result.issues.filter(
+    (issue) => issue.severity === "high"
+  ).length;
+  const medium = result.issues.filter(
+    (issue) => issue.severity === "medium"
+  ).length;
+  if (state.config.preset.quickCritic)
+    return `${JSON.stringify(result.issues, null, 2)}\n\n${high} high, ${medium} medium. In your one fix loop, fix every high issue and the medium ones you can fix quickly with Edit, then run render_check again. This was the only design_review call of this run.`;
   const left = state.config.preset.criticMaxCalls - state.criticCalls;
   return `${JSON.stringify(result.issues, null, 2)}\n\n${high} high, ${medium} medium. Fix every high issue and most medium issues with Edit, then run render_check again. design_review calls left: ${left}.`;
 }
 
-export function criticOutPrefix(runsDir: string, runId: string, call: number | string): string {
+export function criticOutPrefix(
+  runsDir: string,
+  runId: string,
+  call: number | string
+): string {
   return path.join(runsDir, `${runId}-critic-${call}`);
 }

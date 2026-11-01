@@ -1,9 +1,11 @@
-import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { nanoid } from 'nanoid';
-import type { ShareFrame, ShareLink } from '../../shared/share.js';
-import { createKeyedMutex } from '../store/mutex.js';
+import { createHash, randomBytes } from "node:crypto";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { nanoid } from "nanoid";
+
+import type { ShareFrame, ShareLink } from "../../shared/share.js";
+import { createKeyedMutex } from "../store/mutex.js";
 
 export interface ShareRecord {
   id: string;
@@ -22,7 +24,9 @@ export interface ShareRecord {
   rev?: number;
 }
 
-export type SharePatch = Partial<Pick<ShareRecord, 'versionId' | 'frames' | 'rev' | 'studioCursor'>>;
+export type SharePatch = Partial<
+  Pick<ShareRecord, "versionId" | "frames" | "rev" | "studioCursor">
+>;
 
 export interface NewShare {
   projectId: string;
@@ -38,10 +42,13 @@ export interface ShareStore {
   dir: string;
   framesDir(id: string): string;
   newId(): string;
-  add(id: string, input: NewShare): Promise<{ record: ShareRecord; token: string }>;
+  add(
+    id: string,
+    input: NewShare
+  ): Promise<{ record: ShareRecord; token: string }>;
   list(projectId?: string): Promise<ShareRecord[]>;
   byToken(token: string): Promise<ShareRecord | null>;
-  endedByToken(token: string): Promise<'revoked' | 'expired' | null>;
+  endedByToken(token: string): Promise<"revoked" | "expired" | null>;
   revoke(id: string): Promise<ShareRecord | null>;
   addComment(id: string, commentId: string): Promise<void>;
   update(id: string, patch: SharePatch): Promise<ShareRecord | null>;
@@ -53,14 +60,18 @@ const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 const KEEP_REVOKED_MS = 7 * 24 * 3600_000;
 
 export function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
+  return createHash("sha256").update(token).digest("hex");
 }
 
 export function isLive(record: ShareRecord, now = Date.now()): boolean {
   return record.revokedAt === null && record.expiresAt > now;
 }
 
-export function toLink(record: ShareRecord, now = Date.now(), viewers = 0): ShareLink {
+export function toLink(
+  record: ShareRecord,
+  now = Date.now(),
+  viewers = 0
+): ShareLink {
   return {
     id: record.id,
     projectId: record.projectId,
@@ -81,12 +92,12 @@ export function toLink(record: ShareRecord, now = Date.now(), viewers = 0): Shar
 }
 
 export function createShareStore(dataDir: string): ShareStore {
-  const dir = path.join(dataDir, 'shares');
-  const file = path.join(dir, 'shares.json');
+  const dir = path.join(dataDir, "shares");
+  const file = path.join(dir, "shares.json");
   const lock = createKeyedMutex();
 
   const read = async (): Promise<ShareRecord[]> => {
-    const text = await readFile(file, 'utf8').catch(() => null);
+    const text = await readFile(file, "utf8").catch(() => null);
     if (!text) return [];
     const parsed: unknown = JSON.parse(text);
     return Array.isArray(parsed) ? (parsed as ShareRecord[]) : [];
@@ -94,18 +105,22 @@ export function createShareStore(dataDir: string): ShareStore {
 
   const write = async (records: ShareRecord[]): Promise<void> => {
     await mkdir(dir, { recursive: true, mode: 0o700 });
-    const temp = `${file}.${randomBytes(4).toString('hex')}.tmp`;
+    const temp = `${file}.${randomBytes(4).toString("hex")}.tmp`;
     await writeFile(temp, JSON.stringify(records, null, 2), { mode: 0o600 });
     await rename(temp, file);
   };
 
   const mutate = <T>(task: (records: ShareRecord[]) => T): Promise<T> =>
-    lock('shares', async () => {
+    lock("shares", async () => {
       const records = await read();
       const result = task(records);
       const now = Date.now();
-      const kept = records.filter((r) => isLive(r, now) || now - (r.revokedAt ?? r.expiresAt) < KEEP_REVOKED_MS);
-      for (const gone of records.filter((r) => !kept.includes(r))) await rm(path.join(dir, gone.id), { recursive: true, force: true });
+      const kept = records.filter(
+        (r) =>
+          isLive(r, now) || now - (r.revokedAt ?? r.expiresAt) < KEEP_REVOKED_MS
+      );
+      for (const gone of records.filter((r) => !kept.includes(r)))
+        await rm(path.join(dir, gone.id), { recursive: true, force: true });
       await write(kept);
       return result;
     });
@@ -115,14 +130,23 @@ export function createShareStore(dataDir: string): ShareStore {
     framesDir: (id) => path.join(dir, id),
     newId: () => nanoid(12),
     async add(id, input) {
-      const token = randomBytes(32).toString('base64url');
-      const record: ShareRecord = { id, tokenHash: hashToken(token), ...input, createdAt: Date.now(), revokedAt: null, commentIds: [] };
+      const token = randomBytes(32).toString("base64url");
+      const record: ShareRecord = {
+        id,
+        tokenHash: hashToken(token),
+        ...input,
+        createdAt: Date.now(),
+        revokedAt: null,
+        commentIds: [],
+      };
       await mutate((records) => records.push(record));
       return { record, token };
     },
     async list(projectId) {
       const records = await read();
-      return projectId ? records.filter((r) => r.projectId === projectId) : records;
+      return projectId
+        ? records.filter((r) => r.projectId === projectId)
+        : records;
     },
     async byToken(token) {
       if (!TOKEN_RE.test(token)) return null;
@@ -135,7 +159,7 @@ export function createShareStore(dataDir: string): ShareStore {
       const hash = hashToken(token);
       const found = (await read()).find((r) => r.tokenHash === hash);
       if (!found || isLive(found)) return null;
-      return found.revokedAt !== null ? 'revoked' : 'expired';
+      return found.revokedAt !== null ? "revoked" : "expired";
     },
     revoke(id) {
       return mutate((records) => {
@@ -144,7 +168,8 @@ export function createShareStore(dataDir: string): ShareStore {
         if (found.revokedAt === null) found.revokedAt = Date.now();
         return found;
       }).then(async (found) => {
-        if (found) await rm(path.join(dir, found.id), { recursive: true, force: true });
+        if (found)
+          await rm(path.join(dir, found.id), { recursive: true, force: true });
         return found;
       });
     },
@@ -168,7 +193,9 @@ export function createShareStore(dataDir: string): ShareStore {
     },
     async nextExpiry() {
       const now = Date.now();
-      const live = (await read()).filter((r) => isLive(r, now)).map((r) => r.expiresAt);
+      const live = (await read())
+        .filter((r) => isLive(r, now))
+        .map((r) => r.expiresAt);
       return live.length > 0 ? Math.min(...live) : null;
     },
   };

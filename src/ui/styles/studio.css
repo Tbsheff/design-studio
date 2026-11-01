@@ -8,7 +8,7 @@
   padding: var(--s-2) var(--s-2) var(--s-2) 0;
 }
 
-.studio[data-pane='collapsed'] > .columns {
+.studio[data-pane="collapsed"] > .columns {
   grid-template-columns: minmax(0, 1fr);
   padding-left: var(--s-2);
 }
@@ -71,7 +71,7 @@
 }
 
 .pane-project:hover,
-.pane-project[aria-expanded='true'] {
+.pane-project[aria-expanded="true"] {
   background: var(--surface-hover);
 }
 
@@ -120,7 +120,7 @@
   color: var(--text-2);
 }
 
-.pane-head-btn[aria-pressed='true'] {
+.pane-head-btn[aria-pressed="true"] {
   background: var(--surface-active);
   color: var(--text);
 }
@@ -256,7 +256,9 @@
 
 .pane-system .btn.ghost:is(.ds-chip, .ds-add) {
   background: var(--surface-raised);
-  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-xs);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-xs);
   color: var(--text);
 }
 
@@ -282,7 +284,7 @@
     0 4px 14px oklch(0.2 0.01 var(--hue) / 0.08);
 }
 
-:root[data-theme='dark'] .pane-canvas.center {
+:root[data-theme="dark"] .pane-canvas.center {
   box-shadow:
     inset 0 0 0 1px oklch(1 0 0 / 0.1),
     0 0 0 1px oklch(0 0 0 / 0.4),
@@ -316,7 +318,7 @@
   color: var(--text-2);
 }
 
-.canvas-topbar .topbar-icon[aria-pressed='true'] {
+.canvas-topbar .topbar-icon[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }
@@ -345,7 +347,7 @@
 }
 
 .topbar-file:hover,
-.topbar-file[aria-expanded='true'] {
+.topbar-file[aria-expanded="true"] {
   background: var(--surface-hover);
 }
 
@@ -364,7 +366,7 @@
 }
 
 .topbar-zoom:hover,
-.topbar-zoom[aria-expanded='true'] {
+.topbar-zoom[aria-expanded="true"] {
   background: var(--surface-hover);
   color: var(--text);
 }
@@ -454,7 +456,9 @@
 .tweak-prompt {
   position: absolute;
   z-index: 40;
-  top: calc(var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px));
+  top: calc(
+    var(--bar-h) + var(--s-2) + var(--viewrow-h, 0px) + var(--banner-h, 0px)
+  );
   left: 40px;
   display: flex;
   align-items: center;
@@ -465,7 +469,7 @@
   animation: pop-in var(--dur-slow) var(--ease);
 }
 
-.studio[data-pane='collapsed'] .tweak-prompt {
+.studio[data-pane="collapsed"] .tweak-prompt {
   left: 72px;
 }
 
@@ -623,7 +627,7 @@
     display: inline-flex;
   }
 
-  .topbar-menu .ui-menu-section[data-fold='wide'] {
+  .topbar-menu .ui-menu-section[data-fold="wide"] {
     display: grid;
   }
 }
@@ -633,7 +637,7 @@
     display: none;
   }
 
-  .topbar-menu .ui-menu-section[data-fold='narrow'] {
+  .topbar-menu .ui-menu-section[data-fold="narrow"] {
     display: grid;
   }
 }
@@ -643,7 +647,7 @@
     display: none;
   }
 
-  .topbar-menu .ui-menu-section[data-fold='tight'] {
+  .topbar-menu .ui-menu-section[data-fold="tight"] {
     display: grid;
   }
 }

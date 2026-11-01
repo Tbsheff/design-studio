@@ -32,7 +32,7 @@
 }
 
 .tk-dot::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -8px;
 }
@@ -78,7 +78,7 @@
 }
 
 .tk-control.raw .tk-open::before {
-  content: '';
+  content: "";
   position: absolute;
   right: 50%;
   bottom: 50%;
@@ -116,12 +116,12 @@
 }
 
 .tk-open:hover,
-.tk-open[aria-expanded='true'] {
+.tk-open[aria-expanded="true"] {
   background: var(--surface-hover);
 }
 
 .tk-control.unset .tk-open:hover,
-.tk-control.unset .tk-open[aria-expanded='true'] {
+.tk-control.unset .tk-open[aria-expanded="true"] {
   color: var(--text);
 }
 
@@ -205,12 +205,12 @@
   color: var(--text-3);
 }
 
-.tk-snap-toggle[aria-pressed='true'] {
+.tk-snap-toggle[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }
 
-.tk-snap-toggle[aria-pressed='true']:hover {
+.tk-snap-toggle[aria-pressed="true"]:hover {
   background: var(--accent-soft);
   box-shadow: inset 0 0 0 1px var(--accent-line);
 }
@@ -275,7 +275,6 @@
 .ins-field.font .ins-input {
   padding-left: 2px;
 }
-
 
 .tk-lint {
   margin: var(--s-3) var(--pane-inset) 0;

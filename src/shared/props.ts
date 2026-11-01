@@ -1,7 +1,12 @@
-import type { ClassChange, DirectStyleProperty, SourceLoc, Version } from './contracts.js';
+import type {
+  ClassChange,
+  DirectStyleProperty,
+  SourceLoc,
+  Version,
+} from "./contracts.js";
 
 export type PropValue = string | number | boolean;
-export type PropControl = 'select' | 'boolean' | 'text' | 'number';
+export type PropControl = "select" | "boolean" | "text" | "number";
 
 export interface PropSpec {
   name: string;
@@ -9,7 +14,7 @@ export interface PropSpec {
   options?: string[];
   default?: PropValue;
   optional: boolean;
-  from: 'variant' | 'type';
+  from: "variant" | "type";
   node?: boolean;
 }
 
@@ -93,8 +98,8 @@ export interface VariantClassResult {
   note: string | null;
 }
 
-export type ComponentSource = 'package' | 'app';
-export const COMPONENT_SOURCES = ['package', 'app', 'all'] as const;
+export type ComponentSource = "package" | "app";
+export const COMPONENT_SOURCES = ["package", "app", "all"] as const;
 export const COMPONENT_LIST_MAX = 100;
 
 export interface ComponentListItem extends ComponentSchema {

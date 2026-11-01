@@ -107,11 +107,12 @@
 }
 
 .export-frame input:checked::before {
-  content: '';
+  content: "";
   width: 12px;
   height: 12px;
   background: var(--on-strong);
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .export-frame input:focus-visible {
@@ -148,7 +149,6 @@
   min-height: 30px;
   margin-right: auto;
 }
-
 
 .export-progress,
 .export-done {
@@ -252,7 +252,7 @@
 }
 
 .export-switch::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 2px;
   border: 1px solid var(--line-strong);
@@ -264,7 +264,7 @@
 }
 
 .export-switch::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
 }
@@ -350,7 +350,6 @@
   left: auto;
   min-width: 200px;
 }
-
 
 @media (prefers-reduced-motion: reduce) {
   .export-switch-knob {

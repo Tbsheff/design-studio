@@ -1,5 +1,17 @@
-import type { ScanBox, ScanClip, ScanColor, ScanGradient, ScanItem, ScanRect, ScanResult, ScanShadow, ScanShape, ScanSvg, ScanText } from './page-scan.js';
-import { parsePath, type PathPoint } from './svg-path.js';
+import type {
+  ScanBox,
+  ScanClip,
+  ScanColor,
+  ScanGradient,
+  ScanItem,
+  ScanRect,
+  ScanResult,
+  ScanShadow,
+  ScanShape,
+  ScanSvg,
+  ScanText,
+} from "./page-scan.js";
+import { parsePath, type PathPoint } from "./svg-path.js";
 
 export interface NativeStroke {
   color: ScanColor;
@@ -16,12 +28,20 @@ interface Painted {
 }
 
 export type NativeShape =
-  | (Painted & { kind: 'rect'; box: ScanRect; radius: number })
-  | (Painted & { kind: 'ellipse'; box: ScanRect })
-  | (Painted & { kind: 'path'; box: ScanRect; points: PathPoint[] })
-  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; stroke: NativeStroke; opacity: number }
-  | { kind: 'image'; box: ScanRect; radius: number }
-  | { kind: 'text'; text: ScanText };
+  | (Painted & { kind: "rect"; box: ScanRect; radius: number })
+  | (Painted & { kind: "ellipse"; box: ScanRect })
+  | (Painted & { kind: "path"; box: ScanRect; points: PathPoint[] })
+  | {
+      kind: "line";
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+      stroke: NativeStroke;
+      opacity: number;
+    }
+  | { kind: "image"; box: ScanRect; radius: number }
+  | { kind: "text"; text: ScanText };
 
 export interface Placed {
   z: number;
@@ -38,52 +58,121 @@ const THIN = 3;
 const EPS = 0.5;
 
 function overlaps(a: ScanRect, b: ScanRect): boolean {
-  return a.x < b.x + b.width - EPS && b.x < a.x + a.width - EPS && a.y < b.y + b.height - EPS && b.y < a.y + a.height - EPS;
+  return (
+    a.x < b.x + b.width - EPS &&
+    b.x < a.x + a.width - EPS &&
+    a.y < b.y + b.height - EPS &&
+    b.y < a.y + a.height - EPS
+  );
 }
 
 function inside(box: ScanRect, area: ScanRect, slack = EPS): boolean {
-  return box.x >= area.x - slack && box.y >= area.y - slack && box.x + box.width <= area.x + area.width + slack && box.y + box.height <= area.y + area.height + slack;
+  return (
+    box.x >= area.x - slack &&
+    box.y >= area.y - slack &&
+    box.x + box.width <= area.x + area.width + slack &&
+    box.y + box.height <= area.y + area.height + slack
+  );
 }
 
 function spillReach(item: ScanSvg): ScanRect {
-  const boxes = [item, ...(item.shapes ?? []).map((shape) => svgShape(shape, 1)).filter((shape): shape is NativeShape => shape !== null).map(boundsOf)];
+  const boxes = [
+    item,
+    ...(item.shapes ?? [])
+      .map((shape) => svgShape(shape, 1))
+      .filter((shape): shape is NativeShape => shape !== null)
+      .map(boundsOf),
+  ];
   const x = Math.min(...boxes.map((box) => box.x));
   const y = Math.min(...boxes.map((box) => box.y));
-  return { x, y, width: Math.max(...boxes.map((box) => box.x + box.width)) - x, height: Math.max(...boxes.map((box) => box.y + box.height)) - y };
+  return {
+    x,
+    y,
+    width: Math.max(...boxes.map((box) => box.x + box.width)) - x,
+    height: Math.max(...boxes.map((box) => box.y + box.height)) - y,
+  };
 }
 
 function reach(item: ScanBox | ScanSvg): ScanRect {
-  if (item.kind === 'svg') return item.spill ? spillReach(item) : item;
+  if (item.kind === "svg") return item.spill ? spillReach(item) : item;
   if (!item.shadow) return item;
   const { dx, dy } = item.shadow;
   const blur = item.shadow.blur + Math.max(0, item.shadow.spread ?? 0);
-  return { x: item.x + Math.min(0, dx) - blur, y: item.y + Math.min(0, dy) - blur, width: item.width + Math.abs(dx) + blur * 2, height: item.height + Math.abs(dy) + blur * 2 };
+  return {
+    x: item.x + Math.min(0, dx) - blur,
+    y: item.y + Math.min(0, dy) - blur,
+    width: item.width + Math.abs(dx) + blur * 2,
+    height: item.height + Math.abs(dy) + blur * 2,
+  };
 }
 
 function sameColor(colors: ScanColor[]): ScanColor | null {
   const [first] = colors;
-  if (!first || colors.some((c) => c.hex !== first.hex || Math.abs(c.alpha - first.alpha) > 0.01)) return null;
+  if (
+    !first ||
+    colors.some(
+      (c) => c.hex !== first.hex || Math.abs(c.alpha - first.alpha) > 0.01
+    )
+  )
+    return null;
   return first;
 }
 
-function lineIn(rect: ScanRect, color: ScanColor, opacity: number, dashed = false): NativeShape {
+function lineIn(
+  rect: ScanRect,
+  color: ScanColor,
+  opacity: number,
+  dashed = false
+): NativeShape {
   const across = rect.width >= rect.height;
   const width = across ? rect.height : rect.width;
   const stroke = { color, width, dashed };
-  if (across) return { kind: 'line', x1: rect.x, y1: rect.y + width / 2, x2: rect.x + rect.width, y2: rect.y + width / 2, stroke, opacity };
-  return { kind: 'line', x1: rect.x + width / 2, y1: rect.y, x2: rect.x + width / 2, y2: rect.y + rect.height, stroke, opacity };
+  if (across)
+    return {
+      kind: "line",
+      x1: rect.x,
+      y1: rect.y + width / 2,
+      x2: rect.x + rect.width,
+      y2: rect.y + width / 2,
+      stroke,
+      opacity,
+    };
+  return {
+    kind: "line",
+    x1: rect.x + width / 2,
+    y1: rect.y,
+    x2: rect.x + width / 2,
+    y2: rect.y + rect.height,
+    stroke,
+    opacity,
+  };
 }
 
 function thinLine(box: ScanBox): NativeShape | null {
   if (Math.min(box.width, box.height) > THIN) return null;
-  const colors = [box.fill, box.border?.color, ...box.sides.map((side) => side.color)].filter((c): c is ScanColor => Boolean(c));
+  const colors = [
+    box.fill,
+    box.border?.color,
+    ...box.sides.map((side) => side.color),
+  ].filter((c): c is ScanColor => Boolean(c));
   const color = sameColor(colors);
   return color ? lineIn(box, color, box.opacity, box.border?.dashed) : null;
 }
 
-function sideShape(side: ScanRect & { color: ScanColor }, opacity: number): NativeShape {
-  if (Math.min(side.width, side.height) <= THIN) return lineIn(side, side.color, opacity);
-  return { kind: 'rect', box: side, radius: 0, fill: side.color, stroke: null, opacity };
+function sideShape(
+  side: ScanRect & { color: ScanColor },
+  opacity: number
+): NativeShape {
+  if (Math.min(side.width, side.height) <= THIN)
+    return lineIn(side, side.color, opacity);
+  return {
+    kind: "rect",
+    box: side,
+    radius: 0,
+    fill: side.color,
+    stroke: null,
+    opacity,
+  };
 }
 
 function boxShapes(box: ScanBox): NativeShape[] | null {
@@ -94,50 +183,129 @@ function boxShapes(box: ScanBox): NativeShape[] | null {
     const thin = thinLine(box);
     if (thin) return [thin];
   }
-  const fill: NativeShape[] = box.fill ? [{ kind: 'rect', box, radius: r, fill: box.fill, stroke: null, opacity: box.opacity }] : [];
-  if (box.sides.length > 0) return r > EPS ? null : [...fill, ...box.sides.map((side) => sideShape(side, box.opacity))];
-  if (!box.border) return fill.length > 0 || box.gradient || box.shadow ? boxShape(box, r, null) : null;
-  return boxShape(box, r, { color: box.border.color, width: box.border.width, dashed: box.border.dashed });
+  const fill: NativeShape[] = box.fill
+    ? [
+        {
+          kind: "rect",
+          box,
+          radius: r,
+          fill: box.fill,
+          stroke: null,
+          opacity: box.opacity,
+        },
+      ]
+    : [];
+  if (box.sides.length > 0)
+    return r > EPS
+      ? null
+      : [...fill, ...box.sides.map((side) => sideShape(side, box.opacity))];
+  if (!box.border)
+    return fill.length > 0 || box.gradient || box.shadow
+      ? boxShape(box, r, null)
+      : null;
+  return boxShape(box, r, {
+    color: box.border.color,
+    width: box.border.width,
+    dashed: box.border.dashed,
+  });
 }
 
-function boxShape(box: ScanBox, r: number, stroke: NativeStroke | null): NativeShape[] {
+function boxShape(
+  box: ScanBox,
+  r: number,
+  stroke: NativeStroke | null
+): NativeShape[] {
   const inset = stroke ? stroke.width / 2 : 0;
-  const rect = { x: box.x + inset, y: box.y + inset, width: Math.max(0, box.width - inset * 2), height: Math.max(0, box.height - inset * 2) };
-  const painted = { fill: box.fill, stroke, opacity: box.opacity, ...(box.gradient ? { gradient: box.gradient } : {}), ...(box.shadow ? { shadow: box.shadow } : {}) };
+  const rect = {
+    x: box.x + inset,
+    y: box.y + inset,
+    width: Math.max(0, box.width - inset * 2),
+    height: Math.max(0, box.height - inset * 2),
+  };
+  const painted = {
+    fill: box.fill,
+    stroke,
+    opacity: box.opacity,
+    ...(box.gradient ? { gradient: box.gradient } : {}),
+    ...(box.shadow ? { shadow: box.shadow } : {}),
+  };
   const round = r >= Math.min(box.width, box.height) / 2 - EPS;
-  if (round && Math.abs(box.width - box.height) < EPS) return [{ kind: 'ellipse', box: rect, ...painted }];
-  return [{ kind: 'rect', box: rect, radius: Math.max(0, r - inset), ...painted }];
+  if (round && Math.abs(box.width - box.height) < EPS)
+    return [{ kind: "ellipse", box: rect, ...painted }];
+  return [
+    { kind: "rect", box: rect, radius: Math.max(0, r - inset), ...painted },
+  ];
 }
 
 function imageShapes(box: ScanBox, later: ScanRect[]): NativeShape[] | null {
   const [r = 0] = box.radius;
-  if (box.border || box.sides.length > 0 || box.shadow || box.inset || box.radius.some((v) => Math.abs(v - r) > EPS)) return null;
-  return later.some((rect) => overlaps(rect, box)) ? null : [{ kind: 'image', box, radius: r }];
+  if (
+    box.border ||
+    box.sides.length > 0 ||
+    box.shadow ||
+    box.inset ||
+    box.radius.some((v) => Math.abs(v - r) > EPS)
+  )
+    return null;
+  return later.some((rect) => overlaps(rect, box))
+    ? null
+    : [{ kind: "image", box, radius: r }];
 }
 
-function extrema(p0: number, p1: number, p2: number, p3: number | null): number[] {
-  const at = (t: number) => (p3 === null ? (1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t * t * p2 : (1 - t) ** 3 * p0 + 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t * t * p2 + t ** 3 * p3);
+function extrema(
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number | null
+): number[] {
+  const at = (t: number) =>
+    p3 === null
+      ? (1 - t) ** 2 * p0 + 2 * (1 - t) * t * p1 + t * t * p2
+      : (1 - t) ** 3 * p0 +
+        3 * (1 - t) ** 2 * t * p1 +
+        3 * (1 - t) * t * t * p2 +
+        t ** 3 * p3;
   if (p3 === null) {
     const den = p0 - 2 * p1 + p2;
-    return Math.abs(den) < 1e-9 ? [] : [(p0 - p1) / den].filter((t) => t > 0 && t < 1).map(at);
+    return Math.abs(den) < 1e-9
+      ? []
+      : [(p0 - p1) / den].filter((t) => t > 0 && t < 1).map(at);
   }
   const a = -p0 + 3 * p1 - 3 * p2 + p3;
   const b = 2 * (p0 - 2 * p1 + p2);
   const c = p1 - p0;
-  if (Math.abs(a) < 1e-9) return Math.abs(b) < 1e-9 ? [] : [-c / b].filter((t) => t > 0 && t < 1).map(at);
+  if (Math.abs(a) < 1e-9)
+    return Math.abs(b) < 1e-9
+      ? []
+      : [-c / b].filter((t) => t > 0 && t < 1).map(at);
   const disc = b * b - 4 * a * c;
   if (disc < 0) return [];
   const root = Math.sqrt(disc);
-  return [(-b + root) / (2 * a), (-b - root) / (2 * a)].filter((t) => t > 0 && t < 1).map(at);
+  return [(-b + root) / (2 * a), (-b - root) / (2 * a)]
+    .filter((t) => t > 0 && t < 1)
+    .map(at);
 }
 
 type Curved = Extract<PathPoint, { curve: unknown }>;
 
-function curveExtrema(from: { x: number; y: number }, point: Curved): { xs: number[]; ys: number[] } {
-  const cubic = point.curve.type === 'cubic' ? point.curve : null;
+function curveExtrema(
+  from: { x: number; y: number },
+  point: Curved
+): { xs: number[]; ys: number[] } {
+  const cubic = point.curve.type === "cubic" ? point.curve : null;
   return {
-    xs: extrema(from.x, point.curve.x1, cubic ? cubic.x2 : point.x, cubic ? point.x : null),
-    ys: extrema(from.y, point.curve.y1, cubic ? cubic.y2 : point.y, cubic ? point.y : null),
+    xs: extrema(
+      from.x,
+      point.curve.x1,
+      cubic ? cubic.x2 : point.x,
+      cubic ? point.x : null
+    ),
+    ys: extrema(
+      from.y,
+      point.curve.y1,
+      cubic ? cubic.y2 : point.y,
+      cubic ? point.y : null
+    ),
   };
 }
 
@@ -146,10 +314,10 @@ function pathBox(points: PathPoint[]): ScanRect {
   const ys: number[] = [];
   let last: { x: number; y: number } | null = null;
   for (const point of points) {
-    if ('close' in point) continue;
+    if ("close" in point) continue;
     xs.push(point.x);
     ys.push(point.y);
-    if ('curve' in point && last) {
+    if ("curve" in point && last) {
       const more = curveExtrema(last, point);
       xs.push(...more.xs);
       ys.push(...more.ys);
@@ -161,48 +329,112 @@ function pathBox(points: PathPoint[]): ScanRect {
   return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
 }
 
-const ALIGN: Record<string, string> = { middle: 'center', end: 'right' };
+const ALIGN: Record<string, string> = { middle: "center", end: "right" };
 
-function svgText(shape: Extract<ScanShape, { kind: 'text' }>, base: number): NativeShape | null {
+function svgText(
+  shape: Extract<ScanShape, { kind: "text" }>,
+  base: number
+): NativeShape | null {
   if (!shape.fill) return null;
-  const line = { x: shape.x, y: shape.y, width: shape.width, height: shape.height, text: shape.text, baseline: shape.y + shape.height };
-  const text: ScanText = { kind: 'text', lines: [line], font: shape.font, color: shape.fill, letterSpacing: 0, lineHeight: shape.height, underline: false, strike: false, align: ALIGN[shape.anchor] ?? 'left', block: -1, opacity: base * shape.opacity, clip: -1 };
-  return { kind: 'text', text };
+  const line = {
+    x: shape.x,
+    y: shape.y,
+    width: shape.width,
+    height: shape.height,
+    text: shape.text,
+    baseline: shape.y + shape.height,
+  };
+  const text: ScanText = {
+    kind: "text",
+    lines: [line],
+    font: shape.font,
+    color: shape.fill,
+    letterSpacing: 0,
+    lineHeight: shape.height,
+    underline: false,
+    strike: false,
+    align: ALIGN[shape.anchor] ?? "left",
+    block: -1,
+    opacity: base * shape.opacity,
+    clip: -1,
+  };
+  return { kind: "text", text };
 }
 
 function svgShape(shape: ScanShape, base: number): NativeShape | null {
-  if (shape.kind === 'text') return svgText(shape, base);
-  const stroke = shape.stroke ? { color: shape.stroke, width: shape.strokeWidth, dashed: false } : null;
+  if (shape.kind === "text") return svgText(shape, base);
+  const stroke = shape.stroke
+    ? { color: shape.stroke, width: shape.strokeWidth, dashed: false }
+    : null;
   const painted = { fill: shape.fill, stroke, opacity: base * shape.opacity };
-  if (shape.kind === 'rect') return { kind: 'rect', box: shape, radius: shape.radius, ...painted };
-  if (shape.kind === 'ellipse') return { kind: 'ellipse', box: shape, ...painted };
-  if (shape.kind === 'line') return stroke ? { kind: 'line', x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2, stroke, opacity: painted.opacity } : null;
+  if (shape.kind === "rect")
+    return { kind: "rect", box: shape, radius: shape.radius, ...painted };
+  if (shape.kind === "ellipse")
+    return { kind: "ellipse", box: shape, ...painted };
+  if (shape.kind === "line")
+    return stroke
+      ? {
+          kind: "line",
+          x1: shape.x1,
+          y1: shape.y1,
+          x2: shape.x2,
+          y2: shape.y2,
+          stroke,
+          opacity: painted.opacity,
+        }
+      : null;
   const points = parsePath(shape.d, shape.matrix);
-  return points ? { kind: 'path', box: pathBox(points), points, ...painted } : null;
+  return points
+    ? { kind: "path", box: pathBox(points), points, ...painted }
+    : null;
 }
 
 function boundsOf(shape: NativeShape): ScanRect {
-  if (shape.kind === 'image') return shape.box;
-  if (shape.kind === 'text') return shape.text.lines[0] ?? { x: 0, y: 0, width: 0, height: 0 };
+  if (shape.kind === "image") return shape.box;
+  if (shape.kind === "text")
+    return shape.text.lines[0] ?? { x: 0, y: 0, width: 0, height: 0 };
   const half = (shape.stroke?.width ?? 0) / 2;
-  const box = shape.kind === 'line' ? { x: Math.min(shape.x1, shape.x2), y: Math.min(shape.y1, shape.y2), width: Math.abs(shape.x2 - shape.x1), height: Math.abs(shape.y2 - shape.y1) } : shape.box;
-  return { x: box.x - half, y: box.y - half, width: box.width + half * 2, height: box.height + half * 2 };
+  const box =
+    shape.kind === "line"
+      ? {
+          x: Math.min(shape.x1, shape.x2),
+          y: Math.min(shape.y1, shape.y2),
+          width: Math.abs(shape.x2 - shape.x1),
+          height: Math.abs(shape.y2 - shape.y1),
+        }
+      : shape.box;
+  return {
+    x: box.x - half,
+    y: box.y - half,
+    width: box.width + half * 2,
+    height: box.height + half * 2,
+  };
 }
 
 function svgShapes(item: ScanSvg, scan: ScanResult): NativeShape[] | null {
   if (!item.shapes) return null;
   const out: NativeShape[] = [];
-  const area = item.spill ? { x: 0, y: 0, width: scan.width, height: scan.height } : item;
+  const area = item.spill
+    ? { x: 0, y: 0, width: scan.width, height: scan.height }
+    : item;
   for (const shape of item.shapes) {
     const native = svgShape(shape, item.opacity);
-    const slack = native?.kind === 'text' ? 4 : 1 + (native && 'stroke' in native ? (native.stroke?.width ?? 0) / 2 : 0);
+    const slack =
+      native?.kind === "text"
+        ? 4
+        : 1 +
+          (native && "stroke" in native ? (native.stroke?.width ?? 0) / 2 : 0);
     if (!native || !inside(boundsOf(native), area, slack)) return null;
     out.push(native);
   }
   return out;
 }
 
-function clipOk(box: ScanRect, radius: number, clip: ScanClip | undefined): boolean {
+function clipOk(
+  box: ScanRect,
+  radius: number,
+  clip: ScanClip | undefined
+): boolean {
   if (!clip) return true;
   if (!inside(box, clip)) return false;
   if (clip.radius <= EPS || radius >= clip.radius - EPS) return true;
@@ -215,29 +447,63 @@ function clipOk(box: ScanRect, radius: number, clip: ScanClip | undefined): bool
 }
 
 function inRegion(item: ScanBox | ScanSvg, scan: ScanResult): boolean {
-  return inside(item, { x: 0, y: 0, width: scan.width, height: scan.height }, 1);
+  return inside(
+    item,
+    { x: 0, y: 0, width: scan.width, height: scan.height },
+    1
+  );
 }
 
-function liveClip(item: ScanBox | ScanSvg, scan: ScanResult): ScanClip | undefined {
+function liveClip(
+  item: ScanBox | ScanSvg,
+  scan: ScanResult
+): ScanClip | undefined {
   const clip = scan.clips[item.clip];
   if (!clip || clip.radius > EPS) return clip;
-  return inside({ x: 0, y: 0, width: scan.width, height: scan.height }, clip, 1) ? undefined : clip;
+  return inside({ x: 0, y: 0, width: scan.width, height: scan.height }, clip, 1)
+    ? undefined
+    : clip;
 }
 
 function clipToRegion(box: ScanBox, scan: ScanResult): ScanBox | null {
   if (inRegion(box, scan)) return box;
   const region = { x: 0, y: 0, width: scan.width, height: scan.height };
   if (!overlaps(box, region)) return null;
-  if (box.border || box.sides.length > 0 || box.radius.some((r) => r > EPS) || box.gradient || box.shadow) return box.width * box.height <= scan.width * scan.height ? box : null;
+  if (
+    box.border ||
+    box.sides.length > 0 ||
+    box.radius.some((r) => r > EPS) ||
+    box.gradient ||
+    box.shadow
+  )
+    return box.width * box.height <= scan.width * scan.height ? box : null;
   if (!box.fill) return null;
   const x = Math.max(0, box.x);
   const y = Math.max(0, box.y);
-  return { ...box, x, y, width: Math.min(scan.width, box.x + box.width) - x, height: Math.min(scan.height, box.y + box.height) - y };
+  return {
+    ...box,
+    x,
+    y,
+    width: Math.min(scan.width, box.x + box.width) - x,
+    height: Math.min(scan.height, box.y + box.height) - y,
+  };
 }
 
-function convert(item: ScanBox | ScanSvg, scan: ScanResult, later: ScanRect[]): NativeShape[] | null {
-  if (item.id === undefined || !clipOk(item.kind === 'box' && item.shadow ? reach(item) : item, item.kind === 'box' ? (item.radius[0] ?? 0) : 0, liveClip(item, scan))) return null;
-  if (item.kind === 'svg') return svgShapes(item, scan);
+function convert(
+  item: ScanBox | ScanSvg,
+  scan: ScanResult,
+  later: ScanRect[]
+): NativeShape[] | null {
+  if (
+    item.id === undefined ||
+    !clipOk(
+      item.kind === "box" && item.shadow ? reach(item) : item,
+      item.kind === "box" ? (item.radius[0] ?? 0) : 0,
+      liveClip(item, scan)
+    )
+  )
+    return null;
+  if (item.kind === "svg") return svgShapes(item, scan);
   if (item.complex) return null;
   if (item.image) return inRegion(item, scan) ? imageShapes(item, later) : null;
   if (item.raster && !item.gradient) return null;
@@ -246,7 +512,7 @@ function convert(item: ScanBox | ScanSvg, scan: ScanResult, later: ScanRect[]): 
 }
 
 function drawn(item: ScanItem): item is ScanBox | ScanSvg {
-  return item.kind !== 'text';
+  return item.kind !== "text";
 }
 
 export function planNative(scan: ScanResult): NativePlan {
@@ -258,15 +524,18 @@ export function planNative(scan: ScanResult): NativePlan {
     const item = scan.items[z];
     if (!item || !drawn(item)) continue;
     const rect = reach(item);
-    if (!overlaps(rect, { x: 0, y: 0, width: scan.width, height: scan.height })) continue;
-    const shapes = raster.some((other) => overlaps(other, rect)) ? null : convert(item, scan, later);
+    if (!overlaps(rect, { x: 0, y: 0, width: scan.width, height: scan.height }))
+      continue;
+    const shapes = raster.some((other) => overlaps(other, rect))
+      ? null
+      : convert(item, scan, later);
     later.push(rect);
     if (!shapes || item.id === undefined) {
       raster.push(rect);
       continue;
     }
     layers.push(shapes.map((shape) => ({ z, shape })));
-    if (item.kind === 'svg' || item.image) plan.gone.push(item.id);
+    if (item.kind === "svg" || item.image) plan.gone.push(item.id);
     else plan.paint.push(item.id);
   }
   plan.shapes = layers.reverse().flat();

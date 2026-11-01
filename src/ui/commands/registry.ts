@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react';
-import type { KeyId } from '../../shared/keymap';
-import type { IconName } from '../components/Icon';
+import { useEffect, useRef } from "react";
 
-export const COMMAND_EVENT = 'studio:command';
-export const LAYER_EVENT = 'studio:command-layer';
+import type { KeyId } from "../../shared/keymap";
+import type { IconName } from "../components/Icon";
 
-export type CommandLayer = 'palette' | 'shortcuts';
+export const COMMAND_EVENT = "studio:command";
+export const LAYER_EVENT = "studio:command-layer";
+
+export type CommandLayer = "palette" | "shortcuts";
 
 export interface Command {
   id: string;
@@ -45,7 +46,7 @@ export function runCommand(id: string): boolean {
 
 export function commandBlocker(id: string): string | null {
   const command = collectCommands().find((c) => c.id === id);
-  return command ? (command.disabled ?? null) : 'Not available here';
+  return command ? (command.disabled ?? null) : "Not available here";
 }
 
 export function openLayer(layer: CommandLayer): void {
@@ -71,6 +72,6 @@ export function listenForCommands(): void {
   listening = true;
   window.addEventListener(COMMAND_EVENT, (event) => {
     const id = (event as CustomEvent<unknown>).detail;
-    if (typeof id === 'string') runCommand(id);
+    if (typeof id === "string") runCommand(id);
   });
 }

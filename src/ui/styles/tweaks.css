@@ -179,7 +179,7 @@
 }
 
 .twk-switch::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -12px -5px;
 }

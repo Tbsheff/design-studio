@@ -1,4 +1,8 @@
-import type { InsertJsxResult, InsertTarget, JsxInsertPosition } from './insert.js';
+import type {
+  InsertJsxResult,
+  InsertTarget,
+  JsxInsertPosition,
+} from "./insert.js";
 
 export interface FigmaColor {
   r: number;
@@ -90,7 +94,12 @@ export interface FigmaNode {
   fills?: FigmaPaint[];
   strokes?: FigmaPaint[];
   strokeWeight?: number;
-  individualStrokeWeights?: { top: number; right: number; bottom: number; left: number };
+  individualStrokeWeights?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
   cornerRadius?: number;
   rectangleCornerRadii?: number[];
   effects?: FigmaEffect[];
@@ -159,10 +168,18 @@ export const FIGMA_LAYERS_MAX = 600;
 
 export function looksLikeFigmaNodes(text: string): boolean {
   const head = text.trimStart();
-  if (!head.startsWith('{')) return false;
-  return /"(nodes|document)"\s*:/.test(head.slice(0, 4000)) || (/"type"\s*:\s*"(FRAME|COMPONENT|INSTANCE|GROUP|SECTION)"/.test(head.slice(0, 4000)) && /"absoluteBoundingBox"/.test(head));
+  if (!head.startsWith("{")) return false;
+  return (
+    /"(nodes|document)"\s*:/.test(head.slice(0, 4000)) ||
+    (/"type"\s*:\s*"(FRAME|COMPONENT|INSTANCE|GROUP|SECTION)"/.test(
+      head.slice(0, 4000)
+    ) &&
+      /"absoluteBoundingBox"/.test(head))
+  );
 }
 
 export function looksLikeFigmaLink(text: string): boolean {
-  return /^https:\/\/(www\.)?figma\.com\/(file|design|proto)\/[A-Za-z0-9]+/.test(text.trim());
+  return /^https:\/\/(www\.)?figma\.com\/(file|design|proto)\/[A-Za-z0-9]+/.test(
+    text.trim()
+  );
 }

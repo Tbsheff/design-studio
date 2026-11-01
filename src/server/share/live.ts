@@ -1,9 +1,16 @@
-import { randomBytes } from 'node:crypto';
-import { rm } from 'node:fs/promises';
-import { SHARE_LIVE_VIEWERS_MAX, type ShareFrame, type SharePresenceCursor, type SharePresenceEvent, type StudioCursorInput } from '../../shared/share.js';
-import { resolveSource, type ExportDeps } from '../export/source.js';
-import { captureShare } from './snapshot.js';
-import { isLive, type ShareRecord, type ShareStore } from './store.js';
+import { randomBytes } from "node:crypto";
+import { rm } from "node:fs/promises";
+
+import {
+  SHARE_LIVE_VIEWERS_MAX,
+  type ShareFrame,
+  type SharePresenceCursor,
+  type SharePresenceEvent,
+  type StudioCursorInput,
+} from "../../shared/share.js";
+import { resolveSource, type ExportDeps } from "../export/source.js";
+import { captureShare } from "./snapshot.js";
+import { isLive, type ShareRecord, type ShareStore } from "./store.js";
 
 const CURSOR_MIN_MS = 40;
 const STUDIO_CURSOR_MIN_MS = 30;
@@ -38,10 +45,17 @@ export interface ViewerCursorInput {
 }
 
 export interface LiveHub {
-  join(record: ShareRecord, send: Send, close: () => Promise<void>): { key: string; id: string } | null;
+  join(
+    record: ShareRecord,
+    send: Send,
+    close: () => Promise<void>
+  ): { key: string; id: string } | null;
   leave(linkId: string, key: string): void;
-  cursor(linkId: string, input: ViewerCursorInput): 'ok' | 'gone' | 'skip';
-  subscribeStudio(projectId: string, send: (event: SharePresenceEvent) => void): () => void;
+  cursor(linkId: string, input: ViewerCursorInput): "ok" | "gone" | "skip";
+  subscribeStudio(
+    projectId: string,
+    send: (event: SharePresenceEvent) => void
+  ): () => void;
   studioCursor(projectId: string, input: StudioCursorInput | null): void;
   update(record: ShareRecord): void;
   setStudioCursor(record: ShareRecord): void;
@@ -53,7 +67,15 @@ export interface LiveHub {
 function publicCursor(room: Room, viewer: Viewer): SharePresenceCursor | null {
   if (!viewer.cursor) return null;
   const frame = room.frames[viewer.cursor.frame];
-  return { linkId: room.linkId, viewer: viewer.id, name: viewer.name, frameId: frame?.id ?? null, frame: viewer.cursor.frame, x: viewer.cursor.x, y: viewer.cursor.y };
+  return {
+    linkId: room.linkId,
+    viewer: viewer.id,
+    name: viewer.name,
+    frameId: frame?.id ?? null,
+    frame: viewer.cursor.frame,
+    x: viewer.cursor.x,
+    y: viewer.cursor.y,
+  };
 }
 
 export function createLiveHub(): LiveHub {
@@ -67,14 +89,29 @@ export function createLiveHub(): LiveHub {
 
   const stateOf = (projectId: string): SharePresenceEvent => {
     const own = [...rooms.values()].filter((r) => r.projectId === projectId);
-    const cursors = own.flatMap((room) => [...room.viewers.values()].map((v) => publicCursor(room, v)).filter((c): c is SharePresenceCursor => c !== null));
-    return { type: 'state', cursors, wantCursor: own.some((r) => r.studioCursor && r.viewers.size > 0), live: own.length };
+    const cursors = own.flatMap((room) =>
+      [...room.viewers.values()]
+        .map((v) => publicCursor(room, v))
+        .filter((c): c is SharePresenceCursor => c !== null)
+    );
+    return {
+      type: "state",
+      cursors,
+      wantCursor: own.some((r) => r.studioCursor && r.viewers.size > 0),
+      live: own.length,
+    };
   };
 
   const roomOf = (record: ShareRecord): Room => {
     const found = rooms.get(record.id);
     if (found) return found;
-    const room: Room = { linkId: record.id, projectId: record.projectId, frames: record.frames, studioCursor: record.studioCursor === true, viewers: new Map() };
+    const room: Room = {
+      linkId: record.id,
+      projectId: record.projectId,
+      frames: record.frames,
+      studioCursor: record.studioCursor === true,
+      viewers: new Map(),
+    };
     rooms.set(record.id, room);
     return room;
   };
@@ -85,7 +122,7 @@ export function createLiveHub(): LiveHub {
     if (!room || !viewer) return;
     room.viewers.delete(key);
     if (room.viewers.size === 0) rooms.delete(linkId);
-    toStudio(room.projectId, { type: 'leave', linkId, viewer: viewer.id });
+    toStudio(room.projectId, { type: "leave", linkId, viewer: viewer.id });
     toStudio(room.projectId, stateOf(room.projectId));
   };
 
@@ -93,7 +130,15 @@ export function createLiveHub(): LiveHub {
     join(record, send, close) {
       const room = roomOf(record);
       if (room.viewers.size >= SHARE_LIVE_VIEWERS_MAX) return null;
-      const viewer: Viewer = { key: randomBytes(18).toString('base64url'), id: randomBytes(6).toString('base64url'), name: 'Viewer', send, close, at: 0, cursor: null };
+      const viewer: Viewer = {
+        key: randomBytes(18).toString("base64url"),
+        id: randomBytes(6).toString("base64url"),
+        name: "Viewer",
+        send,
+        close,
+        at: 0,
+        cursor: null,
+      };
       room.viewers.set(viewer.key, viewer);
       toStudio(room.projectId, stateOf(room.projectId));
       return { key: viewer.key, id: viewer.id };
@@ -102,21 +147,21 @@ export function createLiveHub(): LiveHub {
     cursor(linkId, input) {
       const room = rooms.get(linkId);
       const viewer = room?.viewers.get(input.key);
-      if (!room || !viewer) return 'gone';
+      if (!room || !viewer) return "gone";
       const now = Date.now();
-      if (now - viewer.at < CURSOR_MIN_MS) return 'skip';
+      if (now - viewer.at < CURSOR_MIN_MS) return "skip";
       viewer.at = now;
       viewer.name = input.name;
       if (input.frame === null || !room.frames[input.frame]) {
-        if (!viewer.cursor) return 'ok';
+        if (!viewer.cursor) return "ok";
         viewer.cursor = null;
-        toStudio(room.projectId, { type: 'leave', linkId, viewer: viewer.id });
-        return 'ok';
+        toStudio(room.projectId, { type: "leave", linkId, viewer: viewer.id });
+        return "ok";
       }
       viewer.cursor = { frame: input.frame, x: input.x, y: input.y };
       const shown = publicCursor(room, viewer);
-      if (shown) toStudio(room.projectId, { type: 'cursor', cursor: shown });
-      return 'ok';
+      if (shown) toStudio(room.projectId, { type: "cursor", cursor: shown });
+      return "ok";
     },
     subscribeStudio(projectId, send) {
       const set = studio.get(projectId) ?? new Set();
@@ -130,27 +175,43 @@ export function createLiveHub(): LiveHub {
     },
     studioCursor(projectId, input) {
       const now = Date.now();
-      if (input && now - (studioAt.get(projectId) ?? 0) < STUDIO_CURSOR_MIN_MS) return;
+      if (input && now - (studioAt.get(projectId) ?? 0) < STUDIO_CURSOR_MIN_MS)
+        return;
       studioAt.set(projectId, now);
       for (const room of rooms.values()) {
         if (room.projectId !== projectId || !room.studioCursor) continue;
-        const frame = !input?.frameId ? -1 : room.frames.length === 1 && !room.frames[0]?.id ? 0 : room.frames.findIndex((f) => f.id === input.frameId);
-        const data = frame >= 0 && input ? { frame, x: Math.round(input.x), y: Math.round(input.y) } : null;
-        for (const viewer of room.viewers.values()) viewer.send('studio', data);
+        const frame = !input?.frameId
+          ? -1
+          : room.frames.length === 1 && !room.frames[0]?.id
+            ? 0
+            : room.frames.findIndex((f) => f.id === input.frameId);
+        const data =
+          frame >= 0 && input
+            ? { frame, x: Math.round(input.x), y: Math.round(input.y) }
+            : null;
+        for (const viewer of room.viewers.values()) viewer.send("studio", data);
       }
     },
     update(record) {
       const room = rooms.get(record.id);
       if (!room) return;
       room.frames = record.frames;
-      const frames = record.frames.map((f) => ({ name: f.name, width: f.width, height: f.height, cssHeight: f.cssHeight, ...(f.path ? { path: f.path } : {}) }));
-      for (const viewer of room.viewers.values()) viewer.send('frames', { rev: record.rev ?? 0, frames });
+      const frames = record.frames.map((f) => ({
+        name: f.name,
+        width: f.width,
+        height: f.height,
+        cssHeight: f.cssHeight,
+        ...(f.path ? { path: f.path } : {}),
+      }));
+      for (const viewer of room.viewers.values())
+        viewer.send("frames", { rev: record.rev ?? 0, frames });
     },
     setStudioCursor(record) {
       const room = rooms.get(record.id);
       if (!room) return;
       room.studioCursor = record.studioCursor === true;
-      if (!room.studioCursor) for (const viewer of room.viewers.values()) viewer.send('studio', null);
+      if (!room.studioCursor)
+        for (const viewer of room.viewers.values()) viewer.send("studio", null);
       toStudio(room.projectId, stateOf(room.projectId));
     },
     async close(linkId) {
@@ -158,12 +219,16 @@ export function createLiveHub(): LiveHub {
       if (!room) return;
       rooms.delete(linkId);
       const closing = [...room.viewers.values()].map((viewer) => {
-        viewer.send('end', {});
+        viewer.send("end", {});
         return viewer.close();
       });
       toStudio(room.projectId, stateOf(room.projectId));
-      await Promise.race([Promise.all(closing), new Promise((resolve) => setTimeout(resolve, 500).unref())]);
-      if (closing.length > 0) await new Promise((resolve) => setTimeout(resolve, 50).unref());
+      await Promise.race([
+        Promise.all(closing),
+        new Promise((resolve) => setTimeout(resolve, 500).unref()),
+      ]);
+      if (closing.length > 0)
+        await new Promise((resolve) => setTimeout(resolve, 50).unref());
     },
     count: (linkId) => rooms.get(linkId)?.viewers.size ?? 0,
     hasRoom: (linkId) => rooms.has(linkId),
@@ -175,7 +240,12 @@ export interface LiveRefresher {
   stop(): void;
 }
 
-export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: LiveHub, onEnded: () => void): LiveRefresher {
+export function createLiveRefresher(
+  deps: ExportDeps,
+  store: ShareStore,
+  hub: LiveHub,
+  onEnded: () => void
+): LiveRefresher {
   let timer: NodeJS.Timeout | null = null;
   let stopped = false;
   const busy = new Set<string>();
@@ -186,14 +256,29 @@ export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: Li
     const dir = store.framesDir(record.id);
     try {
       const source = await resolveSource(deps, record.projectId, head);
-      const frames = record.frames.map((f) => ({ name: f.name, width: f.width, height: f.height, ...(f.path ? { path: f.path } : {}) }));
-      const shots = await captureShare(deps.preview, source, frames, dir, record.frames.map((f) => f.id));
-      const next = await store.update(record.id, { versionId: source.version.id, frames: shots, rev: (record.rev ?? 0) + 1 });
+      const frames = record.frames.map((f) => ({
+        name: f.name,
+        width: f.width,
+        height: f.height,
+        ...(f.path ? { path: f.path } : {}),
+      }));
+      const shots = await captureShare(
+        deps.preview,
+        source,
+        frames,
+        dir,
+        record.frames.map((f) => f.id)
+      );
+      const next = await store.update(record.id, {
+        versionId: source.version.id,
+        frames: shots,
+        rev: (record.rev ?? 0) + 1,
+      });
       if (next) hub.update(next);
       else await rm(dir, { recursive: true, force: true });
     } catch (error) {
       failed.set(record.id, head);
-      console.error('[share] live refresh failed', error);
+      console.error("[share] live refresh failed", error);
     } finally {
       busy.delete(record.id);
     }
@@ -202,8 +287,11 @@ export function createLiveRefresher(deps: ExportDeps, store: ShareStore, hub: Li
   const check = async (record: ShareRecord): Promise<void> => {
     if (busy.has(record.id)) return;
     const project = await deps.projects.get(record.projectId).catch(() => null);
-    const head = project?.directions.find((d) => d.id === record.directionId)?.headVersionId;
-    if (head && head !== record.versionId && failed.get(record.id) !== head) await refresh(record, head);
+    const head = project?.directions.find(
+      (d) => d.id === record.directionId
+    )?.headVersionId;
+    if (head && head !== record.versionId && failed.get(record.id) !== head)
+      await refresh(record, head);
   };
 
   const tick = async (): Promise<void> => {

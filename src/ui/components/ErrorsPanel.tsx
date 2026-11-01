@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Icon } from './Icon';
-import type { BuildError } from '../useStudioData';
+import { useEffect, useState } from "react";
+
+import type { BuildError } from "../useStudioData";
+import { Icon } from "./Icon";
 
 interface Props {
   errors: BuildError[];
@@ -20,28 +21,52 @@ const DEV_NOISE = [
 ];
 
 export function isDevNoise(e: BuildError): boolean {
-  return e.source === 'console' && DEV_NOISE.some((pattern) => pattern.test(e.message));
+  return (
+    e.source === "console" &&
+    DEV_NOISE.some((pattern) => pattern.test(e.message))
+  );
 }
 
 function countText(n: number): string {
-  return n === 1 ? '1 error' : `${n} errors`;
+  return n === 1 ? "1 error" : `${n} errors`;
 }
 
 export function fixPrompt(e: BuildError): string {
-  const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ''}` : '';
-  const what = e.source === 'build' ? 'build error' : `${e.source} error`;
+  const where = e.file ? ` in ${e.file}${e.line ? `:${e.line}` : ""}` : "";
+  const what = e.source === "build" ? "build error" : `${e.source} error`;
   return `Fix this ${what}${where}:\n\n${e.message}`;
 }
 
-function ErrorsChip({ count, onOpen, onClear }: { count: number; onOpen: () => void; onClear: () => void }) {
+function ErrorsChip({
+  count,
+  onOpen,
+  onClear,
+}: {
+  count: number;
+  onOpen: () => void;
+  onClear: () => void;
+}) {
   return (
     <div className="errors-chip" role="region" aria-label="Preview errors">
-      <button type="button" className="errors-chip-open" aria-expanded={false} data-tip="Show the errors" onClick={onOpen}>
+      <button
+        type="button"
+        className="errors-chip-open"
+        aria-expanded={false}
+        data-tip="Show the errors"
+        onClick={onOpen}
+      >
         <Icon name="alert" size={14} />
         <span>{countText(count)}</span>
         <Icon name="chevronRight" size={12} />
       </button>
-      <button type="button" className="icon-btn" aria-label="Clear errors" data-tip="Clear" data-tip-align="end" onClick={onClear}>
+      <button
+        type="button"
+        className="icon-btn"
+        aria-label="Clear errors"
+        data-tip="Clear"
+        data-tip-align="end"
+        onClick={onClear}
+      >
         <Icon name="close" size={12} />
       </button>
     </div>
@@ -51,15 +76,28 @@ function ErrorsChip({ count, onOpen, onClear }: { count: number; onOpen: () => v
 export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (pane === 'design') setOpen(false);
+    if (pane === "design") setOpen(false);
   }, [pane]);
   const shown = errors.filter((e) => !isDevNoise(e));
   if (shown.length === 0) return null;
-  if (!open) return <ErrorsChip count={shown.length} onOpen={() => setOpen(true)} onClear={onClear} />;
+  if (!open)
+    return (
+      <ErrorsChip
+        count={shown.length}
+        onOpen={() => setOpen(true)}
+        onClear={onClear}
+      />
+    );
   return (
     <div className="errors" role="region" aria-label="Preview errors">
       <div className="section-head">
-        <button type="button" className="errors-head" aria-expanded={true} data-tip="Hide the errors" onClick={() => setOpen(false)}>
+        <button
+          type="button"
+          className="errors-head"
+          aria-expanded={true}
+          data-tip="Hide the errors"
+          onClick={() => setOpen(false)}
+        >
           <Icon name="alert" size={14} />
           <span>{countText(shown.length)}</span>
           <Icon name="chevronDown" size={12} />
@@ -73,7 +111,10 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
           <li key={e.id}>
             <div className="row between">
               <span className="badge fail">{e.source}</span>
-              <button className="btn small has-icon" onClick={() => onSendToAgent(e)}>
+              <button
+                className="btn small has-icon"
+                onClick={() => onSendToAgent(e)}
+              >
                 <Icon name="sparkle" size={14} />
                 Send to agent
               </button>
@@ -82,7 +123,7 @@ export function ErrorsPanel({ errors, onSendToAgent, onClear, pane }: Props) {
             {e.file && (
               <div className="mono error-loc">
                 {e.file}
-                {e.line ? `:${e.line}` : ''}
+                {e.line ? `:${e.line}` : ""}
               </div>
             )}
           </li>

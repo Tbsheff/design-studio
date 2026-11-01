@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ProjectKind, Version } from '../../shared/contracts';
-import { api, errorText } from '../api';
-import { HTML_FRAME_SANDBOX, frameSrc } from '../bridge';
-import { randomToken } from '../session';
-import { useTokenFrames } from '../tokenFrames';
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import type { ProjectKind, Version } from "../../shared/contracts";
+import { api, errorText } from "../api";
+import { HTML_FRAME_SANDBOX, frameSrc } from "../bridge";
+import { randomToken } from "../session";
+import { useTokenFrames } from "../tokenFrames";
 
 interface Props {
   projectId: string;
@@ -15,7 +16,15 @@ interface Props {
   onError: (message: string) => void;
 }
 
-export function CompareFrame({ projectId, version, title, kind, viewport, scale, onError }: Props) {
+export function CompareFrame({
+  projectId,
+  version,
+  title,
+  kind,
+  viewport,
+  scale,
+  onError,
+}: Props) {
   const [slot, setSlot] = useState<{ token: string; src: string } | null>(null);
   const elements = useRef<Record<string, HTMLIFrameElement | null>>({});
   const slots = useMemo(() => (slot ? [slot] : []), [slot]);
@@ -28,7 +37,13 @@ export function CompareFrame({ projectId, version, title, kind, viewport, scale,
     api
       .versionPreview(projectId, version.id)
       .then(({ url }) => alive && setSlot({ token, src: frameSrc(url, token) }))
-      .catch((err) => alive && report.current(`Could not load this version. ${errorText(err)} Close compare and try again.`));
+      .catch(
+        (err) =>
+          alive &&
+          report.current(
+            `Could not load this version. ${errorText(err)} Close compare and try again.`
+          )
+      );
     return () => {
       alive = false;
     };
@@ -41,7 +56,7 @@ export function CompareFrame({ projectId, version, title, kind, viewport, scale,
       }}
       title={`Version ${title}`}
       src={slot.src}
-      sandbox={kind === 'html' ? HTML_FRAME_SANDBOX : undefined}
+      sandbox={kind === "html" ? HTML_FRAME_SANDBOX : undefined}
       width={viewport.width}
       height={viewport.height}
       style={{ transform: `scale(${scale})` }}

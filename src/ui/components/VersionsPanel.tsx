@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import type { Direction, Project, Version } from '../../shared/contracts';
-import { displayTitle, indexVersions, type VersionIndex } from '../versionLabels';
-import { Icon } from './Icon';
-import { PanelHead } from './SheetHead';
-import { VersionRow } from './VersionRow';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+
+import type { Direction, Project, Version } from "../../shared/contracts";
+import {
+  displayTitle,
+  indexVersions,
+  type VersionIndex,
+} from "../versionLabels";
+import { Icon } from "./Icon";
+import { PanelHead } from "./SheetHead";
+import { VersionRow } from "./VersionRow";
 
 interface Props {
   project: Project;
@@ -40,10 +45,19 @@ function ForkForm(props: ForkFormProps) {
   return (
     <form className="fork-form" onSubmit={props.onSubmit}>
       <div className="fork-from">Branch from {props.fromTitle}</div>
-      <input autoFocus value={props.name} onChange={(e) => props.onName(e.target.value)} aria-label="Direction name" />
+      <input
+        autoFocus
+        value={props.name}
+        onChange={(e) => props.onName(e.target.value)}
+        aria-label="Direction name"
+      />
       {props.error && <div className="alert error">{props.error}</div>}
       <div className="row end">
-        <button type="button" className="btn ghost small" onClick={props.onCancel}>
+        <button
+          type="button"
+          className="btn ghost small"
+          onClick={props.onCancel}
+        >
           Cancel
         </button>
         <button type="submit" className="btn primary small">
@@ -54,10 +68,23 @@ function ForkForm(props: ForkFormProps) {
   );
 }
 
-function DirectionItem({ dir, selected, onSelect }: { dir: Direction; selected: boolean; onSelect: () => void }) {
+function DirectionItem({
+  dir,
+  selected,
+  onSelect,
+}: {
+  dir: Direction;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   return (
     <li>
-      <button type="button" className={`list-item compact ${selected ? 'selected' : ''}`} aria-current={selected || undefined} onClick={onSelect}>
+      <button
+        type="button"
+        className={`list-item compact ${selected ? "selected" : ""}`}
+        aria-current={selected || undefined}
+        onClick={onSelect}
+      >
         <Icon name="branch" />
         <span className="name">{dir.name}</span>
         {selected && <Icon name="check" size={14} className="dir-current" />}
@@ -66,13 +93,16 @@ function DirectionItem({ dir, selected, onSelect }: { dir: Direction; selected: 
   );
 }
 
-function useFork(directionName: string | undefined, onNewDirection: Props['onNewDirection']) {
+function useFork(
+  directionName: string | undefined,
+  onNewDirection: Props["onNewDirection"]
+) {
   const [from, setFrom] = useState<string | null>(null);
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const start = (versionId: string) => {
     setFrom(versionId);
-    setName(`${directionName ?? 'Direction'} variant`);
+    setName(`${directionName ?? "Direction"} variant`);
     setError(null);
   };
   const submit = async (e: FormEvent) => {
@@ -85,7 +115,15 @@ function useFork(directionName: string | undefined, onNewDirection: Props['onNew
       setError(err instanceof Error ? err.message : String(err));
     }
   };
-  return { from, name, error, setName, start, cancel: () => setFrom(null), submit };
+  return {
+    from,
+    name,
+    error,
+    setName,
+    start,
+    cancel: () => setFrom(null),
+    submit,
+  };
 }
 
 function titleOf(id: string, index: VersionIndex): string {
@@ -102,9 +140,19 @@ interface DirectionsProps {
   onSelectDirection: (id: string) => void;
 }
 
-function DirectionsSection({ project, directionId, headVersionId, index, fork, onSelectDirection }: DirectionsProps) {
+function DirectionsSection({
+  project,
+  directionId,
+  headVersionId,
+  index,
+  fork,
+  onSelectDirection,
+}: DirectionsProps) {
   return (
-    <section className="panel-section dir-section" aria-labelledby="directions-heading">
+    <section
+      className="panel-section dir-section"
+      aria-labelledby="directions-heading"
+    >
       <div className="section-head">
         <h3 id="directions-heading">
           Directions <span className="count">{project.directions.length}</span>
@@ -121,23 +169,49 @@ function DirectionsSection({ project, directionId, headVersionId, index, fork, o
       </div>
       <ul className="list dir-list">
         {project.directions.map((dir) => (
-          <DirectionItem key={dir.id} dir={dir} selected={dir.id === directionId} onSelect={() => onSelectDirection(dir.id)} />
+          <DirectionItem
+            key={dir.id}
+            dir={dir}
+            selected={dir.id === directionId}
+            onSelect={() => onSelectDirection(dir.id)}
+          />
         ))}
       </ul>
       {fork.from && (
-        <ForkForm fromTitle={titleOf(fork.from, index)} name={fork.name} error={fork.error} onName={fork.setName} onCancel={fork.cancel} onSubmit={fork.submit} />
+        <ForkForm
+          fromTitle={titleOf(fork.from, index)}
+          name={fork.name}
+          error={fork.error}
+          onName={fork.setName}
+          onCancel={fork.cancel}
+          onSubmit={fork.submit}
+        />
       )}
     </section>
   );
 }
 
-function VersionsHead(props: { count: number; comparing: boolean; canUndo: boolean; onCompare: () => void; onUndo: () => void }) {
+function VersionsHead(props: {
+  count: number;
+  comparing: boolean;
+  canUndo: boolean;
+  onCompare: () => void;
+  onUndo: () => void;
+}) {
   return (
-    <PanelHead title="Versions" className="section-head" titleClassName="section-title">
+    <PanelHead
+      title="Versions"
+      className="section-head"
+      titleClassName="section-title"
+    >
       <span className="count">{props.count}</span>
       <div className="section-actions">
         {props.comparing && (
-          <button type="button" className="btn small primary has-icon" onClick={props.onCompare}>
+          <button
+            type="button"
+            className="btn small primary has-icon"
+            onClick={props.onCompare}
+          >
             <Icon name="compare" size={14} />
             Compare
           </button>
@@ -160,7 +234,13 @@ function VersionsHead(props: { count: number; comparing: boolean; canUndo: boole
   );
 }
 
-function VersionsEmpty({ count, loading }: { count: number; loading: boolean }) {
+function VersionsEmpty({
+  count,
+  loading,
+}: {
+  count: number;
+  loading: boolean;
+}) {
   if (count > 0) return null;
   if (loading) {
     return (
@@ -178,33 +258,53 @@ function VersionsEmpty({ count, loading }: { count: number; loading: boolean }) 
       </div>
     );
   }
-  return <div className="empty-note">No versions yet. Send a prompt and the first run saves one here.</div>;
+  return (
+    <div className="empty-note">
+      No versions yet. Send a prompt and the first run saves one here.
+    </div>
+  );
 }
 
 function useHeadFocus(headVersionId: string | null) {
   const ref = useRef<HTMLUListElement>(null);
   useEffect(() => {
     const id = window.requestAnimationFrame(() => {
-      const lost = !document.activeElement || document.activeElement === document.body;
-      if (lost) ref.current?.querySelector<HTMLElement>('.version.head .version-toggle')?.focus({ preventScroll: true });
+      const lost =
+        !document.activeElement || document.activeElement === document.body;
+      if (lost)
+        ref.current
+          ?.querySelector<HTMLElement>(".version.head .version-toggle")
+          ?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(id);
   }, [headVersionId]);
   return ref;
 }
 
-function compareSides(sorted: Version[], compare: string[]): Map<string, 'A' | 'B'> {
+function compareSides(
+  sorted: Version[],
+  compare: string[]
+): Map<string, "A" | "B"> {
   const picked = sorted.filter((v) => compare.includes(v.id));
   const [newer, older] = picked;
-  return picked.length === 2 && newer && older ? new Map([[older.id, 'A' as const], [newer.id, 'B' as const]]) : new Map();
+  return picked.length === 2 && newer && older
+    ? new Map([
+        [older.id, "A" as const],
+        [newer.id, "B" as const],
+      ])
+    : new Map();
 }
 
 export function VersionsPanel(props: Props) {
   const { project, directionId, versions } = props;
-  const direction = project.directions.find((x) => x.id === directionId) ?? null;
+  const direction =
+    project.directions.find((x) => x.id === directionId) ?? null;
   const fork = useFork(direction?.name, props.onNewDirection);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [renamed, setRenamed] = useState<{ source: Version[]; names: Map<string, string | null> } | null>(null);
+  const [renamed, setRenamed] = useState<{
+    source: Version[];
+    names: Map<string, string | null>;
+  } | null>(null);
   const named = useMemo(() => {
     if (!renamed || renamed.source !== versions) return versions;
     return versions.map((v) => {
@@ -214,22 +314,46 @@ export function VersionsPanel(props: Props) {
       return name ? { ...rest, name } : rest;
     });
   }, [versions, renamed]);
-  const sorted = useMemo(() => [...named].sort((a, b) => b.createdAt - a.createdAt), [named]);
+  const sorted = useMemo(
+    () => [...named].sort((a, b) => b.createdAt - a.createdAt),
+    [named]
+  );
   const index = useMemo(() => indexVersions(named), [named]);
   const rename = (v: Version, name: string | null) => {
-    setRenamed((prev) => ({ source: versions, names: new Map(prev?.source === versions ? prev.names : []).set(v.id, name) }));
+    setRenamed((prev) => ({
+      source: versions,
+      names: new Map(prev?.source === versions ? prev.names : []).set(
+        v.id,
+        name
+      ),
+    }));
     void props.onRename?.(v, name);
   };
   const locked = props.busy || props.running;
   const headVersionId = direction?.headVersionId ?? null;
-  const listRef = useHeadFocus(sorted.some((v) => v.id === headVersionId) ? headVersionId : null);
+  const listRef = useHeadFocus(
+    sorted.some((v) => v.id === headVersionId) ? headVersionId : null
+  );
   const sides = compareSides(sorted, props.compare);
 
   return (
     <div className="versions-pane">
-      <DirectionsSection project={project} directionId={directionId} headVersionId={headVersionId} index={index} fork={fork} onSelectDirection={props.onSelectDirection} />
+      <DirectionsSection
+        project={project}
+        directionId={directionId}
+        headVersionId={headVersionId}
+        index={index}
+        fork={fork}
+        onSelectDirection={props.onSelectDirection}
+      />
       <section className="panel-section grow" aria-label="Version list">
-        <VersionsHead count={sorted.length} comparing={props.compare.length === 2} canUndo={!locked && sorted.length >= 2} onCompare={props.onCompare} onUndo={props.onUndo} />
+        <VersionsHead
+          count={sorted.length}
+          comparing={props.compare.length === 2}
+          canUndo={!locked && sorted.length >= 2}
+          onCompare={props.onCompare}
+          onUndo={props.onUndo}
+        />
         <VersionsEmpty count={sorted.length} loading={headVersionId !== null} />
         <ul className="list versions" ref={listRef}>
           {sorted.map((v) => (
@@ -245,9 +369,13 @@ export function VersionsPanel(props: Props) {
               compareSide={sides.get(v.id) ?? null}
               locked={locked}
               expanded={expanded === v.id}
-              onExpand={() => setExpanded((cur) => (cur === v.id ? null : v.id))}
+              onExpand={() =>
+                setExpanded((cur) => (cur === v.id ? null : v.id))
+              }
               onOpen={() => props.onOpen(v, displayTitle(v, index))}
-              onOpenVersion={(target) => props.onOpen(target, displayTitle(target, index))}
+              onOpenVersion={(target) =>
+                props.onOpen(target, displayTitle(target, index))
+              }
               onRestore={() => props.onRestore(v)}
               onToggleCompare={() => props.onToggleCompare(v)}
               onExport={() => props.onExport(v)}

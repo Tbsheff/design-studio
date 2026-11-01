@@ -1,31 +1,48 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
-import { matchesKey } from '../../shared/keymap';
-import { TYPE_LABELS, type ProjectHit } from '../../shared/project-search';
-import { IS_MAC, tipWithKey } from '../commands/keys';
-import { useCommands } from '../commands/registry';
-import { openProject } from '../projectNav';
-import { noteProjectOpened, refreshProjectHits, useProjectHits } from '../projectHits';
-import { BrandMark } from './BrandMark';
-import { Icon } from './Icon';
-import { HealthDot, ProjectThumb } from './ProjectThumb';
-import '../styles/project-nav.css';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
 
-const KEY = 'design-studio.rail.v1';
+import { matchesKey } from "../../shared/keymap";
+import { TYPE_LABELS, type ProjectHit } from "../../shared/project-search";
+import { IS_MAC, tipWithKey } from "../commands/keys";
+import { useCommands } from "../commands/registry";
+import {
+  noteProjectOpened,
+  refreshProjectHits,
+  useProjectHits,
+} from "../projectHits";
+import { openProject } from "../projectNav";
+import { BrandMark } from "./BrandMark";
+import { Icon } from "./Icon";
+import { HealthDot, ProjectThumb } from "./ProjectThumb";
+
+import "../styles/project-nav.css";
+
+const KEY = "design-studio.rail.v1";
 const MINI_MAX = 8;
 const GROUPS: { title: string; test: (hit: ProjectHit) => boolean }[] = [
-  { title: 'Apps', test: (hit) => hit.type === 'next' || hit.type === 'vite' },
-  { title: 'Prototypes', test: (hit) => hit.type === 'html' || hit.type === 'react' },
-  { title: 'Design systems', test: (hit) => hit.type === 'design-system' },
+  { title: "Apps", test: (hit) => hit.type === "next" || hit.type === "vite" },
+  {
+    title: "Prototypes",
+    test: (hit) => hit.type === "html" || hit.type === "react",
+  },
+  { title: "Design systems", test: (hit) => hit.type === "design-system" },
 ];
 
-type RailState = 'open' | 'mini';
+type RailState = "open" | "mini";
 const listeners = new Set<() => void>();
 
 function readRail(): RailState {
   try {
-    return localStorage.getItem(KEY) === 'open' ? 'open' : 'mini';
+    return localStorage.getItem(KEY) === "open" ? "open" : "mini";
   } catch {
-    return 'mini';
+    return "mini";
   }
 }
 
@@ -43,7 +60,7 @@ export function setRail(next: RailState): void {
 }
 
 export function toggleRail(): void {
-  setRail(railState === 'open' ? 'mini' : 'open');
+  setRail(railState === "open" ? "mini" : "open");
 }
 
 export function useRail(): RailState {
@@ -52,78 +69,114 @@ export function useRail(): RailState {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    () => railState,
+    () => railState
   );
 }
 
-const OVERLAY_QUERY = '(max-width: 1279px)';
+const OVERLAY_QUERY = "(max-width: 1279px)";
 
 function floating(): boolean {
   return window.matchMedia(OVERLAY_QUERY).matches;
 }
 
 function pickProject(id: string): void {
-  if (railState === 'open' && floating()) setRail('mini');
+  if (railState === "open" && floating()) setRail("mini");
   openProject(id);
 }
 
-function useFloatingDismiss(state: RailState, rail: RefObject<HTMLElement | null>): void {
+function useFloatingDismiss(
+  state: RailState,
+  rail: RefObject<HTMLElement | null>
+): void {
   useEffect(() => {
-    if (state !== 'open') return;
-    const close = () => floating() && setRail('mini');
+    if (state !== "open") return;
+    const close = () => floating() && setRail("mini");
     const onPointer = (event: PointerEvent) => {
       if (!rail.current?.contains(event.target as Node)) close();
     };
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented && !document.querySelector('[role="dialog"][aria-modal="true"]')) close();
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        !document.querySelector('[role="dialog"][aria-modal="true"]')
+      )
+        close();
     };
-    window.addEventListener('pointerdown', onPointer, true);
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('blur', close);
+    window.addEventListener("pointerdown", onPointer, true);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("blur", close);
     return () => {
-      window.removeEventListener('pointerdown', onPointer, true);
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('blur', close);
+      window.removeEventListener("pointerdown", onPointer, true);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("blur", close);
     };
   }, [state, rail]);
 }
 
 function moveFocus(event: ReactKeyboardEvent<HTMLElement>): void {
-  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-  const items = [...event.currentTarget.querySelectorAll<HTMLElement>('.prail-item')];
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLElement>(".prail-item"),
+  ];
   const at = items.indexOf(document.activeElement as HTMLElement);
   if (at < 0 && !(document.activeElement instanceof HTMLInputElement)) return;
   event.preventDefault();
-  const next = at < 0 ? 0 : (at + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+  const next =
+    at < 0
+      ? 0
+      : (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) %
+        items.length;
   items[next]?.focus();
 }
 
-function useStageFocusOnClose(state: RailState, rail: RefObject<HTMLElement | null>): void {
+function useStageFocusOnClose(
+  state: RailState,
+  rail: RefObject<HTMLElement | null>
+): void {
   const last = useRef(state);
   useEffect(() => {
-    const closed = last.current === 'open' && state !== 'open';
+    const closed = last.current === "open" && state !== "open";
     last.current = state;
     if (!closed) return;
     const active = document.activeElement;
-    if (active && active !== document.body && !rail.current?.contains(active)) return;
-    document.querySelector<HTMLElement>('.canvas .stage')?.focus({ preventScroll: true });
+    if (active && active !== document.body && !rail.current?.contains(active))
+      return;
+    document
+      .querySelector<HTMLElement>(".canvas .stage")
+      ?.focus({ preventScroll: true });
   }, [state, rail]);
 }
 
 function useRailKeys(onOpened: () => void): void {
   const opened = useRef(onOpened);
   opened.current = onOpened;
-  useCommands(() => [{ id: 'view.project-rail', title: 'Show or hide the project rail', group: 'View', icon: 'sidebar', keyId: 'project-rail', keywords: 'projects switch sidebar recent', run: () => toggleRail() }]);
+  useCommands(() => [
+    {
+      id: "view.project-rail",
+      title: "Show or hide the project rail",
+      group: "View",
+      icon: "sidebar",
+      keyId: "project-rail",
+      keywords: "projects switch sidebar recent",
+      run: () => toggleRail(),
+    },
+  ]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.repeat || !matchesKey('project-rail', event, IS_MAC)) return;
+      if (
+        event.defaultPrevented ||
+        event.repeat ||
+        !matchesKey("project-rail", event, IS_MAC)
+      )
+        return;
       if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       event.preventDefault();
       toggleRail();
-      if (railState === 'open') window.requestAnimationFrame(() => opened.current());
+      if (railState === "open")
+        window.requestAnimationFrame(() => opened.current());
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
@@ -136,14 +189,27 @@ interface RailProps {
 const KIND_LABEL = TYPE_LABELS;
 
 function tipOf(hit: ProjectHit, current: boolean): string {
-  const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(Boolean);
-  return current ? `${parts.join(' · ')} (open)` : parts.join(' · ');
+  const parts = [hit.name, KIND_LABEL[hit.type], hit.health?.note].filter(
+    Boolean
+  );
+  return current ? `${parts.join(" · ")} (open)` : parts.join(" · ");
 }
 
-function MiniRail({ hits, projectId, onNewPrototype }: { hits: ProjectHit[]; projectId: string; onNewPrototype: () => void }) {
+function MiniRail({
+  hits,
+  projectId,
+  onNewPrototype,
+}: {
+  hits: ProjectHit[];
+  projectId: string;
+  onNewPrototype: () => void;
+}) {
   const top = hits.slice(0, MINI_MAX);
   const current = hits.find((hit) => hit.id === projectId);
-  const shown = current && !top.includes(current) ? [...top.slice(0, MINI_MAX - 1), current] : top;
+  const shown =
+    current && !top.includes(current)
+      ? [...top.slice(0, MINI_MAX - 1), current]
+      : top;
   return (
     <>
       <div className="prail-top">
@@ -155,7 +221,7 @@ function MiniRail({ hits, projectId, onNewPrototype }: { hits: ProjectHit[]; pro
             key={hit.id}
             type="button"
             className="prail-item prail-mini"
-            aria-current={hit.id === projectId ? 'page' : undefined}
+            aria-current={hit.id === projectId ? "page" : undefined}
             aria-label={tipOf(hit, hit.id === projectId)}
             data-tip={tipOf(hit, hit.id === projectId)}
             data-tip-align="start"
@@ -167,10 +233,27 @@ function MiniRail({ hits, projectId, onNewPrototype }: { hits: ProjectHit[]; pro
         ))}
       </nav>
       <div className="prail-foot">
-        <button type="button" className="icon-btn small" aria-label="New prototype" data-tip="New prototype" data-tip-side="top" data-tip-align="start" onClick={onNewPrototype}>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="New prototype"
+          data-tip="New prototype"
+          data-tip-side="top"
+          data-tip-align="start"
+          onClick={onNewPrototype}
+        >
           <Icon name="plus" size={14} />
         </button>
-        <button type="button" className="icon-btn small" aria-label="Show projects" aria-expanded="false" data-tip={tipWithKey('Show projects', 'project-rail')} data-tip-side="top" data-tip-align="start" onClick={() => setRail('open')}>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="Show projects"
+          aria-expanded="false"
+          data-tip={tipWithKey("Show projects", "project-rail")}
+          data-tip-side="top"
+          data-tip-align="start"
+          onClick={() => setRail("open")}
+        >
           <Icon name="sidebar" size={14} />
         </button>
       </div>
@@ -183,8 +266,12 @@ function RailRow({ hit, current }: { hit: ProjectHit; current: boolean }) {
     <button
       type="button"
       className="prail-item prail-row"
-      aria-current={current ? 'page' : undefined}
-      data-tip={hit.health ? `${KIND_LABEL[hit.type]} · ${hit.health.note}` : KIND_LABEL[hit.type]}
+      aria-current={current ? "page" : undefined}
+      data-tip={
+        hit.health
+          ? `${KIND_LABEL[hit.type]} · ${hit.health.note}`
+          : KIND_LABEL[hit.type]
+      }
       data-tip-align="start"
       onClick={() => pickProject(hit.id)}
     >
@@ -195,18 +282,42 @@ function RailRow({ hit, current }: { hit: ProjectHit; current: boolean }) {
   );
 }
 
-function OpenRail({ hits, projectId, onHome, onNewPrototype, find }: { hits: ProjectHit[]; projectId: string; onHome: () => void; onNewPrototype: () => void; find: RefObject<HTMLInputElement | null> }) {
-  const [filter, setFilter] = useState('');
+function OpenRail({
+  hits,
+  projectId,
+  onHome,
+  onNewPrototype,
+  find,
+}: {
+  hits: ProjectHit[];
+  projectId: string;
+  onHome: () => void;
+  onNewPrototype: () => void;
+  find: RefObject<HTMLInputElement | null>;
+}) {
+  const [filter, setFilter] = useState("");
   const shown = useMemo(() => {
     const needle = filter.trim().toLowerCase();
-    return needle ? hits.filter((hit) => `${hit.name} ${hit.place ?? ''}`.toLowerCase().includes(needle)) : hits;
+    return needle
+      ? hits.filter((hit) =>
+          `${hit.name} ${hit.place ?? ""}`.toLowerCase().includes(needle)
+        )
+      : hits;
   }, [hits, filter]);
   return (
     <>
       <div className="prail-head">
         <BrandMark />
         <span className="prail-title">Projects</span>
-        <button type="button" className="icon-btn small" aria-label="Collapse projects" aria-expanded="true" data-tip={tipWithKey('Collapse', 'project-rail')} data-tip-align="end" onClick={() => setRail('mini')}>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="Collapse projects"
+          aria-expanded="true"
+          data-tip={tipWithKey("Collapse", "project-rail")}
+          data-tip-align="end"
+          onClick={() => setRail("mini")}
+        >
           <Icon name="sidebar" size={14} />
         </button>
       </div>
@@ -221,11 +332,12 @@ function OpenRail({ hits, projectId, onHome, onNewPrototype, find }: { hits: Pro
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={(e) => {
             const first = shown[0];
-            if (e.key === 'Enter' && first && !e.nativeEvent.isComposing) pickProject(first.id);
-            else if (e.key === 'Escape' && filter) {
+            if (e.key === "Enter" && first && !e.nativeEvent.isComposing)
+              pickProject(first.id);
+            else if (e.key === "Escape" && filter) {
               e.preventDefault();
               e.stopPropagation();
-              setFilter('');
+              setFilter("");
             }
           }}
         />
@@ -235,15 +347,28 @@ function OpenRail({ hits, projectId, onHome, onNewPrototype, find }: { hits: Pro
           const items = shown.filter(group.test);
           if (items.length === 0) return null;
           return (
-            <div key={group.title} className="prail-group" role="group" aria-label={group.title}>
+            <div
+              key={group.title}
+              className="prail-group"
+              role="group"
+              aria-label={group.title}
+            >
               <div className="prail-group-head">{group.title}</div>
               {items.map((hit) => (
-                <RailRow key={hit.id} hit={hit} current={hit.id === projectId} />
+                <RailRow
+                  key={hit.id}
+                  hit={hit}
+                  current={hit.id === projectId}
+                />
               ))}
             </div>
           );
         })}
-        {shown.length === 0 && <p className="prail-empty">{filter ? 'No project matches.' : 'Loading projects…'}</p>}
+        {shown.length === 0 && (
+          <p className="prail-empty">
+            {filter ? "No project matches." : "Loading projects…"}
+          </p>
+        )}
       </nav>
       <div className="prail-foot">
         <button type="button" className="btn small" onClick={onNewPrototype}>
@@ -268,18 +393,39 @@ export function ProjectRail({ projectId, onHome, onNewPrototype }: RailProps) {
   useFloatingDismiss(state, aside);
   useStageFocusOnClose(state, aside);
   useEffect(() => {
-    if (state === 'open' && document.activeElement instanceof HTMLIFrameElement) find.current?.focus();
+    if (state === "open" && document.activeElement instanceof HTMLIFrameElement)
+      find.current?.focus();
   }, [state]);
   useEffect(() => noteProjectOpened(projectId), [projectId]);
   useEffect(() => {
     const onFocus = () => void refreshProjectHits(projectId);
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [projectId]);
   const hits = result?.projects ?? [];
   return (
-    <aside ref={aside} className="prail" data-state={state} aria-label="Project rail" onKeyDown={moveFocus}>
-      {state === 'open' ? <OpenRail hits={hits} projectId={projectId} onHome={onHome} onNewPrototype={onNewPrototype} find={find} /> : <MiniRail hits={hits} projectId={projectId} onNewPrototype={onNewPrototype} />}
+    <aside
+      ref={aside}
+      className="prail"
+      data-state={state}
+      aria-label="Project rail"
+      onKeyDown={moveFocus}
+    >
+      {state === "open" ? (
+        <OpenRail
+          hits={hits}
+          projectId={projectId}
+          onHome={onHome}
+          onNewPrototype={onNewPrototype}
+          find={find}
+        />
+      ) : (
+        <MiniRail
+          hits={hits}
+          projectId={projectId}
+          onNewPrototype={onNewPrototype}
+        />
+      )}
     </aside>
   );
 }

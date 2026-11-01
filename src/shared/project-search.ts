@@ -1,6 +1,6 @@
-export type ProjectType = 'next' | 'vite' | 'html' | 'react' | 'design-system';
+export type ProjectType = "next" | "vite" | "html" | "react" | "design-system";
 
-export type HealthLevel = 'ok' | 'busy' | 'warn' | 'failed' | 'off';
+export type HealthLevel = "ok" | "busy" | "warn" | "failed" | "off";
 
 export interface ProjectHealth {
   level: HealthLevel;
@@ -34,23 +34,23 @@ export interface ProjectSearchResult {
 }
 
 export const TYPE_LABELS: Record<ProjectType, string> = {
-  next: 'App · Next.js',
-  vite: 'App · Vite',
-  html: 'Prototype · HTML',
-  react: 'Prototype · React',
-  'design-system': 'System',
+  next: "App · Next.js",
+  vite: "App · Vite",
+  html: "Prototype · HTML",
+  react: "Prototype · React",
+  "design-system": "System",
 };
 
 interface TypedProject {
-  kind: 'html' | 'react';
+  kind: "html" | "react";
   designSystemFor?: string | null;
-  app?: { framework: 'next' | 'vite' } | null;
+  app?: { framework: "next" | "vite" } | null;
   imported?: { created?: boolean } | null;
 }
 
 export function projectTypeOf(project: TypedProject): ProjectType {
-  if (project.designSystemFor) return 'design-system';
+  if (project.designSystemFor) return "design-system";
   if (project.app) return project.app.framework;
   const folder = Boolean(project.imported && !project.imported.created);
-  return folder && project.kind === 'react' ? 'vite' : project.kind;
+  return folder && project.kind === "react" ? "vite" : project.kind;
 }

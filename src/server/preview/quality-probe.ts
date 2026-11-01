@@ -1,4 +1,4 @@
-import type { NavSummary } from '../../shared/contracts.js';
+import type { NavSummary } from "../../shared/contracts.js";
 
 const PLACEHOLDER_PATTERN = String.raw`\b(lorem|ipsum|todo|tbd|to come|will be added|placeholder|sample (data|timings))\b|example\.(com|org)|@[\w.-]+\.example\b`;
 
@@ -26,14 +26,14 @@ export interface PlaceholderHit {
 }
 
 export interface GenericHit {
-  pattern: 'plan-cards' | 'hero-feature-cards' | 'all-centered';
+  pattern: "plan-cards" | "hero-feature-cards" | "all-centered";
   detail: string;
   selector: string | null;
   source: string | null;
 }
 
 export interface DuplicateHit {
-  kind: 'price' | 'cta';
+  kind: "price" | "cta";
   text: string;
   count: number;
   selectors: string[];

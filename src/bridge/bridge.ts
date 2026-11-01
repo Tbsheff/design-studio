@@ -1,30 +1,13 @@
-import type { AnchorQuery, AnchorReport, BridgeToParent, ParentToBridge, SelectionContext, SourceLoc } from '../shared/contracts.js';
-import { forwardHistoryKeys } from './history-key.js';
-import { resolveAnchor, type AnchorDom } from '../shared/comments.js';
-import { TWEAKS_PREVIEW_STYLE_ID } from '../shared/tweaks.js';
-import { LOFI_STYLE_ID } from '../shared/lofi.js';
-import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from './authored.js';
-import { createLayerIndex, moveSelection } from './layers.js';
-import { createLockSet } from './locks.js';
-import { createMarquee } from './marquee.js';
-import { createFreeMove, nudgeBaseOf } from './free-move.js';
-import { createSharePointer } from './share-pointer.js';
-import { exposeHeadlessMatch, isMatchKind, matchingElements } from './select-match.js';
-import { exposeHeadlessScan, findStyles } from './style-scan.js';
-import { elementBySource } from './reorder.js';
-import { reorderMoveOf } from '../shared/reorder.js';
-import { vectorToolKeyOf } from '../shared/vector.js';
-import { structureKeyOf } from '../shared/structure-keys.js';
-import { nudgeStepOf } from '../shared/nudge.js';
-import { createForceState, type ForcedState } from './force-state.js';
-import { arrangeChordOf, isLayoutKey, layoutStyles } from './inlineStyle.js';
-import { createTextEditor } from './text-edit.js';
-import { createLinkBridge } from './play.js';
-import { USED_AT_ATTR, appElementBySource, appHydrated, appSourceFor, appSourceMode, componentUseOf, primeAppSources } from './app-source.js';
-import { componentOwners } from './component-owner.js';
-import { createOptimistic, type Released } from './optimistic.js';
-import { dropElement, insideTarget } from './insert-target.js';
-import { APP_REDIRECT_PARAM } from '../shared/app.js';
+import { APP_REDIRECT_PARAM } from "../shared/app.js";
+import { resolveAnchor, type AnchorDom } from "../shared/comments.js";
+import type {
+  AnchorQuery,
+  AnchorReport,
+  BridgeToParent,
+  ParentToBridge,
+  SelectionContext,
+  SourceLoc,
+} from "../shared/contracts.js";
 import {
   BRIDGE_CHANGES_PATH,
   BRIDGE_PARENT_ORIGIN_PARAM,
@@ -38,68 +21,104 @@ import {
   isModZoomKey,
   selectMoveOf,
   appKeyOf,
-} from '../shared/contracts.js';
+} from "../shared/contracts.js";
+import { LOFI_STYLE_ID } from "../shared/lofi.js";
+import { nudgeStepOf } from "../shared/nudge.js";
+import { reorderMoveOf } from "../shared/reorder.js";
+import { structureKeyOf } from "../shared/structure-keys.js";
+import { TWEAKS_PREVIEW_STYLE_ID } from "../shared/tweaks.js";
+import { vectorToolKeyOf } from "../shared/vector.js";
+import {
+  USED_AT_ATTR,
+  appElementBySource,
+  appHydrated,
+  appSourceFor,
+  appSourceMode,
+  componentUseOf,
+  primeAppSources,
+} from "./app-source.js";
+import { AUTHORED_MAX_BYTES, ancestorPath, authoredRules } from "./authored.js";
+import { componentOwners } from "./component-owner.js";
+import { createForceState, type ForcedState } from "./force-state.js";
+import { createFreeMove, nudgeBaseOf } from "./free-move.js";
+import { forwardHistoryKeys } from "./history-key.js";
+import { arrangeChordOf, isLayoutKey, layoutStyles } from "./inlineStyle.js";
+import { dropElement, insideTarget } from "./insert-target.js";
+import { createLayerIndex, moveSelection } from "./layers.js";
+import { createLockSet } from "./locks.js";
+import { createMarquee } from "./marquee.js";
+import { createOptimistic, type Released } from "./optimistic.js";
+import { createLinkBridge } from "./play.js";
+import { elementBySource } from "./reorder.js";
+import {
+  exposeHeadlessMatch,
+  isMatchKind,
+  matchingElements,
+} from "./select-match.js";
+import { createSharePointer } from "./share-pointer.js";
+import { exposeHeadlessScan, findStyles } from "./style-scan.js";
+import { createTextEditor } from "./text-edit.js";
 
-type Rect = SelectionContext['rect'];
+type Rect = SelectionContext["rect"];
 type OutgoingBody = BridgeToParent extends infer Message
   ? Message extends BridgeToParent
-    ? Omit<Message, 'ns' | 'token'>
+    ? Omit<Message, "ns" | "token">
     : never
   : never;
 
-const STORAGE_PREFIX = '__studio_bridge:';
+const STORAGE_PREFIX = "__studio_bridge:";
 const STYLE_KEYS = [
-  'color',
-  'background-color',
-  'font-family',
-  'font-size',
-  'font-weight',
-  'line-height',
-  'letter-spacing',
-  'padding',
-  'margin',
-  'border-radius',
-  'display',
-  'gap',
-  'width',
-  'height',
-  'text-align',
-  'flex-direction',
-  'flex-wrap',
-  'justify-content',
-  'align-items',
-  'align-self',
-  'flex',
-  'box-shadow',
-  'filter',
-  'font-style',
-  'text-decoration-line',
-  'text-transform',
-  'overflow',
-  'text-shadow',
-  'transform',
-  'opacity',
-  'border-width',
-  'border-style',
-  'border-color',
-  'position',
-  'top',
-  'right',
-  'bottom',
-  'left',
-  'min-width',
-  'max-width',
-  'min-height',
-  'max-height',
-  'row-gap',
-  'column-gap',
-  'justify-items',
-  'object-fit',
-  'object-position',
-  'background-image',
-  'background-size',
-  'background-position',
-  'background-repeat',
+  "color",
+  "background-color",
+  "font-family",
+  "font-size",
+  "font-weight",
+  "line-height",
+  "letter-spacing",
+  "padding",
+  "margin",
+  "border-radius",
+  "display",
+  "gap",
+  "width",
+  "height",
+  "text-align",
+  "flex-direction",
+  "flex-wrap",
+  "justify-content",
+  "align-items",
+  "align-self",
+  "flex",
+  "box-shadow",
+  "filter",
+  "font-style",
+  "text-decoration-line",
+  "text-transform",
+  "overflow",
+  "text-shadow",
+  "transform",
+  "opacity",
+  "border-width",
+  "border-style",
+  "border-color",
+  "position",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "min-width",
+  "max-width",
+  "min-height",
+  "max-height",
+  "row-gap",
+  "column-gap",
+  "justify-items",
+  "object-fit",
+  "object-position",
+  "background-image",
+  "background-size",
+  "background-position",
+  "background-repeat",
 ];
 const MAX_SELECTOR_DEPTH = 8;
 const MAX_ANCESTORS = 5;
@@ -118,10 +137,10 @@ function storageKey(): string {
 
 function isBridgeSession(value: unknown): value is BridgeSession {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    typeof (value as BridgeSession).token === 'string' &&
-    typeof (value as BridgeSession).parentOrigin === 'string'
+    typeof (value as BridgeSession).token === "string" &&
+    typeof (value as BridgeSession).parentOrigin === "string"
   );
 }
 
@@ -136,14 +155,20 @@ function rememberSession(session: BridgeSession): void {
 const APP_MODE = appSourceMode();
 const SELECT_RETRIES = 20;
 const SELECT_RETRY_MS = 250;
-const REDIRECTED_FROM = new URL(window.location.href).searchParams.get(APP_REDIRECT_PARAM);
+const REDIRECTED_FROM = new URL(window.location.href).searchParams.get(
+  APP_REDIRECT_PARAM
+);
 
 function stripBridgeParams(url: URL): void {
   url.searchParams.delete(BRIDGE_TOKEN_PARAM);
   url.searchParams.delete(BRIDGE_PARENT_ORIGIN_PARAM);
   url.searchParams.delete(APP_REDIRECT_PARAM);
   try {
-    window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    window.history.replaceState(
+      window.history.state,
+      "",
+      url.pathname + url.search + url.hash
+    );
   } catch {
     return;
   }
@@ -179,7 +204,9 @@ function rectOf(element: Element): Rect {
 
 function shortLabel(element: Element): string {
   const tag = element.tagName.toLowerCase();
-  const firstClass = (element.getAttribute('class') ?? '').trim().split(/\s+/)[0];
+  const firstClass = (element.getAttribute("class") ?? "")
+    .trim()
+    .split(/\s+/)[0];
   return firstClass ? `${tag}.${firstClass}` : tag;
 }
 
@@ -209,26 +236,32 @@ function nthOfType(element: Element): string {
   return count > 1 ? `${tag}:nth-of-type(${index})` : tag;
 }
 
-const IS_MAC = /mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent);
+const IS_MAC = /mac|iphone|ipad/i.test(
+  navigator.platform || navigator.userAgent
+);
 
 function selectorFor(element: Element): string {
   const own = uniqueId(element);
   if (own) return own;
   const parts: string[] = [];
   let current: Element | null = element;
-  while (current && current !== document.body && current !== document.documentElement) {
+  while (
+    current &&
+    current !== document.body &&
+    current !== document.documentElement
+  ) {
     if (parts.length >= MAX_SELECTOR_DEPTH) break;
     const id = parts.length > 0 ? uniqueId(current) : null;
     if (id) {
       parts.unshift(id);
-      return parts.join(' > ');
+      return parts.join(" > ");
     }
     parts.unshift(nthOfType(current));
     current = current.parentElement;
   }
-  if (current === document.body) parts.unshift('body');
+  if (current === document.body) parts.unshift("body");
   if (parts.length === 0) return element.tagName.toLowerCase();
-  return parts.join(' > ');
+  return parts.join(" > ");
 }
 
 function parseLoc(value: string): SourceLoc | null {
@@ -238,7 +271,8 @@ function parseLoc(value: string): SourceLoc | null {
 }
 
 function sourceOf(element: Element): SourceLoc | null {
-  const owner = APP_MODE === 'next' ? element : element.closest(`[${SOURCE_LOC_ATTR}]`);
+  const owner =
+    APP_MODE === "next" ? element : element.closest(`[${SOURCE_LOC_ATTR}]`);
   const value = owner?.getAttribute(SOURCE_LOC_ATTR);
   return value ? parseLoc(value) : null;
 }
@@ -267,7 +301,10 @@ function ancestorsOf(element: Element): string[] {
 }
 
 function textOf(element: Element): string {
-  const raw = element instanceof HTMLElement ? element.innerText : (element.textContent ?? '');
+  const raw =
+    element instanceof HTMLElement
+      ? element.innerText
+      : (element.textContent ?? "");
   return raw.trim().slice(0, MAX_TEXT);
 }
 
@@ -280,7 +317,9 @@ function selectionFor(element: Element): SelectionContext {
     styles: stylesOf(element),
     rect: rectOf(element),
     source: sourceOf(element),
-    ...(APP_MODE === 'next' ? { usedAt: usedAtOf(element), usedBy: componentUseOf(element) } : {}),
+    ...(APP_MODE === "next"
+      ? { usedAt: usedAtOf(element), usedBy: componentUseOf(element) }
+      : {}),
     owners: componentOwners(element),
     ancestors: ancestorsOf(element),
   };
@@ -288,7 +327,7 @@ function selectionFor(element: Element): SelectionContext {
 
 function stringifyArg(value: unknown): string {
   if (value instanceof Error) return value.message;
-  if (typeof value === 'string') return value;
+  if (typeof value === "string") return value;
   try {
     return JSON.stringify(value) ?? String(value);
   } catch {
@@ -304,15 +343,20 @@ function eventElement(event: Event): Element | null {
 }
 
 function shapeRoot(element: Element | null): Element | null {
-  return element instanceof SVGElement ? (element.closest('svg') ?? element) : element;
+  return element instanceof SVGElement
+    ? (element.closest("svg") ?? element)
+    : element;
 }
 
 function isTypingElement(element: Element | null): boolean {
   if (!(element instanceof HTMLElement)) return false;
-  return element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName);
+  return (
+    element.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(element.tagName)
+  );
 }
 
-const DRAG_STYLE_ID = 'studio-drag-no-select';
+const DRAG_STYLE_ID = "studio-drag-no-select";
 
 function holdTextSelection(on: boolean): void {
   const style = document.getElementById(DRAG_STYLE_ID);
@@ -321,29 +365,44 @@ function holdTextSelection(on: boolean): void {
     return;
   }
   if (style) return;
-  const element = document.createElement('style');
+  const element = document.createElement("style");
   element.id = DRAG_STYLE_ID;
-  element.textContent = '*{-webkit-user-select:none!important;user-select:none!important}';
+  element.textContent =
+    "*{-webkit-user-select:none!important;user-select:none!important}";
   document.head.appendChild(element);
   window.getSelection()?.removeAllRanges();
 }
 
 function isEditKey(event: KeyboardEvent): boolean {
-  return event.key === 'Enter' && !event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && !event.repeat;
+  return (
+    event.key === "Enter" &&
+    !event.shiftKey &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.repeat
+  );
 }
 
 function reloadIfChangedDuringLoad(): void {
   if (!document.querySelector('script[src="/@vite/client"]')) return;
   const loadStartedAt = performance.timeOrigin;
-  fetch(BRIDGE_CHANGES_PATH, { cache: 'no-store' })
-    .then((res) => (res.ok ? (res.json() as Promise<{ changedAt?: unknown }>) : null))
+  fetch(BRIDGE_CHANGES_PATH, { cache: "no-store" })
+    .then((res) =>
+      res.ok ? (res.json() as Promise<{ changedAt?: unknown }>) : null
+    )
     .then((body) => {
-      if (body && typeof body.changedAt === 'number' && body.changedAt >= loadStartedAt) window.location.reload();
+      if (
+        body &&
+        typeof body.changedAt === "number" &&
+        body.changedAt >= loadStartedAt
+      )
+        window.location.reload();
     })
     .catch(() => undefined);
 }
 
-type WheelBody = Extract<OutgoingBody, { type: 'wheel' }>;
+type WheelBody = Extract<OutgoingBody, { type: "wheel" }>;
 
 function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   let pending: WheelBody | null = null;
@@ -361,7 +420,7 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
     event.preventDefault();
     if (pending && pending.deltaMode !== event.deltaMode) flush();
     pending = {
-      type: 'wheel',
+      type: "wheel",
       deltaX: (pending?.deltaX ?? 0) + event.deltaX,
       deltaY: (pending?.deltaY ?? 0) + event.deltaY,
       deltaMode: event.deltaMode,
@@ -374,27 +433,29 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    const app = event.repeat ? null : appKeyOf(event, isTypingElement(eventElement(event)));
+    const app = event.repeat
+      ? null
+      : appKeyOf(event, isTypingElement(eventElement(event)));
     if (app) {
       event.preventDefault();
-      post({ type: 'app-key', id: app });
+      post({ type: "app-key", id: app });
       return;
     }
-    if (event.key === 'Escape' && !event.repeat) post({ type: 'escape' });
+    if (event.key === "Escape" && !event.repeat) post({ type: "escape" });
     if (isLayoutKey(event) && !isTypingElement(eventElement(event))) {
       event.preventDefault();
-      post({ type: 'layout-key' });
+      post({ type: "layout-key" });
       return;
     }
     const chord = arrangeChordOf(event);
     if (chord && !isTypingElement(eventElement(event))) {
       event.preventDefault();
-      post({ type: 'arrange-key', key: chord });
+      post({ type: "arrange-key", key: chord });
       return;
     }
     const tool = vectorToolKeyOf(event);
     if (tool && !isTypingElement(eventElement(event))) {
-      post({ type: 'tool-key', tool });
+      post({ type: "tool-key", tool });
       return;
     }
     const key = zoomKeyOf(event);
@@ -402,11 +463,15 @@ function forwardZoomInput(post: (body: OutgoingBody) => void): void {
     const mod = isModZoomKey(event);
     if (!mod && isTypingElement(eventElement(event))) return;
     event.preventDefault();
-    post({ type: 'zoom-key', key, at: performance.timeOrigin + performance.now() });
+    post({
+      type: "zoom-key",
+      key,
+      at: performance.timeOrigin + performance.now(),
+    });
   };
 
-  window.addEventListener('wheel', onWheel, { capture: true, passive: false });
-  window.addEventListener('keydown', onKeyDown, { capture: true });
+  window.addEventListener("wheel", onWheel, { capture: true, passive: false });
+  window.addEventListener("keydown", onKeyDown, { capture: true });
 }
 
 type StyledElement = HTMLElement | SVGElement;
@@ -429,10 +494,21 @@ interface LivePreview {
 const PREVIEW_STYLE_KEYS = new Set<string>(DIRECT_STYLE_PROPERTIES);
 const MAX_PREVIEW_VALUE = 200;
 const MAX_PREVIEW_TEXT = 5000;
-const NON_TEXT_TAGS = new Set(['script', 'style', 'template', 'iframe', 'textarea', 'img', 'input', 'br', 'hr', 'svg']);
+const NON_TEXT_TAGS = new Set([
+  "script",
+  "style",
+  "template",
+  "iframe",
+  "textarea",
+  "img",
+  "input",
+  "br",
+  "hr",
+  "svg",
+]);
 
 function queryPreviewTarget(selector: unknown): Element | null {
-  if (typeof selector !== 'string' || selector === '') return null;
+  if (typeof selector !== "string" || selector === "") return null;
   try {
     return document.querySelector(selector);
   } catch {
@@ -445,22 +521,28 @@ function isStyledElement(element: Element | null): element is StyledElement {
 }
 
 function isPreviewValue(value: unknown): value is string | null {
-  return value === null || (typeof value === 'string' && value.length <= MAX_PREVIEW_VALUE);
+  return (
+    value === null ||
+    (typeof value === "string" && value.length <= MAX_PREVIEW_VALUE)
+  );
 }
 
 function previewEntries(style: unknown): [string, string | null][] {
-  if (typeof style !== 'object' || style === null || Array.isArray(style)) return [];
+  if (typeof style !== "object" || style === null || Array.isArray(style))
+    return [];
   return Object.entries(style as Record<string, unknown>).filter(
-    (entry): entry is [string, string | null] => PREVIEW_STYLE_KEYS.has(entry[0]) && isPreviewValue(entry[1]),
+    (entry): entry is [string, string | null] =>
+      PREVIEW_STYLE_KEYS.has(entry[0]) && isPreviewValue(entry[1])
   );
 }
 
 function restoreStyle(element: StyledElement, backup: StyleBackup): void {
   for (const [prop, original] of backup.props) {
-    if (original.value === '') element.style.removeProperty(prop);
+    if (original.value === "") element.style.removeProperty(prop);
     else element.style.setProperty(prop, original.value, original.priority);
   }
-  if (!backup.hadAttribute && element.getAttribute('style') === '') element.removeAttribute('style');
+  if (!backup.hadAttribute && element.getAttribute("style") === "")
+    element.removeAttribute("style");
 }
 
 function createLivePreview(): LivePreview {
@@ -470,7 +552,11 @@ function createLivePreview(): LivePreview {
   const backupFor = (element: StyledElement): StyleBackup => {
     const existing = styleBackups.get(element);
     if (existing) return existing;
-    const created: StyleBackup = { hadAttribute: element.hasAttribute('style'), attribute: element.getAttribute('style'), props: new Map() };
+    const created: StyleBackup = {
+      hadAttribute: element.hasAttribute("style"),
+      attribute: element.getAttribute("style"),
+      props: new Map(),
+    };
     styleBackups.set(element, created);
     return created;
   };
@@ -483,16 +569,20 @@ function createLivePreview(): LivePreview {
     const backup = backupFor(element);
     for (const [prop, value] of entries) {
       if (!backup.props.has(prop)) {
-        backup.props.set(prop, { value: element.style.getPropertyValue(prop), priority: element.style.getPropertyPriority(prop) });
+        backup.props.set(prop, {
+          value: element.style.getPropertyValue(prop),
+          priority: element.style.getPropertyPriority(prop),
+        });
       }
       if (value === null) element.style.removeProperty(prop);
-      else element.style.setProperty(prop, value, 'important');
+      else element.style.setProperty(prop, value, "important");
     }
   };
 
   const previewText = (selector: unknown, text: unknown): void => {
     const element = queryPreviewTarget(selector);
-    if (!element || typeof text !== 'string' || text.length > MAX_PREVIEW_TEXT) return;
+    if (!element || typeof text !== "string" || text.length > MAX_PREVIEW_TEXT)
+      return;
     if (NON_TEXT_TAGS.has(element.tagName.toLowerCase())) return;
     if (!textBackups.has(element)) {
       if (element.children.length > 0) return;
@@ -502,18 +592,25 @@ function createLivePreview(): LivePreview {
   };
 
   const reset = (): void => {
-    for (const [element, nodes] of textBackups) element.replaceChildren(...nodes);
+    for (const [element, nodes] of textBackups)
+      element.replaceChildren(...nodes);
     for (const [element, backup] of styleBackups) restoreStyle(element, backup);
     textBackups.clear();
     styleBackups.clear();
   };
 
   const authoredInline = (element: Element): string => {
-    const backup = isStyledElement(element) ? styleBackups.get(element) : undefined;
-    return (backup ? backup.attribute : element.getAttribute('style')) ?? '';
+    const backup = isStyledElement(element)
+      ? styleBackups.get(element)
+      : undefined;
+    return (backup ? backup.attribute : element.getAttribute("style")) ?? "";
   };
 
-  const release = (element: StyledElement, props: string[], text: boolean): Released => {
+  const release = (
+    element: StyledElement,
+    props: string[],
+    text: boolean
+  ): Released => {
     const backup = styleBackups.get(element);
     const taken = new Map<string, { value: string; priority: string }>();
     for (const prop of props) {
@@ -524,30 +621,55 @@ function createLivePreview(): LivePreview {
     }
     if (backup && backup.props.size === 0) styleBackups.delete(element);
     const saved = text ? textBackups.get(element) : undefined;
-    const textNodes = saved && saved.length === 1 && saved[0] instanceof Text ? saved : null;
+    const textNodes =
+      saved && saved.length === 1 && saved[0] instanceof Text ? saved : null;
     if (textNodes) textBackups.delete(element);
-    return { props: taken, hadAttribute: backup ? backup.hadAttribute : null, textNodes };
+    return {
+      props: taken,
+      hadAttribute: backup ? backup.hadAttribute : null,
+      textNodes,
+    };
   };
 
-  const previewing = (element: Element): boolean => (isStyledElement(element) && styleBackups.has(element)) || textBackups.has(element);
+  const previewing = (element: Element): boolean =>
+    (isStyledElement(element) && styleBackups.has(element)) ||
+    textBackups.has(element);
 
-  return { previewStyle, previewText, reset, authoredInline, release, previewing };
+  return {
+    previewStyle,
+    previewText,
+    reset,
+    authoredInline,
+    release,
+    previewing,
+  };
 }
 
-function sourceStrings(element: Element): Promise<{ own: string | null; usedAt: string | null }> {
+function sourceStrings(
+  element: Element
+): Promise<{ own: string | null; usedAt: string | null }> {
   const usedAt = element.getAttribute(USED_AT_ATTR);
-  if (APP_MODE === 'next') return appSourceFor(element).then((own) => ({ own, usedAt: element.getAttribute(USED_AT_ATTR) ?? usedAt }));
-  return Promise.resolve({ own: element.closest(`[${SOURCE_LOC_ATTR}]`)?.getAttribute(SOURCE_LOC_ATTR) ?? null, usedAt });
+  if (APP_MODE === "next")
+    return appSourceFor(element).then((own) => ({
+      own,
+      usedAt: element.getAttribute(USED_AT_ATTR) ?? usedAt,
+    }));
+  return Promise.resolve({
+    own:
+      element.closest(`[${SOURCE_LOC_ATTR}]`)?.getAttribute(SOURCE_LOC_ATTR) ??
+      null,
+    usedAt,
+  });
 }
 
 const MAX_TOKEN_PREVIEW_CSS = 200_000;
 
-type PreviewLayer = 'tokens' | 'tweaks' | 'lofi';
+type PreviewLayer = "tokens" | "tweaks" | "lofi";
 
 const PREVIEW_LAYERS: { layer: PreviewLayer; id: string }[] = [
-  { layer: 'tokens', id: TOKEN_PREVIEW_STYLE_ID },
-  { layer: 'tweaks', id: TWEAKS_PREVIEW_STYLE_ID },
-  { layer: 'lofi', id: LOFI_STYLE_ID },
+  { layer: "tokens", id: TOKEN_PREVIEW_STYLE_ID },
+  { layer: "tweaks", id: TWEAKS_PREVIEW_STYLE_ID },
+  { layer: "lofi", id: LOFI_STYLE_ID },
 ];
 
 interface PreviewStyles {
@@ -555,7 +677,11 @@ interface PreviewStyles {
 }
 
 function createPreviewStyles(): PreviewStyles {
-  const active: Record<PreviewLayer, string> = { tokens: '', tweaks: '', lofi: '' };
+  const active: Record<PreviewLayer, string> = {
+    tokens: "",
+    tweaks: "",
+    lofi: "",
+  };
   let observer: MutationObserver | null = null;
 
   const element = (id: string): HTMLStyleElement | null => {
@@ -563,14 +689,21 @@ function createPreviewStyles(): PreviewStyles {
     return found instanceof HTMLStyleElement ? found : null;
   };
 
-  const wanted = () => PREVIEW_LAYERS.filter((item) => active[item.layer] !== '');
+  const wanted = () =>
+    PREVIEW_LAYERS.filter((item) => active[item.layer] !== "");
 
   const inOrder = (): boolean => {
     const items = wanted();
     let node = document.head.lastElementChild;
     for (let i = items.length - 1; i >= 0; i -= 1) {
       const item = items[i];
-      if (!item || !(node instanceof HTMLStyleElement) || node.id !== item.id || node.textContent !== active[item.layer]) return false;
+      if (
+        !item ||
+        !(node instanceof HTMLStyleElement) ||
+        node.id !== item.id ||
+        node.textContent !== active[item.layer]
+      )
+        return false;
       node = node.previousElementSibling;
     }
     return true;
@@ -582,24 +715,28 @@ function createPreviewStyles(): PreviewStyles {
     for (const item of wanted()) {
       let style = element(item.id);
       if (!style) {
-        style = document.createElement('style');
+        style = document.createElement("style");
         style.id = item.id;
       }
-      if (style.textContent !== active[item.layer]) style.textContent = active[item.layer];
+      if (style.textContent !== active[item.layer])
+        style.textContent = active[item.layer];
       head.appendChild(style);
     }
   };
 
   const watch = (): void => {
-    if (observer || typeof MutationObserver !== 'function') return;
+    if (observer || typeof MutationObserver !== "function") return;
     observer = new MutationObserver(() => ensureOrder());
     observer.observe(document.head, { childList: true });
   };
 
   const apply = (layer: PreviewLayer, css: unknown): void => {
-    if (typeof css !== 'string' || css.length > MAX_TOKEN_PREVIEW_CSS) return;
+    if (typeof css !== "string" || css.length > MAX_TOKEN_PREVIEW_CSS) return;
     active[layer] = css;
-    if (!css) element(PREVIEW_LAYERS.find((item) => item.layer === layer)?.id ?? '')?.remove();
+    if (!css)
+      element(
+        PREVIEW_LAYERS.find((item) => item.layer === layer)?.id ?? ""
+      )?.remove();
     if (wanted().length === 0) {
       observer?.disconnect();
       observer = null;
@@ -624,8 +761,8 @@ function createThemeControl(): ThemeControl {
     const root = document.documentElement;
     if (original.theme === undefined) delete root.dataset.theme;
     else root.dataset.theme = original.theme;
-    root.classList.toggle('dark', original.dark);
-    if (root.getAttribute('class') === '') root.removeAttribute('class');
+    root.classList.toggle("dark", original.dark);
+    if (root.getAttribute("class") === "") root.removeAttribute("class");
     original = null;
   };
 
@@ -634,11 +771,14 @@ function createThemeControl(): ThemeControl {
       restore();
       return;
     }
-    if (theme !== 'light' && theme !== 'dark') return;
+    if (theme !== "light" && theme !== "dark") return;
     const root = document.documentElement;
-    original ??= { theme: root.dataset.theme, dark: root.classList.contains('dark') };
+    original ??= {
+      theme: root.dataset.theme,
+      dark: root.classList.contains("dark"),
+    };
     root.dataset.theme = theme;
-    root.classList.toggle('dark', theme === 'dark');
+    root.classList.toggle("dark", theme === "dark");
   };
 
   return { set };
@@ -654,8 +794,14 @@ function queryElement(selector: string): Element | null {
 
 const NEIGHBOR_MAX = 200;
 
-function neighborRects(selector: unknown): { parent: Rect | null; siblings: Rect[] } {
-  const element = typeof selector === 'string' && selector.length <= 2000 ? queryElement(selector) : null;
+function neighborRects(selector: unknown): {
+  parent: Rect | null;
+  siblings: Rect[];
+} {
+  const element =
+    typeof selector === "string" && selector.length <= 2000
+      ? queryElement(selector)
+      : null;
   const parent = element?.parentElement;
   if (!element || !parent) return { parent: null, siblings: [] };
   const siblings = Array.from(parent.children)
@@ -667,7 +813,9 @@ function neighborRects(selector: unknown): { parent: Rect | null; siblings: Rect
 }
 
 function sameElements(a: (Element | null)[], b: (Element | null)[]): boolean {
-  return a.length === b.length && a.every((element, index) => element === b[index]);
+  return (
+    a.length === b.length && a.every((element, index) => element === b[index])
+  );
 }
 
 interface RectTracker {
@@ -679,7 +827,10 @@ function createRectTracker(post: (body: OutgoingBody) => void): RectTracker {
   let selectors: string[] = [];
   let observed: (Element | null)[] = [];
   let frame = 0;
-  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => schedule()) : null;
+  const observer =
+    typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => schedule())
+      : null;
 
   const observe = (elements: (Element | null)[]): void => {
     if (!observer || sameElements(elements, observed)) return;
@@ -695,7 +846,11 @@ function createRectTracker(post: (body: OutgoingBody) => void): RectTracker {
     if (selectors.length === 0) return;
     const elements = selectors.map(queryElement);
     observe(elements);
-    post({ type: 'rects', selectors, rects: elements.map((element) => (element ? rectOf(element) : null)) });
+    post({
+      type: "rects",
+      selectors,
+      rects: elements.map((element) => (element ? rectOf(element) : null)),
+    });
   };
 
   function schedule(): void {
@@ -720,30 +875,43 @@ function createRectTracker(post: (body: OutgoingBody) => void): RectTracker {
 const MAX_ANCHORS = 200;
 
 const anchorDom: AnchorDom<Element> = {
-  bySource: (loc) => Array.from(document.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)).filter((element) => element.getAttribute(SOURCE_LOC_ATTR) === loc),
+  bySource: (loc) =>
+    Array.from(document.querySelectorAll(`[${SOURCE_LOC_ATTR}]`)).filter(
+      (element) => element.getAttribute(SOURCE_LOC_ATTR) === loc
+    ),
   bySelector: (selector) => queryElement(selector),
-  byTag: (tag) => (/^[a-z][a-z0-9-]*$/i.test(tag) ? Array.from(document.getElementsByTagName(tag)) : []),
+  byTag: (tag) =>
+    /^[a-z][a-z0-9-]*$/i.test(tag)
+      ? Array.from(document.getElementsByTagName(tag))
+      : [],
   tagOf: (element) => element.tagName.toLowerCase(),
-  textOf: (element) => (element instanceof HTMLElement ? element.innerText : (element.textContent ?? '')),
+  textOf: (element) =>
+    element instanceof HTMLElement
+      ? element.innerText
+      : (element.textContent ?? ""),
 };
 
 function isAnchorQuery(value: unknown): value is AnchorQuery {
-  if (typeof value !== 'object' || value === null) return false;
+  if (typeof value !== "object" || value === null) return false;
   const query = value as Partial<AnchorQuery>;
   return (
-    typeof query.id === 'string' &&
-    typeof query.selector === 'string' &&
-    typeof query.tag === 'string' &&
-    typeof query.textSnippet === 'string' &&
-    (query.sourceLoc === null || typeof query.sourceLoc === 'string')
+    typeof query.id === "string" &&
+    typeof query.selector === "string" &&
+    typeof query.tag === "string" &&
+    typeof query.textSnippet === "string" &&
+    (query.sourceLoc === null || typeof query.sourceLoc === "string")
   );
 }
 
 function anchorQueries(raw: unknown): AnchorQuery[] {
-  return Array.isArray(raw) ? raw.filter(isAnchorQuery).slice(0, MAX_ANCHORS) : [];
+  return Array.isArray(raw)
+    ? raw.filter(isAnchorQuery).slice(0, MAX_ANCHORS)
+    : [];
 }
 
-function resolveAnchorElement(query: AnchorQuery): { element: Element; report: AnchorReport } | null {
+function resolveAnchorElement(
+  query: AnchorQuery
+): { element: Element; report: AnchorReport } | null {
   const found = resolveAnchor(query, anchorDom);
   if (!found) return null;
   const report: AnchorReport = {
@@ -761,11 +929,16 @@ interface AnchorTracker {
   schedule(): void;
 }
 
-function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker {
+function createAnchorTracker(
+  post: (body: OutgoingBody) => void
+): AnchorTracker {
   let queries: AnchorQuery[] = [];
   let observed: (Element | null)[] = [];
   let frame = 0;
-  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => schedule()) : null;
+  const observer =
+    typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => schedule())
+      : null;
 
   const observe = (elements: (Element | null)[]): void => {
     if (!observer || sameElements(elements, observed)) return;
@@ -781,8 +954,15 @@ function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker 
     const resolved = queries.map(resolveAnchorElement);
     observe(resolved.map((entry) => entry?.element ?? null));
     post({
-      type: 'anchor-rects',
-      anchors: resolved.map((entry, index) => entry?.report ?? { id: queries[index]?.id ?? '', rect: null, via: null }),
+      type: "anchor-rects",
+      anchors: resolved.map(
+        (entry, index) =>
+          entry?.report ?? {
+            id: queries[index]?.id ?? "",
+            rect: null,
+            via: null,
+          }
+      ),
     });
   };
 
@@ -797,7 +977,7 @@ function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker 
     frame = 0;
     if (next.length === 0) {
       observe([]);
-      post({ type: 'anchor-rects', anchors: [] });
+      post({ type: "anchor-rects", anchors: [] });
       return;
     }
     send();
@@ -808,7 +988,7 @@ function createAnchorTracker(post: (body: OutgoingBody) => void): AnchorTracker 
 
 function startBridge(session: BridgeSession): void {
   const parentWindow = window.parent;
-  let mode: 'select' | 'none' = 'none';
+  let mode: "select" | "none" = "none";
   let marqueeOn = false;
   let hoverFrame = 0;
   let pendingHover: Element | null = null;
@@ -818,13 +998,18 @@ function startBridge(session: BridgeSession): void {
 
   const post = (body: OutgoingBody): void => {
     try {
-      parentWindow.postMessage({ ...body, ns: 'studio', token: session.token }, session.parentOrigin);
+      parentWindow.postMessage(
+        { ...body, ns: "studio", token: session.token },
+        session.parentOrigin
+      );
     } catch {
       void 0;
     }
   };
 
-  const reportError = (body: Extract<OutgoingBody, { type: 'error' }>): void => {
+  const reportError = (
+    body: Extract<OutgoingBody, { type: "error" }>
+  ): void => {
     if (reporting) return;
     reporting = true;
     try {
@@ -834,11 +1019,11 @@ function startBridge(session: BridgeSession): void {
     }
   };
 
-  window.addEventListener('error', (event: ErrorEvent) => {
+  window.addEventListener("error", (event: ErrorEvent) => {
     const error: unknown = event.error;
     reportError({
-      type: 'error',
-      kind: 'runtime',
+      type: "error",
+      kind: "runtime",
       message: event.message || stringifyArg(error),
       stack: error instanceof Error ? error.stack : undefined,
       source: event.filename || undefined,
@@ -846,62 +1031,84 @@ function startBridge(session: BridgeSession): void {
     });
   });
 
-  window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-    const reason: unknown = event.reason;
-    reportError({
-      type: 'error',
-      kind: 'unhandledrejection',
-      message: stringifyArg(reason),
-      stack: reason instanceof Error ? reason.stack : undefined,
-    });
-  });
+  window.addEventListener(
+    "unhandledrejection",
+    (event: PromiseRejectionEvent) => {
+      const reason: unknown = event.reason;
+      reportError({
+        type: "error",
+        kind: "unhandledrejection",
+        message: stringifyArg(reason),
+        stack: reason instanceof Error ? reason.stack : undefined,
+      });
+    }
+  );
 
   const originalConsoleError = console.error.bind(console);
   console.error = (...args: unknown[]): void => {
     originalConsoleError(...args);
     const firstError = args.find((arg): arg is Error => arg instanceof Error);
     reportError({
-      type: 'error',
-      kind: 'console',
-      message: args.map(stringifyArg).join(' '),
+      type: "error",
+      kind: "console",
+      message: args.map(stringifyArg).join(" "),
       stack: firstError?.stack,
     });
   };
 
   const layers = createLayerIndex();
-  const locks = createLockSet(APP_MODE === 'next' ? { prime: primeAppSources, source: appSourceFor } : null, (keys) => {
-    if (keys) post({ type: 'locks', keys });
-    post({ type: 'tree', ...layers.build(locks.ownLocked) });
-  });
-  const hitOf = (event: Event): Element | null => locks.hit(event, shapeRoot(eventElement(event)));
+  const locks = createLockSet(
+    APP_MODE === "next"
+      ? { prime: primeAppSources, source: appSourceFor }
+      : null,
+    (keys) => {
+      if (keys) post({ type: "locks", keys });
+      post({ type: "tree", ...layers.build(locks.ownLocked) });
+    }
+  );
+  const hitOf = (event: Event): Element | null =>
+    locks.hit(event, shapeRoot(eventElement(event)));
   let selected: Element | null = null;
   let selectedAt = -Infinity;
   let tracked: string[] = [];
   let altHeld = false;
   let lastAlt = false;
 
-  const postHover = (element: Element | null, source?: 'tree'): void => {
+  const postHover = (element: Element | null, source?: "tree"): void => {
     if (!element) {
-      post({ type: 'hover', rect: null, source });
+      post({ type: "hover", rect: null, source });
       return;
     }
-    post({ type: 'hover', rect: rectOf(element), label: shortLabel(element), altKey: altHeld, node: layers.idOf(element), source });
+    post({
+      type: "hover",
+      rect: rectOf(element),
+      label: shortLabel(element),
+      altKey: altHeld,
+      node: layers.idOf(element),
+      source,
+    });
   };
 
   const flushHover = (): void => {
     hoverFrame = 0;
     const element = pendingHover;
     pendingHover = null;
-    if (mode !== 'select') return;
+    if (mode !== "select") return;
     if (element === lastHover && element && altHeld === lastAlt) return;
     lastHover = element;
     lastAlt = altHeld;
     postHover(element);
-    if (element && APP_MODE === 'next') void appSourceFor(element);
+    if (element && APP_MODE === "next") void appSourceFor(element);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (mode !== 'select' || textEditor.editing() || freeMove.move(event) || marquee.move(event)) return;
+    if (
+      mode !== "select" ||
+      textEditor.editing() ||
+      freeMove.move(event) ||
+      marquee.move(event)
+    )
+      return;
     altHeld = event.altKey;
     pendingHover = hitOf(event);
     if (!hoverFrame) hoverFrame = window.requestAnimationFrame(flushHover);
@@ -912,26 +1119,30 @@ function startBridge(session: BridgeSession): void {
       event.stopImmediatePropagation();
       return;
     }
-    if (event.type === 'pointerdown') textEditor.commit();
-    if (mode !== 'select') return;
+    if (event.type === "pointerdown") textEditor.commit();
+    if (mode !== "select") return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
   };
 
   const lookUpAppSource = (element: Element, additive: boolean): void => {
-    if (APP_MODE !== 'next' || element.hasAttribute(SOURCE_LOC_ATTR)) return;
+    if (APP_MODE !== "next" || element.hasAttribute(SOURCE_LOC_ATTR)) return;
     void appSourceFor(element).then((source) => {
       if (source && selected === element) postSelect(element, additive);
     });
   };
 
-  const postSelect = (element: Element, additive: boolean, point?: { x: number; y: number }): void => {
+  const postSelect = (
+    element: Element,
+    additive: boolean,
+    point?: { x: number; y: number }
+  ): void => {
     lookUpAppSource(element, additive);
     selected = element;
     selectedAt = performance.now();
     post({
-      type: 'select',
+      type: "select",
       selection: { ...selectionFor(element), path: ancestorPath(element) },
       additive,
       at: performance.timeOrigin + performance.now(),
@@ -940,8 +1151,12 @@ function startBridge(session: BridgeSession): void {
     });
   };
 
-  const postSelectMany = async (elements: Element[], additive: boolean): Promise<void> => {
-    if (APP_MODE === 'next') await Promise.all(elements.map((element) => appSourceFor(element)));
+  const postSelectMany = async (
+    elements: Element[],
+    additive: boolean
+  ): Promise<void> => {
+    if (APP_MODE === "next")
+      await Promise.all(elements.map((element) => appSourceFor(element)));
     const live = elements.filter((element) => element.isConnected);
     const last = live.at(-1);
     if (!last && additive) return;
@@ -949,18 +1164,27 @@ function startBridge(session: BridgeSession): void {
       selected = last;
       selectedAt = performance.now();
     }
-    post({ type: 'select-many', selections: live.map((element) => ({ ...selectionFor(element), path: ancestorPath(element) })), additive, at: performance.timeOrigin + performance.now(), ...(last ? { node: layers.idOf(last) } : {}) });
+    post({
+      type: "select-many",
+      selections: live.map((element) => ({
+        ...selectionFor(element),
+        path: ancestorPath(element),
+      })),
+      additive,
+      at: performance.timeOrigin + performance.now(),
+      ...(last ? { node: layers.idOf(last) } : {}),
+    });
   };
 
   const marquee = createMarquee({
-    enabled: () => mode === 'select' && marqueeOn && !textEditor.editing(),
+    enabled: () => mode === "select" && marqueeOn && !textEditor.editing(),
     locked: (element) => locks.isLocked(element),
     show: (rect) => {
       if (rect && lastHover) {
         lastHover = null;
-        post({ type: 'hover', rect: null });
+        post({ type: "hover", rect: null });
       }
-      post({ type: 'marquee', rect });
+      post({ type: "marquee", rect });
     },
     pick: (elements, additive) => void postSelectMany(elements, additive),
   });
@@ -968,13 +1192,22 @@ function startBridge(session: BridgeSession): void {
   const sharePointer = createSharePointer(post);
 
   const freeMove = createFreeMove({
-    enabled: () => mode === 'select' && !textEditor.editing(),
+    enabled: () => mode === "select" && !textEditor.editing(),
     selected: () => selected,
     selectorFor,
     rectOf,
     ownSource: async (element) => {
-      const value = APP_MODE === 'next' ? await appSourceFor(element) : element.getAttribute(SOURCE_LOC_ATTR);
-      return { own: value ? parseLoc(value) : null, usedAt: APP_MODE === 'next' && componentUseOf(element)?.root ? usedAtOf(element) : null };
+      const value =
+        APP_MODE === "next"
+          ? await appSourceFor(element)
+          : element.getAttribute(SOURCE_LOC_ATTR);
+      return {
+        own: value ? parseLoc(value) : null,
+        usedAt:
+          APP_MODE === "next" && componentUseOf(element)?.root
+            ? usedAtOf(element)
+            : null,
+      };
     },
     post,
     promote: (element) => postSelect(element, false),
@@ -983,7 +1216,7 @@ function startBridge(session: BridgeSession): void {
   const onPointerDown = (event: PointerEvent): void => {
     block(event);
     if (textEditor.owns(eventElement(event))) return;
-    if (mode === 'select' && event.button === 0) holdTextSelection(true);
+    if (mode === "select" && event.button === 0) holdTextSelection(true);
     if (!freeMove.down(event, hitOf(event))) marquee.down(event, hitOf(event));
   };
 
@@ -994,8 +1227,14 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onClick = (event: MouseEvent): void => {
-    if (mode !== 'select' && links.onClick(event)) return;
-    if (mode !== 'select' || textEditor.owns(eventElement(event)) || freeMove.takeClick() || marquee.takeClick()) return block(event);
+    if (mode !== "select" && links.onClick(event)) return;
+    if (
+      mode !== "select" ||
+      textEditor.owns(eventElement(event)) ||
+      freeMove.takeClick() ||
+      marquee.takeClick()
+    )
+      return block(event);
     block(event);
     const element = hitOf(event);
     if (!element) return;
@@ -1005,15 +1244,17 @@ function startBridge(session: BridgeSession): void {
   const onContextMenu = (event: MouseEvent): void => {
     block(event);
     const element = hitOf(event);
-    if (mode !== 'select' || !element || textEditor.owns(element)) return;
-    const inSelection = element === selected || tracked.some((selector) => queryElement(selector) === element);
+    if (mode !== "select" || !element || textEditor.owns(element)) return;
+    const inSelection =
+      element === selected ||
+      tracked.some((selector) => queryElement(selector) === element);
     if (!inSelection) postSelect(element, false);
-    post({ type: 'context-menu', x: event.clientX, y: event.clientY });
+    post({ type: "context-menu", x: event.clientX, y: event.clientY });
   };
 
   const onAltChange = (event: KeyboardEvent): void => {
-    if (event.key !== 'Alt' || mode !== 'select') return;
-    altHeld = event.type === 'keydown';
+    if (event.key !== "Alt" || mode !== "select") return;
+    altHeld = event.type === "keydown";
     if (altHeld === lastAlt || !lastHover) return;
     lastAlt = altHeld;
     postHover(lastHover);
@@ -1021,8 +1262,9 @@ function startBridge(session: BridgeSession): void {
 
   const onDblClick = (event: MouseEvent): void => {
     const element = hitOf(event);
-    const target = mode === 'select' || element === selected ? element : null;
-    if (textEditor.owns(element) || !textEditor.canEdit(target)) return block(event);
+    const target = mode === "select" || element === selected ? element : null;
+    if (textEditor.owns(element) || !textEditor.canEdit(target))
+      return block(event);
     event.preventDefault();
     event.stopImmediatePropagation();
     textEditor.start(target, { x: event.clientX, y: event.clientY });
@@ -1030,43 +1272,71 @@ function startBridge(session: BridgeSession): void {
 
   const forwardStructureKey = (event: KeyboardEvent): boolean => {
     const key = event.repeat ? null : structureKeyOf(event, IS_MAC);
-    if (!key || !selected?.isConnected || isTypingElement(eventElement(event))) return false;
+    if (!key || !selected?.isConnected || isTypingElement(eventElement(event)))
+      return false;
     event.preventDefault();
     event.stopPropagation();
-    post({ type: 'structure-key', selector: selectorFor(selected), key });
+    post({ type: "structure-key", selector: selectorFor(selected), key });
     return true;
   };
 
   const forwardReorderKey = (event: KeyboardEvent): boolean => {
     const reorder = reorderMoveOf(event);
-    if (!reorder || !selected?.isConnected || isTypingElement(eventElement(event))) return false;
+    if (
+      !reorder ||
+      !selected?.isConnected ||
+      isTypingElement(eventElement(event))
+    )
+      return false;
     event.preventDefault();
     event.stopPropagation();
-    post({ type: 'reorder-key', selector: selectorFor(selected), move: reorder });
+    post({
+      type: "reorder-key",
+      selector: selectorFor(selected),
+      move: reorder,
+    });
     return true;
   };
 
   const postNudge = (dx: number, dy: number): boolean => {
-    if (mode !== 'select' || !selected?.isConnected || textEditor.editing()) return false;
+    if (mode !== "select" || !selected?.isConnected || textEditor.editing())
+      return false;
     const own = selectorFor(selected);
-    const others = tracked.filter((selector) => selector !== own).flatMap((selector) => {
-      const element = queryElement(selector);
-      return element?.isConnected && element !== selected ? [{ selector, base: nudgeBaseOf(element) }] : [];
+    const others = tracked
+      .filter((selector) => selector !== own)
+      .flatMap((selector) => {
+        const element = queryElement(selector);
+        return element?.isConnected && element !== selected
+          ? [{ selector, base: nudgeBaseOf(element) }]
+          : [];
+      });
+    post({
+      type: "nudge-key",
+      selector: own,
+      dx,
+      dy,
+      base: nudgeBaseOf(selected),
+      ...(others.length > 0 ? { others } : {}),
     });
-    post({ type: 'nudge-key', selector: own, dx, dy, base: nudgeBaseOf(selected), ...(others.length > 0 ? { others } : {}) });
     return true;
   };
 
   const forwardNudgeKey = (event: KeyboardEvent): boolean => {
     const step = nudgeStepOf(event);
-    if (!step || isTypingElement(eventElement(event)) || !postNudge(step.dx, step.dy)) return false;
+    if (
+      !step ||
+      isTypingElement(eventElement(event)) ||
+      !postNudge(step.dx, step.dy)
+    )
+      return false;
     event.preventDefault();
     event.stopPropagation();
     return true;
   };
 
   const cancelMarquee = (event: KeyboardEvent): boolean => {
-    if (event.key !== 'Escape' || !(freeMove.cancel() || marquee.cancel())) return false;
+    if (event.key !== "Escape" || !(freeMove.cancel() || marquee.cancel()))
+      return false;
     holdTextSelection(false);
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -1074,7 +1344,13 @@ function startBridge(session: BridgeSession): void {
   };
 
   const clearOnEscape = (event: KeyboardEvent): boolean => {
-    if (event.key !== 'Escape' || event.repeat || mode !== 'select' || tracked.length === 0) return false;
+    if (
+      event.key !== "Escape" ||
+      event.repeat ||
+      mode !== "select" ||
+      tracked.length === 0
+    )
+      return false;
     event.preventDefault();
     event.stopImmediatePropagation();
     selected = null;
@@ -1084,34 +1360,53 @@ function startBridge(session: BridgeSession): void {
   };
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (textEditor.onKeyDown(event) || cancelMarquee(event) || clearOnEscape(event)) return;
-    if (mode !== 'select' && links.onKeyDown(event)) return;
+    if (
+      textEditor.onKeyDown(event) ||
+      cancelMarquee(event) ||
+      clearOnEscape(event)
+    )
+      return;
+    if (mode !== "select" && links.onKeyDown(event)) return;
     onAltChange(event);
-    if (forwardReorderKey(event) || mode !== 'select' || forwardStructureKey(event) || forwardNudgeKey(event)) return;
-    if (isEditKey(event) && textEditor.canEdit(selected) && !isTypingElement(eventElement(event))) {
+    if (
+      forwardReorderKey(event) ||
+      mode !== "select" ||
+      forwardStructureKey(event) ||
+      forwardNudgeKey(event)
+    )
+      return;
+    if (
+      isEditKey(event) &&
+      textEditor.canEdit(selected) &&
+      !isTypingElement(eventElement(event))
+    ) {
       event.preventDefault();
       event.stopImmediatePropagation();
       textEditor.start(selected);
       return;
     }
     const move = selectMoveOf(event);
-    if (move && selected?.isConnected && !isTypingElement(eventElement(event))) {
+    if (
+      move &&
+      selected?.isConnected &&
+      !isTypingElement(eventElement(event))
+    ) {
       event.preventDefault();
       event.stopPropagation();
       const next = moveSelection(selected, move);
       if (next) postSelect(next, false);
       return;
     }
-    if (event.key !== 'Escape') return;
-    mode = 'none';
+    if (event.key !== "Escape") return;
+    mode = "none";
     lastHover = null;
     pendingHover = null;
-    post({ type: 'hover', rect: null });
-    post({ type: 'mode-exited' });
+    post({ type: "hover", rect: null });
+    post({ type: "mode-exited" });
   };
 
   const selectFirstLayer = (): void => {
-    const first = moveSelection(document.body, 'child');
+    const first = moveSelection(document.body, "child");
     if (first) postSelect(first, false);
   };
 
@@ -1121,7 +1416,7 @@ function startBridge(session: BridgeSession): void {
     if (scrollFrame) return;
     scrollFrame = window.requestAnimationFrame(() => {
       scrollFrame = 0;
-      post({ type: 'scroll' });
+      post({ type: "scroll" });
     });
   };
 
@@ -1136,14 +1431,22 @@ function startBridge(session: BridgeSession): void {
     onStart: (element) => {
       lastHover = null;
       pendingHover = null;
-      post({ type: 'hover', rect: null });
+      post({ type: "hover", rect: null });
       if (selected !== element) postSelect(element, false);
     },
   });
   const optimistic = createOptimistic({
-    report: (id, outcome, ms, reason) => post({ type: 'optimistic-result', id, outcome, ms, ...(reason ? { reason } : {}) }),
+    report: (id, outcome, ms, reason) =>
+      post({
+        type: "optimistic-result",
+        id,
+        outcome,
+        ms,
+        ...(reason ? { reason } : {}),
+      }),
     styleKeys: PREVIEW_STYLE_KEYS,
-    release: (element, props, text) => livePreview.release(element, props, text),
+    release: (element, props, text) =>
+      livePreview.release(element, props, text),
     previewing: (element) => livePreview.previewing(element),
     sourceOf: sourceStrings,
   });
@@ -1154,90 +1457,165 @@ function startBridge(session: BridgeSession): void {
     if (selected?.isConnected) postSelect(selected, false);
   };
   const forceState = createForceState(repostSelected);
-  const onForceState = (message: Extract<ParentToBridge, { type: 'force-state' }>): void => {
-    const states = (Array.isArray(message.states) ? message.states : []).filter((state): state is ForcedState => state === 'hover' || state === 'focus' || state === 'active');
-    const selector = typeof message.selector === 'string' && message.selector.length <= 2000 ? message.selector : null;
+  const onForceState = (
+    message: Extract<ParentToBridge, { type: "force-state" }>
+  ): void => {
+    const states = (Array.isArray(message.states) ? message.states : []).filter(
+      (state): state is ForcedState =>
+        state === "hover" || state === "focus" || state === "active"
+    );
+    const selector =
+      typeof message.selector === "string" && message.selector.length <= 2000
+        ? message.selector
+        : null;
     const dark = message.dark === true && selector !== null;
-    if (dark !== forcedDark) themeControl.set(dark ? 'dark' : null);
+    if (dark !== forcedDark) themeControl.set(dark ? "dark" : null);
     forcedDark = dark;
     forceState.set(selector, states, dark, message.track === true);
     if (selector && !selected?.isConnected) selected = queryElement(selector);
-    window.requestAnimationFrame(() => window.requestAnimationFrame(repostSelected));
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(repostSelected)
+    );
   };
-  const messageHandlers: { [Type in ParentToBridge['type']]: (message: Extract<ParentToBridge, { type: Type }>) => void } = {
-    'set-mode': (message) => {
-      mode = message.mode === 'select' ? 'select' : 'none';
+  const messageHandlers: {
+    [Type in ParentToBridge["type"]]: (
+      message: Extract<ParentToBridge, { type: Type }>
+    ) => void;
+  } = {
+    "set-mode": (message) => {
+      mode = message.mode === "select" ? "select" : "none";
       marqueeOn = message.marquee === true;
       lastHover = null;
       pendingHover = null;
     },
-    'request-rects': (message) => {
-      const selectors = (Array.isArray(message.selectors) ? message.selectors : []).filter((selector): selector is string => typeof selector === 'string');
+    "request-rects": (message) => {
+      const selectors = (
+        Array.isArray(message.selectors) ? message.selectors : []
+      ).filter((selector): selector is string => typeof selector === "string");
       const last = selectors.at(-1);
       tracked = selectors;
       if (!last) selected = null;
-      else if (performance.now() - selectedAt > SELECT_SETTLE_MS) selected = queryElement(last);
+      else if (performance.now() - selectedAt > SELECT_SETTLE_MS)
+        selected = queryElement(last);
       rects.track(selectors);
     },
     clear: () => {
       lastHover = null;
       pendingHover = null;
     },
-    'preview-style': (message) => livePreview.previewStyle(message.selector, message.style),
-    'preview-text': (message) => livePreview.previewText(message.selector, message.text),
-    'preview-reset': () => livePreview.reset(),
-    'optimistic-apply': (message) => optimistic.apply(message.id, message.patch, message.written === true),
-    'optimistic-settle': (message) => optimistic.settle(message.id, message.ok === true, message.classes, message.reason),
-    'optimistic-drop': () => optimistic.drop(),
-    'tokens-preview': (message) => previewStyles.apply('tokens', message.css),
-    'tweaks-preview': (message) => previewStyles.apply('tweaks', message.css),
-    'lofi-preview': (message) => previewStyles.apply('lofi', message.css),
-    'set-theme': (message) => themeControl.set(message.theme),
-    'force-state': onForceState,
-    'track-anchors': (message) => anchors.track(anchorQueries(message.anchors)),
-    'track-links': (message) => links.track(message.links),
-    'play-links': (message) => links.play(message.links),
-    'play-fx': (message) => links.fx(message),
-    'request-tree': () => post({ type: 'tree', ...layers.build(locks.ownLocked) }),
-    'set-locks': (message) => locks.set(message.keys),
-    'lock-node': (message) => {
-      const element = typeof message.id === 'number' ? layers.element(message.id) : null;
+    "preview-style": (message) =>
+      livePreview.previewStyle(message.selector, message.style),
+    "preview-text": (message) =>
+      livePreview.previewText(message.selector, message.text),
+    "preview-reset": () => livePreview.reset(),
+    "optimistic-apply": (message) =>
+      optimistic.apply(message.id, message.patch, message.written === true),
+    "optimistic-settle": (message) =>
+      optimistic.settle(
+        message.id,
+        message.ok === true,
+        message.classes,
+        message.reason
+      ),
+    "optimistic-drop": () => optimistic.drop(),
+    "tokens-preview": (message) => previewStyles.apply("tokens", message.css),
+    "tweaks-preview": (message) => previewStyles.apply("tweaks", message.css),
+    "lofi-preview": (message) => previewStyles.apply("lofi", message.css),
+    "set-theme": (message) => themeControl.set(message.theme),
+    "force-state": onForceState,
+    "track-anchors": (message) => anchors.track(anchorQueries(message.anchors)),
+    "track-links": (message) => links.track(message.links),
+    "play-links": (message) => links.play(message.links),
+    "play-fx": (message) => links.fx(message),
+    "request-tree": () =>
+      post({ type: "tree", ...layers.build(locks.ownLocked) }),
+    "set-locks": (message) => locks.set(message.keys),
+    "lock-node": (message) => {
+      const element =
+        typeof message.id === "number" ? layers.element(message.id) : null;
       if (!element) return;
       void locks.lock(element, message.locked === true).then((keys) => {
-        post({ type: 'locks', keys });
-        post({ type: 'tree', ...layers.build(locks.ownLocked) });
+        post({ type: "locks", keys });
+        post({ type: "tree", ...layers.build(locks.ownLocked) });
       });
     },
-    'select-matching': (message) => {
-      if (typeof message.requestId !== 'string' || typeof message.selector !== 'string' || !isMatchKind(message.by)) return;
-      const base = selected?.isConnected && selectorFor(selected) === message.selector ? selected : queryElement(message.selector);
-      if (!base) return post({ type: 'matched', requestId: message.requestId, count: 0, note: 'Select the element again.' });
-      const result = matchingElements(base, message.by, { useLoc: APP_MODE !== 'next', skip: (element) => locks.isLocked(element) });
+    "select-matching": (message) => {
+      if (
+        typeof message.requestId !== "string" ||
+        typeof message.selector !== "string" ||
+        !isMatchKind(message.by)
+      )
+        return;
+      const base =
+        selected?.isConnected && selectorFor(selected) === message.selector
+          ? selected
+          : queryElement(message.selector);
+      if (!base)
+        return post({
+          type: "matched",
+          requestId: message.requestId,
+          count: 0,
+          note: "Select the element again.",
+        });
+      const result = matchingElements(base, message.by, {
+        useLoc: APP_MODE !== "next",
+        skip: (element) => locks.isLocked(element),
+      });
       void postSelectMany(result.elements, false);
-      post({ type: 'matched', requestId: message.requestId, count: result.elements.length, ...(result.note ? { note: result.note } : {}) });
+      post({
+        type: "matched",
+        requestId: message.requestId,
+        count: result.elements.length,
+        ...(result.note ? { note: result.note } : {}),
+      });
     },
-    'hover-node': (message) => postHover(typeof message.id === 'number' ? layers.element(message.id) : null, 'tree'),
-    'select-node': (message) => {
-      const element = typeof message.id === 'number' ? layers.element(message.id) : null;
+    "hover-node": (message) =>
+      postHover(
+        typeof message.id === "number" ? layers.element(message.id) : null,
+        "tree"
+      ),
+    "select-node": (message) => {
+      const element =
+        typeof message.id === "number" ? layers.element(message.id) : null;
       if (element) postSelect(element, message.additive === true);
     },
-    'select-relative': (message) => {
-      if (message.selector === '') return selectFirstLayer();
-      const base = selected?.isConnected ? selected : typeof message.selector === 'string' ? queryElement(message.selector) : null;
-      if (message.move === 'child' && textEditor.canEdit(base)) return textEditor.start(base);
-      const valid = message.move === 'child' || message.move === 'parent' || message.move === 'next' || message.move === 'prev';
+    "select-relative": (message) => {
+      if (message.selector === "") return selectFirstLayer();
+      const base = selected?.isConnected
+        ? selected
+        : typeof message.selector === "string"
+          ? queryElement(message.selector)
+          : null;
+      if (message.move === "child" && textEditor.canEdit(base))
+        return textEditor.start(base);
+      const valid =
+        message.move === "child" ||
+        message.move === "parent" ||
+        message.move === "next" ||
+        message.move === "prev";
       const next = base && valid ? moveSelection(base, message.move) : null;
       if (next) postSelect(next, false);
     },
-    'request-authored': (message) => {
-      if (typeof message.requestId !== 'string' || typeof message.selector !== 'string') return;
+    "request-authored": (message) => {
+      if (
+        typeof message.requestId !== "string" ||
+        typeof message.selector !== "string"
+      )
+        return;
       const element = queryElement(message.selector);
       const rules = element ? authoredRules(element) : [];
-      post({ type: 'authored', requestId: message.requestId, rules, inline: element ? livePreview.authoredInline(element).slice(0, AUTHORED_MAX_BYTES) : '' });
+      post({
+        type: "authored",
+        requestId: message.requestId,
+        rules,
+        inline: element
+          ? livePreview.authoredInline(element).slice(0, AUTHORED_MAX_BYTES)
+          : "",
+      });
     },
-    'select-selector': (message) => {
+    "select-selector": (message) => {
       const selector = message.selector;
-      if (typeof selector !== 'string' || selector.length > 400) return;
+      if (typeof selector !== "string" || selector.length > 400) return;
       const attempt = (left: number): void => {
         let element: Element | null = null;
         try {
@@ -1245,104 +1623,165 @@ function startBridge(session: BridgeSession): void {
         } catch {
           return;
         }
-        const ready = element && (APP_MODE !== 'next' || appHydrated(element));
+        const ready = element && (APP_MODE !== "next" || appHydrated(element));
         if (element && (ready || left === 0)) {
-          element.scrollIntoView({ block: 'center', inline: 'nearest' });
+          element.scrollIntoView({ block: "center", inline: "nearest" });
           postSelect(element, false);
-        } else if (left > 0 && APP_MODE === 'next') window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+        } else if (left > 0 && APP_MODE === "next")
+          window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
       };
       attempt(SELECT_RETRIES);
     },
-    'select-at': (message) => {
-      if (typeof message.x !== 'number' || typeof message.y !== 'number') return;
+    "select-at": (message) => {
+      if (typeof message.x !== "number" || typeof message.y !== "number")
+        return;
       const { x, y } = message;
       const attempt = (left: number): void => {
         const element = dropElement(x, y);
-        const ready = element && (APP_MODE !== 'next' || appHydrated(element));
+        const ready = element && (APP_MODE !== "next" || appHydrated(element));
         if (element && (ready || left === 0)) postSelect(element, false);
-        else if (left > 0) window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
+        else if (left > 0)
+          window.setTimeout(() => attempt(left - 1), SELECT_RETRY_MS);
       };
       attempt(SELECT_RETRIES);
     },
-    'find-styles': (message) => findStyles(message, { selectorOf: selectorFor, select: postSelect, reply: (requestId, result, selected) => post({ type: 'styles-found', requestId, result, selected }) }),
-    'select-source': (message) => {
+    "find-styles": (message) =>
+      findStyles(message, {
+        selectorOf: selectorFor,
+        select: postSelect,
+        reply: (requestId, result, selected) =>
+          post({ type: "styles-found", requestId, result, selected }),
+      }),
+    "select-source": (message) => {
       const element = elementBySource(message, textOf);
       if (element) postSelect(element, false);
-      else if (APP_MODE === 'next' && typeof message.sourceLoc === 'string' && typeof message.tag === 'string') {
-        void appElementBySource(message.sourceLoc, message.tag).then((found) => found && postSelect(found, false));
+      else if (
+        APP_MODE === "next" &&
+        typeof message.sourceLoc === "string" &&
+        typeof message.tag === "string"
+      ) {
+        void appElementBySource(message.sourceLoc, message.tag).then(
+          (found) => found && postSelect(found, false)
+        );
       }
     },
-    'text-edit-allowed': (message) => textEditor.allow(message.allowed === true),
-    'text-edit-stop': () => textEditor.cancel(),
-    'element-at': (message) => {
-      if (typeof message.requestId !== 'string' || typeof message.x !== 'number' || typeof message.y !== 'number') return;
+    "text-edit-allowed": (message) =>
+      textEditor.allow(message.allowed === true),
+    "text-edit-stop": () => textEditor.cancel(),
+    "element-at": (message) => {
+      if (
+        typeof message.requestId !== "string" ||
+        typeof message.x !== "number" ||
+        typeof message.y !== "number"
+      )
+        return;
       const element = dropElement(message.x, message.y);
       if (element) postHover(element);
-      post({ type: 'element-at', requestId: message.requestId, selection: element ? selectionFor(element) : null, inside: element ? insideTarget(element) : false, label: element ? shortLabel(element) : '' });
+      post({
+        type: "element-at",
+        requestId: message.requestId,
+        selection: element ? selectionFor(element) : null,
+        inside: element ? insideTarget(element) : false,
+        label: element ? shortLabel(element) : "",
+      });
     },
-    'describe-anchors': (message) => {
-      if (typeof message.requestId !== 'string') return;
+    "describe-anchors": (message) => {
+      if (typeof message.requestId !== "string") return;
       const contexts = anchorQueries(message.anchors).map((query) => {
         const found = resolveAnchorElement(query);
         return found ? selectionFor(found.element) : null;
       });
-      post({ type: 'anchor-contexts', requestId: message.requestId, contexts });
+      post({ type: "anchor-contexts", requestId: message.requestId, contexts });
     },
-    'move-cancel': () => {
+    "move-cancel": () => {
       holdTextSelection(false);
       void freeMove.cancel();
     },
-    nudge: (message) => void postNudge(Number(message.dx) || 0, Number(message.dy) || 0),
-    'share-pointer': (message) => sharePointer.set(message.on === true),
-    'request-neighbors': (message) => {
-      if (typeof message.requestId === 'string') post({ type: 'neighbors', requestId: message.requestId, ...neighborRects(message.selector) });
+    nudge: (message) =>
+      void postNudge(Number(message.dx) || 0, Number(message.dy) || 0),
+    "share-pointer": (message) => sharePointer.set(message.on === true),
+    "request-neighbors": (message) => {
+      if (typeof message.requestId === "string")
+        post({
+          type: "neighbors",
+          requestId: message.requestId,
+          ...neighborRects(message.selector),
+        });
     },
   };
 
   const onMessage = (event: MessageEvent): void => {
-    if (event.source !== parentWindow || event.origin !== session.parentOrigin) return;
+    if (event.source !== parentWindow || event.origin !== session.parentOrigin)
+      return;
     const data = event.data as Partial<ParentToBridge> | null;
-    if (!data || typeof data !== 'object' || data.ns !== 'studio' || data.token !== session.token) return;
+    if (
+      !data ||
+      typeof data !== "object" ||
+      data.ns !== "studio" ||
+      data.token !== session.token
+    )
+      return;
     const message = data as ParentToBridge;
-    if (typeof message.type !== 'string' || !Object.hasOwn(messageHandlers, message.type)) return;
-    const handler = messageHandlers[message.type] as (message: ParentToBridge) => void;
+    if (
+      typeof message.type !== "string" ||
+      !Object.hasOwn(messageHandlers, message.type)
+    )
+      return;
+    const handler = messageHandlers[message.type] as (
+      message: ParentToBridge
+    ) => void;
     handler(message);
   };
 
-  const hasFiles = (event: DragEvent): boolean => Array.from(event.dataTransfer?.types ?? []).includes('Files');
+  const hasFiles = (event: DragEvent): boolean =>
+    Array.from(event.dataTransfer?.types ?? []).includes("Files");
   const onDragOver = (event: DragEvent): void => {
     if (!hasFiles(event)) return;
     event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     const element = dropElement(event.clientX, event.clientY);
     if (element) postHover(element);
   };
   const onFileDrop = (event: DragEvent): void => {
     if (!hasFiles(event)) return;
     event.preventDefault();
-    const files = Array.from(event.dataTransfer?.files ?? []).filter((file) => file.type.startsWith('image/')).slice(0, 1);
+    const files = Array.from(event.dataTransfer?.files ?? [])
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, 1);
     const element = dropElement(event.clientX, event.clientY);
-    post({ type: 'file-drop', files, selection: element ? selectionFor(element) : null, inside: element ? insideTarget(element) : false, label: element ? shortLabel(element) : '', rect: element ? rectOf(element) : null });
+    post({
+      type: "file-drop",
+      files,
+      selection: element ? selectionFor(element) : null,
+      inside: element ? insideTarget(element) : false,
+      label: element ? shortLabel(element) : "",
+      rect: element ? rectOf(element) : null,
+    });
   };
 
-  window.addEventListener('message', onMessage);
-  window.addEventListener('dragover', onDragOver, { capture: true });
-  window.addEventListener('drop', onFileDrop, { capture: true });
-  window.addEventListener('pointermove', onPointerMove, { capture: true, passive: true });
-  window.addEventListener('pointerdown', onPointerDown, { capture: true });
-  window.addEventListener('mousedown', block, { capture: true });
-  window.addEventListener('pointerup', onPointerUp, { capture: true });
-  window.addEventListener('pointercancel', () => holdTextSelection(false), { capture: true });
-  window.addEventListener('blur', () => holdTextSelection(false));
-  window.addEventListener('mouseup', block, { capture: true });
-  window.addEventListener('click', onClick, { capture: true });
-  window.addEventListener('dblclick', onDblClick, { capture: true });
-  window.addEventListener('auxclick', block, { capture: true });
-  window.addEventListener('contextmenu', onContextMenu, { capture: true });
-  window.addEventListener('keydown', onKeyDown, { capture: true });
-  window.addEventListener('keyup', onAltChange, { capture: true });
-  window.addEventListener('scroll', onScroll, { capture: true, passive: true });
-  window.addEventListener('resize', onScroll, { passive: true });
+  window.addEventListener("message", onMessage);
+  window.addEventListener("dragover", onDragOver, { capture: true });
+  window.addEventListener("drop", onFileDrop, { capture: true });
+  window.addEventListener("pointermove", onPointerMove, {
+    capture: true,
+    passive: true,
+  });
+  window.addEventListener("pointerdown", onPointerDown, { capture: true });
+  window.addEventListener("mousedown", block, { capture: true });
+  window.addEventListener("pointerup", onPointerUp, { capture: true });
+  window.addEventListener("pointercancel", () => holdTextSelection(false), {
+    capture: true,
+  });
+  window.addEventListener("blur", () => holdTextSelection(false));
+  window.addEventListener("mouseup", block, { capture: true });
+  window.addEventListener("click", onClick, { capture: true });
+  window.addEventListener("dblclick", onDblClick, { capture: true });
+  window.addEventListener("auxclick", block, { capture: true });
+  window.addEventListener("contextmenu", onContextMenu, { capture: true });
+  window.addEventListener("keydown", onKeyDown, { capture: true });
+  window.addEventListener("keyup", onAltChange, { capture: true });
+  window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
   forwardZoomInput(post);
   forwardHistoryKeys(post);
 
@@ -1357,16 +1796,23 @@ function startBridge(session: BridgeSession): void {
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         paintScheduled = false;
-        post({ type: 'painted', at: performance.timeOrigin + performance.now() });
+        post({
+          type: "painted",
+          at: performance.timeOrigin + performance.now(),
+        });
         const moved = locks.refresh();
-        if (moved) post({ type: 'locks', keys: moved });
+        if (moved) post({ type: "locks", keys: moved });
       });
     });
   };
 
   const announce = (): void => {
     reloadIfChangedDuringLoad();
-    post({ type: 'ready', url: window.location.href, ...(REDIRECTED_FROM ? { redirectedFrom: REDIRECTED_FROM } : {}) });
+    post({
+      type: "ready",
+      url: window.location.href,
+      ...(REDIRECTED_FROM ? { redirectedFrom: REDIRECTED_FROM } : {}),
+    });
     schedulePainted();
     new MutationObserver(schedulePainted).observe(document.documentElement, {
       subtree: true,
@@ -1375,28 +1821,30 @@ function startBridge(session: BridgeSession): void {
     });
   };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', announce, { once: true });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", announce, { once: true });
   } else {
     announce();
   }
 }
 
 function markScopedElement(): void {
-  const loc = new URL(window.location.href).searchParams.get(ELEMENT_MARK_PARAM);
-  if (!loc || document.getElementById('studio-element-mark')) return;
-  const style = document.createElement('style');
-  style.id = 'studio-element-mark';
+  const loc = new URL(window.location.href).searchParams.get(
+    ELEMENT_MARK_PARAM
+  );
+  if (!loc || document.getElementById("studio-element-mark")) return;
+  const style = document.createElement("style");
+  style.id = "studio-element-mark";
   style.textContent = `[${SOURCE_LOC_ATTR}="${CSS.escape(loc)}"]{outline:2px solid oklch(0.62 0.19 255) !important;outline-offset:4px !important;}`;
   (document.head ?? document.documentElement).appendChild(style);
 }
 
-const marker = '__studioBridgeStarted';
+const marker = "__studioBridgeStarted";
 const globalScope = window as unknown as Record<string, unknown>;
 if (!globalScope[marker]) {
   globalScope[marker] = true;
   exposeHeadlessScan(selectorFor);
-  exposeHeadlessMatch(APP_MODE !== 'next');
+  exposeHeadlessMatch(APP_MODE !== "next");
   markScopedElement();
   const session = readSession();
   if (session) startBridge(session);

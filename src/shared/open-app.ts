@@ -1,6 +1,6 @@
-import type { AppCandidate } from './contracts';
+import type { AppCandidate } from "./contracts";
 
-export type FolderKind = 'next' | 'vite' | 'html' | 'tokens';
+export type FolderKind = "next" | "vite" | "html" | "tokens";
 
 export interface FolderInspection {
   path: string;

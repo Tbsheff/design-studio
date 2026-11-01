@@ -1,6 +1,6 @@
-import type { FinalCheck } from './contracts.js';
+import type { FinalCheck } from "./contracts.js";
 
-export const REFERENCE_NAME_PREFIX = 'reference--';
+export const REFERENCE_NAME_PREFIX = "reference--";
 export const REFERENCE_LOW_SCORE = 80;
 export const REFERENCE_MAX_WIDTH = 1920;
 
@@ -13,7 +13,9 @@ export function asReferenceName(name: string): string {
 }
 
 export function plainAttachmentName(name: string): string {
-  return isReferenceName(name) ? name.slice(REFERENCE_NAME_PREFIX.length) : name;
+  return isReferenceName(name)
+    ? name.slice(REFERENCE_NAME_PREFIX.length)
+    : name;
 }
 
 export interface ReferenceRegion {
@@ -49,4 +51,6 @@ export interface ReferenceRecord {
   error?: string;
 }
 
-export type FinalCheckWithReference = FinalCheck & { reference?: ReferenceRecord };
+export type FinalCheckWithReference = FinalCheck & {
+  reference?: ReferenceRecord;
+};

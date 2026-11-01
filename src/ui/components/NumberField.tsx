@@ -1,13 +1,31 @@
-import { memo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
-import type { DirectStyleProperty } from '../../shared/contracts';
-import { formatNumber, normalizeLength, parseNumber, stepValue } from '../cssValues';
-import { resolveNumberInput } from '../mathInput';
-import { dependsOnCurrent } from '../mixedValues';
-import { lengthToPx, resolveTokenValue, varName } from '../../shared/token-match';
-import { sameEditValues, type DirectEdit } from '../useDirectEdit';
-import { useInherited } from '../editVariant';
-import { useTokenUi, type TokenUi } from '../useTokenSnap';
-import { TokenControl } from './TokenControl';
+import {
+  memo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from "react";
+
+import type { DirectStyleProperty } from "../../shared/contracts";
+import {
+  lengthToPx,
+  resolveTokenValue,
+  varName,
+} from "../../shared/token-match";
+import {
+  formatNumber,
+  normalizeLength,
+  parseNumber,
+  stepValue,
+} from "../cssValues";
+import { useInherited } from "../editVariant";
+import { resolveNumberInput } from "../mathInput";
+import { dependsOnCurrent } from "../mixedValues";
+import { sameEditValues, type DirectEdit } from "../useDirectEdit";
+import { useTokenUi, type TokenUi } from "../useTokenSnap";
+import { TokenControl } from "./TokenControl";
 
 export interface NumberSpec {
   prop: DirectStyleProperty;
@@ -27,13 +45,14 @@ function plainLength(value: string, ui: TokenUi | null): string {
   if (!ui || !varName(value)) return value;
   const resolved = resolveTokenValue(value, ui.entries, ui.mode);
   const px = lengthToPx(resolved);
-  return px === null ? resolved : formatNumber(px, 'px');
+  return px === null ? resolved : formatNumber(px, "px");
 }
 
 function displayLength(value: string): string {
   const parsed = parseNumber(value);
-  if (!parsed || parsed.unit !== 'px' || Number.isInteger(parsed.value)) return value;
-  return formatNumber(Math.round(parsed.value * 10) / 10, 'px');
+  if (!parsed || parsed.unit !== "px" || Number.isInteger(parsed.value))
+    return value;
+  return formatNumber(Math.round(parsed.value * 10) / 10, "px");
 }
 
 function clamp(value: string, spec: NumberSpec): string {
@@ -45,23 +64,33 @@ function clamp(value: string, spec: NumberSpec): string {
   return bounded === parsed.value ? value : formatNumber(bounded, parsed.unit);
 }
 
-function patchFor(spec: NumberSpec, value: string): Partial<Record<DirectStyleProperty, string>> {
+function patchFor(
+  spec: NumberSpec,
+  value: string
+): Partial<Record<DirectStyleProperty, string>> {
   const targets = spec.targets ?? [spec.prop];
   return Object.fromEntries(targets.map((prop) => [prop, value]));
 }
 
 function shiftMixed(spec: NumberSpec, delta: number): void {
-  spec.edit.shift(spec.targets ?? [spec.prop], delta, { min: spec.min, max: spec.max });
+  spec.edit.shift(spec.targets ?? [spec.prop], delta, {
+    min: spec.min,
+    max: spec.max,
+  });
 }
 
-function stepOf(event: { shiftKey: boolean; altKey?: boolean }, spec: NumberSpec): number {
+function stepOf(
+  event: { shiftKey: boolean; altKey?: boolean },
+  spec: NumberSpec
+): number {
   const base = spec.step ?? 1;
   if (event.shiftKey) return base * 10;
   return event.altKey ? base / 10 : base;
 }
 
 function isValidValue(prop: DirectStyleProperty, value: string): boolean {
-  if (value.trim() === '' || typeof CSS === 'undefined' || !CSS.supports) return true;
+  if (value.trim() === "" || typeof CSS === "undefined" || !CSS.supports)
+    return true;
   return CSS.supports(prop, value);
 }
 
@@ -73,8 +102,19 @@ function selectSoon(input: HTMLInputElement): void {
 
 function sameSpec(a: NumberSpec, b: NumberSpec): boolean {
   const targets = a.targets ?? [a.prop];
-  const sameShape = a.prop === b.prop && a.label === b.label && a.unit === b.unit && a.step === b.step && a.min === b.min && a.max === b.max && a.display === b.display;
-  return sameShape && targets.join() === (b.targets ?? [b.prop]).join() && sameEditValues(a.edit, b.edit, targets);
+  const sameShape =
+    a.prop === b.prop &&
+    a.label === b.label &&
+    a.unit === b.unit &&
+    a.step === b.step &&
+    a.min === b.min &&
+    a.max === b.max &&
+    a.display === b.display;
+  return (
+    sameShape &&
+    targets.join() === (b.targets ?? [b.prop]).join() &&
+    sameEditValues(a.edit, b.edit, targets)
+  );
 }
 
 interface InputProps {
@@ -89,7 +129,7 @@ function useNumberText(spec: NumberSpec) {
   const start = useRef<string | null>(null);
   const last = useRef<string | null>(null);
   const ui = useTokenUi();
-  const unit = spec.unit ?? 'px';
+  const unit = spec.unit ?? "px";
   const current = plainLength(edit.values[prop], ui);
   const mixed = edit.mixed.has(prop);
 
@@ -109,7 +149,8 @@ function useNumberText(spec: NumberSpec) {
     start.current = null;
     last.current = null;
     setText(null);
-    if (typed !== null && !isValidValue(prop, typed)) edit.revert(spec.targets ?? [prop]);
+    if (typed !== null && !isValidValue(prop, typed))
+      edit.revert(spec.targets ?? [prop]);
     edit.commit();
   };
 
@@ -137,14 +178,19 @@ function NumberInputView({ spec, id, className }: InputProps) {
   const keepSelection = useRef(false);
   const field = useNumberText(spec);
   const inherited = useInherited(spec.prop);
-  const shown = field.text ?? (focused ? field.current : (spec.display ?? displayLength(field.current)));
-  const refused = field.mixed && field.text !== null && dependsOnCurrent(field.text, field.unit);
+  const shown =
+    field.text ??
+    (focused ? field.current : (spec.display ?? displayLength(field.current)));
+  const refused =
+    field.mixed &&
+    field.text !== null &&
+    dependsOnCurrent(field.text, field.unit);
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-      const delta = stepOf(event, spec) * (event.key === 'ArrowUp' ? 1 : -1);
+      const delta = stepOf(event, spec) * (event.key === "ArrowUp" ? 1 : -1);
       if (field.mixed) {
         shiftMixed(spec, delta);
         spec.edit.commitSoon();
@@ -152,11 +198,11 @@ function NumberInputView({ spec, id, className }: InputProps) {
       }
       field.nudge(delta, shown);
       selectSoon(input);
-    } else if (event.key === 'Enter') {
+    } else if (event.key === "Enter") {
       event.preventDefault();
       field.settle();
       selectSoon(input);
-    } else if (event.key === 'Escape') {
+    } else if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       field.cancel();
@@ -167,14 +213,16 @@ function NumberInputView({ spec, id, className }: InputProps) {
   return (
     <input
       id={id}
-      className={`ins-input num ${className ?? ''} ${inherited ? 'inherited' : ''}`}
+      className={`ins-input num ${className ?? ""} ${inherited ? "inherited" : ""}`}
       aria-label={spec.label}
       value={shown}
       spellCheck={false}
       autoComplete="off"
-      placeholder={field.mixed ? 'Mixed' : '—'}
+      placeholder={field.mixed ? "Mixed" : "—"}
       aria-invalid={refused || undefined}
-      data-tip={refused ? 'Values differ. Type a number, not a change.' : undefined}
+      data-tip={
+        refused ? "Values differ. Type a number, not a change." : undefined
+      }
       onChange={(event) => field.apply(event.target.value)}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => {
@@ -197,7 +245,11 @@ function NumberInputView({ spec, id, className }: InputProps) {
   );
 }
 
-export const NumberInput = memo(NumberInputView, (a, b) => a.id === b.id && a.className === b.className && sameSpec(a.spec, b.spec));
+export const NumberInput = memo(
+  NumberInputView,
+  (a, b) =>
+    a.id === b.id && a.className === b.className && sameSpec(a.spec, b.spec)
+);
 
 interface Scrub {
   x: number;
@@ -208,9 +260,18 @@ interface Scrub {
 }
 
 function scrubStart(spec: NumberSpec, ui: TokenUi | null, x: number): Scrub {
-  const unit = spec.unit ?? 'px';
-  const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? { value: 0, unit };
-  return { x, value: parsed.value, unit: parsed.unit || unit, moved: false, mixed: spec.edit.mixed.has(spec.prop) };
+  const unit = spec.unit ?? "px";
+  const parsed = parseNumber(plainLength(spec.edit.values[spec.prop], ui)) ?? {
+    value: 0,
+    unit,
+  };
+  return {
+    x,
+    value: parsed.value,
+    unit: parsed.unit || unit,
+    moved: false,
+    mixed: spec.edit.mixed.has(spec.prop),
+  };
 }
 
 function useScrub(spec: NumberSpec) {
@@ -230,17 +291,21 @@ function useScrub(spec: NumberSpec) {
     if (steps === 0) return;
     s.x += steps * SCRUB_PX_PER_STEP;
     s.moved = true;
-    document.body.classList.add('ins-scrubbing');
+    document.body.classList.add("ins-scrubbing");
     if (s.mixed) return shiftMixed(spec, steps * stepOf(event, spec));
-    s.value = parseNumber(clamp(formatNumber(s.value + steps * stepOf(event, spec), s.unit), spec))?.value ?? s.value;
+    s.value =
+      parseNumber(
+        clamp(formatNumber(s.value + steps * stepOf(event, spec), s.unit), spec)
+      )?.value ?? s.value;
     spec.edit.preview(patchFor(spec, formatNumber(s.value, s.unit)));
   };
   const onPointerUp = (event: PointerEvent<HTMLElement>) => {
     const s = scrub.current;
     if (!s) return;
     scrub.current = null;
-    document.body.classList.remove('ins-scrubbing');
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    document.body.classList.remove("ins-scrubbing");
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
     scrubbed.current = s.moved;
     if (s.moved) spec.edit.commit();
   };
@@ -249,7 +314,13 @@ function useScrub(spec: NumberSpec) {
     scrubbed.current = false;
     event.preventDefault();
   };
-  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onClick };
+  return {
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel: onPointerUp,
+    onClick,
+  };
 }
 
 interface NumberFieldProps {
@@ -261,23 +332,44 @@ interface NumberFieldProps {
   className?: string;
 }
 
-function NumberFieldView({ spec, short, icon, id: idProp, tokens = true, className }: NumberFieldProps) {
+function NumberFieldView({
+  spec,
+  short,
+  icon,
+  id: idProp,
+  tokens = true,
+  className,
+}: NumberFieldProps) {
   const id = idProp ?? `ins-${spec.prop}`;
   const scrub = useScrub(spec);
   return (
-    <div className={`ins-field ${className ?? ''}`}>
+    <div className={`ins-field ${className ?? ""}`}>
       <label htmlFor={id} className="ins-scrub" {...scrub}>
         {icon ?? short}
       </label>
       <NumberInput spec={spec} id={id} />
-      {tokens && <TokenControl prop={spec.prop} label={spec.label} edit={spec.edit} targets={spec.targets} />}
+      {tokens && (
+        <TokenControl
+          prop={spec.prop}
+          label={spec.label}
+          edit={spec.edit}
+          targets={spec.targets}
+        />
+      )}
     </div>
   );
 }
 
 function sameField(a: NumberFieldProps, b: NumberFieldProps): boolean {
   const sameIcon = (a.icon === undefined) === (b.icon === undefined);
-  return sameIcon && a.short === b.short && a.id === b.id && a.tokens === b.tokens && a.className === b.className && sameSpec(a.spec, b.spec);
+  return (
+    sameIcon &&
+    a.short === b.short &&
+    a.id === b.id &&
+    a.tokens === b.tokens &&
+    a.className === b.className &&
+    sameSpec(a.spec, b.spec)
+  );
 }
 
 export const NumberField = memo(NumberFieldView, sameField);

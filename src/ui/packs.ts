@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { PackSummary } from '../shared/contracts';
-import { api, errorText } from './api';
+import { useEffect, useState } from "react";
+
+import type { PackSummary } from "../shared/contracts";
+import { api, errorText } from "./api";
 
 export interface PacksState {
   packs: PackSummary[] | null;
@@ -49,10 +50,15 @@ export function usePacks(): PacksState {
 }
 
 export function pickable(state: PacksState): PacksState {
-  return state.packs ? { ...state, packs: state.packs.filter((pack) => !pack.draft) } : state;
+  return state.packs
+    ? { ...state, packs: state.packs.filter((pack) => !pack.draft) }
+    : state;
 }
 
-export function findPack(packs: PackSummary[] | null, id: string | null | undefined): PackSummary | null {
+export function findPack(
+  packs: PackSummary[] | null,
+  id: string | null | undefined
+): PackSummary | null {
   if (!packs || !id) return null;
   return packs.find((pack) => pack.id === id) ?? null;
 }
@@ -62,10 +68,15 @@ const loadedFonts = new Set<string>();
 export function loadPackFonts(packs: PackSummary[]): void {
   for (const pack of packs) {
     const url = pack.fonts.googleFontsUrl;
-    if (!url || loadedFonts.has(pack.id) || !/^https:\/\/fonts\.googleapis\.com\//.test(url)) continue;
+    if (
+      !url ||
+      loadedFonts.has(pack.id) ||
+      !/^https:\/\/fonts\.googleapis\.com\//.test(url)
+    )
+      continue;
     loadedFonts.add(pack.id);
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
     link.href = url;
     link.dataset.packFont = pack.id;
     document.head.appendChild(link);
@@ -75,14 +86,14 @@ export function loadPackFonts(packs: PackSummary[]): void {
 export function fontStack(family: string, fallback: string): string {
   const trimmed = family.trim();
   if (!trimmed) return fallback;
-  if (trimmed.includes(',')) return trimmed;
+  if (trimmed.includes(",")) return trimmed;
   const name = /^['"]/.test(trimmed) ? trimmed : `'${trimmed}'`;
   return `${name}, ${fallback}`;
 }
 
-const KEY_SWATCHES = ['primary', 'accent', 'fg', 'bg'];
+const KEY_SWATCHES = ["primary", "accent", "fg", "bg"];
 
-export function keySwatches(pack: PackSummary): PackSummary['swatches'] {
+export function keySwatches(pack: PackSummary): PackSummary["swatches"] {
   const rank = (name: string) => {
     const index = KEY_SWATCHES.indexOf(name);
     return index === -1 ? KEY_SWATCHES.length : index;

@@ -1,13 +1,25 @@
-import type { McpPointBadge as Badge } from '../useCanvasPoint';
-import { authorInitial } from './CommentAvatar';
-import { Icon } from './Icon';
+import type { McpPointBadge as Badge } from "../useCanvasPoint";
+import { authorInitial } from "./CommentAvatar";
+import { Icon } from "./Icon";
 
-export function McpPointBadge({ badge, frameName }: { badge: Badge; frameName: (frameId: string) => string }) {
+export function McpPointBadge({
+  badge,
+  frameName,
+}: {
+  badge: Badge;
+  frameName: (frameId: string) => string;
+}) {
   const { point } = badge;
   if (!point) return null;
   const where = point.label ?? frameName(point.frameId);
   return (
-    <div className="mcp-point" role="status" data-tip={point.selector ? `${where}, ${point.selector}` : undefined} data-testid="mcp-point" onPointerDown={(event) => event.stopPropagation()}>
+    <div
+      className="mcp-point"
+      role="status"
+      data-tip={point.selector ? `${where}, ${point.selector}` : undefined}
+      data-testid="mcp-point"
+      onPointerDown={(event) => event.stopPropagation()}
+    >
       <span className="mcp-point-avatar" aria-hidden="true">
         {authorInitial(point.client)}
       </span>
@@ -17,7 +29,12 @@ export function McpPointBadge({ badge, frameName }: { badge: Badge; frameName: (
       <button type="button" className="btn small" onClick={badge.show}>
         Show
       </button>
-      <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={badge.dismiss}>
+      <button
+        type="button"
+        className="icon-btn small"
+        aria-label="Dismiss"
+        onClick={badge.dismiss}
+      >
         <Icon name="close" size={14} />
       </button>
     </div>

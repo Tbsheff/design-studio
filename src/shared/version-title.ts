@@ -1,4 +1,4 @@
-import type { VersionKind } from './contracts';
+import type { VersionKind } from "./contracts";
 
 export const RUN_TITLE_MAX = 60;
 
@@ -9,19 +9,19 @@ const CURRENT_WRAP = /^(?:Back to|Restored) (.+)$/s;
 function cutAtWord(text: string, max: number): string {
   if (text.length <= max) return text;
   const head = text.slice(0, max - 1);
-  const space = head.lastIndexOf(' ');
+  const space = head.lastIndexOf(" ");
   const cut = space > max / 2 ? head.slice(0, space) : head;
-  return `${cut.replace(/[\s,.;:—–-]+$/, '')}…`;
+  return `${cut.replace(/[\s,.;:—–-]+$/, "")}…`;
 }
 
 export function runTitle(prompt: string): string {
-  const flat = prompt.replace(/\r/g, '').trim();
-  const clause = (flat.split(CLAUSE_END)[0] ?? '').replace(/\s+/g, ' ').trim();
-  return clause === '' ? 'Untitled run' : cutAtWord(clause, RUN_TITLE_MAX);
+  const flat = prompt.replace(/\r/g, "").trim();
+  const clause = (flat.split(CLAUSE_END)[0] ?? "").replace(/\s+/g, " ").trim();
+  return clause === "" ? "Untitled run" : cutAtWord(clause, RUN_TITLE_MAX);
 }
 
-export function isRestoreKind(kind: VersionKind): kind is 'undo' | 'restore' {
-  return kind === 'undo' || kind === 'restore';
+export function isRestoreKind(kind: VersionKind): kind is "undo" | "restore" {
+  return kind === "undo" || kind === "restore";
 }
 
 export function baseTitle(title: string, kind: VersionKind): string {
@@ -35,7 +35,7 @@ export function baseTitle(title: string, kind: VersionKind): string {
   return current;
 }
 
-export function restoreTitle(kind: 'undo' | 'restore', base: string): string {
-  const shown = base.trim() || 'an earlier version';
-  return kind === 'undo' ? `Back to ${shown}` : `Restored ${shown}`;
+export function restoreTitle(kind: "undo" | "restore", base: string): string {
+  const shown = base.trim() || "an earlier version";
+  return kind === "undo" ? `Back to ${shown}` : `Restored ${shown}`;
 }

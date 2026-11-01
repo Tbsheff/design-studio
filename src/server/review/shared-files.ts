@@ -1,10 +1,11 @@
-import path from 'node:path';
-import type { AppRoute, Direction, Project } from '../../shared/contracts.js';
-import { listAppRoutes } from '../app/routes.js';
-import type { Draft } from './checks.js';
+import path from "node:path";
+
+import type { AppRoute, Direction, Project } from "../../shared/contracts.js";
+import { listAppRoutes } from "../app/routes.js";
+import type { Draft } from "./checks.js";
 
 function segmentsOf(value: string): string[] {
-  return value.split(/[?#]/)[0]?.split('/').filter(Boolean) ?? [];
+  return value.split(/[?#]/)[0]?.split("/").filter(Boolean) ?? [];
 }
 
 function segmentMatches(pattern: string[], parts: string[]): boolean {
@@ -20,13 +21,24 @@ function segmentMatches(pattern: string[], parts: string[]): boolean {
 
 function routeFor(routes: AppRoute[], page: string): AppRoute | null {
   const parts = segmentsOf(page);
-  return routes.find((route) => route.route === `/${parts.join('/')}`) ?? routes.find((route) => segmentMatches(segmentsOf(route.route), parts)) ?? null;
+  return (
+    routes.find((route) => route.route === `/${parts.join("/")}`) ??
+    routes.find((route) => segmentMatches(segmentsOf(route.route), parts)) ??
+    null
+  );
 }
 
-export async function pageOwnDir(project: Project, direction: Direction, page: string | undefined): Promise<string | null> {
+export async function pageOwnDir(
+  project: Project,
+  direction: Direction,
+  page: string | undefined
+): Promise<string | null> {
   if (!project.app) return null;
-  const routes = await listAppRoutes(direction.workTree, project.app.appDir).catch(() => []);
-  const route = routeFor(routes, page ?? '/');
+  const routes = await listAppRoutes(
+    direction.workTree,
+    project.app.appDir
+  ).catch(() => []);
+  const route = routeFor(routes, page ?? "/");
   return route ? path.posix.dirname(route.file) : null;
 }
 

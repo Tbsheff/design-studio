@@ -1,14 +1,25 @@
-import { useId, useRef, type KeyboardEvent } from 'react';
-import { RUN_LEVELS, type RunLevel } from '../../shared/contracts';
-import { LEVEL_PRESETS } from '../../shared/run-levels';
+import { useId, useRef, type KeyboardEvent } from "react";
 
-const STEP: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+import { RUN_LEVELS, type RunLevel } from "../../shared/contracts";
+import { LEVEL_PRESETS } from "../../shared/run-levels";
 
-export function nextRadioOption<T>(options: readonly T[], current: T, key: string, isDisabled: (option: T) => boolean = () => false): T | null {
+const STEP: Record<string, number> = {
+  ArrowRight: 1,
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowUp: -1,
+};
+
+export function nextRadioOption<T>(
+  options: readonly T[],
+  current: T,
+  key: string,
+  isDisabled: (option: T) => boolean = () => false
+): T | null {
   const enabled = options.filter((option) => !isDisabled(option));
   if (enabled.length === 0) return null;
-  if (key === 'Home') return enabled[0] ?? null;
-  if (key === 'End') return enabled[enabled.length - 1] ?? null;
+  if (key === "Home") return enabled[0] ?? null;
+  if (key === "End") return enabled[enabled.length - 1] ?? null;
   const step = STEP[key];
   if (step === undefined) return null;
   const at = enabled.indexOf(current);
@@ -16,7 +27,12 @@ export function nextRadioOption<T>(options: readonly T[], current: T, key: strin
   return enabled[(at + step + enabled.length) % enabled.length] ?? null;
 }
 
-export function useRovingRadioGroup<T extends string | number>(options: readonly T[], value: T, onChange: (next: T) => void, isDisabled?: (option: T) => boolean) {
+export function useRovingRadioGroup<T extends string | number>(
+  options: readonly T[],
+  value: T,
+  onChange: (next: T) => void,
+  isDisabled?: (option: T) => boolean
+) {
   const refs = useRef(new Map<T, HTMLButtonElement | null>());
   const onKeyDown = (event: KeyboardEvent) => {
     const next = nextRadioOption(options, value, event.key, isDisabled);
@@ -38,14 +54,25 @@ interface Props {
   value: RunLevel;
   onChange: (level: RunLevel) => void;
   disabled?: boolean;
-  tipSide?: 'top' | 'bottom';
+  tipSide?: "top" | "bottom";
 }
 
-export function LevelControl({ value, onChange, disabled, tipSide = 'top' }: Props) {
+export function LevelControl({
+  value,
+  onChange,
+  disabled,
+  tipSide = "top",
+}: Props) {
   const baseId = useId();
   const radios = useRovingRadioGroup(RUN_LEVELS, value, onChange);
   return (
-    <div className="segmented level-control" role="radiogroup" aria-label="Run level" data-testid="level-control" onKeyDown={radios.onKeyDown}>
+    <div
+      className="segmented level-control"
+      role="radiogroup"
+      aria-label="Run level"
+      data-testid="level-control"
+      onKeyDown={radios.onKeyDown}
+    >
       {RUN_LEVELS.map((level) => {
         const on = level === value;
         return (
@@ -57,7 +84,7 @@ export function LevelControl({ value, onChange, disabled, tipSide = 'top' }: Pro
             aria-checked={on}
             aria-describedby={`${baseId}-${level}-hint`}
             disabled={disabled}
-            className={on ? 'on' : ''}
+            className={on ? "on" : ""}
             data-testid={`level-option-${level}`}
             data-tip={LEVEL_PRESETS[level].hint}
             data-tip-side={tipSide}
@@ -84,22 +111,49 @@ export function levelHint(level: RunLevel): string {
   return LEVEL_PRESETS[level].hint;
 }
 
-export function levelGist(level: RunLevel): { hint: string; cost: string | null } {
+export function levelGist(level: RunLevel): {
+  hint: string;
+  cost: string | null;
+} {
   const match = /^(.*?) \(usually ([^,)]+)/.exec(LEVEL_PRESETS[level].hint);
   if (!match) return { hint: levelShortHint(level), cost: null };
-  return { hint: match[1] ?? '', cost: (match[2] ?? '').replace(' to ', '–') };
+  return { hint: match[1] ?? "", cost: (match[2] ?? "").replace(" to ", "–") };
 }
 
 export function levelShortHint(level: RunLevel): string {
   const hint = LEVEL_PRESETS[level].hint;
   const match = /^(.*?) \(usually ([^,)]+)/.exec(hint);
-  return match ? `${match[1]}, ${match[2]}` : (hint.split('. ')[0] ?? hint);
+  return match ? `${match[1]}, ${match[2]}` : (hint.split(". ")[0] ?? hint);
 }
 
-export function ChoiceItem({ label, hint, meta, full, checked, focusable, onPick }: { label: string; hint: string; meta?: string | null; full: string; checked: boolean; focusable?: boolean; onPick: () => void }) {
+export function ChoiceItem({
+  label,
+  hint,
+  meta,
+  full,
+  checked,
+  focusable,
+  onPick,
+}: {
+  label: string;
+  hint: string;
+  meta?: string | null;
+  full: string;
+  checked: boolean;
+  focusable?: boolean;
+  onPick: () => void;
+}) {
   const id = useId();
   return (
-    <button type="button" role="menuitemradio" className="ui-menu-item choice-item" aria-checked={checked} aria-describedby={id} tabIndex={focusable && checked ? 0 : -1} onClick={onPick}>
+    <button
+      type="button"
+      role="menuitemradio"
+      className="ui-menu-item choice-item"
+      aria-checked={checked}
+      aria-describedby={id}
+      tabIndex={focusable && checked ? 0 : -1}
+      onClick={onPick}
+    >
       <span className="choice-label">{label}</span>
       <span className="choice-hint" aria-hidden="true">
         {hint}

@@ -1,5 +1,9 @@
-import { randomBytes } from 'node:crypto';
-import type { McpApprovalOutcome, McpApprovalRecord } from '../../shared/contracts.js';
+import { randomBytes } from "node:crypto";
+
+import type {
+  McpApprovalOutcome,
+  McpApprovalRecord,
+} from "../../shared/contracts.js";
 
 export interface ApprovalAsk {
   tool: string;
@@ -19,7 +23,11 @@ export interface ApprovalQueue {
   ask(input: ApprovalAsk): Promise<McpApprovalOutcome>;
   answer(id: string, allow: boolean): boolean;
   list(): McpApprovalRecord[];
-  poll(seen: string, waitMs: number, signal?: AbortSignal): Promise<McpApprovalRecord[]>;
+  poll(
+    seen: string,
+    waitMs: number,
+    signal?: AbortSignal
+  ): Promise<McpApprovalRecord[]>;
   watch(onChange: () => void): () => void;
   windowOpen(): boolean;
 }
@@ -42,11 +50,11 @@ const MAX_PENDING = 10;
 const TEXT_MAX = { title: 200, detail: 600 };
 
 export function approvalKey(list: readonly McpApprovalRecord[]): string {
-  return list.map((item) => item.id).join(',');
+  return list.map((item) => item.id).join(",");
 }
 
 function clean(text: string, max: number): string {
-  const flat = text.replace(/[\p{Cc}\s]+/gu, ' ').trim();
+  const flat = text.replace(/[\p{Cc}\s]+/gu, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
@@ -63,7 +71,8 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
     for (const wake of [...waiters, ...watchers]) wake();
   };
 
-  const list = (): McpApprovalRecord[] => [...pending.values()].map((item) => item.approval);
+  const list = (): McpApprovalRecord[] =>
+    [...pending.values()].map((item) => item.approval);
 
   const finish = (id: string, outcome: McpApprovalOutcome): boolean => {
     const item = pending.get(id);
@@ -75,17 +84,30 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
     return true;
   };
 
-  const windowOpen = (): boolean => polls > 0 || now() - lastPoll < POLL_GRACE_MS || options.appOpen?.() === true;
+  const windowOpen = (): boolean =>
+    polls > 0 ||
+    now() - lastPoll < POLL_GRACE_MS ||
+    options.appOpen?.() === true;
 
   return {
     ask(input) {
-      if (!windowOpen()) return Promise.resolve('closed');
-      if (pending.size >= MAX_PENDING) return Promise.resolve('deny');
-      const id = randomBytes(9).toString('base64url');
+      if (!windowOpen()) return Promise.resolve("closed");
+      if (pending.size >= MAX_PENDING) return Promise.resolve("deny");
+      const id = randomBytes(9).toString("base64url");
       const createdAt = now();
-      const approval: McpApprovalRecord = { id, tool: input.tool, action: input.action, title: clean(input.title, TEXT_MAX.title), detail: clean(input.detail, TEXT_MAX.detail), projectId: input.projectId, client: clean(input.client, 40), createdAt, expiresAt: createdAt + timeoutMs };
+      const approval: McpApprovalRecord = {
+        id,
+        tool: input.tool,
+        action: input.action,
+        title: clean(input.title, TEXT_MAX.title),
+        detail: clean(input.detail, TEXT_MAX.detail),
+        projectId: input.projectId,
+        client: clean(input.client, 40),
+        createdAt,
+        expiresAt: createdAt + timeoutMs,
+      };
       return new Promise<McpApprovalOutcome>((resolve) => {
-        const timer = setTimeout(() => finish(id, 'timeout'), timeoutMs);
+        const timer = setTimeout(() => finish(id, "timeout"), timeoutMs);
         timer.unref?.();
         pending.set(id, {
           approval,
@@ -98,7 +120,7 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
         changed();
       });
     },
-    answer: (id, allow) => finish(id, allow ? 'allow' : 'deny'),
+    answer: (id, allow) => finish(id, allow ? "allow" : "deny"),
     list,
     async poll(seen, waitMs, signal) {
       polls += 1;
@@ -109,12 +131,12 @@ export function createApprovalQueue(options: QueueOptions = {}): ApprovalQueue {
           const done = (): void => {
             clearTimeout(timer);
             waiters.delete(done);
-            signal?.removeEventListener('abort', done);
+            signal?.removeEventListener("abort", done);
             resolve();
           };
           const timer = setTimeout(done, waitMs);
           waiters.add(done);
-          signal?.addEventListener('abort', done);
+          signal?.addEventListener("abort", done);
         });
         return list();
       } finally {

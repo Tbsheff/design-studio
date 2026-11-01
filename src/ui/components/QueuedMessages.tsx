@@ -1,8 +1,13 @@
-import { useState, type KeyboardEvent } from 'react';
-import type { QueuedMessage } from '../../shared/contracts';
-import { Icon } from './Icon';
+import { useState, type KeyboardEvent } from "react";
 
-function move(items: QueuedMessage[], from: number, to: number): QueuedMessage[] {
+import type { QueuedMessage } from "../../shared/contracts";
+import { Icon } from "./Icon";
+
+function move(
+  items: QueuedMessage[],
+  from: number,
+  to: number
+): QueuedMessage[] {
   if (to < 0 || to >= items.length || from === to) return items;
   const next = [...items];
   const [item] = next.splice(from, 1);
@@ -10,7 +15,16 @@ function move(items: QueuedMessage[], from: number, to: number): QueuedMessage[]
   return next;
 }
 
-function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStart, onDropAt }: {
+function QueuedItem({
+  item,
+  index,
+  count,
+  onChange,
+  onRemove,
+  onMove,
+  onDragStart,
+  onDropAt,
+}: {
   item: QueuedMessage;
   index: number;
   count: number;
@@ -29,9 +43,9 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
   };
   const onKey = (event: KeyboardEvent<HTMLLIElement>) => {
     if (editing || !event.altKey) return;
-    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
-      onMove(index + (event.key === 'ArrowUp' ? -1 : 1));
+      onMove(index + (event.key === "ArrowUp" ? -1 : 1));
     }
   };
   return (
@@ -39,7 +53,7 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
       className="queued-item"
       draggable={!editing && count > 1}
       onDragStart={(event) => {
-        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.effectAllowed = "move";
         onDragStart();
       }}
       onDragOver={(event) => event.preventDefault()}
@@ -51,7 +65,13 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
       data-testid="queued-item"
     >
       {count > 1 && (
-        <span className="queued-grip" aria-hidden="true" data-tip="Drag, or Alt+↑ and Alt+↓, to move" data-tip-side="top" data-tip-align="start">
+        <span
+          className="queued-grip"
+          aria-hidden="true"
+          data-tip="Drag, or Alt+↑ and Alt+↓, to move"
+          data-tip-side="top"
+          data-tip-align="start"
+        >
           ⋮⋮
         </span>
       )}
@@ -61,33 +81,50 @@ function QueuedItem({ item, index, count, onChange, onRemove, onMove, onDragStar
           aria-label="Edit queued message"
           value={text}
           autoFocus
-          rows={Math.min(4, text.split('\n').length)}
+          rows={Math.min(4, text.split("\n").length)}
           onChange={(event) => setText(event.target.value)}
           onBlur={() => finish(true)}
           onKeyDown={(event) => {
-            if (event.key === 'Escape') {
+            if (event.key === "Escape") {
               event.stopPropagation();
               event.preventDefault();
               finish(false);
-            } else if (event.key === 'Enter' && !event.shiftKey) {
+            } else if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               finish(true);
             }
           }}
         />
       ) : (
-        <button type="button" className="queued-text" onClick={() => setEditing(true)}>
+        <button
+          type="button"
+          className="queued-text"
+          onClick={() => setEditing(true)}
+        >
           {item.text}
         </button>
       )}
-      <button type="button" className="icon-btn small queued-remove" aria-label="Remove queued message" data-tip="Remove" data-tip-side="top" onClick={onRemove}>
+      <button
+        type="button"
+        className="icon-btn small queued-remove"
+        aria-label="Remove queued message"
+        data-tip="Remove"
+        data-tip-side="top"
+        onClick={onRemove}
+      >
         <Icon name="close" size={14} />
       </button>
     </li>
   );
 }
 
-export function QueuedMessages({ items, onChange }: { items: QueuedMessage[]; onChange: (items: QueuedMessage[]) => void }) {
+export function QueuedMessages({
+  items,
+  onChange,
+}: {
+  items: QueuedMessage[];
+  onChange: (items: QueuedMessage[]) => void;
+}) {
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   if (items.length === 0) return null;
   return (
@@ -100,8 +137,16 @@ export function QueuedMessages({ items, onChange }: { items: QueuedMessage[]; on
             item={item}
             index={index}
             count={items.length}
-            onChange={(text) => onChange(items.map((entry) => (entry.id === item.id ? { ...entry, text } : entry)))}
-            onRemove={() => onChange(items.filter((entry) => entry.id !== item.id))}
+            onChange={(text) =>
+              onChange(
+                items.map((entry) =>
+                  entry.id === item.id ? { ...entry, text } : entry
+                )
+              )
+            }
+            onRemove={() =>
+              onChange(items.filter((entry) => entry.id !== item.id))
+            }
             onMove={(to) => onChange(move(items, index, to))}
             onDragStart={() => setDragFrom(index)}
             onDropAt={() => {

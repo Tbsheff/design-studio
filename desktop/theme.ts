@@ -1,24 +1,32 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
-import { BrowserWindow, ipcMain, nativeTheme } from 'electron';
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
-export type ThemePref = 'system' | 'light' | 'dark';
+import { BrowserWindow, ipcMain, nativeTheme } from "electron";
 
-export const THEME_IPC = { get: 'studio:theme-get', set: 'studio:theme-set' } as const;
+export type ThemePref = "system" | "light" | "dark";
 
-const STUDIO_PAINT = { light: '#faf9f5', dark: '#1f1e1d' };
-const SETUP_PAINT = { light: '#fbfcfe', dark: '#141619' };
+export const THEME_IPC = {
+  get: "studio:theme-get",
+  set: "studio:theme-set",
+} as const;
+
+const STUDIO_PAINT = { light: "#faf9f5", dark: "#1f1e1d" };
+const SETUP_PAINT = { light: "#fbfcfe", dark: "#141619" };
 
 let file: string | null = null;
-let pref: ThemePref = 'dark';
+let pref: ThemePref = "dark";
 const painted = new Set<BrowserWindow>();
 
 function valid(value: unknown): ThemePref | null {
-  return value === 'system' || value === 'light' || value === 'dark' ? value : null;
+  return value === "system" || value === "light" || value === "dark"
+    ? value
+    : null;
 }
 
 function isDark(): boolean {
-  return pref === 'dark' || (pref === 'system' && nativeTheme.shouldUseDarkColors);
+  return (
+    pref === "dark" || (pref === "system" && nativeTheme.shouldUseDarkColors)
+  );
 }
 
 export function studioBackground(): string {
@@ -31,21 +39,26 @@ export function setupBackground(): string {
 
 function repaint(): void {
   const color = studioBackground();
-  for (const window of painted) if (!window.isDestroyed()) window.setBackgroundColor(color);
+  for (const window of painted)
+    if (!window.isDestroyed()) window.setBackgroundColor(color);
 }
 
 export function trackThemeWindow(window: BrowserWindow): void {
   painted.add(window);
-  window.on('closed', () => painted.delete(window));
+  window.on("closed", () => painted.delete(window));
 }
 
 export function initTheme(themeFile: string): void {
   if (file) return;
   file = themeFile;
   try {
-    pref = valid((JSON.parse(readFileSync(themeFile, 'utf8')) as { theme?: unknown }).theme) ?? 'dark';
+    pref =
+      valid(
+        (JSON.parse(readFileSync(themeFile, "utf8")) as { theme?: unknown })
+          .theme
+      ) ?? "dark";
   } catch {
-    pref = 'dark';
+    pref = "dark";
   }
   ipcMain.on(THEME_IPC.get, (event) => {
     event.returnValue = pref;
@@ -62,5 +75,5 @@ export function initTheme(themeFile: string): void {
     }
     repaint();
   });
-  nativeTheme.on('updated', repaint);
+  nativeTheme.on("updated", repaint);
 }

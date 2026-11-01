@@ -1,8 +1,8 @@
-const EVENT = 'studio:open-app';
+const EVENT = "studio:open-app";
 
 let pending: { path: string } | null = null;
 
-export function requestOpenApp(path = ''): void {
+export function requestOpenApp(path = ""): void {
   pending = { path };
   window.dispatchEvent(new CustomEvent(EVENT));
 }

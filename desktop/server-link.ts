@@ -1,7 +1,13 @@
-import type { ChildProcess } from 'node:child_process';
-import path from 'node:path';
-import type { Project } from '../src/shared/contracts.js';
-import { isDesktopLinkMessage, isProjectId, type DesktopLinkMessage, type DesktopRunInfo } from '../src/shared/desktop-link.js';
+import type { ChildProcess } from "node:child_process";
+import path from "node:path";
+
+import type { Project } from "../src/shared/contracts.js";
+import {
+  isDesktopLinkMessage,
+  isProjectId,
+  type DesktopLinkMessage,
+  type DesktopRunInfo,
+} from "../src/shared/desktop-link.js";
 
 export interface McpApprovalNotice {
   projectId: string;
@@ -24,7 +30,8 @@ export class ServerLink {
 
   constructor(
     private readonly onFinished: (finished: FinishedRun) => void,
-    private readonly onApproval: (notice: McpApprovalNotice) => void = () => undefined,
+    private readonly onApproval: (notice: McpApprovalNotice) => void = () =>
+      undefined
   ) {}
 
   attach(child: ChildProcess, origin: string): void {
@@ -32,23 +39,33 @@ export class ServerLink {
     this.dataDir = null;
     this.origin = origin;
     this.active.clear();
-    child.on('message', (raw: unknown) => {
+    child.on("message", (raw: unknown) => {
       if (isDesktopLinkMessage(raw)) this.handle(raw);
     });
-    child.once('exit', () => this.active.clear());
+    child.once("exit", () => this.active.clear());
   }
 
   private handle(message: DesktopLinkMessage): void {
-    if (message.kind === 'hello') {
+    if (message.kind === "hello") {
       this.token = message.token;
       this.dataDir = message.dataDir;
-    } else if (message.kind === 'run-started') {
+    } else if (message.kind === "run-started") {
       this.active.set(message.run.runId, message.run);
-    } else if (message.kind === 'mcp-approval') {
-      if (isProjectId(message.projectId) && typeof message.title === 'string') this.onApproval({ projectId: message.projectId, approvalId: message.approvalId, title: message.title.slice(0, 200) });
+    } else if (message.kind === "mcp-approval") {
+      if (isProjectId(message.projectId) && typeof message.title === "string")
+        this.onApproval({
+          projectId: message.projectId,
+          approvalId: message.approvalId,
+          title: message.title.slice(0, 200),
+        });
     } else {
       this.active.delete(message.run.runId);
-      this.onFinished({ run: message.run, status: message.status, costUsd: message.costUsd, error: message.error });
+      this.onFinished({
+        run: message.run,
+        status: message.status,
+        costUsd: message.costUsd,
+        error: message.error,
+      });
     }
   }
 
@@ -58,28 +75,47 @@ export class ServerLink {
 
   async project(projectId: string): Promise<Project | null> {
     if (!this.token || !this.origin || !isProjectId(projectId)) return null;
-    const res = await fetch(`${this.origin}/api/projects/${projectId}`, { headers: { 'x-studio-token': this.token } }).catch(() => null);
+    const res = await fetch(`${this.origin}/api/projects/${projectId}`, {
+      headers: { "x-studio-token": this.token },
+    }).catch(() => null);
     if (!res?.ok) return null;
     return (await res.json()) as Project;
   }
 
-  async workTree(projectId: string, directionId: string | null): Promise<string | null> {
+  async workTree(
+    projectId: string,
+    directionId: string | null
+  ): Promise<string | null> {
     const project = await this.project(projectId);
     if (!project || !this.dataDir) return null;
-    const direction = project.directions.find((item) => item.id === directionId) ?? project.directions[0];
+    const direction =
+      project.directions.find((item) => item.id === directionId) ??
+      project.directions[0];
     if (!direction) return null;
-    return allowedRevealPath(direction.workTree, this.dataDir, project.imported?.sourcePath ?? null);
+    return allowedRevealPath(
+      direction.workTree,
+      this.dataDir,
+      project.imported?.sourcePath ?? null
+    );
   }
 }
 
 function inside(child: string, parent: string): boolean {
   const relative = path.relative(parent, child);
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }
 
-export function allowedRevealPath(target: string, dataDir: string, importedFrom: string | null): string | null {
+export function allowedRevealPath(
+  target: string,
+  dataDir: string,
+  importedFrom: string | null
+): string | null {
   const resolved = path.resolve(target);
   if (inside(resolved, path.resolve(dataDir))) return resolved;
-  if (importedFrom && inside(resolved, path.resolve(importedFrom))) return resolved;
+  if (importedFrom && inside(resolved, path.resolve(importedFrom)))
+    return resolved;
   return null;
 }

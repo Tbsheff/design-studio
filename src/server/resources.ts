@@ -1,7 +1,9 @@
-import { existsSync } from 'node:fs';
-import path from 'node:path';
+import { existsSync } from "node:fs";
+import path from "node:path";
 
-export function resourcesDir(env: NodeJS.ProcessEnv = process.env): string | null {
+export function resourcesDir(
+  env: NodeJS.ProcessEnv = process.env
+): string | null {
   const raw = env.STUDIO_RESOURCES_DIR;
   return raw ? path.resolve(raw) : null;
 }

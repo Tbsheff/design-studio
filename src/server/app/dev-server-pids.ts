@@ -1,9 +1,9 @@
-import { execFile } from 'node:child_process';
-import { rmSync } from 'node:fs';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import { execFile } from "node:child_process";
+import { rmSync } from "node:fs";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import path from "node:path";
 
-const PIDS_FILE = 'app-dev-servers.json';
+const PIDS_FILE = "app-dev-servers.json";
 const STOP_WAIT_MS = 4000;
 
 export interface DevServerRecord {
@@ -20,20 +20,29 @@ function alive(pid: number): boolean {
     process.kill(pid, 0);
     return true;
   } catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'EPERM';
+    return (error as NodeJS.ErrnoException).code === "EPERM";
   }
 }
 
 function commandOf(pid: number): Promise<string | null> {
   return new Promise((resolve) => {
-    execFile('ps', ['-o', 'command=', '-p', String(pid)], { timeout: 3000 }, (error, stdout) => resolve(error ? null : stdout.trim()));
+    execFile(
+      "ps",
+      ["-o", "command=", "-p", String(pid)],
+      { timeout: 3000 },
+      (error, stdout) => resolve(error ? null : stdout.trim())
+    );
   });
 }
 
 async function isOurNext(record: DevServerRecord): Promise<boolean> {
   if (!alive(record.pid)) return false;
   const command = await commandOf(record.pid);
-  return command !== null && command.includes('next') && command.includes(`-p ${record.port}`);
+  return (
+    command !== null &&
+    command.includes("next") &&
+    command.includes(`-p ${record.port}`)
+  );
 }
 
 function signalGroup(pid: number, signal: NodeJS.Signals): void {
@@ -67,8 +76,8 @@ export class DevServerPids {
 
   private async read(): Promise<Records> {
     try {
-      const parsed = JSON.parse(await readFile(this.file, 'utf8')) as Records;
-      return parsed && typeof parsed === 'object' ? parsed : {};
+      const parsed = JSON.parse(await readFile(this.file, "utf8")) as Records;
+      return parsed && typeof parsed === "object" ? parsed : {};
     } catch {
       return {};
     }
@@ -112,18 +121,25 @@ export class DevServerPids {
 
   async reapAll(log: (line: string) => void): Promise<void> {
     const records = await this.read();
-    await Promise.all(Object.entries(records).map(async ([projectId, record]) => {
-      await this.stopStale(record, log);
-      await this.forget(projectId, record.pid);
-    }));
+    await Promise.all(
+      Object.entries(records).map(async ([projectId, record]) => {
+        await this.stopStale(record, log);
+        await this.forget(projectId, record.pid);
+      })
+    );
   }
 
-  private async stopStale(record: DevServerRecord, log: (line: string) => void): Promise<void> {
+  private async stopStale(
+    record: DevServerRecord,
+    log: (line: string) => void
+  ): Promise<void> {
     if (!(await isOurNext(record))) return;
-    log(`Stopping the next dev (PID ${record.pid}, port ${record.port}) that an earlier Design Studio started in ${record.appRoot}.`);
-    signalGroup(record.pid, 'SIGTERM');
+    log(
+      `Stopping the next dev (PID ${record.pid}, port ${record.port}) that an earlier Design Studio started in ${record.appRoot}.`
+    );
+    signalGroup(record.pid, "SIGTERM");
     if (await waitGone(record.pid, STOP_WAIT_MS)) return;
-    signalGroup(record.pid, 'SIGKILL');
+    signalGroup(record.pid, "SIGKILL");
     await waitGone(record.pid, 1000);
   }
 }

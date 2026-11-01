@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReviewFinding, ReviewResult } from '../shared/review';
-import { api, errorText } from './api';
-import type { CanvasFrame } from './canvasFrames';
-import type { FilesChange } from './useStudioData';
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import type { ReviewFinding, ReviewResult } from "../shared/review";
+import { api, errorText } from "./api";
+import type { CanvasFrame } from "./canvasFrames";
+import type { FilesChange } from "./useStudioData";
 
 const RERUN_MS = 900;
 const SIDE_MIN = 200;
@@ -30,8 +31,11 @@ function side(value: number): number {
   return Math.min(SIDE_MAX, Math.max(SIDE_MIN, Math.round(value)));
 }
 
-export function frameKey(directionId: string | null, frame: CanvasFrame): string {
-  return `${directionId}|${frame.id}|${frame.path ?? ''}|${frame.width}x${frame.height}`;
+export function frameKey(
+  directionId: string | null,
+  frame: CanvasFrame
+): string {
+  return `${directionId}|${frame.id}|${frame.path ?? ""}|${frame.width}x${frame.height}`;
 }
 
 function useLatest<T>(value: T) {
@@ -61,14 +65,21 @@ export function useReview(input: ReviewInput): ReviewState {
     setBusy(true);
     setError(null);
     api
-      .review(projectId, directionId, { frame: frame.id, ...(frame.path ? { path: frame.path } : {}), width: side(frame.width), height: side(frame.height) })
+      .review(projectId, directionId, {
+        frame: frame.id,
+        ...(frame.path ? { path: frame.path } : {}),
+        width: side(frame.width),
+        height: side(frame.height),
+      })
       .then((next) => {
         if (ticket !== pending.current) return;
         setResult(next);
         setResultKey(runKey);
         setRanAt(started);
       })
-      .catch((err: unknown) => ticket === pending.current && setError(errorText(err)))
+      .catch(
+        (err: unknown) => ticket === pending.current && setError(errorText(err))
+      )
       .finally(() => ticket === pending.current && setBusy(false));
   }, [latest]);
 
@@ -79,20 +90,26 @@ export function useReview(input: ReviewInput): ReviewState {
       setFixing(findings.map((finding) => finding.id));
       setError(null);
       try {
-        const done = await api.reviewFix(projectId, directionId, findings.map((finding) => finding.id));
-        if (done.applied.length === 0) setError(done.skipped[0]?.reason ?? 'Nothing was fixed.');
+        const done = await api.reviewFix(
+          projectId,
+          directionId,
+          findings.map((finding) => finding.id)
+        );
+        if (done.applied.length === 0)
+          setError(done.skipped[0]?.reason ?? "Nothing was fixed.");
       } catch (err) {
         setError(errorText(err));
       } finally {
         setFixing(null);
       }
     },
-    [latest],
+    [latest]
   );
 
   const change = input.lastChange;
   useEffect(() => {
-    if (change && change.directionId === latest.current.directionId) setChangedAt(change.receivedAt);
+    if (change && change.directionId === latest.current.directionId)
+      setChangedAt(change.receivedAt);
   }, [change, latest]);
 
   const stale = result !== null && (resultKey !== key || changedAt > ranAt);
@@ -104,5 +121,13 @@ export function useReview(input: ReviewInput): ReviewState {
     return () => window.clearTimeout(timer);
   }, [open, stale, result, busy, fixing, error, run]);
 
-  return { result: resultKey === key ? result : null, stale, busy, fixing, error, run, fix };
+  return {
+    result: resultKey === key ? result : null,
+    stale,
+    busy,
+    fixing,
+    error,
+    run,
+    fix,
+  };
 }

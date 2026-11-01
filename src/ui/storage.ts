@@ -1,22 +1,23 @@
-import { useSyncExternalStore } from 'react';
-import type { RunLevel } from '../shared/contracts';
+import { useSyncExternalStore } from "react";
+
+import type { RunLevel } from "../shared/contracts";
 
 export interface Viewport {
-  preset: 'desktop' | 'tablet' | 'mobile' | 'custom';
+  preset: "desktop" | "tablet" | "mobile" | "custom";
   width: number;
   height: number;
 }
 
-export type ZoomSetting = 'fit' | number;
+export type ZoomSetting = "fit" | number;
 
-export type Screen = 'home' | 'new-design-system' | 'design-systems';
+export type Screen = "home" | "new-design-system" | "design-systems";
 
 export interface LibraryFrom {
   projectId: string;
   directionId: string;
 }
 
-const SCREENS: Screen[] = ['home', 'new-design-system', 'design-systems'];
+const SCREENS: Screen[] = ["home", "new-design-system", "design-systems"];
 
 export interface UiState {
   activeProjectId: string | null;
@@ -37,24 +38,24 @@ export interface UiState {
   rulers: boolean;
 }
 
-export type HomeSort = 'recent' | 'name' | 'created';
-export const HOME_SORTS: readonly HomeSort[] = ['recent', 'name', 'created'];
+export type HomeSort = "recent" | "name" | "created";
+export const HOME_SORTS: readonly HomeSort[] = ["recent", "name", "created"];
 
-const KEY = 'design-studio.ui.v1';
+const KEY = "design-studio.ui.v1";
 
 const defaults: UiState = {
   activeProjectId: null,
-  screen: 'home',
+  screen: "home",
   libraryFrom: null,
-  returnTo: 'home',
+  returnTo: "home",
   directionByProject: {},
-  viewport: { preset: 'desktop', width: 1440, height: 900 },
-  zoom: 'fit',
+  viewport: { preset: "desktop", width: 1440, height: 900 },
+  zoom: "fit",
   chatWidth: null,
   lastPackId: null,
   lastLocation: null,
   snapByProject: {},
-  homeSort: 'recent',
+  homeSort: "recent",
   layersOpen: false,
   paneCollapsed: false,
   viewRowOpen: false,
@@ -63,7 +64,10 @@ const defaults: UiState = {
 
 function libraryFromOf(value: unknown): LibraryFrom | null {
   const from = value as Partial<LibraryFrom> | null | undefined;
-  return typeof from?.projectId === 'string' && typeof from.directionId === 'string' ? { projectId: from.projectId, directionId: from.directionId } : null;
+  return typeof from?.projectId === "string" &&
+    typeof from.directionId === "string"
+    ? { projectId: from.projectId, directionId: from.directionId }
+    : null;
 }
 
 function loadUiState(): UiState {
@@ -73,17 +77,35 @@ function loadUiState(): UiState {
     const parsed = JSON.parse(raw) as Partial<UiState>;
     return {
       activeProjectId: parsed.activeProjectId ?? null,
-      screen: parsed.screen && SCREENS.includes(parsed.screen) ? parsed.screen : 'home',
-      libraryFrom: parsed.screen === 'design-systems' ? libraryFromOf(parsed.libraryFrom) : null,
-      returnTo: parsed.returnTo === 'design-systems' ? 'design-systems' : 'home',
+      screen:
+        parsed.screen && SCREENS.includes(parsed.screen)
+          ? parsed.screen
+          : "home",
+      libraryFrom:
+        parsed.screen === "design-systems"
+          ? libraryFromOf(parsed.libraryFrom)
+          : null,
+      returnTo:
+        parsed.returnTo === "design-systems" ? "design-systems" : "home",
       directionByProject: parsed.directionByProject ?? {},
       viewport: parsed.viewport ?? defaults.viewport,
       zoom: parsed.zoom ?? defaults.zoom,
-      chatWidth: typeof parsed.chatWidth === 'number' ? parsed.chatWidth : null,
-      lastPackId: typeof parsed.lastPackId === 'string' ? parsed.lastPackId : null,
-      lastLocation: typeof parsed.lastLocation === 'string' && parsed.lastLocation.startsWith('/') ? parsed.lastLocation : null,
-      snapByProject: parsed.snapByProject && typeof parsed.snapByProject === 'object' ? parsed.snapByProject : {},
-      homeSort: parsed.homeSort && HOME_SORTS.includes(parsed.homeSort) ? parsed.homeSort : 'recent',
+      chatWidth: typeof parsed.chatWidth === "number" ? parsed.chatWidth : null,
+      lastPackId:
+        typeof parsed.lastPackId === "string" ? parsed.lastPackId : null,
+      lastLocation:
+        typeof parsed.lastLocation === "string" &&
+        parsed.lastLocation.startsWith("/")
+          ? parsed.lastLocation
+          : null,
+      snapByProject:
+        parsed.snapByProject && typeof parsed.snapByProject === "object"
+          ? parsed.snapByProject
+          : {},
+      homeSort:
+        parsed.homeSort && HOME_SORTS.includes(parsed.homeSort)
+          ? parsed.homeSort
+          : "recent",
       layersOpen: parsed.layersOpen === true,
       paneCollapsed: parsed.paneCollapsed === true,
       viewRowOpen: parsed.viewRowOpen === true,
@@ -108,7 +130,7 @@ const listeners = new Set<() => void>();
 export const uiStore = {
   get: () => state,
   set: (patch: Partial<UiState> | ((s: UiState) => Partial<UiState>)) => {
-    const next = typeof patch === 'function' ? patch(state) : patch;
+    const next = typeof patch === "function" ? patch(state) : patch;
     state = { ...state, ...next };
     saveUiState(state);
     listeners.forEach((l) => l());
@@ -131,7 +153,7 @@ export interface DraftStore {
   subscribe: (listener: () => void) => () => void;
 }
 
-export function createDraftStore(initial = ''): DraftStore {
+export function createDraftStore(initial = ""): DraftStore {
   let value = initial;
   const draftListeners = new Set<() => void>();
   return {
@@ -155,7 +177,7 @@ export function useDraft(store: DraftStore): string {
 }
 
 export function useDraftActive(store: DraftStore): boolean {
-  return useSyncExternalStore(store.subscribe, () => store.get().trim() !== '');
+  return useSyncExternalStore(store.subscribe, () => store.get().trim() !== "");
 }
 
 interface HomeVariationsIntent {

@@ -88,11 +88,11 @@
   user-select: none;
 }
 
-.cmdk-row[aria-selected='true'] {
+.cmdk-row[aria-selected="true"] {
   background: var(--surface-active);
 }
 
-.cmdk-row[aria-disabled='true'] {
+.cmdk-row[aria-disabled="true"] {
   color: var(--text-3);
 }
 
@@ -316,14 +316,14 @@ body:has(dialog:modal) .keysheet {
   }
 }
 
-.cmdk-row[data-kind='project'],
-.cmdk-row[data-kind='new'],
+.cmdk-row[data-kind="project"],
+.cmdk-row[data-kind="new"],
 .cmdk-row:has(.cmdk-icon[data-tone]) {
   height: 40px;
 }
 
-.cmdk-row[data-kind='project'] .cmdk-icon,
-.cmdk-row[data-kind='route'] .cmdk-icon,
+.cmdk-row[data-kind="project"] .cmdk-icon,
+.cmdk-row[data-kind="route"] .cmdk-icon,
 .cmdk-icon[data-tone] {
   width: 26px;
   height: 26px;
@@ -333,23 +333,23 @@ body:has(dialog:modal) .keysheet {
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.cmdk-row[data-kind='route'] {
+.cmdk-row[data-kind="route"] {
   height: 36px;
 }
 
-.cmdk-row[data-kind='project'] .cmdk-title,
-.cmdk-row[data-kind='new'] .cmdk-title {
+.cmdk-row[data-kind="project"] .cmdk-title,
+.cmdk-row[data-kind="new"] .cmdk-title {
   flex: 0 1 auto;
   font-weight: var(--w-medium);
 }
 
-.cmdk-icon[data-tone='brand'] {
+.cmdk-icon[data-tone="brand"] {
   box-shadow: none;
   background: var(--brand-soft);
   color: var(--brand);
 }
 
-.cmdk-icon[data-tone='accent'] {
+.cmdk-icon[data-tone="accent"] {
   box-shadow: none;
   background: var(--accent-soft);
   color: var(--accent-text);

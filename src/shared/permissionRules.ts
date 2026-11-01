@@ -1,7 +1,7 @@
 export const RULE_MAX_CHARS = 2000;
 
 const SHELL_META = /[;&|`<>\n\r]|\$\(/;
-const PREFIX_SUFFIX = ' *';
+const PREFIX_SUFFIX = " *";
 
 function words(command: string): string[] {
   return command.trim().split(/\s+/).filter(Boolean);
@@ -13,9 +13,11 @@ export function hasShellMeta(command: string): boolean {
 
 export function ruleForCommand(command: string): string {
   const trimmed = command.trim();
-  if (trimmed === '' || hasShellMeta(trimmed)) return trimmed;
+  if (trimmed === "" || hasShellMeta(trimmed)) return trimmed;
   const parts = words(trimmed);
-  return parts.length >= 2 ? `${parts.slice(0, 3).join(' ')}${PREFIX_SUFFIX}` : trimmed;
+  return parts.length >= 2
+    ? `${parts.slice(0, 3).join(" ")}${PREFIX_SUFFIX}`
+    : trimmed;
 }
 
 function prefixOf(rule: string): string[] | null {
@@ -28,14 +30,20 @@ function prefixOf(rule: string): string[] | null {
 
 export function ruleMatches(rule: string, command: string): boolean {
   const trimmed = command.trim();
-  if (trimmed === '') return false;
+  if (trimmed === "") return false;
   const prefix = prefixOf(rule);
   if (!prefix) return rule === trimmed;
   if (hasShellMeta(trimmed)) return false;
   const parts = words(trimmed);
-  return parts.length >= prefix.length && prefix.every((word, index) => parts[index] === word);
+  return (
+    parts.length >= prefix.length &&
+    prefix.every((word, index) => parts[index] === word)
+  );
 }
 
-export function anyRuleMatches(rules: readonly string[], command: string): boolean {
+export function anyRuleMatches(
+  rules: readonly string[],
+  command: string
+): boolean {
   return rules.some((rule) => ruleMatches(rule, command));
 }

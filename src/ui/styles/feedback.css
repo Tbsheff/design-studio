@@ -67,7 +67,7 @@
 }
 
 .pill .link::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -3px 0;
 }

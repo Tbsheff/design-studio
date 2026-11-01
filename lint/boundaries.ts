@@ -2,13 +2,28 @@ import type { OxlintOverride } from "oxlint";
 
 type Severity = "error" | "warn";
 
-type ElementSelector = { type: string | string[]; captured?: Record<string, string> };
+type ElementSelector = {
+  type: string | string[];
+  captured?: Record<string, string>;
+};
 
-type Policy = { from: { element: ElementSelector }; allow: { to: { element: ElementSelector } }[] };
+type Policy = {
+  from: { element: ElementSelector };
+  allow: { to: { element: ElementSelector } }[];
+};
 
-type Element = { type: string; pattern: string; partialMatch?: boolean; capture?: string[] };
+type Element = {
+  type: string;
+  pattern: string;
+  partialMatch?: boolean;
+  capture?: string[];
+};
 
-const element = (type: string, pattern: string, capture?: string[]): Element => ({
+const element = (
+  type: string,
+  pattern: string,
+  capture?: string[]
+): Element => ({
   type,
   pattern,
   partialMatch: false,
@@ -42,7 +57,15 @@ export const ELEMENTS: Element[] = [
   element("tooling", "lint"),
 ];
 
-const SERVER_TYPES = ["platform", "domain", "services", "agent", "adapter", "main", "server"];
+const SERVER_TYPES = [
+  "platform",
+  "domain",
+  "services",
+  "agent",
+  "adapter",
+  "main",
+  "server",
+];
 
 const allow = (from: ElementSelector, to: ElementSelector[]): Policy => ({
   from: { element: from },
@@ -53,19 +76,36 @@ export const ROOT_POLICIES: Policy[] = [
   allow({ type: "shared*" }, [{ type: "shared*" }]),
   allow({ type: "bridge" }, [{ type: ["shared", "shared-contract"] }]),
   allow({ type: "ui*" }, [{ type: ["shared", "shared-contract", "ui*"] }]),
-  allow({ type: SERVER_TYPES }, [{ type: ["shared", "shared-contract", "cloud-publish", ...SERVER_TYPES] }]),
-  allow({ type: "desktop" }, [{ type: ["shared", "shared-contract", "desktop"] }, { type: "platform", captured: { mod: "data-lock" } }]),
+  allow({ type: SERVER_TYPES }, [
+    { type: ["shared", "shared-contract", "cloud-publish", ...SERVER_TYPES] },
+  ]),
+  allow({ type: "desktop" }, [
+    { type: ["shared", "shared-contract", "desktop"] },
+    { type: "platform", captured: { mod: "data-lock" } },
+  ]),
   allow({ type: "cloud-publish" }, [{ type: "cloud-publish" }]),
-  allow({ type: "cloud-api" }, [{ type: ["shared", "shared-contract", "cloud-api"] }]),
-  allow({ type: "tooling" }, [{ type: ["shared", "shared-contract", "main", "desktop", "tooling"] }]),
+  allow({ type: "cloud-api" }, [
+    { type: ["shared", "shared-contract", "cloud-api"] },
+  ]),
+  allow({ type: "tooling" }, [
+    { type: ["shared", "shared-contract", "main", "desktop", "tooling"] },
+  ]),
 ];
 
-export const dependencies = (severity: Severity, policies: Policy[]): [Severity, { default: string; policies: Policy[] }] => [
+export const dependencies = (
+  severity: Severity,
+  policies: Policy[]
+): [Severity, { default: string; policies: Policy[] }] => [
   severity,
   { default: "disallow", policies },
 ];
 
-type Layer = { name: string; areas?: string[]; type?: string; paths?: string[] };
+type Layer = {
+  name: string;
+  areas?: string[];
+  type?: string;
+  paths?: string[];
+};
 
 export const LAYERS: Layer[] = [
   { name: "platform", type: "platform", paths: ["src/server/platform"] },
@@ -78,19 +118,31 @@ export const LAYERS: Layer[] = [
   { name: "preview", areas: ["preview"] },
   { name: "page-probe", areas: ["page-probe", "layers"] },
   { name: "canvas-core", areas: ["canvas"] },
-  { name: "app-flow", areas: ["export", "review", "tweaks", "figma", "design-rules", "comments"] },
+  {
+    name: "app-flow",
+    areas: ["export", "review", "tweaks", "figma", "design-rules", "comments"],
+  },
   { name: "share", areas: ["share", "publish", "ship", "variations", "git"] },
   { name: "services", type: "services", paths: ["src/server/services"] },
   { name: "agent", type: "agent", paths: ["src/server/agent"] },
-  { name: "adapter", type: "adapter", paths: ["src/server/http", "src/server/mcp", "src/server/agent-tools"] },
+  {
+    name: "adapter",
+    type: "adapter",
+    paths: ["src/server/http", "src/server/mcp", "src/server/agent-tools"],
+  },
   { name: "main", type: "main", paths: ["src/server/main"] },
 ];
 
 const selectorsOf = (layer: Layer): ElementSelector[] =>
-  layer.areas ? layer.areas.map((area) => ({ type: "domain", captured: { area } })) : [{ type: layer.type ?? "server" }];
+  layer.areas
+    ? layer.areas.map((area) => ({ type: "domain", captured: { area } }))
+    : [{ type: layer.type ?? "server" }];
 
 export const globsOf = (layer: Layer): string[] =>
-  (layer.areas ? layer.areas.map((area) => `src/server/${area}`) : (layer.paths ?? [])).map((dir) => `${dir}/**`);
+  (layer.areas
+    ? layer.areas.map((area) => `src/server/${area}`)
+    : (layer.paths ?? [])
+  ).map((dir) => `${dir}/**`);
 
 export const layerPolicies = (index: number): Policy[] => {
   const layer = LAYERS[index];
@@ -99,10 +151,22 @@ export const layerPolicies = (index: number): Policy[] => {
   }
   const lower = LAYERS.slice(0, index).flatMap(selectorsOf);
   const own = layer.name === "adapter" ? [] : selectorsOf(layer);
-  return [allow({ type: "*" }, [{ type: ["shared", "shared-contract", "cloud-publish"] }, ...lower, ...own])];
+  return [
+    allow({ type: "*" }, [
+      { type: ["shared", "shared-contract", "cloud-publish"] },
+      ...lower,
+      ...own,
+    ]),
+  ];
 };
 
-export const layerOverride = (index: number, files: string[], severity: Severity): OxlintOverride => ({
+export const layerOverride = (
+  index: number,
+  files: string[],
+  severity: Severity
+): OxlintOverride => ({
   files,
-  rules: { "boundaries/dependencies": dependencies(severity, layerPolicies(index)) },
+  rules: {
+    "boundaries/dependencies": dependencies(severity, layerPolicies(index)),
+  },
 });

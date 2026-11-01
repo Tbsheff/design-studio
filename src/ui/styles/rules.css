@@ -70,11 +70,11 @@
   white-space: nowrap;
 }
 
-.rules-row[data-tone='ok'] .rules-hits {
+.rules-row[data-tone="ok"] .rules-hits {
   color: var(--ok);
 }
 
-.rules-row[data-tone='bad'] .rules-hits {
+.rules-row[data-tone="bad"] .rules-hits {
   color: var(--danger);
   font-weight: var(--w-medium);
 }

@@ -1,5 +1,5 @@
-import type { LayoutFinding } from '../../shared/contracts.js';
-import { devChromeExpression } from '../../shared/app.js';
+import { devChromeExpression } from "../../shared/app.js";
+import type { LayoutFinding } from "../../shared/contracts.js";
 
 const MAX_LAYOUT_FINDINGS = 10;
 

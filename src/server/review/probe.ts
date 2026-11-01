@@ -1,5 +1,5 @@
-import { SOURCE_LOC_ATTR } from '../../shared/contracts.js';
-import { APP_SOURCE_PATH } from '../../shared/app.js';
+import { APP_SOURCE_PATH } from "../../shared/app.js";
+import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
 
 export interface ProbeElement {
   selector: string;
@@ -16,7 +16,7 @@ export interface ProbeElement {
 }
 
 export interface TokenHit {
-  via: 'class' | 'inline' | 'rule';
+  via: "class" | "inline" | "rule";
   selector: string;
   prop: string;
   value: string;

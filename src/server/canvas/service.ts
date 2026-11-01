@@ -1,13 +1,26 @@
-import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { CANVAS_FILE, emptyCanvasFile, parseCanvasText, serializeCanvasFile, type CanvasFile } from '../../shared/canvas-file.js';
-import type { CanvasPresence, CanvasWriteSource, Direction, LegacyCanvasNotice, Project } from '../../shared/contracts.js';
-import { ConflictError } from '../store/errors.js';
-import { createKeyedMutex } from '../store/mutex.js';
-import type { EventBus } from '../types.js';
-import type { LayoutListener } from './layout-history.js';
-import { createLinksService, type LinksService } from './links.js';
+import { createHash, randomBytes } from "node:crypto";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import {
+  CANVAS_FILE,
+  emptyCanvasFile,
+  parseCanvasText,
+  serializeCanvasFile,
+  type CanvasFile,
+} from "../../shared/canvas-file.js";
+import type {
+  CanvasPresence,
+  CanvasWriteSource,
+  Direction,
+  LegacyCanvasNotice,
+  Project,
+} from "../../shared/contracts.js";
+import { ConflictError } from "../store/errors.js";
+import { createKeyedMutex } from "../store/mutex.js";
+import type { EventBus } from "../types.js";
+import type { LayoutListener } from "./layout-history.js";
+import { createLinksService, type LinksService } from "./links.js";
 
 export interface CanvasSnapshot {
   canvas: CanvasFile | null;
@@ -23,8 +36,16 @@ export interface CanvasWrite {
 export interface CanvasService {
   ownerOf(project: Project): Direction;
   read(project: Project): Promise<CanvasSnapshot>;
-  write(project: Project, canvas: CanvasFile, write: CanvasWrite): Promise<CanvasSnapshot>;
-  update(project: Project, change: (canvas: CanvasFile) => CanvasFile | null, write: CanvasWrite): Promise<CanvasSnapshot>;
+  write(
+    project: Project,
+    canvas: CanvasFile,
+    write: CanvasWrite
+  ): Promise<CanvasSnapshot>;
+  update(
+    project: Project,
+    change: (canvas: CanvasFile) => CanvasFile | null,
+    write: CanvasWrite
+  ): Promise<CanvasSnapshot>;
   announce(project: Project): Promise<void>;
   setPresence(projectId: string, presence: CanvasPresence): void;
   presence(projectId: string): CanvasPresence | null;
@@ -33,42 +54,72 @@ export interface CanvasService {
   links: LinksService;
 }
 
-const MAIN_DIRECTION_ID = 'main';
+const MAIN_DIRECTION_ID = "main";
 const PRESENCE_TTL_MS = 10 * 60 * 1000;
 
 export function canvasOwner(project: Project): Direction {
-  const direction = project.directions.find((candidate) => candidate.id === MAIN_DIRECTION_ID) ?? project.directions[0];
+  const direction =
+    project.directions.find(
+      (candidate) => candidate.id === MAIN_DIRECTION_ID
+    ) ?? project.directions[0];
   if (!direction) throw new Error(`project ${project.id} has no directions`);
   return direction;
 }
 
 export function canvasPath(workTree: string): string {
-  return path.join(workTree, ...CANVAS_FILE.split('/'));
+  return path.join(workTree, ...CANVAS_FILE.split("/"));
 }
 
 export type ProjectDirOf = (projectId: string) => string;
 
-const APP_CANVAS_FILE = 'canvas.json';
+const APP_CANVAS_FILE = "canvas.json";
 
-export function canvasFileOf(project: Project, projectDir: ProjectDirOf | null): string {
-  return project.app && projectDir ? path.join(projectDir(project.id), APP_CANVAS_FILE) : canvasPath(canvasOwner(project).workTree);
+export function canvasFileOf(
+  project: Project,
+  projectDir: ProjectDirOf | null
+): string {
+  return project.app && projectDir
+    ? path.join(projectDir(project.id), APP_CANVAS_FILE)
+    : canvasPath(canvasOwner(project).workTree);
 }
 
-export async function readProjectCanvas(project: Project, projectDir: ProjectDirOf | null): Promise<{ canvas: CanvasFile | null; text: string | null }> {
-  const text = await readFile(canvasFileOf(project, projectDir), 'utf8').catch(() => null);
-  if (text === null) return project.app && projectDir ? readCanvasAt(canvasOwner(project).workTree) : { canvas: null, text: null };
+export async function readProjectCanvas(
+  project: Project,
+  projectDir: ProjectDirOf | null
+): Promise<{ canvas: CanvasFile | null; text: string | null }> {
+  const text = await readFile(canvasFileOf(project, projectDir), "utf8").catch(
+    () => null
+  );
+  if (text === null)
+    return project.app && projectDir
+      ? readCanvasAt(canvasOwner(project).workTree)
+      : { canvas: null, text: null };
   return { canvas: parseCanvasText(text), text };
 }
 
 function setAsideName(now: Date): string {
-  const stamp = now.toISOString().replace(/\.\d+Z$/, '').replace(/[-:]/g, '').replace('T', '-');
+  const stamp = now
+    .toISOString()
+    .replace(/\.\d+Z$/, "")
+    .replace(/[-:]/g, "")
+    .replace("T", "-");
   return CANVAS_FILE.replace(/\.json$/, `.old-${stamp}.json`);
 }
 
-export async function setAsideLegacyCanvas(project: Project, projectDir: ProjectDirOf, tracked: (workTree: string, relative: string) => Promise<boolean>): Promise<LegacyCanvasNotice | null> {
+export async function setAsideLegacyCanvas(
+  project: Project,
+  projectDir: ProjectDirOf,
+  tracked: (workTree: string, relative: string) => Promise<boolean>
+): Promise<LegacyCanvasNotice | null> {
   if (!project.app) return null;
   const own = canvasFileOf(project, projectDir);
-  if (await readFile(own, 'utf8').then(() => true, () => false)) return null;
+  if (
+    await readFile(own, "utf8").then(
+      () => true,
+      () => false
+    )
+  )
+    return null;
   const workTree = canvasOwner(project).workTree;
   const legacy = await readCanvasAt(workTree);
   if (legacy.text === null) return null;
@@ -78,23 +129,28 @@ export async function setAsideLegacyCanvas(project: Project, projectDir: Project
     return { file: CANVAS_FILE, movedTo: null, frames };
   }
   const movedTo = setAsideName(new Date());
-  await rename(canvasPath(workTree), path.join(workTree, ...movedTo.split('/')));
+  await rename(
+    canvasPath(workTree),
+    path.join(workTree, ...movedTo.split("/"))
+  );
   return { file: CANVAS_FILE, movedTo, frames };
 }
 
 function hashOf(text: string): string {
-  return createHash('sha1').update(text).digest('hex').slice(0, 16);
+  return createHash("sha1").update(text).digest("hex").slice(0, 16);
 }
 
-export async function readCanvasAt(workTree: string): Promise<{ canvas: CanvasFile | null; text: string | null }> {
-  const text = await readFile(canvasPath(workTree), 'utf8').catch(() => null);
+export async function readCanvasAt(
+  workTree: string
+): Promise<{ canvas: CanvasFile | null; text: string | null }> {
+  const text = await readFile(canvasPath(workTree), "utf8").catch(() => null);
   if (text === null) return { canvas: null, text: null };
   return { canvas: parseCanvasText(text), text };
 }
 
 export async function writeAtomic(target: string, text: string): Promise<void> {
   await mkdir(path.dirname(target), { recursive: true });
-  const temp = `${target}.${randomBytes(4).toString('hex')}.tmp`;
+  const temp = `${target}.${randomBytes(4).toString("hex")}.tmp`;
   try {
     await writeFile(temp, text);
     await rename(temp, target);
@@ -104,12 +160,16 @@ export async function writeAtomic(target: string, text: string): Promise<void> {
   }
 }
 
-export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | null = null): CanvasService {
+export function createCanvasService(
+  bus: EventBus,
+  projectDir: ProjectDirOf | null = null
+): CanvasService {
   const lock = createKeyedMutex();
   const presences = new Map<string, CanvasPresence>();
   const listeners = new Set<LayoutListener>();
   const links = createLinksService(bus, (project, before, after, source) => {
-    for (const listener of listeners) listener(project, { kind: 'links', before, after }, source);
+    for (const listener of listeners)
+      listener(project, { kind: "links", before, after }, source);
   });
 
   const snapshotOf = async (project: Project): Promise<CanvasSnapshot> => {
@@ -118,9 +178,13 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
     return { canvas, hash: hashOf(serializeCanvasFile(canvas)) };
   };
 
-  const emit = (project: Project, snapshot: CanvasSnapshot, write: CanvasWrite): void => {
+  const emit = (
+    project: Project,
+    snapshot: CanvasSnapshot,
+    write: CanvasWrite
+  ): void => {
     bus.emit({
-      type: 'canvas.changed',
+      type: "canvas.changed",
       projectId: project.id,
       directionId: canvasOwner(project).id,
       canvas: snapshot.canvas,
@@ -130,21 +194,28 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
     });
   };
 
-  const store = async (project: Project, canvas: CanvasFile, write: CanvasWrite): Promise<CanvasSnapshot> => {
+  const store = async (
+    project: Project,
+    canvas: CanvasFile,
+    write: CanvasWrite
+  ): Promise<CanvasSnapshot> => {
     const text = serializeCanvasFile(canvas);
     const file = canvasFileOf(project, projectDir);
-    const current = await readFile(file, 'utf8').catch(() => null);
+    const current = await readFile(file, "utf8").catch(() => null);
     const saved = parseCanvasText(text) ?? emptyCanvasFile();
     const snapshot = { canvas: saved, hash: hashOf(text) };
     if (current === text) return snapshot;
     await writeAtomic(file, text);
     emit(project, snapshot, write);
-    const before = (current === null ? null : parseCanvasText(current)) ?? emptyCanvasFile();
-    for (const listener of listeners) listener(project, { kind: 'canvas', before, after: saved }, write.source);
+    const before =
+      (current === null ? null : parseCanvasText(current)) ?? emptyCanvasFile();
+    for (const listener of listeners)
+      listener(project, { kind: "canvas", before, after: saved }, write.source);
     return snapshot;
   };
 
-  const keyOf = (project: Project): string => `${project.id}/${canvasOwner(project).id}`;
+  const keyOf = (project: Project): string =>
+    `${project.id}/${canvasOwner(project).id}`;
 
   return {
     ownerOf: canvasOwner,
@@ -157,7 +228,8 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
       return lock(keyOf(project), async () => {
         if (write.baseHash !== undefined) {
           const current = await snapshotOf(project);
-          if (current.hash !== write.baseHash) throw new ConflictError('canvas_stale');
+          if (current.hash !== write.baseHash)
+            throw new ConflictError("canvas_stale");
         }
         return store(project, canvas, write);
       });
@@ -174,7 +246,7 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
 
     async announce(project) {
       const snapshot = await lock(keyOf(project), () => snapshotOf(project));
-      emit(project, snapshot, { source: 'restore' });
+      emit(project, snapshot, { source: "restore" });
       await links.announce(project);
     },
 
@@ -193,7 +265,14 @@ export function createCanvasService(bus: EventBus, projectDir: ProjectDirOf | nu
     },
 
     point(project, frameId, selector) {
-      bus.emit({ type: 'canvas.point', projectId: project.id, directionId: canvasOwner(project).id, frameId, at: Date.now(), ...(selector ? { selector } : {}) });
+      bus.emit({
+        type: "canvas.point",
+        projectId: project.id,
+        directionId: canvasOwner(project).id,
+        frameId,
+        at: Date.now(),
+        ...(selector ? { selector } : {}),
+      });
     },
   };
 }

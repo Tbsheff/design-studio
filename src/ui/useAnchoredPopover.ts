@@ -1,9 +1,24 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
-import { placeFixed } from './popoverPlacement';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 
-const HIDDEN: CSSProperties = { top: 0, left: 0, opacity: 0, pointerEvents: 'none' };
+import { placeFixed } from "./popoverPlacement";
 
-export function useAnchoredPopover<T extends string>(anchor?: (trigger: HTMLElement) => HTMLElement) {
+const HIDDEN: CSSProperties = {
+  top: 0,
+  left: 0,
+  opacity: 0,
+  pointerEvents: "none",
+};
+
+export function useAnchoredPopover<T extends string>(
+  anchor?: (trigger: HTMLElement) => HTMLElement
+) {
   const [view, setView] = useState<T | null>(null);
   const [style, setStyle] = useState<CSSProperties>(HIDDEN);
   const trigger = useRef<HTMLSpanElement | null>(null);
@@ -11,7 +26,10 @@ export function useAnchoredPopover<T extends string>(anchor?: (trigger: HTMLElem
   const returnTo = useRef<HTMLElement | null>(null);
 
   const open = useCallback((next: T) => {
-    if (document.activeElement instanceof HTMLElement && !panel.current?.contains(document.activeElement)) {
+    if (
+      document.activeElement instanceof HTMLElement &&
+      !panel.current?.contains(document.activeElement)
+    ) {
       returnTo.current = document.activeElement;
     }
     setView(next);
@@ -25,18 +43,25 @@ export function useAnchoredPopover<T extends string>(anchor?: (trigger: HTMLElem
 
   useLayoutEffect(() => {
     if (!view || !trigger.current || !panel.current) return;
-    setStyle(placeFixed(anchor ? anchor(trigger.current) : trigger.current, panel.current, { align: 'end' }));
+    setStyle(
+      placeFixed(
+        anchor ? anchor(trigger.current) : trigger.current,
+        panel.current,
+        { align: "end" }
+      )
+    );
   }, [view, anchor]);
 
   useEffect(() => {
     if (!view) return;
     const inside = (target: EventTarget | null) =>
-      target instanceof Node && (panel.current?.contains(target) || trigger.current?.contains(target));
+      target instanceof Node &&
+      (panel.current?.contains(target) || trigger.current?.contains(target));
     const onDown = (e: MouseEvent) => {
       if (!inside(e.target)) close(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== "Escape") return;
       e.preventDefault();
       e.stopPropagation();
       close(true);
@@ -44,15 +69,15 @@ export function useAnchoredPopover<T extends string>(anchor?: (trigger: HTMLElem
     const onScroll = (e: Event) => {
       if (!inside(e.target)) close(false);
     };
-    document.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey, true);
-    window.addEventListener('scroll', onScroll, true);
-    window.addEventListener('resize', onScroll);
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
     return () => {
-      document.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey, true);
-      window.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
     };
   }, [view, close]);
 

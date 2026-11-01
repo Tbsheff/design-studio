@@ -10,7 +10,7 @@
   overflow: auto;
 }
 
-.flow-tab .app-route[aria-pressed='true'] {
+.flow-tab .app-route[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }

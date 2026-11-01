@@ -89,7 +89,12 @@
 .lib-grid.skeleton {
   min-height: 180px;
   border-radius: var(--r-lg);
-  background: linear-gradient(90deg, var(--surface-2), var(--surface-hover), var(--surface-2));
+  background: linear-gradient(
+    90deg,
+    var(--surface-2),
+    var(--surface-hover),
+    var(--surface-2)
+  );
   background-size: 200% 100%;
   animation: shimmer var(--dur-loop) linear infinite;
 }
@@ -104,7 +109,9 @@
   border-radius: var(--r-lg);
   background: var(--surface-raised);
   color: var(--text);
-  box-shadow: inset 0 0 0 1px var(--line), var(--shadow-xs);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-xs);
   text-align: left;
   cursor: pointer;
   outline: none;
@@ -114,11 +121,15 @@
 }
 
 .lib-card:hover {
-  box-shadow: inset 0 0 0 1px var(--line-strong), var(--shadow-sm);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    var(--shadow-sm);
 }
 
 .lib-card:focus-visible {
-  box-shadow: inset 0 0 0 1px var(--line-strong), var(--ring);
+  box-shadow:
+    inset 0 0 0 1px var(--line-strong),
+    var(--ring);
 }
 
 .lib-specimen {
@@ -181,7 +192,7 @@
 }
 
 .lib-tag::before {
-  content: '#';
+  content: "#";
 }
 
 .lib-empty {
@@ -440,7 +451,9 @@
   padding: 0 var(--space-3, var(--s-3));
   border-radius: var(--radius-md);
   background: var(--bg);
-  box-shadow: inset 0 0 0 1px var(--line), 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
   color: var(--fg-muted);
 }
 

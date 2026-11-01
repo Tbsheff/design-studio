@@ -1,18 +1,32 @@
-import { useEffect, useRef } from 'react';
-import type { BridgeToParent, DirectEditRequest, NudgeBase, NudgeItem, SelectionContext } from '../shared/contracts';
-import { nudgeStepOf } from '../shared/nudge';
-import { api, errorText } from './api';
-import type { ParentMessageBody } from './bridge';
-import { startOptimistic } from './optimisticEdit';
-import { multiBlockReason } from './mixedValues';
-import { canvasHasKeys, inspectorButtonFocused, isTypingTarget } from './typingTarget';
-import { buildEditRequest, mergeCommit } from './useDirectEdit';
-import { focusStageQuietly } from './useInlineTextEdit';
+import { useEffect, useRef } from "react";
+
+import type {
+  BridgeToParent,
+  DirectEditRequest,
+  NudgeBase,
+  NudgeItem,
+  SelectionContext,
+} from "../shared/contracts";
+import { nudgeStepOf } from "../shared/nudge";
+import { api, errorText } from "./api";
+import type { ParentMessageBody } from "./bridge";
+import { multiBlockReason } from "./mixedValues";
+import { startOptimistic } from "./optimisticEdit";
+import {
+  canvasHasKeys,
+  inspectorButtonFocused,
+  isTypingTarget,
+} from "./typingTarget";
+import { buildEditRequest, mergeCommit } from "./useDirectEdit";
+import { focusStageQuietly } from "./useInlineTextEdit";
 
 const SAVE_MS = 300;
-const FLOW_HINT = 'Arrow keys move absolute elements and elements with a margin. Drag this one to change its place in the layout.';
-const NO_SOURCE_HINT = 'This element has no source location, so it cannot move here.';
-const SOME_HINT = 'Some selected elements sit in the layout, so the arrow keys move only the others. Drag one to change its place.';
+const FLOW_HINT =
+  "Arrow keys move absolute elements and elements with a margin. Drag this one to change its place in the layout.";
+const NO_SOURCE_HINT =
+  "This element has no source location, so it cannot move here.";
+const SOME_HINT =
+  "Some selected elements sit in the layout, so the arrow keys move only the others. Drag one to change its place.";
 
 interface Options {
   projectId: string;
@@ -21,7 +35,9 @@ interface Options {
   enabled: boolean;
   post: (body: ParentMessageBody) => void;
   listen: (handler: (message: BridgeToParent) => void) => () => void;
-  setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
+  setSelection: (
+    updater: (prev: SelectionContext[]) => SelectionContext[]
+  ) => void;
   refreshRects: () => void;
   onError: (message: string) => void;
 }
@@ -44,27 +60,56 @@ interface Step {
   dy: number;
 }
 
-const FLUSH_ON = new Set<BridgeToParent['type']>(['ready', 'history-key', 'app-key', 'structure-key', 'reorder-key', 'move-start']);
+const FLUSH_ON = new Set<BridgeToParent["type"]>([
+  "ready",
+  "history-key",
+  "app-key",
+  "structure-key",
+  "reorder-key",
+  "move-start",
+]);
 const shown = new Set<string>();
 
-function axisStyle(prop: string, start: number, delta: number): Record<string, string> {
+function axisStyle(
+  prop: string,
+  start: number,
+  delta: number
+): Record<string, string> {
   return delta === 0 ? {} : { [prop]: `${Math.round(start + delta)}px` };
 }
 
 export function nudgeStyle(b: Step): Record<string, string> {
   const { base, dx, dy } = b;
-  if (base.mode === 'margin') return { ...axisStyle('margin-left', base.x, base.lockX ? 0 : dx), ...axisStyle('margin-top', base.y, base.lockY ? 0 : dy) };
-  if (base.mode !== 'position') return {};
-  return { ...axisStyle(base.fromRight ? 'right' : 'left', base.x, base.fromRight ? -dx : dx), ...axisStyle(base.fromBottom ? 'bottom' : 'top', base.y, base.fromBottom ? -dy : dy) };
+  if (base.mode === "margin")
+    return {
+      ...axisStyle("margin-left", base.x, base.lockX ? 0 : dx),
+      ...axisStyle("margin-top", base.y, base.lockY ? 0 : dy),
+    };
+  if (base.mode !== "position") return {};
+  return {
+    ...axisStyle(
+      base.fromRight ? "right" : "left",
+      base.x,
+      base.fromRight ? -dx : dx
+    ),
+    ...axisStyle(
+      base.fromBottom ? "bottom" : "top",
+      base.y,
+      base.fromBottom ? -dy : dy
+    ),
+  };
 }
 
 function movable(base: NudgeBase, dx: number, dy: number): boolean {
-  if (base.mode === 'position') return true;
-  return base.mode === 'margin' && ((dx !== 0 && !base.lockX) || (dy !== 0 && !base.lockY));
+  if (base.mode === "position") return true;
+  return (
+    base.mode === "margin" &&
+    ((dx !== 0 && !base.lockX) || (dy !== 0 && !base.lockY))
+  );
 }
 
 function burstKey(selectors: string[]): string {
-  return [...selectors].sort().join('\n');
+  return [...selectors].sort().join("\n");
 }
 
 interface Saved {
@@ -79,30 +124,52 @@ function savedOf(b: Burst): Saved[] {
     const style = nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy });
     const edit = buildEditRequest(item.target, style);
     if (!edit) return [];
-    const back = Object.fromEntries(Object.keys(style).map((key) => [key, item.target.styles[key] ?? '']));
+    const back = Object.fromEntries(
+      Object.keys(style).map((key) => [key, item.target.styles[key] ?? ""])
+    );
     return [{ edit, selector: item.target.selector, style, back }];
   });
 }
 
-const OVERLAY_OPEN = 'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
+const OVERLAY_OPEN =
+  'dialog[open], [role="dialog"], [role="menu"], [role="listbox"], [data-esc-owner]';
 
-function picksNew(message: BridgeToParent, current: SelectionContext[]): boolean {
-  if (message.type !== 'select' && message.type !== 'select-many') return false;
-  const picked = message.type === 'select' ? [message.selection.selector] : message.selections.map((s) => s.selector);
+function picksNew(
+  message: BridgeToParent,
+  current: SelectionContext[]
+): boolean {
+  if (message.type !== "select" && message.type !== "select-many") return false;
+  const picked =
+    message.type === "select"
+      ? [message.selection.selector]
+      : message.selections.map((s) => s.selector);
   if (message.additive) return true;
   return burstKey(picked) !== burstKey(current.map((s) => s.selector));
 }
 
 function keysToCanvas(): void {
   const focused = document.activeElement;
-  if (focused instanceof HTMLIFrameElement && focused.closest('.canvas .stage')) focused.blur();
+  if (focused instanceof HTMLIFrameElement && focused.closest(".canvas .stage"))
+    focused.blur();
 }
 
 function blurToCanvas(event: KeyboardEvent): boolean {
   const focused = document.activeElement;
-  if (event.key !== 'Escape' || event.defaultPrevented || !(focused instanceof HTMLElement) || focused === document.body) return false;
-  if (canvasHasKeys() || focused instanceof HTMLIFrameElement || isTypingTarget(focused) || document.querySelector(OVERLAY_OPEN)) return false;
-  const stage = document.querySelector<HTMLElement>('.canvas .stage');
+  if (
+    event.key !== "Escape" ||
+    event.defaultPrevented ||
+    !(focused instanceof HTMLElement) ||
+    focused === document.body
+  )
+    return false;
+  if (
+    canvasHasKeys() ||
+    focused instanceof HTMLIFrameElement ||
+    isTypingTarget(focused) ||
+    document.querySelector(OVERLAY_OPEN)
+  )
+    return false;
+  const stage = document.querySelector<HTMLElement>(".canvas .stage");
   if (stage) focusStageQuietly(stage);
   else focused.blur();
   event.preventDefault();
@@ -132,24 +199,44 @@ export function useElementNudge(o: Options): void {
       live.current.onError(text);
     };
     const restore = (list: Saved[], message: string) => {
-      live.current.post({ type: 'preview-reset' });
-      for (const one of list) live.current.setSelection((prev) => mergeCommit(prev, { selector: one.selector, style: one.back }));
+      live.current.post({ type: "preview-reset" });
+      for (const one of list)
+        live.current.setSelection((prev) =>
+          mergeCommit(prev, { selector: one.selector, style: one.back })
+        );
       live.current.onError(message);
     };
     const save = async (b: Burst) => {
       const cur = live.current;
       const list = savedOf(b);
       if (list.length === 0 || !cur.directionId) return;
-      for (const one of list) cur.setSelection((prev) => mergeCommit(prev, { selector: one.selector, style: one.style }));
+      for (const one of list)
+        cur.setSelection((prev) =>
+          mergeCommit(prev, { selector: one.selector, style: one.style })
+        );
       const port = { post: cur.post, refreshRects: cur.refreshRects };
-      const optimistic = list.map((one) => startOptimistic(port, one.edit, (message) => live.current.onError(message)));
+      const optimistic = list.map((one) =>
+        startOptimistic(port, one.edit, (message) =>
+          live.current.onError(message)
+        )
+      );
       try {
         if (list.length === 1) {
-          const result = await api.directEdit(cur.projectId, cur.directionId, (list[0] as Saved).edit);
+          const result = await api.directEdit(
+            cur.projectId,
+            cur.directionId,
+            (list[0] as Saved).edit
+          );
           optimistic[0]?.saved(result.tailwind);
         } else {
-          const result = await api.directEditBatch(cur.projectId, cur.directionId, { edits: list.map((one) => one.edit) });
-          optimistic.forEach((one, index) => one.saved(result.applied[index]?.tailwind));
+          const result = await api.directEditBatch(
+            cur.projectId,
+            cur.directionId,
+            { edits: list.map((one) => one.edit) }
+          );
+          optimistic.forEach((one, index) =>
+            one.saved(result.applied[index]?.tailwind)
+          );
         }
         live.current.refreshRects();
       } catch (err) {
@@ -172,15 +259,21 @@ export function useElementNudge(o: Options): void {
         return target ? [{ target, base: item.base }] : [];
       });
       if (picked.length === 0) return null;
-      const reason = picked.length > 1 ? multiBlockReason(picked.map((item) => item.target)) : picked[0]?.target.source ? null : NO_SOURCE_HINT;
+      const reason =
+        picked.length > 1
+          ? multiBlockReason(picked.map((item) => item.target))
+          : picked[0]?.target.source
+            ? null
+            : NO_SOURCE_HINT;
       if (reason) hintOnce(reason);
       return reason ? null : picked;
     };
     const begin = (wanted: NudgeItem[], key: string): Burst | null => {
       const all = moversFor(wanted);
       if (!all) return null;
-      const items = all.filter((item) => item.base.mode !== 'none');
-      if (items.length < all.length) hintOnce(items.length === 0 ? FLOW_HINT : SOME_HINT);
+      const items = all.filter((item) => item.base.mode !== "none");
+      if (items.length < all.length)
+        hintOnce(items.length === 0 ? FLOW_HINT : SOME_HINT);
       return items.length === 0 ? null : { key, items, dx: 0, dy: 0 };
     };
     const press = (wanted: NudgeItem[], dx: number, dy: number) => {
@@ -188,40 +281,61 @@ export function useElementNudge(o: Options): void {
       if (burst.current && burst.current.key !== key) flush();
       const b = burst.current ?? begin(wanted, key);
       if (!b) return;
-      if (!b.items.some((item) => movable(item.base, dx, dy))) return hintOnce(FLOW_HINT);
+      if (!b.items.some((item) => movable(item.base, dx, dy)))
+        return hintOnce(FLOW_HINT);
       b.dx += dx;
       b.dy += dy;
       burst.current = b;
-      for (const item of b.items) live.current.post({ type: 'preview-style', selector: item.target.selector, style: nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy }) });
+      for (const item of b.items)
+        live.current.post({
+          type: "preview-style",
+          selector: item.target.selector,
+          style: nudgeStyle({ base: item.base, dx: b.dx, dy: b.dy }),
+        });
       live.current.refreshRects();
       if (timer.current !== null) window.clearTimeout(timer.current);
       timer.current = window.setTimeout(flush, SAVE_MS);
     };
     const onKey = (event: KeyboardEvent) => {
-      if (live.current.enabled && live.current.selection.length > 0 && blurToCanvas(event)) return;
+      if (
+        live.current.enabled &&
+        live.current.selection.length > 0 &&
+        blurToCanvas(event)
+      )
+        return;
       const step = nudgeStepOf(event);
       if (!step) {
-        if (burst.current && event.key !== 'Shift') flush();
+        if (burst.current && event.key !== "Shift") flush();
         return;
       }
       const cur = live.current;
-      if (!cur.enabled || cur.selection.length === 0 || !takeArrowKeys()) return;
+      if (!cur.enabled || cur.selection.length === 0 || !takeArrowKeys())
+        return;
       event.preventDefault();
-      cur.post({ type: 'nudge', dx: step.dx, dy: step.dy });
+      cur.post({ type: "nudge", dx: step.dx, dy: step.dy });
     };
     flushNow.current = flush;
     let editing = false;
     const stop = o.listen((message) => {
-      if (message.type === 'nudge-key') press([{ selector: message.selector, base: message.base }, ...(message.others ?? [])], message.dx, message.dy);
+      if (message.type === "nudge-key")
+        press(
+          [
+            { selector: message.selector, base: message.base },
+            ...(message.others ?? []),
+          ],
+          message.dx,
+          message.dy
+        );
       else if (FLUSH_ON.has(message.type)) flush();
-      if (message.type === 'text-edit') editing = message.state === 'start';
-      else if (message.type === 'text-commit') editing = false;
-      if (picksNew(message, live.current.selection)) window.setTimeout(() => editing || keysToCanvas(), 0);
+      if (message.type === "text-edit") editing = message.state === "start";
+      else if (message.type === "text-commit") editing = false;
+      if (picksNew(message, live.current.selection))
+        window.setTimeout(() => editing || keysToCanvas(), 0);
     });
-    window.addEventListener('keydown', onKey, true);
+    window.addEventListener("keydown", onKey, true);
     return () => {
       stop();
-      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener("keydown", onKey, true);
       flush();
     };
   }, [o.listen]);

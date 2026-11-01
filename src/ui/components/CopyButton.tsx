@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Icon } from './Icon';
+import { useEffect, useState } from "react";
+
+import { Icon } from "./Icon";
 
 export async function copyText(text: string): Promise<boolean> {
   try {
@@ -10,14 +11,23 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function CopyButton({ text, label = 'Copy', className = '' }: { text: string | (() => string); label?: string; className?: string }) {
-  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
+export function CopyButton({
+  text,
+  label = "Copy",
+  className = "",
+}: {
+  text: string | (() => string);
+  label?: string;
+  className?: string;
+}) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   useEffect(() => {
-    if (state === 'idle') return;
-    const id = window.setTimeout(() => setState('idle'), 1400);
+    if (state === "idle") return;
+    const id = window.setTimeout(() => setState("idle"), 1400);
     return () => window.clearTimeout(id);
   }, [state]);
-  const tip = state === 'copied' ? 'Copied' : state === 'failed' ? 'Copy failed' : label;
+  const tip =
+    state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : label;
   return (
     <button
       type="button"
@@ -28,7 +38,9 @@ export function CopyButton({ text, label = 'Copy', className = '' }: { text: str
       data-tip-side="top"
       onClick={(event) => {
         event.stopPropagation();
-        void copyText(typeof text === 'function' ? text() : text).then((ok) => setState(ok ? 'copied' : 'failed'));
+        void copyText(typeof text === "function" ? text() : text).then((ok) =>
+          setState(ok ? "copied" : "failed")
+        );
       }}
     >
       <span className="copy-icon" aria-hidden="true">
@@ -38,7 +50,7 @@ export function CopyButton({ text, label = 'Copy', className = '' }: { text: str
         <Icon name="check" size={14} />
       </span>
       <span className="sr-only" aria-live="polite">
-        {state === 'copied' ? 'Copied' : ''}
+        {state === "copied" ? "Copied" : ""}
       </span>
     </button>
   );

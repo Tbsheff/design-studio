@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { TextEditMessage } from './usePreviewFrames';
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import type { TextEditMessage } from "./usePreviewFrames";
 
 export const MAX_INLINE_TEXT = 5000;
 
 const REFOCUS_MS = 50;
-export const QUIET_FOCUS_ATTR = 'data-quiet-focus';
+export const QUIET_FOCUS_ATTR = "data-quiet-focus";
 
-export function focusStageQuietly(stage: HTMLElement | null = document.querySelector<HTMLElement>('.canvas .stage')): void {
+export function focusStageQuietly(
+  stage: HTMLElement | null = document.querySelector<HTMLElement>(
+    ".canvas .stage"
+  )
+): void {
   if (!stage) return;
-  stage.setAttribute(QUIET_FOCUS_ATTR, '');
+  stage.setAttribute(QUIET_FOCUS_ATTR, "");
   stage.focus({ preventScroll: true });
 }
 
@@ -20,15 +25,23 @@ function focusLeftCanvas(stage: HTMLElement): boolean {
 
 export type TextCommitHandler = (selector: string, text: string) => void;
 
-export function parseTextCommit(message: TextEditMessage): { selector: string; text: string } | null {
-  if (message.type !== 'text-commit') return null;
+export function parseTextCommit(
+  message: TextEditMessage
+): { selector: string; text: string } | null {
+  if (message.type !== "text-commit") return null;
   const { selector, text } = message as { selector: unknown; text: unknown };
-  if (typeof selector !== 'string' || selector === '' || selector.length > 2000) return null;
-  if (typeof text !== 'string' || text.length > MAX_INLINE_TEXT) return null;
+  if (typeof selector !== "string" || selector === "" || selector.length > 2000)
+    return null;
+  if (typeof text !== "string" || text.length > MAX_INLINE_TEXT) return null;
   return { selector, text };
 }
 
-export function useInlineTextEdit(allowed: boolean, onCommit: TextCommitHandler | undefined, onReject: () => void, stage: () => HTMLElement | null) {
+export function useInlineTextEdit(
+  allowed: boolean,
+  onCommit: TextCommitHandler | undefined,
+  onReject: () => void,
+  stage: () => HTMLElement | null
+) {
   const [editing, setEditing] = useState(false);
   const live = useRef({ onCommit, onReject, stage });
   live.current = { onCommit, onReject, stage };
@@ -46,18 +59,23 @@ export function useInlineTextEdit(allowed: boolean, onCommit: TextCommitHandler 
     if (!allowed) setEditing(false);
   }, [allowed]);
 
-  const onMessage = useCallback((message: TextEditMessage) => {
-    editingRef.current = message.type === 'text-edit' && message.state === 'start';
-    if (!editingRef.current) refocusStage();
-    if (message.type === 'text-edit') {
-      setEditing(editingRef.current);
-      return;
-    }
-    setEditing(false);
-    const parsed = parseTextCommit(message);
-    if (parsed && live.current.onCommit) live.current.onCommit(parsed.selector, parsed.text);
-    else live.current.onReject();
-  }, [refocusStage]);
+  const onMessage = useCallback(
+    (message: TextEditMessage) => {
+      editingRef.current =
+        message.type === "text-edit" && message.state === "start";
+      if (!editingRef.current) refocusStage();
+      if (message.type === "text-edit") {
+        setEditing(editingRef.current);
+        return;
+      }
+      setEditing(false);
+      const parsed = parseTextCommit(message);
+      if (parsed && live.current.onCommit)
+        live.current.onCommit(parsed.selector, parsed.text);
+      else live.current.onReject();
+    },
+    [refocusStage]
+  );
 
   const reset = useCallback(() => setEditing(false), []);
 

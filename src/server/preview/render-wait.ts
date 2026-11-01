@@ -13,9 +13,14 @@ const jobs = new Map<string, RenderJob>();
 const lastDone = new Map<string, number>();
 const pages = new Map<string, string[]>();
 
-export function noteRenderedPage(projectId: string, page: string | undefined): void {
-  const list = (pages.get(projectId) ?? []).filter((item) => item !== (page ?? ''));
-  list.unshift(page ?? '');
+export function noteRenderedPage(
+  projectId: string,
+  page: string | undefined
+): void {
+  const list = (pages.get(projectId) ?? []).filter(
+    (item) => item !== (page ?? "")
+  );
+  list.unshift(page ?? "");
   pages.set(projectId, list.slice(0, PAGES_MAX));
 }
 
@@ -23,11 +28,18 @@ export function recentPages(projectId: string): string[] {
   return pages.get(projectId) ?? [];
 }
 
-export function startRender(projectId: string, render: (signal: AbortSignal) => Promise<void>): void {
+export function startRender(
+  projectId: string,
+  render: (signal: AbortSignal) => Promise<void>
+): void {
   const before = jobs.get(projectId);
   if (before && !before.started) return;
   before?.controller.abort();
-  const job: RenderJob = { started: false, controller: new AbortController(), done: Promise.resolve() };
+  const job: RenderJob = {
+    started: false,
+    controller: new AbortController(),
+    done: Promise.resolve(),
+  };
   job.done = (async () => {
     await before?.done;
     await new Promise((done) => setTimeout(done, WATCH_DELAY_MS));
@@ -35,7 +47,8 @@ export function startRender(projectId: string, render: (signal: AbortSignal) => 
     await render(job.controller.signal);
   })()
     .catch((error: unknown) => {
-      if (!job.controller.signal.aborted) console.error('[render-wait] warm failed', error);
+      if (!job.controller.signal.aborted)
+        console.error("[render-wait] warm failed", error);
     })
     .finally(() => {
       lastDone.set(projectId, Date.now());
@@ -58,7 +71,11 @@ export function renderedSince(projectId: string, since: number): boolean {
 
 async function latestJobs(projectId?: string): Promise<void> {
   for (;;) {
-    const current = projectId ? [pending.get(projectId)].filter((job): job is Promise<void> => job !== undefined) : [...pending.values()];
+    const current = projectId
+      ? [pending.get(projectId)].filter(
+          (job): job is Promise<void> => job !== undefined
+        )
+      : [...pending.values()];
     if (current.length === 0) return;
     await Promise.all(current);
   }
@@ -69,7 +86,7 @@ const PREVIEW_HOST = /^p-((?:[0-9a-f]{2})+)\.localhost$/;
 export function projectOfUrl(url: string): string | undefined {
   try {
     const hex = PREVIEW_HOST.exec(new URL(url).hostname)?.[1];
-    return hex ? Buffer.from(hex, 'hex').toString('utf8') : undefined;
+    return hex ? Buffer.from(hex, "hex").toString("utf8") : undefined;
   } catch {
     return undefined;
   }
@@ -86,7 +103,10 @@ export async function renderSettled(projectId?: string): Promise<boolean> {
     timer = setTimeout(() => done(false), SETTLE_MAX_MS);
     timer.unref();
   });
-  const settled = await Promise.race([latestJobs(projectId).then(() => true as const), timeout]);
+  const settled = await Promise.race([
+    latestJobs(projectId).then(() => true as const),
+    timeout,
+  ]);
   clearTimeout(timer);
   return settled;
 }

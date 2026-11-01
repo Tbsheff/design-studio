@@ -1,9 +1,12 @@
-import { lazy, Suspense, useState, type ChangeEvent } from 'react';
-import type { SettingsDraft } from '../settingsDraft';
-import { Icon } from './Icon';
+import { lazy, Suspense, useState, type ChangeEvent } from "react";
 
-const loadFields = () => import('./SettingsFields');
-const SettingsFields = lazy(() => loadFields().then((m) => ({ default: m.SettingsFields })));
+import type { SettingsDraft } from "../settingsDraft";
+import { Icon } from "./Icon";
+
+const loadFields = () => import("./SettingsFields");
+const SettingsFields = lazy(() =>
+  loadFields().then((m) => ({ default: m.SettingsFields }))
+);
 
 interface Props {
   draft: SettingsDraft;
@@ -18,7 +21,7 @@ export function NewProjectAdvanced(props: Props) {
   const [open, setOpen] = useState(props.initiallyOpen === true);
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    e.target.value = '';
+    e.target.value = "";
     if (!file) return;
     file
       .text()
@@ -27,8 +30,15 @@ export function NewProjectAdvanced(props: Props) {
   };
 
   return (
-    <details className="advanced" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
-      <summary onPointerEnter={() => void loadFields()} onFocus={() => void loadFields()}>
+    <details
+      className="advanced"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary
+        onPointerEnter={() => void loadFields()}
+        onFocus={() => void loadFields()}
+      >
         <Icon name="chevronRight" size={14} />
         Advanced
       </summary>
@@ -39,7 +49,9 @@ export function NewProjectAdvanced(props: Props) {
           </Suspense>
         )}
         <label className="field">
-          <span>DESIGN.md (optional). The agent reads it before the first run.</span>
+          <span>
+            DESIGN.md (optional). The agent reads it before the first run.
+          </span>
           <textarea
             aria-label="DESIGN.md"
             className="mono"
@@ -53,7 +65,12 @@ export function NewProjectAdvanced(props: Props) {
         <label className="btn small has-icon file-pick">
           <Icon name="file" size={14} />
           Load DESIGN.md from a file
-          <input type="file" accept=".md,text/markdown,text/plain" hidden onChange={pickFile} />
+          <input
+            type="file"
+            accept=".md,text/markdown,text/plain"
+            hidden
+            onChange={pickFile}
+          />
         </label>
       </div>
     </details>

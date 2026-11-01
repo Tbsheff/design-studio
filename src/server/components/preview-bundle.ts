@@ -1,7 +1,9 @@
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import type { Plugin } from 'esbuild';
-import type { PropValue } from '../../shared/props.js';
+import { createRequire } from "node:module";
+import path from "node:path";
+
+import type { Plugin } from "esbuild";
+
+import type { PropValue } from "../../shared/props.js";
 
 export interface SampleNode {
   exportName: string;
@@ -21,7 +23,22 @@ export class BundleError extends Error {}
 const REACT_SPEC = /^(react|react-dom)(\/.*)?$/;
 const EMPTY_SPEC = /^(server-only|client-only)$/;
 const NEXT_STUB = /^next\/(link|image|navigation|router|dynamic)$/;
-const ASSET_LOADERS = { '.css': 'empty', '.scss': 'empty', '.sass': 'empty', '.less': 'empty', '.png': 'dataurl', '.jpg': 'dataurl', '.jpeg': 'dataurl', '.gif': 'dataurl', '.webp': 'dataurl', '.avif': 'dataurl', '.svg': 'dataurl', '.woff': 'dataurl', '.woff2': 'dataurl', '.ttf': 'dataurl' } as const;
+const ASSET_LOADERS = {
+  ".css": "empty",
+  ".scss": "empty",
+  ".sass": "empty",
+  ".less": "empty",
+  ".png": "dataurl",
+  ".jpg": "dataurl",
+  ".jpeg": "dataurl",
+  ".gif": "dataurl",
+  ".webp": "dataurl",
+  ".avif": "dataurl",
+  ".svg": "dataurl",
+  ".woff": "dataurl",
+  ".woff2": "dataurl",
+  ".ttf": "dataurl",
+} as const;
 
 const NEXT_STUBS: Record<string, string> = {
   link: `import * as React from 'react';
@@ -52,9 +69,9 @@ export default router;`,
 };
 
 function previewPlugin(appDir: string): Plugin {
-  const appRequire = createRequire(path.join(appDir, 'package.json'));
+  const appRequire = createRequire(path.join(appDir, "package.json"));
   return {
-    name: 'studio-preview',
+    name: "studio-preview",
     setup(build) {
       build.onResolve({ filter: REACT_SPEC }, (args) => {
         try {
@@ -63,18 +80,31 @@ function previewPlugin(appDir: string): Plugin {
           return undefined;
         }
       });
-      build.onResolve({ filter: EMPTY_SPEC }, () => ({ path: 'empty', namespace: 'studio-empty' }));
-      build.onResolve({ filter: NEXT_STUB }, (args) => ({ path: args.path.slice('next/'.length), namespace: 'studio-next' }));
-      build.onLoad({ filter: /.*/, namespace: 'studio-empty' }, () => ({ contents: 'export {};', loader: 'js' }));
-      build.onLoad({ filter: /.*/, namespace: 'studio-next' }, (args) => ({ contents: NEXT_STUBS[args.path] ?? 'export {};', loader: 'jsx', resolveDir: appDir }));
+      build.onResolve({ filter: EMPTY_SPEC }, () => ({
+        path: "empty",
+        namespace: "studio-empty",
+      }));
+      build.onResolve({ filter: NEXT_STUB }, (args) => ({
+        path: args.path.slice("next/".length),
+        namespace: "studio-next",
+      }));
+      build.onLoad({ filter: /.*/, namespace: "studio-empty" }, () => ({
+        contents: "export {};",
+        loader: "js",
+      }));
+      build.onLoad({ filter: /.*/, namespace: "studio-next" }, (args) => ({
+        contents: NEXT_STUBS[args.path] ?? "export {};",
+        loader: "jsx",
+        resolveDir: appDir,
+      }));
     },
   };
 }
 
 function nodeSource(node: SampleNode | string): string {
-  if (typeof node === 'string') return JSON.stringify(node);
-  const children = node.children.map(nodeSource).join(', ');
-  return `React.createElement(part(${JSON.stringify(node.exportName)}), ${JSON.stringify(node.props)}${children ? `, ${children}` : ''})`;
+  if (typeof node === "string") return JSON.stringify(node);
+  const children = node.children.map(nodeSource).join(", ");
+  return `React.createElement(part(${JSON.stringify(node.exportName)}), ${JSON.stringify(node.props)}${children ? `, ${children}` : ""})`;
 }
 
 function entrySource(request: BundleRequest): string {
@@ -102,37 +132,61 @@ try {
 `;
 }
 
-function firstError(errors: { text: string; location: { file: string; line: number } | null }[]): string {
+function firstError(
+  errors: { text: string; location: { file: string; line: number } | null }[]
+): string {
   const error = errors[0];
-  if (!error) return 'esbuild failed';
-  return error.location ? `${error.text} (${error.location.file}:${error.location.line})` : error.text;
+  if (!error) return "esbuild failed";
+  return error.location
+    ? `${error.text} (${error.location.file}:${error.location.line})`
+    : error.text;
 }
 
 export async function bundlePreview(request: BundleRequest): Promise<string> {
-  const { build } = await import('esbuild');
+  const { build } = await import("esbuild");
   try {
     const result = await build({
-      stdin: { contents: entrySource(request), resolveDir: request.appDir, loader: 'jsx', sourcefile: 'studio-component-preview.jsx' },
+      stdin: {
+        contents: entrySource(request),
+        resolveDir: request.appDir,
+        loader: "jsx",
+        sourcefile: "studio-component-preview.jsx",
+      },
       absWorkingDir: request.root,
       bundle: true,
       write: false,
-      format: 'iife',
-      platform: 'browser',
-      target: ['es2020'],
+      format: "iife",
+      platform: "browser",
+      target: ["es2020"],
       minify: true,
-      jsx: 'automatic',
+      jsx: "automatic",
       loader: ASSET_LOADERS,
-      define: { 'process.env.NODE_ENV': '"production"' },
-      banner: { js: 'var process = globalThis.process || { env: { NODE_ENV: "production" } };' },
+      define: { "process.env.NODE_ENV": '"production"' },
+      banner: {
+        js: 'var process = globalThis.process || { env: { NODE_ENV: "production" } };',
+      },
       plugins: [previewPlugin(request.appDir)],
-      logLevel: 'silent',
+      logLevel: "silent",
     });
     const output = result.outputFiles[0];
-    if (!output) throw new BundleError('esbuild produced no output');
+    if (!output) throw new BundleError("esbuild produced no output");
     return output.text;
   } catch (error) {
     if (error instanceof BundleError) throw error;
-    const errors = (error as { errors?: { text: string; location: { file: string; line: number } | null }[] }).errors;
-    throw new BundleError(errors ? firstError(errors) : error instanceof Error ? error.message : String(error));
+    const errors = (
+      error as {
+        errors?: {
+          text: string;
+          location: { file: string; line: number } | null;
+        }[];
+      }
+    ).errors;
+    throw new BundleError(
+      errors
+        ? firstError(errors)
+        : error instanceof Error
+          ? error.message
+          : String(error)
+    );
   }
 }

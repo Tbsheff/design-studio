@@ -1,9 +1,14 @@
-import { createHash } from 'node:crypto';
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import path from 'node:path';
-import type * as TS from 'typescript';
-import { compilerConfigFor, nodeModulesFile } from '../components/props-program.js';
+import { createHash } from "node:crypto";
+import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+import type * as TS from "typescript";
+
+import {
+  compilerConfigFor,
+  nodeModulesFile,
+} from "../components/props-program.js";
 
 type Ts = typeof TS;
 
@@ -13,7 +18,10 @@ export interface ContentStamp {
 }
 
 export type ImportEdges = [file: string, deps: string[]][];
-export type GraphRequest = { kind: 'stamp'; workTree: string; roots: string[] } | { kind: 'edges'; workTree: string; roots: string[] } | { kind: 'flush' };
+export type GraphRequest =
+  | { kind: "stamp"; workTree: string; roots: string[] }
+  | { kind: "edges"; workTree: string; roots: string[] }
+  | { kind: "flush" };
 export type GraphReply = ContentStamp | ImportEdges | null;
 
 interface FileDeps {
@@ -44,32 +52,60 @@ const CODE_FILE = /\.(tsx?|jsx?|mjs|cjs)$/;
 const GRAPH_CAP = 40000;
 const SAVED_VERSION = 2;
 const SAVE_DELAY_MS = 2000;
-const CONFIG_FILES = ['package.json', 'tsconfig.json', 'tsconfig.base.json', 'tsconfig.app.json', 'pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock', 'pnpm-workspace.yaml'];
+const CONFIG_FILES = [
+  "package.json",
+  "tsconfig.json",
+  "tsconfig.base.json",
+  "tsconfig.app.json",
+  "pnpm-lock.yaml",
+  "package-lock.json",
+  "yarn.lock",
+  "bun.lock",
+  "pnpm-workspace.yaml",
+];
 
 let tsModule: Promise<Ts> | null = null;
 let tsVersion: string | null = null;
 
 function typescriptVersion(): string {
-  tsVersion ??= (createRequire(import.meta.url)('typescript/package.json') as { version: string }).version;
+  tsVersion ??= (
+    createRequire(import.meta.url)("typescript/package.json") as {
+      version: string;
+    }
+  ).version;
   return tsVersion;
 }
 
 function loadTs(): Promise<Ts> {
-  tsModule ??= import('typescript').then((loaded) => ((loaded as { default?: Ts }).default ?? loaded) as Ts);
+  tsModule ??= import("typescript").then(
+    (loaded) => ((loaded as { default?: Ts }).default ?? loaded) as Ts
+  );
   return tsModule;
 }
 
-function resolutionCache(ts: Ts, scope: WalkScope, options: TS.CompilerOptions): TS.ModuleResolutionCache {
-  const key = `${JSON.stringify(options.paths ?? {})}|${options.baseUrl ?? ''}`;
+function resolutionCache(
+  ts: Ts,
+  scope: WalkScope,
+  options: TS.CompilerOptions
+): TS.ModuleResolutionCache {
+  const key = `${JSON.stringify(options.paths ?? {})}|${options.baseUrl ?? ""}`;
   let cache = scope.caches.get(key);
   if (!cache) {
-    cache = ts.createModuleResolutionCache(scope.workTree, (name) => name, options);
+    cache = ts.createModuleResolutionCache(
+      scope.workTree,
+      (name) => name,
+      options
+    );
     scope.caches.set(key, cache);
   }
   return cache;
 }
 
-function optionsFor(ts: Ts, scope: WalkScope, file: string): TS.CompilerOptions {
+function optionsFor(
+  ts: Ts,
+  scope: WalkScope,
+  file: string
+): TS.CompilerOptions {
   const dir = path.dirname(file);
   let options = scope.options.get(dir);
   if (!options) {
@@ -81,17 +117,30 @@ function optionsFor(ts: Ts, scope: WalkScope, file: string): TS.CompilerOptions 
   return options;
 }
 
-async function configStamp(workTree: string, configs: Iterable<string>): Promise<string> {
+async function configStamp(
+  workTree: string,
+  configs: Iterable<string>
+): Promise<string> {
   const names = [...new Set([...CONFIG_FILES, ...configs])].sort();
-  const parts = await Promise.all(names.map(async (name) => `${name}:${(await stat(path.join(workTree, name)).catch(() => null))?.mtimeMs ?? -1}`));
-  return parts.join('|');
+  const parts = await Promise.all(
+    names.map(
+      async (name) =>
+        `${name}:${(await stat(path.join(workTree, name)).catch(() => null))?.mtimeMs ?? -1}`
+    )
+  );
+  return parts.join("|");
 }
 
 function stampOf(seen: Map<string, FileDeps>): ContentStamp {
-  const parts = [...seen.entries()].map(([file, deps]) => `${file}:${deps.size}:${deps.mtimeMs}`).sort();
+  const parts = [...seen.entries()]
+    .map(([file, deps]) => `${file}:${deps.size}:${deps.mtimeMs}`)
+    .sort();
   let newest = 0;
   for (const deps of seen.values()) newest = Math.max(newest, deps.mtimeMs);
-  return { key: `r${parts.length}:${createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 16)}`, newest };
+  return {
+    key: `r${parts.length}:${createHash("sha1").update(parts.join("|")).digest("hex").slice(0, 16)}`,
+    newest,
+  };
 }
 
 class WorkTreeGraph {
@@ -103,7 +152,7 @@ class WorkTreeGraph {
 
   constructor(
     readonly workTree: string,
-    private readonly cacheFile: string | null,
+    private readonly cacheFile: string | null
   ) {}
 
   ready(): Promise<void> {
@@ -113,11 +162,25 @@ class WorkTreeGraph {
 
   private async load(): Promise<void> {
     if (!this.cacheFile) return;
-    const saved = JSON.parse(await readFile(this.cacheFile, 'utf8')) as SavedGraph;
-    if (saved.version !== SAVED_VERSION || saved.ts !== typescriptVersion() || saved.config !== (await configStamp(this.workTree, saved.configs))) return;
+    const saved = JSON.parse(
+      await readFile(this.cacheFile, "utf8")
+    ) as SavedGraph;
+    if (
+      saved.version !== SAVED_VERSION ||
+      saved.ts !== typescriptVersion() ||
+      saved.config !== (await configStamp(this.workTree, saved.configs))
+    )
+      return;
     for (const config of saved.configs) this.configs.add(config);
-    const absolute = (file: string): string => path.resolve(this.workTree, file);
-    for (const [file, mtimeMs, size, deps] of saved.files) if (!this.files.has(absolute(file))) this.files.set(absolute(file), { mtimeMs, size, deps: deps.map(absolute) });
+    const absolute = (file: string): string =>
+      path.resolve(this.workTree, file);
+    for (const [file, mtimeMs, size, deps] of saved.files)
+      if (!this.files.has(absolute(file)))
+        this.files.set(absolute(file), {
+          mtimeMs,
+          size,
+          deps: deps.map(absolute),
+        });
   }
 
   usedConfig(file: string): void {
@@ -145,9 +208,23 @@ class WorkTreeGraph {
   async save(): Promise<void> {
     if (!this.cacheFile || !this.dirty) return;
     this.dirty = false;
-    const relative = (file: string): string => path.relative(this.workTree, file);
-    const files: SavedEntry[] = [...this.files.entries()].map(([file, deps]) => [relative(file), deps.mtimeMs, deps.size, deps.deps.map(relative)]);
-    const saved: SavedGraph = { version: SAVED_VERSION, ts: typescriptVersion(), config: await configStamp(this.workTree, this.configs), configs: [...this.configs], files };
+    const relative = (file: string): string =>
+      path.relative(this.workTree, file);
+    const files: SavedEntry[] = [...this.files.entries()].map(
+      ([file, deps]) => [
+        relative(file),
+        deps.mtimeMs,
+        deps.size,
+        deps.deps.map(relative),
+      ]
+    );
+    const saved: SavedGraph = {
+      version: SAVED_VERSION,
+      ts: typescriptVersion(),
+      config: await configStamp(this.workTree, this.configs),
+      configs: [...this.configs],
+      files,
+    };
     await mkdir(path.dirname(this.cacheFile), { recursive: true });
     const temp = `${this.cacheFile}.${process.pid}.tmp`;
     await writeFile(temp, JSON.stringify(saved));
@@ -169,8 +246,11 @@ export class RouteGraph {
   private graphFor(workTree: string): WorkTreeGraph {
     let graph = this.graphs.get(workTree);
     if (!graph) {
-      const name = `${createHash('sha1').update(workTree).digest('hex').slice(0, 16)}.json`;
-      graph = new WorkTreeGraph(workTree, this.cacheDir ? path.join(this.cacheDir, name) : null);
+      const name = `${createHash("sha1").update(workTree).digest("hex").slice(0, 16)}.json`;
+      graph = new WorkTreeGraph(
+        workTree,
+        this.cacheDir ? path.join(this.cacheDir, name) : null
+      );
       this.graphs.set(workTree, graph);
     }
     return graph;
@@ -187,19 +267,37 @@ export class RouteGraph {
 
   async edges(workTree: string, roots: string[]): Promise<ImportEdges> {
     const seen = await this.walk(workTree, roots, Infinity);
-    return [...(seen ?? new Map<string, FileDeps>()).entries()].map(([file, entry]) => [file, entry.deps]);
+    return [...(seen ?? new Map<string, FileDeps>()).entries()].map(
+      ([file, entry]) => [file, entry.deps]
+    );
   }
 
-  private async walk(workTree: string, roots: string[], cap = GRAPH_CAP): Promise<Map<string, FileDeps> | null> {
+  private async walk(
+    workTree: string,
+    roots: string[],
+    cap = GRAPH_CAP
+  ): Promise<Map<string, FileDeps> | null> {
     const graph = this.graphFor(workTree);
     await graph.ready();
-    const scope: WalkScope = { workTree, graph, options: new Map(), caches: new Map() };
+    const scope: WalkScope = {
+      workTree,
+      graph,
+      options: new Map(),
+      caches: new Map(),
+    };
     const seen = new Map<string, FileDeps>();
     let frontier = roots;
     while (frontier.length) {
       if (seen.size > cap) return null;
       const next: string[] = [];
-      const read = await Promise.all(frontier.filter((file) => !seen.has(file)).map(async (file) => [file, await this.depsOf(scope, graph, file)] as const));
+      const read = await Promise.all(
+        frontier
+          .filter((file) => !seen.has(file))
+          .map(
+            async (file) =>
+              [file, await this.depsOf(scope, graph, file)] as const
+          )
+      );
       for (const [file, deps] of read) {
         if (!deps || seen.has(file)) continue;
         seen.set(file, deps);
@@ -212,14 +310,23 @@ export class RouteGraph {
   }
 
   async flush(): Promise<void> {
-    await Promise.all([...this.graphs.values()].map((graph) => graph.flushNow().catch(() => undefined)));
+    await Promise.all(
+      [...this.graphs.values()].map((graph) =>
+        graph.flushNow().catch(() => undefined)
+      )
+    );
   }
 
-  private async depsOf(scope: WalkScope, graph: WorkTreeGraph, file: string): Promise<FileDeps | null> {
+  private async depsOf(
+    scope: WalkScope,
+    graph: WorkTreeGraph,
+    file: string
+  ): Promise<FileDeps | null> {
     const info = await stat(file).catch(() => null);
     if (!info?.isFile()) return null;
     const known = graph.files.get(file);
-    if (known && known.mtimeMs === info.mtimeMs && known.size === info.size) return known;
+    if (known && known.mtimeMs === info.mtimeMs && known.size === info.size)
+      return known;
     const deps = CODE_FILE.test(file) ? await this.imports(scope, file) : [];
     const entry = { mtimeMs: info.mtimeMs, size: info.size, deps };
     graph.remember(file, entry);
@@ -228,28 +335,37 @@ export class RouteGraph {
 
   private async imports(scope: WalkScope, file: string): Promise<string[]> {
     const ts = await loadTs();
-    const text = await readFile(file, 'utf8').catch(() => '');
-    const specs = ts.preProcessFile(text, true, true).importedFiles.map((ref) => ref.fileName);
+    const text = await readFile(file, "utf8").catch(() => "");
+    const specs = ts
+      .preProcessFile(text, true, true)
+      .importedFiles.map((ref) => ref.fileName);
     const options = optionsFor(ts, scope, file);
     const cache = resolutionCache(ts, scope, options);
     const out: string[] = [];
     for (const spec of specs) {
       if (STYLE_FILE.test(spec)) {
-        if (spec.startsWith('.')) out.push(path.resolve(path.dirname(file), spec));
+        if (spec.startsWith("."))
+          out.push(path.resolve(path.dirname(file), spec));
         continue;
       }
-      const resolved = ts.resolveModuleName(spec, file, options, ts.sys, cache).resolvedModule?.resolvedFileName;
-      if (resolved && !nodeModulesFile(resolved) && !resolved.endsWith('.d.ts')) out.push(path.resolve(resolved));
+      const resolved = ts.resolveModuleName(spec, file, options, ts.sys, cache)
+        .resolvedModule?.resolvedFileName;
+      if (resolved && !nodeModulesFile(resolved) && !resolved.endsWith(".d.ts"))
+        out.push(path.resolve(resolved));
     }
     return out;
   }
 }
 
-export async function answerGraph(graph: RouteGraph, request: GraphRequest): Promise<GraphReply> {
-  if (request.kind === 'flush') {
+export async function answerGraph(
+  graph: RouteGraph,
+  request: GraphRequest
+): Promise<GraphReply> {
+  if (request.kind === "flush") {
     await graph.flush();
     return null;
   }
-  if (request.kind === 'edges') return graph.edges(request.workTree, request.roots);
+  if (request.kind === "edges")
+    return graph.edges(request.workTree, request.roots);
   return graph.stamp(request.workTree, request.roots);
 }

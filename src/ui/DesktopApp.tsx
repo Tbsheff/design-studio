@@ -1,6 +1,10 @@
-import { useDesktopApp } from './useDesktopApp';
+import { useDesktopApp } from "./useDesktopApp";
 
-export default function DesktopApp({ activeProjectId }: { activeProjectId: string | null }) {
+export default function DesktopApp({
+  activeProjectId,
+}: {
+  activeProjectId: string | null;
+}) {
   const error = useDesktopApp(activeProjectId);
   return error ? (
     <div className="desktop-notice" role="alert">

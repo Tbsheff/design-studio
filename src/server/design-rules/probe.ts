@@ -1,9 +1,9 @@
-import { APP_SOURCE_PATH } from '../../shared/app.js';
-import { SOURCE_LOC_ATTR } from '../../shared/contracts.js';
+import { APP_SOURCE_PATH } from "../../shared/app.js";
+import { SOURCE_LOC_ATTR } from "../../shared/contracts.js";
 
 export interface ProbeRule {
   id: string;
-  kind: 'class' | 'font' | 'component';
+  kind: "class" | "font" | "component";
   selector?: string;
   classes?: string[][];
   families?: string[];
@@ -241,6 +241,9 @@ const RULES_PROBE = String.raw`async (input) => {
   return { hits, scanned };
 }`;
 
-export function rulesProbeExpression(input: { rules: ProbeRule[]; app: boolean }): string {
+export function rulesProbeExpression(input: {
+  rules: ProbeRule[];
+  app: boolean;
+}): string {
   return `(${RULES_PROBE})(${JSON.stringify(input)})`;
 }

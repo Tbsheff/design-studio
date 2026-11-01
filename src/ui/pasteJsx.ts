@@ -1,12 +1,32 @@
-import type { SelectionContext } from '../shared/contracts';
-import { looksLikeFigmaLink, looksLikeFigmaNodes } from '../shared/figma-nodes';
-import type { InsertTarget, JsxInsertPosition } from '../shared/insert';
-import { insertApi, insertError } from './componentInsert';
+import type { SelectionContext } from "../shared/contracts";
+import { looksLikeFigmaLink, looksLikeFigmaNodes } from "../shared/figma-nodes";
+import type { InsertTarget, JsxInsertPosition } from "../shared/insert";
+import { insertApi, insertError } from "./componentInsert";
 
-const VOID = new Set(['img', 'input', 'hr', 'br', 'textarea', 'select', 'meta', 'link', 'source', 'track', 'wbr', 'col', 'area', 'embed']);
+const VOID = new Set([
+  "img",
+  "input",
+  "hr",
+  "br",
+  "textarea",
+  "select",
+  "meta",
+  "link",
+  "source",
+  "track",
+  "wbr",
+  "col",
+  "area",
+  "embed",
+]);
 
 function targetOf(selection: SelectionContext): InsertTarget {
-  return { source: selection.source, tag: selection.tag.toLowerCase(), selector: selection.selector, ...(selection.owners?.length ? { owners: selection.owners } : {}) };
+  return {
+    source: selection.source,
+    tag: selection.tag.toLowerCase(),
+    selector: selection.selector,
+    ...(selection.owners?.length ? { owners: selection.owners } : {}),
+  };
 }
 
 async function clipboardText(): Promise<string | null> {
@@ -17,9 +37,18 @@ async function clipboardText(): Promise<string | null> {
   }
 }
 
-async function openFigmaImport(ids: { projectId: string; directionId: string }, selection: SelectionContext, text: string, notify: (message: string) => void): Promise<void> {
-  const [{ createElement }, { createRoot }, dialog] = await Promise.all([import('react'), import('react-dom/client'), import('./components/FigmaImportDialog')]);
-  const host = document.createElement('div');
+async function openFigmaImport(
+  ids: { projectId: string; directionId: string },
+  selection: SelectionContext,
+  text: string,
+  notify: (message: string) => void
+): Promise<void> {
+  const [{ createElement }, { createRoot }, dialog] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+    import("./components/FigmaImportDialog"),
+  ]);
+  const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
   const close = () => {
@@ -28,19 +57,47 @@ async function openFigmaImport(ids: { projectId: string; directionId: string }, 
       host.remove();
     });
   };
-  root.render(createElement(dialog.default, { ids, target: targetOf(selection), text, canNest: !VOID.has(selection.tag.toLowerCase()), onDone: notify, onClose: close }));
+  root.render(
+    createElement(dialog.default, {
+      ids,
+      target: targetOf(selection),
+      text,
+      canNest: !VOID.has(selection.tag.toLowerCase()),
+      onDone: notify,
+      onClose: close,
+    })
+  );
 }
 
-export async function pasteJsx(ids: { projectId: string; directionId: string }, selection: SelectionContext, notify: (message: string) => void): Promise<void> {
+export async function pasteJsx(
+  ids: { projectId: string; directionId: string },
+  selection: SelectionContext,
+  notify: (message: string) => void
+): Promise<void> {
   const jsx = (await clipboardText())?.trim();
-  if (jsx === undefined) return notify('The studio cannot read the clipboard. Allow clipboard access, then try again.');
-  if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx)) return openFigmaImport(ids, selection, jsx, notify);
-  if (!jsx.startsWith('<')) return notify('The clipboard has no JSX. Copy a snippet such as <Card>…</Card> or Figma nodes JSON, then try again.');
-  const position: JsxInsertPosition = VOID.has(selection.tag.toLowerCase()) ? 'after' : 'inside';
+  if (jsx === undefined)
+    return notify(
+      "The studio cannot read the clipboard. Allow clipboard access, then try again."
+    );
+  if (looksLikeFigmaNodes(jsx) || looksLikeFigmaLink(jsx))
+    return openFigmaImport(ids, selection, jsx, notify);
+  if (!jsx.startsWith("<"))
+    return notify(
+      "The clipboard has no JSX. Copy a snippet such as <Card>…</Card> or Figma nodes JSON, then try again."
+    );
+  const position: JsxInsertPosition = VOID.has(selection.tag.toLowerCase())
+    ? "after"
+    : "inside";
   try {
-    const result = await insertApi.insertJsx(ids.projectId, ids.directionId, { target: targetOf(selection), position, jsx });
+    const result = await insertApi.insertJsx(ids.projectId, ids.directionId, {
+      target: targetOf(selection),
+      position,
+      jsx,
+    });
     const added = result.imports.filter((item) => item.added).length;
-    notify(`${result.title}${added > 0 ? `, ${added} import${added === 1 ? '' : 's'} added` : ''}.`);
+    notify(
+      `${result.title}${added > 0 ? `, ${added} import${added === 1 ? "" : "s"} added` : ""}.`
+    );
   } catch (error) {
     notify(insertError(error));
   }

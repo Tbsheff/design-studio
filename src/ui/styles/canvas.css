@@ -23,7 +23,9 @@
   border-radius: var(--r-lg);
   background: var(--warn-soft);
   color: var(--warn);
-  box-shadow: inset 0 0 0 1px var(--warn-line), var(--shadow-md);
+  box-shadow:
+    inset 0 0 0 1px var(--warn-line),
+    var(--shadow-md);
   font-weight: 500;
   animation: fade-in var(--dur-slow) var(--ease);
 }
@@ -158,7 +160,7 @@
   margin-right: -4px;
 }
 
-.select-toggle[aria-pressed='true'] kbd {
+.select-toggle[aria-pressed="true"] kbd {
   color: var(--accent-text);
   box-shadow: inset 0 0 0 1px var(--accent-line);
   background: transparent;
@@ -359,7 +361,10 @@ body.element-resizing .frame {
 
 .pane-canvas:has(> .banner) .review-panel {
   top: calc(var(--bar-h) + 8px + var(--viewrow-h, 0px) + var(--banner-h));
-  max-height: min(640px, calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px) - var(--banner-h)));
+  max-height: min(
+    640px,
+    calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px) - var(--banner-h))
+  );
 }
 
 .pane-canvas:has(> .banner) .draw-bar {
@@ -500,7 +505,7 @@ body.element-resizing .frame {
 }
 
 .compare-handle::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -644,7 +649,7 @@ body.element-resizing .frame {
   gap: 2px;
 }
 
-.layers-tools [aria-disabled='true'] {
+.layers-tools [aria-disabled="true"] {
   opacity: 0.5;
 }
 
@@ -654,7 +659,7 @@ body.element-resizing .frame {
 }
 
 .layers-tools .layers-delete::before {
-  content: '';
+  content: "";
   position: absolute;
   left: calc(-1 * var(--s-1) - 1px);
   top: 50%;
@@ -664,7 +669,7 @@ body.element-resizing .frame {
   background: var(--line);
 }
 
-.layers-tools .layers-delete:not([aria-disabled='true']):hover {
+.layers-tools .layers-delete:not([aria-disabled="true"]):hover {
   background: var(--danger-tint);
   color: var(--danger);
 }
@@ -829,7 +834,7 @@ body.element-resizing .frame {
 }
 
 .layers-twisty::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -6px;
 }
@@ -877,7 +882,7 @@ body.element-resizing .frame {
 }
 
 .layers-eye::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
 }
@@ -990,7 +995,7 @@ body.element-resizing .frame {
 }
 
 .resize-handle::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -6px;
 }
@@ -1109,7 +1114,7 @@ body.element-resizing .frame {
 
 .snap-gap::before,
 .snap-gap::after {
-  content: '';
+  content: "";
 }
 
 .snap-gap.x::before,

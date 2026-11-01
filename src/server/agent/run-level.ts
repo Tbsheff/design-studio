@@ -1,8 +1,8 @@
-import type { RunLevel, RunMode } from '../../shared/contracts.js';
-import { PORT_LEVEL_LABEL, PORT_TASK } from '../../shared/port.js';
-import type { ResolvedRunConfig } from '../../shared/run-levels.js';
-import { PORT_RULES } from './prompt.js';
-import type { UserMessageParts } from './user-message.js';
+import type { RunLevel, RunMode } from "../../shared/contracts.js";
+import { PORT_LEVEL_LABEL, PORT_TASK } from "../../shared/port.js";
+import type { ResolvedRunConfig } from "../../shared/run-levels.js";
+import { PORT_RULES } from "./prompt.js";
+import type { UserMessageParts } from "./user-message.js";
 
 const TWEAKS_STEP = `Tweaks: call \`mcp__studio__define_tweaks\` with 3 to 8 controls for the most useful knobs of this design (spacing scale, accent hue, corner radius, density, base font size, a layout toggle). Each cssVar must be declared once in a top-level \`:root\` rule with its default value (design-system tokens are already declared in tokens.css) and used with var() by the rules it changes; add the declarations and var() uses with Edit first. Keep controls that already exist unless they no longer fit.`;
 
@@ -52,7 +52,7 @@ function finishStep(context: RunLevelContext): string {
 }
 
 function appLine(context: RunLevelContext): string {
-  return isApp(context) ? `\n- ${APP_STEP}` : '';
+  return isApp(context) ? `\n- ${APP_STEP}` : "";
 }
 
 function wireframeEdit(context: RunLevelContext): string {
@@ -82,7 +82,7 @@ REQUIRED steps, in this order. Do not skip one:
 9. After your LAST edit, run render_check once more. This final check is mandatory.`;
 }
 
-const POLISH_BUDGET_STOP = ', or when less than 20% of the budget is left';
+const POLISH_BUDGET_STOP = ", or when less than 20% of the budget is left";
 
 function polishEdit(context: RunLevelContext): string {
   return `Level: POLISH. Goal: a finished, distinctive design. Be thorough and honest.
@@ -103,9 +103,12 @@ REQUIRED steps, in this order. Do not skip one:
 }
 
 const CRITIQUE_SCOPE: Record<RunLevel, string> = {
-  wireframe: 'Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.',
-  prototype: 'Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.',
-  polish: 'Level: POLISH critique. Call render_check (390, 768, 1440 px), screenshot mobile, tablet and desktop from=0, and design_review. Report every high and medium issue with a concrete fix.',
+  wireframe:
+    "Level: WIREFRAME critique. Cover structure only: sections, order, hierarchy, labels, the main flow and mobile layout. Skip color, type and polish. Call render_check once; no screenshots needed.",
+  prototype:
+    "Level: PROTOTYPE critique. Call render_check, then screenshot mobile from=0 and desktop from=0 (and each screen it lists, with screen=<number>), then design_review once. Report the three to six most important issues.",
+  polish:
+    "Level: POLISH critique. Call render_check (390, 768, 1440 px), screenshot mobile, tablet and desktop from=0, and design_review. Report every high and medium issue with a concrete fix.",
 };
 
 const STOP_RULE = `Stop when there are no high findings, when the fix loops above are used up, or when the budget line in a tool result says less than 20% is left.`;
@@ -113,11 +116,15 @@ const STOP_RULE_NO_LIMIT = `Stop when there are no high findings or when the fix
 
 const REPLY_RULE = `Final reply: one to three sentences on the result, then list the checks you ran (render_check, screenshots, design_review) and every finding you did not fix. Be honest: never say a check passed if you did not run it after your last edit.`;
 
-function editBody(level: RunLevel, limited: boolean, context: RunLevelContext): string {
-  if (level === 'wireframe') return wireframeEdit(context);
-  if (level === 'polish') {
+function editBody(
+  level: RunLevel,
+  limited: boolean,
+  context: RunLevelContext
+): string {
+  if (level === "wireframe") return wireframeEdit(context);
+  if (level === "polish") {
     const body = polishEdit(context);
-    return `${limited ? body : body.replace(POLISH_BUDGET_STOP, '')}\n- ${REPLY_RULE}`;
+    return `${limited ? body : body.replace(POLISH_BUDGET_STOP, "")}\n- ${REPLY_RULE}`;
   }
   return `${prototypeEdit(context)}\n- ${limited ? STOP_RULE : STOP_RULE_NO_LIMIT}\n- ${REPLY_RULE}`;
 }
@@ -135,21 +142,38 @@ REQUIRED steps, in this order:
 
 function taskBody(config: ResolvedRunConfig): string | null {
   if (config.task === PORT_TASK) return PORT_STEPS;
-  if (config.task === 'tweaks') return TWEAKS_TASK;
-  if (config.task === 'design-system') return DESIGN_SYSTEM_TASK;
+  if (config.task === "tweaks") return TWEAKS_TASK;
+  if (config.task === "design-system") return DESIGN_SYSTEM_TASK;
   return null;
 }
 
 function budgetLine(config: ResolvedRunConfig): string {
-  if (config.maxBudgetUsd === null) return `No spending limit for this run; at most ${config.maxTurns} turns.`;
+  if (config.maxBudgetUsd === null)
+    return `No spending limit for this run; at most ${config.maxTurns} turns.`;
   return `Budget for this run: $${config.maxBudgetUsd.toFixed(2)}, at most ${config.maxTurns} turns.`;
 }
 
-export function buildRunLevelBlock(config: ResolvedRunConfig, mode: RunMode, context: RunLevelContext = {}): string {
-  const body = mode === 'critique' ? CRITIQUE_SCOPE[config.level] : taskBody(config) ?? editBody(config.level, config.maxBudgetUsd !== null, context);
+export function buildRunLevelBlock(
+  config: ResolvedRunConfig,
+  mode: RunMode,
+  context: RunLevelContext = {}
+): string {
+  const body =
+    mode === "critique"
+      ? CRITIQUE_SCOPE[config.level]
+      : (taskBody(config) ??
+        editBody(config.level, config.maxBudgetUsd !== null, context));
   return `<run-level>\n${body}\n${budgetLine(config)}\n</run-level>`;
 }
 
-export function withRunLevel(parts: UserMessageParts, config: ResolvedRunConfig, mode: RunMode, context: RunLevelContext = {}): UserMessageParts {
-  return { ...parts, text: `${buildRunLevelBlock(config, mode, context)}\n\n${parts.text}` };
+export function withRunLevel(
+  parts: UserMessageParts,
+  config: ResolvedRunConfig,
+  mode: RunMode,
+  context: RunLevelContext = {}
+): UserMessageParts {
+  return {
+    ...parts,
+    text: `${buildRunLevelBlock(config, mode, context)}\n\n${parts.text}`,
+  };
 }

@@ -1,4 +1,4 @@
-export type FoundAppKind = 'next' | 'vite' | 'html';
+export type FoundAppKind = "next" | "vite" | "html";
 
 export interface FoundApp {
   path: string;
@@ -17,7 +17,12 @@ export interface FoundApps {
   scannedAt: number;
 }
 
-export type AppHealthState = 'ready' | 'install' | 'building' | 'failed' | 'static';
+export type AppHealthState =
+  | "ready"
+  | "install"
+  | "building"
+  | "failed"
+  | "static";
 
 export interface AppHealth {
   projectId: string;
@@ -27,4 +32,8 @@ export interface AppHealth {
   command: string | null;
 }
 
-export const FOUND_KIND_LABEL: Record<FoundAppKind, string> = { next: 'Next.js', vite: 'Vite', html: 'HTML' };
+export const FOUND_KIND_LABEL: Record<FoundAppKind, string> = {
+  next: "Next.js",
+  vite: "Vite",
+  html: "HTML",
+};

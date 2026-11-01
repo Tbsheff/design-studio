@@ -1,11 +1,12 @@
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
-import type { PackSummary } from '../../shared/contracts';
-import { findPack, keySwatches, type PacksState } from '../packs';
-import { usePopover } from '../usePopover';
-import { Icon } from './Icon';
-import { Swatches } from './Swatches';
+import { lazy, Suspense, useCallback, useRef, useState } from "react";
 
-const loadList = () => import('./PackList');
+import type { PackSummary } from "../../shared/contracts";
+import { findPack, keySwatches, type PacksState } from "../packs";
+import { usePopover } from "../usePopover";
+import { Icon } from "./Icon";
+import { Swatches } from "./Swatches";
+
+const loadList = () => import("./PackList");
 const PackList = lazy(() => loadList().then((m) => ({ default: m.PackList })));
 
 interface Props {
@@ -54,11 +55,13 @@ export function PackPicker({ state, value, onChange, onNew }: Props) {
       <button
         ref={trigger}
         type="button"
-        className={`btn ghost small pack-trigger ${selected ? 'chosen' : ''}`}
+        className={`btn ghost small pack-trigger ${selected ? "chosen" : ""}`}
         aria-label="Design system"
         aria-haspopup="listbox"
         aria-expanded={open}
-        data-tip={selected ? `Design system: ${selected.name}` : 'Design system'}
+        data-tip={
+          selected ? `Design system: ${selected.name}` : "Design system"
+        }
         onPointerEnter={() => void loadList()}
         onFocus={() => void loadList()}
         onClick={() => (open ? close(false) : setOpen(true))}
@@ -70,15 +73,32 @@ export function PackPicker({ state, value, onChange, onNew }: Props) {
         <div className="pack-popover" role="presentation">
           <div className="pack-popover-head">
             <strong>Design system</strong>
-            <span>Tokens, fonts and a DESIGN.md go into the project. The agent builds with them.</span>
+            <span>
+              Tokens, fonts and a DESIGN.md go into the project. The agent
+              builds with them.
+            </span>
           </div>
-          {state.error && <div className="alert error small">Could not load design systems. {state.error}</div>}
+          {state.error && (
+            <div className="alert error small">
+              Could not load design systems. {state.error}
+            </div>
+          )}
           <Suspense fallback={null}>
-            <PackList packs={state.packs} value={value} includeNone onChoose={choose} onTab={() => setOpen(false)} />
+            <PackList
+              packs={state.packs}
+              value={value}
+              includeNone
+              onChoose={choose}
+              onTab={() => setOpen(false)}
+            />
           </Suspense>
           {onNew && (
             <div className="pack-popover-foot">
-              <button type="button" className="btn ghost small has-icon" onClick={onNew}>
+              <button
+                type="button"
+                className="btn ghost small has-icon"
+                onClick={onNew}
+              >
                 <Icon name="plus" size={14} />
                 New design system…
               </button>

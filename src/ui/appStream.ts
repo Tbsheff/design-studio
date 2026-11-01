@@ -1,30 +1,40 @@
-import { APP_STREAM_PATH, STREAM_APPROVALS, STREAM_HELLO, type StreamHello, type StreamWatchRequest } from '../shared/app-stream';
-import type { McpApprovalPoll } from '../shared/export';
-import { json } from './api';
-import { EVENT_TYPES, type ConnectionState, type EventSourceLike } from './eventHub';
-import { getSession } from './session';
+import {
+  APP_STREAM_PATH,
+  STREAM_APPROVALS,
+  STREAM_HELLO,
+  type StreamHello,
+  type StreamWatchRequest,
+} from "../shared/app-stream";
+import type { McpApprovalPoll } from "../shared/export";
+import { json } from "./api";
+import {
+  EVENT_TYPES,
+  type ConnectionState,
+  type EventSourceLike,
+} from "./eventHub";
+import { getSession } from "./session";
 
 type Wants = Record<string, number>;
 
 type Wire =
-  | { t: 'want'; tab: string; wants: Wants }
-  | { t: 'bye'; tab: string }
-  | { t: 'hello' }
-  | { t: 'ev'; type: string; pid: string; seq: number; data: string }
-  | { t: 'state'; state: ConnectionState }
-  | { t: 'approvals'; poll: McpApprovalPoll };
+  | { t: "want"; tab: string; wants: Wants }
+  | { t: "bye"; tab: string }
+  | { t: "hello" }
+  | { t: "ev"; type: string; pid: string; seq: number; data: string }
+  | { t: "state"; state: ConnectionState }
+  | { t: "approvals"; poll: McpApprovalPoll };
 
-const CHANNEL = 'design-studio-stream';
-const LEADER_LOCK = 'design-studio-stream-leader';
-const TAB_LOCK = 'design-studio-tab-';
+const CHANNEL = "design-studio-stream";
+const LEADER_LOCK = "design-studio-stream-leader";
+const TAB_LOCK = "design-studio-tab-";
 const REOPEN_MS = 2000;
 const GAP_MS = 2000;
 const GAP_MAX = 2000;
 
 class VirtualSource implements EventSourceLike {
-  onopen: EventSourceLike['onopen'] = null;
-  onmessage: EventSourceLike['onmessage'] = null;
-  onerror: EventSourceLike['onerror'] = null;
+  onopen: EventSourceLike["onopen"] = null;
+  onmessage: EventSourceLike["onmessage"] = null;
+  onerror: EventSourceLike["onerror"] = null;
   opened = false;
   closed = false;
   private readonly typed = new Map<string, Set<EventListener>>();
@@ -34,7 +44,7 @@ class VirtualSource implements EventSourceLike {
   constructor(
     readonly projectId: string,
     public delivered: number,
-    private readonly onClose: (source: VirtualSource) => void,
+    private readonly onClose: (source: VirtualSource) => void
   ) {}
 
   addEventListener(type: string, listener: EventListener): void {
@@ -54,12 +64,12 @@ class VirtualSource implements EventSourceLike {
   open(): void {
     if (this.closed || this.opened) return;
     this.opened = true;
-    this.onopen?.call(this as unknown as EventSource, new Event('open'));
+    this.onopen?.call(this as unknown as EventSource, new Event("open"));
   }
 
   fail(): void {
     if (this.closed) return;
-    this.onerror?.call(this as unknown as EventSource, new Event('error'));
+    this.onerror?.call(this as unknown as EventSource, new Event("error"));
   }
 
   deliver(type: string, seq: number, data: string): void {
@@ -76,7 +86,11 @@ class VirtualSource implements EventSourceLike {
   }
 
   private drain(): void {
-    for (let next = this.held.get(this.delivered + 1); next; next = this.held.get(this.delivered + 1)) {
+    for (
+      let next = this.held.get(this.delivered + 1);
+      next;
+      next = this.held.get(this.delivered + 1)
+    ) {
       this.held.delete(this.delivered + 1);
       this.emit(next.type, this.delivered + 1, next.data);
     }
@@ -90,7 +104,8 @@ class VirtualSource implements EventSourceLike {
     this.gapTimer = undefined;
     const waiting = [...this.held.entries()].sort(([a], [b]) => a - b);
     this.held.clear();
-    for (const [seq, item] of waiting) if (seq > this.delivered) this.emit(item.type, seq, item.data);
+    for (const [seq, item] of waiting)
+      if (seq > this.delivered) this.emit(item.type, seq, item.data);
   }
 
   private emit(type: string, seq: number, data: string): void {
@@ -103,10 +118,21 @@ class VirtualSource implements EventSourceLike {
   }
 }
 
-function eventHead(data: string): { pid: string; seq: number; type: string } | null {
+function eventHead(
+  data: string
+): { pid: string; seq: number; type: string } | null {
   try {
-    const event = JSON.parse(data) as { projectId?: unknown; seq?: unknown; type?: unknown };
-    if (typeof event.projectId !== 'string' || typeof event.seq !== 'number' || typeof event.type !== 'string') return null;
+    const event = JSON.parse(data) as {
+      projectId?: unknown;
+      seq?: unknown;
+      type?: unknown;
+    };
+    if (
+      typeof event.projectId !== "string" ||
+      typeof event.seq !== "number" ||
+      typeof event.type !== "string"
+    )
+      return null;
     return { pid: event.projectId, seq: event.seq, type: event.type };
   } catch {
     return null;
@@ -116,7 +142,7 @@ function eventHead(data: string): { pid: string; seq: number; type: string } | n
 class Tab {
   readonly id = Math.random().toString(36).slice(2) + Date.now().toString(36);
   readonly sources = new Set<VirtualSource>();
-  state: ConnectionState = 'connecting';
+  state: ConnectionState = "connecting";
   approvals: McpApprovalPoll | null = null;
   readonly approvalListeners = new Set<(poll: McpApprovalPoll) => void>();
   private announcing = false;
@@ -130,13 +156,17 @@ class Tab {
     });
     this.sources.add(source);
     this.changed();
-    if (this.state === 'open') queueMicrotask(() => source.open());
+    if (this.state === "open") queueMicrotask(() => source.open());
     return source;
   }
 
   wants(): Wants {
     const out: Wants = {};
-    for (const source of this.sources) out[source.projectId] = Math.min(out[source.projectId] ?? Number.MAX_SAFE_INTEGER, source.delivered);
+    for (const source of this.sources)
+      out[source.projectId] = Math.min(
+        out[source.projectId] ?? Number.MAX_SAFE_INTEGER,
+        source.delivered
+      );
     return out;
   }
 
@@ -150,15 +180,16 @@ class Tab {
   }
 
   deliver(type: string, pid: string, seq: number, data: string): void {
-    for (const source of [...this.sources]) if (source.projectId === pid) source.deliver(type, seq, data);
+    for (const source of [...this.sources])
+      if (source.projectId === pid) source.deliver(type, seq, data);
   }
 
   setState(state: ConnectionState): void {
     if (this.state === state) return;
     this.state = state;
     for (const source of [...this.sources]) {
-      if (state === 'open') source.open();
-      else if (state === 'reconnecting') source.fail();
+      if (state === "open") source.open();
+      else if (state === "reconnecting") source.fail();
     }
   }
 
@@ -179,11 +210,11 @@ class Leader {
 
   constructor(
     private readonly tab: Tab,
-    private readonly channel: BroadcastChannel | null,
+    private readonly channel: BroadcastChannel | null
   ) {}
 
   start(): void {
-    this.post({ t: 'hello' });
+    this.post({ t: "hello" });
     this.update(this.tab.id, this.tab.wants());
     this.open();
   }
@@ -196,7 +227,8 @@ class Leader {
     for (const [pid, after] of Object.entries(wants)) {
       const pos = this.watched.get(pid);
       const fresh = prev?.[pid] === undefined || after < (prev[pid] ?? 0);
-      if (pos === undefined || (fresh && after < pos)) this.queueWatch(pid, after);
+      if (pos === undefined || (fresh && after < pos))
+        this.queueWatch(pid, after);
     }
     this.collectUnused();
     this.scheduleFlush();
@@ -209,8 +241,9 @@ class Leader {
   }
 
   private replayStatus(): void {
-    this.post({ t: 'state', state: this.tab.state });
-    if (this.tab.approvals) this.post({ t: 'approvals', poll: this.tab.approvals });
+    this.post({ t: "state", state: this.tab.state });
+    if (this.tab.approvals)
+      this.post({ t: "approvals", poll: this.tab.approvals });
   }
 
   private post(message: Wire): void {
@@ -221,16 +254,23 @@ class Leader {
     const url = `${APP_STREAM_PATH}?token=${encodeURIComponent(getSession().token)}`;
     const es = new EventSource(url);
     this.es = es;
-    es.addEventListener(STREAM_HELLO, (msg) => this.hello(JSON.parse((msg as MessageEvent<string>).data) as StreamHello));
-    es.addEventListener(STREAM_APPROVALS, (msg) => this.approvals(JSON.parse((msg as MessageEvent<string>).data) as McpApprovalPoll));
-    const onEvent = (msg: Event) => this.event((msg as MessageEvent<string>).data);
+    es.addEventListener(STREAM_HELLO, (msg) =>
+      this.hello(JSON.parse((msg as MessageEvent<string>).data) as StreamHello)
+    );
+    es.addEventListener(STREAM_APPROVALS, (msg) =>
+      this.approvals(
+        JSON.parse((msg as MessageEvent<string>).data) as McpApprovalPoll
+      )
+    );
+    const onEvent = (msg: Event) =>
+      this.event((msg as MessageEvent<string>).data);
     for (const type of EVENT_TYPES) es.addEventListener(type, onEvent);
     es.onerror = () => this.lost(es);
   }
 
   private lost(es: EventSource): void {
     this.sid = null;
-    this.setState('reconnecting');
+    this.setState("reconnecting");
     if (es.readyState !== EventSource.CLOSED) return;
     es.close();
     window.setTimeout(() => {
@@ -244,40 +284,47 @@ class Leader {
     this.watched.clear();
     this.pendingUnwatch.clear();
     this.pendingWatch = {};
-    for (const wants of this.tabs.values()) for (const [pid, after] of Object.entries(wants)) this.queueWatch(pid, seen.get(pid) ?? after);
+    for (const wants of this.tabs.values())
+      for (const [pid, after] of Object.entries(wants))
+        this.queueWatch(pid, seen.get(pid) ?? after);
     this.scheduleFlush();
-    this.setState('open');
-    this.post({ t: 'hello' });
+    this.setState("open");
+    this.post({ t: "hello" });
     void this.pruneDeadTabs();
   }
 
   private setState(state: ConnectionState): void {
     this.tab.setState(state);
-    this.post({ t: 'state', state });
+    this.post({ t: "state", state });
   }
 
   private approvals(poll: McpApprovalPoll): void {
     this.tab.setApprovals(poll);
-    this.post({ t: 'approvals', poll });
+    this.post({ t: "approvals", poll });
   }
 
   private event(data: string): void {
     const head = eventHead(data);
     if (!head) return;
-    if (head.seq > (this.watched.get(head.pid) ?? 0)) this.watched.set(head.pid, head.seq);
+    if (head.seq > (this.watched.get(head.pid) ?? 0))
+      this.watched.set(head.pid, head.seq);
     this.tab.deliver(head.type, head.pid, head.seq, data);
-    this.post({ t: 'ev', type: head.type, pid: head.pid, seq: head.seq, data });
+    this.post({ t: "ev", type: head.type, pid: head.pid, seq: head.seq, data });
   }
 
   private queueWatch(pid: string, after: number): void {
-    this.pendingWatch[pid] = Math.min(this.pendingWatch[pid] ?? Number.MAX_SAFE_INTEGER, after);
+    this.pendingWatch[pid] = Math.min(
+      this.pendingWatch[pid] ?? Number.MAX_SAFE_INTEGER,
+      after
+    );
     this.pendingUnwatch.delete(pid);
     if (!this.watched.has(pid)) this.watched.set(pid, after);
   }
 
   private collectUnused(): void {
     const wanted = new Set<string>();
-    for (const wants of this.tabs.values()) for (const pid of Object.keys(wants)) wanted.add(pid);
+    for (const wants of this.tabs.values())
+      for (const pid of Object.keys(wants)) wanted.add(pid);
     for (const pid of this.watched.keys()) {
       if (wanted.has(pid)) continue;
       this.watched.delete(pid);
@@ -298,18 +345,26 @@ class Leader {
     const sid = this.sid;
     const watch = this.pendingWatch;
     const unwatch = [...this.pendingUnwatch];
-    if (!sid || (Object.keys(watch).length === 0 && unwatch.length === 0)) return;
+    if (!sid || (Object.keys(watch).length === 0 && unwatch.length === 0))
+      return;
     this.pendingWatch = {};
     this.pendingUnwatch.clear();
     const body: StreamWatchRequest = { watch, unwatch };
-    json('POST', `${APP_STREAM_PATH}/${encodeURIComponent(sid)}`, body).catch((error: unknown) => console.warn('[stream] watch failed', error));
+    json("POST", `${APP_STREAM_PATH}/${encodeURIComponent(sid)}`, body).catch(
+      (error: unknown) => console.warn("[stream] watch failed", error)
+    );
   }
 
   private async pruneDeadTabs(): Promise<void> {
     if (!this.channel || !navigator.locks) return;
     const state = await navigator.locks.query();
-    const live = new Set((state.held ?? []).map((lock) => lock.name).filter((name): name is string => !!name?.startsWith(TAB_LOCK)));
-    for (const tab of [...this.tabs.keys()]) if (tab !== this.tab.id && !live.has(TAB_LOCK + tab)) this.drop(tab);
+    const live = new Set(
+      (state.held ?? [])
+        .map((lock) => lock.name)
+        .filter((name): name is string => !!name?.startsWith(TAB_LOCK))
+    );
+    for (const tab of [...this.tabs.keys()])
+      if (tab !== this.tab.id && !live.has(TAB_LOCK + tab)) this.drop(tab);
   }
 }
 
@@ -320,48 +375,60 @@ interface AppStream {
 
 function follow(tab: Tab, message: Wire, leader: Leader | null): void {
   switch (message.t) {
-    case 'ev':
-      if (!leader) tab.deliver(message.type, message.pid, message.seq, message.data);
+    case "ev":
+      if (!leader)
+        tab.deliver(message.type, message.pid, message.seq, message.data);
       return;
-    case 'state':
+    case "state":
       if (!leader) tab.setState(message.state);
       return;
-    case 'approvals':
+    case "approvals":
       if (!leader) tab.setApprovals(message.poll);
       return;
-    case 'hello':
+    case "hello":
       if (!leader) tab.changed();
       return;
-    case 'want':
+    case "want":
       leader?.update(message.tab, message.wants);
       return;
-    case 'bye':
+    case "bye":
       leader?.drop(message.tab);
   }
 }
 
 function startStream(): AppStream {
-  const shared = typeof BroadcastChannel !== 'undefined' && typeof navigator !== 'undefined' && !!navigator.locks;
+  const shared =
+    typeof BroadcastChannel !== "undefined" &&
+    typeof navigator !== "undefined" &&
+    !!navigator.locks;
   const channel = shared ? new BroadcastChannel(CHANNEL) : null;
   let leader: Leader | null = null;
   const tab = new Tab((wants) => {
     if (leader) leader.update(tab.id, wants);
-    else channel?.postMessage({ t: 'want', tab: tab.id, wants } satisfies Wire);
+    else channel?.postMessage({ t: "want", tab: tab.id, wants } satisfies Wire);
   });
   const lead = () => {
     leader = new Leader(tab, channel);
     leader.start();
   };
   if (channel) {
-    channel.onmessage = (msg: MessageEvent<Wire>) => follow(tab, msg.data, leader);
-    void navigator.locks.request(TAB_LOCK + tab.id, () => new Promise<void>(() => undefined));
+    channel.onmessage = (msg: MessageEvent<Wire>) =>
+      follow(tab, msg.data, leader);
+    void navigator.locks.request(
+      TAB_LOCK + tab.id,
+      () => new Promise<void>(() => undefined)
+    );
     void navigator.locks.request(LEADER_LOCK, () => {
       lead();
       return new Promise<void>(() => undefined);
     });
-    window.addEventListener('pagehide', () => {
-      if (leader) channel.postMessage({ t: 'state', state: 'reconnecting' } satisfies Wire);
-      else channel.postMessage({ t: 'bye', tab: tab.id } satisfies Wire);
+    window.addEventListener("pagehide", () => {
+      if (leader)
+        channel.postMessage({
+          t: "state",
+          state: "reconnecting",
+        } satisfies Wire);
+      else channel.postMessage({ t: "bye", tab: tab.id } satisfies Wire);
     });
     tab.changed();
   } else {

@@ -1,4 +1,8 @@
-import type { ClassDelta, DomPatch, OptimisticOutcome } from '../shared/contracts.js';
+import type {
+  ClassDelta,
+  DomPatch,
+  OptimisticOutcome,
+} from "../shared/contracts.js";
 
 type StyledElement = HTMLElement | SVGElement;
 
@@ -14,11 +18,18 @@ export interface Released {
 }
 
 export interface OptimisticDeps {
-  report: (id: string, outcome: OptimisticOutcome, ms: number, reason?: string) => void;
+  report: (
+    id: string,
+    outcome: OptimisticOutcome,
+    ms: number,
+    reason?: string
+  ) => void;
   styleKeys: ReadonlySet<string>;
   release: (element: StyledElement, props: string[], text: boolean) => Released;
   previewing: (element: Element) => boolean;
-  sourceOf: (element: Element) => Promise<{ own: string | null; usedAt: string | null }>;
+  sourceOf: (
+    element: Element
+  ) => Promise<{ own: string | null; usedAt: string | null }>;
 }
 
 interface Spec {
@@ -44,7 +55,7 @@ interface Entry {
   patch: DomPatch;
   spec: Spec;
   hold: Hold | null;
-  state: 'pending' | 'written';
+  state: "pending" | "written";
   startedAt: number;
   writtenAt: number;
   sawChange: boolean;
@@ -53,7 +64,12 @@ interface Entry {
 
 export interface Optimistic {
   apply(id: string, patch: DomPatch, written: boolean): void;
-  settle(id: string, ok: boolean, classes: ClassDelta | undefined, reason: string | undefined): void;
+  settle(
+    id: string,
+    ok: boolean,
+    classes: ClassDelta | undefined,
+    reason: string | undefined
+  ): void;
   drop(): void;
 }
 
@@ -79,7 +95,12 @@ function query(selector: string): Element | null {
 
 function cleanClasses(list: unknown): string[] {
   if (!Array.isArray(list)) return [];
-  return list.filter((name): name is string => typeof name === 'string' && CLASS_NAME.test(name)).slice(0, MAX_CLASSES);
+  return list
+    .filter(
+      (name): name is string =>
+        typeof name === "string" && CLASS_NAME.test(name)
+    )
+    .slice(0, MAX_CLASSES);
 }
 
 function emptySpec(): Spec {
@@ -89,10 +110,15 @@ function emptySpec(): Spec {
 function specOf(patch: DomPatch, keys: ReadonlySet<string>): Spec {
   const spec = emptySpec();
   for (const [prop, value] of Object.entries(patch.style ?? {})) {
-    if (keys.has(prop) && (value === null || (typeof value === 'string' && value.length <= 200))) spec.style.set(prop, value);
+    if (
+      keys.has(prop) &&
+      (value === null || (typeof value === "string" && value.length <= 200))
+    )
+      spec.style.set(prop, value);
   }
   mergeClasses(spec, patch.classes);
-  if (typeof patch.text === 'string' && patch.text.length <= MAX_TEXT) spec.text = patch.text;
+  if (typeof patch.text === "string" && patch.text.length <= MAX_TEXT)
+    spec.text = patch.text;
   return spec;
 }
 
@@ -114,21 +140,35 @@ function soleTextNode(element: Element): Text | null {
 }
 
 function newHold(element: StyledElement): Hold {
-  return { element, props: new Map(), expected: new Map(), hadAttribute: element.hasAttribute('style'), addedByUs: new Set(), removedByUs: new Set(), textNode: null, textOriginal: null };
+  return {
+    element,
+    props: new Map(),
+    expected: new Map(),
+    hadAttribute: element.hasAttribute("style"),
+    addedByUs: new Set(),
+    removedByUs: new Set(),
+    textNode: null,
+    textOriginal: null,
+  };
 }
 
 function adoptPreview(hold: Hold, released: Released): void {
   if (released.hadAttribute !== null) hold.hadAttribute = released.hadAttribute;
-  for (const [prop, backup] of released.props) if (!hold.props.has(prop)) hold.props.set(prop, backup);
+  for (const [prop, backup] of released.props)
+    if (!hold.props.has(prop)) hold.props.set(prop, backup);
   if (released.textNodes) hold.element.replaceChildren(...released.textNodes);
 }
 
 function setStyle(hold: Hold, spec: Spec): void {
   const style = hold.element.style;
   for (const [prop, value] of spec.style) {
-    if (!hold.props.has(prop)) hold.props.set(prop, { value: style.getPropertyValue(prop), priority: style.getPropertyPriority(prop) });
+    if (!hold.props.has(prop))
+      hold.props.set(prop, {
+        value: style.getPropertyValue(prop),
+        priority: style.getPropertyPriority(prop),
+      });
     if (value === null) style.removeProperty(prop);
-    else style.setProperty(prop, value, 'important');
+    else style.setProperty(prop, value, "important");
   }
 }
 
@@ -162,7 +202,8 @@ function setText(hold: Hold, spec: Spec): void {
 function recordExpected(hold: Hold, spec: Spec): void {
   if (spec.style.size === 0) return;
   const computed = window.getComputedStyle(hold.element);
-  for (const prop of spec.style.keys()) hold.expected.set(prop, computed.getPropertyValue(prop));
+  for (const prop of spec.style.keys())
+    hold.expected.set(prop, computed.getPropertyValue(prop));
 }
 
 function paint(hold: Hold, spec: Spec): void {
@@ -174,18 +215,23 @@ function paint(hold: Hold, spec: Spec): void {
 
 function isOurs(hold: Hold, prop: string, value: string | null): boolean {
   const style = hold.element.style;
-  return value !== null && style.getPropertyPriority(prop) === 'important' && style.getPropertyValue(prop) === value;
+  return (
+    value !== null &&
+    style.getPropertyPriority(prop) === "important" &&
+    style.getPropertyValue(prop) === value
+  );
 }
 
 function restoreProp(hold: Hold, prop: string): void {
   const original = hold.props.get(prop);
   const style = hold.element.style;
-  if (!original || original.value === '') style.removeProperty(prop);
+  if (!original || original.value === "") style.removeProperty(prop);
   else style.setProperty(prop, original.value, original.priority);
 }
 
 function tidyStyleAttribute(hold: Hold): void {
-  if (!hold.hadAttribute && hold.element.getAttribute('style') === '') hold.element.removeAttribute('style');
+  if (!hold.hadAttribute && hold.element.getAttribute("style") === "")
+    hold.element.removeAttribute("style");
 }
 
 function liftOurStyle(hold: Hold, spec: Spec): string[] {
@@ -202,14 +248,19 @@ const SUBPIXEL = 0.1;
 const PX_VALUE = /^-?\d+(\.\d+)?px$/;
 
 function samePixels(got: string, want: string): boolean {
-  return PX_VALUE.test(got) && PX_VALUE.test(want) && Math.abs(parseFloat(got) - parseFloat(want)) < SUBPIXEL;
+  return (
+    PX_VALUE.test(got) &&
+    PX_VALUE.test(want) &&
+    Math.abs(parseFloat(got) - parseFloat(want)) < SUBPIXEL
+  );
 }
 
 function styleMismatch(hold: Hold): string | null {
   const computed = window.getComputedStyle(hold.element);
   for (const [prop, want] of hold.expected) {
     const got = computed.getPropertyValue(prop);
-    if (got !== want && !samePixels(got, want)) return `${prop} is ${got || 'unset'} on the page, not ${want}`;
+    if (got !== want && !samePixels(got, want))
+      return `${prop} is ${got || "unset"} on the page, not ${want}`;
   }
   return null;
 }
@@ -217,10 +268,17 @@ function styleMismatch(hold: Hold): string | null {
 function contentMismatch(hold: Hold, spec: Spec): string | null {
   const list = hold.element.classList;
   const missing = [...spec.add].filter((name) => !list.contains(name));
-  if (missing.length > 0) return `the page does not have the class ${missing.join(' ')}`;
+  if (missing.length > 0)
+    return `the page does not have the class ${missing.join(" ")}`;
   const extra = [...spec.remove].filter((name) => list.contains(name));
-  if (extra.length > 0) return `the page still has the class ${extra.join(' ')}`;
-  if (spec.text !== null && hold.textNode && (hold.element.textContent ?? '') !== spec.text) return 'the page shows different text';
+  if (extra.length > 0)
+    return `the page still has the class ${extra.join(" ")}`;
+  if (
+    spec.text !== null &&
+    hold.textNode &&
+    (hold.element.textContent ?? "") !== spec.text
+  )
+    return "the page shows different text";
   return null;
 }
 
@@ -230,18 +288,21 @@ function rollback(hold: Hold): void {
   const list = hold.element.classList;
   for (const name of hold.addedByUs) list.remove(name);
   for (const name of hold.removedByUs) list.add(name);
-  if (hold.textNode && hold.textOriginal !== null) hold.textNode.nodeValue = hold.textOriginal;
+  if (hold.textNode && hold.textOriginal !== null)
+    hold.textNode.nodeValue = hold.textOriginal;
 }
 
 function touches(entry: Entry, record: MutationRecord): boolean {
   const element = entry.hold?.element;
   if (!element) return false;
-  if (record.type === 'attributes') return record.target === element;
+  if (record.type === "attributes") return record.target === element;
   return entry.spec.text !== null && element.contains(record.target);
 }
 
 function isOverdue(entry: Entry, now: number): boolean {
-  return entry.sawChange ? now - entry.changedAt > MISMATCH_QUIET_MS : now - entry.writtenAt > UNCHANGED_TIMEOUT_MS;
+  return entry.sawChange
+    ? now - entry.changedAt > MISMATCH_QUIET_MS
+    : now - entry.writtenAt > UNCHANGED_TIMEOUT_MS;
 }
 
 export function createOptimistic(deps: OptimisticDeps): Optimistic {
@@ -257,21 +318,32 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
     observer?.takeRecords();
   };
 
-  const finish = (entry: Entry, outcome: OptimisticOutcome, reason?: string): void => {
+  const finish = (
+    entry: Entry,
+    outcome: OptimisticOutcome,
+    reason?: string
+  ): void => {
     entries.delete(entry.id);
-    entry.hold?.element.removeAttribute('data-studio-pending');
-    deps.report(entry.id, outcome, Math.round(performance.now() - entry.startedAt), reason);
+    entry.hold?.element.removeAttribute("data-studio-pending");
+    deps.report(
+      entry.id,
+      outcome,
+      Math.round(performance.now() - entry.startedAt),
+      reason
+    );
     if (entries.size === 0) stopWatching();
   };
 
-  const holderOf = (element: Element): Entry | undefined => [...entries.values()].find((entry) => entry.hold?.element === element);
+  const holderOf = (element: Element): Entry | undefined =>
+    [...entries.values()].find((entry) => entry.hold?.element === element);
 
   const takeOver = (entry: Entry, element: StyledElement): Hold => {
     const previous = holderOf(element);
     if (!previous?.hold) return newHold(element);
     const hold = previous.hold;
     previous.hold = null;
-    for (const [prop, value] of previous.spec.style) if (!entry.spec.style.has(prop)) entry.spec.style.set(prop, value);
+    for (const [prop, value] of previous.spec.style)
+      if (!entry.spec.style.has(prop)) entry.spec.style.set(prop, value);
     entries.delete(previous.id);
     return hold;
   };
@@ -279,10 +351,17 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   const place = (entry: Entry, element: StyledElement): void => {
     quiet(() => {
       const hold = takeOver(entry, element);
-      adoptPreview(hold, deps.release(element, [...entry.spec.style.keys()], entry.spec.text !== null));
+      adoptPreview(
+        hold,
+        deps.release(
+          element,
+          [...entry.spec.style.keys()],
+          entry.spec.text !== null
+        )
+      );
       entry.hold = hold;
       paint(hold, entry.spec);
-      element.setAttribute('data-studio-pending', entry.state);
+      element.setAttribute("data-studio-pending", entry.state);
     });
   };
 
@@ -295,12 +374,25 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
       const lifted = liftOurStyle(hold, entry.spec);
       reason = styleMismatch(hold) ?? contentMismatch(hold, entry.spec);
       settled = reason === null || final;
-      if (!settled) for (const prop of lifted) hold.element.style.setProperty(prop, entry.spec.style.get(prop) ?? '', 'important');
+      if (!settled)
+        for (const prop of lifted)
+          hold.element.style.setProperty(
+            prop,
+            entry.spec.style.get(prop) ?? "",
+            "important"
+          );
       else tidyStyleAttribute(hold);
     });
     if (!settled) return;
-    if (reason === null) finish(entry, 'confirmed');
-    else finish(entry, entry.sawChange ? 'mismatch' : 'timeout', entry.sawChange ? `Saved, but ${reason}.` : 'The page did not update after the save.');
+    if (reason === null) finish(entry, "confirmed");
+    else
+      finish(
+        entry,
+        entry.sawChange ? "mismatch" : "timeout",
+        entry.sawChange
+          ? `Saved, but ${reason}.`
+          : "The page did not update after the save."
+      );
   };
 
   const replaced = (entry: Entry): void => {
@@ -317,11 +409,17 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
     for (const entry of [...entries.values()]) {
       replaced(entry);
       if (!entry.hold) {
-        if (now - entry.startedAt > PENDING_TIMEOUT_MS) finish(entry, 'timeout', 'The element left the page before the save.');
+        if (now - entry.startedAt > PENDING_TIMEOUT_MS)
+          finish(
+            entry,
+            "timeout",
+            "The element left the page before the save."
+          );
         continue;
       }
-      if (entry.state === 'pending') {
-        if (now - entry.startedAt > PENDING_TIMEOUT_MS) settleFailed(entry, 'The save did not answer.');
+      if (entry.state === "pending") {
+        if (now - entry.startedAt > PENDING_TIMEOUT_MS)
+          settleFailed(entry, "The save did not answer.");
         continue;
       }
       if (deps.previewing(entry.hold.element)) entry.writtenAt = now;
@@ -353,49 +451,98 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   const watch = (): void => {
     if (observer) return;
     observer = new MutationObserver(noteChanges);
-    observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class', 'style'] });
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
     timer = window.setInterval(schedule, 1000);
   };
 
   function settleFailed(entry: Entry, reason: string): void {
     if (entry.hold) quiet(() => entry.hold && rollback(entry.hold));
-    finish(entry, 'mismatch', reason);
+    finish(entry, "mismatch", reason);
   }
 
-  const verified = async (patch: DomPatch, element: StyledElement): Promise<boolean> => {
+  const verified = async (
+    patch: DomPatch,
+    element: StyledElement
+  ): Promise<boolean> => {
     if (patch.trusted) return true;
-    if (patch.tag && element.tagName.toLowerCase() !== patch.tag.toLowerCase()) return false;
+    if (patch.tag && element.tagName.toLowerCase() !== patch.tag.toLowerCase())
+      return false;
     const source = await deps.sourceOf(element);
-    return patch.loc !== undefined && (source.own === patch.loc || source.usedAt === patch.loc);
+    return (
+      patch.loc !== undefined &&
+      (source.own === patch.loc || source.usedAt === patch.loc)
+    );
   };
 
   const apply = (id: string, patch: DomPatch, written: boolean): void => {
-    if (typeof id !== 'string' || entries.has(id) || entries.size >= MAX_ENTRIES || typeof patch?.selector !== 'string') return;
+    if (
+      typeof id !== "string" ||
+      entries.has(id) ||
+      entries.size >= MAX_ENTRIES ||
+      typeof patch?.selector !== "string"
+    )
+      return;
     const element = query(patch.selector);
     const now = performance.now();
-    const entry: Entry = { id, patch, spec: specOf(patch, deps.styleKeys), hold: null, state: written ? 'written' : 'pending', startedAt: now, writtenAt: now, sawChange: false, changedAt: now };
-    if (!isStyled(element)) return deps.report(id, 'skipped', 0, 'No element matches the selector in this frame.');
+    const entry: Entry = {
+      id,
+      patch,
+      spec: specOf(patch, deps.styleKeys),
+      hold: null,
+      state: written ? "written" : "pending",
+      startedAt: now,
+      writtenAt: now,
+      sawChange: false,
+      changedAt: now,
+    };
+    if (!isStyled(element))
+      return deps.report(
+        id,
+        "skipped",
+        0,
+        "No element matches the selector in this frame."
+      );
     entries.set(id, entry);
     void verified(patch, element).then((ok) => {
       if (entries.get(id) !== entry) return;
-      if (!ok || !element.isConnected) return finish(entry, 'skipped', 'The element in this frame is not the edited one.');
+      if (!ok || !element.isConnected)
+        return finish(
+          entry,
+          "skipped",
+          "The element in this frame is not the edited one."
+        );
       watch();
       place(entry, element);
     });
   };
 
-  const settle = (id: string, ok: boolean, classes: ClassDelta | undefined, reason: string | undefined): void => {
+  const settle = (
+    id: string,
+    ok: boolean,
+    classes: ClassDelta | undefined,
+    reason: string | undefined
+  ): void => {
     const entry = entries.get(id);
     if (!entry) return;
-    if (!ok) return settleFailed(entry, typeof reason === 'string' ? reason.slice(0, 300) : 'The save failed.');
-    entry.state = 'written';
+    if (!ok)
+      return settleFailed(
+        entry,
+        typeof reason === "string" ? reason.slice(0, 300) : "The save failed."
+      );
+    entry.state = "written";
     entry.writtenAt = performance.now();
     mergeClasses(entry.spec, classes);
     const hold = entry.hold;
     if (hold)
       quiet(() => {
         setClasses(hold, entry.spec);
-        hold.element.setAttribute('data-studio-pending', 'written');
+        hold.element.setAttribute("data-studio-pending", "written");
       });
     schedule();
   };
@@ -403,7 +550,7 @@ export function createOptimistic(deps: OptimisticDeps): Optimistic {
   const drop = (): void => {
     for (const entry of [...entries.values()]) {
       if (entry.hold) quiet(() => entry.hold && rollback(entry.hold));
-      finish(entry, 'skipped', 'Dropped for undo or discard.');
+      finish(entry, "skipped", "Dropped for undo or discard.");
     }
   };
 

@@ -1,4 +1,4 @@
-import type { ExportFrame } from './export.js';
+import type { ExportFrame } from "./export.js";
 
 export const SHARE_EXPIRY_HOURS = [1, 24, 168] as const;
 export type ShareExpiryHours = (typeof SHARE_EXPIRY_HOURS)[number];
@@ -68,10 +68,15 @@ export interface SharePresenceCursor {
 }
 
 export type SharePresenceEvent =
-  | { type: 'state'; cursors: SharePresenceCursor[]; wantCursor: boolean; live: number }
-  | { type: 'cursor'; cursor: SharePresenceCursor }
-  | { type: 'leave'; linkId: string; viewer: string }
-  | { type: 'idle' };
+  | {
+      type: "state";
+      cursors: SharePresenceCursor[];
+      wantCursor: boolean;
+      live: number;
+    }
+  | { type: "cursor"; cursor: SharePresenceCursor }
+  | { type: "leave"; linkId: string; viewer: string }
+  | { type: "idle" };
 
 export interface StudioCursorInput {
   frameId: string | null;

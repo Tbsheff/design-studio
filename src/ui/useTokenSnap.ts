@@ -1,9 +1,28 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { TOKEN_GROUP_FOR_PROPERTY, type CompiledTokenEntry, type DirectStyleProperty } from '../shared/contracts';
-import { isSnappable, isUnsetValue, matchForProperty, varName, type TokenMode } from '../shared/token-match';
-import type { StyleValues } from './cssValues';
-import { uiStore, useUi } from './storage';
-import type { DesignTokens } from './useDesignSystemState';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  TOKEN_GROUP_FOR_PROPERTY,
+  type CompiledTokenEntry,
+  type DirectStyleProperty,
+} from "../shared/contracts";
+import {
+  isSnappable,
+  isUnsetValue,
+  matchForProperty,
+  varName,
+  type TokenMode,
+} from "../shared/token-match";
+import type { StyleValues } from "./cssValues";
+import { uiStore, useUi } from "./storage";
+import type { DesignTokens } from "./useDesignSystemState";
 
 export interface SnapNote {
   cssVar: string;
@@ -32,19 +51,30 @@ export function useTokenUi(): TokenUi | null {
 
 const NOTE_MS = 8000;
 
-export function snapTarget(prop: DirectStyleProperty, value: string, entries: CompiledTokenEntry[], mode: TokenMode): string | null {
+export function snapTarget(
+  prop: DirectStyleProperty,
+  value: string,
+  entries: CompiledTokenEntry[],
+  mode: TokenMode
+): string | null {
   const group = TOKEN_GROUP_FOR_PROPERTY[prop];
-  if (!group || group === 'font' || varName(value) || isUnsetValue(value)) return null;
+  if (!group || group === "font" || varName(value) || isUnsetValue(value))
+    return null;
   const best = matchForProperty(prop, value, entries, mode)[0];
   return isSnappable(group, best) ? best.cssVar : null;
 }
 
-export function useSnapSetting(projectId: string): [boolean, (on: boolean) => void] {
+export function useSnapSetting(
+  projectId: string
+): [boolean, (on: boolean) => void] {
   const ui = useUi();
   const on = ui.snapByProject[projectId] ?? true;
   const set = useCallback(
-    (next: boolean) => uiStore.set((s) => ({ snapByProject: { ...s.snapByProject, [projectId]: next } })),
-    [projectId],
+    (next: boolean) =>
+      uiStore.set((s) => ({
+        snapByProject: { ...s.snapByProject, [projectId]: next },
+      })),
+    [projectId]
   );
   return [on, set];
 }
@@ -64,7 +94,10 @@ export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
     const out: Partial<StyleValues> = { ...style };
     const raw: Partial<StyleValues> = {};
     let cssVar: string | null = null;
-    for (const [prop, value] of Object.entries(style) as [DirectStyleProperty, string][]) {
+    for (const [prop, value] of Object.entries(style) as [
+      DirectStyleProperty,
+      string,
+    ][]) {
       if (kept.current[prop] === value) continue;
       const target = snapTarget(prop, value, t.entries, t.mode);
       if (!target) continue;
@@ -89,5 +122,8 @@ export function useTokenSnap(tokens: DesignTokens | null, snapOn: boolean) {
     return () => window.clearTimeout(id);
   }, [note]);
 
-  return useMemo(() => ({ rewrite, note, keepRaw, dismiss }), [rewrite, note, keepRaw, dismiss]);
+  return useMemo(
+    () => ({ rewrite, note, keepRaw, dismiss }),
+    [rewrite, note, keepRaw, dismiss]
+  );
 }

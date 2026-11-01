@@ -1,21 +1,40 @@
-import { parse } from 'parse5';
-import type { DefaultTreeAdapterMap } from 'parse5';
-import { BROWSER_TOTAL_MS, browserReadsEnabled, readWithBrowser } from './browser.js';
-import type { BrowserOutcome, BrowserRead } from './browser.js';
-import { computedCandidates } from './browser-tokens.js';
-import { cssImports, customProperties, parseCss, resolveVars } from './css.js';
-import type { CssRule, CustomProperties } from './css.js';
-import { resourcesDir } from '../../resources.js';
-import { FetchBlockedError } from './safe-fetch.js';
-import type { FetchedResource } from './safe-fetch.js';
-import type { Candidate, Harvest } from './types.js';
-import { candidate, candidatesFromVars } from './vars.js';
-import { chromaOf, colorsInText, googleFontsUrlFor, lengthPx, lightnessOf, normalizeColor, normalizeLength, normalizeShadow, safeGoogleFontsUrl } from './values.js';
+import { parse } from "parse5";
+import type { DefaultTreeAdapterMap } from "parse5";
 
-type Node = DefaultTreeAdapterMap['node'];
-type Element = DefaultTreeAdapterMap['element'];
+import { resourcesDir } from "../../resources.js";
+import { computedCandidates } from "./browser-tokens.js";
+import {
+  BROWSER_TOTAL_MS,
+  browserReadsEnabled,
+  readWithBrowser,
+} from "./browser.js";
+import type { BrowserOutcome, BrowserRead } from "./browser.js";
+import { cssImports, customProperties, parseCss, resolveVars } from "./css.js";
+import type { CssRule, CustomProperties } from "./css.js";
+import { FetchBlockedError } from "./safe-fetch.js";
+import type { FetchedResource } from "./safe-fetch.js";
+import type { Candidate, Harvest } from "./types.js";
+import {
+  chromaOf,
+  colorsInText,
+  googleFontsUrlFor,
+  lengthPx,
+  lightnessOf,
+  normalizeColor,
+  normalizeLength,
+  normalizeShadow,
+  safeGoogleFontsUrl,
+} from "./values.js";
+import { candidate, candidatesFromVars } from "./vars.js";
 
-export type Fetcher = (url: string, kind: 'page' | 'css', deadline?: number) => Promise<FetchedResource>;
+type Node = DefaultTreeAdapterMap["node"];
+type Element = DefaultTreeAdapterMap["element"];
+
+export type Fetcher = (
+  url: string,
+  kind: "page" | "css",
+  deadline?: number
+) => Promise<FetchedResource>;
 
 export const MAX_STYLESHEETS = 20;
 export const URL_TOTAL_MS = 20_000;
@@ -26,7 +45,11 @@ function limitText(totalMs: number): string {
   return `${Math.max(1, Math.round(totalMs / 1000))} s`;
 }
 
-function beforeDeadline<T>(work: Promise<T>, deadline: number, label: string): Promise<T> {
+function beforeDeadline<T>(
+  work: Promise<T>,
+  deadline: number,
+  label: string
+): Promise<T> {
   const left = deadline - Date.now();
   if (left <= 0) return Promise.reject(new SiteTimeLimitError(label));
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -43,7 +66,7 @@ export interface UrlSnapshot {
   failures: string[];
 }
 
-export type ReadMethod = 'browser' | 'static';
+export type ReadMethod = "browser" | "static";
 
 export interface UrlHarvest {
   harvest: Harvest;
@@ -75,36 +98,56 @@ function attr(element: Element, name: string): string | null {
 }
 
 function textOf(element: Element): string {
-  return element.childNodes.map((child) => ('value' in child && child.nodeName === '#text' ? child.value : '')).join('');
+  return element.childNodes
+    .map((child) =>
+      "value" in child && child.nodeName === "#text" ? child.value : ""
+    )
+    .join("");
 }
 
 function walk(node: Node, visit: (element: Element) => void): void {
-  if ('tagName' in node) visit(node);
-  const children = 'childNodes' in node ? node.childNodes : [];
+  if ("tagName" in node) visit(node);
+  const children = "childNodes" in node ? node.childNodes : [];
   for (const child of children) walk(child, visit);
-  if ('content' in node && node.content) walk(node.content as Node, visit);
+  if ("content" in node && node.content) walk(node.content as Node, visit);
 }
 
 export function pageParts(html: string): PageParts {
-  const parts: PageParts = { links: [], inline: [], styleAttrs: [], themeColor: null, fontLinks: [], darkHint: false };
+  const parts: PageParts = {
+    links: [],
+    inline: [],
+    styleAttrs: [],
+    themeColor: null,
+    fontLinks: [],
+    darkHint: false,
+  };
   walk(parse(html), (element) => {
     const tag = element.tagName;
-    if (tag === 'html') {
-      const theme = `${attr(element, 'class') ?? ''} ${attr(element, 'data-theme') ?? ''} ${attr(element, 'data-color-mode') ?? ''}`.toLowerCase();
+    if (tag === "html") {
+      const theme =
+        `${attr(element, "class") ?? ""} ${attr(element, "data-theme") ?? ""} ${attr(element, "data-color-mode") ?? ""}`.toLowerCase();
       if (/\bdark\b/.test(theme)) parts.darkHint = true;
     }
-    if (tag === 'link') {
-      const rel = (attr(element, 'rel') ?? '').toLowerCase().split(/\s+/);
-      const href = attr(element, 'href');
+    if (tag === "link") {
+      const rel = (attr(element, "rel") ?? "").toLowerCase().split(/\s+/);
+      const href = attr(element, "href");
       if (!href) return;
-      if (href.includes('fonts.googleapis.com/css')) parts.fontLinks.push(href);
-      else if (rel.includes('stylesheet')) parts.links.push(href);
+      if (href.includes("fonts.googleapis.com/css")) parts.fontLinks.push(href);
+      else if (rel.includes("stylesheet")) parts.links.push(href);
     }
-    if (tag === 'style') parts.inline.push(textOf(element));
-    if (tag === 'meta' && (attr(element, 'name') ?? '').toLowerCase() === 'theme-color') parts.themeColor = attr(element, 'content');
-    const style = attr(element, 'style');
+    if (tag === "style") parts.inline.push(textOf(element));
+    if (
+      tag === "meta" &&
+      (attr(element, "name") ?? "").toLowerCase() === "theme-color"
+    )
+      parts.themeColor = attr(element, "content");
+    const style = attr(element, "style");
     if (style && style.length < 4000) {
-      const classes = (attr(element, 'class') ?? '').split(/\s+/).filter(Boolean).map((name) => `.${name}`).join('');
+      const classes = (attr(element, "class") ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((name) => `.${name}`)
+        .join("");
       const rules = parseCss(`${tag}${classes}{${style}}`);
       parts.styleAttrs.push(...rules);
     }
@@ -115,7 +158,9 @@ export function pageParts(html: string): PageParts {
 function absolute(href: string, base: string): string | null {
   try {
     const url = new URL(href, base);
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.href
+      : null;
   } catch {
     return null;
   }
@@ -127,29 +172,52 @@ interface SiteClock {
 }
 
 function sheetFailure(url: string, error: unknown, clock: SiteClock): string {
-  if (error instanceof SiteTimeLimitError) return `${url}: stopped, the ${limitText(clock.totalMs)} limit for this site ran out`;
-  if (error instanceof FetchBlockedError) return `${url}: blocked (${error.message})`;
+  if (error instanceof SiteTimeLimitError)
+    return `${url}: stopped, the ${limitText(clock.totalMs)} limit for this site ran out`;
+  if (error instanceof FetchBlockedError)
+    return `${url}: blocked (${error.message})`;
   return `${url}: ${error instanceof Error ? error.message : String(error)}`;
 }
 
-async function readSheet(url: string, fetcher: Fetcher, clock: SiteClock): Promise<{ sheet: { url: string; css: string }; imports: string[] }> {
-  const fetched = await beforeDeadline(fetcher(url, 'css', clock.deadline), clock.deadline, url);
-  const css = fetched.body.toString('utf8');
+async function readSheet(
+  url: string,
+  fetcher: Fetcher,
+  clock: SiteClock
+): Promise<{ sheet: { url: string; css: string }; imports: string[] }> {
+  const fetched = await beforeDeadline(
+    fetcher(url, "css", clock.deadline),
+    clock.deadline,
+    url
+  );
+  const css = fetched.body.toString("utf8");
   const imports = cssImports(css)
     .map((imported) => absolute(imported, fetched.url))
-    .filter((next): next is string => next !== null && !next.includes('fonts.googleapis.com'));
+    .filter(
+      (next): next is string =>
+        next !== null && !next.includes("fonts.googleapis.com")
+    );
   return { sheet: { url: fetched.url, css }, imports };
 }
 
-async function loadStylesheets(first: string[], base: string, fetcher: Fetcher, failures: string[], clock: SiteClock): Promise<Array<{ url: string; css: string }>> {
-  const queue = first.map((href) => absolute(href, base)).filter((url): url is string => url !== null);
+async function loadStylesheets(
+  first: string[],
+  base: string,
+  fetcher: Fetcher,
+  failures: string[],
+  clock: SiteClock
+): Promise<Array<{ url: string; css: string }>> {
+  const queue = first
+    .map((href) => absolute(href, base))
+    .filter((url): url is string => url !== null);
   const seen = new Set<string>();
   const out: Array<{ url: string; css: string }> = [];
   while (queue.length > 0 && seen.size < MAX_STYLESHEETS) {
     const url = queue.shift()!;
     if (seen.has(url)) continue;
     if (Date.now() >= clock.deadline) {
-      failures.push(`${queue.length + 1} stylesheet(s) not read: the ${limitText(clock.totalMs)} limit for this site ran out`);
+      failures.push(
+        `${queue.length + 1} stylesheet(s) not read: the ${limitText(clock.totalMs)} limit for this site ran out`
+      );
       break;
     }
     seen.add(url);
@@ -164,11 +232,14 @@ async function loadStylesheets(first: string[], base: string, fetcher: Fetcher, 
   return out;
 }
 
-const BUTTONISH = /(^|[\s>+~,(])(button|\.btn|\.button|\[type=["']?submit|\.cta|\.primary)\b/i;
+const BUTTONISH =
+  /(^|[\s>+~,(])(button|\.btn|\.button|\[type=["']?submit|\.cta|\.primary)\b/i;
 const LINKISH = /(^|[\s>+~,])a(\b|:|$)/;
 const CARDISH = /\.(card|panel|tile|box)\b/i;
-const MUTEDISH = /\.(muted|text-muted|subtle|secondary|caption|meta)\b|(^|[\s,])(small|figcaption)\b/i;
-const INPUTISH = /(^|[\s,])(input|textarea|select)\b|\.(input|form-control|field)\b/i;
+const MUTEDISH =
+  /\.(muted|text-muted|subtle|secondary|caption|meta)\b|(^|[\s,])(small|figcaption)\b/i;
+const INPUTISH =
+  /(^|[\s,])(input|textarea|select)\b|\.(input|form-control|field)\b/i;
 const HEADINGISH = /(^|[\s,])h[1-3]\b/i;
 const CODEISH = /(^|[\s,])(code|pre|kbd|samp)\b/i;
 const BODYISH = /^(html|body|:root)$/i;
@@ -187,13 +258,16 @@ class Tally {
     if (value) this.counts.set(value, (this.counts.get(value) ?? 0) + 1);
   }
   ranked(filter: (value: string) => boolean = () => true): string[] {
-    return [...this.counts.entries()].filter(([value]) => filter(value)).sort((a, b) => b[1] - a[1]).map(([value]) => value);
+    return [...this.counts.entries()]
+      .filter(([value]) => filter(value))
+      .sort((a, b) => b[1] - a[1])
+      .map(([value]) => value);
   }
 }
 
 function blurOf(shadow: string): number {
   const lengths = shadow.match(/-?\d*\.?\d+px/g) ?? [];
-  return lengths.length >= 3 ? Math.abs(parseFloat(lengths[2] ?? '0')) : 0;
+  return lengths.length >= 3 ? Math.abs(parseFloat(lengths[2] ?? "0")) : 0;
 }
 
 interface Tallies {
@@ -222,8 +296,26 @@ interface Decl {
 }
 
 function newTallies(): Tallies {
-  const names: Array<keyof Tallies> = ['bodyBg', 'bodyFg', 'buttonBg', 'buttonFg', 'linkFg', 'cardBg', 'muted', 'borders', 'allColors', 'radii', 'buttonRadius', 'shadows', 'fontBody', 'fontDisplay', 'fontMono'];
-  return Object.fromEntries(names.map((name) => [name, new Tally()])) as unknown as Tallies;
+  const names: Array<keyof Tallies> = [
+    "bodyBg",
+    "bodyFg",
+    "buttonBg",
+    "buttonFg",
+    "linkFg",
+    "cardBg",
+    "muted",
+    "borders",
+    "allColors",
+    "radii",
+    "buttonRadius",
+    "shadows",
+    "fontBody",
+    "fontDisplay",
+    "fontMono",
+  ];
+  return Object.fromEntries(
+    names.map((name) => [name, new Tally()])
+  ) as unknown as Tallies;
 }
 
 function tallyBackground(t: Tallies, decl: Decl, color: string | null): void {
@@ -240,27 +332,37 @@ function tallyText(t: Tallies, decl: Decl, color: string | null): void {
 }
 
 function tallyColor(t: Tallies, decl: Decl): void {
-  const isBg = decl.prop === 'background' || decl.prop === 'background-color';
-  if (!isBg && decl.prop !== 'color' && !decl.prop.startsWith('border')) return;
+  const isBg = decl.prop === "background" || decl.prop === "background-color";
+  if (!isBg && decl.prop !== "color" && !decl.prop.startsWith("border")) return;
   const color = firstColor(decl.value);
   t.allColors.add(color);
   if (isBg) tallyBackground(t, decl, color);
-  if (decl.prop === 'color') tallyText(t, decl, color);
-  if ((decl.prop === 'border' || decl.prop === 'border-color') && (INPUTISH.test(decl.selector) || CARDISH.test(decl.selector))) t.borders.add(color);
+  if (decl.prop === "color") tallyText(t, decl, color);
+  if (
+    (decl.prop === "border" || decl.prop === "border-color") &&
+    (INPUTISH.test(decl.selector) || CARDISH.test(decl.selector))
+  )
+    t.borders.add(color);
 }
 
 function tallyShape(t: Tallies, decl: Decl): void {
-  if (decl.prop === 'box-shadow') t.shadows.add(normalizeShadow(decl.value));
-  if (decl.prop !== 'border-radius') return;
-  const length = normalizeLength(decl.value.split(/\s+/)[0] ?? '');
+  if (decl.prop === "box-shadow") t.shadows.add(normalizeShadow(decl.value));
+  if (decl.prop !== "border-radius") return;
+  const length = normalizeLength(decl.value.split(/\s+/)[0] ?? "");
   t.radii.add(length);
   if (length && BUTTONISH.test(decl.selector)) t.buttonRadius.add(length);
-  if (/^(50%|9999px|999px|100px)$/.test(decl.value.trim())) t.radii.add('9999px');
+  if (/^(50%|9999px|999px|100px)$/.test(decl.value.trim()))
+    t.radii.add("9999px");
 }
 
 function tallyFont(t: Tallies, decl: Decl): void {
-  if (decl.prop !== 'font-family' && decl.prop !== 'font') return;
-  const family = decl.prop === 'font' ? (decl.value.split(/\d+(?:\.\d+)?(?:px|rem|em|%)(?:\s*\/\s*\S+)?\s+/).pop() ?? '') : decl.value;
+  if (decl.prop !== "font-family" && decl.prop !== "font") return;
+  const family =
+    decl.prop === "font"
+      ? (decl.value
+          .split(/\d+(?:\.\d+)?(?:px|rem|em|%)(?:\s*\/\s*\S+)?\s+/)
+          .pop() ?? "")
+      : decl.value;
   if (decl.body) t.fontBody.add(family);
   if (HEADINGISH.test(decl.selector)) t.fontDisplay.add(family);
   if (CODEISH.test(decl.selector)) t.fontMono.add(family);
@@ -269,10 +371,17 @@ function tallyFont(t: Tallies, decl: Decl): void {
 function tallyRules(rules: CssRule[], root: Map<string, string>): Tallies {
   const t = newTallies();
   for (const rule of rules) {
-    const body = rule.selector.split(',').some((part) => BODYISH.test(part.trim()));
+    const body = rule.selector
+      .split(",")
+      .some((part) => BODYISH.test(part.trim()));
     for (const [prop, raw] of rule.decls) {
-      if (prop.startsWith('--')) continue;
-      const decl: Decl = { selector: rule.selector, body, prop, value: resolveVars(raw, [root]) };
+      if (prop.startsWith("--")) continue;
+      const decl: Decl = {
+        selector: rule.selector,
+        body,
+        prop,
+        value: resolveVars(raw, [root]),
+      };
       tallyColor(t, decl);
       tallyShape(t, decl);
       tallyFont(t, decl);
@@ -281,55 +390,90 @@ function tallyRules(rules: CssRule[], root: Map<string, string>): Tallies {
   return t;
 }
 
-type Push = (token: string, value: string | undefined, evidence: string) => void;
+type Push = (
+  token: string,
+  value: string | undefined,
+  evidence: string
+) => void;
 
 const saturated = (value: string) => chromaOf(value) > 0.04;
 
 function pushColors(t: Tallies, page: PageParts, push: Push): void {
-  push('color.bg', t.bodyBg.ranked()[0], 'body background');
-  push('color.fg', t.bodyFg.ranked()[0], 'body text color');
-  push('color.primary', t.buttonBg.ranked(saturated)[0], 'button background');
-  push('color.primary-fg', t.buttonFg.ranked()[0], 'button text color');
-  push('color.primary', t.linkFg.ranked(saturated)[0], 'link color');
+  push("color.bg", t.bodyBg.ranked()[0], "body background");
+  push("color.fg", t.bodyFg.ranked()[0], "body text color");
+  push("color.primary", t.buttonBg.ranked(saturated)[0], "button background");
+  push("color.primary-fg", t.buttonFg.ranked()[0], "button text color");
+  push("color.primary", t.linkFg.ranked(saturated)[0], "link color");
   const theme = page.themeColor ? normalizeColor(page.themeColor) : null;
-  if (theme && saturated(theme)) push('color.primary', theme, 'meta theme-color');
-  push('color.primary', t.allColors.ranked(saturated)[0], 'most used saturated color');
-  push('color.surface', t.cardBg.ranked()[0], 'card background');
-  push('color.fg-muted', t.muted.ranked()[0], 'muted text color');
-  push('color.border', t.borders.ranked()[0], 'input or card border');
+  if (theme && saturated(theme))
+    push("color.primary", theme, "meta theme-color");
+  push(
+    "color.primary",
+    t.allColors.ranked(saturated)[0],
+    "most used saturated color"
+  );
+  push("color.surface", t.cardBg.ranked()[0], "card background");
+  push("color.fg-muted", t.muted.ranked()[0], "muted text color");
+  push("color.border", t.borders.ranked()[0], "input or card border");
 }
 
 function pushFonts(t: Tallies, push: Push): void {
-  push('font.body', t.fontBody.ranked()[0], 'body font-family');
-  push('font.display', t.fontDisplay.ranked()[0], 'heading font-family');
-  push('font.mono', t.fontMono.ranked()[0], 'code font-family');
+  push("font.body", t.fontBody.ranked()[0], "body font-family");
+  push("font.display", t.fontDisplay.ranked()[0], "heading font-family");
+  push("font.mono", t.fontMono.ranked()[0], "code font-family");
 }
 
 function pushRadii(t: Tallies, push: Push): void {
-  push('radius.md', t.buttonRadius.ranked()[0], 'button border-radius');
-  const sorted = t.radii.ranked((value) => value !== '9999px' && lengthPx(value) > 0).sort((a, b) => lengthPx(a) - lengthPx(b));
+  push("radius.md", t.buttonRadius.ranked()[0], "button border-radius");
+  const sorted = t.radii
+    .ranked((value) => value !== "9999px" && lengthPx(value) > 0)
+    .sort((a, b) => lengthPx(a) - lengthPx(b));
   if (sorted.length >= 3) {
-    push('radius.sm', sorted[0], 'smallest border-radius');
-    push('radius.md', sorted[Math.floor(sorted.length / 2)], 'middle border-radius');
-    push('radius.lg', sorted.at(-1), 'largest border-radius');
+    push("radius.sm", sorted[0], "smallest border-radius");
+    push(
+      "radius.md",
+      sorted[Math.floor(sorted.length / 2)],
+      "middle border-radius"
+    );
+    push("radius.lg", sorted.at(-1), "largest border-radius");
   }
-  if (t.radii.ranked((value) => value === '9999px').length > 0) push('radius.pill', '9999px', 'pill border-radius');
+  if (t.radii.ranked((value) => value === "9999px").length > 0)
+    push("radius.pill", "9999px", "pill border-radius");
 }
 
 function pushShadows(t: Tallies, push: Push): void {
-  const sorted = t.shadows.ranked().slice(0, 6).sort((a, b) => blurOf(a) - blurOf(b));
+  const sorted = t.shadows
+    .ranked()
+    .slice(0, 6)
+    .sort((a, b) => blurOf(a) - blurOf(b));
   if (sorted.length < 2) return;
-  push('shadow.sm', sorted[0], 'smallest box-shadow');
-  push('shadow.lg', sorted.at(-1), 'largest box-shadow');
-  if (sorted.length >= 3) push('shadow.md', sorted[Math.floor(sorted.length / 2)], 'middle box-shadow');
+  push("shadow.sm", sorted[0], "smallest box-shadow");
+  push("shadow.lg", sorted.at(-1), "largest box-shadow");
+  if (sorted.length >= 3)
+    push(
+      "shadow.md",
+      sorted[Math.floor(sorted.length / 2)],
+      "middle box-shadow"
+    );
 }
 
-function usageCandidates(rules: CssRule[], root: Map<string, string>, page: PageParts, label: string): Candidate[] {
+function usageCandidates(
+  rules: CssRule[],
+  root: Map<string, string>,
+  page: PageParts,
+  label: string
+): Candidate[] {
   const t = tallyRules(rules, root);
   const out: Candidate[] = [];
   const push: Push = (token, value, evidence) => {
     if (value === undefined) return;
-    const found = candidate({ token, confidence: 'medium' }, { value }, 'url', `${label}: ${evidence}`, 'medium');
+    const found = candidate(
+      { token, confidence: "medium" },
+      { value },
+      "url",
+      `${label}: ${evidence}`,
+      "medium"
+    );
     if (found) out.push(found);
   };
   pushColors(t, page, push);
@@ -341,9 +485,16 @@ function usageCandidates(rules: CssRule[], root: Map<string, string>, page: Page
 
 async function fetchPage(url: string, fetcher: Fetcher, clock: SiteClock) {
   try {
-    return await beforeDeadline(fetcher(url, 'page', clock.deadline), clock.deadline, url);
+    return await beforeDeadline(
+      fetcher(url, "page", clock.deadline),
+      clock.deadline,
+      url
+    );
   } catch (error) {
-    if (error instanceof SiteTimeLimitError) throw new Error(`${url} did not answer within ${limitText(clock.totalMs)}`);
+    if (error instanceof SiteTimeLimitError)
+      throw new Error(
+        `${url} did not answer within ${limitText(clock.totalMs)}`
+      );
     throw error;
   }
 }
@@ -354,26 +505,50 @@ interface StaticRead {
   usage: Candidate[];
 }
 
-async function readStatic(url: string, fetcher: Fetcher, totalMs: number): Promise<StaticRead> {
+async function readStatic(
+  url: string,
+  fetcher: Fetcher,
+  totalMs: number
+): Promise<StaticRead> {
   const clock: SiteClock = { deadline: Date.now() + totalMs, totalMs };
   const page = await fetchPage(url, fetcher, clock);
   const type = page.contentType.toLowerCase();
-  if (type !== '' && !type.includes('html') && !type.includes('xml')) throw new Error(`${page.url} is not an HTML page (${type.split(';')[0]})`);
-  const html = page.body.toString('utf8');
+  if (type !== "" && !type.includes("html") && !type.includes("xml"))
+    throw new Error(`${page.url} is not an HTML page (${type.split(";")[0]})`);
+  const html = page.body.toString("utf8");
   const parts = pageParts(html);
   const failures: string[] = [];
-  const stylesheets = await loadStylesheets([...parts.links, ...parts.inline.flatMap((css) => cssImports(css))], page.url, fetcher, failures, clock);
-  const rules = [...parts.inline, ...stylesheets.map((sheet) => sheet.css)].flatMap((css) => parseCss(css)).concat(parts.styleAttrs);
+  const stylesheets = await loadStylesheets(
+    [...parts.links, ...parts.inline.flatMap((css) => cssImports(css))],
+    page.url,
+    fetcher,
+    failures,
+    clock
+  );
+  const rules = [...parts.inline, ...stylesheets.map((sheet) => sheet.css)]
+    .flatMap((css) => parseCss(css))
+    .concat(parts.styleAttrs);
   const props = customProperties(rules);
   const label = new URL(page.url).host;
   const usage = usageCandidates(rules, props.root, parts, label);
-  const candidates = [...candidatesFromVars(props, 'url', label), ...usage];
-  const googleFontsUrl = parts.fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null);
-  const bg = candidates.find((item) => item.token === 'color.bg' && item.value)?.value;
-  const darkHint = parts.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
+  const candidates = [...candidatesFromVars(props, "url", label), ...usage];
+  const googleFontsUrl = parts.fontLinks
+    .map((href) => safeGoogleFontsUrl(href))
+    .find((value): value is string => value !== null);
+  const bg = candidates.find(
+    (item) => item.token === "color.bg" && item.value
+  )?.value;
+  const darkHint =
+    parts.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
   return {
     result: {
-      harvest: { source: 'url', label: page.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
+      harvest: {
+        source: "url",
+        label: page.url,
+        candidates,
+        ...(googleFontsUrl ? { googleFontsUrl } : {}),
+        darkHint,
+      },
       snapshot: { url: page.url, html, stylesheets, failures },
     },
     props,
@@ -381,68 +556,145 @@ async function readStatic(url: string, fetcher: Fetcher, totalMs: number): Promi
   };
 }
 
-function withoutNames(props: CustomProperties, known: Set<string>): CustomProperties {
-  const keep = (map: Map<string, string>) => new Map([...map].filter(([name]) => !known.has(name)));
+function withoutNames(
+  props: CustomProperties,
+  known: Set<string>
+): CustomProperties {
+  const keep = (map: Map<string, string>) =>
+    new Map([...map].filter(([name]) => !known.has(name)));
   return { ...props, root: keep(props.root), dark: keep(props.dark) };
 }
 
 function browserProps(read: BrowserRead, rules: CssRule[]): CustomProperties {
   const props = customProperties(rules);
-  for (const [name, value] of Object.entries({ ...read.live.vars, ...read.live.bodyVars })) props.root.set(name, value);
+  for (const [name, value] of Object.entries({
+    ...read.live.vars,
+    ...read.live.bodyVars,
+  }))
+    props.root.set(name, value);
   return props;
 }
 
 function loadedGoogleFamilies(read: BrowserRead): string[] {
-  return read.live.fontFaces.filter((face) => face.loaded && face.src.includes('fonts.gstatic.com')).map((face) => face.family);
+  return read.live.fontFaces
+    .filter((face) => face.loaded && face.src.includes("fonts.gstatic.com"))
+    .map((face) => face.family);
 }
 
 function fillDark(candidates: Candidate[], fallback: Candidate[]): Candidate[] {
   return candidates.map((item) => {
-    if (item.dark !== undefined || !item.token.startsWith('color.')) return item;
-    const dark = fallback.find((other) => other.token === item.token && other.dark !== undefined)?.dark;
+    if (item.dark !== undefined || !item.token.startsWith("color."))
+      return item;
+    const dark = fallback.find(
+      (other) => other.token === item.token && other.dark !== undefined
+    )?.dark;
     return dark ? { ...item, dark } : item;
   });
 }
 
 function livePageParts(read: BrowserRead): PageParts {
-  return { links: [], inline: [], styleAttrs: [], themeColor: read.live.themeColor, fontLinks: read.live.fontLinks, darkHint: read.live.darkHint };
+  return {
+    links: [],
+    inline: [],
+    styleAttrs: [],
+    themeColor: read.live.themeColor,
+    fontLinks: read.live.fontLinks,
+    darkHint: read.live.darkHint,
+  };
 }
 
 function refusalNotes(read: BrowserRead): string[] {
-  const reasons = Object.entries(read.requests.reasons).sort((a, b) => b[1] - a[1]);
+  const reasons = Object.entries(read.requests.reasons).sort(
+    (a, b) => b[1] - a[1]
+  );
   const refusedCount = reasons.reduce((sum, [, count]) => sum + count, 0);
   if (refusedCount === 0) return [];
-  return [`The browser refused ${refusedCount} request(s) from the page: ${reasons.slice(0, 5).map(([reason, count]) => `${reason} (${count})`).join('; ')}`];
+  return [
+    `The browser refused ${refusedCount} request(s) from the page: ${reasons
+      .slice(0, 5)
+      .map(([reason, count]) => `${reason} (${count})`)
+      .join("; ")}`,
+  ];
 }
 
-function browserFontsUrl(read: BrowserRead, fromStatic: StaticRead | null): string | undefined {
+function browserFontsUrl(
+  read: BrowserRead,
+  fromStatic: StaticRead | null
+): string | undefined {
   const staticUrl = fromStatic?.result.harvest.googleFontsUrl;
   const fontLinks = [...read.live.fontLinks, ...(staticUrl ? [staticUrl] : [])];
-  return fontLinks.map((href) => safeGoogleFontsUrl(href)).find((value): value is string => value !== null) ?? googleFontsUrlFor(loadedGoogleFamilies(read)) ?? undefined;
+  return (
+    fontLinks
+      .map((href) => safeGoogleFontsUrl(href))
+      .find((value): value is string => value !== null) ??
+    googleFontsUrlFor(loadedGoogleFamilies(read)) ??
+    undefined
+  );
 }
 
-function browserHarvest(read: BrowserRead, fromStatic: StaticRead | null): UrlHarvest {
+function browserHarvest(
+  read: BrowserRead,
+  fromStatic: StaticRead | null
+): UrlHarvest {
   const label = new URL(read.url).host;
   const rules = read.sheets.flatMap((sheet) => parseCss(sheet.css));
   const props = browserProps(read, rules);
   const known = new Set([...props.root.keys(), ...props.dark.keys()]);
-  const vars = candidatesFromVars(props, 'url', label);
+  const vars = candidatesFromVars(props, "url", label);
   const computed = computedCandidates(read.live, label);
-  const cssUsage = usageCandidates(rules, props.root, livePageParts(read), label);
-  const staticVars = fromStatic ? candidatesFromVars(withoutNames(fromStatic.props, known), 'url', `${label} (plain fetch)`) : [];
+  const cssUsage = usageCandidates(
+    rules,
+    props.root,
+    livePageParts(read),
+    label
+  );
+  const staticVars = fromStatic
+    ? candidatesFromVars(
+        withoutNames(fromStatic.props, known),
+        "url",
+        `${label} (plain fetch)`
+      )
+    : [];
   const staticAll = fromStatic?.result.harvest.candidates ?? [];
-  const sure = vars.filter((item) => item.confidence === 'high');
-  const guessed = vars.filter((item) => item.confidence !== 'high');
-  const candidates = fillDark([...sure, ...computed.candidates, ...guessed, ...staticVars, ...cssUsage, ...(fromStatic?.usage ?? [])], staticAll);
+  const sure = vars.filter((item) => item.confidence === "high");
+  const guessed = vars.filter((item) => item.confidence !== "high");
+  const candidates = fillDark(
+    [
+      ...sure,
+      ...computed.candidates,
+      ...guessed,
+      ...staticVars,
+      ...cssUsage,
+      ...(fromStatic?.usage ?? []),
+    ],
+    staticAll
+  );
   const googleFontsUrl = browserFontsUrl(read, fromStatic);
-  const bg = computed.bg ?? candidates.find((item) => item.token === 'color.bg' && item.value)?.value;
-  const darkHint = read.live.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
-  const stylesheets = read.sheets.slice(0, MAX_STYLESHEETS).map((sheet) => ({ url: sheet.url === 'inline' ? `${read.url} (inline)` : sheet.url, css: sheet.css }));
+  const bg =
+    computed.bg ??
+    candidates.find((item) => item.token === "color.bg" && item.value)?.value;
+  const darkHint =
+    read.live.darkHint || (bg !== undefined && (lightnessOf(bg) ?? 1) < 0.35);
+  const stylesheets = read.sheets.slice(0, MAX_STYLESHEETS).map((sheet) => ({
+    url: sheet.url === "inline" ? `${read.url} (inline)` : sheet.url,
+    css: sheet.css,
+  }));
   const notes = refusalNotes(read);
   return {
-    harvest: { source: 'url', label: read.url, candidates, ...(googleFontsUrl ? { googleFontsUrl } : {}), darkHint },
-    snapshot: { url: read.url, html: read.html, stylesheets, failures: fromStatic?.result.snapshot.failures ?? [] },
-    method: 'browser',
+    harvest: {
+      source: "url",
+      label: read.url,
+      candidates,
+      ...(googleFontsUrl ? { googleFontsUrl } : {}),
+      darkHint,
+    },
+    snapshot: {
+      url: read.url,
+      html: read.html,
+      stylesheets,
+      failures: fromStatic?.result.snapshot.failures ?? [],
+    },
+    method: "browser",
     ...(read.screenshot ? { screenshot: read.screenshot } : {}),
     ...(read.logo ? { logo: read.logo } : {}),
     ...(notes.length > 0 ? { notes } : {}),
@@ -450,7 +702,7 @@ function browserHarvest(read: BrowserRead, fromStatic: StaticRead | null): UrlHa
 }
 
 function defaultAllowLoopback(): boolean {
-  return process.env.STUDIO_FETCH_ALLOW_LOOPBACK === '1' && !resourcesDir();
+  return process.env.STUDIO_FETCH_ALLOW_LOOPBACK === "1" && !resourcesDir();
 }
 
 function shouldUseBrowser(options: HarvestOptions, totalMs: number): boolean {
@@ -459,12 +711,15 @@ function shouldUseBrowser(options: HarvestOptions, totalMs: number): boolean {
 }
 
 function outcomeNote(outcome: BrowserOutcome): string | null {
-  if (outcome.kind === 'unavailable') return outcome.note;
-  if (outcome.kind === 'failed') return `The browser could not read the page: ${outcome.error}`;
+  if (outcome.kind === "unavailable") return outcome.note;
+  if (outcome.kind === "failed")
+    return `The browser could not read the page: ${outcome.error}`;
   return null;
 }
 
-async function settle<T>(work: Promise<T>): Promise<{ ok: true; value: T } | { ok: false; error: unknown }> {
+async function settle<T>(
+  work: Promise<T>
+): Promise<{ ok: true; value: T } | { ok: false; error: unknown }> {
   try {
     return { ok: true, value: await work };
   } catch (error) {
@@ -472,11 +727,21 @@ async function settle<T>(work: Promise<T>): Promise<{ ok: true; value: T } | { o
   }
 }
 
-export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TOTAL_MS, options: HarvestOptions = {}): Promise<UrlHarvest> {
+export async function harvestUrl(
+  url: string,
+  fetcher: Fetcher,
+  totalMs = URL_TOTAL_MS,
+  options: HarvestOptions = {}
+): Promise<UrlHarvest> {
   const started = Date.now();
   const useBrowser = shouldUseBrowser(options, totalMs);
   const deadline = started + Math.min(totalMs, BROWSER_TOTAL_MS);
-  const browserWork = useBrowser ? readWithBrowser(url, { allowLoopback: options.allowLoopback ?? defaultAllowLoopback(), deadline }) : null;
+  const browserWork = useBrowser
+    ? readWithBrowser(url, {
+        allowLoopback: options.allowLoopback ?? defaultAllowLoopback(),
+        deadline,
+      })
+    : null;
   const plain = await settle(readStatic(url, fetcher, totalMs));
   if (!plain.ok && plain.error instanceof FetchBlockedError) {
     void browserWork?.catch(() => undefined);
@@ -484,19 +749,35 @@ export async function harvestUrl(url: string, fetcher: Fetcher, totalMs = URL_TO
   }
   if (!browserWork) {
     if (!plain.ok) throw plain.error;
-    return { ...plain.value.result, method: 'static', ms: Date.now() - started };
+    return {
+      ...plain.value.result,
+      method: "static",
+      ms: Date.now() - started,
+    };
   }
-  const outcome = await browserWork.catch((error: unknown): BrowserOutcome => ({ kind: 'failed', error: error instanceof Error ? error.message : String(error) }));
+  const outcome = await browserWork.catch((error: unknown): BrowserOutcome => ({
+    kind: "failed",
+    error: error instanceof Error ? error.message : String(error),
+  }));
   const ms = Date.now() - started;
-  if (outcome.kind === 'read' && !outcome.read.blocked) {
+  if (outcome.kind === "read" && !outcome.read.blocked) {
     const merged = browserHarvest(outcome.read, plain.ok ? plain.value : null);
     return { ...merged, ms };
   }
-  const blocked = outcome.kind === 'read' ? outcome.read.blocked : undefined;
-  const note = blocked ? `The browser saw a wall: ${blocked}. The plain fetch was used instead.` : outcomeNote(outcome);
+  const blocked = outcome.kind === "read" ? outcome.read.blocked : undefined;
+  const note = blocked
+    ? `The browser saw a wall: ${blocked}. The plain fetch was used instead.`
+    : outcomeNote(outcome);
   if (!plain.ok) {
-    const reason = plain.error instanceof Error ? plain.error.message : String(plain.error);
+    const reason =
+      plain.error instanceof Error ? plain.error.message : String(plain.error);
     throw new Error(blocked ? `${reason} (${blocked})` : reason);
   }
-  return { ...plain.value.result, method: 'static', ...(blocked ? { blocked } : {}), ...(note ? { notes: [note] } : {}), ms };
+  return {
+    ...plain.value.result,
+    method: "static",
+    ...(blocked ? { blocked } : {}),
+    ...(note ? { notes: [note] } : {}),
+    ms,
+  };
 }

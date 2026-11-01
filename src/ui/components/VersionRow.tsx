@@ -1,12 +1,29 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
-import type { Version } from '../../shared/contracts';
-import { formatRelative, formatTime } from '../format';
-import { openCompareInCode } from '../versionsApi';
-import { autoTitle, displayTitle, fullText, kindInfo, originOf, undoneOf, type VersionIndex } from '../versionLabels';
-import { Icon, type IconName } from './Icon';
-import { levelLabel } from './LevelControl';
-import { usePopover } from '../usePopover';
-import { VersionThumb } from './VersionThumb';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type RefObject,
+} from "react";
+
+import type { Version } from "../../shared/contracts";
+import { formatRelative, formatTime } from "../format";
+import { usePopover } from "../usePopover";
+import {
+  autoTitle,
+  displayTitle,
+  fullText,
+  kindInfo,
+  originOf,
+  undoneOf,
+  type VersionIndex,
+} from "../versionLabels";
+import { openCompareInCode } from "../versionsApi";
+import { Icon, type IconName } from "./Icon";
+import { levelLabel } from "./LevelControl";
+import { VersionThumb } from "./VersionThumb";
 
 const NAME_MAX = 80;
 
@@ -18,7 +35,7 @@ interface VersionRowProps {
   isHead: boolean;
   isOpen: boolean;
   picked: boolean;
-  compareSide?: 'A' | 'B' | null;
+  compareSide?: "A" | "B" | null;
   locked: boolean;
   expanded: boolean;
   onExpand: () => void;
@@ -33,7 +50,15 @@ interface VersionRowProps {
   onReview?: () => void;
 }
 
-function RenameField({ initial, fallback, onDone }: { initial: string; fallback: string; onDone: (name: string | null | undefined) => void }) {
+function RenameField({
+  initial,
+  fallback,
+  onDone,
+}: {
+  initial: string;
+  fallback: string;
+  onDone: (name: string | null | undefined) => void;
+}) {
   const [value, setValue] = useState(initial);
   const done = useRef(false);
   const finish = (name: string | null | undefined) => {
@@ -42,17 +67,17 @@ function RenameField({ initial, fallback, onDone }: { initial: string; fallback:
     onDone(name);
   };
   const commit = () => {
-    const name = value.trim().replace(/\s+/g, ' ');
+    const name = value.trim().replace(/\s+/g, " ");
     if (name === initial) return finish(undefined);
-    finish(name === '' || name === fallback ? null : name);
+    finish(name === "" || name === fallback ? null : name);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.stopPropagation();
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.preventDefault();
       commit();
     }
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       event.preventDefault();
       finish(undefined);
     }
@@ -74,7 +99,15 @@ function RenameField({ initial, fallback, onDone }: { initial: string; fallback:
   );
 }
 
-function RowAction(props: { label: string; icon: IconName; tip: string; onClick: () => void; disabled?: boolean; pressed?: boolean; testId?: string }) {
+function RowAction(props: {
+  label: string;
+  icon: IconName;
+  tip: string;
+  onClick: () => void;
+  disabled?: boolean;
+  pressed?: boolean;
+  testId?: string;
+}) {
   return (
     <button
       type="button"
@@ -92,7 +125,17 @@ function RowAction(props: { label: string; icon: IconName; tip: string; onClick:
   );
 }
 
-function VersionLink({ label, target, index, onOpen }: { label: string; target: Version; index: VersionIndex; onOpen: (v: Version) => void }) {
+function VersionLink({
+  label,
+  target,
+  index,
+  onOpen,
+}: {
+  label: string;
+  target: Version;
+  index: VersionIndex;
+  onOpen: (v: Version) => void;
+}) {
   return (
     <div className="version-fact">
       <dt>{label}</dt>
@@ -105,7 +148,17 @@ function VersionLink({ label, target, index, onOpen }: { label: string; target: 
   );
 }
 
-function VersionDetail({ version: v, index, id, onOpenVersion }: { version: Version; index: VersionIndex; id: string; onOpenVersion: (v: Version) => void }) {
+function VersionDetail({
+  version: v,
+  index,
+  id,
+  onOpenVersion,
+}: {
+  version: Version;
+  index: VersionIndex;
+  id: string;
+  onOpenVersion: (v: Version) => void;
+}) {
   const prompt = fullText(v);
   const origin = originOf(v, index);
   const undone = undoneOf(v, index);
@@ -113,12 +166,26 @@ function VersionDetail({ version: v, index, id, onOpenVersion }: { version: Vers
     <dl className="version-detail" id={id}>
       {prompt && (
         <div className="version-fact">
-          <dt>{v.meta.kind === 'run' ? 'Prompt' : 'Change'}</dt>
+          <dt>{v.meta.kind === "run" ? "Prompt" : "Change"}</dt>
           <dd className="version-prompt">{prompt}</dd>
         </div>
       )}
-      {undone && <VersionLink label="Undid" target={undone} index={index} onOpen={onOpenVersion} />}
-      {origin && <VersionLink label={v.meta.kind === 'undo' ? 'Back to' : 'Restored'} target={origin} index={index} onOpen={onOpenVersion} />}
+      {undone && (
+        <VersionLink
+          label="Undid"
+          target={undone}
+          index={index}
+          onOpen={onOpenVersion}
+        />
+      )}
+      {origin && (
+        <VersionLink
+          label={v.meta.kind === "undo" ? "Back to" : "Restored"}
+          target={origin}
+          index={index}
+          onOpen={onOpenVersion}
+        />
+      )}
       <div className="version-fact">
         <dt>Saved</dt>
         <dd>{formatTime(v.createdAt)}</dd>
@@ -130,7 +197,9 @@ function VersionDetail({ version: v, index, id, onOpenVersion }: { version: Vers
             {v.changedFiles.map((file) => (
               <code key={file}>{file}</code>
             ))}
-            {fileCount(v) > v.changedFiles.length && <span>and {fileCount(v) - v.changedFiles.length} more</span>}
+            {fileCount(v) > v.changedFiles.length && (
+              <span>and {fileCount(v) - v.changedFiles.length} more</span>
+            )}
           </dd>
         </div>
       )}
@@ -161,26 +230,51 @@ function VersionMeta({ version: v }: { version: Version }) {
   const more = files - v.changedFiles.length;
   return (
     <div className="version-meta">
-      <span className={`version-kind ${v.meta.kind}`} data-kind={v.meta.kind} data-tip={kind.hint} data-tip-align="start">
+      <span
+        className={`version-kind ${v.meta.kind}`}
+        data-kind={v.meta.kind}
+        data-tip={kind.hint}
+        data-tip-align="start"
+      >
         <Icon name={kind.icon} size={12} />
         <span className="version-kind-label">{kind.label}</span>
       </span>
       <VersionLevel version={v} />
       <span className="dot" />
-      <time dateTime={new Date(v.createdAt).toISOString()} data-tip={`${formatTime(v.createdAt)} · ${files} file${files === 1 ? '' : 's'}`}>
+      <time
+        dateTime={new Date(v.createdAt).toISOString()}
+        data-tip={`${formatTime(v.createdAt)} · ${files} file${files === 1 ? "" : "s"}`}
+      >
         {formatRelative(v.createdAt)}
       </time>
       <span className="dot version-file-count-dot" />
-      <span className="version-file-count" data-tip={more > 0 ? `${v.changedFiles.slice(0, 20).join('\n')}\nand ${more} more` : v.changedFiles.join('\n')}>
-        {files} file{files === 1 ? '' : 's'}
+      <span
+        className="version-file-count"
+        data-tip={
+          more > 0
+            ? `${v.changedFiles.slice(0, 20).join("\n")}\nand ${more} more`
+            : v.changedFiles.join("\n")
+        }
+      >
+        {files} file{files === 1 ? "" : "s"}
       </span>
     </div>
   );
 }
 
 function rowClasses(props: VersionRowProps): string {
-  const flags = { head: props.isHead, selected: props.isOpen, picked: props.picked, expanded: props.expanded };
-  return ['version', ...Object.entries(flags).filter(([, on]) => on).map(([name]) => name)].join(' ');
+  const flags = {
+    head: props.isHead,
+    selected: props.isOpen,
+    picked: props.picked,
+    expanded: props.expanded,
+  };
+  return [
+    "version",
+    ...Object.entries(flags)
+      .filter(([, on]) => on)
+      .map(([name]) => name),
+  ].join(" ");
 }
 
 export function VersionRow(props: VersionRowProps) {
@@ -197,11 +291,21 @@ export function VersionRow(props: VersionRowProps) {
   return (
     <li className={rowClasses(props)}>
       <span className="version-node" aria-hidden="true" />
-      <VersionThumb projectId={props.projectId} versionId={v.id} active={props.active} label={title} onOpen={props.onOpen} />
+      <VersionThumb
+        projectId={props.projectId}
+        versionId={v.id}
+        active={props.active}
+        label={title}
+        onOpen={props.onOpen}
+      />
       <div className="version-main">
         <div className="version-title">
           {renaming ? (
-            <RenameField initial={title} fallback={autoTitle(v, props.index)} onDone={endRename} />
+            <RenameField
+              initial={title}
+              fallback={autoTitle(v, props.index)}
+              onDone={endRename}
+            />
           ) : (
             <button
               ref={toggle}
@@ -215,7 +319,7 @@ export function VersionRow(props: VersionRowProps) {
               onClick={props.onExpand}
               onDoubleClick={() => setRenaming(true)}
               onKeyDown={(event) => {
-                if (event.key === 'F2') {
+                if (event.key === "F2") {
                   event.preventDefault();
                   setRenaming(true);
                 }
@@ -225,7 +329,10 @@ export function VersionRow(props: VersionRowProps) {
             </button>
           )}
           {props.compareSide && (
-            <span className="badge accent version-side" data-tip={`Compare side ${props.compareSide}`}>
+            <span
+              className="badge accent version-side"
+              data-tip={`Compare side ${props.compareSide}`}
+            >
               <span aria-hidden="true">{props.compareSide}</span>
               <span className="sr-only">Compare side {props.compareSide}</span>
             </span>
@@ -236,7 +343,14 @@ export function VersionRow(props: VersionRowProps) {
           <VersionMeta version={v} />
           <VersionActions {...props} />
         </div>
-        {props.expanded && <VersionDetail version={v} index={props.index} id={detailId} onOpenVersion={props.onOpenVersion} />}
+        {props.expanded && (
+          <VersionDetail
+            version={v}
+            index={props.index}
+            id={detailId}
+            onOpenVersion={props.onOpenVersion}
+          />
+        )}
       </div>
     </li>
   );
@@ -256,18 +370,35 @@ function moreItems(props: VersionRowProps): MoreItem[] {
   const onReview = props.onReview;
   if (onReview && v.parentId !== null) {
     items.push({
-      id: 'review',
-      label: 'Review changes',
-      icon: 'code',
+      id: "review",
+      label: "Review changes",
+      icon: "code",
       run: () => {
         openCompareInCode();
         onReview();
       },
     });
   }
-  items.push({ id: 'export', label: 'Export…', icon: 'download', run: props.onExport });
-  items.push({ id: 'branch', label: 'New direction from here', icon: 'branch', run: props.onBranch });
-  if (isHead && v.meta.level !== 'polish') items.push({ id: 'polish', label: 'Polish this', icon: 'sparkle', hint: props.locked ? 'Wait for the run' : undefined, run: props.onPolish });
+  items.push({
+    id: "export",
+    label: "Export…",
+    icon: "download",
+    run: props.onExport,
+  });
+  items.push({
+    id: "branch",
+    label: "New direction from here",
+    icon: "branch",
+    run: props.onBranch,
+  });
+  if (isHead && v.meta.level !== "polish")
+    items.push({
+      id: "polish",
+      label: "Polish this",
+      icon: "sparkle",
+      hint: props.locked ? "Wait for the run" : undefined,
+      run: props.onPolish,
+    });
   return items;
 }
 
@@ -278,12 +409,19 @@ const MENU_STEP: Record<string, (index: number, count: number) => number> = {
   End: (_index, count) => count - 1,
 };
 
-function onMenuKey(event: KeyboardEvent<HTMLDivElement>, close: (refocus: boolean) => void) {
-  if (event.key === 'Tab') close(false);
+function onMenuKey(
+  event: KeyboardEvent<HTMLDivElement>,
+  close: (refocus: boolean) => void
+) {
+  if (event.key === "Tab") close(false);
   const step = MENU_STEP[event.key];
   if (!step) return;
   event.preventDefault();
-  const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)'));
+  const items = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="menuitem"]:not(:disabled)'
+    )
+  );
   const index = items.indexOf(document.activeElement as HTMLButtonElement);
   items[step(Math.max(0, index), items.length)]?.focus();
 }
@@ -291,24 +429,48 @@ function onMenuKey(event: KeyboardEvent<HTMLDivElement>, close: (refocus: boolea
 const MENU_GAP = 4;
 const MENU_EDGE = 8;
 
-function useMenuPlace(open: boolean, trigger: RefObject<HTMLButtonElement | null>, menu: RefObject<HTMLDivElement | null>) {
-  const [place, setPlace] = useState<{ left: number; top: number } | null>(null);
+function useMenuPlace(
+  open: boolean,
+  trigger: RefObject<HTMLButtonElement | null>,
+  menu: RefObject<HTMLDivElement | null>
+) {
+  const [place, setPlace] = useState<{ left: number; top: number } | null>(
+    null
+  );
   useLayoutEffect(() => {
     if (!open) return setPlace(null);
     const button = trigger.current?.getBoundingClientRect();
     const el = menu.current;
     if (!button || !el) return;
     const below = button.bottom + MENU_GAP;
-    const top = below + el.offsetHeight > window.innerHeight - MENU_EDGE ? button.top - MENU_GAP - el.offsetHeight : below;
-    setPlace({ left: Math.max(MENU_EDGE, Math.min(button.left, window.innerWidth - el.offsetWidth - MENU_EDGE)), top: Math.max(MENU_EDGE, top) });
+    const top =
+      below + el.offsetHeight > window.innerHeight - MENU_EDGE
+        ? button.top - MENU_GAP - el.offsetHeight
+        : below;
+    setPlace({
+      left: Math.max(
+        MENU_EDGE,
+        Math.min(button.left, window.innerWidth - el.offsetWidth - MENU_EDGE)
+      ),
+      top: Math.max(MENU_EDGE, top),
+    });
   }, [open, trigger, menu]);
   useEffect(() => {
-    if (place) menu.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')?.focus({ preventScroll: true });
+    if (place)
+      menu.current
+        ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+        ?.focus({ preventScroll: true });
   }, [place, menu]);
   return place;
 }
 
-function VersionMoreMenu({ items, title }: { items: MoreItem[]; title: string }) {
+function VersionMoreMenu({
+  items,
+  title,
+}: {
+  items: MoreItem[];
+  title: string;
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -328,23 +490,36 @@ function VersionMoreMenu({ items, title }: { items: MoreItem[]; title: string })
         aria-label={`More actions for ${title}`}
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tip={open ? undefined : 'More'}
+        data-tip={open ? undefined : "More"}
         data-tip-side="top"
         onClick={() => setOpen((value) => !value)}
       >
         <Icon name="more" size={15} />
       </button>
       {open && (
-        <div ref={menu} className="ui-menu version-menu" role="menu" aria-label="More version actions" style={place ?? { visibility: 'hidden' }} onKeyDown={(event) => onMenuKey(event, close)}>
+        <div
+          ref={menu}
+          className="ui-menu version-menu"
+          role="menu"
+          aria-label="More version actions"
+          style={place ?? { visibility: "hidden" }}
+          onKeyDown={(event) => onMenuKey(event, close)}
+        >
           {items.map((item) => (
             <button
               key={item.id}
               type="button"
               role="menuitem"
-              className={`ui-menu-item${item.hint ? ' has-hint' : ''}`}
+              className={`ui-menu-item${item.hint ? " has-hint" : ""}`}
               tabIndex={-1}
               disabled={Boolean(item.hint)}
-              data-testid={item.id === 'review' ? 'version-review-changes' : item.id === 'polish' ? 'version-polish-this' : undefined}
+              data-testid={
+                item.id === "review"
+                  ? "version-review-changes"
+                  : item.id === "polish"
+                    ? "version-polish-this"
+                    : undefined
+              }
               onClick={(event) => {
                 close(event.detail === 0);
                 item.run();
@@ -365,16 +540,30 @@ function VersionActions(props: VersionRowProps) {
   const { isHead, picked } = props;
   return (
     <div className="version-actions" role="group" aria-label="Version actions">
-      <RowAction label="Open" icon="eye" tip="Open this version" onClick={props.onOpen} />
-      <RowAction label="Restore" icon="restore" tip={isHead ? 'Already the head' : 'Restore as head'} disabled={isHead || props.locked} onClick={props.onRestore} />
       <RowAction
-        label={picked ? 'Comparing' : 'Compare'}
+        label="Open"
+        icon="eye"
+        tip="Open this version"
+        onClick={props.onOpen}
+      />
+      <RowAction
+        label="Restore"
+        icon="restore"
+        tip={isHead ? "Already the head" : "Restore as head"}
+        disabled={isHead || props.locked}
+        onClick={props.onRestore}
+      />
+      <RowAction
+        label={picked ? "Comparing" : "Compare"}
         icon="compare"
-        tip={picked ? 'Remove from compare' : 'Add to compare'}
+        tip={picked ? "Remove from compare" : "Add to compare"}
         pressed={picked}
         onClick={props.onToggleCompare}
       />
-      <VersionMoreMenu items={moreItems(props)} title={displayTitle(props.version, props.index)} />
+      <VersionMoreMenu
+        items={moreItems(props)}
+        title={displayTitle(props.version, props.index)}
+      />
     </div>
   );
 }

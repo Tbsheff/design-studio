@@ -205,7 +205,7 @@
   font-weight: var(--w-medium);
 }
 
-.mcp-approval-done[data-outcome='allow'] svg {
+.mcp-approval-done[data-outcome="allow"] svg {
   color: var(--ok);
 }
 
@@ -420,7 +420,7 @@
   transition: rotate var(--dur) var(--ease);
 }
 
-.mcp-edit-head[aria-expanded='false'] .mcp-edit-caret {
+.mcp-edit-head[aria-expanded="false"] .mcp-edit-caret {
   rotate: 180deg;
 }
 

@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export const CSS_DUR_EXIT_MS = 100;
 
 function reducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
 }
 
-export function usePresence<T>(value: T | null): { shown: T | null; closing: boolean } {
+export function usePresence<T>(value: T | null): {
+  shown: T | null;
+  closing: boolean;
+} {
   const [kept, setKept] = useState<T | null>(value);
   useEffect(() => {
     if (value !== null) {

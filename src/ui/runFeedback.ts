@@ -1,13 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
-export type Thumb = 'up' | 'down';
+export type Thumb = "up" | "down";
 
 export interface RunFeedback {
   thumb: Thumb | null;
   stars: number;
 }
 
-const KEY = 'design-studio.run-feedback.v1';
+const KEY = "design-studio.run-feedback.v1";
 const MAX_ENTRIES = 500;
 const EMPTY: RunFeedback = { thumb: null, stars: 0 };
 
@@ -20,7 +20,7 @@ function load(): Store {
   try {
     const raw = window.localStorage.getItem(KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : {};
-    cache = parsed && typeof parsed === 'object' ? (parsed as Store) : {};
+    cache = parsed && typeof parsed === "object" ? (parsed as Store) : {};
   } catch {
     cache = {};
   }
@@ -44,7 +44,9 @@ function save(store: Store): void {
 
 export function readRunFeedback(runId: string): RunFeedback {
   const entry = load()[runId];
-  return entry ? { thumb: entry.thumb ?? null, stars: entry.stars ?? 0 } : EMPTY;
+  return entry
+    ? { thumb: entry.thumb ?? null, stars: entry.stars ?? 0 }
+    : EMPTY;
 }
 
 export function writeRunFeedback(runId: string, feedback: RunFeedback): void {
@@ -55,7 +57,9 @@ export function writeRunFeedback(runId: string, feedback: RunFeedback): void {
   save(store);
 }
 
-export function useRunFeedback(runId: string): [RunFeedback, (patch: Partial<RunFeedback>) => void] {
+export function useRunFeedback(
+  runId: string
+): [RunFeedback, (patch: Partial<RunFeedback>) => void] {
   const [feedback, setFeedback] = useState(() => readRunFeedback(runId));
   const update = useCallback(
     (patch: Partial<RunFeedback>) =>
@@ -64,7 +68,7 @@ export function useRunFeedback(runId: string): [RunFeedback, (patch: Partial<Run
         writeRunFeedback(runId, next);
         return next;
       }),
-    [runId],
+    [runId]
   );
   return [feedback, update];
 }

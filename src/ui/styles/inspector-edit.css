@@ -168,7 +168,7 @@
   color: var(--text);
 }
 
-.ins-tool[aria-pressed='true'] {
+.ins-tool[aria-pressed="true"] {
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 0.5px var(--line-strong);
   color: var(--text);
@@ -472,7 +472,10 @@
 }
 
 .edit-pane .ins-swatch:has(input:focus-visible) {
-  box-shadow: inset 0 0 0 1px var(--edge-strong), 0 0 0 2px var(--surface-raised), 0 0 0 3px var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-strong),
+    0 0 0 2px var(--surface-raised),
+    0 0 0 3px var(--accent);
 }
 
 .edit-pane .ins-value {
@@ -649,7 +652,7 @@
 }
 
 .ins-export-row:hover,
-.ins-export-row[aria-expanded='true'] {
+.ins-export-row[aria-expanded="true"] {
   color: var(--text);
   text-decoration: underline;
   text-decoration-color: var(--line-strong);
@@ -915,7 +918,9 @@
   flex: none;
   color: var(--text-3);
   transform: rotate(90deg);
-  transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease);
 }
 
 .ins-section.closed .ins-section-toggle > svg {
@@ -968,7 +973,7 @@
 }
 
 .edit-pane .ins-field .ui-select:hover:not(:disabled),
-.edit-pane .ins-field .ui-select[aria-expanded='true'] {
+.edit-pane .ins-field .ui-select[aria-expanded="true"] {
   background: transparent;
 }
 
@@ -1063,7 +1068,7 @@
   gap: var(--s-1);
 }
 
-.ins-abs-toggle[aria-pressed='true'] {
+.ins-abs-toggle[aria-pressed="true"] {
   background: var(--surface-raised);
   box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--text);

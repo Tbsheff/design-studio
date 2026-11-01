@@ -1,27 +1,37 @@
-import { mkdir } from 'node:fs/promises';
-import path from 'node:path';
-import { serve } from '@hono/node-server';
-import { createAgentRunner } from './agent/index.js';
-import { createCommentStore } from './store/comments.js';
-import { followSourceMoves } from './direct-edit/follow-moves.js';
-import { loadConfig } from './config.js';
-import { createApp } from './http/app.js';
-import { createCanvasService } from './canvas/service.js';
-import { loadBridgeScript } from './preview/bridge-bundle.js';
-import { createPreviewService } from './preview/index.js';
-import { createEventBus } from './store/events.js';
-import { acquireDataLock, DataDirLockedError, LOCKED_EXIT_CODE } from './store/data-lock.js';
-import { createProjectStore } from './store/projects.js';
-import { watchParent } from './parent-watch.js';
-import { desktopSender, linkDesktop } from './desktop-link.js';
-import { createVersionStore } from './store/versions.js';
-import { withSaveQueue } from './direct-edit/save-queue.js';
-import { createThumbnailService, observeBus, wantsThumbnail } from './thumbnails.js';
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
+
+import { serve } from "@hono/node-server";
+
+import { createAgentRunner } from "./agent/index.js";
+import { createCanvasService } from "./canvas/service.js";
+import { loadConfig } from "./config.js";
+import { desktopSender, linkDesktop } from "./desktop-link.js";
+import { followSourceMoves } from "./direct-edit/follow-moves.js";
+import { withSaveQueue } from "./direct-edit/save-queue.js";
+import { createApp } from "./http/app.js";
+import { watchParent } from "./parent-watch.js";
+import { loadBridgeScript } from "./preview/bridge-bundle.js";
+import { createPreviewService } from "./preview/index.js";
+import { createCommentStore } from "./store/comments.js";
+import {
+  acquireDataLock,
+  DataDirLockedError,
+  LOCKED_EXIT_CODE,
+} from "./store/data-lock.js";
+import { createEventBus } from "./store/events.js";
+import { createProjectStore } from "./store/projects.js";
+import { createVersionStore } from "./store/versions.js";
+import {
+  createThumbnailService,
+  observeBus,
+  wantsThumbnail,
+} from "./thumbnails.js";
 
 async function watchExisting(
   preview: ReturnType<typeof createPreviewService>,
   versions: ReturnType<typeof createVersionStore>,
-  projects: ReturnType<typeof createProjectStore>,
+  projects: ReturnType<typeof createProjectStore>
 ): Promise<void> {
   for (const project of await projects.list()) {
     await versions.ensureRepo(project);
@@ -29,7 +39,10 @@ async function watchExisting(
       try {
         preview.watch(project, direction);
       } catch (error) {
-        console.error(`[studio] cannot watch ${project.id}/${direction.id}`, error);
+        console.error(
+          `[studio] cannot watch ${project.id}/${direction.id}`,
+          error
+        );
       }
     }
   }
@@ -39,42 +52,74 @@ async function warmPreview(
   config: ReturnType<typeof loadConfig>,
   preview: ReturnType<typeof createPreviewService>,
   versions: ReturnType<typeof createVersionStore>,
-  projects: ReturnType<typeof createProjectStore>,
+  projects: ReturnType<typeof createProjectStore>
 ): Promise<void> {
   try {
     await watchExisting(preview, versions, projects);
     await loadBridgeScript();
   } catch (error) {
-    console.error('[studio] preview warm-up failed', error, config.dataDir);
+    console.error("[studio] preview warm-up failed", error, config.dataDir);
   }
 }
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  await mkdir(path.join(config.dataDir, 'projects'), { recursive: true });
+  await mkdir(path.join(config.dataDir, "projects"), { recursive: true });
   const releaseLock = acquireDataLock(config.dataDir, config.studioPort);
-  process.on('exit', releaseLock);
+  process.on("exit", releaseLock);
 
   const versions = withSaveQueue(createVersionStore(config));
   const projects = createProjectStore(config, versions);
   const desktop = desktopSender();
   const baseBus = createEventBus(config.dataDir);
-  const observed = observeBus(desktop ? linkDesktop(baseBus, desktop, { token: config.studioToken, dataDir: config.dataDir }) : baseBus);
+  const observed = observeBus(
+    desktop
+      ? linkDesktop(baseBus, desktop, {
+          token: config.studioToken,
+          dataDir: config.dataDir,
+        })
+      : baseBus
+  );
   const bus = observed.bus;
   const preview = createPreviewService({ config, bus, projects, versions });
-  const canvas = createCanvasService(bus, (projectId) => projects.projectDir(projectId));
+  const canvas = createCanvasService(bus, (projectId) =>
+    projects.projectDir(projectId)
+  );
   const comments = createCommentStore(config.dataDir, bus);
   followSourceMoves(comments);
-  const runner = createAgentRunner({ config, bus, projects, versions, preview, canvas, comments });
+  const runner = createAgentRunner({
+    config,
+    bus,
+    projects,
+    versions,
+    preview,
+    canvas,
+    comments,
+  });
   const thumbnails = createThumbnailService({ projects, preview, versions });
   observed.observe((event) => {
     if (wantsThumbnail(event)) thumbnails.schedule(event.projectId);
   });
 
-  const app = createApp({ config, bus, projects, versions, runner, preview, thumbnails, canvas, comments });
-  const server = serve({ fetch: app.fetch, port: config.studioPort, hostname: '127.0.0.1' }, () => {
-    console.log(`Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`);
+  const app = createApp({
+    config,
+    bus,
+    projects,
+    versions,
+    runner,
+    preview,
+    thumbnails,
+    canvas,
+    comments,
   });
+  const server = serve(
+    { fetch: app.fetch, port: config.studioPort, hostname: "127.0.0.1" },
+    () => {
+      console.log(
+        `Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`
+      );
+    }
+  );
 
   await preview.start();
   void warmPreview(config, preview, versions, projects);
@@ -89,13 +134,15 @@ async function main(): Promise<void> {
     server.close();
     preview
       .stop()
-      .catch((error: unknown) => console.error('[studio] preview stop failed', error))
+      .catch((error: unknown) =>
+        console.error("[studio] preview stop failed", error)
+      )
       .finally(() => process.exit(0));
   };
-  watchParent(() => shutdown('parent exit'));
-  process.on('SIGINT', () => shutdown('SIGINT'));
-  process.on('SIGTERM', () => shutdown('SIGTERM'));
-  process.on('SIGHUP', () => shutdown('SIGHUP'));
+  watchParent(() => shutdown("parent exit"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGHUP", () => shutdown("SIGHUP"));
 }
 
 main().catch((error: unknown) => {
@@ -103,6 +150,6 @@ main().catch((error: unknown) => {
     console.error(`[studio] ${error.message}`);
     process.exit(LOCKED_EXIT_CODE);
   }
-  console.error('[studio] failed to start', error);
+  console.error("[studio] failed to start", error);
   process.exit(1);
 });

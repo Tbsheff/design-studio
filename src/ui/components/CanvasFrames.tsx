@@ -1,13 +1,29 @@
-import { memo, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from 'react';
-import { canvasStore, FRAME_PRESETS, frameName, type CanvasFrame } from '../canvasFrames';
-import { FrameResizeHandles, type ResizeEdge } from './FrameControls';
-import { FlowFromHere } from './FlowFromHere';
-import { FrameStateMenu } from './FrameStateMenu';
-import { FrameSkeleton } from './FrameSkeleton';
-import { pageFileOf } from '../useFirstBuild';
-import { Icon } from './Icon';
-import { PREVIEW_PAINTED_EVENT } from '../useEditHistory';
-import { openAppPanel } from '../appStatus';
+import {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
+
+import { openAppPanel } from "../appStatus";
+import {
+  canvasStore,
+  FRAME_PRESETS,
+  frameName,
+  type CanvasFrame,
+} from "../canvasFrames";
+import { PREVIEW_PAINTED_EVENT } from "../useEditHistory";
+import { pageFileOf } from "../useFirstBuild";
+import { FlowFromHere } from "./FlowFromHere";
+import { FrameResizeHandles, type ResizeEdge } from "./FrameControls";
+import { FrameSkeleton } from "./FrameSkeleton";
+import { FrameStateMenu } from "./FrameStateMenu";
+import { Icon } from "./Icon";
 
 export interface FrameBadge {
   label: string;
@@ -26,51 +42,101 @@ interface LabelProps {
   extras?: ReactNode;
   note?: ReactNode;
   onPointerDown: (e: ReactPointerEvent, frame: CanvasFrame) => void;
-  onBodyPointerDown?: (e: ReactPointerEvent, frame: CanvasFrame, body: boolean) => void;
+  onBodyPointerDown?: (
+    e: ReactPointerEvent,
+    frame: CanvasFrame,
+    body: boolean
+  ) => void;
   onActivate: (frame: CanvasFrame) => void;
   onRemove: (frame: CanvasFrame) => void;
   onNudge: (frame: CanvasFrame, dx: number, dy: number) => void;
-  onResizeStart: (e: ReactPointerEvent, frame: CanvasFrame, edge: ResizeEdge) => void;
+  onResizeStart: (
+    e: ReactPointerEvent,
+    frame: CanvasFrame,
+    edge: ResizeEdge
+  ) => void;
 }
 
 export function framePage(path: string | undefined): string {
-  const clean = (path ?? '').replace(/^\/+/, '');
-  if (clean === '' || /\.html?$/i.test(clean)) return clean.replace(/^.*\//, '').replace(/\.html?$/i, '') || 'index';
+  const clean = (path ?? "").replace(/^\/+/, "");
+  if (clean === "" || /\.html?$/i.test(clean))
+    return clean.replace(/^.*\//, "").replace(/\.html?$/i, "") || "index";
   return `/${clean}`;
 }
 
-export function frameBaseName(frame: Pick<CanvasFrame, 'label' | 'width' | 'height'>): string {
+export function frameBaseName(
+  frame: Pick<CanvasFrame, "label" | "width" | "height">
+): string {
   return frame.label?.trim() || frameName(frame);
 }
 
-export function frameTitle(frame: Pick<CanvasFrame, 'id' | 'label' | 'width' | 'height' | 'path'>, frames?: readonly Pick<CanvasFrame, 'id'>[]): string {
+export function frameTitle(
+  frame: Pick<CanvasFrame, "id" | "label" | "width" | "height" | "path">,
+  frames?: readonly Pick<CanvasFrame, "id">[]
+): string {
   const index = frames ? frames.findIndex((item) => item.id === frame.id) : -1;
-  return `${index >= 0 ? `${index + 1} ` : ''}${frameBaseName(frame)} · ${framePage(frame.path)}`;
+  return `${index >= 0 ? `${index + 1} ` : ""}${frameBaseName(frame)} · ${framePage(frame.path)}`;
 }
 
-export function canvasFrameName(projectId: string, frameId: string, fallback: string): string {
+export function canvasFrameName(
+  projectId: string,
+  frameId: string,
+  fallback: string
+): string {
   const frames = canvasStore.get(projectId)?.frames ?? [];
   const index = frames.findIndex((item) => item.id === frameId);
   const frame = frames[index];
   return frame ? `${index + 1} ${frameBaseName(frame)}` : fallback;
 }
 
-const NUDGE: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+const NUDGE: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
 
-export function FrameLabel({ frame, active, removable, directionId, badge, number, title, extras, note, onPointerDown, onActivate, onRemove, onNudge }: LabelProps) {
+export function FrameLabel({
+  frame,
+  active,
+  removable,
+  directionId,
+  badge,
+  number,
+  title,
+  extras,
+  note,
+  onPointerDown,
+  onActivate,
+  onRemove,
+  onNudge,
+}: LabelProps) {
   const size = frameName(frame);
   const base = frameBaseName(frame);
   const name = badge ? `Variation ${badge.label}` : base;
-  const owner = !badge && title && title !== frame.label ? `${title} · ` : '';
-  const classes = ['frame-label', active ? 'active' : '', badge ? 'variation' : '', badge?.current ? 'current' : ''].filter(Boolean).join(' ');
+  const owner = !badge && title && title !== frame.label ? `${title} · ` : "";
+  const classes = [
+    "frame-label",
+    active ? "active" : "",
+    badge ? "variation" : "",
+    badge?.current ? "current" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <div className={classes} data-frame-id={frame.id} data-direction-id={directionId ?? undefined} data-testid={badge ? 'variation-frame' : undefined} style={{ '--frame-w': `${frame.width}px` } as CSSProperties}>
+    <div
+      className={classes}
+      data-frame-id={frame.id}
+      data-direction-id={directionId ?? undefined}
+      data-testid={badge ? "variation-frame" : undefined}
+      style={{ "--frame-w": `${frame.width}px` } as CSSProperties}
+    >
       <button
         type="button"
         className="frame-name"
         aria-pressed={active}
         aria-label={`${name} frame`}
-        data-tip={`${badge ? `${size} · ` : owner}${active ? 'Drag to move, double-click to zoom' : 'Click to edit, double-click to zoom'}`}
+        data-tip={`${badge ? `${size} · ` : owner}${active ? "Drag to move, double-click to zoom" : "Click to edit, double-click to zoom"}`}
         onPointerDown={(e) => onPointerDown(e, frame)}
         onKeyDown={(e) => {
           const step = NUDGE[e.key];
@@ -78,7 +144,7 @@ export function FrameLabel({ frame, active, removable, directionId, badge, numbe
             e.preventDefault();
             const size = e.shiftKey ? 100 : 10;
             onNudge(frame, step[0] * size, step[1] * size);
-          } else if (e.key === 'Enter' || e.key === ' ') {
+          } else if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             onActivate(frame);
           }
@@ -86,14 +152,22 @@ export function FrameLabel({ frame, active, removable, directionId, badge, numbe
       >
         {number && <span className="frame-number">{number}</span>}
         <span className="frame-title">{badge ? badge.title : base}</span>
-        {!badge && frame.label?.trim() && <span className="frame-size">{size}</span>}
+        {!badge && frame.label?.trim() && (
+          <span className="frame-size">{size}</span>
+        )}
       </button>
       <FrameStateMenu frameId={frame.id} frameName={name} />
       {!badge && <FlowFromHere frameId={frame.id} frameName={name} />}
       {extras}
       {note}
       {removable && (
-        <button type="button" className="frame-remove" aria-label={`Remove ${name} frame`} data-tip="Remove frame" onClick={() => onRemove(frame)}>
+        <button
+          type="button"
+          className="frame-remove"
+          aria-label={`Remove ${name} frame`}
+          data-tip="Remove frame"
+          onClick={() => onRemove(frame)}
+        >
           <Icon name="close" size={12} />
         </button>
       )}
@@ -110,9 +184,17 @@ export function isAuthRoute(route: string): boolean {
   return /sign-?in|log-?in|auth/i.test(route);
 }
 
-export function FrameRedirectNote({ redirect, onSignIn, onDismiss }: { redirect: FrameRedirect; onSignIn: () => void; onDismiss: () => void }) {
+export function FrameRedirectNote({
+  redirect,
+  onSignIn,
+  onDismiss,
+}: {
+  redirect: FrameRedirect;
+  onSignIn: () => void;
+  onDismiss: () => void;
+}) {
   const auth = isAuthRoute(redirect.to);
-  const text = `${redirect.from} goes to ${redirect.to}.${auth ? ' Sign in, or pick a public route.' : ''}`;
+  const text = `${redirect.from} goes to ${redirect.to}.${auth ? " Sign in, or pick a public route." : ""}`;
   return (
     <div className="frame-redirect" role="status" data-tip={text}>
       <Icon name="alert" size={12} />
@@ -122,10 +204,20 @@ export function FrameRedirectNote({ redirect, onSignIn, onDismiss }: { redirect:
           Sign in
         </button>
       )}
-      <button type="button" className="btn ghost small" onClick={() => openAppPanel('routes')}>
+      <button
+        type="button"
+        className="btn ghost small"
+        onClick={() => openAppPanel("routes")}
+      >
         Pick a route
       </button>
-      <button type="button" className="icon-btn small" aria-label="Dismiss" data-tip="Dismiss" onClick={onDismiss}>
+      <button
+        type="button"
+        className="icon-btn small"
+        aria-label="Dismiss"
+        data-tip="Dismiss"
+        onClick={onDismiss}
+      >
         <Icon name="close" size={12} />
       </button>
     </div>
@@ -142,7 +234,7 @@ export function useResetPassiveGateInFirstRender(): void {
 
 function resetPassiveMountGate(): void {
   frontPainted = false;
-  if (paintListening || typeof window === 'undefined') return;
+  if (paintListening || typeof window === "undefined") return;
   paintListening = true;
   window.addEventListener(PREVIEW_PAINTED_EVENT, () => {
     frontPainted = true;
@@ -165,14 +257,14 @@ function usePassiveMount(ref: RefObject<HTMLDivElement | null>): boolean {
     };
     window.addEventListener(PREVIEW_PAINTED_EVENT, onPaint);
     const timer = window.setTimeout(onPaint, MOUNT_FALLBACK_MS);
-    const root = el.closest('.stage');
+    const root = el.closest(".stage");
     const io = new IntersectionObserver(
       (entries) => {
         if (!entries.some((e) => e.isIntersecting)) return;
         seen = true;
         tryArm();
       },
-      { root, rootMargin: '50%' },
+      { root, rootMargin: "50%" }
     );
     io.observe(el);
     return () => {
@@ -197,8 +289,21 @@ interface PassiveProps {
   onNextLoad: (id: string) => void;
 }
 
-export function PassiveFrame({ frame, src, nextSrc, pending, sandbox, offset, label, register, frameRef, onNextLoad }: PassiveProps) {
-  const name = label.badge ? `Variation ${label.badge.label}` : frameBaseName(frame);
+export function PassiveFrame({
+  frame,
+  src,
+  nextSrc,
+  pending,
+  sandbox,
+  offset,
+  label,
+  register,
+  frameRef,
+  onNextLoad,
+}: PassiveProps) {
+  const name = label.badge
+    ? `Variation ${label.badge.label}`
+    : frameBaseName(frame);
   const box = useRef<HTMLDivElement | null>(null);
   const armed = usePassiveMount(box);
   return (
@@ -210,7 +315,12 @@ export function PassiveFrame({ frame, src, nextSrc, pending, sandbox, offset, la
       className="canvas-frame"
       data-frame-id={frame.id}
       data-direction-id={label.directionId ?? undefined}
-      style={{ left: frame.x - offset.x, top: frame.y - offset.y, width: frame.width, height: frame.height }}
+      style={{
+        left: frame.x - offset.x,
+        top: frame.y - offset.y,
+        width: frame.width,
+        height: frame.height,
+      }}
     >
       {(armed ? [src, nextSrc] : []).map((url, index) =>
         url ? (
@@ -218,7 +328,7 @@ export function PassiveFrame({ frame, src, nextSrc, pending, sandbox, offset, la
             key={url}
             ref={index === 0 ? frameRef : undefined}
             title={`${name} preview`}
-            className={index === 0 ? 'frame passive' : 'frame passive next'}
+            className={index === 0 ? "frame passive" : "frame passive next"}
             src={url}
             sandbox={sandbox}
             width={frame.width}
@@ -226,12 +336,28 @@ export function PassiveFrame({ frame, src, nextSrc, pending, sandbox, offset, la
             tabIndex={-1}
             onLoad={index === 0 ? undefined : () => onNextLoad(frame.id)}
           />
-        ) : null,
+        ) : null
       )}
-      {pending && <FrameSkeleton step={pending.step} page={pageFileOf(frame.path)} missing={pending.missing ? pageFileOf(frame.path) : undefined} />}
-      <div className="frame-hit" aria-hidden="true" onPointerDown={(e) => (label.onBodyPointerDown ? label.onBodyPointerDown(e, frame, true) : label.onPointerDown(e, frame))} />
+      {pending && (
+        <FrameSkeleton
+          step={pending.step}
+          page={pageFileOf(frame.path)}
+          missing={pending.missing ? pageFileOf(frame.path) : undefined}
+        />
+      )}
+      <div
+        className="frame-hit"
+        aria-hidden="true"
+        onPointerDown={(e) =>
+          label.onBodyPointerDown
+            ? label.onBodyPointerDown(e, frame, true)
+            : label.onPointerDown(e, frame)
+        }
+      />
       <FrameLabel {...label} />
-      <FrameResizeHandles onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)} />
+      <FrameResizeHandles
+        onPointerDown={(e, edge) => label.onResizeStart(e, frame, edge)}
+      />
     </div>
   );
 }
@@ -242,7 +368,9 @@ function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
   return {
     ...cur,
     onPointerDown: (e, f) => live().onPointerDown(e, f),
-    onBodyPointerDown: cur.onBodyPointerDown ? (e, f, body) => live().onBodyPointerDown?.(e, f, body) : undefined,
+    onBodyPointerDown: cur.onBodyPointerDown
+      ? (e, f, body) => live().onBodyPointerDown?.(e, f, body)
+      : undefined,
     onActivate: (f) => live().onActivate(f),
     onRemove: (f) => live().onRemove(f),
     onNudge: (f, dx, dy) => live().onNudge(f, dx, dy),
@@ -251,43 +379,78 @@ function liveLabel(cur: LabelProps, live: () => LabelProps): LabelProps {
 }
 
 export const StablePassiveFrame = memo(
-  function StablePassiveFrame({ id, entries }: { id: string; sig: string; entries: RefObject<Map<string, PassiveEntry>> }) {
+  function StablePassiveFrame({
+    id,
+    entries,
+  }: {
+    id: string;
+    sig: string;
+    entries: RefObject<Map<string, PassiveEntry>>;
+  }) {
     const cur = entries.current.get(id);
     if (!cur) return null;
     const live = () => entries.current.get(id) ?? cur;
-    return <PassiveFrame {...cur} label={liveLabel(cur.label, () => live().label)} onNextLoad={(frameId) => live().onNextLoad(frameId)} />;
+    return (
+      <PassiveFrame
+        {...cur}
+        label={liveLabel(cur.label, () => live().label)}
+        onNextLoad={(frameId) => live().onNextLoad(frameId)}
+      />
+    );
   },
-  (a, b) => a.sig === b.sig && a.entries === b.entries && a.id === b.id,
+  (a, b) => a.sig === b.sig && a.entries === b.entries && a.id === b.id
 );
 
-export function AddFrameMenu({ disabled, onAdd }: { disabled: boolean; onAdd: (size: { width: number; height: number }) => void }) {
+export function AddFrameMenu({
+  disabled,
+  onAdd,
+}: {
+  disabled: boolean;
+  onAdd: (size: { width: number; height: number }) => void;
+}) {
   const [open, setOpen] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
-    menu.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
+    menu.current
+      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+      ?.focus();
     const onDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (!menu.current?.contains(target) && !button.current?.contains(target)) setOpen(false);
+      if (!menu.current?.contains(target) && !button.current?.contains(target))
+        setOpen(false);
     };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
   const close = (refocus: boolean) => {
     setOpen(false);
     if (refocus) button.current?.focus();
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const items = [...(menu.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? [])];
+    const items = [
+      ...(menu.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]'
+      ) ?? []),
+    ];
     const index = items.indexOf(document.activeElement as HTMLButtonElement);
-    if (event.key === 'Escape' || event.key === 'Tab') {
+    if (event.key === "Escape" || event.key === "Tab") {
       event.preventDefault();
       event.stopPropagation();
       close(true);
       return;
     }
-    const next = event.key === 'ArrowDown' ? index + 1 : event.key === 'ArrowUp' ? index - 1 : event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : null;
+    const next =
+      event.key === "ArrowDown"
+        ? index + 1
+        : event.key === "ArrowUp"
+          ? index - 1
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? items.length - 1
+              : null;
     if (next === null) return;
     event.preventDefault();
     items[(next + items.length) % items.length]?.focus();
@@ -301,14 +464,22 @@ export function AddFrameMenu({ disabled, onAdd }: { disabled: boolean; onAdd: (s
         aria-label="Add frame"
         aria-haspopup="menu"
         aria-expanded={open}
-        data-tip={open ? undefined : disabled ? 'Frame limit reached' : 'Add frame'}
+        data-tip={
+          open ? undefined : disabled ? "Frame limit reached" : "Add frame"
+        }
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="frame" />
       </button>
       {open && (
-        <div ref={menu} className="project-menu canvas-menu" role="menu" aria-label="Add frame" onKeyDown={onKeyDown}>
+        <div
+          ref={menu}
+          className="project-menu canvas-menu"
+          role="menu"
+          aria-label="Add frame"
+          onKeyDown={onKeyDown}
+        >
           {FRAME_PRESETS.map((p) => (
             <button
               key={p.preset}
@@ -332,7 +503,13 @@ export function AddFrameMenu({ disabled, onAdd }: { disabled: boolean; onAdd: (s
   );
 }
 
-export function FrameUndoBar({ onUndo, onDismiss }: { onUndo: (() => void) | null; onDismiss: () => void }) {
+export function FrameUndoBar({
+  onUndo,
+  onDismiss,
+}: {
+  onUndo: (() => void) | null;
+  onDismiss: () => void;
+}) {
   useEffect(() => {
     if (!onUndo) return;
     const timer = window.setTimeout(onDismiss, 8000);

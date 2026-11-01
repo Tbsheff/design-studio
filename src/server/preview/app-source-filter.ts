@@ -1,5 +1,5 @@
-import { APP_SOURCE_PATH, devChromeExpression } from '../../shared/app.js';
-import type { RenderPage } from './render-backend.js';
+import { APP_SOURCE_PATH, devChromeExpression } from "../../shared/app.js";
+import type { RenderPage } from "./render-backend.js";
 
 const MAX_ANCESTORS = 40;
 
@@ -46,10 +46,25 @@ export function outsideAppExpression(selectors: readonly string[]): string {
   })(${JSON.stringify(selectors)})`;
 }
 
-export async function dropOutsideApp<T extends { selector: string | null }>(page: Pick<RenderPage, 'evaluate'>, findings: T[]): Promise<T[]> {
-  const selectors = [...new Set(findings.flatMap((finding) => (finding.selector ? [finding.selector] : [])))];
+export async function dropOutsideApp<T extends { selector: string | null }>(
+  page: Pick<RenderPage, "evaluate">,
+  findings: T[]
+): Promise<T[]> {
+  const selectors = [
+    ...new Set(
+      findings.flatMap((finding) =>
+        finding.selector ? [finding.selector] : []
+      )
+    ),
+  ];
   if (selectors.length === 0) return findings;
-  const outside = await page.evaluate<boolean[]>(outsideAppExpression(selectors)).catch(() => selectors.map(() => false));
+  const outside = await page
+    .evaluate<boolean[]>(outsideAppExpression(selectors))
+    .catch(() => selectors.map(() => false));
   const drop = new Set(selectors.filter((_, index) => outside[index] === true));
-  return drop.size ? findings.filter((finding) => !finding.selector || !drop.has(finding.selector)) : findings;
+  return drop.size
+    ? findings.filter(
+        (finding) => !finding.selector || !drop.has(finding.selector)
+      )
+    : findings;
 }

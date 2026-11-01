@@ -1,8 +1,9 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import type { StudioEvent, StudioEventInput } from '../../shared/contracts.js';
-import type { EventBus } from '../types.js';
-import { assertSafeId } from './errors.js';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+
+import type { StudioEvent, StudioEventInput } from "../../shared/contracts.js";
+import type { EventBus } from "../types.js";
+import { assertSafeId } from "./errors.js";
 
 const RING_SIZE = 5000;
 
@@ -14,8 +15,8 @@ interface ProjectLog {
 
 function parseLines(text: string): StudioEvent[] {
   const events: StudioEvent[] = [];
-  for (const line of text.split('\n')) {
-    if (line.trim() === '') continue;
+  for (const line of text.split("\n")) {
+    if (line.trim() === "") continue;
     try {
       events.push(JSON.parse(line) as StudioEvent);
     } catch {
@@ -29,12 +30,17 @@ export function createEventBus(dataDir: string): EventBus {
   const logs = new Map<string, ProjectLog>();
 
   const eventsFile = (projectId: string): string =>
-    path.join(dataDir, 'projects', assertSafeId(projectId, 'projectId'), 'events.jsonl');
+    path.join(
+      dataDir,
+      "projects",
+      assertSafeId(projectId, "projectId"),
+      "events.jsonl"
+    );
 
   const readFileEvents = (projectId: string): StudioEvent[] => {
     const file = eventsFile(projectId);
     if (!existsSync(file)) return [];
-    return parseLines(readFileSync(file, 'utf8'));
+    return parseLines(readFileSync(file, "utf8"));
   };
 
   const logFor = (projectId: string): ProjectLog => {
@@ -54,18 +60,23 @@ export function createEventBus(dataDir: string): EventBus {
   return {
     emit(input: StudioEventInput): StudioEvent {
       const log = logFor(input.projectId);
-      const event = { ...input, seq: log.lastSeq + 1, ts: Date.now() } as StudioEvent;
+      const event = {
+        ...input,
+        seq: log.lastSeq + 1,
+        ts: Date.now(),
+      } as StudioEvent;
       const file = eventsFile(input.projectId);
       mkdirSync(path.dirname(file), { recursive: true });
       appendFileSync(file, `${JSON.stringify(event)}\n`);
       log.lastSeq = event.seq;
       log.ring.push(event);
-      if (log.ring.length > RING_SIZE) log.ring.splice(0, log.ring.length - RING_SIZE);
+      if (log.ring.length > RING_SIZE)
+        log.ring.splice(0, log.ring.length - RING_SIZE);
       for (const listener of [...log.listeners]) {
         try {
           listener(event);
         } catch (error) {
-          console.error('[events] listener failed', error);
+          console.error("[events] listener failed", error);
         }
       }
       return event;
@@ -80,7 +91,10 @@ export function createEventBus(dataDir: string): EventBus {
       return readFileEvents(projectId).filter((event) => event.seq > afterSeq);
     },
 
-    subscribe(projectId: string, listener: (event: StudioEvent) => void): () => void {
+    subscribe(
+      projectId: string,
+      listener: (event: StudioEvent) => void
+    ): () => void {
       const log = logFor(projectId);
       log.listeners.add(listener);
       return () => {

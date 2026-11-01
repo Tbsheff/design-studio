@@ -6,7 +6,7 @@
   border: 0;
 }
 
-.port-pages[aria-busy='true'] .port-page-route {
+.port-pages[aria-busy="true"] .port-page-route {
   opacity: 0.4;
 }
 

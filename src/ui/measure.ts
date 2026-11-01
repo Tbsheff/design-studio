@@ -1,1 +1,1 @@
-export * from '../shared/measure';
+export * from "../shared/measure";

@@ -1,31 +1,73 @@
-import { nanoid } from 'nanoid';
-import type { Hono } from 'hono';
-import { z } from 'zod';
-import { RUN_LEVELS, VARIATION_DEFAULT, type Direction, type DirectionVariation, type Project, type RunRequest, type VariationBriefsResult, type VariationStartResult } from '../../shared/contracts.js';
-import { levelOf, resolveRunConfig } from '../../shared/run-levels.js';
-import type { ElementVariantInfo } from '../../shared/element-variants.js';
-import { readDesignSystemState } from '../design-system/state.js';
-import { BadRequestError, ConflictError, assertSafeId } from '../store/errors.js';
-import type { StudioProjectStore } from '../store/projects.js';
-import type { AgentRunner, ServerConfig } from '../types.js';
-import { countProblem, createMockBriefGenerator, createSdkBriefGenerator, validateUserBriefs, type BriefGenerator } from './briefs.js';
-import { createGroupRegistry, fanOut, groupDirections } from './fanout.js';
-import { buildReference, labelOf, mixPrompt } from './reference.js';
-import { buildScope, keepElementVariant, variantInfo, type KeepDeps } from './scope.js';
+import type { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { z } from "zod";
+
+import {
+  RUN_LEVELS,
+  VARIATION_DEFAULT,
+  type Direction,
+  type DirectionVariation,
+  type Project,
+  type RunRequest,
+  type VariationBriefsResult,
+  type VariationStartResult,
+} from "../../shared/contracts.js";
+import type { ElementVariantInfo } from "../../shared/element-variants.js";
+import { levelOf, resolveRunConfig } from "../../shared/run-levels.js";
+import { readDesignSystemState } from "../design-system/state.js";
+import {
+  BadRequestError,
+  ConflictError,
+  assertSafeId,
+} from "../store/errors.js";
+import type { StudioProjectStore } from "../store/projects.js";
+import type { AgentRunner, ServerConfig } from "../types.js";
+import {
+  countProblem,
+  createMockBriefGenerator,
+  createSdkBriefGenerator,
+  validateUserBriefs,
+  type BriefGenerator,
+} from "./briefs.js";
+import { createGroupRegistry, fanOut, groupDirections } from "./fanout.js";
+import { buildReference, labelOf, mixPrompt } from "./reference.js";
+import {
+  buildScope,
+  keepElementVariant,
+  variantInfo,
+  type KeepDeps,
+} from "./scope.js";
 
 interface VariationRouteDeps {
   config: ServerConfig;
   projects: StudioProjectStore;
   runner: AgentRunner;
-  startRun: (project: Project, direction: Direction, request: RunRequest) => Promise<string>;
-  withDirection: <T>(pid: string, did: string, task: (project: Project, direction: Direction) => Promise<T>) => Promise<T>;
-  forkDirection: (pid: string, input: { name: string; fromVersionId: string | null; variation?: DirectionVariation }) => Promise<Direction>;
+  startRun: (
+    project: Project,
+    direction: Direction,
+    request: RunRequest
+  ) => Promise<string>;
+  withDirection: <T>(
+    pid: string,
+    did: string,
+    task: (project: Project, direction: Direction) => Promise<T>
+  ) => Promise<T>;
+  forkDirection: (
+    pid: string,
+    input: {
+      name: string;
+      fromVersionId: string | null;
+      variation?: DirectionVariation;
+    }
+  ) => Promise<Direction>;
   briefs?: BriefGenerator;
   edit: KeepDeps;
 }
 
 const PROMPT_MAX = 20_000;
-const LevelSchema = z.enum(RUN_LEVELS as unknown as [string, ...string[]]).optional();
+const LevelSchema = z
+  .enum(RUN_LEVELS as unknown as [string, ...string[]])
+  .optional();
 
 const ElementSchema = z.object({
   selector: z.string().max(2000),
@@ -33,8 +75,19 @@ const ElementSchema = z.object({
   text: z.string().max(20_000),
   outerHTML: z.string().max(200_000),
   styles: z.record(z.string(), z.string()),
-  rect: z.object({ x: z.number(), y: z.number(), width: z.number(), height: z.number() }),
-  source: z.object({ file: z.string().max(1000), line: z.number().int(), col: z.number().int() }).nullable(),
+  rect: z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+  }),
+  source: z
+    .object({
+      file: z.string().max(1000),
+      line: z.number().int(),
+      col: z.number().int(),
+    })
+    .nullable(),
   ancestors: z.array(z.string()),
 });
 
@@ -56,7 +109,6 @@ const StartBody = z.object({
 
 const KeepBody = z.object({ directionId: z.string() });
 
-
 const MixBody = z.object({
   fromDirectionId: z.string(),
   toDirectionId: z.string(),
@@ -67,126 +119,224 @@ const MixBody = z.object({
 
 function parse<T>(schema: z.ZodType<T>, raw: unknown): T {
   const result = schema.safeParse(raw);
-  if (!result.success) throw new BadRequestError(result.error.issues.map((issue) => `${issue.path.join('.') || 'body'}: ${issue.message}`).join('; '));
+  if (!result.success)
+    throw new BadRequestError(
+      result.error.issues
+        .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
+        .join("; ")
+    );
   return result.data;
 }
 
-async function body(c: { req: { json: () => Promise<unknown> } }): Promise<unknown> {
+async function body(c: {
+  req: { json: () => Promise<unknown> };
+}): Promise<unknown> {
   try {
     return await c.req.json();
   } catch {
-    throw new BadRequestError('invalid JSON body');
+    throw new BadRequestError("invalid JSON body");
   }
 }
 
-function sourceDirection(project: Project, fromDirectionId: string | null | undefined): Direction | null {
+function sourceDirection(
+  project: Project,
+  fromDirectionId: string | null | undefined
+): Direction | null {
   if (!fromDirectionId) return null;
-  const direction = project.directions.find((candidate) => candidate.id === assertSafeId(fromDirectionId, 'fromDirectionId'));
-  if (!direction) throw new BadRequestError(`direction ${fromDirectionId} not found`);
+  const direction = project.directions.find(
+    (candidate) =>
+      candidate.id === assertSafeId(fromDirectionId, "fromDirectionId")
+  );
+  if (!direction)
+    throw new BadRequestError(`direction ${fromDirectionId} not found`);
   return direction;
 }
 
-export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): void {
+export function registerVariationRoutes(
+  app: Hono,
+  deps: VariationRouteDeps
+): void {
   const { projects, runner } = deps;
-  const briefs = deps.briefs ?? (deps.config.agentMode === 'mock' ? createMockBriefGenerator() : createSdkBriefGenerator(process.env.STUDIO_CLAUDE_PATH ? { claudeExecutable: process.env.STUDIO_CLAUDE_PATH } : {}));
+  const briefs =
+    deps.briefs ??
+    (deps.config.agentMode === "mock"
+      ? createMockBriefGenerator()
+      : createSdkBriefGenerator(
+          process.env.STUDIO_CLAUDE_PATH
+            ? { claudeExecutable: process.env.STUDIO_CLAUDE_PATH }
+            : {}
+        ));
   const groups = createGroupRegistry();
 
-  app.post('/api/projects/:pid/variations/briefs', async (c) => {
+  app.post("/api/projects/:pid/variations/briefs", async (c) => {
     const input = parse(BriefsBody, await body(c));
-    const project = await projects.get(c.req.param('pid'));
+    const project = await projects.get(c.req.param("pid"));
     const problem = countProblem(input.count, project.kind);
     if (problem) throw new BadRequestError(problem);
     const from = sourceDirection(project, input.fromDirectionId);
-    const designSystem = from ? await readDesignSystemState(project, from).catch(() => null) : null;
+    const designSystem = from
+      ? await readDesignSystemState(project, from).catch(() => null)
+      : null;
     const result: VariationBriefsResult = await briefs.generate({
       prompt: input.prompt,
       count: input.count,
       kind: project.kind,
       hasDesign: Boolean(from?.headVersionId),
       hasDesignSystem: Boolean(designSystem?.tokens),
-      element: input.element ? { tag: input.element.tag, text: input.element.text } : null,
+      element: input.element
+        ? { tag: input.element.tag, text: input.element.text }
+        : null,
     });
     return c.json(result);
   });
 
-  app.post('/api/projects/:pid/variations', async (c) => {
-    const pid = c.req.param('pid');
+  app.post("/api/projects/:pid/variations", async (c) => {
+    const pid = c.req.param("pid");
     const input = parse(StartBody, await body(c));
     const project = await projects.get(pid);
     let validBriefs;
     try {
       validBriefs = validateUserBriefs(input.briefs, project.kind);
     } catch (error) {
-      throw new BadRequestError(error instanceof Error ? error.message : String(error));
+      throw new BadRequestError(
+        error instanceof Error ? error.message : String(error)
+      );
     }
     const from = sourceDirection(project, input.fromDirectionId);
-    if (input.element && !from) throw new BadRequestError('fromDirectionId is required for element variants');
-    const scope = input.element && from ? await buildScope(project, from, deps.edit.versions, input.element) : undefined;
-    const level = levelOf({ level: input.level as RunRequest['level'] }, project.settings);
+    if (input.element && !from)
+      throw new BadRequestError(
+        "fromDirectionId is required for element variants"
+      );
+    const scope =
+      input.element && from
+        ? await buildScope(project, from, deps.edit.versions, input.element)
+        : undefined;
+    const level = levelOf(
+      { level: input.level as RunRequest["level"] },
+      project.settings
+    );
     const groupId = nanoid(10);
     const items = await fanOut(
       {
-        createDirection: (name, variation) => deps.forkDirection(pid, { name, fromVersionId: from?.headVersionId ?? null, variation }),
-        startRun: (direction, request) =>
-          deps.withDirection(pid, direction.id, async (latestProject, latest) => {
-            if (runner.isRunning(latestProject.id, latest.id)) throw new ConflictError('run_in_progress');
-            return deps.startRun(latestProject, latest, request);
+        createDirection: (name, variation) =>
+          deps.forkDirection(pid, {
+            name,
+            fromVersionId: from?.headVersionId ?? null,
+            variation,
           }),
+        startRun: (direction, request) =>
+          deps.withDirection(
+            pid,
+            direction.id,
+            async (latestProject, latest) => {
+              if (runner.isRunning(latestProject.id, latest.id))
+                throw new ConflictError("run_in_progress");
+              return deps.startRun(latestProject, latest, request);
+            }
+          ),
       },
-      { groupId, prompt: input.prompt, briefs: validBriefs, level, attachmentIds: input.attachmentIds, takenNames: new Set(project.directions.map((direction) => direction.name)), ...(scope ? { scope } : {}) },
+      {
+        groupId,
+        prompt: input.prompt,
+        briefs: validBriefs,
+        level,
+        attachmentIds: input.attachmentIds,
+        takenNames: new Set(
+          project.directions.map((direction) => direction.name)
+        ),
+        ...(scope ? { scope } : {}),
+      }
     );
-    groups.remember(groupId, items.flatMap((item) => (item.runId ? [item.runId] : [])));
-    const perRunBudgetUsd = resolveRunConfig(project.settings, level).maxBudgetUsd;
-    const result: VariationStartResult = { groupId, items, perRunBudgetUsd, totalBudgetUsd: perRunBudgetUsd === null ? null : Math.round(perRunBudgetUsd * validBriefs.length * 100) / 100 };
+    groups.remember(
+      groupId,
+      items.flatMap((item) => (item.runId ? [item.runId] : []))
+    );
+    const perRunBudgetUsd = resolveRunConfig(
+      project.settings,
+      level
+    ).maxBudgetUsd;
+    const result: VariationStartResult = {
+      groupId,
+      items,
+      perRunBudgetUsd,
+      totalBudgetUsd:
+        perRunBudgetUsd === null
+          ? null
+          : Math.round(perRunBudgetUsd * validBriefs.length * 100) / 100,
+    };
     return c.json(result);
   });
 
-  app.post('/api/projects/:pid/variations/mix', async (c) => {
-    const pid = c.req.param('pid');
+  app.post("/api/projects/:pid/variations/mix", async (c) => {
+    const pid = c.req.param("pid");
     const input = parse(MixBody, await body(c));
-    if (input.fromDirectionId === input.toDirectionId) throw new BadRequestError('pick another variation as the target');
+    if (input.fromDirectionId === input.toDirectionId)
+      throw new BadRequestError("pick another variation as the target");
     const project = await projects.get(pid);
     const from = sourceDirection(project, input.fromDirectionId);
-    if (!from) throw new BadRequestError('fromDirectionId is required');
+    if (!from) throw new BadRequestError("fromDirectionId is required");
     const reference = await buildReference(from, input.element);
-    const runId = await deps.withDirection(pid, assertSafeId(input.toDirectionId, 'toDirectionId'), async (latestProject, target) => {
-      if (runner.isRunning(latestProject.id, target.id)) throw new ConflictError('run_in_progress');
-      const request: RunRequest = {
-        prompt: mixPrompt(reference.fromLabel, labelOf(target), reference.tag, input.prompt),
-        mode: 'edit',
-        level: levelOf({ level: input.level as RunRequest['level'] }, latestProject.settings),
-        reference,
-      };
-      return deps.startRun(latestProject, target, request);
-    });
+    const runId = await deps.withDirection(
+      pid,
+      assertSafeId(input.toDirectionId, "toDirectionId"),
+      async (latestProject, target) => {
+        if (runner.isRunning(latestProject.id, target.id))
+          throw new ConflictError("run_in_progress");
+        const request: RunRequest = {
+          prompt: mixPrompt(
+            reference.fromLabel,
+            labelOf(target),
+            reference.tag,
+            input.prompt
+          ),
+          mode: "edit",
+          level: levelOf(
+            { level: input.level as RunRequest["level"] },
+            latestProject.settings
+          ),
+          reference,
+        };
+        return deps.startRun(latestProject, target, request);
+      }
+    );
     if (from.variation) groups.add(from.variation.groupId, runId);
     return c.json({ runId });
   });
 
-  app.get('/api/projects/:pid/variations/elements', async (c) => {
-    const project = await projects.get(c.req.param('pid'));
+  app.get("/api/projects/:pid/variations/elements", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
     return c.json(await listElementVariants(project, runner));
   });
 
-  app.post('/api/projects/:pid/variations/:gid/keep', async (c) => {
-    const pid = c.req.param('pid');
-    const groupId = assertSafeId(c.req.param('gid'), 'groupId');
+  app.post("/api/projects/:pid/variations/:gid/keep", async (c) => {
+    const pid = c.req.param("pid");
+    const groupId = assertSafeId(c.req.param("gid"), "groupId");
     const input = parse(KeepBody, await body(c));
     const project = await projects.get(pid);
-    const variant = groupDirections(project, groupId).find((direction) => direction.id === input.directionId);
-    if (!variant) throw new BadRequestError(`direction ${input.directionId} is not in variation group ${groupId}`);
+    const variant = groupDirections(project, groupId).find(
+      (direction) => direction.id === input.directionId
+    );
+    if (!variant)
+      throw new BadRequestError(
+        `direction ${input.directionId} is not in variation group ${groupId}`
+      );
     const target = variant.variation?.scope?.sourceDirectionId;
-    if (!target) throw new BadRequestError('This is not an element variant');
-    const result = await deps.withDirection(pid, target, async (latest) => keepElementVariant(deps.edit, latest, variant.id));
+    if (!target) throw new BadRequestError("This is not an element variant");
+    const result = await deps.withDirection(pid, target, async (latest) =>
+      keepElementVariant(deps.edit, latest, variant.id)
+    );
     for (const runId of groups.runIds(groupId)) runner.get(runId)?.cancel();
     return c.json(result);
   });
 
-  app.post('/api/projects/:pid/variations/:gid/cancel', async (c) => {
-    const project = await projects.get(c.req.param('pid'));
-    const groupId = assertSafeId(c.req.param('gid'), 'groupId');
-    const known = new Set(groupDirections(project, groupId).map((direction) => direction.id));
-    if (known.size === 0) throw new BadRequestError(`variation group ${groupId} not found`);
+  app.post("/api/projects/:pid/variations/:gid/cancel", async (c) => {
+    const project = await projects.get(c.req.param("pid"));
+    const groupId = assertSafeId(c.req.param("gid"), "groupId");
+    const known = new Set(
+      groupDirections(project, groupId).map((direction) => direction.id)
+    );
+    if (known.size === 0)
+      throw new BadRequestError(`variation group ${groupId} not found`);
     const canceled: string[] = [];
     for (const runId of groups.runIds(groupId)) {
       const handle = runner.get(runId);
@@ -198,7 +348,18 @@ export function registerVariationRoutes(app: Hono, deps: VariationRouteDeps): vo
   });
 }
 
-export async function listElementVariants(project: Project, runner: Pick<AgentRunner, 'isRunning'>): Promise<ElementVariantInfo[]> {
-  const items = await Promise.all(project.directions.map((direction) => variantInfo(project, direction, runner.isRunning(project.id, direction.id))));
+export async function listElementVariants(
+  project: Project,
+  runner: Pick<AgentRunner, "isRunning">
+): Promise<ElementVariantInfo[]> {
+  const items = await Promise.all(
+    project.directions.map((direction) =>
+      variantInfo(
+        project,
+        direction,
+        runner.isRunning(project.id, direction.id)
+      )
+    )
+  );
   return items.filter((item): item is ElementVariantInfo => item !== null);
 }

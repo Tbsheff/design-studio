@@ -10,8 +10,10 @@
   width: 100%;
 }
 
-.cc-form input[aria-invalid='true'] {
-  box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 3px var(--danger-tint);
+.cc-form input[aria-invalid="true"] {
+  box-shadow:
+    inset 0 0 0 1px var(--danger),
+    0 0 0 3px var(--danger-tint);
 }
 
 .field > .cc-help {

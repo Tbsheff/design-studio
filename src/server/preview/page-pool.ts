@@ -1,4 +1,4 @@
-import type { RenderBackend, RenderPage } from './render-backend.js';
+import type { RenderBackend, RenderPage } from "./render-backend.js";
 
 export interface PageSize {
   width: number;
@@ -29,7 +29,10 @@ export class WarmPages {
 
   constructor(private readonly backend: () => Promise<RenderBackend>) {}
 
-  async lease<T>(size: PageSize, task: (page: RenderPage) => Promise<T>): Promise<T> {
+  async lease<T>(
+    size: PageSize,
+    task: (page: RenderPage) => Promise<T>
+  ): Promise<T> {
     const backend = await this.backend();
     await this.slot(MAX_ACTIVE[backend.name]);
     try {
@@ -41,11 +44,16 @@ export class WarmPages {
   }
 
   private async slot(limit: number): Promise<void> {
-    while (this.active >= limit) await new Promise<void>((resolve) => this.queue.push(resolve));
+    while (this.active >= limit)
+      await new Promise<void>((resolve) => this.queue.push(resolve));
     this.active += 1;
   }
 
-  private async run<T>(backend: RenderBackend, size: PageSize, task: (page: RenderPage) => Promise<T>): Promise<T> {
+  private async run<T>(
+    backend: RenderBackend,
+    size: PageSize,
+    task: (page: RenderPage) => Promise<T>
+  ): Promise<T> {
     const key = sizeKey(size);
     const page = this.take(key) ?? (await backend.open(size));
     let healthy = false;
@@ -54,7 +62,8 @@ export class WarmPages {
       healthy = true;
       return value;
     } finally {
-      if (healthy && backend.reusablePages && page.reset) void this.recycle(key, page, page.reset.bind(page));
+      if (healthy && backend.reusablePages && page.reset)
+        void this.recycle(key, page, page.reset.bind(page));
       else await page.close();
     }
   }
@@ -68,7 +77,11 @@ export class WarmPages {
     return entry.page;
   }
 
-  private async recycle(key: string, page: RenderPage, reset: () => Promise<void>): Promise<void> {
+  private async recycle(
+    key: string,
+    page: RenderPage,
+    reset: () => Promise<void>
+  ): Promise<void> {
     try {
       await reset();
       this.keep(key, page);
@@ -100,12 +113,17 @@ export class WarmPages {
     const backend = await this.backend();
     await backend.warm?.();
     const key = sizeKey(size);
-    if (this.closed || !backend.reusablePages || (this.idle.get(key)?.length ?? 0) > 0) return;
+    if (
+      this.closed ||
+      !backend.reusablePages ||
+      (this.idle.get(key)?.length ?? 0) > 0
+    )
+      return;
     this.keep(key, await backend.open(size));
   }
 
   async hold(size: PageSize): Promise<RenderPage> {
-    if (this.closed) throw new Error('Browser pool is closed');
+    if (this.closed) throw new Error("Browser pool is closed");
     const backend = await this.backend();
     const page = this.take(sizeKey(size)) ?? (await backend.open(size));
     this.held.add(page);
@@ -129,7 +147,7 @@ export class WarmPages {
       pages.map(async (entry) => {
         clearTimeout(entry.timer);
         await entry.page.close();
-      }),
+      })
     );
   }
 }

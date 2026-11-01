@@ -1,10 +1,17 @@
-import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Worker, type Transferable } from 'node:worker_threads';
-import { REPO_ROOT } from './config.js';
-import type { WorkerReply, WorkerRequest } from './worker-serve.js';
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { Worker, type Transferable } from "node:worker_threads";
 
-const TSX_LOADER = path.join(REPO_ROOT, 'node_modules', 'tsx', 'dist', 'loader.mjs');
+import { REPO_ROOT } from "./config.js";
+import type { WorkerReply, WorkerRequest } from "./worker-serve.js";
+
+const TSX_LOADER = path.join(
+  REPO_ROOT,
+  "node_modules",
+  "tsx",
+  "dist",
+  "loader.mjs"
+);
 const MAX_FAILURES = 3;
 
 interface Pending<R> {
@@ -31,7 +38,7 @@ export class WorkerClient<Q, R> {
       workerData?: unknown;
       inProcess: (request: Q) => Promise<R>;
       idleMs?: number;
-    },
+    }
   ) {}
 
   run(request: Q, transfer: Transferable[] = []): Promise<R> {
@@ -60,28 +67,41 @@ export class WorkerClient<Q, R> {
   private spawn(): Worker | null {
     if (this.worker) return this.worker;
     try {
-      const execArgv = this.options.file.endsWith('.ts') ? ['--import', pathToFileURL(TSX_LOADER).href] : [];
-      const worker = new Worker(this.options.file, { workerData: this.options.workerData, execArgv });
+      const execArgv = this.options.file.endsWith(".ts")
+        ? ["--import", pathToFileURL(TSX_LOADER).href]
+        : [];
+      const worker = new Worker(this.options.file, {
+        workerData: this.options.workerData,
+        execArgv,
+      });
       worker.unref();
-      worker.on('message', (reply: WorkerReply<R>) => this.settle(reply));
-      worker.on('error', (error) => this.fail(worker, error));
-      worker.on('exit', (code) => this.fail(worker, new Error(`${this.options.label} worker exited with code ${code}`)));
+      worker.on("message", (reply: WorkerReply<R>) => this.settle(reply));
+      worker.on("error", (error) => this.fail(worker, error));
+      worker.on("exit", (code) =>
+        this.fail(
+          worker,
+          new Error(`${this.options.label} worker exited with code ${code}`)
+        )
+      );
       this.worker = worker;
       return worker;
     } catch (error) {
-      console.error(`[${this.options.label}] worker did not start; running in process`, error);
+      console.error(
+        `[${this.options.label}] worker did not start; running in process`,
+        error
+      );
       this.failures = MAX_FAILURES;
       return null;
     }
   }
 
   private settle(reply: WorkerReply<R>): void {
-    if (typeof reply !== 'object' || reply === null || !('id' in reply)) return;
+    if (typeof reply !== "object" || reply === null || !("id" in reply)) return;
     const waiting = this.pending.get(reply.id);
     if (!waiting) return;
     this.pending.delete(reply.id);
     if (this.pending.size === 0) this.rest();
-    if ('error' in reply) waiting.reject(new Error(reply.error));
+    if ("error" in reply) waiting.reject(new Error(reply.error));
     else waiting.resolve(reply.result);
   }
 
@@ -108,7 +128,11 @@ export class WorkerClient<Q, R> {
     if (this.worker !== worker) return;
     this.worker = null;
     this.failures += 1;
-    if (this.failures >= MAX_FAILURES) console.error(`[${this.options.label}] worker failed ${this.failures} times; running in process`, error);
+    if (this.failures >= MAX_FAILURES)
+      console.error(
+        `[${this.options.label}] worker failed ${this.failures} times; running in process`,
+        error
+      );
     const waiting = [...this.pending.values()];
     this.pending.clear();
     for (const item of waiting) item.reject(error);

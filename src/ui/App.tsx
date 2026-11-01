@@ -1,17 +1,35 @@
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
-import { errorText } from './api';
-import { Home } from './components/Home';
-import { CommandLayer, DesignSystems, NewDesignSystem, prefetchCommandLayer, prefetchStudio, Studio } from './screens';
-import type { CommandLayer as Layer } from './commands/registry';
-import { isTypingTarget } from './typingTarget';
-import { loadSession } from './session';
-import { uiStore, useUi } from './storage';
-import { installRouting } from './route';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+
+import { errorText } from "./api";
+import type { CommandLayer as Layer } from "./commands/registry";
+import { Home } from "./components/Home";
+import { installRouting } from "./route";
+import {
+  CommandLayer,
+  DesignSystems,
+  NewDesignSystem,
+  prefetchCommandLayer,
+  prefetchStudio,
+  Studio,
+} from "./screens";
+import { loadSession } from "./session";
+import { uiStore, useUi } from "./storage";
+import { isTypingTarget } from "./typingTarget";
 
 installRouting();
 if (uiStore.get().activeProjectId) void prefetchStudio();
 
-class ScreenBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+class ScreenBoundary extends Component<
+  { children: ReactNode },
+  { error: string | null }
+> {
   state = { error: null };
 
   static getDerivedStateFromError(error: unknown) {
@@ -34,28 +52,42 @@ class ScreenBoundary extends Component<{ children: ReactNode }, { error: string 
   }
 }
 
-const LAYER_EVENT = 'studio:command-layer';
-const DesktopApp = 'studioDesktop' in window ? lazy(() => import('./DesktopApp')) : null;
-const McpToasts = lazy(() => import('./components/McpToasts'));
+const LAYER_EVENT = "studio:command-layer";
+const DesktopApp =
+  "studioDesktop" in window ? lazy(() => import("./DesktopApp")) : null;
+const McpToasts = lazy(() => import("./components/McpToasts"));
 
 function useCommandLayer() {
   const [layer, setLayer] = useState<Layer | null>(null);
   useEffect(() => {
-    const toggle = (next: unknown) => (next === 'palette' || next === 'shortcuts') && setLayer((cur) => (cur === next ? null : next));
+    const toggle = (next: unknown) =>
+      (next === "palette" || next === "shortcuts") &&
+      setLayer((cur) => (cur === next ? null : next));
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Meta' || e.key === 'Control') prefetchCommandLayer();
+      if (e.key === "Meta" || e.key === "Control") prefetchCommandLayer();
       const mod = e.metaKey || e.ctrlKey;
-      const next = mod && !e.altKey && !e.shiftKey && (e.code === 'KeyK' || e.code === 'KeyP') ? 'palette' : e.key === '?' && !e.metaKey && !e.altKey && (e.ctrlKey || !isTypingTarget(e.target)) ? 'shortcuts' : null;
+      const next =
+        mod &&
+        !e.altKey &&
+        !e.shiftKey &&
+        (e.code === "KeyK" || e.code === "KeyP")
+          ? "palette"
+          : e.key === "?" &&
+              !e.metaKey &&
+              !e.altKey &&
+              (e.ctrlKey || !isTypingTarget(e.target))
+            ? "shortcuts"
+            : null;
       if (!next || e.repeat) return;
       e.preventDefault();
       e.stopPropagation();
       toggle(next);
     };
     const onOpen = (e: Event) => toggle((e as CustomEvent<unknown>).detail);
-    window.addEventListener('keydown', onKey, true);
+    window.addEventListener("keydown", onKey, true);
     window.addEventListener(LAYER_EVENT, onOpen);
     return () => {
-      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener("keydown", onKey, true);
       window.removeEventListener(LAYER_EVENT, onOpen);
     };
   }, []);
@@ -71,7 +103,9 @@ function useCommandLayer() {
 function Screen({ children }: { children: ReactNode }) {
   return (
     <ScreenBoundary>
-      <Suspense fallback={<div className="boot muted">Loading project…</div>}>{children}</Suspense>
+      <Suspense fallback={<div className="boot muted">Loading project…</div>}>
+        {children}
+      </Suspense>
     </ScreenBoundary>
   );
 }
@@ -129,20 +163,29 @@ export function App() {
       </>
     );
   }
-  if (ui.screen === 'new-design-system') {
+  if (ui.screen === "new-design-system") {
     return (
       <>
         {notice}
         <Screen>
           <NewDesignSystem
-            onCancel={() => uiStore.set({ screen: ui.returnTo, returnTo: 'home' })}
-            onCreated={(id) => uiStore.set({ activeProjectId: id, screen: 'home', returnTo: 'home', libraryFrom: null })}
+            onCancel={() =>
+              uiStore.set({ screen: ui.returnTo, returnTo: "home" })
+            }
+            onCreated={(id) =>
+              uiStore.set({
+                activeProjectId: id,
+                screen: "home",
+                returnTo: "home",
+                libraryFrom: null,
+              })
+            }
           />
         </Screen>
       </>
     );
   }
-  if (ui.screen === 'design-systems') {
+  if (ui.screen === "design-systems") {
     return (
       <>
         {notice}
@@ -156,7 +199,13 @@ export function App() {
     <>
       {notice}
       <ScreenBoundary>
-        <Home onOpen={(id) => void prefetchStudio().then(() => uiStore.set({ activeProjectId: id }))} />
+        <Home
+          onOpen={(id) =>
+            void prefetchStudio().then(() =>
+              uiStore.set({ activeProjectId: id })
+            )
+          }
+        />
       </ScreenBoundary>
     </>
   );

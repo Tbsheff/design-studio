@@ -1,35 +1,66 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { emptyLinksFile, LINKS_FILE, parseLinksText, serializeLinksFile, type LinksFile } from '../../shared/links.js';
-import type { CanvasWriteSource, Project } from '../../shared/contracts.js';
-import { createKeyedMutex } from '../store/mutex.js';
-import type { EventBus } from '../types.js';
-import { canvasOwner, writeAtomic } from './service.js';
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
+import type { CanvasWriteSource, Project } from "../../shared/contracts.js";
+import {
+  emptyLinksFile,
+  LINKS_FILE,
+  parseLinksText,
+  serializeLinksFile,
+  type LinksFile,
+} from "../../shared/links.js";
+import { createKeyedMutex } from "../store/mutex.js";
+import type { EventBus } from "../types.js";
+import { canvasOwner, writeAtomic } from "./service.js";
 
 export interface LinksService {
   read(project: Project): Promise<LinksFile>;
-  update(project: Project, change: (file: LinksFile) => LinksFile | null, source: CanvasWriteSource): Promise<LinksFile>;
+  update(
+    project: Project,
+    change: (file: LinksFile) => LinksFile | null,
+    source: CanvasWriteSource
+  ): Promise<LinksFile>;
   announce(project: Project): Promise<void>;
 }
 
 export function linksPath(workTree: string): string {
-  return path.join(workTree, ...LINKS_FILE.split('/'));
+  return path.join(workTree, ...LINKS_FILE.split("/"));
 }
 
 export async function readLinksAt(workTree: string): Promise<LinksFile> {
-  const text = await readFile(linksPath(workTree), 'utf8').catch(() => null);
+  const text = await readFile(linksPath(workTree), "utf8").catch(() => null);
   return (text === null ? null : parseLinksText(text)) ?? emptyLinksFile();
 }
 
-export type LinksWritten = (project: Project, before: LinksFile, after: LinksFile, source: CanvasWriteSource) => void;
+export type LinksWritten = (
+  project: Project,
+  before: LinksFile,
+  after: LinksFile,
+  source: CanvasWriteSource
+) => void;
 
-export function createLinksService(bus: EventBus, written?: LinksWritten): LinksService {
+export function createLinksService(
+  bus: EventBus,
+  written?: LinksWritten
+): LinksService {
   const lock = createKeyedMutex();
-  const keyOf = (project: Project): string => `${project.id}/${canvasOwner(project).id}/links`;
-  const read = (project: Project): Promise<LinksFile> => readLinksAt(canvasOwner(project).workTree);
+  const keyOf = (project: Project): string =>
+    `${project.id}/${canvasOwner(project).id}/links`;
+  const read = (project: Project): Promise<LinksFile> =>
+    readLinksAt(canvasOwner(project).workTree);
 
-  const emit = (project: Project, links: LinksFile, source: CanvasWriteSource): void => {
-    bus.emit({ type: 'links.changed', projectId: project.id, directionId: canvasOwner(project).id, links, source });
+  const emit = (
+    project: Project,
+    links: LinksFile,
+    source: CanvasWriteSource
+  ): void => {
+    bus.emit({
+      type: "links.changed",
+      projectId: project.id,
+      directionId: canvasOwner(project).id,
+      links,
+      source,
+    });
   };
 
   return {
@@ -52,7 +83,7 @@ export function createLinksService(bus: EventBus, written?: LinksWritten): Links
 
     async announce(project) {
       const links = await lock(keyOf(project), () => read(project));
-      emit(project, links, 'restore');
+      emit(project, links, "restore");
     },
   };
 }

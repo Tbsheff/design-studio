@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import type { Project } from '../shared/contracts';
-import type { AppHealth, FoundApps } from '../shared/found-apps';
-import { api, errorText, json } from './api';
-import { thumbnailPending } from './projectList';
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+
+import type { Project } from "../shared/contracts";
+import type { AppHealth, FoundApps } from "../shared/found-apps";
+import { api, errorText, json } from "./api";
+import { thumbnailPending } from "./projectList";
 
 export interface ProjectsState {
   projects: Project[] | null;
@@ -44,7 +45,9 @@ export const projectsApi = {
   },
   update,
   rename: async (project: Project, name: string) => {
-    update((list) => list.map((item) => (item.id === project.id ? { ...item, name } : item)));
+    update((list) =>
+      list.map((item) => (item.id === project.id ? { ...item, name } : item))
+    );
     try {
       return await api.renameProject(project.id, name);
     } finally {
@@ -68,28 +71,44 @@ export const projectsApi = {
     await api.restoreProject(trashId);
     await load();
   },
-  reveal: (project: Project) => json<{ ok: true }>('POST', `/api/projects/${encodeURIComponent(project.id)}/reveal`),
-  health: () => json<AppHealth[]>('GET', '/api/home/health'),
-  found: (fresh = false) => json<FoundApps>('GET', `/api/folders/found${fresh ? '?fresh=1' : ''}`),
+  reveal: (project: Project) =>
+    json<{ ok: true }>(
+      "POST",
+      `/api/projects/${encodeURIComponent(project.id)}/reveal`
+    ),
+  health: () => json<AppHealth[]>("GET", "/api/home/health"),
+  found: (fresh = false) =>
+    json<FoundApps>("GET", `/api/folders/found${fresh ? "?fresh=1" : ""}`),
 };
 
 const POLL_FAST_MS = 500;
 const POLL_MS = 1500;
 const RECENT_MS = 120_000;
 
-export function useProjects(options: { watch?: boolean } = {}): ProjectsState & { reload: () => Promise<void> } {
+export function useProjects(
+  options: { watch?: boolean } = {}
+): ProjectsState & { reload: () => Promise<void> } {
   const current = useSyncExternalStore(projectsApi.subscribe, projectsApi.get);
   useEffect(() => {
     void load();
   }, []);
   const projects = current.projects;
   const lagging = projects?.some(thumbnailPending) ?? false;
-  const watching = options.watch === true && (lagging || (projects?.some((project) => Date.now() - project.updatedAt < RECENT_MS) ?? false));
+  const watching =
+    options.watch === true &&
+    (lagging ||
+      (projects?.some(
+        (project) => Date.now() - project.updatedAt < RECENT_MS
+      ) ??
+        false));
   useEffect(() => {
     if (!watching) return;
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void load();
-    }, lagging ? POLL_FAST_MS : POLL_MS);
+    const timer = window.setInterval(
+      () => {
+        if (document.visibilityState === "visible") void load();
+      },
+      lagging ? POLL_FAST_MS : POLL_MS
+    );
     return () => window.clearInterval(timer);
   }, [watching, lagging]);
   return { ...current, reload: load };
@@ -97,13 +116,15 @@ export function useProjects(options: { watch?: boolean } = {}): ProjectsState & 
 
 const HEALTH_POLL_MS = 2500;
 
-export function useAppHealth(projects: Project[] | null): Map<string, AppHealth> {
+export function useAppHealth(
+  projects: Project[] | null
+): Map<string, AppHealth> {
   const [health, setHealth] = useState<AppHealth[]>([]);
   const [tick, setTick] = useState(0);
   const key = (projects ?? [])
     .filter((project) => project.imported && !project.designSystemFor)
     .map((project) => `${project.id}:${project.updatedAt}`)
-    .join(',');
+    .join(",");
   useEffect(() => {
     if (!key) return;
     let live = true;
@@ -115,11 +136,17 @@ export function useAppHealth(projects: Project[] | null): Map<string, AppHealth>
       live = false;
     };
   }, [key, tick]);
-  const building = health.some((item) => item.state === 'building');
+  const building = health.some((item) => item.state === "building");
   useEffect(() => {
     if (!building) return;
-    const timer = window.setTimeout(() => setTick((n) => n + 1), HEALTH_POLL_MS);
+    const timer = window.setTimeout(
+      () => setTick((n) => n + 1),
+      HEALTH_POLL_MS
+    );
     return () => window.clearTimeout(timer);
   }, [building, health]);
-  return useMemo(() => new Map(health.map((item) => [item.projectId, item])), [health]);
+  return useMemo(
+    () => new Map(health.map((item) => [item.projectId, item])),
+    [health]
+  );
 }

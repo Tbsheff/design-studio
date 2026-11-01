@@ -1,4 +1,4 @@
-import type { Direction, Project } from '../../shared/contracts.js';
+import type { Direction, Project } from "../../shared/contracts.js";
 
 interface Job {
   run: Promise<void> | null;
@@ -10,7 +10,10 @@ export interface WarmQueue {
   settled(project: Project, direction: Direction): Promise<void>;
 }
 
-export function createWarmQueue(keyOf: (project: Project, direction: Direction) => string, scan: (project: Project, direction: Direction) => Promise<void>): WarmQueue {
+export function createWarmQueue(
+  keyOf: (project: Project, direction: Direction) => string,
+  scan: (project: Project, direction: Direction) => Promise<void>
+): WarmQueue {
   const jobs = new Map<string, Job>();
   let chain: Promise<void> = Promise.resolve();
 
@@ -22,8 +25,16 @@ export function createWarmQueue(keyOf: (project: Project, direction: Direction) 
         run: null,
         start() {
           job.run ??= after
-            .then(() => scan(project, direction), () => undefined)
-            .catch((error: unknown) => console.error('[versions] background status check failed', error instanceof Error ? error.message : error))
+            .then(
+              () => scan(project, direction),
+              () => undefined
+            )
+            .catch((error: unknown) =>
+              console.error(
+                "[versions] background status check failed",
+                error instanceof Error ? error.message : error
+              )
+            )
             .finally(() => {
               if (jobs.get(key) === job) jobs.delete(key);
             });

@@ -1,5 +1,21 @@
-import type { PermissionRequest, QueuedMessage, RunPart, RunRequest, RunStatus, RunSummary, StudioEvent, TodoItem, ToolDiff } from '../shared/contracts';
-import { applyPartEvent, closeParts, isPartEvent, partsText, withFinalText } from '../shared/run-parts';
+import type {
+  PermissionRequest,
+  QueuedMessage,
+  RunPart,
+  RunRequest,
+  RunStatus,
+  RunSummary,
+  StudioEvent,
+  TodoItem,
+  ToolDiff,
+} from "../shared/contracts";
+import {
+  applyPartEvent,
+  closeParts,
+  isPartEvent,
+  partsText,
+  withFinalText,
+} from "../shared/run-parts";
 
 export interface ToolRow {
   toolUseId: string;
@@ -47,7 +63,7 @@ function toolRows(summary: RunSummary): ToolRow[] {
     startedAt: t.startedAt,
     durationMs: t.finishedAt === null ? null : t.finishedAt - t.startedAt,
     isError: t.isError,
-    summary: t.summary ?? '',
+    summary: t.summary ?? "",
     ...(t.diff ? { diff: t.diff } : {}),
     ...(t.diffs ? { diffs: t.diffs } : {}),
     ...(t.denied ? { denied: true } : {}),
@@ -55,17 +71,27 @@ function toolRows(summary: RunSummary): ToolRow[] {
 }
 
 function legacyParts(summary: RunSummary): RunPart[] {
-  const tools: RunPart[] = summary.toolCalls.map((t) => ({ kind: 'tool', toolUseId: t.toolUseId }));
-  return summary.finalText ? [...tools, { kind: 'text', text: summary.finalText }] : tools;
+  const tools: RunPart[] = summary.toolCalls.map((t) => ({
+    kind: "tool",
+    toolUseId: t.toolUseId,
+  }));
+  return summary.finalText
+    ? [...tools, { kind: "text", text: summary.finalText }]
+    : tools;
 }
 
-export function emptyRun(runId: string, directionId: string | null, startedAt: number, request: RunRequest | null = null): RunView {
+export function emptyRun(
+  runId: string,
+  directionId: string | null,
+  startedAt: number,
+  request: RunRequest | null = null
+): RunView {
   return {
     runId,
     directionId,
     request,
     startedAt,
-    status: 'running',
+    status: "running",
     parts: [],
     tools: [],
     queue: [],
@@ -79,15 +105,28 @@ export function emptyRun(runId: string, directionId: string | null, startedAt: n
 
 const PENDING_CLOCK_SLACK_MS = 1000;
 
-export function shownPending(pending: RunView | null, runs: RunView[], directionId: string | null): RunView | null {
+export function shownPending(
+  pending: RunView | null,
+  runs: RunView[],
+  directionId: string | null
+): RunView | null {
   if (!pending || pending.directionId !== directionId) return null;
-  const started = runs.some((run) => run.startedAt >= pending.startedAt - PENDING_CLOCK_SLACK_MS && run.request?.prompt === pending.request?.prompt);
+  const started = runs.some(
+    (run) =>
+      run.startedAt >= pending.startedAt - PENDING_CLOCK_SLACK_MS &&
+      run.request?.prompt === pending.request?.prompt
+  );
   return started ? null : pending;
 }
 
 export function runFromSummary(summary: RunSummary): RunView {
   return {
-    ...emptyRun(summary.id, summary.directionId, summary.startedAt, summary.request),
+    ...emptyRun(
+      summary.id,
+      summary.directionId,
+      summary.startedAt,
+      summary.request
+    ),
     status: summary.status,
     parts: summary.parts ?? legacyParts(summary),
     tools: toolRows(summary),
@@ -102,68 +141,118 @@ function finishedView(prev: RunView | undefined, event: RunSummary): RunView {
   const summary = title ? { ...event, title } : event;
   const finished = runFromSummary(summary);
   if (!prev) return finished;
-  const parts = summary.parts ?? withFinalText(closeParts(prev.parts), summary.finalText);
-  const tools = prev.tools.length >= finished.tools.length ? mergeTools(prev.tools, finished.tools) : finished.tools;
-  return { ...finished, parts, tools, todos: finished.todos ?? prev.todos, contextTokens: finished.contextTokens ?? prev.contextTokens };
+  const parts =
+    summary.parts ?? withFinalText(closeParts(prev.parts), summary.finalText);
+  const tools =
+    prev.tools.length >= finished.tools.length
+      ? mergeTools(prev.tools, finished.tools)
+      : finished.tools;
+  return {
+    ...finished,
+    parts,
+    tools,
+    todos: finished.todos ?? prev.todos,
+    contextTokens: finished.contextTokens ?? prev.contextTokens,
+  };
 }
 
 function applyToolEvent(run: RunView, event: StudioEvent): void {
-  if (event.type === 'run.tool.started') {
+  if (event.type === "run.tool.started") {
     run.retry = null;
     run.tools = [
       ...run.tools.filter((t) => t.toolUseId !== event.toolUseId),
-      { toolUseId: event.toolUseId, name: event.name, input: event.input, startedAt: event.ts, durationMs: null, isError: false, summary: '' },
+      {
+        toolUseId: event.toolUseId,
+        name: event.name,
+        input: event.input,
+        startedAt: event.ts,
+        durationMs: null,
+        isError: false,
+        summary: "",
+      },
     ];
-  } else if (event.type === 'run.tool.finished') {
+  } else if (event.type === "run.tool.finished") {
     run.tools = run.tools.map((t) =>
-      t.toolUseId === event.toolUseId ? { ...t, durationMs: event.durationMs, isError: event.isError, summary: event.summary, ...(event.diff ? { diff: event.diff } : {}), ...(event.diffs ? { diffs: event.diffs } : {}), ...(event.denied ? { denied: true } : {}) } : t,
+      t.toolUseId === event.toolUseId
+        ? {
+            ...t,
+            durationMs: event.durationMs,
+            isError: event.isError,
+            summary: event.summary,
+            ...(event.diff ? { diff: event.diff } : {}),
+            ...(event.diffs ? { diffs: event.diffs } : {}),
+            ...(event.denied ? { denied: true } : {}),
+          }
+        : t
     );
   }
 }
 
 function applyControlEvent(run: RunView, event: StudioEvent): void {
   switch (event.type) {
-    case 'run.queue':
+    case "run.queue":
       run.queue = event.items;
       break;
-    case 'run.user':
+    case "run.user":
       run.queue = run.queue.filter((item) => item.id !== event.id);
       break;
-    case 'run.permission':
-      run.permissions = [...run.permissions.filter((p) => p.id !== event.request.id), event.request];
+    case "run.permission":
+      run.permissions = [
+        ...run.permissions.filter((p) => p.id !== event.request.id),
+        event.request,
+      ];
       break;
-    case 'run.permission.resolved':
+    case "run.permission.resolved":
       run.permissions = run.permissions.filter((p) => p.id !== event.requestId);
       break;
-    case 'run.todos':
+    case "run.todos":
       run.todos = event.todos;
       break;
-    case 'run.usage':
+    case "run.usage":
       run.contextTokens = event.contextTokens;
       break;
-    case 'run.retry':
-      run.retry = { attempt: event.attempt, max: event.max, until: event.ts + event.delayMs, error: event.error };
+    case "run.retry":
+      run.retry = {
+        attempt: event.attempt,
+        max: event.max,
+        until: event.ts + event.delayMs,
+        error: event.error,
+      };
       break;
   }
 }
 
 export function applyRunEvent(runs: RunMap, event: StudioEvent): RunMap {
-  if (!event.type.startsWith('run.') || !('runId' in event)) return runs;
+  if (!event.type.startsWith("run.") || !("runId" in event)) return runs;
   const runId = event.runId;
   const prev = runs[runId];
-  if (event.type === 'run.finished') return { ...runs, [runId]: finishedView(prev, event.summary) };
+  if (event.type === "run.finished")
+    return { ...runs, [runId]: finishedView(prev, event.summary) };
   if (prev?.summary) return runs;
-  const run: RunView = prev ? { ...prev, directionId: prev.directionId ?? event.directionId ?? null } : emptyRun(runId, event.directionId ?? null, event.ts);
-  if (event.type === 'run.stopping') return { ...runs, [runId]: { ...run, status: 'canceled', queue: [], permissions: [], retry: null } };
-  if (run.status === 'canceled' && isPartEvent(event)) return runs;
+  const run: RunView = prev
+    ? { ...prev, directionId: prev.directionId ?? event.directionId ?? null }
+    : emptyRun(runId, event.directionId ?? null, event.ts);
+  if (event.type === "run.stopping")
+    return {
+      ...runs,
+      [runId]: {
+        ...run,
+        status: "canceled",
+        queue: [],
+        permissions: [],
+        retry: null,
+      },
+    };
+  if (run.status === "canceled" && isPartEvent(event)) return runs;
   if (isPartEvent(event)) {
     run.parts = applyPartEvent(run.parts, event);
-    if (event.type === 'run.text.delta' || event.type === 'run.thinking.delta') run.retry = null;
+    if (event.type === "run.text.delta" || event.type === "run.thinking.delta")
+      run.retry = null;
   }
-  if (event.type === 'run.started') {
+  if (event.type === "run.started") {
     run.request = event.request;
     run.startedAt = event.ts;
-    if (run.status !== 'canceled') run.status = 'running';
+    if (run.status !== "canceled") run.status = "running";
   }
   applyToolEvent(run, event);
   applyControlEvent(run, event);
@@ -177,18 +266,34 @@ function mergeTools(live: ToolRow[], final: ToolRow[]): ToolRow[] {
     if (!f) return t;
     const diff = f.diff ?? t.diff;
     const diffs = f.diffs ?? t.diffs;
-    return { ...t, durationMs: f.durationMs ?? t.durationMs, isError: f.isError, summary: f.summary || t.summary, ...(diff ? { diff } : {}), ...(diffs ? { diffs } : {}), ...(f.denied || t.denied ? { denied: true } : {}) };
+    return {
+      ...t,
+      durationMs: f.durationMs ?? t.durationMs,
+      isError: f.isError,
+      summary: f.summary || t.summary,
+      ...(diff ? { diff } : {}),
+      ...(diffs ? { diffs } : {}),
+      ...(f.denied || t.denied ? { denied: true } : {}),
+    };
   });
 }
 
 export function shortInput(input: unknown): string {
-  if (input === null || input === undefined) return '';
-  if (typeof input === 'string') return input.slice(0, 80);
-  if (typeof input !== 'object') return String(input);
+  if (input === null || input === undefined) return "";
+  if (typeof input === "string") return input.slice(0, 80);
+  if (typeof input !== "object") return String(input);
   const o = input as Record<string, unknown>;
-  for (const key of ['file_path', 'path', 'filePath', 'pattern', 'command', 'url', 'query']) {
+  for (const key of [
+    "file_path",
+    "path",
+    "filePath",
+    "pattern",
+    "command",
+    "url",
+    "query",
+  ]) {
     const v = o[key];
-    if (typeof v === 'string') return v.slice(0, 80);
+    if (typeof v === "string") return v.slice(0, 80);
   }
   return JSON.stringify(input).slice(0, 80);
 }

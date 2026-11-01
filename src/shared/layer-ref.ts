@@ -8,9 +8,13 @@ export function layerRef(key: string): string {
     hash ^= key.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193);
   }
-  return `e${((hash >>> 0) % SPACE).toString(36).padStart(6, '0')}`;
+  return `e${((hash >>> 0) % SPACE).toString(36).padStart(6, "0")}`;
 }
 
-export function layerKey(own: string, used: string | null, nth: number): string {
-  return `${own}|${used ?? ''}#${nth}`;
+export function layerKey(
+  own: string,
+  used: string | null,
+  nth: number
+): string {
+  return `${own}|${used ?? ""}#${nth}`;
 }

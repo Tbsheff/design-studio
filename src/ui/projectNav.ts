@@ -1,7 +1,7 @@
-import { prefetchStudio } from './screens';
-import { uiStore } from './storage';
+import { prefetchStudio } from "./screens";
+import { uiStore } from "./storage";
 
-export const OPEN_ROUTE_EVENT = 'studio:open-route';
+export const OPEN_ROUTE_EVENT = "studio:open-route";
 
 type Switcher = (projectId: string | null) => void;
 
@@ -25,7 +25,10 @@ export function takePendingRoute(projectId: string): string | null {
 export function openProject(projectId: string, route?: string): void {
   if (uiStore.get().activeProjectId === projectId) {
     pending = null;
-    if (route) window.dispatchEvent(new CustomEvent(OPEN_ROUTE_EVENT, { detail: { projectId, route } }));
+    if (route)
+      window.dispatchEvent(
+        new CustomEvent(OPEN_ROUTE_EVENT, { detail: { projectId, route } })
+      );
     return;
   }
   pending = route ? { projectId, route } : null;
@@ -33,10 +36,12 @@ export function openProject(projectId: string, route?: string): void {
     switcher(projectId);
     return;
   }
-  void prefetchStudio().then(() => uiStore.set({ activeProjectId: projectId, screen: 'home' }));
+  void prefetchStudio().then(() =>
+    uiStore.set({ activeProjectId: projectId, screen: "home" })
+  );
 }
 
 export function goHome(): void {
   if (switcher && uiStore.get().activeProjectId) switcher(null);
-  else uiStore.set({ activeProjectId: null, screen: 'home' });
+  else uiStore.set({ activeProjectId: null, screen: "home" });
 }

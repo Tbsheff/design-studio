@@ -1,5 +1,5 @@
-@import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' source(none);
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" source(none);
 @plugin '@tailwindcss/typography';
 
 @source '../ai';
@@ -45,14 +45,14 @@
   background: transparent;
 }
 
-[data-slot='composer-input'],
-[data-slot='composer-input']:hover,
-[data-slot='composer-input']:focus {
+[data-slot="composer-input"],
+[data-slot="composer-input"]:hover,
+[data-slot="composer-input"]:focus {
   border-radius: 0;
   box-shadow: none;
 }
 
-[data-slot='markdown'] {
+[data-slot="markdown"] {
   --tw-prose-body: var(--text);
   --tw-prose-headings: var(--text);
   --tw-prose-bold: var(--text);
@@ -69,22 +69,22 @@
   line-height: 1.55;
 }
 
-[data-slot='markdown'] :is(strong, b, h1, h2, h3, h4, th) {
+[data-slot="markdown"] :is(strong, b, h1, h2, h3, h4, th) {
   font-weight: var(--w-medium);
 }
 
-.assistant-text [data-slot='markdown'] {
+.assistant-text [data-slot="markdown"] {
   font-family: var(--serif);
   font-size: var(--t-lg);
   line-height: var(--lh-lg);
   font-optical-sizing: auto;
 }
 
-.assistant-text [data-slot='markdown'] :is(code, pre, kbd) {
+.assistant-text [data-slot="markdown"] :is(code, pre, kbd) {
   font-family: var(--mono);
 }
 
-[data-slot='markdown'] :not(pre) > code {
+[data-slot="markdown"] :not(pre) > code {
   padding: 1px 6px;
   border-radius: var(--r-xs);
   background: var(--surface-active);
@@ -93,16 +93,16 @@
   font-weight: 500;
 }
 
-[data-slot='markdown'] :not(pre) > code::before,
-[data-slot='markdown'] :not(pre) > code::after {
+[data-slot="markdown"] :not(pre) > code::before,
+[data-slot="markdown"] :not(pre) > code::after {
   content: none;
 }
 
-[data-slot='markdown'] > :first-child {
+[data-slot="markdown"] > :first-child {
   margin-top: 0;
 }
 
-[data-slot='markdown'] > :last-child {
+[data-slot="markdown"] > :last-child {
   margin-bottom: 0;
 }
 

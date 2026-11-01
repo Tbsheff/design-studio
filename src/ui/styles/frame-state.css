@@ -6,7 +6,7 @@
 .frame-label.active .frame-chip.state,
 .frame-chip.state.set,
 .frame-chip.state:focus-visible,
-.frame-chip.state[aria-expanded='true'] {
+.frame-chip.state[aria-expanded="true"] {
   opacity: 1;
 }
 
@@ -68,7 +68,7 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.frame-state-rules[aria-invalid='true'] {
+.frame-state-rules[aria-invalid="true"] {
   border-color: var(--danger);
 }
 

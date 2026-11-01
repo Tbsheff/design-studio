@@ -18,7 +18,7 @@
 }
 
 .splitter::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -121,12 +121,18 @@ body.resizing iframe {
 
 @media (max-width: 1099px) {
   .studio > .columns {
-    grid-template-columns: clamp(300px, var(--chat-w, 320px), 50%) minmax(0, 1fr);
+    grid-template-columns: clamp(300px, var(--chat-w, 320px), 50%) minmax(
+        0,
+        1fr
+      );
   }
 }
 
 @media (max-width: 899px) {
   .studio > .columns {
-    grid-template-columns: clamp(300px, var(--chat-w, 300px), 50%) minmax(0, 1fr);
+    grid-template-columns: clamp(300px, var(--chat-w, 300px), 50%) minmax(
+        0,
+        1fr
+      );
   }
 }

@@ -1,12 +1,20 @@
-import { useEffect, useState } from 'react';
-import type { ProjectHit, ProjectType } from '../../shared/project-search';
-import { api } from '../api';
-import { Icon, type IconName } from './Icon';
-import '../styles/project-nav.css';
+import { useEffect, useState } from "react";
+
+import type { ProjectHit, ProjectType } from "../../shared/project-search";
+import { api } from "../api";
+import { Icon, type IconName } from "./Icon";
+
+import "../styles/project-nav.css";
 
 const cache = new Map<string, Promise<string>>();
 
-const TYPE_ICON: Record<ProjectType, IconName> = { next: 'code', vite: 'code', html: 'file', react: 'react', 'design-system': 'palette' };
+const TYPE_ICON: Record<ProjectType, IconName> = {
+  next: "code",
+  vite: "code",
+  html: "file",
+  react: "react",
+  "design-system": "palette",
+};
 
 function useThumb(hit: ProjectHit): string | null {
   const key = hit.thumbnail ? `${hit.id}/${hit.thumbnail}` : null;
@@ -16,13 +24,15 @@ function useThumb(hit: ProjectHit): string | null {
     let live = true;
     let pending = cache.get(key);
     if (!pending) {
-      pending = api.thumbnail(hit.id, hit.thumbnail).then((blob) => URL.createObjectURL(blob));
+      pending = api
+        .thumbnail(hit.id, hit.thumbnail)
+        .then((blob) => URL.createObjectURL(blob));
       pending.catch(() => cache.delete(key));
       cache.set(key, pending);
     }
     pending.then(
       (next) => live && setUrl({ key, url: next }),
-      () => undefined,
+      () => undefined
     );
     return () => {
       live = false;
@@ -31,11 +41,25 @@ function useThumb(hit: ProjectHit): string | null {
   return url && url.key === key ? url.url : null;
 }
 
-export function ProjectThumb({ hit, className }: { hit: ProjectHit; className?: string }) {
+export function ProjectThumb({
+  hit,
+  className,
+}: {
+  hit: ProjectHit;
+  className?: string;
+}) {
   const url = useThumb(hit);
   return (
-    <span className={`pnav-thumb${className ? ` ${className}` : ''}`} data-type={hit.type} aria-hidden="true">
-      {url ? <img src={url} alt="" draggable={false} /> : <Icon name={TYPE_ICON[hit.type]} size={12} />}
+    <span
+      className={`pnav-thumb${className ? ` ${className}` : ""}`}
+      data-type={hit.type}
+      aria-hidden="true"
+    >
+      {url ? (
+        <img src={url} alt="" draggable={false} />
+      ) : (
+        <Icon name={TYPE_ICON[hit.type]} size={12} />
+      )}
     </span>
   );
 }
@@ -48,9 +72,21 @@ export function TypeBadge({ hit }: { hit: ProjectHit }) {
   );
 }
 
-export function HealthDot({ hit, className }: { hit: ProjectHit; className?: string }) {
+export function HealthDot({
+  hit,
+  className,
+}: {
+  hit: ProjectHit;
+  className?: string;
+}) {
   if (!hit.health) return null;
   return (
-    <span className={`pnav-dot${className ? ` ${className}` : ''}`} data-level={hit.health.level} role="img" aria-label={hit.health.note} data-tip={hit.health.note} />
+    <span
+      className={`pnav-dot${className ? ` ${className}` : ""}`}
+      data-level={hit.health.level}
+      role="img"
+      aria-label={hit.health.note}
+      data-tip={hit.health.note}
+    />
   );
 }

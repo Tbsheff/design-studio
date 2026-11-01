@@ -1,4 +1,4 @@
-import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { deflateRawSync, inflateRawSync } from "node:zlib";
 
 export interface ZipEntry {
   name: string;
@@ -13,13 +13,20 @@ const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
 
 function crc32(data: Buffer): number {
   let crc = 0xffffffff;
-  for (const byte of data) crc = (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0) ^ (crc >>> 8);
+  for (const byte of data)
+    crc = (CRC_TABLE[(crc ^ byte) & 0xff] ?? 0) ^ (crc >>> 8);
   return (crc ^ 0xffffffff) >>> 0;
 }
 
 function dosTime(date: Date): { time: number; day: number } {
-  const time = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
-  const day = ((Math.max(1980, date.getFullYear()) - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  const time =
+    (date.getHours() << 11) |
+    (date.getMinutes() << 5) |
+    Math.floor(date.getSeconds() / 2);
+  const day =
+    ((Math.max(1980, date.getFullYear()) - 1980) << 9) |
+    ((date.getMonth() + 1) << 5) |
+    date.getDate();
   return { time, day };
 }
 
@@ -29,7 +36,7 @@ export function zipFiles(entries: ZipEntry[], date: Date = new Date()): Buffer {
   const centrals: Buffer[] = [];
   let offset = 0;
   for (const entry of entries) {
-    const name = Buffer.from(entry.name, 'utf8');
+    const name = Buffer.from(entry.name, "utf8");
     const packed = deflateRawSync(entry.data);
     const crc = crc32(entry.data);
     const local = Buffer.alloc(30);
@@ -90,16 +97,24 @@ const S_IFREG = 0o100000;
 
 function findEnd(bytes: Buffer): number {
   const stop = Math.max(0, bytes.length - EOCD_MIN - MAX_COMMENT);
-  for (let at = bytes.length - EOCD_MIN; at >= stop; at -= 1) if (bytes.readUInt32LE(at) === EOCD_SIGNATURE) return at;
-  throw new ZipError('not a zip file');
+  for (let at = bytes.length - EOCD_MIN; at >= stop; at -= 1)
+    if (bytes.readUInt32LE(at) === EOCD_SIGNATURE) return at;
+  throw new ZipError("not a zip file");
 }
 
-function inflate(packed: Buffer, method: number, size: number, limit: number): Buffer {
+function inflate(
+  packed: Buffer,
+  method: number,
+  size: number,
+  limit: number
+): Buffer {
   if (method === 0) return packed;
   try {
-    return inflateRawSync(packed, { maxOutputLength: Math.min(size, limit) + 1 });
+    return inflateRawSync(packed, {
+      maxOutputLength: Math.min(size, limit) + 1,
+    });
   } catch {
-    throw new ZipError('a file in the zip is damaged or too large');
+    throw new ZipError("a file in the zip is damaged or too large");
   }
 }
 
@@ -116,12 +131,13 @@ interface CentralEntry {
 }
 
 function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
-  if (at + 46 > end || bytes.readUInt32LE(at) !== CENTRAL_SIGNATURE) throw new ZipError('not a zip file');
+  if (at + 46 > end || bytes.readUInt32LE(at) !== CENTRAL_SIGNATURE)
+    throw new ZipError("not a zip file");
   const nameLength = bytes.readUInt16LE(at + 28);
   const skip = bytes.readUInt16LE(at + 30) + bytes.readUInt16LE(at + 32);
   const madeByUnix = bytes.readUInt16LE(at + 4) >> 8 === 3;
   return {
-    name: bytes.subarray(at + 46, at + 46 + nameLength).toString('utf8'),
+    name: bytes.subarray(at + 46, at + 46 + nameLength).toString("utf8"),
     flags: bytes.readUInt16LE(at + 8),
     method: bytes.readUInt16LE(at + 10),
     crc: bytes.readUInt32LE(at + 16),
@@ -135,32 +151,70 @@ function readCentral(bytes: Buffer, at: number, end: number): CentralEntry {
 
 function checkEntry(entry: CentralEntry, limits: UnzipLimits): void {
   const { name } = entry;
-  if (entry.flags & 0x1) throw new ZipError('encrypted zips are not supported');
-  if (entry.method !== 0 && entry.method !== 8) throw new ZipError(`${name} uses a compression method that is not supported`);
-  if (name.endsWith('/')) throw new ZipError(`folder entries are not allowed: ${name}`);
-  if (entry.unixMode !== 0 && (entry.unixMode & S_IFMT) !== S_IFREG) throw new ZipError(`${name} is not a regular file`);
-  if (entry.size > limits.maxEntryBytes) throw new ZipError(`${name} is larger than ${Math.round(limits.maxEntryBytes / 1024)} KB`);
+  if (entry.flags & 0x1) throw new ZipError("encrypted zips are not supported");
+  if (entry.method !== 0 && entry.method !== 8)
+    throw new ZipError(
+      `${name} uses a compression method that is not supported`
+    );
+  if (name.endsWith("/"))
+    throw new ZipError(`folder entries are not allowed: ${name}`);
+  if (entry.unixMode !== 0 && (entry.unixMode & S_IFMT) !== S_IFREG)
+    throw new ZipError(`${name} is not a regular file`);
+  if (entry.size > limits.maxEntryBytes)
+    throw new ZipError(
+      `${name} is larger than ${Math.round(limits.maxEntryBytes / 1024)} KB`
+    );
 }
 
-function readData(bytes: Buffer, entry: CentralEntry, centralStart: number, limits: UnzipLimits): Buffer {
+function readData(
+  bytes: Buffer,
+  entry: CentralEntry,
+  centralStart: number,
+  limits: UnzipLimits
+): Buffer {
   const { localAt } = entry;
-  if (localAt + 30 > centralStart || bytes.readUInt32LE(localAt) !== LOCAL_SIGNATURE) throw new ZipError('not a zip file');
-  const dataAt = localAt + 30 + bytes.readUInt16LE(localAt + 26) + bytes.readUInt16LE(localAt + 28);
-  if (dataAt + entry.packedSize > centralStart) throw new ZipError('not a zip file');
-  const data = inflate(bytes.subarray(dataAt, dataAt + entry.packedSize), entry.method, entry.size, limits.maxEntryBytes);
-  if (data.length !== entry.size || crc32(data) !== entry.crc) throw new ZipError(`${entry.name} is damaged`);
+  if (
+    localAt + 30 > centralStart ||
+    bytes.readUInt32LE(localAt) !== LOCAL_SIGNATURE
+  )
+    throw new ZipError("not a zip file");
+  const dataAt =
+    localAt +
+    30 +
+    bytes.readUInt16LE(localAt + 26) +
+    bytes.readUInt16LE(localAt + 28);
+  if (dataAt + entry.packedSize > centralStart)
+    throw new ZipError("not a zip file");
+  const data = inflate(
+    bytes.subarray(dataAt, dataAt + entry.packedSize),
+    entry.method,
+    entry.size,
+    limits.maxEntryBytes
+  );
+  if (data.length !== entry.size || crc32(data) !== entry.crc)
+    throw new ZipError(`${entry.name} is damaged`);
   return Buffer.from(data);
 }
 
-function readDirectory(bytes: Buffer, limits: UnzipLimits): { count: number; centralStart: number; end: number } {
-  if (bytes.length < EOCD_MIN) throw new ZipError('not a zip file');
+function readDirectory(
+  bytes: Buffer,
+  limits: UnzipLimits
+): { count: number; centralStart: number; end: number } {
+  if (bytes.length < EOCD_MIN) throw new ZipError("not a zip file");
   const end = findEnd(bytes);
   const count = bytes.readUInt16LE(end + 10);
   const centralSize = bytes.readUInt32LE(end + 12);
   const centralStart = bytes.readUInt32LE(end + 16);
-  if (count === 0xffff || centralStart === 0xffffffff || bytes.readUInt16LE(end + 4) !== 0 || bytes.readUInt16LE(end + 8) !== count) throw new ZipError('zip64 and multi-part zips are not supported');
-  if (count > limits.maxEntries) throw new ZipError(`the zip has more than ${limits.maxEntries} entries`);
-  if (centralStart + centralSize > end) throw new ZipError('not a zip file');
+  if (
+    count === 0xffff ||
+    centralStart === 0xffffffff ||
+    bytes.readUInt16LE(end + 4) !== 0 ||
+    bytes.readUInt16LE(end + 8) !== count
+  )
+    throw new ZipError("zip64 and multi-part zips are not supported");
+  if (count > limits.maxEntries)
+    throw new ZipError(`the zip has more than ${limits.maxEntries} entries`);
+  if (centralStart + centralSize > end) throw new ZipError("not a zip file");
   return { count, centralStart, end };
 }
 
@@ -174,11 +228,18 @@ export function unzipFiles(bytes: Buffer, limits: UnzipLimits): ZipEntry[] {
     const entry = readCentral(bytes, at, end);
     at = entry.next;
     checkEntry(entry, limits);
-    if (seen.has(entry.name)) throw new ZipError(`${entry.name} is in the zip more than once`);
+    if (seen.has(entry.name))
+      throw new ZipError(`${entry.name} is in the zip more than once`);
     seen.add(entry.name);
     total += entry.size;
-    if (total > limits.maxTotalBytes) throw new ZipError(`the zip contents are larger than ${Math.round(limits.maxTotalBytes / 1024)} KB`);
-    entries.push({ name: entry.name, data: readData(bytes, entry, centralStart, limits) });
+    if (total > limits.maxTotalBytes)
+      throw new ZipError(
+        `the zip contents are larger than ${Math.round(limits.maxTotalBytes / 1024)} KB`
+      );
+    entries.push({
+      name: entry.name,
+      data: readData(bytes, entry, centralStart, limits),
+    });
   }
   return entries;
 }

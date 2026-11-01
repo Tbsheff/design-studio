@@ -1,9 +1,9 @@
-import type { SourceLoc, Version } from './contracts.js';
-import type { ComponentOwner, PropValue } from './props.js';
+import type { SourceLoc, Version } from "./contracts.js";
+import type { ComponentOwner, PropValue } from "./props.js";
 
-export type InsertPosition = 'inside' | 'after';
+export type InsertPosition = "inside" | "after";
 
-export const INSERT_POSITIONS: readonly InsertPosition[] = ['inside', 'after'];
+export const INSERT_POSITIONS: readonly InsertPosition[] = ["inside", "after"];
 export const INSERT_TEXT_MAX = 200;
 
 export interface InsertableComponent {
@@ -47,9 +47,14 @@ export interface InsertComponentResult {
   usedAt: SourceLoc | null;
 }
 
-export type JsxInsertPosition = 'inside' | 'before' | 'after' | 'replace';
+export type JsxInsertPosition = "inside" | "before" | "after" | "replace";
 
-export const JSX_INSERT_POSITIONS: readonly JsxInsertPosition[] = ['inside', 'before', 'after', 'replace'];
+export const JSX_INSERT_POSITIONS: readonly JsxInsertPosition[] = [
+  "inside",
+  "before",
+  "after",
+  "replace",
+];
 export const JSX_SNIPPET_MAX = 20000;
 export const JSX_IMPORTS_MAX = 40;
 

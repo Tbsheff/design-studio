@@ -13,27 +13,28 @@ function readMeta(name: string): string | null {
 
 export async function loadSession(): Promise<StudioSession> {
   if (current) return current;
-  const token = readMeta('studio-token');
-  const previewOrigin = readMeta('studio-preview-origin');
+  const token = readMeta("studio-token");
+  const previewOrigin = readMeta("studio-preview-origin");
   if (token && previewOrigin) {
     current = { token, previewOrigin };
     return current;
   }
-  const res = await fetch('/api/session');
+  const res = await fetch("/api/session");
   if (!res.ok) throw new Error(`Session request failed: ${res.status}`);
   const body = (await res.json()) as Partial<StudioSession>;
-  if (!body.token || !body.previewOrigin) throw new Error('Session response is missing token or previewOrigin');
+  if (!body.token || !body.previewOrigin)
+    throw new Error("Session response is missing token or previewOrigin");
   current = { token: body.token, previewOrigin: body.previewOrigin };
   return current;
 }
 
 export function getSession(): StudioSession {
-  if (!current) throw new Error('Session not loaded');
+  if (!current) throw new Error("Session not loaded");
   return current;
 }
 
 export function randomToken(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }

@@ -1,15 +1,23 @@
-import path from 'node:path';
-import { TOKENS_FILE } from '../../shared/contracts.js';
-import type { Direction, Project } from '../../shared/contracts.js';
-import { refreshDraftCoverage } from '../design-system/draft-project.js';
-import { packRegistry, type PackRegistry } from '../design-system/packs.js';
-import { buildErrorMessage, syncDesignSystem } from '../design-system/sync.js';
-import type { AgentRunner, EventBus, PreviewService, ProjectStore, ServerConfig, VersionStore } from '../types.js';
-import type { CanvasService } from '../canvas/service.js';
-import type { CommentStore } from '../store/comments.js';
-import { createRunLifecycle } from './lifecycle.js';
-import { createMockDriver } from './mock.js';
-import { createSdkDriver } from './sdk-driver.js';
+import path from "node:path";
+
+import { TOKENS_FILE } from "../../shared/contracts.js";
+import type { Direction, Project } from "../../shared/contracts.js";
+import type { CanvasService } from "../canvas/service.js";
+import { refreshDraftCoverage } from "../design-system/draft-project.js";
+import { packRegistry, type PackRegistry } from "../design-system/packs.js";
+import { buildErrorMessage, syncDesignSystem } from "../design-system/sync.js";
+import type { CommentStore } from "../store/comments.js";
+import type {
+  AgentRunner,
+  EventBus,
+  PreviewService,
+  ProjectStore,
+  ServerConfig,
+  VersionStore,
+} from "../types.js";
+import { createRunLifecycle } from "./lifecycle.js";
+import { createMockDriver } from "./mock.js";
+import { createSdkDriver } from "./sdk-driver.js";
 
 interface AgentRunnerDeps {
   config: ServerConfig;
@@ -28,20 +36,44 @@ function claudeExecutableOption(): { claudeExecutable?: string } {
 
 export function createAgentRunner(deps: AgentRunnerDeps): AgentRunner {
   const canvas = deps.canvas ? { canvas: deps.canvas } : {};
-  const driver = deps.config.agentMode === 'mock' ? createMockDriver({ ...canvas, preview: deps.preview }) : createSdkDriver({ preview: deps.preview, ...canvas, ...(deps.comments ? { comments: deps.comments } : {}), skillsRoot: path.join(deps.config.dataDir, 'skills-plugins'), exportsRoot: path.join(deps.config.dataDir, 'exports'), ...claudeExecutableOption() });
-  const registry = packRegistry(undefined, { userDir: path.join(deps.config.dataDir, 'packs') });
-  return createRunLifecycle({ ...deps, beforeCommit: designSystemBeforeCommit(deps.bus, registry) }, driver);
+  const driver =
+    deps.config.agentMode === "mock"
+      ? createMockDriver({ ...canvas, preview: deps.preview })
+      : createSdkDriver({
+          preview: deps.preview,
+          ...canvas,
+          ...(deps.comments ? { comments: deps.comments } : {}),
+          skillsRoot: path.join(deps.config.dataDir, "skills-plugins"),
+          exportsRoot: path.join(deps.config.dataDir, "exports"),
+          ...claudeExecutableOption(),
+        });
+  const registry = packRegistry(undefined, {
+    userDir: path.join(deps.config.dataDir, "packs"),
+  });
+  return createRunLifecycle(
+    { ...deps, beforeCommit: designSystemBeforeCommit(deps.bus, registry) },
+    driver
+  );
 }
 
-export function designSystemBeforeCommit(bus: EventBus, registry?: PackRegistry): (project: Project, direction: Direction) => Promise<void> {
+export function designSystemBeforeCommit(
+  bus: EventBus,
+  registry?: PackRegistry
+): (project: Project, direction: Direction) => Promise<void> {
   return async (project, direction) => {
     if (project.designSystemFor && registry) {
-      await refreshDraftCoverage(direction.workTree, registry).catch((error: unknown) => console.error(`[agent] coverage refresh failed for ${project.id}`, error));
+      await refreshDraftCoverage(direction.workTree, registry).catch(
+        (error: unknown) =>
+          console.error(
+            `[agent] coverage refresh failed for ${project.id}`,
+            error
+          )
+      );
     }
     const result = await syncDesignSystem(direction.workTree);
     if (result.errors.length === 0) return;
     bus.emit({
-      type: 'preview.build-error',
+      type: "preview.build-error",
       projectId: project.id,
       directionId: direction.id,
       message: buildErrorMessage(result.errors),

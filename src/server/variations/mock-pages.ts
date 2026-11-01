@@ -1,8 +1,13 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import type { ProjectKind, ReferenceElement, RunRequest } from '../../shared/contracts.js';
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
-type MockVariation = NonNullable<RunRequest['variation']>;
+import type {
+  ProjectKind,
+  ReferenceElement,
+  RunRequest,
+} from "../../shared/contracts.js";
+
+type MockVariation = NonNullable<RunRequest["variation"]>;
 
 interface Look {
   font: string;
@@ -13,14 +18,43 @@ interface Look {
 }
 
 const LOOKS: Look[] = [
-  { font: 'Georgia, "Times New Roman", serif', paper: '#f7f2e8', ink: '#1d1a16', accent: '#a4471c', layout: 'editorial' },
-  { font: '"Arial Black", "Helvetica Neue", Arial, sans-serif', paper: '#ffd23f', ink: '#101010', accent: '#e4002b', layout: 'blocks' },
-  { font: 'ui-sans-serif, system-ui, sans-serif', paper: '#ffffff', ink: '#2b2f36', accent: '#1f5fbf', layout: 'list' },
-  { font: '"Arial Narrow", "Roboto Condensed", sans-serif', paper: '#17191c', ink: '#f2f2f2', accent: '#b5f23d', layout: 'dark' },
+  {
+    font: 'Georgia, "Times New Roman", serif',
+    paper: "#f7f2e8",
+    ink: "#1d1a16",
+    accent: "#a4471c",
+    layout: "editorial",
+  },
+  {
+    font: '"Arial Black", "Helvetica Neue", Arial, sans-serif',
+    paper: "#ffd23f",
+    ink: "#101010",
+    accent: "#e4002b",
+    layout: "blocks",
+  },
+  {
+    font: "ui-sans-serif, system-ui, sans-serif",
+    paper: "#ffffff",
+    ink: "#2b2f36",
+    accent: "#1f5fbf",
+    layout: "list",
+  },
+  {
+    font: '"Arial Narrow", "Roboto Condensed", sans-serif',
+    paper: "#17191c",
+    ink: "#f2f2f2",
+    accent: "#b5f23d",
+    layout: "dark",
+  },
 ];
 
 function escape(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function lookFor(index: number): Look {
@@ -74,7 +108,8 @@ function variationPage(title: string, variation: MockVariation): string {
 
 function variationApp(title: string, variation: MockVariation): string {
   const look = lookFor(variation.index);
-  const text = (value: string) => escape(value).replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
+  const text = (value: string) =>
+    escape(value).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
   return `export default function App() {
   return (
     <main data-variation="${escape(variation.label)}" className="variation-${look.layout}" style={{ fontFamily: ${JSON.stringify(look.font)}, background: '${look.paper}', color: '${look.ink}', minHeight: '100vh', padding: 48 }}>
@@ -90,45 +125,83 @@ function referenceSection(reference: ReferenceElement): string {
   return `  <section class="mock-mix" data-from="${escape(reference.fromLabel)}"><p>Adapted ${escape(reference.tag)} from ${escape(reference.fromLabel)}.</p></section>\n`;
 }
 
-function withReferenceSection(source: string, reference: ReferenceElement): string {
+function withReferenceSection(
+  source: string,
+  reference: ReferenceElement
+): string {
   const section = referenceSection(reference);
-  const closeBody = source.lastIndexOf('</body>');
-  return closeBody === -1 ? `${source}${section}` : `${source.slice(0, closeBody)}${section}${source.slice(closeBody)}`;
+  const closeBody = source.lastIndexOf("</body>");
+  return closeBody === -1
+    ? `${source}${section}`
+    : `${source.slice(0, closeBody)}${section}${source.slice(closeBody)}`;
 }
 
 interface MockWriter {
   say(text: string): Promise<void>;
-  writeFileAsTool(toolName: 'Write' | 'Edit', relativePath: string, content: string): Promise<void>;
+  writeFileAsTool(
+    toolName: "Write" | "Edit",
+    relativePath: string,
+    content: string
+  ): Promise<void>;
 }
 
 async function readOptional(file: string): Promise<string | null> {
   try {
-    return await readFile(file, 'utf8');
+    return await readFile(file, "utf8");
   } catch {
     return null;
   }
 }
 
-export async function runVariationMock(writer: MockWriter, request: RunRequest, kind: ProjectKind, workTree: string, title: string): Promise<string> {
+export async function runVariationMock(
+  writer: MockWriter,
+  request: RunRequest,
+  kind: ProjectKind,
+  workTree: string,
+  title: string
+): Promise<string> {
   const variation = request.variation;
   const reference = request.reference;
   if (variation) {
     await writer.say(`Building option ${variation.label}: ${variation.title}.`);
-    if (kind === 'html') await writer.writeFileAsTool('Write', 'index.html', variationPage(title, variation));
-    else await writer.writeFileAsTool('Write', 'src/App.tsx', variationApp(title, variation));
+    if (kind === "html")
+      await writer.writeFileAsTool(
+        "Write",
+        "index.html",
+        variationPage(title, variation)
+      );
+    else
+      await writer.writeFileAsTool(
+        "Write",
+        "src/App.tsx",
+        variationApp(title, variation)
+      );
     const finalText = `Wrote option ${variation.label} (${variation.title}).`;
     await writer.say(finalText);
     return finalText;
   }
-  if (!reference) throw new Error('runVariationMock needs a variation or a reference');
-  await writer.say(`Adapting the ${reference.tag} from ${reference.fromLabel}.`);
-  if (kind === 'html') {
-    const current = (await readOptional(path.join(workTree, 'index.html'))) ?? '';
-    await writer.writeFileAsTool('Edit', 'index.html', withReferenceSection(current, reference));
+  if (!reference)
+    throw new Error("runVariationMock needs a variation or a reference");
+  await writer.say(
+    `Adapting the ${reference.tag} from ${reference.fromLabel}.`
+  );
+  if (kind === "html") {
+    const current =
+      (await readOptional(path.join(workTree, "index.html"))) ?? "";
+    await writer.writeFileAsTool(
+      "Edit",
+      "index.html",
+      withReferenceSection(current, reference)
+    );
   } else {
-    const current = (await readOptional(path.join(workTree, 'src', 'App.tsx'))) ?? '';
+    const current =
+      (await readOptional(path.join(workTree, "src", "App.tsx"))) ?? "";
     const marker = `<p className="mock-mix" data-from="${escape(reference.fromLabel)}">Adapted ${escape(reference.tag)} from ${escape(reference.fromLabel)}.</p>`;
-    await writer.writeFileAsTool('Edit', 'src/App.tsx', current.replace(/(<\/main>)/, `  ${marker}\n    $1`));
+    await writer.writeFileAsTool(
+      "Edit",
+      "src/App.tsx",
+      current.replace(/(<\/main>)/, `  ${marker}\n    $1`)
+    );
   }
   const finalText = `Adapted the ${reference.tag} from ${reference.fromLabel}.`;
   await writer.say(finalText);

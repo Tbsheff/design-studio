@@ -1,11 +1,38 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { EXPORT_SCALES, type EditorInfo, type ExportFormat, type ExportFrame, type ExportScale, type ExportScope, type HandoffResult, type McpStatus } from '../../shared/export';
-import { downloadBlob } from '../format';
-import { canRevealDownload, canvasFrameChoices, exportApi, frameRoute, readExportPrefs, revealDownload, saveExportPrefs, type ExportTarget, type FrameChoice } from '../exportApi';
-import { useModalDialog } from '../usePopover';
-import { canvasFrameName, framePage } from './CanvasFrames';
-import { Icon, type IconName } from './Icon';
-import '../styles/export.css';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+
+import {
+  EXPORT_SCALES,
+  type EditorInfo,
+  type ExportFormat,
+  type ExportFrame,
+  type ExportScale,
+  type ExportScope,
+  type HandoffResult,
+  type McpStatus,
+} from "../../shared/export";
+import {
+  canRevealDownload,
+  canvasFrameChoices,
+  exportApi,
+  frameRoute,
+  readExportPrefs,
+  revealDownload,
+  saveExportPrefs,
+  type ExportTarget,
+  type FrameChoice,
+} from "../exportApi";
+import { downloadBlob } from "../format";
+import { useModalDialog } from "../usePopover";
+import { canvasFrameName, framePage } from "./CanvasFrames";
+import { Icon, type IconName } from "./Icon";
+
+import "../styles/export.css";
 
 interface Props {
   target: ExportTarget;
@@ -21,19 +48,65 @@ interface FormatInfo {
 }
 
 const FORMATS: FormatInfo[] = [
-  { id: 'png', label: 'PNG', icon: 'image', hint: 'One image per frame. Many frames download as a zip.', action: 'Export PNG' },
-  { id: 'svg', label: 'SVG', icon: 'pencil', hint: 'Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.', action: 'Export SVG' },
-  { id: 'pdf', label: 'PDF', icon: 'doc', hint: 'One page per frame, at 2× for sharp print.', action: 'Export PDF' },
-  { id: 'pptx', label: 'PPTX', icon: 'play', hint: 'One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.', action: 'Export PPTX' },
-  { id: 'html', label: 'HTML', icon: 'code', hint: 'One file with CSS, fonts and images inside. Opens offline.', action: 'Export HTML' },
-  { id: 'zip', label: 'Source', icon: 'folder', hint: 'The project files of this version as a zip.', action: 'Export zip' },
-  { id: 'handoff', label: 'Handoff', icon: 'terminal', hint: 'A folder for a coding agent: HANDOFF.md, tokens, screens and source.', action: 'Create handoff' },
+  {
+    id: "png",
+    label: "PNG",
+    icon: "image",
+    hint: "One image per frame. Many frames download as a zip.",
+    action: "Export PNG",
+  },
+  {
+    id: "svg",
+    label: "SVG",
+    icon: "pencil",
+    hint: "Vector shapes and live text, with font names. Pictures stay embedded. Many frames download as a zip.",
+    action: "Export SVG",
+  },
+  {
+    id: "pdf",
+    label: "PDF",
+    icon: "doc",
+    hint: "One page per frame, at 2× for sharp print.",
+    action: "Export PDF",
+  },
+  {
+    id: "pptx",
+    label: "PPTX",
+    icon: "play",
+    hint: "One slide per frame, or per slide of a deck, with text, boxes, shadows, gradients, SVG icons and images you can edit in Keynote or PowerPoint.",
+    action: "Export PPTX",
+  },
+  {
+    id: "html",
+    label: "HTML",
+    icon: "code",
+    hint: "One file with CSS, fonts and images inside. Opens offline.",
+    action: "Export HTML",
+  },
+  {
+    id: "zip",
+    label: "Source",
+    icon: "folder",
+    hint: "The project files of this version as a zip.",
+    action: "Export zip",
+  },
+  {
+    id: "handoff",
+    label: "Handoff",
+    icon: "terminal",
+    hint: "A folder for a coding agent: HANDOFF.md, tokens, screens and source.",
+    action: "Create handoff",
+  },
 ];
 
 const MOBILE_MAX = 600;
-const MOBILE_FRAME = { name: 'Mobile', width: 390, height: 844 };
+const MOBILE_FRAME = { name: "Mobile", width: 390, height: 844 };
 
-type Status = { kind: 'idle' } | { kind: 'busy'; startedAt: number } | { kind: 'done'; text: string; note: string | null; reveal: boolean } | { kind: 'error'; text: string };
+type Status =
+  | { kind: "idle" }
+  | { kind: "busy"; startedAt: number }
+  | { kind: "done"; text: string; note: string | null; reveal: boolean }
+  | { kind: "error"; text: string };
 
 const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
   ArrowRight: (i, n) => (i + 1) % n,
@@ -45,7 +118,11 @@ const RADIO_STEP: Record<string, (index: number, count: number) => number> = {
 function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
   const step = RADIO_STEP[event.key];
   if (!step) return;
-  const radios = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]:not(:disabled)'));
+  const radios = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      '[role="radio"]:not(:disabled)'
+    )
+  );
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
   if (index < 0) return;
   event.preventDefault();
@@ -54,11 +131,34 @@ function onRadioKey(event: KeyboardEvent<HTMLDivElement>): void {
   next?.click();
 }
 
-function Segmented<T extends string | number>({ label, value, options, onChange }: { label: string; value: T; options: { id: T; label: string; icon?: IconName }[]; onChange: (value: T) => void }) {
+function Segmented<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { id: T; label: string; icon?: IconName }[];
+  onChange: (value: T) => void;
+}) {
   return (
-    <div className="segmented export-seg" role="radiogroup" aria-label={label} onKeyDown={onRadioKey}>
+    <div
+      className="segmented export-seg"
+      role="radiogroup"
+      aria-label={label}
+      onKeyDown={onRadioKey}
+    >
       {options.map((option) => (
-        <button key={option.id} type="button" role="radio" aria-checked={value === option.id} tabIndex={value === option.id ? 0 : -1} className={value === option.id ? 'on' : ''} onClick={() => onChange(option.id)}>
+        <button
+          key={option.id}
+          type="button"
+          role="radio"
+          aria-checked={value === option.id}
+          tabIndex={value === option.id ? 0 : -1}
+          className={value === option.id ? "on" : ""}
+          onClick={() => onChange(option.id)}
+        >
           {option.icon ? <Icon name={option.icon} size={14} /> : null}
           {option.label}
         </button>
@@ -70,19 +170,24 @@ function Segmented<T extends string | number>({ label, value, options, onChange 
 function useElapsed(status: Status): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (status.kind !== 'busy') return;
+    if (status.kind !== "busy") return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [status.kind]);
-  return status.kind === 'busy' ? Math.max(0, Math.floor((now - status.startedAt) / 1000)) : 0;
+  return status.kind === "busy"
+    ? Math.max(0, Math.floor((now - status.startedAt) / 1000))
+    : 0;
 }
 
 function useCopied(): [string | null, (key: string, text: string) => void] {
   const [copied, setCopied] = useState<string | null>(null);
   const timer = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+    },
+    []
+  );
   const copy = (key: string, text: string) => {
     void navigator.clipboard.writeText(text).then(
       () => {
@@ -90,36 +195,70 @@ function useCopied(): [string | null, (key: string, text: string) => void] {
         if (timer.current !== null) window.clearTimeout(timer.current);
         timer.current = window.setTimeout(() => setCopied(null), 1500);
       },
-      () => setCopied(null),
+      () => setCopied(null)
     );
   };
   return [copied, copy];
 }
 
-function HandoffResultView({ target, result, editors, onError }: { target: ExportTarget; result: HandoffResult; editors: EditorInfo[]; onError: (text: string) => void }) {
+function HandoffResultView({
+  target,
+  result,
+  editors,
+  onError,
+}: {
+  target: ExportTarget;
+  result: HandoffResult;
+  editors: EditorInfo[];
+  onError: (text: string) => void;
+}) {
   const [copied, copy] = useCopied();
-  const folder = result.path.split('/').pop() ?? '';
-  const run = (task: () => Promise<void>) => void task().catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)));
+  const folder = result.path.split("/").pop() ?? "";
+  const run = (task: () => Promise<void>) =>
+    void task().catch((error: unknown) =>
+      onError(error instanceof Error ? error.message : String(error))
+    );
   return (
     <div className="export-handoff-result">
       <div className="export-path" data-tip={result.path}>
         <Icon name="folder" size={14} />
         <span className="truncate">…/handoff/{folder}</span>
       </div>
-      <p className="export-sub">{result.files.length} files. Paste the prompt into Claude Code to build the design.</p>
+      <p className="export-sub">
+        {result.files.length} files. Paste the prompt into Claude Code to build
+        the design.
+      </p>
       <div className="export-row-actions">
-        <button type="button" className="btn small primary has-icon" onClick={() => copy('prompt', result.prompt)}>
-          <Icon name={copied === 'prompt' ? 'check' : 'copy'} size={14} />
-          <span aria-live="polite">{copied === 'prompt' ? 'Copied' : 'Copy prompt for Claude Code'}</span>
+        <button
+          type="button"
+          className="btn small primary has-icon"
+          onClick={() => copy("prompt", result.prompt)}
+        >
+          <Icon name={copied === "prompt" ? "check" : "copy"} size={14} />
+          <span aria-live="polite">
+            {copied === "prompt" ? "Copied" : "Copy prompt for Claude Code"}
+          </span>
         </button>
-        <button type="button" className="btn small has-icon" onClick={() => run(async () => {
-          const zip = await exportApi.handoffZip(target.projectId, folder);
-          downloadBlob(zip.blob, zip.name);
-        })}>
+        <button
+          type="button"
+          className="btn small has-icon"
+          onClick={() =>
+            run(async () => {
+              const zip = await exportApi.handoffZip(target.projectId, folder);
+              downloadBlob(zip.blob, zip.name);
+            })
+          }
+        >
           <Icon name="download" size={14} />
           Download zip
         </button>
-        <button type="button" className="btn small ghost" onClick={() => run(() => exportApi.revealHandoff(target.projectId, folder))}>
+        <button
+          type="button"
+          className="btn small ghost"
+          onClick={() =>
+            run(() => exportApi.revealHandoff(target.projectId, folder))
+          }
+        >
           Reveal in Finder
         </button>
       </div>
@@ -127,7 +266,20 @@ function HandoffResultView({ target, result, editors, onError }: { target: Expor
         <div className="export-editors">
           <span className="export-label">Open project in</span>
           {editors.map((editor) => (
-            <button key={editor.id} type="button" className="btn small ghost" onClick={() => run(() => exportApi.openInEditor(target.projectId, target.directionId as string, editor.id))}>
+            <button
+              key={editor.id}
+              type="button"
+              className="btn small ghost"
+              onClick={() =>
+                run(() =>
+                  exportApi.openInEditor(
+                    target.projectId,
+                    target.directionId as string,
+                    editor.id
+                  )
+                )
+              }
+            >
               {editor.name}
             </button>
           ))}
@@ -144,12 +296,20 @@ function ConnectClaudeCode() {
   const [copied, copy] = useCopied();
   useEffect(() => {
     let live = true;
-    exportApi.mcpStatus().then((s) => live && setStatus(s), (e: unknown) => live && setError(e instanceof Error ? e.message : String(e)));
+    exportApi.mcpStatus().then(
+      (s) => live && setStatus(s),
+      (e: unknown) =>
+        live && setError(e instanceof Error ? e.message : String(e))
+    );
     return () => {
       live = false;
     };
   }, []);
-  const change = async (input: { enabled?: boolean; edits?: boolean; rotate?: boolean }) => {
+  const change = async (input: {
+    enabled?: boolean;
+    edits?: boolean;
+    rotate?: boolean;
+  }) => {
     setBusy(true);
     setError(null);
     try {
@@ -167,9 +327,20 @@ function ConnectClaudeCode() {
       <div className="export-connect-head">
         <div className="titles">
           <h3>Connect to Claude Code</h3>
-          <p className="export-sub">A local MCP server lets Claude Code read projects, tokens, DESIGN.md and screenshots. Runs on this Mac only.</p>
+          <p className="export-sub">
+            A local MCP server lets Claude Code read projects, tokens, DESIGN.md
+            and screenshots. Runs on this Mac only.
+          </p>
         </div>
-        <button type="button" role="switch" aria-checked={on} aria-label="MCP server" className={`export-switch${on ? ' on' : ''}`} disabled={busy || status === null} onClick={() => void change({ enabled: !on })}>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="MCP server"
+          className={`export-switch${on ? " on" : ""}`}
+          disabled={busy || status === null}
+          onClick={() => void change({ enabled: !on })}
+        >
           <span className="export-switch-knob" />
         </button>
       </div>
@@ -182,9 +353,15 @@ function ConnectClaudeCode() {
         <>
           <div className="export-command" data-tip={status.command}>
             <code className="truncate">{status.command}</code>
-            <button type="button" className="btn small has-icon" onClick={() => copy('mcp', status.command as string)}>
-              <Icon name={copied === 'mcp' ? 'check' : 'copy'} size={14} />
-              <span aria-live="polite">{copied === 'mcp' ? 'Copied' : 'Copy command'}</span>
+            <button
+              type="button"
+              className="btn small has-icon"
+              onClick={() => copy("mcp", status.command as string)}
+            >
+              <Icon name={copied === "mcp" ? "check" : "copy"} size={14} />
+              <span aria-live="polite">
+                {copied === "mcp" ? "Copied" : "Copy command"}
+              </span>
             </button>
           </div>
           <div className="export-connect-head export-control">
@@ -192,17 +369,32 @@ function ConnectClaudeCode() {
               <h4>Allow edits</h4>
               <p className="export-sub">
                 {edits
-                  ? 'Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It cannot start or stop Claude runs in the studio. Reconnect the server in Claude Code after you change this.'
-                  : 'Off: Claude Code can only read. Turn on to let it edit the design and the canvas directly.'}
+                  ? "Claude Code can also edit files and elements, arrange frames, comment, restore versions, apply design systems, create projects and export. Each edit is a version you can undo. It cannot start or stop Claude runs in the studio. Reconnect the server in Claude Code after you change this."
+                  : "Off: Claude Code can only read. Turn on to let it edit the design and the canvas directly."}
               </p>
             </div>
-            <button type="button" role="switch" aria-checked={edits} aria-label="Allow edits" className={`export-switch${edits ? ' on' : ''}`} disabled={busy} onClick={() => void change({ edits: !edits })}>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={edits}
+              aria-label="Allow edits"
+              className={`export-switch${edits ? " on" : ""}`}
+              disabled={busy}
+              onClick={() => void change({ edits: !edits })}
+            >
               <span className="export-switch-knob" />
             </button>
           </div>
           <div className="export-connect-foot">
-            <span className="export-sub">{status.running ? `Running at ${status.url}` : 'Not running'}</span>
-            <button type="button" className="btn small ghost" disabled={busy} onClick={() => void change({ rotate: true })}>
+            <span className="export-sub">
+              {status.running ? `Running at ${status.url}` : "Not running"}
+            </span>
+            <button
+              type="button"
+              className="btn small ghost"
+              disabled={busy}
+              onClick={() => void change({ rotate: true })}
+            >
               New token
             </button>
           </div>
@@ -230,12 +422,20 @@ interface Options {
 
 function useExportOptions(target: ExportTarget): Options {
   const initial = useMemo(readExportPrefs, []);
-  const [format, setFormat] = useState<ExportFormat>(target.format ?? (target.selector ? 'png' : initial.format));
+  const [format, setFormat] = useState<ExportFormat>(
+    target.format ?? (target.selector ? "png" : initial.format)
+  );
   const [scale, setScale] = useState<ExportScale>(initial.scale);
   const [scope, setScope] = useState<ExportScope>(initial.scope);
-  const frames = useMemo(() => canvasFrameChoices(target.projectId, target.directionId), [target.projectId, target.directionId]);
-  const [picked, setPicked] = useState<Set<string>>(() => new Set(frames.map((f) => f.id)));
-  const selectionOnly = Boolean(target.selector) && (format === 'png' || format === 'svg');
+  const frames = useMemo(
+    () => canvasFrameChoices(target.projectId, target.directionId),
+    [target.projectId, target.directionId]
+  );
+  const [picked, setPicked] = useState<Set<string>>(
+    () => new Set(frames.map((f) => f.id))
+  );
+  const selectionOnly =
+    Boolean(target.selector) && (format === "png" || format === "svg");
   return {
     projectId: target.projectId,
     format,
@@ -245,7 +445,7 @@ function useExportOptions(target: ExportTarget): Options {
     picked,
     chosen: frames.filter((f) => picked.has(f.id)).map((f) => f.frame),
     selectionOnly,
-    needsFrames: format !== 'zip' && !selectionOnly,
+    needsFrames: format !== "zip" && !selectionOnly,
     choose: (next) => {
       setFormat(next);
       saveExportPrefs({ format: next, scale, scope });
@@ -273,7 +473,10 @@ function useEditors(active: boolean): EditorInfo[] {
   useEffect(() => {
     if (!active || editors.length > 0) return;
     let live = true;
-    exportApi.editors().then((list) => live && setEditors(list), () => undefined);
+    exportApi.editors().then(
+      (list) => live && setEditors(list),
+      () => undefined
+    );
     return () => {
       live = false;
     };
@@ -281,11 +484,16 @@ function useEditors(active: boolean): EditorInfo[] {
   return editors;
 }
 
-async function exportOnce(target: ExportTarget, options: Options): Promise<Status> {
-  const selectionFrame = options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
-  const useSelection = options.selectionOnly && target.selector && selectionFrame;
+async function exportOnce(
+  target: ExportTarget,
+  options: Options
+): Promise<Status> {
+  const selectionFrame =
+    options.frames.find((f) => f.active)?.frame ?? options.chosen[0];
+  const useSelection =
+    options.selectionOnly && target.selector && selectionFrame;
   const file = await exportApi.exportFile(target.projectId, {
-    format: options.format as Exclude<ExportFormat, 'handoff'>,
+    format: options.format as Exclude<ExportFormat, "handoff">,
     versionId: target.versionId,
     frames: useSelection && selectionFrame ? [selectionFrame] : options.chosen,
     scale: options.scale,
@@ -293,22 +501,42 @@ async function exportOnce(target: ExportTarget, options: Options): Promise<Statu
     ...(useSelection ? { selector: target.selector } : {}),
   });
   downloadBlob(file.blob, file.name);
-  return { kind: 'done', text: `Saved ${file.name}`, note: file.note, reveal: canRevealDownload() };
+  return {
+    kind: "done",
+    text: `Saved ${file.name}`,
+    note: file.note,
+    reveal: canRevealDownload(),
+  };
 }
 
 function handoffFrames(chosen: ExportFrame[]): ExportFrame[] {
-  return chosen.some((f) => f.width <= MOBILE_MAX) ? chosen : [...chosen, MOBILE_FRAME];
+  return chosen.some((f) => f.width <= MOBILE_MAX)
+    ? chosen
+    : [...chosen, MOBILE_FRAME];
 }
 
 function FrameList({ options }: { options: Options }) {
   return (
     <fieldset className="export-field export-frames">
-      <legend className="export-label">{options.format === 'html' ? 'Pages from frames' : 'Frames'}</legend>
+      <legend className="export-label">
+        {options.format === "html" ? "Pages from frames" : "Frames"}
+      </legend>
       {options.frames.map((choice) => (
         <label key={choice.id} className="export-frame">
-          <input type="checkbox" checked={options.picked.has(choice.id)} onChange={() => options.toggle(choice.id)} />
-          <span className="export-frame-name">{canvasFrameName(options.projectId, choice.id, choice.frame.name)}</span>
-          <span className="export-frame-path truncate" data-tip={frameRoute(choice.frame)}>{framePage(choice.frame.path)}</span>
+          <input
+            type="checkbox"
+            checked={options.picked.has(choice.id)}
+            onChange={() => options.toggle(choice.id)}
+          />
+          <span className="export-frame-name">
+            {canvasFrameName(options.projectId, choice.id, choice.frame.name)}
+          </span>
+          <span
+            className="export-frame-path truncate"
+            data-tip={frameRoute(choice.frame)}
+          >
+            {framePage(choice.frame.path)}
+          </span>
           <span className="export-frame-size">
             {choice.frame.width} × {choice.frame.height}
           </span>
@@ -333,17 +561,35 @@ function OptionFields({ options }: { options: Options }) {
         </div>
       ) : null}
       {options.needsFrames ? <FrameList options={options} /> : null}
-      {format === 'png' ? (
+      {format === "png" ? (
         <div className="export-field export-inline">
           <span className="export-label">Scale</span>
-          <Segmented label="Scale" value={scale} options={EXPORT_SCALES.map((s) => ({ id: s, label: `${s}×` }))} onChange={options.chooseScale} />
-          {first && !selectionOnly ? <span className="export-sub export-size">{first.width * scale} px wide</span> : null}
+          <Segmented
+            label="Scale"
+            value={scale}
+            options={EXPORT_SCALES.map((s) => ({ id: s, label: `${s}×` }))}
+            onChange={options.chooseScale}
+          />
+          {first && !selectionOnly ? (
+            <span className="export-sub export-size">
+              {first.width * scale} px wide
+            </span>
+          ) : null}
         </div>
       ) : null}
-      {((format === 'png' || format === 'svg') && !selectionOnly) || format === 'pdf' ? (
+      {((format === "png" || format === "svg") && !selectionOnly) ||
+      format === "pdf" ? (
         <div className="export-field export-inline">
           <span className="export-label">Area</span>
-          <Segmented label="Area" value={scope} options={[{ id: 'page' as ExportScope, label: 'Full page' }, { id: 'frame' as ExportScope, label: 'Frame only' }]} onChange={options.chooseScope} />
+          <Segmented
+            label="Area"
+            value={scope}
+            options={[
+              { id: "page" as ExportScope, label: "Full page" },
+              { id: "frame" as ExportScope, label: "Frame only" },
+            ]}
+            onChange={options.chooseScope}
+          />
         </div>
       ) : null}
     </>
@@ -354,21 +600,26 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
   const elapsed = useElapsed(status);
   return (
     <div className="export-status" aria-live="polite">
-      {status.kind === 'busy' ? (
+      {status.kind === "busy" ? (
         <span className="export-progress">
           <span className="spinner" />
-          {handoff ? 'Building handoff' : 'Exporting'}… <span className="tabular">{elapsed} s</span>
+          {handoff ? "Building handoff" : "Exporting"}…{" "}
+          <span className="tabular">{elapsed} s</span>
         </span>
       ) : null}
-      {status.kind === 'done' ? (
+      {status.kind === "done" ? (
         <span className="export-done" data-tip={status.text}>
           <Icon name="check" size={14} />
-          <span className="truncate">
-            {status.text}
-          </span>
-          {status.note ? <span className="export-sub">· {status.note}</span> : null}
+          <span className="truncate">{status.text}</span>
+          {status.note ? (
+            <span className="export-sub">· {status.note}</span>
+          ) : null}
           {status.reveal ? (
-            <button type="button" className="btn small ghost" onClick={revealDownload}>
+            <button
+              type="button"
+              className="btn small ghost"
+              onClick={revealDownload}
+            >
               Reveal in Finder
             </button>
           ) : null}
@@ -378,46 +629,73 @@ function StatusLine({ status, handoff }: { status: Status; handoff: boolean }) {
   );
 }
 
-function actionLabel(info: FormatInfo, status: Status, rebuilt: boolean): string {
-  if (status.kind === 'error') return 'Try again';
-  return rebuilt ? 'Rebuild handoff' : info.action;
+function actionLabel(
+  info: FormatInfo,
+  status: Status,
+  rebuilt: boolean
+): string {
+  if (status.kind === "error") return "Try again";
+  return rebuilt ? "Rebuild handoff" : info.action;
 }
 
 export function ExportDialog({ target, onClose }: Props) {
   const options = useExportOptions(target);
   const { format } = options;
-  const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [handoff, setHandoff] = useState<HandoffResult | null>(null);
-  const editors = useEditors(format === 'handoff');
-  const busy = status.kind === 'busy';
+  const editors = useEditors(format === "handoff");
+  const busy = status.kind === "busy";
   const dialog = useModalDialog(() => (busy ? false : onClose()));
-  const info = FORMATS.find((f) => f.id === format) ?? (FORMATS[0] as FormatInfo);
+  const info =
+    FORMATS.find((f) => f.id === format) ?? (FORMATS[0] as FormatInfo);
   const canRun = !busy && (!options.needsFrames || options.chosen.length > 0);
-  const shown = format === 'handoff' ? handoff : null;
+  const shown = format === "handoff" ? handoff : null;
 
   const run = async () => {
     if (!canRun) return;
-    setStatus({ kind: 'busy', startedAt: Date.now() });
+    setStatus({ kind: "busy", startedAt: Date.now() });
     try {
-      if (format === 'handoff') {
-        setHandoff(await exportApi.handoff(target.projectId, { versionId: target.versionId, frames: handoffFrames(options.chosen) }));
-        setStatus({ kind: 'idle' });
+      if (format === "handoff") {
+        setHandoff(
+          await exportApi.handoff(target.projectId, {
+            versionId: target.versionId,
+            frames: handoffFrames(options.chosen),
+          })
+        );
+        setStatus({ kind: "idle" });
         return;
       }
       setStatus(await exportOnce(target, options));
     } catch (error) {
-      setStatus({ kind: 'error', text: error instanceof Error ? error.message : String(error) });
+      setStatus({
+        kind: "error",
+        text: error instanceof Error ? error.message : String(error),
+      });
     }
   };
 
   return (
-    <dialog ref={dialog.ref} className="modal export-dialog" aria-label="Export" onMouseDown={dialog.onMouseDown}>
+    <dialog
+      ref={dialog.ref}
+      className="modal export-dialog"
+      aria-label="Export"
+      onMouseDown={dialog.onMouseDown}
+    >
       <div className="modal-head">
-        <div className="titles" data-tip={`From version: ${target.versionLabel}`} data-tip-align="start">
+        <div
+          className="titles"
+          data-tip={`From version: ${target.versionLabel}`}
+          data-tip-align="start"
+        >
           <h2>Export</h2>
           <p className="truncate">From version: {target.versionLabel}</p>
         </div>
-        <button className="icon-btn" aria-label="Close export" onClick={onClose} disabled={busy}>
+        <button
+          className="icon-btn"
+          aria-label="Close export"
+          onClick={onClose}
+          disabled={busy}
+        >
           <Icon name="close" />
         </button>
       </div>
@@ -425,29 +703,54 @@ export function ExportDialog({ target, onClose }: Props) {
         <Segmented
           label="Format"
           value={format}
-          options={FORMATS.map((f) => ({ id: f.id, label: f.label, icon: f.icon }))}
+          options={FORMATS.map((f) => ({
+            id: f.id,
+            label: f.label,
+            icon: f.icon,
+          }))}
           onChange={(next) => {
             options.choose(next);
-            setStatus({ kind: 'idle' });
+            setStatus({ kind: "idle" });
           }}
         />
         <p className="export-sub export-hint">{info.hint}</p>
         <OptionFields options={options} />
-        {shown ? <HandoffResultView target={target} result={shown} editors={editors} onError={(text) => setStatus({ kind: 'error', text })} /> : null}
-        {format === 'handoff' ? <ConnectClaudeCode /> : null}
-        {status.kind === 'error' ? (
+        {shown ? (
+          <HandoffResultView
+            target={target}
+            result={shown}
+            editors={editors}
+            onError={(text) => setStatus({ kind: "error", text })}
+          />
+        ) : null}
+        {format === "handoff" ? <ConnectClaudeCode /> : null}
+        {status.kind === "error" ? (
           <div className="alert error small" role="alert">
             {status.text}
           </div>
         ) : null}
       </div>
       <div className="modal-foot">
-        <StatusLine status={status} handoff={format === 'handoff'} />
-        <button type="button" className="btn ghost" onClick={onClose} disabled={busy}>
+        <StatusLine status={status} handoff={format === "handoff"} />
+        <button
+          type="button"
+          className="btn ghost"
+          onClick={onClose}
+          disabled={busy}
+        >
           Close
         </button>
-        <button type="button" className={`btn has-icon${shown ? '' : ' primary'}`} disabled={!canRun} onClick={() => void run()} data-autofocus>
-          <Icon name={format === 'handoff' ? 'terminal' : 'download'} size={14} />
+        <button
+          type="button"
+          className={`btn has-icon${shown ? "" : " primary"}`}
+          disabled={!canRun}
+          onClick={() => void run()}
+          data-autofocus
+        >
+          <Icon
+            name={format === "handoff" ? "terminal" : "download"}
+            size={14}
+          />
           {actionLabel(info, status, shown !== null)}
         </button>
       </div>

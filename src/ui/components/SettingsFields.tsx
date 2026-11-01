@@ -1,8 +1,14 @@
-import type { ReactNode } from 'react';
-import { MODEL_OPTIONS, type SettingsDraft } from '../settingsDraft';
-import { SkillsChecklist } from './SkillsChecklist';
+import type { ReactNode } from "react";
 
-export { modelLabel, parseDraft, toDraft, type SettingsDraft } from '../settingsDraft';
+import { MODEL_OPTIONS, type SettingsDraft } from "../settingsDraft";
+import { SkillsChecklist } from "./SkillsChecklist";
+
+export {
+  modelLabel,
+  parseDraft,
+  toDraft,
+  type SettingsDraft,
+} from "../settingsDraft";
 
 interface Props {
   draft: SettingsDraft;
@@ -11,13 +17,19 @@ interface Props {
 }
 
 export function SettingsFields({ draft, onChange, shellExtra }: Props) {
-  const set = (patch: Partial<SettingsDraft>) => onChange({ ...draft, ...patch });
+  const set = (patch: Partial<SettingsDraft>) =>
+    onChange({ ...draft, ...patch });
   const known = MODEL_OPTIONS.some((m) => m.id === draft.model);
   return (
     <div className="settings-fields">
       <label className="field">
         <span>Model</span>
-        <select className="select" aria-label="Model" value={draft.model} onChange={(e) => set({ model: e.target.value })}>
+        <select
+          className="select"
+          aria-label="Model"
+          value={draft.model}
+          onChange={(e) => set({ model: e.target.value })}
+        >
           {MODEL_OPTIONS.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
@@ -55,11 +67,16 @@ export function SettingsFields({ draft, onChange, shellExtra }: Props) {
         <input
           type="checkbox"
           checked={draft.allowBash}
-          onChange={(e) => set({ allowBash: e.target.checked, allowInstall: e.target.checked && draft.allowInstall })}
+          onChange={(e) =>
+            set({
+              allowBash: e.target.checked,
+              allowInstall: e.target.checked && draft.allowInstall,
+            })
+          }
         />
         <span>Allow agent to run shell commands</span>
       </label>
-      <label className={`check ${draft.allowBash ? '' : 'disabled'}`}>
+      <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
         <input
           type="checkbox"
           checked={draft.allowBash && draft.allowInstall}
@@ -68,16 +85,26 @@ export function SettingsFields({ draft, onChange, shellExtra }: Props) {
         />
         <span>Allow installing packages</span>
       </label>
-      <label className={`check ${draft.allowBash ? '' : 'disabled'}`}>
-        <input type="checkbox" checked={draft.allowBash && draft.autoApprove} disabled={!draft.allowBash} onChange={(e) => set({ autoApprove: e.target.checked })} />
+      <label className={`check ${draft.allowBash ? "" : "disabled"}`}>
+        <input
+          type="checkbox"
+          checked={draft.allowBash && draft.autoApprove}
+          disabled={!draft.allowBash}
+          onChange={(e) => set({ autoApprove: e.target.checked })}
+        />
         <span>Auto mode: run commands without asking</span>
       </label>
       <p className="warn-line">
-        These are on by default. Shell commands run on this computer in the project folder, and installs download and run
-        third-party code. Turn them off for projects you do not trust.
+        These are on by default. Shell commands run on this computer in the
+        project folder, and installs download and run third-party code. Turn
+        them off for projects you do not trust.
       </p>
       {shellExtra}
-      <SkillsChecklist disabled={draft.disabledSkills} allowBash={draft.allowBash} onChange={(disabledSkills) => set({ disabledSkills })} />
+      <SkillsChecklist
+        disabled={draft.disabledSkills}
+        allowBash={draft.allowBash}
+        onChange={(disabledSkills) => set({ disabledSkills })}
+      />
     </div>
   );
 }

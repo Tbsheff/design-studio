@@ -1,36 +1,36 @@
-:root[data-shell='mac'] {
+:root[data-shell="mac"] {
   --shell-inset: 88px;
   --shell-inset-end: var(--s-3);
   --shell-bar-h: 48px;
   --shell-top: var(--shell-bar-h);
 }
 
-:root[data-shell='mac'][data-fullscreen='true'] {
+:root[data-shell="mac"][data-fullscreen="true"] {
   --shell-inset: var(--s-3);
   --shell-inset-end: var(--s-2);
   --shell-top: var(--s-2);
 }
 
-:root[data-shell='mac'] .pane-head {
+:root[data-shell="mac"] .pane-head {
   height: var(--shell-bar-h);
 }
 
-:root[data-shell='mac'] .pane-head,
-:root[data-shell='mac'] .studio[data-pane='collapsed'] .canvas-topbar {
+:root[data-shell="mac"] .pane-head,
+:root[data-shell="mac"] .studio[data-pane="collapsed"] .canvas-topbar {
   padding-left: var(--shell-inset);
   -webkit-app-region: drag;
   app-region: drag;
   user-select: none;
 }
 
-:root[data-shell='mac'] .home {
+:root[data-shell="mac"] .home {
   display: flex;
   flex-direction: column;
   overflow: hidden;
   timeline-scope: --home-scroll;
 }
 
-:root[data-shell='mac'] .home-header {
+:root[data-shell="mac"] .home-header {
   flex: none;
   height: var(--shell-bar-h);
   padding-left: var(--shell-inset);
@@ -42,7 +42,7 @@
   user-select: none;
 }
 
-:root[data-shell='mac'] .home > main {
+:root[data-shell="mac"] .home > main {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -54,7 +54,7 @@
 }
 
 @supports (animation-timeline: scroll()) {
-  :root[data-shell='mac'] .home-header {
+  :root[data-shell="mac"] .home-header {
     animation: shell-header-edge linear both;
     animation-timeline: --home-scroll;
     animation-range: 0 24px;
@@ -67,31 +67,55 @@
   }
 }
 
-:root[data-shell='mac'] :is(.topbar, .pane-head, .canvas-topbar, .home-header) :is(button, a, input, select, textarea, [role='button'], [role='tab'], [tabindex], .alert, .conn) {
+:root[data-shell="mac"]
+  :is(.topbar, .pane-head, .canvas-topbar, .home-header)
+  :is(
+    button,
+    a,
+    input,
+    select,
+    textarea,
+    [role="button"],
+    [role="tab"],
+    [tabindex],
+    .alert,
+    .conn
+  ) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] :is(.run-settings-pop, .tk-pop, .ds-popover, .pack-popover, .desktop-notice, .theme-menu, .ui-menu, .tweak-prompt) {
+:root[data-shell="mac"]
+  :is(
+    .run-settings-pop,
+    .tk-pop,
+    .ds-popover,
+    .pack-popover,
+    .desktop-notice,
+    .theme-menu,
+    .ui-menu,
+    .tweak-prompt
+  ) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac']:has(dialog[open]) :is(.topbar, .pane-head, .canvas-topbar, .home-header) {
+:root[data-shell="mac"]:has(dialog[open])
+  :is(.topbar, .pane-head, .canvas-topbar, .home-header) {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] .canvas-topbar {
+:root[data-shell="mac"] .canvas-topbar {
   -webkit-app-region: drag;
   app-region: drag;
   user-select: none;
 }
 
-:root[data-shell='mac'] .studio > .columns {
+:root[data-shell="mac"] .studio > .columns {
   padding-top: 0;
 }
 
-:root[data-shell='mac'] .studio .pane-canvas {
+:root[data-shell="mac"] .studio .pane-canvas {
   margin-top: calc((var(--shell-bar-h) - var(--bar-h)) / 2);
 }

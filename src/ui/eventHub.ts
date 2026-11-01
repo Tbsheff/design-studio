@@ -1,48 +1,50 @@
-import type { StudioEvent, StudioEventBody } from '../shared/contracts';
+import type { StudioEvent, StudioEventBody } from "../shared/contracts";
 
-const EVERY_EVENT_TYPE: Record<StudioEventBody['type'], true> = {
-  'run.started': true,
-  'run.text.delta': true,
-  'run.text': true,
-  'run.thinking.delta': true,
-  'run.thinking': true,
-  'run.tool.started': true,
-  'run.tool.finished': true,
-  'run.user': true,
-  'run.queue': true,
-  'run.stopping': true,
-  'run.permission': true,
-  'run.permission.resolved': true,
-  'run.todos': true,
-  'run.usage': true,
-  'run.retry': true,
-  'run.finished': true,
-  'files.changed': true,
-  'version.created': true,
-  'direction.updated': true,
-  'status.changed': true,
-  'preview.build-error': true,
-  'comments.changed': true,
-  'edit-history.changed': true,
-  'versions.changed': true,
-  'canvas.changed': true,
-  'canvas.point': true,
-  'links.changed': true,
-  'mcp.approval': true,
-  'mcp.approval.resolved': true,
-  'mcp.activity': true,
-  'mcp.point': true,
-  'design-system.sources': true,
-  'app.status': true,
-  'frame-states.changed': true,
-  'layer-locks.changed': true,
-  'edit.planned': true,
-  'edit.unplanned': true,
+const EVERY_EVENT_TYPE: Record<StudioEventBody["type"], true> = {
+  "run.started": true,
+  "run.text.delta": true,
+  "run.text": true,
+  "run.thinking.delta": true,
+  "run.thinking": true,
+  "run.tool.started": true,
+  "run.tool.finished": true,
+  "run.user": true,
+  "run.queue": true,
+  "run.stopping": true,
+  "run.permission": true,
+  "run.permission.resolved": true,
+  "run.todos": true,
+  "run.usage": true,
+  "run.retry": true,
+  "run.finished": true,
+  "files.changed": true,
+  "version.created": true,
+  "direction.updated": true,
+  "status.changed": true,
+  "preview.build-error": true,
+  "comments.changed": true,
+  "edit-history.changed": true,
+  "versions.changed": true,
+  "canvas.changed": true,
+  "canvas.point": true,
+  "links.changed": true,
+  "mcp.approval": true,
+  "mcp.approval.resolved": true,
+  "mcp.activity": true,
+  "mcp.point": true,
+  "design-system.sources": true,
+  "app.status": true,
+  "frame-states.changed": true,
+  "layer-locks.changed": true,
+  "edit.planned": true,
+  "edit.unplanned": true,
 };
 
-export const EVENT_TYPES = Object.keys(EVERY_EVENT_TYPE) as StudioEventBody['type'][];
+export const EVENT_TYPES = Object.keys(
+  EVERY_EVENT_TYPE
+) as StudioEventBody["type"][];
 
-export type ConnectionState = 'connecting' | 'open' | 'reconnecting';
+export type ConnectionState = "connecting" | "open" | "reconnecting";
 
 export interface EventSourceLike {
   onopen: ((this: EventSource, ev: Event) => unknown) | null;
@@ -95,13 +97,13 @@ export function createEventHub(deps: HubDeps): EventHub {
     } catch {
       return;
     }
-    if (typeof event.seq !== 'number' || event.seq <= channel.lastSeq) return;
+    if (typeof event.seq !== "number" || event.seq <= channel.lastSeq) return;
     channel.lastSeq = event.seq;
     for (const listener of [...channel.listeners]) {
       try {
         listener(event);
       } catch (error) {
-        console.error('[events] listener failed', error);
+        console.error("[events] listener failed", error);
       }
     }
   };
@@ -110,19 +112,23 @@ export function createEventHub(deps: HubDeps): EventHub {
     if (channels.get(projectId) !== channel) return;
     const es = deps.open(projectId, channel.lastSeq);
     channel.source = es;
-    const onMessage = (msg: Event) => receive(channel, msg as MessageEvent<string>);
+    const onMessage = (msg: Event) =>
+      receive(channel, msg as MessageEvent<string>);
     es.onopen = () => {
       channel.retryDelay = 500;
-      setState(channel, 'open');
+      setState(channel, "open");
     };
     es.onmessage = onMessage;
     for (const type of EVENT_TYPES) es.addEventListener(type, onMessage);
     es.onerror = () => {
       es.close();
       if (channels.get(projectId) !== channel) return;
-      setState(channel, 'reconnecting');
+      setState(channel, "reconnecting");
       deps.clearTimer(channel.retryTimer);
-      channel.retryTimer = deps.setTimer(() => connect(projectId, channel), channel.retryDelay);
+      channel.retryTimer = deps.setTimer(
+        () => connect(projectId, channel),
+        channel.retryDelay
+      );
       channel.retryDelay = Math.min(channel.retryDelay * 2, 8000);
     };
   };
@@ -136,7 +142,7 @@ export function createEventHub(deps: HubDeps): EventHub {
     const channel: Channel = {
       listeners: new Set(),
       stateListeners: new Set(),
-      state: 'connecting',
+      state: "connecting",
       lastSeq: 0,
       source: null,
       retryTimer: undefined,
@@ -149,7 +155,12 @@ export function createEventHub(deps: HubDeps): EventHub {
   };
 
   const release = (projectId: string, channel: Channel) => {
-    if (channel.listeners.size > 0 || channel.stateListeners.size > 0 || channel.closing) return;
+    if (
+      channel.listeners.size > 0 ||
+      channel.stateListeners.size > 0 ||
+      channel.closing
+    )
+      return;
     channel.closing = true;
     deps.defer(() => {
       if (!channel.closing || channels.get(projectId) !== channel) return;
@@ -179,7 +190,7 @@ export function createEventHub(deps: HubDeps): EventHub {
       };
     },
     state(projectId) {
-      return channels.get(projectId)?.state ?? 'connecting';
+      return channels.get(projectId)?.state ?? "connecting";
     },
     openCount() {
       return channels.size;

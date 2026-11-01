@@ -1,53 +1,107 @@
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import type { RunComment, RunLevel, RunRequest, SelectionContext } from '../../shared/contracts.js';
-import { levelOf } from '../../shared/run-levels.js';
-import type { DriverInput, DriverOutcome, DriverSink, RunDriver } from './lifecycle.js';
-import { bashWriteProblem, checkPathInside, evaluateToolUse, type ToolPolicy } from './permissions.js';
-import { createBashGate } from './ask-gate.js';
-import { queuedText } from './lifecycle.js';
-import { MOCK_TWEAKS_TAG, runMockTweaks } from '../tweaks/mock-tweaks.js';
-import { buildUserMessageParts, buildUserText } from './user-message.js';
-import { runVariationMock } from '../variations/mock-pages.js';
-import { enforceDesignSystemCheck, wantsDesignSystemCheck } from './design-system-run.js';
-import { runMockDesignSystem, runMockDesignSystemFix } from './mock-design-system.js';
-import type { CanvasService } from '../canvas/service.js';
-import { mockCanvasContext, runMockCanvas, runMockLinks, runMockStates, wantsMockCanvas, wantsMockLinks, wantsMockStates } from './mock-canvas.js';
-import { probeWithPreview } from '../canvas/link-tools.js';
-import { runMockDirect, wantsMockDirect } from './mock-direct.js';
-import type { PreviewService } from '../types.js';
-import { runReferencePass } from './reference-check.js';
-import { referenceNote, withReference } from './final-check.js';
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
 
-const MOCK_USAGE = { inputTokens: 120, outputTokens: 80, cacheReadTokens: 0, cacheWriteTokens: 0 };
+import type {
+  RunComment,
+  RunLevel,
+  RunRequest,
+  SelectionContext,
+} from "../../shared/contracts.js";
+import { levelOf } from "../../shared/run-levels.js";
+import { probeWithPreview } from "../canvas/link-tools.js";
+import type { CanvasService } from "../canvas/service.js";
+import { MOCK_TWEAKS_TAG, runMockTweaks } from "../tweaks/mock-tweaks.js";
+import type { PreviewService } from "../types.js";
+import { runVariationMock } from "../variations/mock-pages.js";
+import { createBashGate } from "./ask-gate.js";
+import {
+  enforceDesignSystemCheck,
+  wantsDesignSystemCheck,
+} from "./design-system-run.js";
+import { referenceNote, withReference } from "./final-check.js";
+import type {
+  DriverInput,
+  DriverOutcome,
+  DriverSink,
+  RunDriver,
+} from "./lifecycle.js";
+import { queuedText } from "./lifecycle.js";
+import {
+  mockCanvasContext,
+  runMockCanvas,
+  runMockLinks,
+  runMockStates,
+  wantsMockCanvas,
+  wantsMockLinks,
+  wantsMockStates,
+} from "./mock-canvas.js";
+import {
+  runMockDesignSystem,
+  runMockDesignSystemFix,
+} from "./mock-design-system.js";
+import { runMockDirect, wantsMockDirect } from "./mock-direct.js";
+import {
+  bashWriteProblem,
+  checkPathInside,
+  evaluateToolUse,
+  type ToolPolicy,
+} from "./permissions.js";
+import { runReferencePass } from "./reference-check.js";
+import { buildUserMessageParts, buildUserText } from "./user-message.js";
+
+const MOCK_USAGE = {
+  inputTokens: 120,
+  outputTokens: 80,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+};
 const DELTA_DELAY_MS = 20;
 const SLOW_STEP_MS = 1500;
 const STEP_TOOL_MS = 900;
-export const MOCK_BASH_OUTPUT = 'mock-bash-output.txt';
+export const MOCK_BASH_OUTPUT = "mock-bash-output.txt";
 const LONG_SECTIONS = 24;
 
-const MOCK_TODO_STEPS = ['Read the page', 'Plan the layout', 'Write the hero', 'Write the cards', 'Check mobile'];
+const MOCK_TODO_STEPS = [
+  "Read the page",
+  "Plan the layout",
+  "Write the hero",
+  "Write the cards",
+  "Check mobile",
+];
 export const MOCK_CONTEXT_TOKENS = 24_000;
 
 function mockTodos(current: number) {
-  return MOCK_TODO_STEPS.map((content, index) => ({ content, activeForm: `${content}…`, status: index < current ? 'completed' : index === current ? 'in_progress' : 'pending' }));
+  return MOCK_TODO_STEPS.map((content, index) => ({
+    content,
+    activeForm: `${content}…`,
+    status:
+      index < current
+        ? "completed"
+        : index === current
+          ? "in_progress"
+          : "pending",
+  }));
 }
 
 export function longReply(): string {
   const sections: string[] = [];
   for (let n = 1; n <= LONG_SECTIONS; n += 1) {
-    const code = Array.from({ length: 18 }, (_, line) => `  .card-${n}-${line} { padding: ${line * 2}px; border-radius: 8px; color: var(--ink); }`).join('\n');
+    const code = Array.from(
+      { length: 18 },
+      (_, line) =>
+        `  .card-${n}-${line} { padding: ${line * 2}px; border-radius: 8px; color: var(--ink); }`
+    ).join("\n");
     sections.push(
-      `## Section ${n}: layout notes\n\nThe hero keeps one clear action and the cards keep a steady rhythm. This paragraph explains why the spacing scale matters for section ${n}, how the type sizes relate, and which tokens the page uses so that the reader can follow the change without opening the code.\n\n- Keep the heading short and specific.\n- Use one accent color for actions.\n- Check the mobile layout at 390 px.\n\n\`\`\`css\n${code}\n\`\`\`\n\nAfter the code, a short summary closes section ${n} and leads into the next one.`,
+      `## Section ${n}: layout notes\n\nThe hero keeps one clear action and the cards keep a steady rhythm. This paragraph explains why the spacing scale matters for section ${n}, how the type sizes relate, and which tokens the page uses so that the reader can follow the change without opening the code.\n\n- Keep the heading short and specific.\n- Use one accent color for actions.\n- Check the mobile layout at 390 px.\n\n\`\`\`css\n${code}\n\`\`\`\n\nAfter the code, a short summary closes section ${n} and leads into the next one.`
     );
   }
-  return sections.join('\n\n');
+  return sections.join("\n\n");
 }
 
 class MockAbortError extends Error {
   constructor() {
-    super('Run canceled.');
-    this.name = 'AbortError';
+    super("Run canceled.");
+    this.name = "AbortError";
   }
 }
 
@@ -55,14 +109,14 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal.aborted) return reject(new MockAbortError());
     const timer = setTimeout(() => {
-      signal.removeEventListener('abort', onAbort);
+      signal.removeEventListener("abort", onAbort);
       resolve();
     }, ms);
     function onAbort() {
       clearTimeout(timer);
       reject(new MockAbortError());
     }
-    signal.addEventListener('abort', onAbort, { once: true });
+    signal.addEventListener("abort", onAbort, { once: true });
   });
 }
 
@@ -72,28 +126,37 @@ function throwIfAborted(signal: AbortSignal): void {
 
 function escapeHtml(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function escapeJsxText(value: string): string {
-  return escapeHtml(value).replace(/\{/g, '&#123;').replace(/\}/g, '&#125;');
+  return escapeHtml(value).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
 }
 
 const SKILL_TAG = /\[skill:([^\]\s]+)\]/g;
-const MOCK_TAGS = /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry|canvas|states)\]/g;
+const MOCK_TAGS =
+  /\[(slow|fail|tweaks|ds-fail-once|ds-fail-always|think|steps|bash|todo|edit1|long|retry|canvas|states)\]/g;
 const SKILL_LINE = /^Use the (\S+) skill\.$/gm;
 
 export function mockSkillRequests(prompt: string): string[] {
-  const ids = [...prompt.matchAll(SKILL_TAG), ...prompt.matchAll(SKILL_LINE)].map((match) => match[1] ?? '');
+  const ids = [
+    ...prompt.matchAll(SKILL_TAG),
+    ...prompt.matchAll(SKILL_LINE),
+  ].map((match) => match[1] ?? "");
   return [...new Set(ids.filter(Boolean))];
 }
 
 export function cleanPrompt(prompt: string): string {
-  return prompt.replace(MOCK_TAGS, '').replace(SKILL_TAG, '').replace(SKILL_LINE, '').replace(/\s+/g, ' ').trim();
+  return prompt
+    .replace(MOCK_TAGS, "")
+    .replace(SKILL_TAG, "")
+    .replace(SKILL_LINE, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function exists(file: string): Promise<boolean> {
@@ -161,8 +224,13 @@ interface MockFlags {
 }
 
 async function mockShellWrite(absolute: string): Promise<void> {
-  const current = await readFile(absolute, 'utf8').catch(() => null);
-  const next = current === null ? 'MOCK_VALUE=1\n' : current.includes('<h1') ? current.replace(/(<h1[^>]*>)[^<]*/, '$1Edited by a shell command') : `${current.trimEnd()}\n/* edited by a shell command */\n`;
+  const current = await readFile(absolute, "utf8").catch(() => null);
+  const next =
+    current === null
+      ? "MOCK_VALUE=1\n"
+      : current.includes("<h1")
+        ? current.replace(/(<h1[^>]*>)[^<]*/, "$1Edited by a shell command")
+        : `${current.trimEnd()}\n/* edited by a shell command */\n`;
   await mkdir(path.dirname(absolute), { recursive: true });
   await writeFile(absolute, next);
 }
@@ -173,7 +241,7 @@ class MockSession {
 
   constructor(
     private readonly input: DriverInput,
-    private readonly flags: MockFlags,
+    private readonly flags: MockFlags
   ) {}
 
   get sink(): DriverSink {
@@ -189,18 +257,24 @@ class MockSession {
   }
 
   async say(text: string): Promise<void> {
-    const words = text.split(' ');
+    const words = text.split(" ");
     const chunkSize = Math.max(1, Math.ceil(words.length / 5));
     for (let index = 0; index < words.length; index += chunkSize) {
       throwIfAborted(this.signal);
-      const chunk = words.slice(index, index + chunkSize).join(' ');
-      this.sink.textDelta(index + chunkSize < words.length ? `${chunk} ` : chunk);
+      const chunk = words.slice(index, index + chunkSize).join(" ");
+      this.sink.textDelta(
+        index + chunkSize < words.length ? `${chunk} ` : chunk
+      );
       await sleep(DELTA_DELAY_MS, this.signal);
     }
     this.sink.text(text);
   }
 
-  async stream(text: string, chunkSize: number, delayMs: number): Promise<void> {
+  async stream(
+    text: string,
+    chunkSize: number,
+    delayMs: number
+  ): Promise<void> {
     for (let index = 0; index < text.length; index += chunkSize) {
       throwIfAborted(this.signal);
       this.sink.textDelta(text.slice(index, index + chunkSize));
@@ -218,7 +292,7 @@ class MockSession {
   }
 
   async think(text: string): Promise<void> {
-    for (const word of text.split(' ')) {
+    for (const word of text.split(" ")) {
       throwIfAborted(this.signal);
       this.sink.thinkingDelta(`${word} `);
       await sleep(DELTA_DELAY_MS / 2, this.signal);
@@ -226,7 +300,12 @@ class MockSession {
     this.sink.thinking(text);
   }
 
-  async fakeTool(name: string, input: Record<string, unknown>, summary: string, ms = DELTA_DELAY_MS): Promise<void> {
+  async fakeTool(
+    name: string,
+    input: Record<string, unknown>,
+    summary: string,
+    ms = DELTA_DELAY_MS
+  ): Promise<void> {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     this.sink.toolStarted(toolUseId, name, input);
@@ -244,32 +323,59 @@ class MockSession {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
     const input = { command };
-    this.sink.toolStarted(toolUseId, 'Bash', input);
-    const gate = this.input.ask && !this.input.ctx.project.settings.autoApprove ? createBashGate(this.input.ask, undefined, this.input.commandRules) : null;
-    const decision = gate ? await gate(toolUseId, input) : { behavior: 'allow' as const };
+    this.sink.toolStarted(toolUseId, "Bash", input);
+    const gate =
+      this.input.ask && !this.input.ctx.project.settings.autoApprove
+        ? createBashGate(this.input.ask, undefined, this.input.commandRules)
+        : null;
+    const decision = gate
+      ? await gate(toolUseId, input)
+      : { behavior: "allow" as const };
     throwIfAborted(this.signal);
-    if (decision.behavior === 'deny') {
+    if (decision.behavior === "deny") {
       this.sink.toolFinished(toolUseId, true, decision.message);
-      this.sink.sent({ text: decision.message, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: null });
-      await this.say(`Okay, I will not run \`${command}\`. ${decision.message}`);
+      this.sink.sent({
+        text: decision.message,
+        imageCount: 0,
+        updatedInstructions: false,
+        recommendedSkills: [],
+        promptHash: "mock",
+        resume: null,
+      });
+      await this.say(
+        `Okay, I will not run \`${command}\`. ${decision.message}`
+      );
       return;
     }
-    await writeFile(path.join(this.workTree, MOCK_BASH_OUTPUT), `ran: ${command}\n`);
+    await writeFile(
+      path.join(this.workTree, MOCK_BASH_OUTPUT),
+      `ran: ${command}\n`
+    );
     this.sink.toolFinished(toolUseId, false, `Bash ${command}`);
     await this.deliverQueued();
   }
 
   async bashWrite(targets: string): Promise<string | null> {
-    const files = targets.split(',').filter(Boolean);
+    const files = targets.split(",").filter(Boolean);
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
-    const input = { command: `python3 scripts/patch.py ${files.map((file) => path.basename(file)).join(' ')}` };
+    const input = {
+      command: `python3 scripts/patch.py ${files.map((file) => path.basename(file)).join(" ")}`,
+    };
     const settings = this.input.ctx.project.settings;
-    const policy: ToolPolicy = { workTree: this.workTree, mode: 'edit', allowBash: settings.allowBash, allowInstall: settings.allowInstall };
-    this.sink.toolStarted(toolUseId, 'Bash', input);
-    await this.sink.beforeWrite(toolUseId, 'Bash', input);
-    for (const file of files) await mockShellWrite(path.resolve(this.workTree, file));
-    const result = await this.sink.bashFinished?.(toolUseId, (relative) => bashWriteProblem(policy, relative));
+    const policy: ToolPolicy = {
+      workTree: this.workTree,
+      mode: "edit",
+      allowBash: settings.allowBash,
+      allowInstall: settings.allowInstall,
+    };
+    this.sink.toolStarted(toolUseId, "Bash", input);
+    await this.sink.beforeWrite(toolUseId, "Bash", input);
+    for (const file of files)
+      await mockShellWrite(path.resolve(this.workTree, file));
+    const result = await this.sink.bashFinished?.(toolUseId, (relative) =>
+      bashWriteProblem(policy, relative)
+    );
     this.sink.toolFinished(toolUseId, false, `Bash ${input.command}`);
     return result?.message ?? null;
   }
@@ -277,13 +383,17 @@ class MockSession {
   async useSkill(skill: string): Promise<void> {
     this.toolCounter += 1;
     const toolUseId = `mock_tool_${this.toolCounter}`;
-    this.sink.toolStarted(toolUseId, 'Skill', { skill });
+    this.sink.toolStarted(toolUseId, "Skill", { skill });
     await sleep(DELTA_DELAY_MS, this.signal);
     this.sink.toolFinished(toolUseId, false, `Skill ${skill}`);
     await this.deliverQueued();
   }
 
-  async writeFileAsTool(toolName: 'Write' | 'Edit', relativePath: string, content: string): Promise<void> {
+  async writeFileAsTool(
+    toolName: "Write" | "Edit",
+    relativePath: string,
+    content: string
+  ): Promise<void> {
     const absolute = path.resolve(this.workTree, relativePath);
     const problem = checkPathInside(this.workTree, absolute);
     if (problem) throw new Error(problem);
@@ -297,7 +407,10 @@ class MockSession {
         const step = Math.ceil(content.length / 3);
         for (let part = 1; part <= 3; part += 1) {
           throwIfAborted(this.signal);
-          await writeFile(absolute, content.slice(0, Math.min(content.length, step * part)));
+          await writeFile(
+            absolute,
+            content.slice(0, Math.min(content.length, step * part))
+          );
           if (part < 3) await sleep(SLOW_STEP_MS, this.signal);
         }
       } else {
@@ -307,18 +420,23 @@ class MockSession {
       this.sink.toolFinished(toolUseId, false, `${toolName} ${relativePath}`);
       await this.deliverQueued();
     } catch (error) {
-      this.sink.toolFinished(toolUseId, true, `${toolName} ${relativePath}: ${error instanceof Error ? error.message : String(error)}`);
+      this.sink.toolFinished(
+        toolUseId,
+        true,
+        `${toolName} ${relativePath}: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
     this.writes += 1;
-    if (this.flags.fail && this.writes === 1) throw new Error('Mock failure after first write.');
+    if (this.flags.fail && this.writes === 1)
+      throw new Error("Mock failure after first write.");
   }
 }
 
 function lineColToOffset(source: string, line: number, col: number): number {
   let offset = 0;
   for (let current = 1; current < line; current += 1) {
-    const next = source.indexOf('\n', offset);
+    const next = source.indexOf("\n", offset);
     if (next === -1) return -1;
     offset = next + 1;
   }
@@ -335,56 +453,70 @@ function findOpenTagEnd(source: string, start: number): number {
       continue;
     }
     if (char === '"' || char === "'") quote = char;
-    else if (char === '{') braceDepth += 1;
-    else if (char === '}') braceDepth -= 1;
-    else if (char === '>' && braceDepth === 0) return index;
+    else if (char === "{") braceDepth += 1;
+    else if (char === "}") braceDepth -= 1;
+    else if (char === ">" && braceDepth === 0) return index;
   }
   return -1;
 }
 
 function parseColorRequest(prompt: string): string | null {
-  const match = /\bcolou?r\s+(#[0-9a-fA-F]{3,8}\b|(?:rgb|rgba|hsl|hsla|oklch)\([^)]*\)|[a-zA-Z]+)/i.exec(prompt);
+  const match =
+    /\bcolou?r\s+(#[0-9a-fA-F]{3,8}\b|(?:rgb|rgba|hsl|hsla|oklch)\([^)]*\)|[a-zA-Z]+)/i.exec(
+      prompt
+    );
   return match?.[1] ?? null;
 }
 
 function setInlineColor(openTag: string, color: string, jsx: boolean): string {
-  const selfClosing = openTag.endsWith('/>');
+  const selfClosing = openTag.endsWith("/>");
   const body = openTag.slice(0, selfClosing ? -2 : -1);
-  const close = selfClosing ? '/>' : '>';
+  const close = selfClosing ? "/>" : ">";
   if (jsx) {
     const jsxStyle = /style=\{\{([\s\S]*?)\}\}/.exec(body);
     if (jsxStyle) {
-      const inner = (jsxStyle[1] ?? '').replace(/,?\s*color\s*:\s*(['"]).*?\1/, '').trim().replace(/^,\s*/, '');
+      const inner = (jsxStyle[1] ?? "")
+        .replace(/,?\s*color\s*:\s*(['"]).*?\1/, "")
+        .trim()
+        .replace(/^,\s*/, "");
       const next = inner ? `color: '${color}', ${inner}` : `color: '${color}'`;
       return `${body.replace(jsxStyle[0], `style={{ ${next} }}`)}${close}`;
     }
-    return `${body.trimEnd()} style={{ color: '${color}' }}${selfClosing ? ' ' : ''}${close}`;
+    return `${body.trimEnd()} style={{ color: '${color}' }}${selfClosing ? " " : ""}${close}`;
   }
   const htmlStyle = /style=(["'])([\s\S]*?)\1/.exec(body);
   if (htmlStyle) {
     const quote = htmlStyle[1] ?? '"';
-    const rules = (htmlStyle[2] ?? '')
-      .split(';')
+    const rules = (htmlStyle[2] ?? "")
+      .split(";")
       .map((rule) => rule.trim())
       .filter((rule) => rule && !/^color\s*:/i.test(rule));
     rules.push(`color: ${color}`);
-    return `${body.replace(htmlStyle[0], `style=${quote}${rules.join('; ')}${quote}`)}${close}`;
+    return `${body.replace(htmlStyle[0], `style=${quote}${rules.join("; ")}${quote}`)}${close}`;
   }
-  return `${body.trimEnd()} style="color: ${color}"${selfClosing ? ' ' : ''}${close}`;
+  return `${body.trimEnd()} style="color: ${color}"${selfClosing ? " " : ""}${close}`;
 }
 
-function replaceFirstText(source: string, from: number, text: string): string | null {
+function replaceFirstText(
+  source: string,
+  from: number,
+  text: string
+): string | null {
   let cursor = from;
   for (let guard = 0; guard < 200 && cursor < source.length; guard += 1) {
-    const nextTag = source.indexOf('<', cursor);
+    const nextTag = source.indexOf("<", cursor);
     const segmentEnd = nextTag === -1 ? source.length : nextTag;
     const segment = source.slice(cursor, segmentEnd);
     if (segment.trim() && !/^\s*\{/.test(segment)) {
       const leading = segment.length - segment.trimStart().length;
       const trailing = segment.length - segment.trimEnd().length;
-      return source.slice(0, cursor + leading) + text + source.slice(segmentEnd - trailing);
+      return (
+        source.slice(0, cursor + leading) +
+        text +
+        source.slice(segmentEnd - trailing)
+      );
     }
-    if (nextTag === -1 || source.startsWith('</', nextTag)) return null;
+    if (nextTag === -1 || source.startsWith("</", nextTag)) return null;
     const tagEnd = findOpenTagEnd(source, nextTag);
     if (tagEnd === -1) return null;
     cursor = tagEnd + 1;
@@ -392,27 +524,45 @@ function replaceFirstText(source: string, from: number, text: string): string | 
   return null;
 }
 
-function applySelectionEdit(source: string, selection: SelectionContext, prompt: string, jsx: boolean): string | null {
+function applySelectionEdit(
+  source: string,
+  selection: SelectionContext,
+  prompt: string,
+  jsx: boolean
+): string | null {
   if (!selection.source) return null;
-  const start = lineColToOffset(source, selection.source.line, selection.source.col);
-  if (start < 0 || source[start] !== '<') return null;
+  const start = lineColToOffset(
+    source,
+    selection.source.line,
+    selection.source.col
+  );
+  if (start < 0 || source[start] !== "<") return null;
   const openEnd = findOpenTagEnd(source, start);
   if (openEnd === -1) return null;
   const color = parseColorRequest(prompt);
   if (color) {
     const openTag = source.slice(start, openEnd + 1);
-    return source.slice(0, start) + setInlineColor(openTag, color, jsx) + source.slice(openEnd + 1);
+    return (
+      source.slice(0, start) +
+      setInlineColor(openTag, color, jsx) +
+      source.slice(openEnd + 1)
+    );
   }
-  const text = jsx ? escapeJsxText(cleanPrompt(prompt)) : escapeHtml(cleanPrompt(prompt));
+  const text = jsx
+    ? escapeJsxText(cleanPrompt(prompt))
+    : escapeHtml(cleanPrompt(prompt));
   return replaceFirstText(source, openEnd + 1, text);
 }
 
 function resolveSelectionFile(workTree: string, file: string): string {
-  if (path.isAbsolute(file) && checkPathInside(workTree, file) === null) return file;
-  return path.resolve(workTree, file.replace(/^\/+/, ''));
+  if (path.isAbsolute(file) && checkPathInside(workTree, file) === null)
+    return file;
+  return path.resolve(workTree, file.replace(/^\/+/, ""));
 }
 
-function groupSelectionsByFile(selections: SelectionContext[]): Map<string, SelectionContext[]> {
+function groupSelectionsByFile(
+  selections: SelectionContext[]
+): Map<string, SelectionContext[]> {
   const byFile = new Map<string, SelectionContext[]>();
   for (const selection of selections) {
     if (!selection.source) continue;
@@ -423,8 +573,14 @@ function groupSelectionsByFile(selections: SelectionContext[]): Map<string, Sele
   return byFile;
 }
 
-function compareSelectionsBottomUp(a: SelectionContext, b: SelectionContext): number {
-  return (b.source?.line ?? 0) - (a.source?.line ?? 0) || (b.source?.col ?? 0) - (a.source?.col ?? 0);
+function compareSelectionsBottomUp(
+  a: SelectionContext,
+  b: SelectionContext
+): number {
+  return (
+    (b.source?.line ?? 0) - (a.source?.line ?? 0) ||
+    (b.source?.col ?? 0) - (a.source?.col ?? 0)
+  );
 }
 
 async function runCritique(session: MockSession): Promise<string> {
@@ -433,109 +589,193 @@ async function runCritique(session: MockSession): Promise<string> {
   return finalText;
 }
 
-async function editSelectionFile(session: MockSession, workTree: string, file: string, selections: SelectionContext[], prompt: string): Promise<void> {
+async function editSelectionFile(
+  session: MockSession,
+  workTree: string,
+  file: string,
+  selections: SelectionContext[],
+  prompt: string
+): Promise<void> {
   const absolute = resolveSelectionFile(workTree, file);
-  let source = await readFile(absolute, 'utf8');
+  let source = await readFile(absolute, "utf8");
   const ordered = [...selections].sort(compareSelectionsBottomUp);
   for (const selection of ordered) {
-    const next = applySelectionEdit(source, selection, prompt, /\.(jsx|tsx)$/.test(file));
+    const next = applySelectionEdit(
+      source,
+      selection,
+      prompt,
+      /\.(jsx|tsx)$/.test(file)
+    );
     if (next !== null) source = next;
   }
-  await session.writeFileAsTool('Edit', path.relative(workTree, absolute), source);
+  await session.writeFileAsTool(
+    "Edit",
+    path.relative(workTree, absolute),
+    source
+  );
 }
 
-async function runSelectionEdit(session: MockSession, workTree: string, selections: SelectionContext[], prompt: string): Promise<string> {
+async function runSelectionEdit(
+  session: MockSession,
+  workTree: string,
+  selections: SelectionContext[],
+  prompt: string
+): Promise<string> {
   await session.say(`Updating ${selections.length} selected element(s).`);
   for (const [file, fileSelections] of groupSelectionsByFile(selections)) {
     await editSelectionFile(session, workTree, file, fileSelections, prompt);
   }
-  const finalText = 'Updated the selected element(s).';
+  const finalText = "Updated the selected element(s).";
   await session.say(finalText);
   return finalText;
 }
 
-type PlacedComment = RunComment & { element: SelectionContext & { source: NonNullable<SelectionContext['source']> } };
+type PlacedComment = RunComment & {
+  element: SelectionContext & {
+    source: NonNullable<SelectionContext["source"]>;
+  };
+};
 
 function isPlaced(comment: RunComment): comment is PlacedComment {
   return comment.element !== null && comment.element.source !== null;
 }
 
-async function runCommentEdit(session: MockSession, workTree: string, comments: RunComment[]): Promise<string> {
+async function runCommentEdit(
+  session: MockSession,
+  workTree: string,
+  comments: RunComment[]
+): Promise<string> {
   await session.say(`Addressing ${comments.length} comment(s).`);
   const placed = comments.filter(isPlaced);
   const byFile = new Map<string, PlacedComment[]>();
-  for (const comment of placed) byFile.set(comment.element.source.file, [...(byFile.get(comment.element.source.file) ?? []), comment]);
+  for (const comment of placed)
+    byFile.set(comment.element.source.file, [
+      ...(byFile.get(comment.element.source.file) ?? []),
+      comment,
+    ]);
   const done: number[] = [];
   for (const [file, fileComments] of byFile) {
     const absolute = resolveSelectionFile(workTree, file);
-    let source = await readFile(absolute, 'utf8');
-    const ordered = [...fileComments].sort((a, b) => compareSelectionsBottomUp(a.element, b.element));
+    let source = await readFile(absolute, "utf8");
+    const ordered = [...fileComments].sort((a, b) =>
+      compareSelectionsBottomUp(a.element, b.element)
+    );
     for (const comment of ordered) {
-      const next = applySelectionEdit(source, comment.element, comment.text, /\.(jsx|tsx)$/.test(file));
+      const next = applySelectionEdit(
+        source,
+        comment.element,
+        comment.text,
+        /\.(jsx|tsx)$/.test(file)
+      );
       if (next === null) continue;
       source = next;
       done.push(comment.n);
     }
-    await session.writeFileAsTool('Edit', path.relative(workTree, absolute), source);
+    await session.writeFileAsTool(
+      "Edit",
+      path.relative(workTree, absolute),
+      source
+    );
   }
-  const finalText = `Done: ${done.sort((a, b) => a - b).map((n) => `#${n}`).join(', ') || 'none'}.`;
+  const finalText = `Done: ${
+    done
+      .sort((a, b) => a - b)
+      .map((n) => `#${n}`)
+      .join(", ") || "none"
+  }.`;
   await session.say(finalText);
   return finalText;
 }
 
 function appendParagraph(source: string, text: string): string {
   const paragraph = `  <p class="mock-edit">${escapeHtml(text)}</p>\n`;
-  const closeBody = source.lastIndexOf('</body>');
-  return closeBody === -1 ? `${source}${paragraph}` : `${source.slice(0, closeBody)}${paragraph}${source.slice(closeBody)}`;
+  const closeBody = source.lastIndexOf("</body>");
+  return closeBody === -1
+    ? `${source}${paragraph}`
+    : `${source.slice(0, closeBody)}${paragraph}${source.slice(closeBody)}`;
 }
 
-async function writeHtmlChange(session: MockSession, indexPath: string, text: string): Promise<string> {
+async function writeHtmlChange(
+  session: MockSession,
+  indexPath: string,
+  text: string
+): Promise<string> {
   if (!(await exists(indexPath))) {
-    await session.say(`Creating a landing page for "${text}" with a hero, a call to action, and three cards.`);
-    await session.writeFileAsTool('Write', 'index.html', landingPage(text));
-    return 'Created `index.html`.';
+    await session.say(
+      `Creating a landing page for "${text}" with a hero, a call to action, and three cards.`
+    );
+    await session.writeFileAsTool("Write", "index.html", landingPage(text));
+    return "Created `index.html`.";
   }
   await session.say(`Adding a note for "${text}".`);
-  const source = await readFile(indexPath, 'utf8');
-  await session.writeFileAsTool('Edit', 'index.html', appendParagraph(source, text));
-  return 'Added a paragraph to `index.html`.';
+  const source = await readFile(indexPath, "utf8");
+  await session.writeFileAsTool(
+    "Edit",
+    "index.html",
+    appendParagraph(source, text)
+  );
+  return "Added a paragraph to `index.html`.";
 }
 
-async function runHeadingEdit(session: MockSession, workTree: string, text: string): Promise<string> {
-  const indexPath = path.join(workTree, 'index.html');
-  const source = await readFile(indexPath, 'utf8');
+async function runHeadingEdit(
+  session: MockSession,
+  workTree: string,
+  text: string
+): Promise<string> {
+  const indexPath = path.join(workTree, "index.html");
+  const source = await readFile(indexPath, "utf8");
   await session.say(`Changing the heading to "${text}".`);
-  const next = source.replace(/(<h1\b[^>]*>)[^<\n]*(<\/h1>)/, `$1${escapeHtml(text)}$2`);
-  await session.writeFileAsTool('Edit', 'index.html', next);
-  const finalText = 'Changed the heading in `index.html`.';
+  const next = source.replace(
+    /(<h1\b[^>]*>)[^<\n]*(<\/h1>)/,
+    `$1${escapeHtml(text)}$2`
+  );
+  await session.writeFileAsTool("Edit", "index.html", next);
+  const finalText = "Changed the heading in `index.html`.";
   await session.say(finalText);
   return finalText;
 }
 
-async function runHtmlEdit(session: MockSession, workTree: string, text: string): Promise<string> {
-  const finalText = await writeHtmlChange(session, path.join(workTree, 'index.html'), text);
+async function runHtmlEdit(
+  session: MockSession,
+  workTree: string,
+  text: string
+): Promise<string> {
+  const finalText = await writeHtmlChange(
+    session,
+    path.join(workTree, "index.html"),
+    text
+  );
   await session.say(finalText);
   return finalText;
 }
 
-async function runReactEdit(session: MockSession, workTree: string, text: string): Promise<string> {
-  const appPath = path.join(workTree, 'src', 'App.tsx');
-  const current = (await exists(appPath)) ? await readFile(appPath, 'utf8') : '';
+async function runReactEdit(
+  session: MockSession,
+  workTree: string,
+  text: string
+): Promise<string> {
+  const appPath = path.join(workTree, "src", "App.tsx");
+  const current = (await exists(appPath))
+    ? await readFile(appPath, "utf8")
+    : "";
   const heading = /(<h1\b[^>]*>)([\s\S]*?)(<\/h1>)/.exec(current);
   await session.say(`Setting the heading to "${text}".`);
   if (heading) {
-    const next = current.replace(heading[0], `${heading[1]}${escapeJsxText(text)}${heading[3]}`);
-    await session.writeFileAsTool('Edit', 'src/App.tsx', next);
+    const next = current.replace(
+      heading[0],
+      `${heading[1]}${escapeJsxText(text)}${heading[3]}`
+    );
+    await session.writeFileAsTool("Edit", "src/App.tsx", next);
   } else {
-    await session.writeFileAsTool('Edit', 'src/App.tsx', reactApp(text));
+    await session.writeFileAsTool("Edit", "src/App.tsx", reactApp(text));
   }
-  const finalText = 'Updated `src/App.tsx`.';
+  const finalText = "Updated `src/App.tsx`.";
   await session.say(finalText);
   return finalText;
 }
 
-const RENDER_CHECK = 'mcp__studio__render_check';
-const SCREENSHOT = 'mcp__studio__screenshot';
+const RENDER_CHECK = "mcp__studio__render_check";
+const SCREENSHOT = "mcp__studio__screenshot";
 
 type MockStep = [name: string, input: Record<string, unknown>];
 
@@ -543,178 +783,378 @@ const MOCK_LEVEL_STEPS: Record<RunLevel, MockStep[]> = {
   wireframe: [[RENDER_CHECK, {}]],
   prototype: [
     [RENDER_CHECK, {}],
-    [SCREENSHOT, { viewport: 'mobile', from: 0 }],
-    [SCREENSHOT, { viewport: 'desktop', from: 0 }],
+    [SCREENSHOT, { viewport: "mobile", from: 0 }],
+    [SCREENSHOT, { viewport: "desktop", from: 0 }],
     [RENDER_CHECK, {}],
   ],
   polish: [
     [RENDER_CHECK, {}],
-    [SCREENSHOT, { viewport: 'mobile', from: 0 }],
-    [SCREENSHOT, { viewport: 'tablet', from: 0 }],
-    [SCREENSHOT, { viewport: 'desktop', from: 0 }],
-    ['mcp__studio__design_review', {}],
+    [SCREENSHOT, { viewport: "mobile", from: 0 }],
+    [SCREENSHOT, { viewport: "tablet", from: 0 }],
+    [SCREENSHOT, { viewport: "desktop", from: 0 }],
+    ["mcp__studio__design_review", {}],
     [RENDER_CHECK, {}],
   ],
 };
 
-async function runLevelChecks(session: MockSession, level: RunLevel): Promise<void> {
+async function runLevelChecks(
+  session: MockSession,
+  level: RunLevel
+): Promise<void> {
   for (const [name, input] of MOCK_LEVEL_STEPS[level]) {
-    const viewport = typeof input['viewport'] === 'string' ? ` ${input['viewport']}` : '';
+    const viewport =
+      typeof input["viewport"] === "string" ? ` ${input["viewport"]}` : "";
     await session.fakeTool(name, input, `${name}${viewport}`);
   }
 }
 
 function wantsLevelChecks(input: DriverInput): boolean {
   const request = input.ctx.request;
-  return request.mode === 'edit' && !request.plan && !request.selection?.length && !request.comments?.length;
+  return (
+    request.mode === "edit" &&
+    !request.plan &&
+    !request.selection?.length &&
+    !request.comments?.length
+  );
 }
 
 function wantsTweaks(input: DriverInput): boolean {
   const request = input.ctx.request;
-  return request.mode === 'edit' && (request.task === 'tweaks' || request.prompt.includes(MOCK_TWEAKS_TAG));
+  return (
+    request.mode === "edit" &&
+    (request.task === "tweaks" || request.prompt.includes(MOCK_TWEAKS_TAG))
+  );
 }
 
-async function runMockScenario(input: DriverInput, session: MockSession, canvas: CanvasService | undefined, preview: PreviewService | undefined): Promise<string> {
-  if (wantsDesignSystemCheck(input.ctx)) return runMockDesignSystem(session, input.ctx.direction.workTree, input.ctx.request.prompt, (await buildUserMessageParts(input.ctx)).images.length);
-  if (wantsMockCanvas(input)) return runMockCanvas(session, mockCanvasContext(input, canvas));
-  if (wantsMockLinks(input)) return runMockLinks(session, mockCanvasContext(input, canvas), preview ? probeWithPreview(preview, input.ctx.project, input.ctx.direction) : undefined, input.ctx.request.prompt);
+async function runMockScenario(
+  input: DriverInput,
+  session: MockSession,
+  canvas: CanvasService | undefined,
+  preview: PreviewService | undefined
+): Promise<string> {
+  if (wantsDesignSystemCheck(input.ctx))
+    return runMockDesignSystem(
+      session,
+      input.ctx.direction.workTree,
+      input.ctx.request.prompt,
+      (await buildUserMessageParts(input.ctx)).images.length
+    );
+  if (wantsMockCanvas(input))
+    return runMockCanvas(session, mockCanvasContext(input, canvas));
+  if (wantsMockLinks(input))
+    return runMockLinks(
+      session,
+      mockCanvasContext(input, canvas),
+      preview
+        ? probeWithPreview(preview, input.ctx.project, input.ctx.direction)
+        : undefined,
+      input.ctx.request.prompt
+    );
   if (wantsMockDirect(input)) return runMockDirect(session, input, preview);
-  if (wantsMockStates(input)) return runMockStates(session, input, mockCanvasContext(input, canvas));
-  const tweaksOnly = input.ctx.request.task === 'tweaks';
-  let finalText = tweaksOnly ? '' : await runMockEdit(input, session);
-  if (wantsTweaks(input)) finalText = `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();
-  if (wantsLevelChecks(input) && !tweaksOnly) await runLevelChecks(session, levelOf(input.ctx.request, input.ctx.project.settings));
+  if (wantsMockStates(input))
+    return runMockStates(session, input, mockCanvasContext(input, canvas));
+  const tweaksOnly = input.ctx.request.task === "tweaks";
+  let finalText = tweaksOnly ? "" : await runMockEdit(input, session);
+  if (wantsTweaks(input))
+    finalText =
+      `${finalText} ${await runMockTweaks(session, input.ctx.project.kind, input.ctx.direction.workTree)}`.trim();
+  if (wantsLevelChecks(input) && !tweaksOnly)
+    await runLevelChecks(
+      session,
+      levelOf(input.ctx.request, input.ctx.project.settings)
+    );
   return finalText;
 }
 
-async function runPlan(session: MockSession, workTree: string, text: string): Promise<string> {
+async function runPlan(
+  session: MockSession,
+  workTree: string,
+  text: string
+): Promise<string> {
   await session.say(`Planning "${text}" before any change.`);
-  const policy: ToolPolicy = { workTree, mode: 'edit', allowBash: false, allowInstall: false, plan: true };
-  const target = { file_path: path.join(workTree, 'index.html') };
+  const policy: ToolPolicy = {
+    workTree,
+    mode: "edit",
+    allowBash: false,
+    allowInstall: false,
+    plan: true,
+  };
+  const target = { file_path: path.join(workTree, "index.html") };
   session.toolCounterNext();
   const toolUseId = session.lastToolId();
-  session.sink.toolStarted(toolUseId, 'Write', target);
-  const decision = evaluateToolUse(policy, 'Write', target);
-  session.sink.toolFinished(toolUseId, decision.behavior === 'deny', decision.behavior === 'deny' ? decision.message : 'Write index.html');
+  session.sink.toolStarted(toolUseId, "Write", target);
+  const decision = evaluateToolUse(policy, "Write", target);
+  session.sink.toolFinished(
+    toolUseId,
+    decision.behavior === "deny",
+    decision.behavior === "deny" ? decision.message : "Write index.html"
+  );
   const plan = `Plan:\n\n1. Keep the hero and make "${text}" the heading.\n2. Tighten the card copy.\n3. Check mobile at 390 px.`;
   await session.say(plan);
   return plan;
 }
 
 const ELEMENT_LOOKS = [
-  { background: '#fef3c7', color: '#422006', radius: '6px', padding: '14px', border: '1px solid #f59e0b' },
-  { background: '#1e293b', color: '#f8fafc', radius: '18px', padding: '22px', border: '0' },
-  { background: '#ecfeff', color: '#083344', radius: '0', padding: '16px', border: '3px solid #0e7490' },
-  { background: '#fce7f3', color: '#500724', radius: '28px', padding: '18px 26px', border: '2px dashed #db2777' },
+  {
+    background: "#fef3c7",
+    color: "#422006",
+    radius: "6px",
+    padding: "14px",
+    border: "1px solid #f59e0b",
+  },
+  {
+    background: "#1e293b",
+    color: "#f8fafc",
+    radius: "18px",
+    padding: "22px",
+    border: "0",
+  },
+  {
+    background: "#ecfeff",
+    color: "#083344",
+    radius: "0",
+    padding: "16px",
+    border: "3px solid #0e7490",
+  },
+  {
+    background: "#fce7f3",
+    color: "#500724",
+    radius: "28px",
+    padding: "18px 26px",
+    border: "2px dashed #db2777",
+  },
 ] as const;
 
-function styleOpenTag(openTag: string, label: string, index: number, jsx: boolean): string {
+function styleOpenTag(
+  openTag: string,
+  label: string,
+  index: number,
+  jsx: boolean
+): string {
   const look = ELEMENT_LOOKS[index % ELEMENT_LOOKS.length] ?? ELEMENT_LOOKS[0];
-  const selfClosing = openTag.endsWith('/>');
-  let body = openTag.slice(0, selfClosing ? -2 : -1).replace(/\s+$/, '');
-  const close = selfClosing ? ' />' : '>';
+  const selfClosing = openTag.endsWith("/>");
+  let body = openTag.slice(0, selfClosing ? -2 : -1).replace(/\s+$/, "");
+  const close = selfClosing ? " />" : ">";
   if (jsx) {
     const css = `background: '${look.background}', color: '${look.color}', borderRadius: '${look.radius}', padding: '${look.padding}', border: '${look.border}'`;
-    body = /style=\{\{/.test(body) ? body.replace(/style=\{\{/, `style={{ ${css}, `) : `${body} style={{ ${css} }}`;
+    body = /style=\{\{/.test(body)
+      ? body.replace(/style=\{\{/, `style={{ ${css}, `)
+      : `${body} style={{ ${css} }}`;
   } else {
     const css = `background: ${look.background}; color: ${look.color}; border-radius: ${look.radius}; padding: ${look.padding}; border: ${look.border}`;
-    body = /\sstyle="/.test(body) ? body.replace(/\sstyle="/, ` style="${css}; `) : `${body} style="${css}"`;
+    body = /\sstyle="/.test(body)
+      ? body.replace(/\sstyle="/, ` style="${css}; `)
+      : `${body} style="${css}"`;
   }
   return `${body} data-variant="${label}"${close}`;
 }
 
-async function runElementVariantMock(session: MockSession, workTree: string, request: RunRequest): Promise<string> {
+async function runElementVariantMock(
+  session: MockSession,
+  workTree: string,
+  request: RunRequest
+): Promise<string> {
   const scope = request.scope;
   const variation = request.variation;
-  if (!scope || !variation) throw new Error('runElementVariantMock needs a scope and a variation');
-  await session.say(`Trying option ${variation.label} of the ${scope.tag}: ${variation.title}.`);
-  const source = await readFile(path.join(workTree, scope.file), 'utf8');
+  if (!scope || !variation)
+    throw new Error("runElementVariantMock needs a scope and a variation");
+  await session.say(
+    `Trying option ${variation.label} of the ${scope.tag}: ${variation.title}.`
+  );
+  const source = await readFile(path.join(workTree, scope.file), "utf8");
   const end = source.length - scope.suffixLength;
   const element = source.slice(scope.start, end);
   const openEnd = findOpenTagEnd(element, 0);
-  if (!element.startsWith('<') || openEnd === -1) throw new Error(`mock: no element at ${scope.file}:${scope.startLine}`);
+  if (!element.startsWith("<") || openEnd === -1)
+    throw new Error(`mock: no element at ${scope.file}:${scope.startLine}`);
   const jsx = /\.(jsx|tsx)$/.test(scope.file);
-  const changed = styleOpenTag(element.slice(0, openEnd + 1), variation.label, variation.index, jsx) + element.slice(openEnd + 1);
+  const changed =
+    styleOpenTag(
+      element.slice(0, openEnd + 1),
+      variation.label,
+      variation.index,
+      jsx
+    ) + element.slice(openEnd + 1);
   let next = source.slice(0, scope.start) + changed + source.slice(end);
-  if (request.prompt.includes('[escape]') && variation.index === variation.count - 1) {
-    next += jsx ? `\n// mock variant ${variation.label} also edited outside the element\n` : `\n<!-- mock variant ${variation.label} also edited outside the element -->\n`;
+  if (
+    request.prompt.includes("[escape]") &&
+    variation.index === variation.count - 1
+  ) {
+    next += jsx
+      ? `\n// mock variant ${variation.label} also edited outside the element\n`
+      : `\n<!-- mock variant ${variation.label} also edited outside the element -->\n`;
   }
-  await session.writeFileAsTool('Edit', scope.file, next);
+  await session.writeFileAsTool("Edit", scope.file, next);
   const finalText = `Wrote option ${variation.label} of the ${scope.tag} (${variation.title}).`;
   await session.say(finalText);
   return finalText;
 }
 
-function runMockEdit(input: DriverInput, session: MockSession): Promise<string> {
+function runMockEdit(
+  input: DriverInput,
+  session: MockSession
+): Promise<string> {
   const { ctx } = input;
   const prompt = ctx.request.prompt;
   const workTree = ctx.direction.workTree;
-  const text = cleanPrompt(prompt) || 'Untitled';
-  if (ctx.request.mode === 'critique') return runCritique(session);
+  const text = cleanPrompt(prompt) || "Untitled";
+  if (ctx.request.mode === "critique") return runCritique(session);
   if (ctx.request.plan) return runPlan(session, workTree, text);
-  if (ctx.request.variation && ctx.request.scope) return runElementVariantMock(session, workTree, ctx.request);
-  if (ctx.request.variation || ctx.request.reference) return runVariationMock(session, ctx.request, ctx.project.kind, workTree, text);
-  if (ctx.request.comments?.length) return runCommentEdit(session, workTree, ctx.request.comments);
+  if (ctx.request.variation && ctx.request.scope)
+    return runElementVariantMock(session, workTree, ctx.request);
+  if (ctx.request.variation || ctx.request.reference)
+    return runVariationMock(
+      session,
+      ctx.request,
+      ctx.project.kind,
+      workTree,
+      text
+    );
+  if (ctx.request.comments?.length)
+    return runCommentEdit(session, workTree, ctx.request.comments);
   const selection = ctx.request.selection;
-  if (selection?.length) return runSelectionEdit(session, workTree, selection, prompt);
-  if (ctx.project.kind === 'html' && prompt.includes('[edit1]')) return runHeadingEdit(session, workTree, text);
-  if (ctx.project.kind === 'html') return runHtmlEdit(session, workTree, text);
+  if (selection?.length)
+    return runSelectionEdit(session, workTree, selection, prompt);
+  if (ctx.project.kind === "html" && prompt.includes("[edit1]"))
+    return runHeadingEdit(session, workTree, text);
+  if (ctx.project.kind === "html") return runHtmlEdit(session, workTree, text);
   return runReactEdit(session, workTree, text);
 }
 
-async function withMockReference(input: DriverInput, session: MockSession, preview: PreviewService | undefined, outcome: DriverOutcome): Promise<DriverOutcome> {
-  if (!preview || outcome.status !== 'completed') return outcome;
-  const continueWith = async (text: string, images: unknown[]): Promise<boolean> => {
-    input.sink.sent({ text, imageCount: images.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId, continuation: 1 });
-    await session.say('Mock fix loop: compared the frame with the reference picture again.');
+async function withMockReference(
+  input: DriverInput,
+  session: MockSession,
+  preview: PreviewService | undefined,
+  outcome: DriverOutcome
+): Promise<DriverOutcome> {
+  if (!preview || outcome.status !== "completed") return outcome;
+  const continueWith = async (
+    text: string,
+    images: unknown[]
+  ): Promise<boolean> => {
+    input.sink.sent({
+      text,
+      imageCount: images.length,
+      updatedInstructions: false,
+      recommendedSkills: [],
+      promptHash: "mock",
+      resume: input.ctx.direction.sessionId,
+      continuation: 1,
+    });
+    await session.say(
+      "Mock fix loop: compared the frame with the reference picture again."
+    );
     return true;
   };
-  const reference = await runReferencePass({ preview, ctx: input.ctx, runsDir: input.runsDir, runId: input.runId, continueWith });
+  const reference = await runReferencePass({
+    preview,
+    ctx: input.ctx,
+    runsDir: input.runsDir,
+    runId: input.runId,
+    continueWith,
+  });
   const finalCheck = withReference(outcome.finalCheck, reference);
-  return reference && finalCheck ? { ...outcome, finalCheck, finalText: `${outcome.finalText}\n\n${referenceNote(reference)}` } : outcome;
+  return reference && finalCheck
+    ? {
+        ...outcome,
+        finalCheck,
+        finalText: `${outcome.finalText}\n\n${referenceNote(reference)}`,
+      }
+    : outcome;
 }
 
-async function runMock(input: DriverInput, canvas: CanvasService | undefined, preview: PreviewService | undefined): Promise<DriverOutcome> {
+async function runMock(
+  input: DriverInput,
+  canvas: CanvasService | undefined,
+  preview: PreviewService | undefined
+): Promise<DriverOutcome> {
   const startedAt = Date.now();
   const prompt = input.ctx.request.prompt;
-  const flags: MockFlags = { slow: prompt.includes('[slow]'), fail: prompt.includes('[fail]') };
+  const flags: MockFlags = {
+    slow: prompt.includes("[slow]"),
+    fail: prompt.includes("[fail]"),
+  };
   const session = new MockSession(input, flags);
-  await input.sink.sessionStarted(input.ctx.direction.sessionId ?? `mock-${input.ctx.direction.id}-${input.runId}`);
+  await input.sink.sessionStarted(
+    input.ctx.direction.sessionId ??
+      `mock-${input.ctx.direction.id}-${input.runId}`
+  );
   input.sink.usage(MOCK_CONTEXT_TOKENS);
-  input.sink.sent({ text: buildUserText(input.ctx), imageCount: input.ctx.attachments.length, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId });
+  input.sink.sent({
+    text: buildUserText(input.ctx),
+    imageCount: input.ctx.attachments.length,
+    updatedInstructions: false,
+    recommendedSkills: [],
+    promptHash: "mock",
+    resume: input.ctx.direction.sessionId,
+  });
   for (const skill of mockSkillRequests(prompt)) await session.useSkill(skill);
-  if (prompt.includes('[steps]')) {
-    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html', STEP_TOOL_MS);
-    await session.fakeTool('Grep', { pattern: 'h1' }, 'Grep h1', STEP_TOOL_MS);
-    await session.fakeTool('Glob', { pattern: '*.css' }, 'Glob *.css', STEP_TOOL_MS);
+  if (prompt.includes("[steps]")) {
+    await session.fakeTool(
+      "Read",
+      { file_path: path.join(session.workTree, "index.html") },
+      "Read index.html",
+      STEP_TOOL_MS
+    );
+    await session.fakeTool("Grep", { pattern: "h1" }, "Grep h1", STEP_TOOL_MS);
+    await session.fakeTool(
+      "Glob",
+      { pattern: "*.css" },
+      "Glob *.css",
+      STEP_TOOL_MS
+    );
   }
-  if (prompt.includes('[bash]')) await session.bash('npm test');
-  const shellWrites = [...prompt.matchAll(/\[bash-write:([^\]\s]+)\]/g)].map((match) => match[1] ?? '');
+  if (prompt.includes("[bash]")) await session.bash("npm test");
+  const shellWrites = [...prompt.matchAll(/\[bash-write:([^\]\s]+)\]/g)].map(
+    (match) => match[1] ?? ""
+  );
   const shellNotes: string[] = [];
   for (const target of shellWrites) {
     const note = await session.bashWrite(target);
     if (note) shellNotes.push(note);
   }
-  if (prompt.includes('[retry]')) {
-    input.sink.retry(1, 5, 2000, 'Overloaded (529)');
+  if (prompt.includes("[retry]")) {
+    input.sink.retry(1, 5, 2000, "Overloaded (529)");
     await sleep(2000, input.signal);
   }
-  if (prompt.includes('[long]')) await session.stream(longReply(), 96, 8);
-  if (prompt.includes('[slowlong]')) await session.stream(longReply(), 64, 60);
-  if (prompt.includes('[todo]')) {
-    await session.fakeTool('TodoWrite', { todos: mockTodos(0) }, 'Todo list', STEP_TOOL_MS);
-    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html', STEP_TOOL_MS);
-    await session.fakeTool('TodoWrite', { todos: mockTodos(1) }, 'Todo list', STEP_TOOL_MS);
+  if (prompt.includes("[long]")) await session.stream(longReply(), 96, 8);
+  if (prompt.includes("[slowlong]")) await session.stream(longReply(), 64, 60);
+  if (prompt.includes("[todo]")) {
+    await session.fakeTool(
+      "TodoWrite",
+      { todos: mockTodos(0) },
+      "Todo list",
+      STEP_TOOL_MS
+    );
+    await session.fakeTool(
+      "Read",
+      { file_path: path.join(session.workTree, "index.html") },
+      "Read index.html",
+      STEP_TOOL_MS
+    );
+    await session.fakeTool(
+      "TodoWrite",
+      { todos: mockTodos(1) },
+      "Todo list",
+      STEP_TOOL_MS
+    );
   }
-  if (prompt.includes('[think]')) {
-    await session.think('Thinking A: the page needs a clear heading first.');
-    await session.fakeTool('Read', { file_path: path.join(session.workTree, 'index.html') }, 'Read index.html');
-    await session.think('Thinking B: keep the cards, then write the change.');
+  if (prompt.includes("[think]")) {
+    await session.think("Thinking A: the page needs a clear heading first.");
+    await session.fakeTool(
+      "Read",
+      { file_path: path.join(session.workTree, "index.html") },
+      "Read index.html"
+    );
+    await session.think("Thinking B: keep the cards, then write the change.");
   }
-  const finalText = shellWrites.length > 0 ? shellNotes.join('\n\n') || 'Edited the files with a shell command.' : await runMockScenario(input, session, canvas, preview);
+  const finalText =
+    shellWrites.length > 0
+      ? shellNotes.join("\n\n") || "Edited the files with a shell command."
+      : await runMockScenario(input, session, canvas, preview);
   if (shellWrites.length > 0) await session.say(finalText);
   const outcome: DriverOutcome = {
-    status: prompt.includes('[budget]') ? 'budget_exceeded' : 'completed',
+    status: prompt.includes("[budget]") ? "budget_exceeded" : "completed",
     usage: { ...MOCK_USAGE },
     costUsd: 0,
     durationMs: Date.now() - startedAt,
@@ -722,14 +1162,27 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined, pr
     finalText,
     error: null,
   };
-  if (!wantsDesignSystemCheck(input.ctx)) return withMockReference(input, session, preview, outcome);
+  if (!wantsDesignSystemCheck(input.ctx))
+    return withMockReference(input, session, preview, outcome);
   return enforceDesignSystemCheck({
     workTree: input.ctx.direction.workTree,
     first: outcome,
     signal: input.signal,
     continueWith: async (text, round, total) => {
-      input.sink.sent({ text, imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'mock', resume: input.ctx.direction.sessionId, continuation: round });
-      const fixed = await runMockDesignSystemFix(session, input.ctx.direction.workTree, prompt);
+      input.sink.sent({
+        text,
+        imageCount: 0,
+        updatedInstructions: false,
+        recommendedSkills: [],
+        promptHash: "mock",
+        resume: input.ctx.direction.sessionId,
+        continuation: round,
+      });
+      const fixed = await runMockDesignSystemFix(
+        session,
+        input.ctx.direction.workTree,
+        prompt
+      );
       return { ...total, finalText: fixed, durationMs: Date.now() - startedAt };
     },
   });
@@ -737,12 +1190,18 @@ async function runMock(input: DriverInput, canvas: CanvasService | undefined, pr
 
 export const MOCK_SLOW_STOP_MS = 2000;
 
-export function createMockDriver(options: { canvas?: CanvasService; preview?: PreviewService } = {}): RunDriver {
+export function createMockDriver(
+  options: { canvas?: CanvasService; preview?: PreviewService } = {}
+): RunDriver {
   return async (input) => {
     try {
       return await runMock(input, options.canvas, options.preview);
     } catch (error) {
-      if (input.signal.aborted && input.ctx.request.prompt.includes('[slowstop]')) await new Promise((resolve) => setTimeout(resolve, MOCK_SLOW_STOP_MS));
+      if (
+        input.signal.aborted &&
+        input.ctx.request.prompt.includes("[slowstop]")
+      )
+        await new Promise((resolve) => setTimeout(resolve, MOCK_SLOW_STOP_MS));
       throw error;
     }
   };

@@ -1,27 +1,49 @@
-import { withFrameStateHost } from '../../shared/frame-state.js';
-import { findApps } from '../app/found-apps.js';
-import { frameStatesView, stateOfFrame } from '../app/frame-state.js';
-import { readFile, readdir, realpath, stat } from 'node:fs/promises';
-import path from 'node:path';
-import { SOURCE_LOC_ATTR, type Direction, type Project, type Version } from '../../shared/contracts.js';
-import { firstVersionState, firstVersionWaitText } from '../app/first-version.js';
-import { cleanExportPath, type ExportFrame } from '../../shared/export.js';
-import { DESIGN_MD_FILE } from '../design-system/packs.js';
-import { readDesignSystemFiles } from '../design-system/sync.js';
-import { findTokenFile } from '../design-system/app-tokens/detect.js';
-import { readAppTokensAt, usesAppTokens } from '../design-system/app-tokens/source.js';
-import { captureFrame, waitForPage } from '../export/capture.js';
-import { noteRenderedPage } from '../preview/render-wait.js';
-import { resolveSource, withPagePath, type ExportDeps, type ExportSource } from '../export/source.js';
-import { readProjectCanvas } from '../canvas/service.js';
-import { findFrame } from '../canvas/tools.js';
-import { listAppRoutes } from '../app/routes.js';
-import { searchProjects } from '../app/project-search.js';
-import { listElementVariants } from '../variations/routes.js';
-import { isLayerRef, LayerRefError, resolveLayerRef, scopeOf } from './layer-ref.js';
+import { readFile, readdir, realpath, stat } from "node:fs/promises";
+import path from "node:path";
+
+import {
+  SOURCE_LOC_ATTR,
+  type Direction,
+  type Project,
+  type Version,
+} from "../../shared/contracts.js";
+import { cleanExportPath, type ExportFrame } from "../../shared/export.js";
+import { withFrameStateHost } from "../../shared/frame-state.js";
+import {
+  firstVersionState,
+  firstVersionWaitText,
+} from "../app/first-version.js";
+import { findApps } from "../app/found-apps.js";
+import { frameStatesView, stateOfFrame } from "../app/frame-state.js";
+import { searchProjects } from "../app/project-search.js";
+import { listAppRoutes } from "../app/routes.js";
+import { readProjectCanvas } from "../canvas/service.js";
+import { findFrame } from "../canvas/tools.js";
+import { findTokenFile } from "../design-system/app-tokens/detect.js";
+import {
+  readAppTokensAt,
+  usesAppTokens,
+} from "../design-system/app-tokens/source.js";
+import { DESIGN_MD_FILE } from "../design-system/packs.js";
+import { readDesignSystemFiles } from "../design-system/sync.js";
+import { captureFrame, waitForPage } from "../export/capture.js";
+import {
+  resolveSource,
+  withPagePath,
+  type ExportDeps,
+  type ExportSource,
+} from "../export/source.js";
+import { noteRenderedPage } from "../preview/render-wait.js";
+import { listElementVariants } from "../variations/routes.js";
+import {
+  isLayerRef,
+  LayerRefError,
+  resolveLayerRef,
+  scopeOf,
+} from "./layer-ref.js";
 
 export interface ToolContent {
-  type: 'text' | 'image';
+  type: "text" | "image";
   text?: string;
   data?: string;
   mimeType?: string;
@@ -37,7 +59,12 @@ export interface ToolDef {
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
-  annotations: { readOnlyHint: boolean; destructiveHint?: boolean; idempotentHint?: boolean; openWorldHint: boolean };
+  annotations: {
+    readOnlyHint: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint: boolean;
+  };
 }
 
 type Args = Record<string, unknown>;
@@ -45,130 +72,399 @@ type Args = Record<string, unknown>;
 const MAX_TEXT = 256 * 1024;
 const MAX_FILES = 2000;
 const MAX_SHOT_HEIGHT = 6000;
-const SKIP = new Set(['node_modules', '.git', '.studio', 'dist', '.vite', '.next', '.turbo', '.DS_Store']);
-const TEXT_EXT = new Set(['.html', '.htm', '.css', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.json', '.md', '.txt', '.svg', '.xml', '.yml', '.yaml', '.toml']);
+const SKIP = new Set([
+  "node_modules",
+  ".git",
+  ".studio",
+  "dist",
+  ".vite",
+  ".next",
+  ".turbo",
+  ".DS_Store",
+]);
+const TEXT_EXT = new Set([
+  ".html",
+  ".htm",
+  ".css",
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".jsx",
+  ".json",
+  ".md",
+  ".txt",
+  ".svg",
+  ".xml",
+  ".yml",
+  ".yaml",
+  ".toml",
+]);
 
-const PROJECT = { type: 'string', description: 'Project id from list_projects' };
-const VERSION = { type: 'string', description: 'Version id. Leave out for the newest saved version of the main direction.' };
-const DIRECTION = { type: 'string', description: 'Direction id. Leave out for the main direction.' };
-const PAGE = { type: 'string', description: 'Page path inside the project, for example "about.html". Leave out for the entry page.' };
+const PROJECT = {
+  type: "string",
+  description: "Project id from list_projects",
+};
+const VERSION = {
+  type: "string",
+  description:
+    "Version id. Leave out for the newest saved version of the main direction.",
+};
+const DIRECTION = {
+  type: "string",
+  description: "Direction id. Leave out for the main direction.",
+};
+const PAGE = {
+  type: "string",
+  description:
+    'Page path inside the project, for example "about.html". Leave out for the entry page.',
+};
 
-function def(name: string, title: string, description: string, properties: Record<string, unknown>, required: string[] = []): ToolDef {
-  return { name, title, description, inputSchema: { type: 'object', properties, required, additionalProperties: false }, annotations: { readOnlyHint: true, openWorldHint: false } };
+function def(
+  name: string,
+  title: string,
+  description: string,
+  properties: Record<string, unknown>,
+  required: string[] = []
+): ToolDef {
+  return {
+    name,
+    title,
+    description,
+    inputSchema: {
+      type: "object",
+      properties,
+      required,
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  };
 }
 
 export const TOOLS: ToolDef[] = [
-  def('list_projects', 'List projects', 'List the design projects in Design Studio with their directions and newest version ids.', {}),
-  def('search_projects', 'Search projects', 'Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt, openedAt (last opened in the studio, or null) and health (level ok, busy, warn or off with a note such as "Needs install" or "Dev server ready"; null for prototypes). A query that starts with "/" searches the routes of every attached app. An empty query lists recent projects: last opened first, last edited when never opened. Read only.', {
-    query: { type: 'string', maxLength: 100, description: 'Search text, for example "bona" or "/f2f". Leave out for recent projects.' },
-    projectId: { type: 'string', description: 'Project id from list_projects whose routes are always searched, like the open project in the studio.' },
-    limit: { type: 'integer', minimum: 1, maximum: 100, description: 'Most projects to return. Default 20.' },
-  }),
-  def('list_versions', 'List versions', 'List the saved versions of one direction, newest first.', { projectId: PROJECT, directionId: DIRECTION }, ['projectId']),
-  def('get_frame_html', 'Get page HTML', 'Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE }, ['projectId']),
-  def('get_tokens', 'Get design tokens', 'Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('get_design_md', 'Get DESIGN.md', 'Get the DESIGN.md rules of the project.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('get_screenshot', 'Get screenshot', 'Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector).', {
-    projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: PAGE,
-    frameId: { type: 'string', description: 'Canvas frame id or @label from canvas_list. It sets the page, the direction, the frame state (signed in, empty …) and the size; width or height given with it render that frame at the other size, for example width 390 for a mobile shot. Leave out to use path, width and height.' },
-    width: { type: 'integer', minimum: 320, maximum: 2560, description: 'Viewport width in px. Default 1440, or the frame width with frameId.' },
-    height: { type: 'integer', minimum: 320, maximum: 2000, description: 'Viewport height in px. Default 900, or the frame height with frameId.' },
-    fullPage: { type: 'boolean', description: 'Capture the full page height, up to 6000 px. Default false.' },
-    element: { type: 'string', maxLength: 300, description: 'Layer id from get_layers (such as "e0k3pz") or a CSS selector: crop the shot to this element plus padding.' },
-    padding: { type: 'integer', minimum: 0, maximum: 200, description: 'Space around the element crop in px. Default 16.' },
-  }, ['projectId']),
-  def('list_variants', 'List element variants', 'List the element variants of a project ("Try variants" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.', { projectId: PROJECT }, ['projectId']),
-  def('list_routes', 'List app routes', 'List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.', {
-    projectId: PROJECT,
-    query: { type: 'string', maxLength: 100, description: 'Search text matched against the route, page file and route group, for example "f2f" or "admin/users".' },
-    limit: { type: 'integer', minimum: 1, maximum: 500, description: 'Routes per page. Default 50.' },
-    cursor: { type: 'string', description: 'nextCursor from the previous page.' },
-  }, ['projectId']),
-  def('list_found_apps', 'List app folders found on this Mac', 'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.', { fresh: { type: 'boolean', description: 'Scan again instead of using the cached list. Default false.' } }),
-  def('list_files', 'List files', 'List the source files of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION }, ['projectId']),
-  def('read_file', 'Read file', 'Read one text source file of a version.', { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION, path: { type: 'string', description: 'File path from list_files' } }, ['projectId', 'path']),
+  def(
+    "list_projects",
+    "List projects",
+    "List the design projects in Design Studio with their directions and newest version ids.",
+    {}
+  ),
+  def(
+    "search_projects",
+    "Search projects",
+    'Find projects and app routes by text, like the studio Cmd+K palette: fuzzy match on the project name and app folder, and on the routes of the matched attached apps (and of projectId when given). Each project has type (next, vite, html, react, design-system), place, updatedAt, openedAt (last opened in the studio, or null) and health (level ok, busy, warn or off with a note such as "Needs install" or "Dev server ready"; null for prototypes). A query that starts with "/" searches the routes of every attached app. An empty query lists recent projects: last opened first, last edited when never opened. Read only.',
+    {
+      query: {
+        type: "string",
+        maxLength: 100,
+        description:
+          'Search text, for example "bona" or "/f2f". Leave out for recent projects.',
+      },
+      projectId: {
+        type: "string",
+        description:
+          "Project id from list_projects whose routes are always searched, like the open project in the studio.",
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+        description: "Most projects to return. Default 20.",
+      },
+    }
+  ),
+  def(
+    "list_versions",
+    "List versions",
+    "List the saved versions of one direction, newest first.",
+    { projectId: PROJECT, directionId: DIRECTION },
+    ["projectId"]
+  ),
+  def(
+    "get_frame_html",
+    "Get page HTML",
+    "Get the HTML of one page. Static HTML projects return the source file. React projects return the rendered DOM.",
+    {
+      projectId: PROJECT,
+      versionId: VERSION,
+      directionId: DIRECTION,
+      path: PAGE,
+    },
+    ["projectId"]
+  ),
+  def(
+    "get_tokens",
+    "Get design tokens",
+    "Get the design tokens. A studio design system gives tokens.css and each token with its CSS variable and values. An imported app folder gives the tokens of its own CSS file (Tailwind @theme, :root and .dark): each token with its declared value, resolved value, dark value, file and line.",
+    { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION },
+    ["projectId"]
+  ),
+  def(
+    "get_design_md",
+    "Get DESIGN.md",
+    "Get the DESIGN.md rules of the project.",
+    { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION },
+    ["projectId"]
+  ),
+  def(
+    "get_screenshot",
+    "Get screenshot",
+    "Get a PNG screenshot of a page at a viewport size, or of one canvas frame (frameId sets the page, the direction, the frame state and the size; pass width to shoot that frame at another width), or of one element on it (element: layer id or CSS selector).",
+    {
+      projectId: PROJECT,
+      versionId: VERSION,
+      directionId: DIRECTION,
+      path: PAGE,
+      frameId: {
+        type: "string",
+        description:
+          "Canvas frame id or @label from canvas_list. It sets the page, the direction, the frame state (signed in, empty …) and the size; width or height given with it render that frame at the other size, for example width 390 for a mobile shot. Leave out to use path, width and height.",
+      },
+      width: {
+        type: "integer",
+        minimum: 320,
+        maximum: 2560,
+        description:
+          "Viewport width in px. Default 1440, or the frame width with frameId.",
+      },
+      height: {
+        type: "integer",
+        minimum: 320,
+        maximum: 2000,
+        description:
+          "Viewport height in px. Default 900, or the frame height with frameId.",
+      },
+      fullPage: {
+        type: "boolean",
+        description:
+          "Capture the full page height, up to 6000 px. Default false.",
+      },
+      element: {
+        type: "string",
+        maxLength: 300,
+        description:
+          'Layer id from get_layers (such as "e0k3pz") or a CSS selector: crop the shot to this element plus padding.',
+      },
+      padding: {
+        type: "integer",
+        minimum: 0,
+        maximum: 200,
+        description: "Space around the element crop in px. Default 16.",
+      },
+    },
+    ["projectId"]
+  ),
+  def(
+    "list_variants",
+    "List element variants",
+    'List the element variants of a project ("Try variants" in the studio): group id, label, title, direction id, file and line range, and state (running, ready, unchanged, rejected with the reason, kept or discarded). Read only. Only the user starts variant runs, in the studio; keep_variant applies a ready one.',
+    { projectId: PROJECT },
+    ["projectId"]
+  ),
+  def(
+    "list_routes",
+    "List app routes",
+    "List the routes of an attached Next.js app from its app router (app/**/page.tsx): route, page file, dynamic, route group. Pages hold 50 routes; pass nextCursor as cursor for the next page.",
+    {
+      projectId: PROJECT,
+      query: {
+        type: "string",
+        maxLength: 100,
+        description:
+          'Search text matched against the route, page file and route group, for example "f2f" or "admin/users".',
+      },
+      limit: {
+        type: "integer",
+        minimum: 1,
+        maximum: 500,
+        description: "Routes per page. Default 50.",
+      },
+      cursor: {
+        type: "string",
+        description: "nextCursor from the previous page.",
+      },
+    },
+    ["projectId"]
+  ),
+  def(
+    "list_found_apps",
+    "List app folders found on this Mac",
+    'Read only. List the app folders Design Studio finds in the home folder, the same list as "Found on this Mac" on Home: ~/Documents, ~/code, ~/dev, ~/Projects and ~/Developer, two folders deep, with kind (next, vite or html), the Next.js apps of a monorepo (apps), and projectId when the folder is already a project. The scan never leaves the home folder, stops after 1 second (truncated: true) and is cached for a minute; fresh: true scans again. Pass a path to open_folder or attach_app to open one.',
+    {
+      fresh: {
+        type: "boolean",
+        description:
+          "Scan again instead of using the cached list. Default false.",
+      },
+    }
+  ),
+  def(
+    "list_files",
+    "List files",
+    "List the source files of a version.",
+    { projectId: PROJECT, versionId: VERSION, directionId: DIRECTION },
+    ["projectId"]
+  ),
+  def(
+    "read_file",
+    "Read file",
+    "Read one text source file of a version.",
+    {
+      projectId: PROJECT,
+      versionId: VERSION,
+      directionId: DIRECTION,
+      path: { type: "string", description: "File path from list_files" },
+    },
+    ["projectId", "path"]
+  ),
 ];
 
 export class ToolError extends Error {}
 
 function str(args: Args, key: string, required = false): string | undefined {
   const value = args[key];
-  if (value === undefined || value === null || value === '') {
+  if (value === undefined || value === null || value === "") {
     if (required) throw new ToolError(`${key} is required`);
     return undefined;
   }
-  if (typeof value !== 'string' || value.length > 300) throw new ToolError(`${key} must be a short string`);
+  if (typeof value !== "string" || value.length > 300)
+    throw new ToolError(`${key} must be a short string`);
   return value;
 }
 
-function int(args: Args, key: string, min: number, max: number, fallback: number): number {
+function int(
+  args: Args,
+  key: string,
+  min: number,
+  max: number,
+  fallback: number
+): number {
   const value = args[key];
   if (value === undefined) return fallback;
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) throw new ToolError(`${key} must be an integer from ${min} to ${max}`);
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < min ||
+    value > max
+  )
+    throw new ToolError(`${key} must be an integer from ${min} to ${max}`);
   return value;
 }
 
 function text(value: string): ToolResult {
-  return { content: [{ type: 'text', text: value.length > MAX_TEXT ? `${value.slice(0, MAX_TEXT)}\n[cut at ${MAX_TEXT} characters]` : value }] };
+  return {
+    content: [
+      {
+        type: "text",
+        text:
+          value.length > MAX_TEXT
+            ? `${value.slice(0, MAX_TEXT)}\n[cut at ${MAX_TEXT} characters]`
+            : value,
+      },
+    ],
+  };
 }
 
 function json(value: unknown): ToolResult {
   return text(JSON.stringify(value, null, 2));
 }
 
-const LIVE_VERSION_ID = 'live';
+const LIVE_VERSION_ID = "live";
 
-function liveAppSource(deps: ExportDeps, project: Project, direction: Direction): ExportSource {
-  const version: Version = { id: LIVE_VERSION_ID, directionId: direction.id, parentId: null, title: 'Live app', meta: { kind: 'init' }, createdAt: Date.now(), changedFiles: [] };
-  return { project, direction, version, root: direction.workTree, files: async () => direction.workTree, open: async () => ({ url: await deps.preview.directionUrl(project, direction), release: async () => undefined }) };
+function liveAppSource(
+  deps: ExportDeps,
+  project: Project,
+  direction: Direction
+): ExportSource {
+  const version: Version = {
+    id: LIVE_VERSION_ID,
+    directionId: direction.id,
+    parentId: null,
+    title: "Live app",
+    meta: { kind: "init" },
+    createdAt: Date.now(),
+    changedFiles: [],
+  };
+  return {
+    project,
+    direction,
+    version,
+    root: direction.workTree,
+    files: async () => direction.workTree,
+    open: async () => ({
+      url: await deps.preview.directionUrl(project, direction),
+      release: async () => undefined,
+    }),
+  };
 }
 
 function versionLabel(src: ExportSource): string {
   if (src.version.id !== LIVE_VERSION_ID) return `version ${src.version.id}`;
   const state = firstVersionState(src.project.id);
-  return state?.pending ? `the live app (the first version is still being saved, about ${state.etaSeconds} s left)` : 'the live app';
+  return state?.pending
+    ? `the live app (the first version is still being saved, about ${state.etaSeconds} s left)`
+    : "the live app";
 }
 
 async function source(deps: ExportDeps, args: Args): Promise<ExportSource> {
-  const projectId = str(args, 'projectId', true) as string;
+  const projectId = str(args, "projectId", true) as string;
   const project = await deps.projects.get(projectId);
-  let versionId = str(args, 'versionId');
+  let versionId = str(args, "versionId");
   if (versionId === LIVE_VERSION_ID) versionId = undefined;
   if (!versionId) {
-    const directionId = str(args, 'directionId');
-    const direction = directionId ? project.directions.find((d) => d.id === directionId) : project.directions[0];
-    if (!direction) throw new ToolError('direction not found');
-    if (!direction.headVersionId && project.app) return liveAppSource(deps, project, direction);
-    if (!direction.headVersionId) throw new ToolError(firstVersionWaitText(project.id));
+    const directionId = str(args, "directionId");
+    const direction = directionId
+      ? project.directions.find((d) => d.id === directionId)
+      : project.directions[0];
+    if (!direction) throw new ToolError("direction not found");
+    if (!direction.headVersionId && project.app)
+      return liveAppSource(deps, project, direction);
+    if (!direction.headVersionId)
+      throw new ToolError(firstVersionWaitText(project.id));
     versionId = direction.headVersionId;
   }
   return resolveSource(deps, project.id, versionId);
 }
 
 function pagePath(args: Args): string | undefined {
-  const raw = str(args, 'path');
+  const raw = str(args, "path");
   if (raw === undefined) return undefined;
   const cleaned = cleanExportPath(raw);
-  if (cleaned === null) throw new ToolError('path is not a page in this project');
+  if (cleaned === null)
+    throw new ToolError("path is not a page in this project");
   return cleaned || undefined;
 }
 
 async function insideRoot(root: string, relative: string): Promise<string> {
   const cleaned = cleanExportPath(relative);
-  if (!cleaned) throw new ToolError('path is not valid');
-  if (cleaned.split('/').some((part) => SKIP.has(part))) throw new ToolError('that file is not part of the source');
+  if (!cleaned) throw new ToolError("path is not valid");
+  if (cleaned.split("/").some((part) => SKIP.has(part)))
+    throw new ToolError("that file is not part of the source");
   const realRoot = await realpath(root);
-  const full = await realpath(path.join(realRoot, ...cleaned.split('/'))).catch(() => null);
-  if (!full || !full.startsWith(realRoot + path.sep)) throw new ToolError('file not found');
+  const full = await realpath(path.join(realRoot, ...cleaned.split("/"))).catch(
+    () => null
+  );
+  if (!full || !full.startsWith(realRoot + path.sep))
+    throw new ToolError("file not found");
   return full;
 }
 
-async function listFiles(root: string, prefix = '', out: { path: string; bytes: number }[] = []): Promise<{ path: string; bytes: number }[]> {
-  for (const item of await readdir(path.join(root, prefix), { withFileTypes: true })) {
+async function listFiles(
+  root: string,
+  prefix = "",
+  out: { path: string; bytes: number }[] = []
+): Promise<{ path: string; bytes: number }[]> {
+  for (const item of await readdir(path.join(root, prefix), {
+    withFileTypes: true,
+  })) {
     if (SKIP.has(item.name) || out.length >= MAX_FILES) continue;
     const relative = prefix ? `${prefix}/${item.name}` : item.name;
     if (item.isDirectory()) await listFiles(root, relative, out);
-    else if (item.isFile()) out.push({ path: relative, bytes: (await stat(path.join(root, relative))).size });
+    else if (item.isFile())
+      out.push({
+        path: relative,
+        bytes: (await stat(path.join(root, relative))).size,
+      });
   }
   return out;
 }
@@ -178,40 +474,74 @@ function summary(project: Project): unknown {
     id: project.id,
     name: project.name,
     kind: project.kind,
-    entry: project.entry || 'index.html',
+    entry: project.entry || "index.html",
     updatedAt: new Date(project.updatedAt).toISOString(),
-    folder: project.imported?.sourcePath ?? project.directions[0]?.workTree ?? null,
-    ...(project.app ? { app: { framework: project.app.framework, appDir: project.app.appDir, mode: project.app.mode } } : {}),
-    directions: project.directions.map((d) => ({ id: d.id, name: d.name, headVersionId: d.headVersionId })),
+    folder:
+      project.imported?.sourcePath ?? project.directions[0]?.workTree ?? null,
+    ...(project.app
+      ? {
+          app: {
+            framework: project.app.framework,
+            appDir: project.app.appDir,
+            mode: project.app.mode,
+          },
+        }
+      : {}),
+    directions: project.directions.map((d) => ({
+      id: d.id,
+      name: d.name,
+      headVersionId: d.headVersionId,
+    })),
   };
 }
 
 const RENDERED_DOM = `(() => { const doc = document.documentElement.cloneNode(true); for (const node of doc.querySelectorAll('script, link[rel="modulepreload"], style[id^="studio-"]')) node.remove(); for (const node of doc.querySelectorAll('[${SOURCE_LOC_ATTR}]')) node.removeAttribute('${SOURCE_LOC_ATTR}'); return '<!doctype html>\\n' + doc.outerHTML; })()`;
 
-function pageOf<T extends { route: string; file: string; group?: string | null }>(routes: T[], args: Args): { routes: T[]; total: number; nextCursor: string | null } {
-  const query = str(args, 'query')?.toLowerCase();
-  const found = query ? routes.filter((r) => `${r.route} ${r.file} ${r.group ?? ''}`.toLowerCase().includes(query)) : routes;
-  const cursor = str(args, 'cursor');
+function pageOf<
+  T extends { route: string; file: string; group?: string | null },
+>(
+  routes: T[],
+  args: Args
+): { routes: T[]; total: number; nextCursor: string | null } {
+  const query = str(args, "query")?.toLowerCase();
+  const found = query
+    ? routes.filter((r) =>
+        `${r.route} ${r.file} ${r.group ?? ""}`.toLowerCase().includes(query)
+      )
+    : routes;
+  const cursor = str(args, "cursor");
   const offset = cursor && /^\d{1,6}$/.test(cursor) ? Number(cursor) : 0;
-  const limit = int(args, 'limit', 1, 500, 50);
+  const limit = int(args, "limit", 1, 500, 50);
   const next = offset + limit;
-  return { routes: found.slice(offset, next), total: found.length, nextCursor: next < found.length ? String(next) : null };
+  return {
+    routes: found.slice(offset, next),
+    total: found.length,
+    nextCursor: next < found.length ? String(next) : null,
+  };
 }
 
 async function frameHtml(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
   const page = pagePath(args);
-  if (src.project.kind === 'html') {
-    const file = await insideRoot(await src.files(), page ?? (src.project.entry || 'index.html'));
-    return text(await readFile(file, 'utf8'));
+  if (src.project.kind === "html") {
+    const file = await insideRoot(
+      await src.files(),
+      page ?? (src.project.entry || "index.html")
+    );
+    return text(await readFile(file, "utf8"));
   }
   const opened = await src.open();
   try {
-    if (!deps.preview.withPage) throw new ToolError('rendering is not available');
-    const html = await deps.preview.withPage(withPagePath(opened.url, page), { width: 1440, height: 900 }, async (p) => {
-      await waitForPage(p);
-      return p.evaluate<string>(RENDERED_DOM);
-    });
+    if (!deps.preview.withPage)
+      throw new ToolError("rendering is not available");
+    const html = await deps.preview.withPage(
+      withPagePath(opened.url, page),
+      { width: 1440, height: 900 },
+      async (p) => {
+        await waitForPage(p);
+        return p.evaluate<string>(RENDERED_DOM);
+      }
+    );
     return text(html);
   } finally {
     await opened.release().catch(() => undefined);
@@ -228,7 +558,7 @@ async function appTokens(src: ExportSource): Promise<ToolResult | null> {
     tokens: loaded.entries.map((e) => ({
       token: e.cssVar,
       path: e.path,
-      group: e.path.split('.')[0],
+      group: e.path.split(".")[0],
       type: e.type,
       value: e.source?.value ?? e.value,
       resolved: e.value,
@@ -244,10 +574,28 @@ async function appTokens(src: ExportSource): Promise<ToolResult | null> {
 async function tokens(deps: ExportDeps, args: Args): Promise<ToolResult> {
   const src = await source(deps, args);
   const files = await readDesignSystemFiles(src.root);
-  if (!files) return (await appTokens(src)) ?? text('This version has no design system and no app token file.');
+  if (!files)
+    return (
+      (await appTokens(src)) ??
+      text("This version has no design system and no app token file.")
+    );
   return json({
-    pack: files.manifest ? { id: files.manifest.id, name: files.manifest.name, mode: files.manifest.mode, fonts: files.manifest.fonts } : null,
-    tokens: files.entries.map((e) => ({ token: e.path, cssVar: e.cssVar, type: e.type, value: e.value, dark: e.darkValue, ...(e.description ? { description: e.description } : {}) })),
+    pack: files.manifest
+      ? {
+          id: files.manifest.id,
+          name: files.manifest.name,
+          mode: files.manifest.mode,
+          fonts: files.manifest.fonts,
+        }
+      : null,
+    tokens: files.entries.map((e) => ({
+      token: e.path,
+      cssVar: e.cssVar,
+      type: e.type,
+      value: e.value,
+      dark: e.darkValue,
+      ...(e.description ? { description: e.description } : {}),
+    })),
     tokensCss: files.css,
     errors: files.errors,
   });
@@ -262,22 +610,57 @@ interface FrameShot {
 }
 
 async function frameShot(deps: ExportDeps, args: Args): Promise<FrameShot> {
-  const ref = str(args, 'frameId');
+  const ref = str(args, "frameId");
   if (!ref) return { args };
-  const project = await deps.projects.get(str(args, 'projectId', true) as string);
-  const frames = (await readProjectCanvas(project, (projectId) => deps.projects.projectDir(projectId))).canvas?.frames ?? [];
-  if (frames.length === 0 && ref === 'f1') return { args };
+  const project = await deps.projects.get(
+    str(args, "projectId", true) as string
+  );
+  const frames =
+    (
+      await readProjectCanvas(project, (projectId) =>
+        deps.projects.projectDir(projectId)
+      )
+    ).canvas?.frames ?? [];
+  if (frames.length === 0 && ref === "f1") return { args };
   const frame = findFrame(frames, ref);
   if (!frame) throw new ToolError(`no frame ${ref} on the canvas`);
-  const withDirection = frame.directionId && args.directionId === undefined && args.versionId === undefined ? { ...args, directionId: frame.directionId } : args;
-  const state = project.app ? stateOfFrame(await frameStatesView(deps.projects.projectDir(project.id)), frame.id) : undefined;
-  return { args: withDirection, width: frame.width, height: frame.height, ...(frame.path ? { path: frame.path } : {}), ...(state ? { state } : {}) };
+  const withDirection =
+    frame.directionId &&
+    args.directionId === undefined &&
+    args.versionId === undefined
+      ? { ...args, directionId: frame.directionId }
+      : args;
+  const state = project.app
+    ? stateOfFrame(
+        await frameStatesView(deps.projects.projectDir(project.id)),
+        frame.id
+      )
+    : undefined;
+  return {
+    args: withDirection,
+    width: frame.width,
+    height: frame.height,
+    ...(frame.path ? { path: frame.path } : {}),
+    ...(state ? { state } : {}),
+  };
 }
 
-async function elementSelector(deps: ExportDeps, src: ExportSource, url: string, frame: ExportFrame, element: string): Promise<string> {
+async function elementSelector(
+  deps: ExportDeps,
+  src: ExportSource,
+  url: string,
+  frame: ExportFrame,
+  element: string
+): Promise<string> {
   if (!isLayerRef(element)) return element;
   try {
-    return await resolveLayerRef(deps.preview, url, { width: frame.width, height: frame.height }, scopeOf(src.project.id, src.direction.id), element.trim());
+    return await resolveLayerRef(
+      deps.preview,
+      url,
+      { width: frame.width, height: frame.height },
+      scopeOf(src.project.id, src.direction.id),
+      element.trim()
+    );
   } catch (error) {
     if (error instanceof LayerRefError) throw new ToolError(error.message);
     throw error;
@@ -291,25 +674,48 @@ const WARM_SCRIPTS_MAX = 40;
 
 async function touch(url: URL, signal?: AbortSignal): Promise<string | null> {
   const timeout = AbortSignal.timeout(WARM_TIMEOUT_MS);
-  const answer = await fetch(url, { redirect: 'manual', signal: signal ? AbortSignal.any([signal, timeout]) : timeout }).catch(() => null);
+  const answer = await fetch(url, {
+    redirect: "manual",
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+  }).catch(() => null);
   if (!answer) return null;
-  if (!(answer.headers.get('content-type') ?? '').includes('text/html')) {
+  if (!(answer.headers.get("content-type") ?? "").includes("text/html")) {
     await answer.body?.cancel().catch(() => undefined);
     return null;
   }
   return answer.text().catch(() => null);
 }
 
-export async function warmUpstream(upstream: string, page: string | undefined, signal?: AbortSignal): Promise<void> {
-  const html = await touch(new URL(`/${page ?? ''}`, upstream), signal);
+export async function warmUpstream(
+  upstream: string,
+  page: string | undefined,
+  signal?: AbortSignal
+): Promise<void> {
+  const html = await touch(new URL(`/${page ?? ""}`, upstream), signal);
   if (!html) return;
-  const scripts = [...new Set([...html.matchAll(SCRIPT_SRC)].map((match) => (match[1] as string).replace(/&amp;/g, '&')))].slice(0, WARM_SCRIPTS_MAX);
-  await Promise.all(scripts.map((src) => touch(new URL(src, upstream), signal)));
+  const scripts = [
+    ...new Set(
+      [...html.matchAll(SCRIPT_SRC)].map((match) =>
+        (match[1] as string).replace(/&amp;/g, "&")
+      )
+    ),
+  ].slice(0, WARM_SCRIPTS_MAX);
+  await Promise.all(
+    scripts.map((src) => touch(new URL(src, upstream), signal))
+  );
 }
 
-async function warmAppPage(deps: ExportDeps, project: Project, page: string | undefined): Promise<void> {
+async function warmAppPage(
+  deps: ExportDeps,
+  project: Project,
+  page: string | undefined
+): Promise<void> {
   noteRenderedPage(project.id, page);
-  if (!project.app || (await deps.preview.livePages?.(project.id))?.includes(`/${page ?? ''}`)) return;
+  if (
+    !project.app ||
+    (await deps.preview.livePages?.(project.id))?.includes(`/${page ?? ""}`)
+  )
+    return;
   const upstream = await deps.preview.apps?.ensure(project).catch(() => null);
   if (upstream) await warmUpstream(upstream, page);
 }
@@ -319,75 +725,193 @@ async function screenshot(deps: ExportDeps, raw: Args): Promise<ToolResult> {
   const args = picked.args;
   const src = await source(deps, args);
   const page = pagePath(args) ?? picked.path;
-  const frame: ExportFrame = { name: 'Screenshot', width: args.width !== undefined ? int(args, 'width', 320, 2560, 1440) : (picked.width ?? 1440), height: args.height !== undefined ? int(args, 'height', 320, 2000, 900) : (picked.height ?? 900), ...(page ? { path: page } : {}) };
-  const element = str(args, 'element');
+  const frame: ExportFrame = {
+    name: "Screenshot",
+    width:
+      args.width !== undefined
+        ? int(args, "width", 320, 2560, 1440)
+        : (picked.width ?? 1440),
+    height:
+      args.height !== undefined
+        ? int(args, "height", 320, 2000, 900)
+        : (picked.height ?? 900),
+    ...(page ? { path: page } : {}),
+  };
+  const element = str(args, "element");
   await warmAppPage(deps, src.project, page);
   const opened = await src.open();
   try {
     const url = withFrameStateHost(opened.url, picked.state);
-    const selector = element ? await elementSelector(deps, src, withPagePath(url, page), frame, element) : undefined;
-    const shot = await captureFrame(deps.preview, url, frame, 1, args.fullPage === true ? 'page' : 'frame', selector, MAX_SHOT_HEIGHT, int(args, 'padding', 0, 200, 16));
-    const note = shot.cropped ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.` : '';
-    const what = element ? `element ${element} (${shot.cssWidth} × ${shot.cssHeight} CSS px with padding) on a ${frame.width} px wide page` : `${shot.width} × ${shot.height} px`;
-    const sized = picked.width !== undefined && (frame.width !== picked.width || frame.height !== picked.height) ? ` Frame ${str(args, 'frameId')} (page, direction and state) at ${frame.width} × ${frame.height} instead of its ${picked.width} × ${picked.height}.` : '';
-    return { content: [{ type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: `${what} of ${versionLabel(src)}.${sized}${note}` }] };
+    const selector = element
+      ? await elementSelector(
+          deps,
+          src,
+          withPagePath(url, page),
+          frame,
+          element
+        )
+      : undefined;
+    const shot = await captureFrame(
+      deps.preview,
+      url,
+      frame,
+      1,
+      args.fullPage === true ? "page" : "frame",
+      selector,
+      MAX_SHOT_HEIGHT,
+      int(args, "padding", 0, 200, 16)
+    );
+    const note = shot.cropped
+      ? ` The page is taller; the shot stops at ${MAX_SHOT_HEIGHT} px.`
+      : "";
+    const what = element
+      ? `element ${element} (${shot.cssWidth} × ${shot.cssHeight} CSS px with padding) on a ${frame.width} px wide page`
+      : `${shot.width} × ${shot.height} px`;
+    const sized =
+      picked.width !== undefined &&
+      (frame.width !== picked.width || frame.height !== picked.height)
+        ? ` Frame ${str(args, "frameId")} (page, direction and state) at ${frame.width} × ${frame.height} instead of its ${picked.width} × ${picked.height}.`
+        : "";
+    return {
+      content: [
+        {
+          type: "image",
+          data: shot.png.toString("base64"),
+          mimeType: "image/png",
+        },
+        {
+          type: "text",
+          text: `${what} of ${versionLabel(src)}.${sized}${note}`,
+        },
+      ],
+    };
   } finally {
     await opened.release().catch(() => undefined);
   }
 }
 
-const PROJECT_TOOLS: Record<string, (deps: ExportDeps, args: Args) => Promise<ToolResult>> = {
+const PROJECT_TOOLS: Record<
+  string,
+  (deps: ExportDeps, args: Args) => Promise<ToolResult>
+> = {
   search_projects: async (deps, args) =>
-    json(await searchProjects({ projects: deps.projects, appStatus: (p) => deps.preview.apps?.status(p) ?? null, runsDir: (projectId) => path.join(deps.projects.projectDir(projectId), 'runs') }, { query: str(args, 'query') ?? '', projectId: str(args, 'projectId') ?? null, limit: int(args, 'limit', 1, 100, 20) })),
-  list_found_apps: async (deps, args) => json(await findApps(await deps.projects.list(), { fresh: args.fresh === true })),
+    json(
+      await searchProjects(
+        {
+          projects: deps.projects,
+          appStatus: (p) => deps.preview.apps?.status(p) ?? null,
+          runsDir: (projectId) =>
+            path.join(deps.projects.projectDir(projectId), "runs"),
+        },
+        {
+          query: str(args, "query") ?? "",
+          projectId: str(args, "projectId") ?? null,
+          limit: int(args, "limit", 1, 100, 20),
+        }
+      )
+    ),
+  list_found_apps: async (deps, args) =>
+    json(
+      await findApps(await deps.projects.list(), { fresh: args.fresh === true })
+    ),
   list_variants: async (deps, args) => {
-    const project = await deps.projects.get(str(args, 'projectId', true) as string);
-    return json(await listElementVariants(project, deps.runner ?? { isRunning: () => false }));
+    const project = await deps.projects.get(
+      str(args, "projectId", true) as string
+    );
+    return json(
+      await listElementVariants(
+        project,
+        deps.runner ?? { isRunning: () => false }
+      )
+    );
   },
   list_routes: async (deps, args) => {
-    const project = await deps.projects.get(str(args, 'projectId', true) as string);
-    if (!project.app) throw new ToolError('this project is not an attached app');
+    const project = await deps.projects.get(
+      str(args, "projectId", true) as string
+    );
+    if (!project.app)
+      throw new ToolError("this project is not an attached app");
     const main = project.directions[0];
-    if (!main) throw new ToolError('project has no direction');
-    return json({ appDir: project.app.appDir, framework: project.app.framework, ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args) });
+    if (!main) throw new ToolError("project has no direction");
+    return json({
+      appDir: project.app.appDir,
+      framework: project.app.framework,
+      ...pageOf(await listAppRoutes(main.workTree, project.app.appDir), args),
+    });
   },
 };
 
-export async function callTool(deps: ExportDeps, name: string, args: Args): Promise<ToolResult> {
-  const projectTool = Object.hasOwn(PROJECT_TOOLS, name) ? PROJECT_TOOLS[name] : undefined;
+export async function callTool(
+  deps: ExportDeps,
+  name: string,
+  args: Args
+): Promise<ToolResult> {
+  const projectTool = Object.hasOwn(PROJECT_TOOLS, name)
+    ? PROJECT_TOOLS[name]
+    : undefined;
   if (projectTool) return projectTool(deps, args);
   switch (name) {
-    case 'list_projects':
-      return json((await deps.projects.list()).filter((p) => !p.designSystemFor).map(summary));
-    case 'list_versions': {
-      const project = await deps.projects.get(str(args, 'projectId', true) as string);
-      const directionId = str(args, 'directionId');
-      const direction = directionId ? project.directions.find((d) => d.id === directionId) : project.directions[0];
-      if (!direction) throw new ToolError('direction not found');
-      const versions = (await deps.versions.list(project, direction)).slice(0, 50);
-      return json(versions.map((v) => ({ id: v.id, name: v.name ?? v.title, kind: v.meta.kind, createdAt: new Date(v.createdAt).toISOString(), changedFiles: v.changedFiles.slice(0, 20) })));
+    case "list_projects":
+      return json(
+        (await deps.projects.list())
+          .filter((p) => !p.designSystemFor)
+          .map(summary)
+      );
+    case "list_versions": {
+      const project = await deps.projects.get(
+        str(args, "projectId", true) as string
+      );
+      const directionId = str(args, "directionId");
+      const direction = directionId
+        ? project.directions.find((d) => d.id === directionId)
+        : project.directions[0];
+      if (!direction) throw new ToolError("direction not found");
+      const versions = (await deps.versions.list(project, direction)).slice(
+        0,
+        50
+      );
+      return json(
+        versions.map((v) => ({
+          id: v.id,
+          name: v.name ?? v.title,
+          kind: v.meta.kind,
+          createdAt: new Date(v.createdAt).toISOString(),
+          changedFiles: v.changedFiles.slice(0, 20),
+        }))
+      );
     }
-    case 'get_frame_html':
+    case "get_frame_html":
       return frameHtml(deps, args);
-    case 'get_tokens':
+    case "get_tokens":
       return tokens(deps, args);
-    case 'get_design_md': {
+    case "get_design_md": {
       const src = await source(deps, args);
-      const md = await readFile(path.join(await src.files(), DESIGN_MD_FILE), 'utf8').catch(() => null);
-      return text(md ?? 'This project has no DESIGN.md.');
+      const md = await readFile(
+        path.join(await src.files(), DESIGN_MD_FILE),
+        "utf8"
+      ).catch(() => null);
+      return text(md ?? "This project has no DESIGN.md.");
     }
-    case 'get_screenshot':
+    case "get_screenshot":
       return screenshot(deps, args);
-    case 'list_files': {
+    case "list_files": {
       const src = await source(deps, args);
-      return json({ versionId: src.version.id, files: await listFiles(await src.files()) });
+      return json({
+        versionId: src.version.id,
+        files: await listFiles(await src.files()),
+      });
     }
-    case 'read_file': {
+    case "read_file": {
       const src = await source(deps, args);
-      const file = await insideRoot(await src.files(), str(args, 'path', true) as string);
-      if (!TEXT_EXT.has(path.extname(file).toLowerCase())) throw new ToolError('only text files can be read');
-      if ((await stat(file)).size > MAX_TEXT) throw new ToolError('the file is too large');
-      return text(await readFile(file, 'utf8'));
+      const file = await insideRoot(
+        await src.files(),
+        str(args, "path", true) as string
+      );
+      if (!TEXT_EXT.has(path.extname(file).toLowerCase()))
+        throw new ToolError("only text files can be read");
+      if ((await stat(file)).size > MAX_TEXT)
+        throw new ToolError("the file is too large");
+      return text(await readFile(file, "utf8"));
     }
     default:
       throw new ToolError(`unknown tool ${name}`);

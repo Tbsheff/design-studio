@@ -1,33 +1,60 @@
-import { createHash, randomBytes } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, realpath, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import type { SkillCatalog, SkillInfo, SkillProblem } from '../../shared/contracts.js';
+import { createHash, randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import {
+  mkdir,
+  readFile,
+  readdir,
+  realpath,
+  rename,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
-const PERSONAL_PLUGIN = 'personal';
+import type {
+  SkillCatalog,
+  SkillInfo,
+  SkillProblem,
+} from "../../shared/contracts.js";
 
-const SKIPPED_PERSONAL_DIRS = new Set(['synced']);
-const BASH_HINT = /```(bash|sh|shell|zsh)\b|\bscripts?\/|\bbash\b|\bnpx\b|\bnpm (run|install)\b|\bpython3?\b|\bcurl\b|\bgit (clone|commit|push)\b/i;
+const PERSONAL_PLUGIN = "personal";
+
+const SKIPPED_PERSONAL_DIRS = new Set(["synced"]);
+const BASH_HINT =
+  /```(bash|sh|shell|zsh)\b|\bscripts?\/|\bbash\b|\bnpx\b|\bnpm (run|install)\b|\bpython3?\b|\bcurl\b|\bgit (clone|commit|push)\b/i;
 
 function claudeHome(): string {
-  return process.env['STUDIO_CLAUDE_HOME'] || path.join(os.homedir(), '.claude');
+  return (
+    process.env["STUDIO_CLAUDE_HOME"] || path.join(os.homedir(), ".claude")
+  );
 }
 
 function unquote(value: string): string {
   const trimmed = value.trim();
-  const quoted = trimmed.length >= 2 && (trimmed[0] === '"' || trimmed[0] === "'") && trimmed.endsWith(trimmed[0]);
+  const quoted =
+    trimmed.length >= 2 &&
+    (trimmed[0] === '"' || trimmed[0] === "'") &&
+    trimmed.endsWith(trimmed[0]);
   return quoted ? trimmed.slice(1, -1) : trimmed;
 }
 
-function readBlockScalar(lines: string[], start: number): { value: string; next: number } {
+function readBlockScalar(
+  lines: string[],
+  start: number
+): { value: string; next: number } {
   const parts: string[] = [];
   let index = start;
-  while (index < lines.length && (lines[index] === '' || /^\s/.test(lines[index] ?? ''))) {
-    parts.push((lines[index] ?? '').trim());
+  while (
+    index < lines.length &&
+    (lines[index] === "" || /^\s/.test(lines[index] ?? ""))
+  ) {
+    parts.push((lines[index] ?? "").trim());
     index += 1;
   }
-  return { value: parts.filter(Boolean).join(' '), next: index };
+  return { value: parts.filter(Boolean).join(" "), next: index };
 }
 
 export function parseFrontMatter(source: string): Record<string, string> {
@@ -37,10 +64,10 @@ export function parseFrontMatter(source: string): Record<string, string> {
   const fields: Record<string, string> = {};
   let index = 0;
   while (index < lines.length) {
-    const field = /^([A-Za-z][\w-]*):\s*(.*)$/.exec(lines[index] ?? '');
+    const field = /^([A-Za-z][\w-]*):\s*(.*)$/.exec(lines[index] ?? "");
     index += 1;
     if (!field?.[1]) continue;
-    const raw = field[2] ?? '';
+    const raw = field[2] ?? "";
     if (/^[>|][+-]?$/.test(raw.trim())) {
       const block = readBlockScalar(lines, index);
       fields[field[1]] = block.value;
@@ -53,16 +80,19 @@ export function parseFrontMatter(source: string): Record<string, string> {
 }
 
 async function readJsonFile(file: string): Promise<unknown> {
-  return JSON.parse(await readFile(file, 'utf8')) as unknown;
+  return JSON.parse(await readFile(file, "utf8")) as unknown;
 }
 
 async function isDir(target: string): Promise<boolean> {
-  return stat(target).then((info) => info.isDirectory(), () => false);
+  return stat(target).then(
+    (info) => info.isDirectory(),
+    () => false
+  );
 }
 
 interface SkillSource {
   plugin: string;
-  origin: SkillInfo['origin'];
+  origin: SkillInfo["origin"];
   entryName: string;
   dir: string;
 }
@@ -73,7 +103,9 @@ interface Scan {
 }
 
 type SkillRead = { skill: SkillInfo } | { problem: SkillProblem };
-type ParsedSkill = Omit<SkillInfo, 'id' | 'origin' | 'sourcePath'> | { problem: string };
+type ParsedSkill =
+  | Omit<SkillInfo, "id" | "origin" | "sourcePath">
+  | { problem: string };
 
 interface ParsedEntry {
   stamp: string;
@@ -85,33 +117,44 @@ const parsedSkills = new Map<string, ParsedEntry>();
 
 function parseSkillText(text: string, entryName: string): ParsedSkill {
   const fields = parseFrontMatter(text);
-  const description = fields['description'] ?? '';
-  if (!description) return { problem: 'SKILL.md has no description in its front matter' };
+  const description = fields["description"] ?? "";
+  if (!description)
+    return { problem: "SKILL.md has no description in its front matter" };
   return {
-    name: fields['name'] || entryName,
+    name: fields["name"] || entryName,
     description,
     needsBash: BASH_HINT.test(text),
-    modelInvocable: fields['disable-model-invocation'] !== 'true',
+    modelInvocable: fields["disable-model-invocation"] !== "true",
   };
 }
 
-async function parsedSkillFile(file: string, entryName: string): Promise<ParsedSkill | null> {
+async function parsedSkillFile(
+  file: string,
+  entryName: string
+): Promise<ParsedSkill | null> {
   const info = await stat(file).catch(() => null);
   if (!info?.isFile()) return null;
   const stamp = `${info.mtimeMs}:${info.ctimeMs}:${info.size}:${entryName}`;
   const known = parsedSkills.get(file);
   if (known?.stamp === stamp) return known.parsed;
-  const parsed = parseSkillText(await readFile(file, 'utf8'), entryName);
+  const parsed = parseSkillText(await readFile(file, "utf8"), entryName);
   if (parsedSkills.size >= MAX_PARSED_ENTRIES) parsedSkills.clear();
   parsedSkills.set(file, { stamp, parsed });
   return parsed;
 }
 
 async function readSkill(source: SkillSource): Promise<SkillRead> {
-  const file = path.join(source.dir, 'SKILL.md');
-  const [parsed, sourcePath] = await Promise.all([parsedSkillFile(file, source.entryName), realpath(source.dir)]);
-  if (!parsed) return { problem: { source: source.dir, reason: 'no SKILL.md in this folder' } };
-  if ('problem' in parsed) return { problem: { source: file, reason: parsed.problem } };
+  const file = path.join(source.dir, "SKILL.md");
+  const [parsed, sourcePath] = await Promise.all([
+    parsedSkillFile(file, source.entryName),
+    realpath(source.dir),
+  ]);
+  if (!parsed)
+    return {
+      problem: { source: source.dir, reason: "no SKILL.md in this folder" },
+    };
+  if ("problem" in parsed)
+    return { problem: { source: file, reason: parsed.problem } };
   return {
     skill: {
       id: `${source.plugin}:${source.entryName}`,
@@ -126,12 +169,27 @@ async function readSkill(source: SkillSource): Promise<SkillRead> {
 }
 
 async function personalSources(home: string): Promise<SkillSource[]> {
-  const root = path.join(home, 'skills');
+  const root = path.join(home, "skills");
   if (!(await isDir(root))) return [];
-  const names = (await readdir(root)).filter((name) => !name.startsWith('.') && !SKIPPED_PERSONAL_DIRS.has(name)).sort();
+  const names = (await readdir(root))
+    .filter((name) => !name.startsWith(".") && !SKIPPED_PERSONAL_DIRS.has(name))
+    .sort();
   const dirs = names.map((name) => ({ name, dir: path.join(root, name) }));
-  const kept = await Promise.all(dirs.map(async (entry) => ((await isDir(entry.dir)) ? entry : null)));
-  return kept.flatMap((entry) => (entry ? [{ plugin: PERSONAL_PLUGIN, origin: 'personal' as const, entryName: entry.name, dir: entry.dir }] : []));
+  const kept = await Promise.all(
+    dirs.map(async (entry) => ((await isDir(entry.dir)) ? entry : null))
+  );
+  return kept.flatMap((entry) =>
+    entry
+      ? [
+          {
+            plugin: PERSONAL_PLUGIN,
+            origin: "personal" as const,
+            entryName: entry.name,
+            dir: entry.dir,
+          },
+        ]
+      : []
+  );
 }
 
 interface InstalledEntry {
@@ -140,82 +198,141 @@ interface InstalledEntry {
 }
 
 async function enabledPluginKeys(home: string): Promise<string[]> {
-  const settings = (await readJsonFile(path.join(home, 'settings.json')).catch(() => ({}))) as { enabledPlugins?: Record<string, unknown> };
+  const settings = (await readJsonFile(path.join(home, "settings.json")).catch(
+    () => ({})
+  )) as { enabledPlugins?: Record<string, unknown> };
   return Object.entries(settings.enabledPlugins ?? {})
-    .filter(([key, on]) => on === true && !key.endsWith('@builtin'))
+    .filter(([key, on]) => on === true && !key.endsWith("@builtin"))
     .map(([key]) => key)
     .sort();
 }
 
-async function installedPlugins(home: string): Promise<Record<string, InstalledEntry[]>> {
-  const file = path.join(home, 'plugins', 'installed_plugins.json');
-  const data = (await readJsonFile(file).catch(() => ({}))) as { plugins?: Record<string, InstalledEntry[]> };
+async function installedPlugins(
+  home: string
+): Promise<Record<string, InstalledEntry[]>> {
+  const file = path.join(home, "plugins", "installed_plugins.json");
+  const data = (await readJsonFile(file).catch(() => ({}))) as {
+    plugins?: Record<string, InstalledEntry[]>;
+  };
   return data.plugins ?? {};
 }
 
 function manifestSkillPaths(manifest: { skills?: unknown }): string[] {
   const raw = manifest.skills;
-  if (typeof raw === 'string') return [raw];
-  return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === 'string') : [];
+  if (typeof raw === "string") return [raw];
+  return Array.isArray(raw)
+    ? raw.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 async function skillDirsUnder(candidate: string): Promise<string[]> {
   if (!(await isDir(candidate))) return [];
-  if (existsSync(path.join(candidate, 'SKILL.md'))) return [candidate];
-  const names = (await readdir(candidate)).filter((name) => !name.startsWith('.')).sort();
+  if (existsSync(path.join(candidate, "SKILL.md"))) return [candidate];
+  const names = (await readdir(candidate))
+    .filter((name) => !name.startsWith("."))
+    .sort();
   const dirs = names.map((name) => path.join(candidate, name));
-  return dirs.filter((dir) => existsSync(path.join(dir, 'SKILL.md')));
+  return dirs.filter((dir) => existsSync(path.join(dir, "SKILL.md")));
 }
 
-async function pluginSkillDirs(installPath: string, manifest: { skills?: unknown }): Promise<string[]> {
-  const candidates = [path.join(installPath, 'skills'), ...manifestSkillPaths(manifest).map((rel) => path.resolve(installPath, rel))];
+async function pluginSkillDirs(
+  installPath: string,
+  manifest: { skills?: unknown }
+): Promise<string[]> {
+  const candidates = [
+    path.join(installPath, "skills"),
+    ...manifestSkillPaths(manifest).map((rel) =>
+      path.resolve(installPath, rel)
+    ),
+  ];
   const found = await Promise.all(candidates.map(skillDirsUnder));
-  const resolved = await Promise.all(found.flat().map(async (dir) => ({ dir, real: await realpath(dir) })));
+  const resolved = await Promise.all(
+    found.flat().map(async (dir) => ({ dir, real: await realpath(dir) }))
+  );
   const seen = new Map<string, string>();
   for (const entry of resolved) seen.set(entry.real, entry.dir);
   return [...seen.values()];
 }
 
-async function pluginSources(key: string, entries: InstalledEntry[] | undefined, problems: SkillProblem[]): Promise<SkillSource[]> {
-  const installPath = entries?.find((entry) => entry.scope === 'user')?.installPath;
+async function pluginSources(
+  key: string,
+  entries: InstalledEntry[] | undefined,
+  problems: SkillProblem[]
+): Promise<SkillSource[]> {
+  const installPath = entries?.find(
+    (entry) => entry.scope === "user"
+  )?.installPath;
   if (!installPath || !(await isDir(installPath))) {
-    problems.push({ source: key, reason: 'plugin is enabled in settings.json but has no user install on disk' });
+    problems.push({
+      source: key,
+      reason:
+        "plugin is enabled in settings.json but has no user install on disk",
+    });
     return [];
   }
-  const manifest = (await readJsonFile(path.join(installPath, '.claude-plugin', 'plugin.json')).catch(() => ({}))) as { name?: unknown; skills?: unknown };
-  const plugin = typeof manifest.name === 'string' && manifest.name ? manifest.name : (key.split('@')[0] ?? key);
+  const manifest = (await readJsonFile(
+    path.join(installPath, ".claude-plugin", "plugin.json")
+  ).catch(() => ({}))) as { name?: unknown; skills?: unknown };
+  const plugin =
+    typeof manifest.name === "string" && manifest.name
+      ? manifest.name
+      : (key.split("@")[0] ?? key);
   if (plugin === PERSONAL_PLUGIN) {
-    problems.push({ source: key, reason: `plugin name "${plugin}" is reserved for personal skills` });
+    problems.push({
+      source: key,
+      reason: `plugin name "${plugin}" is reserved for personal skills`,
+    });
     return [];
   }
   const dirs = await pluginSkillDirs(installPath, manifest);
-  return dirs.map((dir) => ({ plugin, origin: `plugin:${plugin}` as const, entryName: path.basename(dir), dir }));
+  return dirs.map((dir) => ({
+    plugin,
+    origin: `plugin:${plugin}` as const,
+    entryName: path.basename(dir),
+    dir,
+  }));
 }
 
-async function allPluginSources(home: string, problems: SkillProblem[]): Promise<SkillSource[]> {
-  const [installed, keys] = await Promise.all([installedPlugins(home), enabledPluginKeys(home)]);
+async function allPluginSources(
+  home: string,
+  problems: SkillProblem[]
+): Promise<SkillSource[]> {
+  const [installed, keys] = await Promise.all([
+    installedPlugins(home),
+    enabledPluginKeys(home),
+  ]);
   const perKey = await Promise.all(
     keys.map(async (key) => {
       const keyProblems: SkillProblem[] = [];
       const sources = await pluginSources(key, installed[key], keyProblems);
       return { sources, keyProblems };
-    }),
+    })
   );
   for (const entry of perKey) problems.push(...entry.keyProblems);
   return perKey.flatMap((entry) => entry.sources);
 }
 
-export async function discoverSkills(home: string = claudeHome()): Promise<SkillCatalog> {
+export async function discoverSkills(
+  home: string = claudeHome()
+): Promise<SkillCatalog> {
   const scan: Scan = { skills: [], problems: [] };
-  const [personal, plugins] = await Promise.all([personalSources(home), allPluginSources(home, scan.problems)]);
+  const [personal, plugins] = await Promise.all([
+    personalSources(home),
+    allPluginSources(home, scan.problems),
+  ]);
   const reads = await Promise.all(
     [...personal, ...plugins].map((source) =>
-      readSkill(source).catch((error: unknown): SkillRead => ({ problem: { source: source.dir, reason: error instanceof Error ? error.message : String(error) } })),
-    ),
+      readSkill(source).catch((error: unknown): SkillRead => ({
+        problem: {
+          source: source.dir,
+          reason: error instanceof Error ? error.message : String(error),
+        },
+      }))
+    )
   );
   const ids = new Set<string>();
   for (const read of reads) {
-    if ('problem' in read) scan.problems.push(read.problem);
+    if ("problem" in read) scan.problems.push(read.problem);
     else if (!ids.has(read.skill.id)) {
       ids.add(read.skill.id);
       scan.skills.push(read.skill);
@@ -235,23 +352,39 @@ export interface PreparedSkills {
 function groupByPlugin(skills: SkillInfo[]): Map<string, SkillInfo[]> {
   const groups = new Map<string, SkillInfo[]>();
   for (const skill of skills) {
-    const plugin = skill.id.slice(0, skill.id.indexOf(':'));
+    const plugin = skill.id.slice(0, skill.id.indexOf(":"));
     groups.set(plugin, [...(groups.get(plugin) ?? []), skill]);
   }
   return groups;
 }
 
 function entryName(skill: SkillInfo): string {
-  return skill.id.slice(skill.id.indexOf(':') + 1);
+  return skill.id.slice(skill.id.indexOf(":") + 1);
 }
 
-async function writePluginDir(target: string, plugin: string, skills: SkillInfo[]): Promise<void> {
-  const temp = `${target}.tmp-${randomBytes(4).toString('hex')}`;
-  await mkdir(path.join(temp, '.claude-plugin'), { recursive: true });
-  await mkdir(path.join(temp, 'skills'));
-  const manifest = { name: plugin, version: '0.0.0', description: `Skills from ${plugin === PERSONAL_PLUGIN ? '~/.claude/skills' : `the ${plugin} plugin`}, linked by Design Studio. Skills only: no hooks, MCP servers, agents or commands.` };
-  await writeFile(path.join(temp, '.claude-plugin', 'plugin.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  for (const skill of skills) await symlink(skill.sourcePath, path.join(temp, 'skills', entryName(skill)), 'dir');
+async function writePluginDir(
+  target: string,
+  plugin: string,
+  skills: SkillInfo[]
+): Promise<void> {
+  const temp = `${target}.tmp-${randomBytes(4).toString("hex")}`;
+  await mkdir(path.join(temp, ".claude-plugin"), { recursive: true });
+  await mkdir(path.join(temp, "skills"));
+  const manifest = {
+    name: plugin,
+    version: "0.0.0",
+    description: `Skills from ${plugin === PERSONAL_PLUGIN ? "~/.claude/skills" : `the ${plugin} plugin`}, linked by Design Studio. Skills only: no hooks, MCP servers, agents or commands.`,
+  };
+  await writeFile(
+    path.join(temp, ".claude-plugin", "plugin.json"),
+    `${JSON.stringify(manifest, null, 2)}\n`
+  );
+  for (const skill of skills)
+    await symlink(
+      skill.sourcePath,
+      path.join(temp, "skills", entryName(skill)),
+      "dir"
+    );
   try {
     await rename(temp, target);
   } catch {
@@ -259,23 +392,33 @@ async function writePluginDir(target: string, plugin: string, skills: SkillInfo[
   }
 }
 
-async function ensurePluginDir(root: string, plugin: string, skills: SkillInfo[]): Promise<string> {
-  const digest = createHash('sha256')
+async function ensurePluginDir(
+  root: string,
+  plugin: string,
+  skills: SkillInfo[]
+): Promise<string> {
+  const digest = createHash("sha256")
     .update(JSON.stringify(skills.map((skill) => [skill.id, skill.sourcePath])))
-    .digest('hex')
+    .digest("hex")
     .slice(0, 12);
   const target = path.join(root, `${plugin}-${digest}`);
-  if (!existsSync(path.join(target, '.claude-plugin', 'plugin.json'))) await writePluginDir(target, plugin, skills);
+  if (!existsSync(path.join(target, ".claude-plugin", "plugin.json")))
+    await writePluginDir(target, plugin, skills);
   return target;
 }
 
-export async function prepareSkills(options: { root: string; disabled: readonly string[]; home?: string }): Promise<PreparedSkills> {
+export async function prepareSkills(options: {
+  root: string;
+  disabled: readonly string[];
+  home?: string;
+}): Promise<PreparedSkills> {
   const catalog = await discoverSkills(options.home);
   const off = new Set(options.disabled);
   const chosen = catalog.skills.filter((skill) => !off.has(skill.id));
   await mkdir(options.root, { recursive: true });
   const pluginDirs: string[] = [];
-  for (const [plugin, skills] of groupByPlugin(chosen)) pluginDirs.push(await ensurePluginDir(options.root, plugin, skills));
+  for (const [plugin, skills] of groupByPlugin(chosen))
+    pluginDirs.push(await ensurePluginDir(options.root, plugin, skills));
   return {
     catalog,
     enabled: chosen.map((skill) => skill.id),

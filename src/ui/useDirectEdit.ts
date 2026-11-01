@@ -1,16 +1,38 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { DirectEditRequest, DirectStyleProperty, SelectionContext, TailwindOutcome, TextSourceHints } from '../shared/contracts';
-import { ApiError, api, errorText } from './api';
-import type { PreviewPort } from './bridge';
-import { changedProps, shiftedPart, shiftedValue, valuesFromStyles, type Shift, type ShiftPart, type StyleValues } from './cssValues';
-import { editVariantStore } from './editVariant';
-import { startOptimistic } from './optimisticEdit';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
+
+import type {
+  DirectEditRequest,
+  DirectStyleProperty,
+  SelectionContext,
+  TailwindOutcome,
+  TextSourceHints,
+} from "../shared/contracts";
+import { ApiError, api, errorText } from "./api";
+import type { PreviewPort } from "./bridge";
+import {
+  changedProps,
+  shiftedPart,
+  shiftedValue,
+  valuesFromStyles,
+  type Shift,
+  type ShiftPart,
+  type StyleValues,
+} from "./cssValues";
+import { editVariantStore } from "./editVariant";
+import { startOptimistic } from "./optimisticEdit";
 
 export type SaveStatus =
-  | { kind: 'idle' }
-  | { kind: 'saving' }
-  | { kind: 'saved'; at: number }
-  | { kind: 'error'; message: string; code?: string };
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "saved"; at: number }
+  | { kind: "error"; message: string; code?: string };
 
 export interface DirectEditControl {
   cancel: () => void;
@@ -38,66 +60,123 @@ interface Options {
 
 type StyleRewrite = (style: Partial<StyleValues>) => Partial<StyleValues>;
 
-function declaredOf(styles: Record<string, string>, style: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(Object.entries(style).flatMap(([key, value]) => (`declared-${key}` in styles ? [[`declared-${key}`, value]] : [])));
+function declaredOf(
+  styles: Record<string, string>,
+  style: Record<string, string>
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(style).flatMap(([key, value]) =>
+      `declared-${key}` in styles ? [[`declared-${key}`, value]] : []
+    )
+  );
 }
 
-export function mergeCommit(prev: SelectionContext[], commit: DirectEditCommit): SelectionContext[] {
+export function mergeCommit(
+  prev: SelectionContext[],
+  commit: DirectEditCommit
+): SelectionContext[] {
   return prev.map((s) =>
     s.selector === commit.selector
-      ? { ...s, styles: { ...s.styles, ...declaredOf(s.styles, commit.style), ...commit.style }, text: commit.text ?? s.text }
-      : s,
+      ? {
+          ...s,
+          styles: {
+            ...s.styles,
+            ...declaredOf(s.styles, commit.style),
+            ...commit.style,
+          },
+          text: commit.text ?? s.text,
+        }
+      : s
   );
 }
 
 export const NO_MIXED: ReadonlySet<DirectStyleProperty> = new Set();
 
-type EditValues = Pick<DirectEdit, 'values' | 'mixed' | 'preview' | 'commit'>;
+type EditValues = Pick<DirectEdit, "values" | "mixed" | "preview" | "commit">;
 
-export function sameEditValues(a: EditValues, b: EditValues, props: readonly DirectStyleProperty[]): boolean {
+export function sameEditValues(
+  a: EditValues,
+  b: EditValues,
+  props: readonly DirectStyleProperty[]
+): boolean {
   if (a === b) return true;
   if (a.preview !== b.preview || a.commit !== b.commit) return false;
-  return props.every((prop) => a.values[prop] === b.values[prop] && a.mixed.has(prop) === b.mixed.has(prop));
+  return props.every(
+    (prop) =>
+      a.values[prop] === b.values[prop] &&
+      a.mixed.has(prop) === b.mixed.has(prop)
+  );
 }
 
 const DEBOUNCE_MS = 250;
-const AGENT_RUNNING_MESSAGE = 'Agent is running. Wait or cancel.';
+const AGENT_RUNNING_MESSAGE = "Agent is running. Wait or cancel.";
 
 function isStaleSelection(err: unknown): err is ApiError {
-  return err instanceof ApiError && err.status === 422 && err.code === 'stale_selection';
+  return (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    err.code === "stale_selection"
+  );
 }
 
 function failureText(err: unknown): string {
-  if (err instanceof ApiError && err.status === 409) return AGENT_RUNNING_MESSAGE;
+  if (err instanceof ApiError && err.status === 409)
+    return AGENT_RUNNING_MESSAGE;
   return errorText(err);
 }
 
-export function buildEditRequest(selection: SelectionContext, style: Partial<StyleValues>, text?: string, editVariant = editVariantStore.get()): DirectEditRequest | null {
+export function buildEditRequest(
+  selection: SelectionContext,
+  style: Partial<StyleValues>,
+  text?: string,
+  editVariant = editVariantStore.get()
+): DirectEditRequest | null {
   const source = selection.source;
   if (!source) return null;
   const hasStyle = Object.keys(style).length > 0;
   if (!hasStyle && text === undefined) return null;
-  const wire = Object.fromEntries(Object.entries(style).map(([prop, value]) => [prop, value.trim() === '' ? null : value.trim()]));
-  const target = selection.component ? { component: selection.component } : { tag: selection.tag.toLowerCase() };
-  const variant = hasStyle ? editVariant : '';
-  return { source, selector: selection.selector, ...target, ...(hasStyle ? { style: wire } : {}), ...(text !== undefined ? { text, hints: textHints(selection) } : {}), ...(variant ? { variant } : {}) };
+  const wire = Object.fromEntries(
+    Object.entries(style).map(([prop, value]) => [
+      prop,
+      value.trim() === "" ? null : value.trim(),
+    ])
+  );
+  const target = selection.component
+    ? { component: selection.component }
+    : { tag: selection.tag.toLowerCase() };
+  const variant = hasStyle ? editVariant : "";
+  return {
+    source,
+    selector: selection.selector,
+    ...target,
+    ...(hasStyle ? { style: wire } : {}),
+    ...(text !== undefined ? { text, hints: textHints(selection) } : {}),
+    ...(variant ? { variant } : {}),
+  };
 }
 
 export function textHints(selection: SelectionContext): TextSourceHints {
-  return { text: selection.text, ...(selection.usedAt ? { usedAt: selection.usedAt } : {}), ...(selection.owners?.length ? { owners: selection.owners } : {}) };
+  return {
+    text: selection.text,
+    ...(selection.usedAt ? { usedAt: selection.usedAt } : {}),
+    ...(selection.owners?.length ? { owners: selection.owners } : {}),
+  };
 }
 
 export function useDirectEdit(o: Options) {
   const opts = useRef(o);
   opts.current = o;
-  const base = useMemo(() => valuesFromStyles(o.selection.styles), [o.selection.styles]);
+  const base = useMemo(
+    () => valuesFromStyles(o.selection.styles),
+    [o.selection.styles]
+  );
   const baseRef = useRef(base);
   baseRef.current = base;
   const [draft, setDraftState] = useState<Partial<StyleValues>>({});
   const draftRef = useRef(draft);
   const [textDraft, setTextDraftState] = useState<string | null>(null);
   const textRef = useRef(textDraft);
-  const [status, setStatus] = useState<SaveStatus>({ kind: 'idle' });
+  const [status, setStatus] = useState<SaveStatus>({ kind: "idle" });
   const [tailwind, setTailwind] = useState<TailwindOutcome | null>(null);
   const timer = useRef<number | null>(null);
   const inflight = useRef<Promise<void> | null>(null);
@@ -114,10 +193,24 @@ export function useDirectEdit(o: Options) {
     setTextDraftState(next);
   }, []);
 
-  const post = useCallback((body: Parameters<PreviewPort['post']>[0]) => opts.current.port.current?.post(body), []);
+  const post = useCallback(
+    (body: Parameters<PreviewPort["post"]>[0]) =>
+      opts.current.port.current?.post(body),
+    []
+  );
 
-  const resetPreview = useCallback(() => post({ type: 'preview-reset' }), [post]);
-  const reselect = useCallback(() => post({ type: 'select-selector', selector: opts.current.selection.selector }), [post]);
+  const resetPreview = useCallback(
+    () => post({ type: "preview-reset" }),
+    [post]
+  );
+  const reselect = useCallback(
+    () =>
+      post({
+        type: "select-selector",
+        selector: opts.current.selection.selector,
+      }),
+    [post]
+  );
 
   const cancel = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
@@ -132,16 +225,20 @@ export function useDirectEdit(o: Options) {
     (err: unknown) => {
       if (isStaleSelection(err)) {
         cancel();
-        post({ type: 'preview-reset' });
+        post({ type: "preview-reset" });
         opts.current.onStale(err.message);
         return;
       }
       resetPreview();
       setDraft({});
       setTextDraft(null);
-      setStatus({ kind: 'error', message: failureText(err), ...(err instanceof ApiError && err.code ? { code: err.code } : {}) });
+      setStatus({
+        kind: "error",
+        message: failureText(err),
+        ...(err instanceof ApiError && err.code ? { code: err.code } : {}),
+      });
     },
-    [cancel, post, resetPreview, setDraft, setTextDraft],
+    [cancel, post, resetPreview, setDraft, setTextDraft]
   );
 
   const rewriteDraft = useCallback(
@@ -152,10 +249,14 @@ export function useDirectEdit(o: Options) {
       const moved = changedProps(next, { ...baseRef.current, ...style });
       if (Object.keys(moved).length === 0) return next;
       setDraft({ ...draftRef.current, ...moved });
-      post({ type: 'preview-style', selector: opts.current.selection.selector, style: moved });
+      post({
+        type: "preview-style",
+        selector: opts.current.selection.selector,
+        style: moved,
+      });
       return next;
     },
-    [post, setDraft],
+    [post, setDraft]
   );
 
   const flush = useCallback(async () => {
@@ -165,22 +266,34 @@ export function useDirectEdit(o: Options) {
       return;
     }
     const cur = opts.current;
-    const kept = Object.fromEntries([...forced.current].filter((prop) => prop in draftRef.current).map((prop) => [prop, draftRef.current[prop]]));
+    const kept = Object.fromEntries(
+      [...forced.current]
+        .filter((prop) => prop in draftRef.current)
+        .map((prop) => [prop, draftRef.current[prop]])
+    );
     forced.current.clear();
-    const style = rewriteDraft({ ...changedProps(draftRef.current, baseRef.current), ...kept });
+    const style = rewriteDraft({
+      ...changedProps(draftRef.current, baseRef.current),
+      ...kept,
+    });
     const pendingText = textRef.current;
-    const text = pendingText !== null && pendingText !== cur.selection.text ? pendingText : undefined;
+    const text =
+      pendingText !== null && pendingText !== cur.selection.text
+        ? pendingText
+        : undefined;
     const req = buildEditRequest(cur.selection, style, text, cur.variant);
     if (!req || !cur.directionId) return;
-    setStatus({ kind: 'saving' });
-    const optimistic = startOptimistic(cur.port.current, req, (message) => setStatus({ kind: 'error', message, code: 'optimistic_mismatch' }));
+    setStatus({ kind: "saving" });
+    const optimistic = startOptimistic(cur.port.current, req, (message) =>
+      setStatus({ kind: "error", message, code: "optimistic_mismatch" })
+    );
     const request = api
       .directEdit(cur.projectId, cur.directionId, req)
       .then((result) => {
         optimistic.saved(result.tailwind);
         setTailwind(result.tailwind ?? null);
         cur.onCommitted({ selector: req.selector, style, text });
-        setStatus({ kind: 'saved', at: Date.now() });
+        setStatus({ kind: "saved", at: Date.now() });
       })
       .catch((err: unknown) => {
         optimistic.failed(failureText(err));
@@ -207,36 +320,54 @@ export function useDirectEdit(o: Options) {
   const commitText = useCallback(
     (selector: string, text: string) => {
       const cur = opts.current;
-      if (selector !== cur.selection.selector || !cur.selection.source || !cur.directionId) return false;
+      if (
+        selector !== cur.selection.selector ||
+        !cur.selection.source ||
+        !cur.directionId
+      )
+        return false;
       if (timer.current !== null) window.clearTimeout(timer.current);
       setTextDraft(text);
       void flush();
       return true;
     },
-    [flush, setTextDraft],
+    [flush, setTextDraft]
   );
 
   const preview = useCallback(
     (patch: Partial<StyleValues>, force = false) => {
-      if (force) for (const prop of Object.keys(patch) as DirectStyleProperty[]) forced.current.add(prop);
+      if (force)
+        for (const prop of Object.keys(patch) as DirectStyleProperty[])
+          forced.current.add(prop);
       setDraft({ ...draftRef.current, ...patch });
-      post({ type: 'preview-style', selector: opts.current.selection.selector, style: patch });
-      setStatus((s) => (s.kind === 'error' ? { kind: 'idle' } : s));
+      post({
+        type: "preview-style",
+        selector: opts.current.selection.selector,
+        style: patch,
+      });
+      setStatus((s) => (s.kind === "error" ? { kind: "idle" } : s));
     },
-    [post, setDraft],
+    [post, setDraft]
   );
 
   const shift = useCallback(
-    (props: readonly DirectStyleProperty[], delta: number, bounds: Omit<Shift, 'delta'> = {}, part?: ShiftPart) => {
+    (
+      props: readonly DirectStyleProperty[],
+      delta: number,
+      bounds: Omit<Shift, "delta"> = {},
+      part?: ShiftPart
+    ) => {
       const patch: Partial<StyleValues> = {};
       for (const prop of props) {
         const from = draftRef.current[prop] ?? baseRef.current[prop];
-        const next = part ? shiftedPart(from, part, { ...bounds, delta }) : shiftedValue(from, { ...bounds, delta });
+        const next = part
+          ? shiftedPart(from, part, { ...bounds, delta })
+          : shiftedValue(from, { ...bounds, delta });
         if (next !== null) patch[prop] = next;
       }
       if (Object.keys(patch).length > 0) preview(patch);
     },
-    [preview],
+    [preview]
   );
 
   const revert = useCallback(
@@ -245,31 +376,44 @@ export function useDirectEdit(o: Options) {
       const style: Record<string, string | null> = {};
       for (const prop of props) {
         delete next[prop];
-        style[prop] = baseRef.current[prop] === '' ? null : baseRef.current[prop];
+        style[prop] =
+          baseRef.current[prop] === "" ? null : baseRef.current[prop];
       }
       setDraft(next);
-      post({ type: 'preview-style', selector: opts.current.selection.selector, style });
+      post({
+        type: "preview-style",
+        selector: opts.current.selection.selector,
+        style,
+      });
     },
-    [post, setDraft],
+    [post, setDraft]
   );
 
   const previewText = useCallback(
     (text: string) => {
       setTextDraft(text);
-      post({ type: 'preview-text', selector: opts.current.selection.selector, text });
+      post({
+        type: "preview-text",
+        selector: opts.current.selection.selector,
+        text,
+      });
     },
-    [post, setTextDraft],
+    [post, setTextDraft]
   );
 
   const revertText = useCallback(() => {
     setTextDraft(null);
-    post({ type: 'preview-text', selector: opts.current.selection.selector, text: opts.current.selection.text });
+    post({
+      type: "preview-text",
+      selector: opts.current.selection.selector,
+      text: opts.current.selection.text,
+    });
   }, [post, setTextDraft]);
 
   const reset = useCallback(() => {
     cancel();
     resetPreview();
-    setStatus({ kind: 'idle' });
+    setStatus({ kind: "idle" });
   }, [cancel, resetPreview]);
 
   const settle = useCallback(async () => {
@@ -288,11 +432,12 @@ export function useDirectEdit(o: Options) {
   const absorb = useCallback(
     (style: Partial<StyleValues>) => {
       const next = { ...draftRef.current };
-      for (const prop of Object.keys(style) as DirectStyleProperty[]) delete next[prop];
+      for (const prop of Object.keys(style) as DirectStyleProperty[])
+        delete next[prop];
       setDraft(next);
-      setStatus({ kind: 'saved', at: Date.now() });
+      setStatus({ kind: "saved", at: Date.now() });
     },
-    [setDraft],
+    [setDraft]
   );
 
   useEffect(() => {
@@ -307,10 +452,36 @@ export function useDirectEdit(o: Options) {
   }, [cancel, settle, commitText, flush, o.control]);
 
   const values = useMemo(() => ({ ...base, ...draft }), [base, draft]);
-  const dirty = useMemo(() => Object.keys(draft) as DirectStyleProperty[], [draft]);
+  const dirty = useMemo(
+    () => Object.keys(draft) as DirectStyleProperty[],
+    [draft]
+  );
   const text = textDraft ?? o.selection.text;
-  const scope = useMemo(() => ({ projectId: o.projectId, directionId: o.directionId }), [o.projectId, o.directionId]);
-  return { values, mixed: NO_MIXED, each: null as readonly StyleValues[] | null, text, status, tailwind, preview, shift, revert, commit, commitSoon, previewText, revertText, reset, drain, absorb, dirty, scope, reselect };
+  const scope = useMemo(
+    () => ({ projectId: o.projectId, directionId: o.directionId }),
+    [o.projectId, o.directionId]
+  );
+  return {
+    values,
+    mixed: NO_MIXED,
+    each: null as readonly StyleValues[] | null,
+    text,
+    status,
+    tailwind,
+    preview,
+    shift,
+    revert,
+    commit,
+    commitSoon,
+    previewText,
+    revertText,
+    reset,
+    drain,
+    absorb,
+    dirty,
+    scope,
+    reselect,
+  };
 }
 
 export type DirectEdit = ReturnType<typeof useDirectEdit>;

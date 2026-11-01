@@ -1,18 +1,19 @@
-import { lstat, opendir, readFile, realpath } from 'node:fs/promises';
-import path from 'node:path';
-import { customProperties, parseCss } from './css.js';
-import type { CustomProperties } from './css.js';
-import { matchName } from './names.js';
-import type { ValueKind } from './names.js';
-import { TokensFileError, harvestTokensFile } from './tokens-file.js';
-import type { Candidate, Harvest } from './types.js';
-import { candidate, harvestCssVars } from './vars.js';
-import { findTokenFile, safeFileInside } from '../app-tokens/detect.js';
-import { readCssTokens } from '../app-tokens/read-css.js';
-import { buildAppTokens } from '../app-tokens/tokens.js';
-import { harvestNextFonts, type NextFonts } from './next-font.js';
-import { normalizeColor } from './values.js';
-import { flattenJs, objectAfter } from './js-literal.js';
+import { lstat, opendir, readFile, realpath } from "node:fs/promises";
+import path from "node:path";
+
+import { findTokenFile, safeFileInside } from "../app-tokens/detect.js";
+import { readCssTokens } from "../app-tokens/read-css.js";
+import { buildAppTokens } from "../app-tokens/tokens.js";
+import { customProperties, parseCss } from "./css.js";
+import type { CustomProperties } from "./css.js";
+import { flattenJs, objectAfter } from "./js-literal.js";
+import { matchName } from "./names.js";
+import type { ValueKind } from "./names.js";
+import { harvestNextFonts, type NextFonts } from "./next-font.js";
+import { TokensFileError, harvestTokensFile } from "./tokens-file.js";
+import type { Candidate, Harvest } from "./types.js";
+import { normalizeColor } from "./values.js";
+import { candidate, harvestCssVars } from "./vars.js";
 
 export interface FolderLimits {
   maxEntries: number;
@@ -22,7 +23,13 @@ export interface FolderLimits {
   maxDepth: number;
 }
 
-export const FOLDER_LIMITS: FolderLimits = { maxEntries: 20_000, maxFiles: 300, maxFileBytes: 1024 * 1024, maxTotalBytes: 16 * 1024 * 1024, maxDepth: 10 };
+export const FOLDER_LIMITS: FolderLimits = {
+  maxEntries: 20_000,
+  maxFiles: 300,
+  maxFileBytes: 1024 * 1024,
+  maxTotalBytes: 16 * 1024 * 1024,
+  maxDepth: 10,
+};
 
 export class FolderScanError extends Error {}
 
@@ -32,24 +39,62 @@ export interface FolderScan {
   skipped: string[];
 }
 
-const SKIP_DIRS = new Set(['node_modules', '.git', '.hg', '.svn', 'dist', 'build', 'out', '.next', '.nuxt', '.svelte-kit', '.turbo', '.cache', '.parcel-cache', 'coverage', 'vendor', 'bower_components', '.venv', 'venv', '__pycache__', 'target', 'Pods', 'DerivedData', '.idea', '.vscode']);
-const STYLE_EXT = new Set(['.css', '.scss', '.sass', '.less', '.pcss', '.postcss']);
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  ".hg",
+  ".svn",
+  "dist",
+  "build",
+  "out",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".turbo",
+  ".cache",
+  ".parcel-cache",
+  "coverage",
+  "vendor",
+  "bower_components",
+  ".venv",
+  "venv",
+  "__pycache__",
+  "target",
+  "Pods",
+  "DerivedData",
+  ".idea",
+  ".vscode",
+]);
+const STYLE_EXT = new Set([
+  ".css",
+  ".scss",
+  ".sass",
+  ".less",
+  ".pcss",
+  ".postcss",
+]);
 const TAILWIND = /^tailwind\.config\.(js|cjs|mjs|ts|cts|mts)$/;
 const TOKENS_JSON = /(^|[.-])(tokens?|design-tokens|theme)(\.[a-z]+)?\.json$/i;
 const THEME_SCRIPT = /^(theme|tokens|colors)\.(js|cjs|mjs|ts)$/i;
 
-type FileKind = 'style' | 'tailwind' | 'tokens' | 'theme-script';
+type FileKind = "style" | "tailwind" | "tokens" | "theme-script";
 
 function kindOf(name: string): FileKind | null {
   const ext = path.extname(name).toLowerCase();
-  if (STYLE_EXT.has(ext) && !name.endsWith('.min.css')) return 'style';
-  if (TAILWIND.test(name)) return 'tailwind';
-  if (TOKENS_JSON.test(name)) return 'tokens';
-  if (THEME_SCRIPT.test(name)) return 'theme-script';
+  if (STYLE_EXT.has(ext) && !name.endsWith(".min.css")) return "style";
+  if (TAILWIND.test(name)) return "tailwind";
+  if (TOKENS_JSON.test(name)) return "tokens";
+  if (THEME_SCRIPT.test(name)) return "theme-script";
   return null;
 }
 
-async function collect(root: string, limits: FolderLimits): Promise<{ files: Array<{ file: string; kind: FileKind }>; skipped: string[] }> {
+async function collect(
+  root: string,
+  limits: FolderLimits
+): Promise<{
+  files: Array<{ file: string; kind: FileKind }>;
+  skipped: string[];
+}> {
   const files: Array<{ file: string; kind: FileKind }> = [];
   const skipped: string[] = [];
   let entries = 0;
@@ -60,13 +105,16 @@ async function collect(root: string, limits: FolderLimits): Promise<{ files: Arr
     for await (const entry of handle) {
       entries += 1;
       if (entries > limits.maxEntries || files.length >= limits.maxFiles) {
-        skipped.push(`stopped after ${limits.maxEntries} entries or ${limits.maxFiles} files`);
+        skipped.push(
+          `stopped after ${limits.maxEntries} entries or ${limits.maxFiles} files`
+        );
         return;
       }
       if (entry.isSymbolicLink()) continue;
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith('.')) await visit(full, depth + 1);
+        if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith("."))
+          await visit(full, depth + 1);
         continue;
       }
       if (!entry.isFile()) continue;
@@ -80,8 +128,10 @@ async function collect(root: string, limits: FolderLimits): Promise<{ files: Arr
 
 function scssVariables(text: string): Map<string, string> {
   const out = new Map<string, string>();
-  for (const match of text.matchAll(/^[ \t]*[$@]([A-Za-z_][\w-]*)\s*:\s*([^;\n]+);/gm)) {
-    const value = (match[2] ?? '').replace(/\s*!default\s*$/, '').trim();
+  for (const match of text.matchAll(
+    /^[ \t]*[$@]([A-Za-z_][\w-]*)\s*:\s*([^;\n]+);/gm
+  )) {
+    const value = (match[2] ?? "").replace(/\s*!default\s*$/, "").trim();
     if (match[1] && value) out.set(`--${match[1]}`, value);
   }
   for (const [name, value] of out) {
@@ -92,31 +142,47 @@ function scssVariables(text: string): Map<string, string> {
 }
 
 const TAILWIND_SECTIONS: Array<[string, string, ValueKind]> = [
-  ['colors', 'color', 'color'],
-  ['fontFamily', 'font', 'font'],
-  ['borderRadius', 'radius', 'dimension'],
-  ['boxShadow', 'shadow', 'shadow'],
-  ['fontSize', 'text', 'dimension'],
-  ['spacing', 'space', 'dimension'],
+  ["colors", "color", "color"],
+  ["fontFamily", "font", "font"],
+  ["borderRadius", "radius", "dimension"],
+  ["boxShadow", "shadow", "shadow"],
+  ["fontSize", "text", "dimension"],
+  ["spacing", "space", "dimension"],
 ];
 
-function sectionCandidates(text: string, [key, group, kind]: [string, string, ValueKind], label: string): Candidate[] {
+function sectionCandidates(
+  text: string,
+  [key, group, kind]: [string, string, ValueKind],
+  label: string
+): Candidate[] {
   const object = objectAfter(text, key);
   if (!object) return [];
   const flat = new Map<string, string>();
   flattenJs(object, [], flat);
   const out: Candidate[] = [];
   for (const [name, value] of flat) {
-    const isColor = kind === 'color';
-    const match = matchName(isColor && name !== '' ? name : name === '' ? group : `${group}-${name}`, isColor && !normalizeColor(value) ? 'unknown' : kind);
-    const found = match ? candidate(match, { value }, 'folder', `${label}: theme.${key}.${name || 'DEFAULT'}`) : null;
+    const isColor = kind === "color";
+    const match = matchName(
+      isColor && name !== "" ? name : name === "" ? group : `${group}-${name}`,
+      isColor && !normalizeColor(value) ? "unknown" : kind
+    );
+    const found = match
+      ? candidate(
+          match,
+          { value },
+          "folder",
+          `${label}: theme.${key}.${name || "DEFAULT"}`
+        )
+      : null;
     if (found) out.push(found);
   }
   return out;
 }
 
 function tailwindCandidates(text: string, label: string): Candidate[] {
-  return TAILWIND_SECTIONS.flatMap((section) => sectionCandidates(text, section, label));
+  return TAILWIND_SECTIONS.flatMap((section) =>
+    sectionCandidates(text, section, label)
+  );
 }
 
 interface ScanAccumulator {
@@ -126,59 +192,92 @@ interface ScanAccumulator {
   skipped: string[];
 }
 
-function mergeMissing(target: Map<string, string>, source: Map<string, string>): void {
-  for (const [name, value] of source) if (!target.has(name)) target.set(name, value);
+function mergeMissing(
+  target: Map<string, string>,
+  source: Map<string, string>
+): void {
+  for (const [name, value] of source)
+    if (!target.has(name)) target.set(name, value);
 }
 
-function absorb(acc: ScanAccumulator, file: string, kind: FileKind, text: string, relative: string): void {
-  if (kind === 'style') {
+function absorb(
+  acc: ScanAccumulator,
+  file: string,
+  kind: FileKind,
+  text: string,
+  relative: string
+): void {
+  if (kind === "style") {
     const scoped = customProperties(parseCss(text));
     mergeMissing(acc.props.root, scoped.root);
     mergeMissing(acc.props.dark, scoped.dark);
-    if (/\.(scss|sass|less)$/i.test(file)) mergeMissing(acc.props.root, scssVariables(text));
+    if (/\.(scss|sass|less)$/i.test(file))
+      mergeMissing(acc.props.root, scssVariables(text));
     return;
   }
-  if (kind !== 'tokens') {
+  if (kind !== "tokens") {
     acc.candidates.push(...tailwindCandidates(text, relative));
     return;
   }
   try {
-    acc.candidates.push(...harvestTokensFile(text, relative).candidates.map((item) => ({ ...item, source: 'folder' as const })));
+    acc.candidates.push(
+      ...harvestTokensFile(text, relative).candidates.map((item) => ({
+        ...item,
+        source: "folder" as const,
+      }))
+    );
   } catch (error) {
     if (!(error instanceof TokensFileError)) throw error;
     acc.skipped.push(`${relative}: ${error.message}`);
   }
 }
 
-async function readMatched(root: string, files: Array<{ file: string; kind: FileKind }>, limits: FolderLimits, acc: ScanAccumulator): Promise<void> {
+async function readMatched(
+  root: string,
+  files: Array<{ file: string; kind: FileKind }>,
+  limits: FolderLimits,
+  acc: ScanAccumulator
+): Promise<void> {
   let total = 0;
-  const ordered = [...files].sort((a, b) => a.file.split(path.sep).length - b.file.split(path.sep).length);
+  const ordered = [...files].sort(
+    (a, b) => a.file.split(path.sep).length - b.file.split(path.sep).length
+  );
   for (const { file, kind } of ordered) {
     const info = await lstat(file);
     const relative = path.relative(root, file);
     if (!info.isFile() || info.size > limits.maxFileBytes) {
-      acc.skipped.push(`${relative}: larger than ${Math.round(limits.maxFileBytes / 1024)} KB`);
+      acc.skipped.push(
+        `${relative}: larger than ${Math.round(limits.maxFileBytes / 1024)} KB`
+      );
       continue;
     }
     if (total + info.size > limits.maxTotalBytes) {
-      acc.skipped.push(`stopped at ${Math.round(limits.maxTotalBytes / 1024 / 1024)} MB of files`);
+      acc.skipped.push(
+        `stopped at ${Math.round(limits.maxTotalBytes / 1024 / 1024)} MB of files`
+      );
       return;
     }
     total += info.size;
     acc.read.push(relative);
-    absorb(acc, file, kind, await readFile(file, 'utf8'), relative);
+    absorb(acc, file, kind, await readFile(file, "utf8"), relative);
   }
 }
 
 async function resolveRoot(folderPath: string): Promise<string> {
-  if (typeof folderPath !== 'string' || !path.isAbsolute(folderPath) || folderPath.includes('\0')) throw new FolderScanError('folder must be an absolute path');
+  if (
+    typeof folderPath !== "string" ||
+    !path.isAbsolute(folderPath) ||
+    folderPath.includes("\0")
+  )
+    throw new FolderScanError("folder must be an absolute path");
   let root: string;
   try {
     root = await realpath(folderPath);
   } catch {
     throw new FolderScanError(`folder not found: ${folderPath}`);
   }
-  if (!(await lstat(root)).isDirectory()) throw new FolderScanError(`not a folder: ${root}`);
+  if (!(await lstat(root)).isDirectory())
+    throw new FolderScanError(`not a folder: ${root}`);
   return root;
 }
 
@@ -188,11 +287,14 @@ interface TokenFileRead {
   tailwind: boolean;
 }
 
-async function absorbTokenFile(root: string, acc: ScanAccumulator): Promise<TokenFileRead | null> {
+async function absorbTokenFile(
+  root: string,
+  acc: ScanAccumulator
+): Promise<TokenFileRead | null> {
   const relative = await findTokenFile(root).catch(() => null);
   const file = relative ? await safeFileInside(root, relative) : null;
   if (!relative || !file) return null;
-  const sheet = readCssTokens(await readFile(file, 'utf8'));
+  const sheet = readCssTokens(await readFile(file, "utf8"));
   for (const token of buildAppTokens(sheet)) {
     if (token.light) acc.props.root.set(token.name, token.light.value);
     if (token.dark) acc.props.dark.set(token.name, token.dark.value);
@@ -201,37 +303,93 @@ async function absorbTokenFile(root: string, acc: ScanAccumulator): Promise<Toke
   return { file, relative, tailwind: sheet.tailwind };
 }
 
-const TAILWIND_TEXT: Record<string, string> = { xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem' };
-const TAILWIND_RADIUS: Record<string, string> = { sm: '0.25rem', md: '0.375rem', lg: '0.5rem', pill: '9999px' };
+const TAILWIND_TEXT: Record<string, string> = {
+  xs: "0.75rem",
+  sm: "0.875rem",
+  base: "1rem",
+  lg: "1.125rem",
+  xl: "1.25rem",
+  "2xl": "1.5rem",
+  "3xl": "1.875rem",
+  "4xl": "2.25rem",
+};
+const TAILWIND_RADIUS: Record<string, string> = {
+  sm: "0.25rem",
+  md: "0.375rem",
+  lg: "0.5rem",
+  pill: "9999px",
+};
 
 function remTimes(base: string, steps: number): string | null {
   const match = /^(\d*\.?\d+)rem$/.exec(base.trim());
-  return match ? `${Math.round(Number(match[1]) * steps * 10000) / 10000}rem` : null;
+  return match
+    ? `${Math.round(Number(match[1]) * steps * 10000) / 10000}rem`
+    : null;
 }
 
-function tailwindDefaults(props: CustomProperties, relative: string): Candidate[] {
+function tailwindDefaults(
+  props: CustomProperties,
+  relative: string
+): Candidate[] {
   const evidence = `${relative}: Tailwind v4 default`;
-  const make = (token: string, value: string | null): Candidate | null => (value ? candidate({ token, confidence: 'high' }, { value }, 'folder', evidence) : null);
-  const spacing = props.root.get('--spacing') ?? '0.25rem';
+  const make = (token: string, value: string | null): Candidate | null =>
+    value
+      ? candidate({ token, confidence: "high" }, { value }, "folder", evidence)
+      : null;
+  const spacing = props.root.get("--spacing") ?? "0.25rem";
   const out = [
-    ...Object.entries(TAILWIND_TEXT).map(([name, value]) => make(`text.${name}`, value)),
-    ...['1', '2', '3', '4', '5', '6', '8', '10', '12'].map((name) => make(`space.${name}`, remTimes(spacing, Number(name)))),
-    ...Object.entries(TAILWIND_RADIUS).map(([name, value]) => make(`radius.${name}`, value)),
+    ...Object.entries(TAILWIND_TEXT).map(([name, value]) =>
+      make(`text.${name}`, value)
+    ),
+    ...["1", "2", "3", "4", "5", "6", "8", "10", "12"].map((name) =>
+      make(`space.${name}`, remTimes(spacing, Number(name)))
+    ),
+    ...Object.entries(TAILWIND_RADIUS).map(([name, value]) =>
+      make(`radius.${name}`, value)
+    ),
   ];
   return out.filter((item): item is Candidate => item !== null);
 }
 
-export async function scanFolder(folderPath: string, limits: FolderLimits = FOLDER_LIMITS): Promise<FolderScan> {
+export async function scanFolder(
+  folderPath: string,
+  limits: FolderLimits = FOLDER_LIMITS
+): Promise<FolderScan> {
   const root = await resolveRoot(folderPath);
   const { files, skipped } = await collect(root, limits);
-  const acc: ScanAccumulator = { props: { root: new Map(), dark: new Map() }, candidates: [], read: [], skipped };
+  const acc: ScanAccumulator = {
+    props: { root: new Map(), dark: new Map() },
+    candidates: [],
+    read: [],
+    skipped,
+  };
   const main = await absorbTokenFile(root, acc);
-  await readMatched(root, files.filter((item) => item.file !== main?.file), limits, acc);
-  const fonts = await harvestNextFonts(root).catch(() => ({ candidates: [], files: [] }) as NextFonts);
+  await readMatched(
+    root,
+    files.filter((item) => item.file !== main?.file),
+    limits,
+    acc
+  );
+  const fonts = await harvestNextFonts(root).catch(
+    () => ({ candidates: [], files: [] }) as NextFonts
+  );
   acc.read.push(...fonts.files);
-  const vars = harvestCssVars(acc.props, 'folder', path.basename(root));
-  const defaults = main?.tailwind ? tailwindDefaults(acc.props, main.relative) : [];
-  const candidates = [...fonts.candidates, ...vars.candidates, ...acc.candidates, ...defaults];
-  const harvest: Harvest = { source: 'folder', label: root, candidates, extras: vars.extras, ...(fonts.googleFontsUrl ? { googleFontsUrl: fonts.googleFontsUrl } : {}) };
+  const vars = harvestCssVars(acc.props, "folder", path.basename(root));
+  const defaults = main?.tailwind
+    ? tailwindDefaults(acc.props, main.relative)
+    : [];
+  const candidates = [
+    ...fonts.candidates,
+    ...vars.candidates,
+    ...acc.candidates,
+    ...defaults,
+  ];
+  const harvest: Harvest = {
+    source: "folder",
+    label: root,
+    candidates,
+    extras: vars.extras,
+    ...(fonts.googleFontsUrl ? { googleFontsUrl: fonts.googleFontsUrl } : {}),
+  };
   return { harvest, files: acc.read, skipped: acc.skipped };
 }

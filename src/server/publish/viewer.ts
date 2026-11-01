@@ -1,8 +1,9 @@
-import { mkdir, rename, stat, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import type { DesignComment } from '../../shared/contracts.js';
-import type { ShareFrame } from '../../shared/share.js';
-import { frameFile } from '../share/snapshot.js';
+import { mkdir, rename, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import type { DesignComment } from "../../shared/contracts.js";
+import type { ShareFrame } from "../../shared/share.js";
+import { frameFile } from "../share/snapshot.js";
 
 export interface ViewerComment {
   frame: string | null;
@@ -45,39 +46,65 @@ li{padding:8px 10px;border:1px solid var(--line);border-radius:8px}.who{font-wei
 function figure(frame: ShareFrame, index: number): string {
   const width = Math.min(frame.width, 1440);
   const height = Math.round((frame.cssHeight / frame.width) * width);
-  const caption = `${escapeHtml(frame.name)}${frame.path ? ` · ${escapeHtml(frame.path)}` : ''} · ${frame.width} × ${frame.height}`;
-  return `<figure id="f${index + 1}"><figcaption>${caption}</figcaption><div class="shot"><img src="frames/${index}.png" width="${width}" height="${height}" alt="${escapeHtml(frame.name)}" loading="${index < 2 ? 'eager' : 'lazy'}"></div></figure>`;
+  const caption = `${escapeHtml(frame.name)}${frame.path ? ` · ${escapeHtml(frame.path)}` : ""} · ${frame.width} × ${frame.height}`;
+  return `<figure id="f${index + 1}"><figcaption>${caption}</figcaption><div class="shot"><img src="frames/${index}.png" width="${width}" height="${height}" alt="${escapeHtml(frame.name)}" loading="${index < 2 ? "eager" : "lazy"}"></div></figure>`;
 }
 
 function comment(c: ViewerComment): string {
-  const replies = c.replies.map((r) => `<div class="reply"><span class="who">${escapeHtml(r.author)}</span><p>${escapeHtml(r.text)}</p></div>`).join('');
-  return `<li><span class="who">${escapeHtml(c.author)}</span>${c.frame ? ` <span class="where">on ${escapeHtml(c.frame)}</span>` : ''}<p>${escapeHtml(c.text)}</p>${replies}</li>`;
+  const replies = c.replies
+    .map(
+      (r) =>
+        `<div class="reply"><span class="who">${escapeHtml(r.author)}</span><p>${escapeHtml(r.text)}</p></div>`
+    )
+    .join("");
+  return `<li><span class="who">${escapeHtml(c.author)}</span>${c.frame ? ` <span class="where">on ${escapeHtml(c.frame)}</span>` : ""}<p>${escapeHtml(c.text)}</p>${replies}</li>`;
 }
 
 export function viewerHtml(page: ViewerPage): string {
-  const nav = page.frames.length > 1 ? `<nav aria-label="Frames">${page.frames.map((f, i) => `<a href="#f${i + 1}">${escapeHtml(f.name)}</a>`).join('')}</nav>` : '';
-  const notes = page.comments.length > 0 ? `<aside aria-label="Comments"><h2>Comments (${page.comments.length})</h2><ol>${page.comments.map(comment).join('')}</ol></aside>` : '';
+  const nav =
+    page.frames.length > 1
+      ? `<nav aria-label="Frames">${page.frames.map((f, i) => `<a href="#f${i + 1}">${escapeHtml(f.name)}</a>`).join("")}</nav>`
+      : "";
+  const notes =
+    page.comments.length > 0
+      ? `<aside aria-label="Comments"><h2>Comments (${page.comments.length})</h2><ol>${page.comments.map(comment).join("")}</ol></aside>`
+      : "";
   const when = new Date(page.publishedAt).toISOString().slice(0, 10);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><link rel="icon" href="data:,"><title>${escapeHtml(page.title)}</title><link rel="stylesheet" href="viewer.css"></head><body><header><h1>${escapeHtml(page.title)}</h1><span class="badge">${escapeHtml(page.versionLabel)} · ${when}</span><span class="spacer"></span>${nav}${page.commentsHref ? `<a class="badge" href="${escapeHtml(page.commentsHref)}">Leave a comment</a>` : ''}</header><main class="${notes ? 'with-notes' : ''}"><section class="frames">${page.frames.map(figure).join('')}</section>${notes}</main></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><meta name="referrer" content="no-referrer"><link rel="icon" href="data:,"><title>${escapeHtml(page.title)}</title><link rel="stylesheet" href="viewer.css"></head><body><header><h1>${escapeHtml(page.title)}</h1><span class="badge">${escapeHtml(page.versionLabel)} · ${when}</span><span class="spacer"></span>${nav}${page.commentsHref ? `<a class="badge" href="${escapeHtml(page.commentsHref)}">Leave a comment</a>` : ""}</header><main class="${notes ? "with-notes" : ""}"><section class="frames">${page.frames.map(figure).join("")}</section>${notes}</main></body></html>`;
 }
 
-export function viewerComments(list: DesignComment[], frames: ShareFrame[]): ViewerComment[] {
-  const names = new Map(frames.filter((f) => f.id).map((f) => [f.id as string, f.name]));
+export function viewerComments(
+  list: DesignComment[],
+  frames: ShareFrame[]
+): ViewerComment[] {
+  const names = new Map(
+    frames.filter((f) => f.id).map((f) => [f.id as string, f.name])
+  );
   return list
-    .filter((c) => c.status !== 'resolved' && c.status !== 'orphaned')
+    .filter((c) => c.status !== "resolved" && c.status !== "orphaned")
     .slice(0, 200)
     .map((c) => ({
-      frame: (c.frame?.id ? names.get(c.frame.id) : undefined) ?? c.frame?.label ?? null,
-      author: (c.author || 'Designer').slice(0, 60),
+      frame:
+        (c.frame?.id ? names.get(c.frame.id) : undefined) ??
+        c.frame?.label ??
+        null,
+      author: (c.author || "Designer").slice(0, 60),
       text: c.text.slice(0, 2000),
-      replies: (c.replies ?? []).slice(0, 20).map((r) => ({ author: ((r as { author?: string }).author || 'Designer').slice(0, 60), text: r.text.slice(0, 2000) })),
+      replies: (c.replies ?? []).slice(0, 20).map((r) => ({
+        author: ((r as { author?: string }).author || "Designer").slice(0, 60),
+        text: r.text.slice(0, 2000),
+      })),
     }));
 }
 
-export async function writeViewer(outDir: string, shotsDir: string, page: ViewerPage): Promise<{ files: string[]; bytes: number }> {
-  const framesDir = path.join(outDir, 'frames');
+export async function writeViewer(
+  outDir: string,
+  shotsDir: string,
+  page: ViewerPage
+): Promise<{ files: string[]; bytes: number }> {
+  const framesDir = path.join(outDir, "frames");
   await mkdir(framesDir, { recursive: true });
-  const files: string[] = ['index.html', 'viewer.css'];
+  const files: string[] = ["index.html", "viewer.css"];
   let bytes = 0;
   for (let i = 0; i < page.frames.length; i += 1) {
     const target = path.join(framesDir, `${i}.png`);
@@ -86,7 +113,10 @@ export async function writeViewer(outDir: string, shotsDir: string, page: Viewer
     files.push(`frames/${i}.png`);
   }
   const html = viewerHtml(page);
-  await writeFile(path.join(outDir, 'index.html'), html);
-  await writeFile(path.join(outDir, 'viewer.css'), STYLE);
-  return { files, bytes: bytes + Buffer.byteLength(html) + Buffer.byteLength(STYLE) };
+  await writeFile(path.join(outDir, "index.html"), html);
+  await writeFile(path.join(outDir, "viewer.css"), STYLE);
+  return {
+    files,
+    bytes: bytes + Buffer.byteLength(html) + Buffer.byteLength(STYLE),
+  };
 }

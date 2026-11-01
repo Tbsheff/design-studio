@@ -1,4 +1,4 @@
-import path from 'node:path';
+import path from "node:path";
 
 export interface SourceFileChange {
   relative: string;
@@ -26,10 +26,17 @@ export function noteTreeChange(root: string, paths: string[]): void {
   treeLogs.set(root, log.slice(-TREE_LOG_MAX));
 }
 
-export function noteTreeWrite(workTree: string, relatives: string[], complete: boolean): void {
+export function noteTreeWrite(
+  workTree: string,
+  relatives: string[],
+  complete: boolean
+): void {
   const root = path.resolve(workTree);
   if (complete) {
-    noteTreeChange(root, relatives.map((relative) => path.join(root, ...relative.split('/'))));
+    noteTreeChange(
+      root,
+      relatives.map((relative) => path.join(root, ...relative.split("/")))
+    );
     return;
   }
   treeStamps.set(root, treeStamp(root) + 1);
@@ -38,7 +45,8 @@ export function noteTreeWrite(workTree: string, relatives: string[], complete: b
 
 export function treeChangesSince(root: string, stamp: number): string[] | null {
   const log = treeLogs.get(root) ?? [];
-  if (stamp < treeStamp(root) && (log[0]?.stamp ?? Infinity) > stamp + 1) return null;
+  if (stamp < treeStamp(root) && (log[0]?.stamp ?? Infinity) > stamp + 1)
+    return null;
   return log.filter((item) => item.stamp > stamp).flatMap((item) => item.paths);
 }
 
@@ -57,7 +65,7 @@ export function emitSourceChange(change: SourceChange): void {
     try {
       listener(change);
     } catch (error) {
-      console.error('[source-change] listener failed', error);
+      console.error("[source-change] listener failed", error);
     }
   }
 }

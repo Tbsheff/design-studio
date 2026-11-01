@@ -11,6 +11,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+
 import { placeFixed } from "../popoverPlacement";
 import { Icon } from "./Icon";
 
@@ -45,7 +46,7 @@ const HIDDEN: CSSProperties = {
 function step(
   options: readonly UiSelectOption[],
   from: number,
-  delta: 1 | -1,
+  delta: 1 | -1
 ): number {
   for (let i = 1; i <= options.length; i++) {
     const at = (from + delta * i + options.length * 2) % options.length;
@@ -63,7 +64,7 @@ function edge(options: readonly UiSelectOption[], last: boolean): number {
 function typeahead(
   options: readonly UiSelectOption[],
   from: number,
-  query: string,
+  query: string
 ): number {
   const q = query.toLowerCase();
   for (let i = 1; i <= options.length; i++) {
@@ -79,7 +80,7 @@ function useOutsideClose(
   open: boolean,
   close: () => void,
   root: RefObject<HTMLElement | null>,
-  panel: RefObject<HTMLElement | null>,
+  panel: RefObject<HTMLElement | null>
 ) {
   useEffect(() => {
     if (!open) return;
@@ -152,7 +153,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
     setActive(
       current >= 0 && !p.options[current]?.disabled
         ? current
-        : edge(p.options, false),
+        : edge(p.options, false)
     );
     setOpen(true);
   };
@@ -267,7 +268,7 @@ export function UiSelect<V extends string>(p: Props<V>) {
               </div>
             ))}
           </div>,
-          button.current?.closest("dialog") ?? document.body,
+          button.current?.closest("dialog") ?? document.body
         )}
     </span>
   );

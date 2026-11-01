@@ -1,28 +1,97 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type RefObject, type UIEvent } from 'react';
-import type { LayerNode, ReorderMove, StructureKey } from '../../shared/contracts';
-import { reorderMoveOf } from '../../shared/reorder';
-import { STRUCTURE_KEY_IDS, structureKeyOf } from '../../shared/structure-keys';
-import { IS_MAC, tipWithKey } from '../commands/keys';
-import { adjacentMove, ancestorsOf, cleanName, dropTarget, editableName, layerDrop, layerKeys, treeKeyAction, visibleRows, type LayerTree } from '../layersTree';
-import type { LayerDrop } from '../structureEdits';
-import { focusStageQuietly } from '../useInlineTextEdit';
-import { Icon, type IconName } from './Icon';
-import { PreviewMenu, type PreviewMenuItem } from './PreviewMenu';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+  type UIEvent,
+} from "react";
+
+import type {
+  LayerNode,
+  ReorderMove,
+  StructureKey,
+} from "../../shared/contracts";
+import { reorderMoveOf } from "../../shared/reorder";
+import { STRUCTURE_KEY_IDS, structureKeyOf } from "../../shared/structure-keys";
+import { IS_MAC, tipWithKey } from "../commands/keys";
+import {
+  adjacentMove,
+  ancestorsOf,
+  cleanName,
+  dropTarget,
+  editableName,
+  layerDrop,
+  layerKeys,
+  treeKeyAction,
+  visibleRows,
+  type LayerTree,
+} from "../layersTree";
+import type { LayerDrop } from "../structureEdits";
+import { focusStageQuietly } from "../useInlineTextEdit";
+import { Icon, type IconName } from "./Icon";
+import { PreviewMenu, type PreviewMenuItem } from "./PreviewMenu";
 
 const ROW = 28;
-const TEXT_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'em', 'strong', 'b', 'i', 'small', 'label', 'li', 'blockquote', 'figcaption', 'dt', 'dd', 'code', 'pre', 'time', 'mark', 'sup', 'sub', 'cite', 'q', 'abbr']);
-const IMAGE_TAGS = new Set(['img', 'picture', 'video', 'canvas', 'iframe']);
-const VECTOR_TAGS = new Set(['svg', 'path', 'circle', 'rect', 'ellipse', 'line', 'polyline', 'polygon', 'g', 'use']);
-const CONTROL_TAGS = new Set(['button', 'input', 'select', 'textarea']);
+const TEXT_TAGS = new Set([
+  "p",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "span",
+  "em",
+  "strong",
+  "b",
+  "i",
+  "small",
+  "label",
+  "li",
+  "blockquote",
+  "figcaption",
+  "dt",
+  "dd",
+  "code",
+  "pre",
+  "time",
+  "mark",
+  "sup",
+  "sub",
+  "cite",
+  "q",
+  "abbr",
+]);
+const IMAGE_TAGS = new Set(["img", "picture", "video", "canvas", "iframe"]);
+const VECTOR_TAGS = new Set([
+  "svg",
+  "path",
+  "circle",
+  "rect",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "g",
+  "use",
+]);
+const CONTROL_TAGS = new Set(["button", "input", "select", "textarea"]);
 
 function layerIcon(node: LayerNode): IconName {
   const tag = node.tag.toLowerCase();
-  if (IMAGE_TAGS.has(tag)) return 'image';
-  if (VECTOR_TAGS.has(tag)) return 'token';
-  if (tag === 'a') return 'link';
-  if (CONTROL_TAGS.has(tag)) return 'pointer';
-  if (TEXT_TAGS.has(tag) || (node.childCount === 0 && node.text)) return 'alignLeft';
-  return 'frame';
+  if (IMAGE_TAGS.has(tag)) return "image";
+  if (VECTOR_TAGS.has(tag)) return "token";
+  if (tag === "a") return "link";
+  if (CONTROL_TAGS.has(tag)) return "pointer";
+  if (TEXT_TAGS.has(tag) || (node.childCount === 0 && node.text))
+    return "alignLeft";
+  return "frame";
 }
 const OVERSCAN = 8;
 const OPEN_DEPTH = 2;
@@ -68,7 +137,11 @@ function openStateFor(scope: string): OpenState {
   return state;
 }
 
-function idsOf(nodes: LayerNode[], keys: Map<number, string>, collapsed: ReadonlySet<string>): Set<number> {
+function idsOf(
+  nodes: LayerNode[],
+  keys: Map<number, string>,
+  collapsed: ReadonlySet<string>
+): Set<number> {
   const out = new Set<number>();
   for (const node of nodes) {
     const key = keys.get(node.id);
@@ -77,7 +150,11 @@ function idsOf(nodes: LayerNode[], keys: Map<number, string>, collapsed: Readonl
   return out;
 }
 
-function addDefaults(nodes: LayerNode[], keys: Map<number, string>, state: OpenState): boolean {
+function addDefaults(
+  nodes: LayerNode[],
+  keys: Map<number, string>,
+  state: OpenState
+): boolean {
   let changed = false;
   for (const node of nodes) {
     const key = keys.get(node.id);
@@ -91,19 +168,29 @@ function addDefaults(nodes: LayerNode[], keys: Map<number, string>, state: OpenS
   return changed;
 }
 
-function useCollapsed(nodes: LayerNode[], selectedNode: number | null, scope: string) {
+function useCollapsed(
+  nodes: LayerNode[],
+  selectedNode: number | null,
+  scope: string
+) {
   const keys = useMemo(() => layerKeys(nodes), [nodes]);
   const state = openStateFor(scope);
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion((v) => v + 1), []);
-  if (addDefaults(nodes, keys, state)) state.collapsed = new Set(state.collapsed);
-  const collapsed = useMemo(() => idsOf(nodes, keys, state.collapsed), [nodes, keys, state.collapsed, version]);
+  if (addDefaults(nodes, keys, state))
+    state.collapsed = new Set(state.collapsed);
+  const collapsed = useMemo(
+    () => idsOf(nodes, keys, state.collapsed),
+    [nodes, keys, state.collapsed, version]
+  );
   useLayoutEffect(() => {
     if (selectedNode === null) return;
-    const open = ancestorsOf(nodes, selectedNode).filter((id) => collapsed.has(id));
+    const open = ancestorsOf(nodes, selectedNode).filter((id) =>
+      collapsed.has(id)
+    );
     if (open.length === 0) return;
     const next = new Set(state.collapsed);
-    for (const id of open) next.delete(keys.get(id) ?? '');
+    for (const id of open) next.delete(keys.get(id) ?? "");
     state.collapsed = next;
     bump();
   }, [nodes, keys, selectedNode, collapsed, state, bump]);
@@ -118,18 +205,26 @@ function useCollapsed(nodes: LayerNode[], selectedNode: number | null, scope: st
       state.collapsed = next;
       bump();
     },
-    [keys, state, bump],
+    [keys, state, bump]
   );
   return { collapsed, toggle, keys };
 }
 
-function useLatest<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
+function useLatest<A extends unknown[], R>(
+  fn: (...args: A) => R
+): (...args: A) => R {
   const ref = useRef(fn);
   ref.current = fn;
   return useCallback((...args: A) => ref.current(...args), []);
 }
 
-function RenameInput({ initial, onDone }: { initial: string; onDone: (value: string | null, next?: 1 | -1) => void }) {
+function RenameInput({
+  initial,
+  onDone,
+}: {
+  initial: string;
+  onDone: (value: string | null, next?: 1 | -1) => void;
+}) {
   const [value, setValue] = useState(initial);
   const done = useRef(false);
   const finish = (next: string | null, step?: 1 | -1) => {
@@ -152,9 +247,9 @@ function RenameInput({ initial, onDone }: { initial: string; onDone: (value: str
       onDoubleClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         e.stopPropagation();
-        if (e.key === 'Enter') finish(value.trim());
-        else if (e.key === 'Escape') finish(null);
-        else if (e.key === 'Tab') {
+        if (e.key === "Enter") finish(value.trim());
+        else if (e.key === "Escape") finish(null);
+        else if (e.key === "Tab") {
           e.preventDefault();
           finish(value.trim(), e.shiftKey ? -1 : 1);
         }
@@ -184,8 +279,14 @@ interface RowProps {
   onToggleLocked: ((node: LayerNode) => void) | null;
 }
 
-function LockButton({ node, onToggle }: { node: LayerNode; onToggle: (node: LayerNode) => void }) {
-  const label = node.locked ? 'Unlock' : 'Lock';
+function LockButton({
+  node,
+  onToggle,
+}: {
+  node: LayerNode;
+  onToggle: (node: LayerNode) => void;
+}) {
+  const label = node.locked ? "Unlock" : "Lock";
   return (
     <button
       type="button"
@@ -202,20 +303,26 @@ function LockButton({ node, onToggle }: { node: LayerNode; onToggle: (node: Laye
         onToggle(node);
       }}
     >
-      <Icon name={node.locked ? 'lock' : 'unlock'} size={14} />
+      <Icon name={node.locked ? "lock" : "unlock"} size={14} />
     </button>
   );
 }
 
-function EyeButton({ node, onToggleHidden }: { node: LayerNode; onToggleHidden: (node: LayerNode) => void }) {
+function EyeButton({
+  node,
+  onToggleHidden,
+}: {
+  node: LayerNode;
+  onToggleHidden: (node: LayerNode) => void;
+}) {
   return (
     <button
       type="button"
       className="layers-eye"
       tabIndex={-1}
-      aria-label={node.hidden ? 'Show' : 'Hide'}
+      aria-label={node.hidden ? "Show" : "Hide"}
       aria-pressed={node.hidden}
-      data-tip={node.hidden ? 'Show  ⇧⌘H' : 'Hide  ⇧⌘H'}
+      data-tip={node.hidden ? "Show  ⇧⌘H" : "Hide  ⇧⌘H"}
       data-tip-align="end"
       onPointerDown={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
@@ -224,14 +331,14 @@ function EyeButton({ node, onToggleHidden }: { node: LayerNode; onToggleHidden: 
         onToggleHidden(node);
       }}
     >
-      <Icon name={node.hidden ? 'eyeOff' : 'eye'} size={14} />
+      <Icon name={node.hidden ? "eyeOff" : "eye"} size={14} />
     </button>
   );
 }
 
 const LayerRow = memo(function LayerRow(p: RowProps) {
   const { node } = p;
-  const full = [node.tag, node.name, node.text].filter(Boolean).join(' ');
+  const full = [node.tag, node.name, node.text].filter(Boolean).join(" ");
   return (
     <div
       id={`layer-${node.id}`}
@@ -239,7 +346,7 @@ const LayerRow = memo(function LayerRow(p: RowProps) {
       aria-level={node.depth + 1}
       aria-selected={p.selected}
       aria-expanded={node.childCount > 0 ? !p.collapsed : undefined}
-      className={`layers-row${p.selected ? ' selected' : ''}${p.hovered ? ' hovered' : ''}${node.hidden ? ' is-hidden' : ''}${node.locked ? ' is-locked' : ''}${p.dropInto ? ' drop-into' : ''}`}
+      className={`layers-row${p.selected ? " selected" : ""}${p.hovered ? " hovered" : ""}${node.hidden ? " is-hidden" : ""}${node.locked ? " is-locked" : ""}${p.dropInto ? " drop-into" : ""}`}
       style={{ top: p.top, paddingLeft: 4 + node.depth * 12 }}
       data-tip={full}
       onPointerEnter={() => p.onHover(node.id)}
@@ -259,7 +366,7 @@ const LayerRow = memo(function LayerRow(p: RowProps) {
     >
       {node.childCount > 0 ? (
         <span
-          className={`layers-twisty${p.collapsed ? '' : ' open'}`}
+          className={`layers-twisty${p.collapsed ? "" : " open"}`}
           aria-hidden="true"
           onPointerDown={(e) => {
             e.preventDefault();
@@ -277,15 +384,24 @@ const LayerRow = memo(function LayerRow(p: RowProps) {
       </span>
       <span className="layers-tag">{node.tag}</span>
       {p.editing ? (
-        <RenameInput initial={editableName(node.name)} onDone={(value, next) => p.onRenameDone(node, value, next)} />
+        <RenameInput
+          initial={editableName(node.name)}
+          onDone={(value, next) => p.onRenameDone(node, value, next)}
+        />
       ) : (
         <>
           {node.name && <span className="layers-name">{node.name}</span>}
           {node.text && <span className="layers-text">{node.text}</span>}
         </>
       )}
-      {p.onToggleLocked && !p.editing && <LockButton node={node} onToggle={p.onToggleLocked} />}
-      {p.editable && !p.editing ? <EyeButton node={node} onToggleHidden={p.onToggleHidden} /> : node.hidden && <span className="layers-flag">Hidden</span>}
+      {p.onToggleLocked && !p.editing && (
+        <LockButton node={node} onToggle={p.onToggleLocked} />
+      )}
+      {p.editable && !p.editing ? (
+        <EyeButton node={node} onToggleHidden={p.onToggleHidden} />
+      ) : (
+        node.hidden && <span className="layers-flag">Hidden</span>
+      )}
     </div>
   );
 });
@@ -301,17 +417,38 @@ interface DragHandlers {
   onDrop: ((id: number, drop: LayerDrop) => void) | null;
 }
 
-function rowDrop(rows: LayerNode[], id: number, y: number, handlers: DragHandlers): RowDrop | null {
+function rowDrop(
+  rows: LayerNode[],
+  id: number,
+  y: number,
+  handlers: DragHandlers
+): RowDrop | null {
   const { onDrop, onMove } = handlers;
   const target = onDrop ? layerDrop(rows, id, y, ROW) : null;
-  if (onDrop && target?.into != null) return { line: null, into: target.into, commit: () => onDrop(id, target.drop) };
-  const swap = onMove ? (onDrop ? adjacentMove : dropTarget)(rows, id, y, ROW) : null;
-  if (swap && onMove) return { line: swap.line, into: null, commit: () => onMove(id, swap.move) };
-  return target && onDrop ? { line: target.line, into: null, commit: () => onDrop(id, target.drop) } : null;
+  if (onDrop && target?.into != null)
+    return {
+      line: null,
+      into: target.into,
+      commit: () => onDrop(id, target.drop),
+    };
+  const swap = onMove
+    ? (onDrop ? adjacentMove : dropTarget)(rows, id, y, ROW)
+    : null;
+  if (swap && onMove)
+    return { line: swap.line, into: null, commit: () => onMove(id, swap.move) };
+  return target && onDrop
+    ? { line: target.line, into: null, commit: () => onDrop(id, target.drop) }
+    : null;
 }
 
-function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>, handlers: DragHandlers) {
-  const drag = useRef<{ id: number; startY: number; active: boolean } | null>(null);
+function useRowDrag(
+  rows: LayerNode[],
+  rowsRef: RefObject<HTMLDivElement | null>,
+  handlers: DragHandlers
+) {
+  const drag = useRef<{ id: number; startY: number; active: boolean } | null>(
+    null
+  );
   const [drop, setDrop] = useState<RowDrop | null>(null);
   const [dragging, setDragging] = useState<number | null>(null);
   const reset = () => {
@@ -320,7 +457,10 @@ function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>
     setDragging(null);
   };
   const onPress = (id: number, e: ReactPointerEvent<HTMLDivElement>) => {
-    drag.current = handlers.onMove || handlers.onDrop ? { id, startY: e.clientY, active: false } : null;
+    drag.current =
+      handlers.onMove || handlers.onDrop
+        ? { id, startY: e.clientY, active: false }
+        : null;
   };
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const cur = drag.current;
@@ -338,22 +478,52 @@ function useRowDrag(rows: LayerNode[], rowsRef: RefObject<HTMLDivElement | null>
     if (drag.current?.active && drop) drop.commit();
     reset();
   };
-  return { drop, dragging, onPress, onPointerMove, onPointerUp, onPointerCancel: reset };
+  return {
+    drop,
+    dragging,
+    onPress,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel: reset,
+  };
 }
 
-const TOOLS: { key: StructureKey; label: string; icon: 'copy' | 'frame' | 'expand' | 'trash' | 'layers' }[] = [
-  { key: 'duplicate', label: 'Duplicate', icon: 'copy' },
-  { key: 'group', label: 'Group selection', icon: 'layers' },
-  { key: 'wrap', label: 'Wrap in auto layout', icon: 'frame' },
-  { key: 'unwrap', label: 'Unwrap', icon: 'expand' },
-  { key: 'delete', label: 'Delete', icon: 'trash' },
+const TOOLS: {
+  key: StructureKey;
+  label: string;
+  icon: "copy" | "frame" | "expand" | "trash" | "layers";
+}[] = [
+  { key: "duplicate", label: "Duplicate", icon: "copy" },
+  { key: "group", label: "Group selection", icon: "layers" },
+  { key: "wrap", label: "Wrap in auto layout", icon: "frame" },
+  { key: "unwrap", label: "Unwrap", icon: "expand" },
+  { key: "delete", label: "Delete", icon: "trash" },
 ];
 
-function LayerTools({ run, busy }: { run: (key: StructureKey) => void; busy: boolean }) {
+function LayerTools({
+  run,
+  busy,
+}: {
+  run: (key: StructureKey) => void;
+  busy: boolean;
+}) {
   return (
     <div className="layers-tools" role="toolbar" aria-label="Layer actions">
       {TOOLS.map((tool) => (
-        <button key={tool.key} type="button" className={tool.key === 'delete' ? 'icon-btn small layers-delete' : 'icon-btn small'} aria-label={tool.label} aria-disabled={busy || undefined} data-tip={tipWithKey(tool.label, STRUCTURE_KEY_IDS[tool.key])} data-tip-align="end" onClick={() => !busy && run(tool.key)}>
+        <button
+          key={tool.key}
+          type="button"
+          className={
+            tool.key === "delete"
+              ? "icon-btn small layers-delete"
+              : "icon-btn small"
+          }
+          aria-label={tool.label}
+          aria-disabled={busy || undefined}
+          data-tip={tipWithKey(tool.label, STRUCTURE_KEY_IDS[tool.key])}
+          data-tip-align="end"
+          onClick={() => !busy && run(tool.key)}
+        >
           <Icon name={tool.icon} size={14} />
         </button>
       ))}
@@ -361,7 +531,11 @@ function LayerTools({ run, busy }: { run: (key: StructureKey) => void; busy: boo
   );
 }
 
-function useRowMenu(edits: LayerEditActions | null | undefined, selectedNode: number | null, onSelect: (id: number, additive: boolean) => void) {
+function useRowMenu(
+  edits: LayerEditActions | null | undefined,
+  selectedNode: number | null,
+  onSelect: (id: number, additive: boolean) => void
+) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const open = (node: LayerNode, point: { x: number; y: number }) => {
     if (!edits?.menuItems) return;
@@ -369,30 +543,62 @@ function useRowMenu(edits: LayerEditActions | null | undefined, selectedNode: nu
     setAt(point);
   };
   const close = () => setAt(null);
-  const menu = at && edits?.menuItems ? <PreviewMenu at={at} label="Layer actions" items={edits.menuItems()} onClose={close} /> : null;
+  const menu =
+    at && edits?.menuItems ? (
+      <PreviewMenu
+        at={at}
+        label="Layer actions"
+        items={edits.menuItems()}
+        onClose={close}
+      />
+    ) : null;
   return { open, menu };
 }
 
 function isLockKey(e: KeyboardEvent<HTMLDivElement>): boolean {
-  return e.key.toLowerCase() === 'l' && e.shiftKey && (e.metaKey || e.ctrlKey) && !e.altKey;
+  return (
+    e.key.toLowerCase() === "l" &&
+    e.shiftKey &&
+    (e.metaKey || e.ctrlKey) &&
+    !e.altKey
+  );
 }
 
 function scopeOf(frameName: string): string {
-  return `${typeof location === 'undefined' ? '' : location.pathname}|${frameName}`;
+  return `${typeof location === "undefined" ? "" : location.pathname}|${frameName}`;
 }
 
-function sameWindow(a: { top: number; height: number }, b: { top: number; height: number }): boolean {
-  return Math.floor(a.top / ROW) === Math.floor(b.top / ROW) && Math.ceil((a.top + a.height) / ROW) === Math.ceil((b.top + b.height) / ROW);
+function sameWindow(
+  a: { top: number; height: number },
+  b: { top: number; height: number }
+): boolean {
+  return (
+    Math.floor(a.top / ROW) === Math.floor(b.top / ROW) &&
+    Math.ceil((a.top + a.height) / ROW) === Math.ceil((b.top + b.height) / ROW)
+  );
 }
 
-function useListWindow(listRef: RefObject<HTMLDivElement | null>, state: OpenState, ready: boolean) {
-  const [scroll, setScrollState] = useState({ top: state.scrollTop, height: 600 });
-  const setScroll = useCallback((next: { top: number; height: number }) => setScrollState((prev) => (sameWindow(prev, next) ? prev : next)), []);
+function useListWindow(
+  listRef: RefObject<HTMLDivElement | null>,
+  state: OpenState,
+  ready: boolean
+) {
+  const [scroll, setScrollState] = useState({
+    top: state.scrollTop,
+    height: 600,
+  });
+  const setScroll = useCallback(
+    (next: { top: number; height: number }) =>
+      setScrollState((prev) => (sameWindow(prev, next) ? prev : next)),
+    []
+  );
   const restored = useRef(false);
   useLayoutEffect(() => {
     const el = listRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setScroll({ top: el.scrollTop, height: el.clientHeight }));
+    const ro = new ResizeObserver(() =>
+      setScroll({ top: el.scrollTop, height: el.clientHeight })
+    );
     ro.observe(el);
     return () => ro.disconnect();
   }, [listRef, setScroll]);
@@ -404,14 +610,20 @@ function useListWindow(listRef: RefObject<HTMLDivElement | null>, state: OpenSta
   }, [listRef, state, ready]);
   const onScroll = (e: UIEvent<HTMLDivElement>) => {
     state.scrollTop = e.currentTarget.scrollTop;
-    setScroll({ top: e.currentTarget.scrollTop, height: e.currentTarget.clientHeight });
+    setScroll({
+      top: e.currentTarget.scrollTop,
+      height: e.currentTarget.clientHeight,
+    });
   };
   return { scroll, onScroll };
 }
 
 const PENDING_MS = 1500;
 
-function usePendingSelect(selectedNode: number | null, onSelect: (id: number, additive: boolean) => void) {
+function usePendingSelect(
+  selectedNode: number | null,
+  onSelect: (id: number, additive: boolean) => void
+) {
   const [pending, setPending] = useState<number | null>(null);
   useEffect(() => setPending(null), [selectedNode]);
   useEffect(() => {
@@ -424,45 +636,79 @@ function usePendingSelect(selectedNode: number | null, onSelect: (id: number, ad
       if (!additive) setPending(id);
       onSelect(id, additive);
     },
-    [onSelect],
+    [onSelect]
   );
   return { shown: pending ?? selectedNode, select };
 }
 
-export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover, onSelect: onSelectProp, onClose, edits, onToggleLocked, busy = false, hoveredNode = null }: Props) {
+export function LayersPanel({
+  tree,
+  frameName,
+  selectedNode: confirmed,
+  onHover,
+  onSelect: onSelectProp,
+  onClose,
+  edits,
+  onToggleLocked,
+  busy = false,
+  hoveredNode = null,
+}: Props) {
   const nodes = useMemo(() => tree?.nodes ?? [], [tree]);
   const latestSelect = useLatest(onSelectProp);
-  const { shown: selectedNode, select: onSelect } = usePendingSelect(confirmed, latestSelect);
+  const { shown: selectedNode, select: onSelect } = usePendingSelect(
+    confirmed,
+    latestSelect
+  );
   const scope = scopeOf(frameName);
   const { collapsed, toggle, keys } = useCollapsed(nodes, selectedNode, scope);
   const rows = useMemo(() => visibleRows(nodes, collapsed), [nodes, collapsed]);
   const listRef = useRef<HTMLDivElement>(null);
   const rowsRef = useRef<HTMLDivElement>(null);
-  const { scroll, onScroll } = useListWindow(listRef, openStateFor(scope), rows.length > 0);
+  const { scroll, onScroll } = useListWindow(
+    listRef,
+    openStateFor(scope),
+    rows.length > 0
+  );
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const setEditing = useCallback((id: number | null) => setEditingKey(id === null ? null : (keys.get(id) ?? null)), [keys]);
+  const setEditing = useCallback(
+    (id: number | null) =>
+      setEditingKey(id === null ? null : (keys.get(id) ?? null)),
+    [keys]
+  );
   const startRename = useLatest(setEditing);
-  const drag = useRowDrag(rows, rowsRef, { onMove: edits?.onMove ?? null, onDrop: edits?.onDrop ?? null });
+  const drag = useRowDrag(rows, rowsRef, {
+    onMove: edits?.onMove ?? null,
+    onDrop: edits?.onDrop ?? null,
+  });
   const rowMenu = useRowMenu(edits, selectedNode, onSelect);
   const rowHover = useLatest(onHover);
   const rowSelect = useLatest(onSelect);
   const rowToggle = useLatest(toggle);
   const rowPress = useLatest(drag.onPress);
   const rowMenuOpen = useLatest(rowMenu.open);
-  const rowHidden = useLatest((n: LayerNode) => edits?.onToggleHidden(n.id, !n.hidden));
-  const rowLocked = useLatest((n: LayerNode) => onToggleLocked?.(n.id, !n.locked));
+  const rowHidden = useLatest((n: LayerNode) =>
+    edits?.onToggleHidden(n.id, !n.hidden)
+  );
+  const rowLocked = useLatest((n: LayerNode) =>
+    onToggleLocked?.(n.id, !n.locked)
+  );
 
-  const selectedIndex = selectedNode === null ? -1 : rows.findIndex((r) => r.id === selectedNode);
+  const selectedIndex =
+    selectedNode === null ? -1 : rows.findIndex((r) => r.id === selectedNode);
   useEffect(() => {
     const el = listRef.current;
     if (!el || selectedIndex < 0) return;
     const top = selectedIndex * ROW;
     if (top < el.scrollTop) el.scrollTop = top;
-    else if (top + ROW > el.scrollTop + el.clientHeight) el.scrollTop = top + ROW - el.clientHeight;
+    else if (top + ROW > el.scrollTop + el.clientHeight)
+      el.scrollTop = top + ROW - el.clientHeight;
   }, [selectedIndex]);
 
   const first = Math.max(0, Math.floor(scroll.top / ROW) - OVERSCAN);
-  const last = Math.min(rows.length, Math.ceil((scroll.top + scroll.height) / ROW) + OVERSCAN);
+  const last = Math.min(
+    rows.length,
+    Math.ceil((scroll.top + scroll.height) / ROW) + OVERSCAN
+  );
   const selectedRow = selectedIndex >= 0 ? rows[selectedIndex] : undefined;
 
   const editKey = (e: KeyboardEvent<HTMLDivElement>): boolean => {
@@ -472,16 +718,28 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
       edits.onMoveSelected(move);
       return true;
     }
-    const structure = edits.onStructureKey && !e.repeat ? structureKeyOf(e, IS_MAC) : null;
+    const structure =
+      edits.onStructureKey && !e.repeat ? structureKeyOf(e, IS_MAC) : null;
     if (structure) {
       edits.onStructureKey?.(structure);
       return true;
     }
-    if (e.key === 'F2' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
+    if (
+      e.key === "F2" &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.metaKey &&
+      !e.ctrlKey
+    ) {
       setEditing(selectedRow.id);
       return true;
     }
-    if (e.key.toLowerCase() === 'h' && e.shiftKey && (e.metaKey || e.ctrlKey) && !e.altKey) {
+    if (
+      e.key.toLowerCase() === "h" &&
+      e.shiftKey &&
+      (e.metaKey || e.ctrlKey) &&
+      !e.altKey
+    ) {
       edits.onToggleHidden(selectedRow.id, !selectedRow.hidden);
       return true;
     }
@@ -489,7 +747,13 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape' && !e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey) {
+    if (
+      e.key === "Escape" &&
+      !e.shiftKey &&
+      !e.altKey &&
+      !e.metaKey &&
+      !e.ctrlKey
+    ) {
       e.preventDefault();
       e.stopPropagation();
       focusStageQuietly();
@@ -504,22 +768,31 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
       e.preventDefault();
       return;
     }
-    const action = treeKeyAction(e.key, e.shiftKey, nodes, rows, selectedIndex >= 0 ? selectedNode : null, collapsed);
+    const action = treeKeyAction(
+      e.key,
+      e.shiftKey,
+      nodes,
+      rows,
+      selectedIndex >= 0 ? selectedNode : null,
+      collapsed
+    );
     if (!action) return;
     e.preventDefault();
-    if ('select' in action) onSelect(action.select, false);
+    if ("select" in action) onSelect(action.select, false);
     else toggle(action.toggle, action.open);
   };
 
-  const finishRename = useLatest((node: LayerNode, value: string | null, step?: 1 | -1) => {
-    const at = rows.findIndex((r) => r.id === node.id);
-    const next = step && at >= 0 ? rows[at + step] : undefined;
-    setEditing(next ? next.id : null);
-    if (next) onSelect(next.id, false);
-    else listRef.current?.focus();
-    if (value === null || !edits || value === editableName(node.name)) return;
-    edits.onRename(node.id, value === '' ? null : value);
-  });
+  const finishRename = useLatest(
+    (node: LayerNode, value: string | null, step?: 1 | -1) => {
+      const at = rows.findIndex((r) => r.id === node.id);
+      const next = step && at >= 0 ? rows[at + step] : undefined;
+      setEditing(next ? next.id : null);
+      if (next) onSelect(next.id, false);
+      else listRef.current?.focus();
+      if (value === null || !edits || value === editableName(node.name)) return;
+      edits.onRename(node.id, value === "" ? null : value);
+    }
+  );
 
   return (
     <aside className="layers" aria-label="Layers">
@@ -528,20 +801,31 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
         <span className="layers-frame" data-tip={frameName}>
           {frameName}
         </span>
-        {edits?.onStructureKey && selectedNode !== null && <LayerTools run={edits.onStructureKey} busy={busy} />}
+        {edits?.onStructureKey && selectedNode !== null && (
+          <LayerTools run={edits.onStructureKey} busy={busy} />
+        )}
         {onClose && (
-          <button type="button" className="icon-btn small" aria-label="Close layers" data-tip="Close  ⌥1" data-tip-align="end" onClick={onClose}>
+          <button
+            type="button"
+            className="icon-btn small"
+            aria-label="Close layers"
+            data-tip="Close  ⌥1"
+            data-tip-align="end"
+            onClick={onClose}
+          >
             <Icon name="close" size={14} />
           </button>
         )}
       </header>
       <div
         ref={listRef}
-        className={`layers-list${drag.dragging !== null ? ' dragging' : ''}`}
+        className={`layers-list${drag.dragging !== null ? " dragging" : ""}`}
         role="tree"
         aria-label="Layers"
         tabIndex={0}
-        aria-activedescendant={selectedIndex >= 0 ? `layer-${selectedNode}` : undefined}
+        aria-activedescendant={
+          selectedIndex >= 0 ? `layer-${selectedNode}` : undefined
+        }
         aria-busy={busy}
         onKeyDown={onKeyDown}
         onPointerMove={drag.onPointerMove}
@@ -557,7 +841,11 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
         ) : rows.length === 0 ? (
           <div className="layers-empty">This frame has no elements yet.</div>
         ) : (
-          <div ref={rowsRef} className="layers-rows" style={{ height: rows.length * ROW }}>
+          <div
+            ref={rowsRef}
+            className="layers-rows"
+            style={{ height: rows.length * ROW }}
+          >
             {rows.slice(first, last).map((node, i) => (
               <LayerRow
                 key={node.id}
@@ -565,7 +853,9 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
                 top={(first + i) * ROW}
                 selected={node.id === selectedNode}
                 collapsed={collapsed.has(node.id)}
-                editing={editingKey !== null && keys.get(node.id) === editingKey}
+                editing={
+                  editingKey !== null && keys.get(node.id) === editingKey
+                }
                 editable={Boolean(edits)}
                 hovered={node.id === hoveredNode}
                 onToggle={rowToggle}
@@ -580,10 +870,20 @@ export function LayersPanel({ tree, frameName, selectedNode: confirmed, onHover,
                 onToggleLocked={onToggleLocked ? rowLocked : null}
               />
             ))}
-            {drag.drop && drag.drop.line !== null && <div className="layers-drop" data-testid="layers-drop" style={{ top: drag.drop.line }} />}
+            {drag.drop && drag.drop.line !== null && (
+              <div
+                className="layers-drop"
+                data-testid="layers-drop"
+                style={{ top: drag.drop.line }}
+              />
+            )}
           </div>
         )}
-        {tree?.truncated && <div className="layers-note">Showing the first {tree.nodes.length} layers.</div>}
+        {tree?.truncated && (
+          <div className="layers-note">
+            Showing the first {tree.nodes.length} layers.
+          </div>
+        )}
       </div>
       {rowMenu.menu}
     </aside>

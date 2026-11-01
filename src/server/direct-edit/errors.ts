@@ -1,35 +1,39 @@
-import type { ClassChange, TailwindOutcome, TextSourceInfo } from '../../shared/contracts.js';
+import type {
+  ClassChange,
+  TailwindOutcome,
+  TextSourceInfo,
+} from "../../shared/contracts.js";
 
 type DirectEditErrorCode =
-  | 'invalid_request'
-  | 'invalid_source'
-  | 'source_not_found'
-  | 'element_not_found'
-  | 'parse_failed'
-  | 'not_host_element'
-  | 'style_not_literal'
-  | 'text_not_editable'
-  | 'text_from_data'
-  | 'cannot_move'
-  | 'cannot_restructure'
-  | 'attribute_not_literal'
-  | 'classes_not_editable'
-  | 'variant_not_supported'
-  | 'no_change'
-  | 'stale_selection'
-  | 'no_base_version'
-  | 'run_in_progress'
-  | 'unknown_token'
-  | 'invalid_token'
-  | 'token_exists'
-  | 'tokens_invalid'
-  | 'no_design_system'
-  | 'no_tweaks'
-  | 'unknown_tweak'
-  | 'invalid_tweak_value'
-  | 'tweak_not_declared'
-  | 'history_empty'
-  | 'history_stale';
+  | "invalid_request"
+  | "invalid_source"
+  | "source_not_found"
+  | "element_not_found"
+  | "parse_failed"
+  | "not_host_element"
+  | "style_not_literal"
+  | "text_not_editable"
+  | "text_from_data"
+  | "cannot_move"
+  | "cannot_restructure"
+  | "attribute_not_literal"
+  | "classes_not_editable"
+  | "variant_not_supported"
+  | "no_change"
+  | "stale_selection"
+  | "no_base_version"
+  | "run_in_progress"
+  | "unknown_token"
+  | "invalid_token"
+  | "token_exists"
+  | "tokens_invalid"
+  | "no_design_system"
+  | "no_tweaks"
+  | "unknown_tweak"
+  | "invalid_tweak_value"
+  | "tweak_not_declared"
+  | "history_empty"
+  | "history_stale";
 
 const STATUS_FOR_CODE: Partial<Record<DirectEditErrorCode, 404 | 409>> = {
   run_in_progress: 409,
@@ -43,7 +47,11 @@ export class DirectEditError extends Error {
   readonly code: DirectEditErrorCode;
   private readonly statusOverride: 404 | 409 | 422 | undefined;
 
-  constructor(code: DirectEditErrorCode, message: string, status?: 404 | 409 | 422) {
+  constructor(
+    code: DirectEditErrorCode,
+    message: string,
+    status?: 404 | 409 | 422
+  ) {
     super(message);
     this.code = code;
     this.statusOverride = status;
@@ -64,8 +72,8 @@ export interface SourceEdit {
   style?: Record<string, string | null>;
   text?: string;
   name?: string | null;
-  move?: 'up' | 'down';
-  insert?: 'text' | 'frame' | 'rect' | 'ellipse';
+  move?: "up" | "down";
+  insert?: "text" | "frame" | "rect" | "ellipse";
   classes?: ClassChange;
   component?: string;
   variant?: string;
@@ -81,12 +89,17 @@ export interface PatchResult {
   textSource?: TextSourceInfo;
 }
 
-const STALE_SELECTION_MESSAGE = 'The page changed since you selected this element. Select it again.';
+const STALE_SELECTION_MESSAGE =
+  "The page changed since you selected this element. Select it again.";
 
-export function assertSameTag(expected: string | undefined, actual: string | null): void {
+export function assertSameTag(
+  expected: string | undefined,
+  actual: string | null
+): void {
   if (expected !== undefined && actual?.toLowerCase() !== expected) {
-    throw new DirectEditError('stale_selection', STALE_SELECTION_MESSAGE);
+    throw new DirectEditError("stale_selection", STALE_SELECTION_MESSAGE);
   }
 }
 
-export const TEXT_NOT_EDITABLE_MESSAGE = 'This element has child elements; edit a leaf element or ask the agent';
+export const TEXT_NOT_EDITABLE_MESSAGE =
+  "This element has child elements; edit a leaf element or ask the agent";

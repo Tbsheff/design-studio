@@ -1,6 +1,12 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-export function StableText({ children, sizes }: { children: ReactNode; sizes: readonly ReactNode[] }) {
+export function StableText({
+  children,
+  sizes,
+}: {
+  children: ReactNode;
+  sizes: readonly ReactNode[];
+}) {
   return (
     <span className="stable-text">
       <span>{children}</span>

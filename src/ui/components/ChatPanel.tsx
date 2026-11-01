@@ -1,24 +1,57 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useLive } from '../liveStore';
-import { chatSearchAvailable, chatSearchOpen, focusChatSearchButton } from '../chatSearchState';
-import type { Direction } from '../../shared/contracts';
-import { forkBaseOf } from '../../shared/rewind';
-import { loadRunsThrough, renameRun } from '../runHistoryApi';
-import type { RewindControl } from '../useRewind';
-import { Conversation, ConversationContent, ConversationScrollButton, useConversation } from '../ai/components/ai/conversation';
-import { Message, MessageContent } from '../ai/components/ai/message';
-import { canPolishRun } from '../polish';
-import type { RunView, ToolRow } from '../runState';
-import { AssistantText, PlanCard, PolishThis, RunError, RunNotice, SentWhileRunning, Thinking, UserMessage } from './ChatParts';
-import { RunFeedbackRow } from './ChatFeedback';
-import { RunCommentsCard } from './RunComments';
-import { UserTurn, type TurnActions } from './ChatRewind';
-import { ChatSearch } from './ChatSearch';
-import { Icon } from './Icon';
-import { LiveStatus, ToolChips, ToolSummary } from './ToolChips';
-import { PermissionPrompt } from './PermissionPrompt';
-import { feedShown, McpItem, timelineOf, type McpFeedControl, type TimelineItem } from './McpFeed';
-import { EarlierRuns, useHistoryWindow } from './ChatPanelWindow';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+
+import type { Direction } from "../../shared/contracts";
+import { forkBaseOf } from "../../shared/rewind";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+  useConversation,
+} from "../ai/components/ai/conversation";
+import { Message, MessageContent } from "../ai/components/ai/message";
+import {
+  chatSearchAvailable,
+  chatSearchOpen,
+  focusChatSearchButton,
+} from "../chatSearchState";
+import { useLive } from "../liveStore";
+import { canPolishRun } from "../polish";
+import { loadRunsThrough, renameRun } from "../runHistoryApi";
+import type { RunView, ToolRow } from "../runState";
+import type { RewindControl } from "../useRewind";
+import { RunFeedbackRow } from "./ChatFeedback";
+import { EarlierRuns, useHistoryWindow } from "./ChatPanelWindow";
+import {
+  AssistantText,
+  PlanCard,
+  PolishThis,
+  RunError,
+  RunNotice,
+  SentWhileRunning,
+  Thinking,
+  UserMessage,
+} from "./ChatParts";
+import { UserTurn, type TurnActions } from "./ChatRewind";
+import { ChatSearch } from "./ChatSearch";
+import { Icon } from "./Icon";
+import {
+  feedShown,
+  McpItem,
+  timelineOf,
+  type McpFeedControl,
+  type TimelineItem,
+} from "./McpFeed";
+import { PermissionPrompt } from "./PermissionPrompt";
+import { RunCommentsCard } from "./RunComments";
+import { LiveStatus, ToolChips, ToolSummary } from "./ToolChips";
 
 interface PolishProps {
   headVersionId: string | null;
@@ -29,39 +62,83 @@ interface PolishProps {
 }
 
 type Segment =
-  | { kind: 'text'; key: string; text: string; open: boolean }
-  | { kind: 'thinking'; key: string; text: string; open: boolean }
-  | { kind: 'tools'; key: string; tools: ToolRow[] }
-  | { kind: 'user'; key: string; text: string };
+  | { kind: "text"; key: string; text: string; open: boolean }
+  | { kind: "thinking"; key: string; text: string; open: boolean }
+  | { kind: "tools"; key: string; tools: ToolRow[] }
+  | { kind: "user"; key: string; text: string };
 
 function segmentsOf(run: RunView): Segment[] {
   const byId = new Map(run.tools.map((tool) => [tool.toolUseId, tool]));
   const segments: Segment[] = [];
   run.parts.forEach((part, index) => {
-    if (part.kind === 'tool') {
+    if (part.kind === "tool") {
       const tool = byId.get(part.toolUseId);
       if (!tool) return;
       const last = segments.at(-1);
-      if (last?.kind === 'tools') last.tools.push(tool);
-      else segments.push({ kind: 'tools', key: `tools-${part.toolUseId}`, tools: [tool] });
-    } else if (part.kind === 'user') segments.push({ kind: 'user', key: `user-${part.id}`, text: part.text });
-    else segments.push({ kind: part.kind, key: `${part.kind}-${index}`, text: part.text, open: Boolean(part.open) });
+      if (last?.kind === "tools") last.tools.push(tool);
+      else
+        segments.push({
+          kind: "tools",
+          key: `tools-${part.toolUseId}`,
+          tools: [tool],
+        });
+    } else if (part.kind === "user")
+      segments.push({ kind: "user", key: `user-${part.id}`, text: part.text });
+    else
+      segments.push({
+        kind: part.kind,
+        key: `${part.kind}-${index}`,
+        text: part.text,
+        open: Boolean(part.open),
+      });
   });
   return segments;
 }
 
 const ToolSegment = memo(
-  function ToolSegment({ tools, running, workTree }: { tools: ToolRow[]; running: boolean; workTree: string | null }) {
-    return <ToolChips tools={tools} running={running} workTree={workTree} flat />;
+  function ToolSegment({
+    tools,
+    running,
+    workTree,
+  }: {
+    tools: ToolRow[];
+    running: boolean;
+    workTree: string | null;
+  }) {
+    return (
+      <ToolChips tools={tools} running={running} workTree={workTree} flat />
+    );
   },
-  (a, b) => a.running === b.running && a.workTree === b.workTree && a.tools.length === b.tools.length && a.tools.every((tool, index) => tool === b.tools[index]),
+  (a, b) =>
+    a.running === b.running &&
+    a.workTree === b.workTree &&
+    a.tools.length === b.tools.length &&
+    a.tools.every((tool, index) => tool === b.tools[index])
 );
 
-function SegmentView({ segment, running, workTree }: { segment: Segment; running: boolean; workTree: string | null }) {
-  if (segment.kind === 'tools') return <ToolSegment tools={segment.tools} running={running} workTree={workTree} />;
-  if (segment.kind === 'user') return <SentWhileRunning text={segment.text} />;
-  if (segment.kind === 'thinking') return <Thinking text={segment.text} live={running && segment.open} />;
-  return <AssistantText text={segment.text} streaming={running && segment.open} />;
+function SegmentView({
+  segment,
+  running,
+  workTree,
+}: {
+  segment: Segment;
+  running: boolean;
+  workTree: string | null;
+}) {
+  if (segment.kind === "tools")
+    return (
+      <ToolSegment
+        tools={segment.tools}
+        running={running}
+        workTree={workTree}
+      />
+    );
+  if (segment.kind === "user") return <SentWhileRunning text={segment.text} />;
+  if (segment.kind === "thinking")
+    return <Thinking text={segment.text} live={running && segment.open} />;
+  return (
+    <AssistantText text={segment.text} streaming={running && segment.open} />
+  );
 }
 
 interface RunLayout {
@@ -74,38 +151,68 @@ function layoutOf(segments: Segment[], running: boolean): RunLayout {
   let lastTool = -1;
   let lastText = -1;
   segments.forEach((segment, index) => {
-    if (segment.kind === 'tools') lastTool = index;
-    if (segment.kind === 'text' && segment.text.trim()) lastText = index;
+    if (segment.kind === "tools") lastTool = index;
+    if (segment.kind === "text" && segment.text.trim()) lastText = index;
   });
-  const reply = !running && lastText !== -1 && lastText < lastTool ? segments[lastText] : undefined;
+  const reply =
+    !running && lastText !== -1 && lastText < lastTool
+      ? segments[lastText]
+      : undefined;
   const steps: Segment[] = [];
   const sent: Segment[] = [];
   const tail: Segment[] = [];
   segments.forEach((segment, index) => {
     if (segment === reply) return;
-    if (segment.kind === 'user') (index <= lastTool ? sent : tail).push(segment);
+    if (segment.kind === "user")
+      (index <= lastTool ? sent : tail).push(segment);
     else (index <= lastTool ? steps : tail).push(segment);
   });
   if (reply) tail.unshift(reply);
   return { steps, sent, tail };
 }
 
-function RunParts({ run, running, workTree }: { run: RunView; running: boolean; workTree: string | null }) {
-  const layout = useMemo(() => layoutOf(segmentsOf(run), running), [run.parts, run.tools, running]);
+function RunParts({
+  run,
+  running,
+  workTree,
+}: {
+  run: RunView;
+  running: boolean;
+  workTree: string | null;
+}) {
+  const layout = useMemo(
+    () => layoutOf(segmentsOf(run), running),
+    [run.parts, run.tools, running]
+  );
   return (
     <>
       {layout.steps.length > 0 && (
         <ToolSummary tools={run.tools}>
           {layout.steps.map((segment) => (
-            <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+            <SegmentView
+              key={segment.key}
+              segment={segment}
+              running={running}
+              workTree={workTree}
+            />
           ))}
         </ToolSummary>
       )}
       {layout.sent.map((segment) => (
-        <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+        <SegmentView
+          key={segment.key}
+          segment={segment}
+          running={running}
+          workTree={workTree}
+        />
       ))}
       {layout.tail.map((segment) => (
-        <SegmentView key={segment.key} segment={segment} running={running} workTree={workTree} />
+        <SegmentView
+          key={segment.key}
+          segment={segment}
+          running={running}
+          workTree={workTree}
+        />
       ))}
     </>
   );
@@ -135,38 +242,119 @@ interface EntryProps extends TurnProps {
 }
 
 function hasComments(run: RunView): boolean {
-  const lists = [run.request?.comments, run.request?.commentIds, run.summary?.request?.comments, run.summary?.request?.commentIds];
+  const lists = [
+    run.request?.comments,
+    run.request?.commentIds,
+    run.summary?.request?.comments,
+    run.summary?.request?.commentIds,
+  ];
   return lists.some((list) => (list?.length ?? 0) > 0);
 }
 
-const RunEntry = memo(function RunEntry({ run, latest, workTree, onDetails, polish, offline, onStop, title, restoreTip, restoreVersionId, forkBase, editTip, actions, undoVersionId, undoTip, reviewVersionId, onReview }: EntryProps) {
+const RunEntry = memo(function RunEntry({
+  run,
+  latest,
+  workTree,
+  onDetails,
+  polish,
+  offline,
+  onStop,
+  title,
+  restoreTip,
+  restoreVersionId,
+  forkBase,
+  editTip,
+  actions,
+  undoVersionId,
+  undoTip,
+  reviewVersionId,
+  onReview,
+}: EntryProps) {
   const runId = run.runId;
   const details = useCallback(() => onDetails(runId), [onDetails, runId]);
-  const review = useMemo(() => (onReview && reviewVersionId ? () => onReview(reviewVersionId) : undefined), [onReview, reviewVersionId]);
-  const onUndo = useMemo(() => (actions && undoVersionId ? () => actions.onRestore(undoVersionId) : undefined), [actions, undoVersionId]);
-  const running = run.status === 'running';
-  const rewind = useMemo(() => ({ restoreTip, restoreVersionId, forkBase, editTip }), [restoreTip, restoreVersionId, forkBase, editTip]);
+  const review = useMemo(
+    () =>
+      onReview && reviewVersionId ? () => onReview(reviewVersionId) : undefined,
+    [onReview, reviewVersionId]
+  );
+  const onUndo = useMemo(
+    () =>
+      actions && undoVersionId
+        ? () => actions.onRestore(undoVersionId)
+        : undefined,
+    [actions, undoVersionId]
+  );
+  const running = run.status === "running";
+  const rewind = useMemo(
+    () => ({ restoreTip, restoreVersionId, forkBase, editTip }),
+    [restoreTip, restoreVersionId, forkBase, editTip]
+  );
   return (
     <div className="run flex min-w-0 flex-col gap-3.5" data-run-id={runId}>
-      <UserTurn run={run} title={title} rewind={actions ? rewind : null} actions={actions} />
+      <UserTurn
+        run={run}
+        title={title}
+        rewind={actions ? rewind : null}
+        actions={actions}
+      />
       <Message type="incoming" className="msg assistant">
         <MessageContent className="run-body gap-3">
           <RunParts run={run} running={running} workTree={workTree} />
-          {running && run.permissions.map((request) => <PermissionPrompt key={request.id} runId={runId} request={request} />)}
-          {running && <LiveStatus run={run} workTree={workTree} offline={offline} onStop={onStop} />}
-          <RunError run={run} latest={latest} undo={onUndo ? { onUndo, tip: undoTip } : undefined} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
-          <RunNotice run={run} latest={latest} {...(polish.onRetry ? { onRetry: () => polish.onRetry?.(run) } : {})} />
+          {running &&
+            run.permissions.map((request) => (
+              <PermissionPrompt
+                key={request.id}
+                runId={runId}
+                request={request}
+              />
+            ))}
+          {running && (
+            <LiveStatus
+              run={run}
+              workTree={workTree}
+              offline={offline}
+              onStop={onStop}
+            />
+          )}
+          <RunError
+            run={run}
+            latest={latest}
+            undo={onUndo ? { onUndo, tip: undoTip } : undefined}
+            {...(polish.onRetry
+              ? { onRetry: () => polish.onRetry?.(run) }
+              : {})}
+          />
+          <RunNotice
+            run={run}
+            latest={latest}
+            {...(polish.onRetry
+              ? { onRetry: () => polish.onRetry?.(run) }
+              : {})}
+          />
           {hasComments(run) && <RunCommentsCard run={run} />}
           <RunFeedbackRow run={run} onDetails={details} onReview={review} />
-          {latest && run.status === 'completed' && run.request?.plan && polish.onApprovePlan && <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />}
-          {canPolishRun(run, polish.headVersionId) && <PolishThis disabled={polish.running} onPolish={polish.onPolish} />}
+          {latest &&
+            run.status === "completed" &&
+            run.request?.plan &&
+            polish.onApprovePlan && (
+              <PlanCard onApprove={() => polish.onApprovePlan?.(run)} />
+            )}
+          {canPolishRun(run, polish.headVersionId) && (
+            <PolishThis disabled={polish.running} onPolish={polish.onPolish} />
+          )}
         </MessageContent>
       </Message>
     </div>
   );
 });
 
-function PendingEntry({ run, workTree }: { run: RunView; workTree: string | null }) {
+function PendingEntry({
+  run,
+  workTree,
+}: {
+  run: RunView;
+  workTree: string | null;
+}) {
   return (
     <div className="run flex min-w-0 flex-col gap-3.5" data-pending-run="">
       <UserMessage run={run} />
@@ -200,7 +388,13 @@ interface TimelineProps {
   render: (item: TimelineItem) => ReactNode;
 }
 
-function WindowedTimeline({ items, resetKey, reveal, onRevealed, render }: TimelineProps) {
+function WindowedTimeline({
+  items,
+  resetKey,
+  reveal,
+  onRevealed,
+  render,
+}: TimelineProps) {
   const { shown, hidden, more } = useHistoryWindow(items, resetKey, reveal);
   const inView = reveal !== null && shown.some((item) => item.key === reveal);
   return (
@@ -225,7 +419,10 @@ function EmptyChat() {
         <Icon name="sparkle" size={18} />
       </span>
       <strong>No runs yet</strong>
-      <p>Describe a change below. To target one part, press V, then click an element in the preview.</p>
+      <p>
+        Describe a change below. To target one part, press V, then click an
+        element in the preview.
+      </p>
     </div>
   );
 }
@@ -234,40 +431,97 @@ function EmptyState({ empty }: { empty: boolean }) {
   return empty ? <EmptyChat /> : null;
 }
 
-const WAIT_TIP = 'Wait for the run to finish';
+const WAIT_TIP = "Wait for the run to finish";
 
-function turnProps(run: RunView, rewind: RewindControl | undefined, title: string | undefined, actions: TurnActions | null): TurnProps {
-  if (!rewind || !actions) return { title, restoreTip: null, restoreVersionId: null, forkBase: null, editTip: null, actions: null };
-  const running = run.status === 'running' || !run.summary;
+function turnProps(
+  run: RunView,
+  rewind: RewindControl | undefined,
+  title: string | undefined,
+  actions: TurnActions | null
+): TurnProps {
+  if (!rewind || !actions)
+    return {
+      title,
+      restoreTip: null,
+      restoreVersionId: null,
+      forkBase: null,
+      editTip: null,
+      actions: null,
+    };
+  const running = run.status === "running" || !run.summary;
   const versionId = run.summary?.versionId ?? null;
-  const forkBase = running ? null : forkBaseOf({ versionId, startedAt: run.startedAt }, rewind.versions);
-  const restoreTip = running || rewind.locked ? WAIT_TIP : versionId === null ? 'This message made no version' : versionId === rewind.headVersionId || versionId === rewind.headRestoredFrom ? 'The code is already at this message' : null;
-  const editTip = running ? WAIT_TIP : forkBase === null ? 'No earlier version to start from' : null;
-  return { title, restoreTip, restoreVersionId: restoreTip === null ? versionId : null, forkBase, editTip, actions };
+  const forkBase = running
+    ? null
+    : forkBaseOf({ versionId, startedAt: run.startedAt }, rewind.versions);
+  const restoreTip =
+    running || rewind.locked
+      ? WAIT_TIP
+      : versionId === null
+        ? "This message made no version"
+        : versionId === rewind.headVersionId ||
+            versionId === rewind.headRestoredFrom
+          ? "The code is already at this message"
+          : null;
+  const editTip = running
+    ? WAIT_TIP
+    : forkBase === null
+      ? "No earlier version to start from"
+      : null;
+  return {
+    title,
+    restoreTip,
+    restoreVersionId: restoreTip === null ? versionId : null,
+    forkBase,
+    editTip,
+    actions,
+  };
 }
 
-function undoProps(run: RunView, rewind: RewindControl | undefined): { undoVersionId: string | null; undoTip: string | null } {
+function undoProps(
+  run: RunView,
+  rewind: RewindControl | undefined
+): { undoVersionId: string | null; undoTip: string | null } {
   const versionId = run.summary?.versionId;
-  const parentId = rewind && run.status === 'failed' && versionId && versionId === rewind.headVersionId ? rewind.versions.find((version) => version.id === versionId)?.parentId : null;
+  const parentId =
+    rewind &&
+    run.status === "failed" &&
+    versionId &&
+    versionId === rewind.headVersionId
+      ? rewind.versions.find((version) => version.id === versionId)?.parentId
+      : null;
   if (!rewind || !parentId) return { undoVersionId: null, undoTip: null };
-  return { undoVersionId: parentId, undoTip: rewind.locked ? WAIT_TIP : rewind.dirtyCount > 0 ? 'Save or discard your edits first' : null };
+  return {
+    undoVersionId: parentId,
+    undoTip: rewind.locked
+      ? WAIT_TIP
+      : rewind.dirtyCount > 0
+        ? "Save or discard your edits first"
+        : null,
+  };
 }
 
-function reviewOf(run: RunView, rewind: RewindControl | undefined): string | null {
+function reviewOf(
+  run: RunView,
+  rewind: RewindControl | undefined
+): string | null {
   const versionId = run.summary?.versionId;
-  if (!rewind || !versionId || run.status === 'running') return null;
-  return rewind.versions.some((version) => version.id === versionId && version.parentId !== null) ? versionId : null;
+  if (!rewind || !versionId || run.status === "running") return null;
+  return rewind.versions.some(
+    (version) => version.id === versionId && version.parentId !== null
+  )
+    ? versionId
+    : null;
 }
 
 const FOUND_MS = 1600;
 
 function useRunSearch(available: boolean) {
   const open = useLive(chatSearchOpen);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [target, setTarget] = useState<string | null>(null);
   const close = useCallback(() => {
     chatSearchOpen.set(false);
-    setQuery('');
+    setQuery("");
   }, []);
   useEffect(() => {
     chatSearchAvailable.set(available);
@@ -278,32 +532,50 @@ function useRunSearch(available: boolean) {
       chatSearchAvailable.set(false);
       chatSearchOpen.set(false);
     },
-    [],
+    []
   );
   const pick = useCallback(
     (runId: string) => {
       close();
       void loadRunsThrough(runId).then((found) => found && setTarget(runId));
     },
-    [close],
+    [close]
   );
   const found = useCallback(() => setTarget(null), []);
   const dismiss = useCallback(() => {
     close();
     focusChatSearchButton();
   }, [close]);
-  return { open: open && available, query, target, onClose: dismiss, onQuery: setQuery, onPick: pick, onFound: found };
+  return {
+    open: open && available,
+    query,
+    target,
+    onClose: dismiss,
+    onQuery: setQuery,
+    onPick: pick,
+    onFound: found,
+  };
 }
 
-function ScrollToRun({ runId, shown, onDone }: { runId: string | null; shown: boolean; onDone: () => void }) {
+function ScrollToRun({
+  runId,
+  shown,
+  onDone,
+}: {
+  runId: string | null;
+  shown: boolean;
+  onDone: () => void;
+}) {
   const { viewportRef, wasAtBottomRef } = useConversation();
   useEffect(() => {
     if (!runId || !shown) return;
-    const el = viewportRef.current?.querySelector<HTMLElement>(`[data-run-id="${CSS.escape(runId)}"]`);
+    const el = viewportRef.current?.querySelector<HTMLElement>(
+      `[data-run-id="${CSS.escape(runId)}"]`
+    );
     if (!el) return;
     wasAtBottomRef.current = false;
-    el.scrollIntoView({ block: 'start' });
-    el.dataset.found = '';
+    el.scrollIntoView({ block: "start" });
+    el.dataset.found = "";
     window.setTimeout(() => delete el.dataset.found, FOUND_MS);
     onDone();
   }, [runId, shown, onDone, viewportRef, wasAtBottomRef]);
@@ -328,18 +600,22 @@ interface Props {
   onReview?: (versionId: string) => void;
 }
 
-const RUN_ANNOUNCE: Record<RunView['status'], string> = {
-  running: 'Run started',
-  completed: 'Run finished',
-  canceled: 'Run stopped',
-  failed: 'Run failed',
-  budget_exceeded: 'Run stopped at the spending limit',
+const RUN_ANNOUNCE: Record<RunView["status"], string> = {
+  running: "Run started",
+  completed: "Run finished",
+  canceled: "Run stopped",
+  failed: "Run failed",
+  budget_exceeded: "Run stopped at the spending limit",
 };
 
 function RunAnnouncer({ run }: { run: RunView | undefined }) {
-  const queued = run?.status === 'running' ? run.queue.length : 0;
-  const asking = run?.status === 'running' ? run.permissions[0] : undefined;
-  const text = !run ? '' : asking ? `The agent needs your answer: ${asking.title}` : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ''}`;
+  const queued = run?.status === "running" ? run.queue.length : 0;
+  const asking = run?.status === "running" ? run.permissions[0] : undefined;
+  const text = !run
+    ? ""
+    : asking
+      ? `The agent needs your answer: ${asking.title}`
+      : `${RUN_ANNOUNCE[run.status]}${queued ? `. ${queued} queued` : ""}`;
   return (
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
       {text}
@@ -351,14 +627,35 @@ function ChatLead({ lead, empty }: { lead: ReactNode; empty: boolean }) {
   return <>{lead ?? <EmptyState empty={empty} />}</>;
 }
 
-function usePolish(headVersionId: string | null, polishing: boolean, onPolish: () => void, onRetry: ((run: RunView) => void) | undefined, onApprovePlan: ((run: RunView) => void) | undefined): PolishProps {
+function usePolish(
+  headVersionId: string | null,
+  polishing: boolean,
+  onPolish: () => void,
+  onRetry: ((run: RunView) => void) | undefined,
+  onApprovePlan: ((run: RunView) => void) | undefined
+): PolishProps {
   const polishRef = useLatest(onPolish);
   const retryRef = useLatest(onRetry);
-  const retry = useCallback((run: RunView) => retryRef.current?.(run), [retryRef]);
+  const retry = useCallback(
+    (run: RunView) => retryRef.current?.(run),
+    [retryRef]
+  );
   const approveRef = useLatest(onApprovePlan);
-  const approve = useCallback((run: RunView) => approveRef.current?.(run), [approveRef]);
+  const approve = useCallback(
+    (run: RunView) => approveRef.current?.(run),
+    [approveRef]
+  );
   const startPolish = useCallback(() => polishRef.current(), [polishRef]);
-  return useMemo(() => ({ headVersionId, running: polishing, onPolish: startPolish, onRetry: retry, onApprovePlan: approve }), [headVersionId, polishing, startPolish, retry, approve]);
+  return useMemo(
+    () => ({
+      headVersionId,
+      running: polishing,
+      onPolish: startPolish,
+      onRetry: retry,
+      onApprovePlan: approve,
+    }),
+    [headVersionId, polishing, startPolish, retry, approve]
+  );
 }
 
 function useTurnActions(rewind: RewindControl | undefined) {
@@ -370,27 +667,57 @@ function useTurnActions(rewind: RewindControl | undefined) {
       hasRewind
         ? {
             onRestore: (versionId) => rewindRef.current?.onRestore(versionId),
-            onEditResend: (run, prompt, base) => rewindRef.current?.onEditResend(run, prompt, base) ?? Promise.resolve(),
+            onEditResend: (run, prompt, base) =>
+              rewindRef.current?.onEditResend(run, prompt, base) ??
+              Promise.resolve(),
             dirtyCount: () => rewindRef.current?.dirtyCount ?? 0,
             onRename: async (runId, title) => {
               const summary = await renameRun(runId, title);
-              setTitles((prev) => ({ ...prev, [runId]: summary.title ?? '' }));
+              setTitles((prev) => ({ ...prev, [runId]: summary.title ?? "" }));
             },
           }
         : null,
-    [hasRewind, rewindRef],
+    [hasRewind, rewindRef]
   );
   return { titles, actions };
 }
 
-export function ChatPanel({ runs, pending = null, direction, onDetails, running, busy, onPolish, onRetry, onApprovePlan, rewind, mcp = null, lead, offline, onStop, onReview }: Props) {
+export function ChatPanel({
+  runs,
+  pending = null,
+  direction,
+  onDetails,
+  running,
+  busy,
+  onPolish,
+  onRetry,
+  onApprovePlan,
+  rewind,
+  mcp = null,
+  lead,
+  offline,
+  onStop,
+  onReview,
+}: Props) {
   const workTree = direction?.workTree ?? null;
   const headVersionId = direction?.headVersionId ?? null;
   const detailsRef = useLatest(onDetails);
-  const openDetails = useCallback((runId: string) => detailsRef.current(runId), [detailsRef]);
+  const openDetails = useCallback(
+    (runId: string) => detailsRef.current(runId),
+    [detailsRef]
+  );
   const reviewRef = useLatest(onReview);
-  const openReview = useCallback((versionId: string) => reviewRef.current?.(versionId), [reviewRef]);
-  const polish = usePolish(headVersionId, running || busy, onPolish, onRetry, onApprovePlan);
+  const openReview = useCallback(
+    (versionId: string) => reviewRef.current?.(versionId),
+    [reviewRef]
+  );
+  const polish = usePolish(
+    headVersionId,
+    running || busy,
+    onPolish,
+    onRetry,
+    onApprovePlan
+  );
   const { titles, actions } = useTurnActions(rewind);
   const search = useRunSearch(runs.length > 1);
   const lastId = runs.at(-1)?.runId;
@@ -409,22 +736,48 @@ export function ChatPanel({ runs, pending = null, direction, onDetails, running,
       reviewVersionId={reviewOf(run, rewind)}
       onReview={onReview ? openReview : null}
       {...undoProps(run, rewind)}
-      {...turnProps(run, rewind, titles[run.runId] ?? run.summary?.title, actions)}
+      {...turnProps(
+        run,
+        rewind,
+        titles[run.runId] ?? run.summary?.title,
+        actions
+      )}
     />
   );
   return (
     <div className="chat-wrap">
       <RunAnnouncer run={pending ?? runs.at(-1)} />
-      {search.open && <ChatSearch query={search.query} directionId={direction?.id ?? null} onClose={search.onClose} onQuery={search.onQuery} onPick={search.onPick} />}
-      <Conversation className="chat-conversation min-h-0 flex-1" data-ai-scope="" data-searching={search.open || undefined}>
+      {search.open && (
+        <ChatSearch
+          query={search.query}
+          directionId={direction?.id ?? null}
+          onClose={search.onClose}
+          onQuery={search.onQuery}
+          onPick={search.onPick}
+        />
+      )}
+      <Conversation
+        className="chat-conversation min-h-0 flex-1"
+        data-ai-scope=""
+        data-searching={search.open || undefined}
+      >
         <ConversationContent className="chat">
-          <ChatLead lead={lead} empty={runs.length === 0 && !pending && !feedShown(mcp)} />
+          <ChatLead
+            lead={lead}
+            empty={runs.length === 0 && !pending && !feedShown(mcp)}
+          />
           <WindowedTimeline
             items={timeline}
             resetKey={direction?.id ?? null}
             reveal={search.target}
             onRevealed={search.onFound}
-            render={(item) => (item.kind === 'run' ? renderRun(item.run) : <McpItem key={item.key} item={item} mcp={mcp} />)}
+            render={(item) =>
+              item.kind === "run" ? (
+                renderRun(item.run)
+              ) : (
+                <McpItem key={item.key} item={item} mcp={mcp} />
+              )
+            }
           />
           {pending && <PendingEntry run={pending} workTree={workTree} />}
         </ConversationContent>

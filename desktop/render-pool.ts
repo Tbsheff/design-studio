@@ -1,16 +1,31 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { BrowserWindow, session, type Session, type WebContents } from 'electron';
-import { PNG } from 'pngjs';
-import type { RenderClip, RenderErrors } from '../src/shared/render-rpc.js';
-import { pngSize } from './png-size.js';
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import {
+  BrowserWindow,
+  session,
+  type Session,
+  type WebContents,
+} from "electron";
+import { PNG } from "pngjs";
+
+import type { RenderClip, RenderErrors } from "../src/shared/render-rpc.js";
+import { pngSize } from "./png-size.js";
 
 const POOL_SIZE = 4;
 const IDLE_CLOSE_MS = 30_000;
 const NETWORK_QUIET_MS = 120;
 const LONG_REQUEST_MS = 1500;
-const STREAM_TYPES = new Set(['EventSource', 'WebSocket']);
-const CLEAR_STORAGES = ['cookies', 'localstorage', 'indexdb', 'serviceworkers', 'cachestorage', 'filesystem', 'shadercache'] as const;
+const STREAM_TYPES = new Set(["EventSource", "WebSocket"]);
+const CLEAR_STORAGES = [
+  "cookies",
+  "localstorage",
+  "indexdb",
+  "serviceworkers",
+  "cachestorage",
+  "filesystem",
+  "shadercache",
+] as const;
 const MAX_SEGMENT_PX = 8000;
 const renderSessions = new WeakSet<Session>();
 
@@ -45,7 +60,9 @@ function renderSession(index: number): Session {
   const created = session.fromPartition(partition, { cache: false });
   if (!renderSessions.has(created)) {
     renderSessions.add(created);
-    created.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    created.setPermissionRequestHandler((_contents, _permission, callback) =>
+      callback(false)
+    );
     created.setPermissionCheckHandler(() => false);
   }
   return created;
@@ -53,54 +70,71 @@ function renderSession(index: number): Session {
 
 function isFaviconMiss(url: string | undefined): boolean {
   try {
-    return !!url && new URL(url).pathname === '/favicon.ico';
+    return !!url && new URL(url).pathname === "/favicon.ico";
   } catch {
     return false;
   }
 }
 
 function remoteText(arg: Record<string, unknown>): string {
-  if (arg.value !== undefined) return typeof arg.value === 'string' ? arg.value : JSON.stringify(arg.value);
-  return String(arg.description ?? arg.unserializableValue ?? '');
+  if (arg.value !== undefined)
+    return typeof arg.value === "string"
+      ? arg.value
+      : JSON.stringify(arg.value);
+  return String(arg.description ?? arg.unserializableValue ?? "");
 }
 
 function consoleError(params: Record<string, unknown>): string | null {
-  if (params.type !== 'error') return null;
-  const frames = (params.stackTrace as { callFrames?: { url?: string }[] } | undefined)?.callFrames ?? [];
+  if (params.type !== "error") return null;
+  const frames =
+    (params.stackTrace as { callFrames?: { url?: string }[] } | undefined)
+      ?.callFrames ?? [];
   if (isFaviconMiss(frames[0]?.url)) return null;
-  return ((params.args as Record<string, unknown>[] | undefined) ?? []).map(remoteText).join(' ');
+  return ((params.args as Record<string, unknown>[] | undefined) ?? [])
+    .map(remoteText)
+    .join(" ");
 }
 
 function logError(params: Record<string, unknown>): string | null {
-  const entry = params.entry as { level?: string; text?: string; url?: string } | undefined;
-  if (entry?.level !== 'error' || isFaviconMiss(entry.url)) return null;
-  return entry.text ?? '';
+  const entry = params.entry as
+    | { level?: string; text?: string; url?: string }
+    | undefined;
+  if (entry?.level !== "error" || isFaviconMiss(entry.url)) return null;
+  return entry.text ?? "";
 }
 
 function exceptionText(params: Record<string, unknown>): string {
-  const details = params.exceptionDetails as { text?: string; exception?: { description?: string } } | undefined;
-  return details?.exception?.description ?? details?.text ?? 'Uncaught exception';
+  const details = params.exceptionDetails as
+    | { text?: string; exception?: { description?: string } }
+    | undefined;
+  return (
+    details?.exception?.description ?? details?.text ?? "Uncaught exception"
+  );
 }
 
 function trackNetwork(state: PageState, event: CdpEvent): void {
-  const requestId = String(event.params.requestId ?? '');
-  if (event.method === 'Network.requestWillBeSent') {
-    if (STREAM_TYPES.has(String(event.params.type ?? ''))) return;
+  const requestId = String(event.params.requestId ?? "");
+  if (event.method === "Network.requestWillBeSent") {
+    if (STREAM_TYPES.has(String(event.params.type ?? ""))) return;
     state.inflight.set(requestId, Date.now());
-  } else if (event.method === 'Network.loadingFinished' || event.method === 'Network.loadingFailed') state.inflight.delete(requestId);
+  } else if (
+    event.method === "Network.loadingFinished" ||
+    event.method === "Network.loadingFailed"
+  )
+    state.inflight.delete(requestId);
   else return;
   state.lastNetworkAt = Date.now();
 }
 
 function onCdpEvent(state: PageState, event: CdpEvent): void {
   trackNetwork(state, event);
-  if (event.method === 'Runtime.consoleAPICalled') {
+  if (event.method === "Runtime.consoleAPICalled") {
     const text = consoleError(event.params);
     if (text !== null) state.errors.consoleErrors.push(text);
-  } else if (event.method === 'Log.entryAdded') {
+  } else if (event.method === "Log.entryAdded") {
     const text = logError(event.params);
     if (text !== null) state.errors.consoleErrors.push(text);
-  } else if (event.method === 'Runtime.exceptionThrown') {
+  } else if (event.method === "Runtime.exceptionThrown") {
     state.errors.pageErrors.push(exceptionText(event.params));
   }
 }
@@ -123,21 +157,35 @@ export class RenderPool {
       height: 900,
       useContentSize: true,
       paintWhenInitiallyHidden: true,
-      webPreferences: { session: renderSession(index), sandbox: true, contextIsolation: true, nodeIntegration: false, backgroundThrottling: false, spellcheck: false },
+      webPreferences: {
+        session: renderSession(index),
+        sandbox: true,
+        contextIsolation: true,
+        nodeIntegration: false,
+        backgroundThrottling: false,
+        spellcheck: false,
+      },
     });
-    const slot: Slot = { index, window, busy: false, idleTimer: null, sizeKey: null, enabled: false };
-    window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    window.webContents.on('will-navigate', (event, url) => {
+    const slot: Slot = {
+      index,
+      window,
+      busy: false,
+      idleTimer: null,
+      sizeKey: null,
+      enabled: false,
+    };
+    window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+    window.webContents.on("will-navigate", (event, url) => {
       if (!this.allowed(url)) event.preventDefault();
     });
-    window.webContents.on('render-process-gone', () => this.dropSlot(slot));
-    window.on('closed', () => this.dropSlot(slot));
+    window.webContents.on("render-process-gone", () => this.dropSlot(slot));
+    window.on("closed", () => this.dropSlot(slot));
     return slot;
   }
 
   private allowed(url: string): boolean {
-    if (url === 'about:blank') return true;
-    if (!url.startsWith('http://')) return false;
+    if (url === "about:blank") return true;
+    if (!url.startsWith("http://")) return false;
     return !this.blockedOrigins().includes(new URL(url).origin);
   }
 
@@ -156,10 +204,13 @@ export class RenderPool {
   }
 
   private acquire(sizeKey: string | null = null): Promise<Slot> {
-    if (this.closed) return Promise.reject(new Error('render pool is closed'));
-    const free = this.slots.filter((slot) => !slot.busy && !slot.window.isDestroyed());
+    if (this.closed) return Promise.reject(new Error("render pool is closed"));
+    const free = this.slots.filter(
+      (slot) => !slot.busy && !slot.window.isDestroyed()
+    );
     const idle = free.find((slot) => slot.sizeKey === sizeKey) ?? free[0];
-    const slot = idle ?? (this.slots.length < POOL_SIZE ? this.addSlot() : null);
+    const slot =
+      idle ?? (this.slots.length < POOL_SIZE ? this.addSlot() : null);
     if (slot) return Promise.resolve(this.claim(slot));
     return new Promise((resolve) => this.waiters.push(resolve));
   }
@@ -193,7 +244,13 @@ export class RenderPool {
 
   async open(width: number, height: number, scale = 1): Promise<PageState> {
     const slot = await this.acquire(`${width}x${height}`);
-    const state: PageState = { slot, errors: { consoleErrors: [], pageErrors: [] }, inflight: new Map(), lastNetworkAt: Date.now(), scale: clampScale(scale) };
+    const state: PageState = {
+      slot,
+      errors: { consoleErrors: [], pageErrors: [] },
+      inflight: new Map(),
+      lastNetworkAt: Date.now(),
+      scale: clampScale(scale),
+    };
     try {
       await this.prepare(state, width, height);
       return state;
@@ -204,34 +261,64 @@ export class RenderPool {
     }
   }
 
-  private async prepare(state: PageState, width: number, height: number): Promise<void> {
+  private async prepare(
+    state: PageState,
+    width: number,
+    height: number
+  ): Promise<void> {
     const { slot } = state;
     const contents = slot.window.webContents;
-    if (contents.getURL() === '') await contents.loadURL('about:blank');
+    if (contents.getURL() === "") await contents.loadURL("about:blank");
     const cdp = contents.debugger;
     if (!cdp.isAttached()) {
-      cdp.attach('1.3');
+      cdp.attach("1.3");
       slot.enabled = false;
     }
-    cdp.removeAllListeners('message');
-    cdp.on('message', (_event, method, params) => onCdpEvent(state, { method, params: (params ?? {}) as Record<string, unknown> }));
+    cdp.removeAllListeners("message");
+    cdp.on("message", (_event, method, params) =>
+      onCdpEvent(state, {
+        method,
+        params: (params ?? {}) as Record<string, unknown>,
+      })
+    );
     if (!slot.enabled) {
-      await Promise.all([cdp.sendCommand('Network.enable'), cdp.sendCommand('Runtime.enable'), cdp.sendCommand('Log.enable'), cdp.sendCommand('Page.enable'), cdp.sendCommand('Emulation.setScrollbarsHidden', { hidden: true })]);
+      await Promise.all([
+        cdp.sendCommand("Network.enable"),
+        cdp.sendCommand("Runtime.enable"),
+        cdp.sendCommand("Log.enable"),
+        cdp.sendCommand("Page.enable"),
+        cdp.sendCommand("Emulation.setScrollbarsHidden", { hidden: true }),
+      ]);
       slot.enabled = true;
     }
     const sizeKey = `${width}x${height}`;
     if (slot.sizeKey === sizeKey) return;
     slot.sizeKey = null;
     slot.window.setContentSize(width, height);
-    await cdp.sendCommand('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
+    await cdp.sendCommand("Emulation.setDeviceMetricsOverride", {
+      width,
+      height,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
     slot.sizeKey = sizeKey;
   }
 
-  async goto(state: PageState, url: string, timeoutMs: number, settleMs: number): Promise<void> {
+  async goto(
+    state: PageState,
+    url: string,
+    timeoutMs: number,
+    settleMs: number
+  ): Promise<void> {
     if (!this.allowed(url)) throw new Error(`render pool will not load ${url}`);
     const contents = state.slot.window.webContents;
     const loading = contents.loadURL(url);
-    const timeout = new Promise<never>((_resolve, reject) => setTimeout(() => reject(new Error(`page.goto: Timeout ${timeoutMs}ms exceeded`)), timeoutMs).unref());
+    const timeout = new Promise<never>((_resolve, reject) =>
+      setTimeout(
+        () => reject(new Error(`page.goto: Timeout ${timeoutMs}ms exceeded`)),
+        timeoutMs
+      ).unref()
+    );
     await Promise.race([loading, timeout]);
     await this.networkIdle(state, settleMs);
   }
@@ -240,38 +327,75 @@ export class RenderPool {
     const deadline = Date.now() + settleMs;
     while (Date.now() < deadline) {
       const now = Date.now();
-      const busy = [...state.inflight.values()].some((started) => now - started < LONG_REQUEST_MS);
+      const busy = [...state.inflight.values()].some(
+        (started) => now - started < LONG_REQUEST_MS
+      );
       if (!busy && now - state.lastNetworkAt >= NETWORK_QUIET_MS) return;
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
   }
 
   async evaluate(state: PageState, expression: string): Promise<unknown> {
-    const reply = (await state.slot.window.webContents.debugger.sendCommand('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true, userGesture: false })) as {
+    const reply = (await state.slot.window.webContents.debugger.sendCommand(
+      "Runtime.evaluate",
+      {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+        userGesture: false,
+      }
+    )) as {
       result?: { value?: unknown };
-      exceptionDetails?: { text?: string; exception?: { description?: string } };
+      exceptionDetails?: {
+        text?: string;
+        exception?: { description?: string };
+      };
     };
-    if (reply.exceptionDetails) throw new Error(reply.exceptionDetails.exception?.description ?? reply.exceptionDetails.text ?? 'evaluate failed');
+    if (reply.exceptionDetails)
+      throw new Error(
+        reply.exceptionDetails.exception?.description ??
+          reply.exceptionDetails.text ??
+          "evaluate failed"
+      );
     return reply.result?.value;
   }
 
-  private async contentSize(state: PageState): Promise<{ width: number; height: number }> {
-    const metrics = (await state.slot.window.webContents.debugger.sendCommand('Page.getLayoutMetrics')) as { cssContentSize: { width: number; height: number } };
-    const scroll = (await this.evaluate(state, '[document.documentElement.scrollWidth, document.documentElement.scrollHeight]')) as [number, number];
-    return { width: Math.max(Math.ceil(metrics.cssContentSize.width), scroll[0]), height: Math.max(Math.ceil(metrics.cssContentSize.height), scroll[1]) };
+  private async contentSize(
+    state: PageState
+  ): Promise<{ width: number; height: number }> {
+    const metrics = (await state.slot.window.webContents.debugger.sendCommand(
+      "Page.getLayoutMetrics"
+    )) as { cssContentSize: { width: number; height: number } };
+    const scroll = (await this.evaluate(
+      state,
+      "[document.documentElement.scrollWidth, document.documentElement.scrollHeight]"
+    )) as [number, number];
+    return {
+      width: Math.max(Math.ceil(metrics.cssContentSize.width), scroll[0]),
+      height: Math.max(Math.ceil(metrics.cssContentSize.height), scroll[1]),
+    };
   }
 
-  private async captureClip(state: PageState, clip: RenderClip): Promise<Buffer> {
-    const shot = (await state.slot.window.webContents.debugger.sendCommand('Page.captureScreenshot', {
-      format: 'png',
-      captureBeyondViewport: true,
-      fromSurface: true,
-      clip: { ...clip, scale: state.scale },
-    })) as { data: string };
-    return Buffer.from(shot.data, 'base64');
+  private async captureClip(
+    state: PageState,
+    clip: RenderClip
+  ): Promise<Buffer> {
+    const shot = (await state.slot.window.webContents.debugger.sendCommand(
+      "Page.captureScreenshot",
+      {
+        format: "png",
+        captureBeyondViewport: true,
+        fromSurface: true,
+        clip: { ...clip, scale: state.scale },
+      }
+    )) as { data: string };
+    return Buffer.from(shot.data, "base64");
   }
 
-  private async captureTall(state: PageState, clip: RenderClip): Promise<Buffer> {
+  private async captureTall(
+    state: PageState,
+    clip: RenderClip
+  ): Promise<Buffer> {
     const scale = state.scale;
     const outWidth = Math.round(clip.width * scale);
     const outHeight = Math.round(clip.height * scale);
@@ -279,18 +403,51 @@ export class RenderPool {
     const segment = Math.floor(MAX_SEGMENT_PX / scale);
     for (let offset = 0; offset < clip.height; offset += segment) {
       const height = Math.min(segment, clip.height - offset);
-      const part = PNG.sync.read(await this.captureClip(state, { x: clip.x, y: clip.y + offset, width: clip.width, height }));
+      const part = PNG.sync.read(
+        await this.captureClip(state, {
+          x: clip.x,
+          y: clip.y + offset,
+          width: clip.width,
+          height,
+        })
+      );
       const top = Math.round(offset * scale);
-      PNG.bitblt(part, out, 0, 0, Math.min(part.width, outWidth), Math.min(part.height, outHeight - top), 0, top);
+      PNG.bitblt(
+        part,
+        out,
+        0,
+        0,
+        Math.min(part.width, outWidth),
+        Math.min(part.height, outHeight - top),
+        0,
+        top
+      );
     }
     return PNG.sync.write(out);
   }
 
-  async screenshot(state: PageState, outPath: string, clip?: RenderClip): Promise<{ width: number; height: number }> {
+  async screenshot(
+    state: PageState,
+    outPath: string,
+    clip?: RenderClip
+  ): Promise<{ width: number; height: number }> {
     const size = await this.contentSize(state);
-    const target = clip ?? { x: 0, y: 0, width: size.width, height: size.height };
-    const rounded = { x: Math.round(target.x), y: Math.round(target.y), width: Math.max(1, Math.round(target.width)), height: Math.max(1, Math.round(target.height)) };
-    const bytes = rounded.height * state.scale > MAX_SEGMENT_PX ? await this.captureTall(state, rounded) : await this.captureClip(state, rounded);
+    const target = clip ?? {
+      x: 0,
+      y: 0,
+      width: size.width,
+      height: size.height,
+    };
+    const rounded = {
+      x: Math.round(target.x),
+      y: Math.round(target.y),
+      width: Math.max(1, Math.round(target.width)),
+      height: Math.max(1, Math.round(target.height)),
+    };
+    const bytes =
+      rounded.height * state.scale > MAX_SEGMENT_PX
+        ? await this.captureTall(state, rounded)
+        : await this.captureClip(state, rounded);
     await mkdir(path.dirname(outPath), { recursive: true });
     await writeFile(outPath, bytes);
     return pngSize(bytes);
@@ -299,14 +456,18 @@ export class RenderPool {
   async close(state: PageState): Promise<void> {
     const { slot } = state;
     if (slot.window.isDestroyed()) return this.release(slot);
-    slot.window.webContents.debugger.removeAllListeners('message');
+    slot.window.webContents.debugger.removeAllListeners("message");
     void this.clean(slot);
   }
 
   private async clean(slot: Slot): Promise<void> {
     try {
-      await slot.window.webContents.loadURL('about:blank').catch(() => undefined);
-      await slot.window.webContents.session.clearStorageData({ storages: [...CLEAR_STORAGES] }).catch(() => undefined);
+      await slot.window.webContents
+        .loadURL("about:blank")
+        .catch(() => undefined);
+      await slot.window.webContents.session
+        .clearStorageData({ storages: [...CLEAR_STORAGES] })
+        .catch(() => undefined);
     } finally {
       if (slot.window.isDestroyed()) this.dropSlot(slot);
       this.release(slot);

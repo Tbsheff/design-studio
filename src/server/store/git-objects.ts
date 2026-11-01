@@ -1,14 +1,23 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { createHash, randomBytes } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { appendFile, link, mkdir, open, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { deflateSync } from 'node:zlib';
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { createHash, randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
+import {
+  appendFile,
+  link,
+  mkdir,
+  open,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import path from "node:path";
+import { deflateSync } from "node:zlib";
 
-export const TREE_MODE = '40000';
-export const GITLINK_MODE = '160000';
-export const SYMLINK_MODE = '120000';
-const ZERO_SHA = '0'.repeat(40);
+export const TREE_MODE = "40000";
+export const GITLINK_MODE = "160000";
+export const SYMLINK_MODE = "120000";
+const ZERO_SHA = "0".repeat(40);
 const MAX_CACHED = 20000;
 
 export interface TreeEntry {
@@ -37,7 +46,10 @@ interface Pending {
 export class RefConflictError extends Error {}
 
 function gitHash(type: string, body: Buffer): string {
-  return createHash('sha1').update(`${type} ${body.length}\0`).update(body).digest('hex');
+  return createHash("sha1")
+    .update(`${type} ${body.length}\0`)
+    .update(body)
+    .digest("hex");
 }
 
 function nameKey(entry: TreeEntry): Buffer {
@@ -58,36 +70,49 @@ function parseTree(body: Buffer): TreeEntry[] {
   while (at < body.length) {
     const space = body.indexOf(0x20, at);
     const nul = body.indexOf(0, space);
-    entries.push({ mode: body.toString('utf8', at, space), name: body.toString('utf8', space + 1, nul), sha: body.toString('hex', nul + 1, nul + 21) });
+    entries.push({
+      mode: body.toString("utf8", at, space),
+      name: body.toString("utf8", space + 1, nul),
+      sha: body.toString("hex", nul + 1, nul + 21),
+    });
     at = nul + 21;
   }
   return entries;
 }
 
 function serializeTree(entries: TreeEntry[]): Buffer {
-  return Buffer.concat(sortTree(entries).flatMap((entry) => [Buffer.from(`${entry.mode} ${entry.name}\0`), Buffer.from(entry.sha, 'hex')]));
+  return Buffer.concat(
+    sortTree(entries).flatMap((entry) => [
+      Buffer.from(`${entry.mode} ${entry.name}\0`),
+      Buffer.from(entry.sha, "hex"),
+    ])
+  );
 }
 
 function parseCommit(body: Buffer): CommitInfo {
-  const text = body.toString('utf8');
-  const split = text.indexOf('\n\n');
+  const text = body.toString("utf8");
+  const split = text.indexOf("\n\n");
   const header = split === -1 ? text : text.slice(0, split);
   const parents: string[] = [];
-  let tree = '';
-  for (const line of header.split('\n')) {
-    if (line.startsWith('tree ')) tree = line.slice(5);
-    if (line.startsWith('parent ')) parents.push(line.slice(7));
+  let tree = "";
+  for (const line of header.split("\n")) {
+    if (line.startsWith("tree ")) tree = line.slice(5);
+    if (line.startsWith("parent ")) parents.push(line.slice(7));
   }
-  return { tree, parents, message: split === -1 ? '' : text.slice(split + 2) };
+  return { tree, parents, message: split === -1 ? "" : text.slice(split + 2) };
 }
 
 function timezone(date: Date): string {
   const offset = -date.getTimezoneOffset();
   const abs = Math.abs(offset);
-  return `${offset < 0 ? '-' : '+'}${String(Math.floor(abs / 60)).padStart(2, '0')}${String(abs % 60).padStart(2, '0')}`;
+  return `${offset < 0 ? "-" : "+"}${String(Math.floor(abs / 60)).padStart(2, "0")}${String(abs % 60).padStart(2, "0")}`;
 }
 
-export function gitIdent(name: string, email: string, at: Date = new Date()): string {
+export function gitIdent(
+  name: string,
+  email: string,
+  at: Date = new Date()
+): string {
   return `${name} <${email}> ${Math.floor(at.getTime() / 1000)} ${timezone(at)}`;
 }
 
@@ -99,7 +124,7 @@ class BatchReader {
   constructor(
     private readonly binary: () => Promise<string>,
     private readonly env: NodeJS.ProcessEnv,
-    private readonly cwd: string,
+    private readonly cwd: string
   ) {}
 
   async read(sha: string): Promise<RawObject | null> {
@@ -117,12 +142,18 @@ class BatchReader {
 
   private async start(): Promise<ChildProcessWithoutNullStreams> {
     if (this.child) return this.child;
-    const child = spawn(await this.binary(), ['cat-file', '--batch'], { env: this.env, cwd: this.cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(await this.binary(), ["cat-file", "--batch"], {
+      env: this.env,
+      cwd: this.cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
     this.child = child;
-    child.stdout.on('data', (chunk: Buffer) => this.consume(chunk));
-    child.stdin.on('error', () => undefined);
-    child.once('exit', () => this.fail(child, new Error('git cat-file stopped')));
-    child.once('error', (error) => this.fail(child, error));
+    child.stdout.on("data", (chunk: Buffer) => this.consume(chunk));
+    child.stdin.on("error", () => undefined);
+    child.once("exit", () =>
+      this.fail(child, new Error("git cat-file stopped"))
+    );
+    child.once("error", (error) => this.fail(child, error));
     return child;
   }
 
@@ -133,13 +164,14 @@ class BatchReader {
   }
 
   private consume(chunk: Buffer): void {
-    this.buffer = this.buffer.length === 0 ? chunk : Buffer.concat([this.buffer, chunk]);
+    this.buffer =
+      this.buffer.length === 0 ? chunk : Buffer.concat([this.buffer, chunk]);
     for (;;) {
       const pending = this.queue[0];
       const eol = this.buffer.indexOf(0x0a);
       if (!pending || eol === -1) return;
-      const header = this.buffer.toString('utf8', 0, eol).split(' ');
-      if (header[1] === 'missing') {
+      const header = this.buffer.toString("utf8", 0, eol).split(" ");
+      if (header[1] === "missing") {
         this.buffer = this.buffer.subarray(eol + 1);
         this.queue.shift();
         pending.resolve(null);
@@ -150,7 +182,7 @@ class BatchReader {
       const body = Buffer.from(this.buffer.subarray(eol + 1, eol + 1 + size));
       this.buffer = this.buffer.subarray(eol + 1 + size + 1);
       this.queue.shift();
-      pending.resolve({ type: header[1] ?? '', body });
+      pending.resolve({ type: header[1] ?? "", body });
     }
   }
 }
@@ -163,7 +195,7 @@ export class ObjectStore {
   constructor(
     readonly gitDir: string,
     binary: () => Promise<string>,
-    env: NodeJS.ProcessEnv,
+    env: NodeJS.ProcessEnv
   ) {
     this.reader = new BatchReader(binary, env, gitDir);
   }
@@ -178,7 +210,8 @@ export class ObjectStore {
 
   async readBlob(sha: string): Promise<Buffer> {
     const object = await this.reader.read(sha);
-    if (!object || object.type !== 'blob') throw new Error(`blob ${sha} not found`);
+    if (!object || object.type !== "blob")
+      throw new Error(`blob ${sha} not found`);
     return object.body;
   }
 
@@ -186,7 +219,8 @@ export class ObjectStore {
     const known = this.trees.get(sha);
     if (known) return known;
     const object = await this.reader.read(sha);
-    if (!object || object.type !== 'tree') throw new Error(`tree ${sha} not found`);
+    if (!object || object.type !== "tree")
+      throw new Error(`tree ${sha} not found`);
     return this.remember(this.trees, sha, parseTree(object.body));
   }
 
@@ -194,49 +228,70 @@ export class ObjectStore {
     const known = this.commits.get(sha);
     if (known) return known;
     const object = await this.reader.read(sha);
-    if (!object || object.type !== 'commit') return null;
+    if (!object || object.type !== "commit") return null;
     return this.remember(this.commits, sha, parseCommit(object.body));
   }
 
   async writeBlob(body: Buffer): Promise<string> {
-    return this.writeLoose('blob', body);
+    return this.writeLoose("blob", body);
   }
 
   async writeTree(entries: TreeEntry[]): Promise<string> {
-    const sha = await this.writeLoose('tree', serializeTree(entries));
+    const sha = await this.writeLoose("tree", serializeTree(entries));
     this.remember(this.trees, sha, sortTree(entries));
     return sha;
   }
 
-  async writeCommit(tree: string, parents: string[], author: string, message: string): Promise<string> {
-    const header = [`tree ${tree}`, ...parents.map((parent) => `parent ${parent}`), `author ${author}`, `committer ${author}`].join('\n');
+  async writeCommit(
+    tree: string,
+    parents: string[],
+    author: string,
+    message: string
+  ): Promise<string> {
+    const header = [
+      `tree ${tree}`,
+      ...parents.map((parent) => `parent ${parent}`),
+      `author ${author}`,
+      `committer ${author}`,
+    ].join("\n");
     const body = Buffer.from(`${header}\n\n${message}`);
-    const sha = await this.writeLoose('commit', body);
+    const sha = await this.writeLoose("commit", body);
     this.remember(this.commits, sha, { tree, parents, message });
     return sha;
   }
 
   async readRef(ref: string): Promise<string | null> {
-    const loose = await readFile(path.join(this.gitDir, ref), 'utf8').catch(() => null);
+    const loose = await readFile(path.join(this.gitDir, ref), "utf8").catch(
+      () => null
+    );
     if (loose !== null) {
       const value = loose.trim();
       return /^[0-9a-f]{40}$/.test(value) ? value : null;
     }
-    const packed = await readFile(path.join(this.gitDir, 'packed-refs'), 'utf8').catch(() => '');
-    const line = packed.split('\n').find((entry) => entry.endsWith(` ${ref}`));
+    const packed = await readFile(
+      path.join(this.gitDir, "packed-refs"),
+      "utf8"
+    ).catch(() => "");
+    const line = packed.split("\n").find((entry) => entry.endsWith(` ${ref}`));
     return line ? line.slice(0, 40) : null;
   }
 
-  async updateRef(ref: string, next: string, expected: string | null, ident: string): Promise<void> {
+  async updateRef(
+    ref: string,
+    next: string,
+    expected: string | null,
+    ident: string
+  ): Promise<void> {
     const target = path.join(this.gitDir, ref);
     await mkdir(path.dirname(target), { recursive: true });
     const lock = `${target}.lock`;
-    const handle = await open(lock, 'wx').catch(() => {
+    const handle = await open(lock, "wx").catch(() => {
       throw new RefConflictError(`${ref} is locked`);
     });
     try {
       const current = await this.readRef(ref);
-      if ((current ?? null) !== expected) throw new RefConflictError(`${ref} moved`);
+      if ((current ?? null) !== expected)
+        throw new RefConflictError(`${ref} moved`);
       await handle.writeFile(`${next}\n`);
       await handle.close();
       await rename(lock, target);
@@ -245,8 +300,9 @@ export class ObjectStore {
       await rm(lock, { force: true });
       throw error;
     }
-    const log = path.join(this.gitDir, 'logs', ref);
-    if (existsSync(log)) await appendFile(log, `${expected ?? ZERO_SHA} ${next} ${ident}\n`);
+    const log = path.join(this.gitDir, "logs", ref);
+    if (existsSync(log))
+      await appendFile(log, `${expected ?? ZERO_SHA} ${next} ${ident}\n`);
   }
 
   private remember<T>(map: Map<string, T>, sha: string, value: T): T {
@@ -257,14 +313,21 @@ export class ObjectStore {
 
   private async writeLoose(type: string, body: Buffer): Promise<string> {
     const sha = gitHash(type, body);
-    const dir = path.join(this.gitDir, 'objects', sha.slice(0, 2));
+    const dir = path.join(this.gitDir, "objects", sha.slice(0, 2));
     const target = path.join(dir, sha.slice(2));
     if (existsSync(target)) return sha;
     await mkdir(dir, { recursive: true });
-    const temp = path.join(dir, `tmp_obj_${randomBytes(6).toString('hex')}`);
-    await writeFile(temp, deflateSync(Buffer.concat([Buffer.from(`${type} ${body.length}\0`), body]), { level: 1 }), { mode: 0o444 });
+    const temp = path.join(dir, `tmp_obj_${randomBytes(6).toString("hex")}`);
+    await writeFile(
+      temp,
+      deflateSync(
+        Buffer.concat([Buffer.from(`${type} ${body.length}\0`), body]),
+        { level: 1 }
+      ),
+      { mode: 0o444 }
+    );
     await link(temp, target).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== 'EEXIST') throw error;
+      if (error.code !== "EEXIST") throw error;
     });
     await rm(temp, { force: true });
     return sha;
@@ -272,5 +335,5 @@ export class ObjectStore {
 }
 
 export function blobShaOf(body: Buffer): string {
-  return gitHash('blob', body);
+  return gitHash("blob", body);
 }

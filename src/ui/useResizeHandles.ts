@@ -1,14 +1,21 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import type { SelectionContext } from '../shared/contracts';
-import { api, errorText } from './api';
-import type { BridgeToParent } from '../shared/contracts';
-import type { ParentMessageBody } from './bridge';
-import { snapOff, snapRect, type Rect, type SnapGuide } from './snap';
-import { buildEditRequest, mergeCommit } from './useDirectEdit';
-import { startOptimistic } from './optimisticEdit';
-import { createLiveStore, useLive, type LiveStore } from './liveStore';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
-export type ResizeEdge = 'e' | 's' | 'se';
+import type { SelectionContext } from "../shared/contracts";
+import type { BridgeToParent } from "../shared/contracts";
+import { api, errorText } from "./api";
+import type { ParentMessageBody } from "./bridge";
+import { createLiveStore, useLive, type LiveStore } from "./liveStore";
+import { startOptimistic } from "./optimisticEdit";
+import { snapOff, snapRect, type Rect, type SnapGuide } from "./snap";
+import { buildEditRequest, mergeCommit } from "./useDirectEdit";
+
+export type ResizeEdge = "e" | "s" | "se";
 
 interface Size {
   w: number;
@@ -23,7 +30,9 @@ interface Options {
   post: (body: ParentMessageBody) => void;
   listen?: (handler: (message: BridgeToParent) => void) => () => void;
   holdSwap?: (held: boolean, settle: boolean) => void;
-  setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
+  setSelection: (
+    updater: (prev: SelectionContext[]) => SelectionContext[]
+  ) => void;
   refreshRects: () => void;
   onError: (message: string) => void;
 }
@@ -37,7 +46,7 @@ interface Drag {
   base: Size;
   size: Size;
   target: SelectionContext;
-  axes: Set<'width' | 'height'>;
+  axes: Set<"width" | "height">;
   candidates: Rect[];
   guides: SnapGuide[];
   stopListen: () => void;
@@ -67,36 +76,52 @@ interface LiveSize {
 export interface ResizeHandles {
   target: SelectionContext | null;
   sizes: LiveStore<LiveSize | null>;
-  onHandleDown: ResizeControl['onHandleDown'];
+  onHandleDown: ResizeControl["onHandleDown"];
 }
 
-export function useResizeLive({ target, sizes, onHandleDown }: ResizeHandles): ResizeControl {
+export function useResizeLive({
+  target,
+  sizes,
+  onHandleDown,
+}: ResizeHandles): ResizeControl {
   const size = useLive(sizes);
   const live =
     size && target
-      ? { width: size.size.w, height: size.size.h, boxWidth: size.rect.width + size.size.w - size.base.w, boxHeight: size.rect.height + size.size.h - size.base.h, guides: size.guides }
+      ? {
+          width: size.size.w,
+          height: size.size.h,
+          boxWidth: size.rect.width + size.size.w - size.base.w,
+          boxHeight: size.rect.height + size.size.h - size.base.h,
+          guides: size.guides,
+        }
       : null;
   return { target, live, onHandleDown };
 }
 
 function pxOf(value: string | undefined, fallback: number): number {
-  const parsed = value?.endsWith('px') ? Number.parseFloat(value) : Number.NaN;
+  const parsed = value?.endsWith("px") ? Number.parseFloat(value) : Number.NaN;
   return Math.round(Number.isFinite(parsed) ? parsed : fallback);
 }
 
 function scaleOf(element: Element): number {
-  const overlay = element.closest<HTMLElement>('.overlay');
+  const overlay = element.closest<HTMLElement>(".overlay");
   if (!overlay || overlay.offsetWidth === 0) return 1;
   return overlay.getBoundingClientRect().width / overlay.offsetWidth;
 }
 
-export function resizedSize(edge: ResizeEdge, base: Size, dx: number, dy: number, keepRatio: boolean): Size {
-  let w = edge === 's' ? base.w : base.w + dx;
-  let h = edge === 'e' ? base.h : base.h + dy;
+export function resizedSize(
+  edge: ResizeEdge,
+  base: Size,
+  dx: number,
+  dy: number,
+  keepRatio: boolean
+): Size {
+  let w = edge === "s" ? base.w : base.w + dx;
+  let h = edge === "e" ? base.h : base.h + dy;
   if (keepRatio && base.w > 0 && base.h > 0) {
     const ratio = base.w / base.h;
-    if (edge === 'e') h = w / ratio;
-    else if (edge === 's') w = h * ratio;
+    if (edge === "e") h = w / ratio;
+    else if (edge === "s") w = h * ratio;
     else if (Math.abs(dx / base.w) >= Math.abs(dy / base.h)) h = w / ratio;
     else w = h * ratio;
   }
@@ -110,27 +135,47 @@ function requestNeighbors(d: Drag, o: Options): void {
   neighborSeq += 1;
   const requestId = `nb-${neighborSeq}`;
   const stop = o.listen((message) => {
-    if (message.type !== 'neighbors' || message.requestId !== requestId) return;
-    d.candidates = message.parent ? [message.parent, ...message.siblings] : message.siblings;
+    if (message.type !== "neighbors" || message.requestId !== requestId) return;
+    d.candidates = message.parent
+      ? [message.parent, ...message.siblings]
+      : message.siblings;
     stop();
   });
   d.stopListen = stop;
-  o.post({ type: 'request-neighbors', requestId, selector: d.target.selector });
+  o.post({ type: "request-neighbors", requestId, selector: d.target.selector });
 }
 
-export function snapSize(d: Pick<Drag, 'edge' | 'base' | 'target' | 'candidates' | 'zoom'>, next: Size, off: boolean): { size: Size; guides: SnapGuide[] } {
+export function snapSize(
+  d: Pick<Drag, "edge" | "base" | "target" | "candidates" | "zoom">,
+  next: Size,
+  off: boolean
+): { size: Size; guides: SnapGuide[] } {
   if (off || d.candidates.length === 0) return { size: next, guides: [] };
   const r = d.target.rect;
-  const box = { x: r.x, y: r.y, width: r.width + next.w - d.base.w, height: r.height + next.h - d.base.h };
-  const res = snapRect({ rect: box, candidates: d.candidates, zoom: d.zoom, x: d.edge === 's' ? null : 'end', y: d.edge === 'e' ? null : 'end' });
-  const size = { w: Math.max(1, Math.round(next.w + res.rect.width - box.width)), h: Math.max(1, Math.round(next.h + res.rect.height - box.height)) };
+  const box = {
+    x: r.x,
+    y: r.y,
+    width: r.width + next.w - d.base.w,
+    height: r.height + next.h - d.base.h,
+  };
+  const res = snapRect({
+    rect: box,
+    candidates: d.candidates,
+    zoom: d.zoom,
+    x: d.edge === "s" ? null : "end",
+    y: d.edge === "e" ? null : "end",
+  });
+  const size = {
+    w: Math.max(1, Math.round(next.w + res.rect.width - box.width)),
+    h: Math.max(1, Math.round(next.h + res.rect.height - box.height)),
+  };
   return { size, guides: res.guides };
 }
 
 function axisStyle(d: Drag, size: Size): Record<string, string> {
   const style: Record<string, string> = {};
-  if (d.axes.has('width')) style.width = `${size.w}px`;
-  if (d.axes.has('height')) style.height = `${size.h}px`;
+  if (d.axes.has("width")) style.width = `${size.w}px`;
+  if (d.axes.has("height")) style.height = `${size.h}px`;
   return style;
 }
 
@@ -155,15 +200,31 @@ export function useResizeHandles(o: Options): ResizeHandles {
   const drag = useRef<Drag | null>(null);
   const [sizes] = useState(() => createLiveStore<LiveSize | null>(null));
   const setSize = sizes.set;
-  const target = o.enabled && o.selection.length === 1 && o.selection[0]?.source ? (o.selection[0] ?? null) : null;
+  const target =
+    o.enabled && o.selection.length === 1 && o.selection[0]?.source
+      ? (o.selection[0] ?? null)
+      : null;
 
   const preview = useCallback((d: Drag, next: Size, keepRatio: boolean) => {
     d.size = next;
-    if (d.edge !== 's' || keepRatio) d.axes.add('width');
-    if (d.edge !== 'e' || keepRatio) d.axes.add('height');
-    setSize({ size: next, base: d.base, rect: d.target.rect, guides: d.guides });
-    resizeReadout.set({ selector: d.target.selector, width: next.w, height: next.h });
-    live.current.post({ type: 'preview-style', selector: d.target.selector, style: axisStyle(d, next) });
+    if (d.edge !== "s" || keepRatio) d.axes.add("width");
+    if (d.edge !== "e" || keepRatio) d.axes.add("height");
+    setSize({
+      size: next,
+      base: d.base,
+      rect: d.target.rect,
+      guides: d.guides,
+    });
+    resizeReadout.set({
+      selector: d.target.selector,
+      width: next.w,
+      height: next.h,
+    });
+    live.current.post({
+      type: "preview-style",
+      selector: d.target.selector,
+      style: axisStyle(d, next),
+    });
   }, []);
 
   const end = useCallback((committing = false) => {
@@ -171,14 +232,18 @@ export function useResizeHandles(o: Options): ResizeHandles {
     drag.current = null;
     setSize(null);
     resizeReadout.set(null);
-    document.body.classList.remove('element-resizing');
+    document.body.classList.remove("element-resizing");
     live.current.holdSwap?.(false, !committing);
   }, []);
 
   const cancel = useCallback(() => {
     const d = drag.current;
     if (!d) return;
-    live.current.post({ type: 'preview-style', selector: d.target.selector, style: axisStyle(d, d.base) });
+    live.current.post({
+      type: "preview-style",
+      selector: d.target.selector,
+      style: axisStyle(d, d.base),
+    });
     end();
   }, [end]);
 
@@ -189,15 +254,24 @@ export function useResizeHandles(o: Options): ResizeHandles {
     if (!req || !cur.directionId) return;
     const selector = d.target.selector;
     cur.setSelection((prev) => mergeCommit(prev, { selector, style }));
-    const optimistic = startOptimistic({ post: cur.post, refreshRects: cur.refreshRects }, req, (message) => live.current.onError(message));
+    const optimistic = startOptimistic(
+      { post: cur.post, refreshRects: cur.refreshRects },
+      req,
+      (message) => live.current.onError(message)
+    );
     try {
       const result = await api.directEdit(cur.projectId, cur.directionId, req);
       optimistic.saved(result.tailwind);
       live.current.refreshRects();
     } catch (err) {
-      const back = { width: d.target.styles.width ?? '', height: d.target.styles.height ?? '' };
+      const back = {
+        width: d.target.styles.width ?? "",
+        height: d.target.styles.height ?? "",
+      };
       optimistic.failed(errorText(err));
-      live.current.setSelection((prev) => mergeCommit(prev, { selector, style: back }));
+      live.current.setSelection((prev) =>
+        mergeCommit(prev, { selector, style: back })
+      );
       live.current.onError(errorText(err));
     }
   }, []);
@@ -210,25 +284,47 @@ export function useResizeHandles(o: Options): ResizeHandles {
       e.stopPropagation();
       const handle = e.currentTarget;
       handle.setPointerCapture(e.pointerId);
-      const base = { w: pxOf(sel.styles.width, sel.rect.width), h: pxOf(sel.styles.height, sel.rect.height) };
-      const d: Drag = { edge, pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, zoom: scaleOf(handle) || 1, base, size: base, target: sel, axes: new Set(), candidates: [], guides: [], stopListen: () => undefined };
+      const base = {
+        w: pxOf(sel.styles.width, sel.rect.width),
+        h: pxOf(sel.styles.height, sel.rect.height),
+      };
+      const d: Drag = {
+        edge,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        zoom: scaleOf(handle) || 1,
+        base,
+        size: base,
+        target: sel,
+        axes: new Set(),
+        candidates: [],
+        guides: [],
+        stopListen: () => undefined,
+      };
       drag.current = d;
-      document.body.classList.add('element-resizing');
+      document.body.classList.add("element-resizing");
       live.current.holdSwap?.(true, false);
       setSize({ size: base, base, rect: sel.rect, guides: [] });
       requestNeighbors(d, live.current);
       const onMove = (ev: PointerEvent) => {
         if (ev.pointerId !== d.pointerId || drag.current !== d) return;
-        const raw = resizedSize(d.edge, d.base, (ev.clientX - d.startX) / d.zoom, (ev.clientY - d.startY) / d.zoom, ev.shiftKey);
+        const raw = resizedSize(
+          d.edge,
+          d.base,
+          (ev.clientX - d.startX) / d.zoom,
+          (ev.clientY - d.startY) / d.zoom,
+          ev.shiftKey
+        );
         const snapped = snapSize(d, raw, ev.shiftKey || snapOff(ev));
         d.guides = snapped.guides;
         preview(d, snapped.size, ev.shiftKey);
       };
       const detach = () => {
-        handle.removeEventListener('pointermove', onMove);
-        handle.removeEventListener('pointerup', onUp);
-        handle.removeEventListener('pointercancel', onCancel);
-        window.removeEventListener('keydown', onKey, true);
+        handle.removeEventListener("pointermove", onMove);
+        handle.removeEventListener("pointerup", onUp);
+        handle.removeEventListener("pointercancel", onCancel);
+        window.removeEventListener("keydown", onKey, true);
       };
       const onUp = (ev: PointerEvent) => {
         if (ev.pointerId !== d.pointerId) return;
@@ -243,17 +339,17 @@ export function useResizeHandles(o: Options): ResizeHandles {
         cancel();
       };
       const onKey = (ev: KeyboardEvent) => {
-        if (ev.key !== 'Escape') return;
+        if (ev.key !== "Escape") return;
         ev.preventDefault();
         ev.stopPropagation();
         onCancel();
       };
-      handle.addEventListener('pointermove', onMove);
-      handle.addEventListener('pointerup', onUp);
-      handle.addEventListener('pointercancel', onCancel);
-      window.addEventListener('keydown', onKey, true);
+      handle.addEventListener("pointermove", onMove);
+      handle.addEventListener("pointerup", onUp);
+      handle.addEventListener("pointercancel", onCancel);
+      window.addEventListener("keydown", onKey, true);
     },
-    [target, preview, end, cancel, commit],
+    [target, preview, end, cancel, commit]
   );
 
   useEffect(() => () => cancel(), [cancel]);

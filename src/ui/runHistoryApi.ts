@@ -1,9 +1,12 @@
-import { useSyncExternalStore } from 'react';
-import type { RunSummary } from '../shared/contracts';
-import { json } from './api';
+import { useSyncExternalStore } from "react";
+
+import type { RunSummary } from "../shared/contracts";
+import { json } from "./api";
 
 export function renameRun(runId: string, title: string): Promise<RunSummary> {
-  return json<RunSummary>('PATCH', `/api/runs/${encodeURIComponent(runId)}`, { title });
+  return json<RunSummary>("PATCH", `/api/runs/${encodeURIComponent(runId)}`, {
+    title,
+  });
 }
 
 export interface RunPage {
@@ -11,18 +14,36 @@ export interface RunPage {
   nextBefore: number | null;
 }
 
-export function listRunPage(projectId: string, limit: number, before: number | null): Promise<RunPage> {
-  const after = before === null ? '' : `&before=${before}`;
-  return json<RunPage>('GET', `/api/projects/${encodeURIComponent(projectId)}/runs?limit=${limit}${after}`);
+export function listRunPage(
+  projectId: string,
+  limit: number,
+  before: number | null
+): Promise<RunPage> {
+  const after = before === null ? "" : `&before=${before}`;
+  return json<RunPage>(
+    "GET",
+    `/api/projects/${encodeURIComponent(projectId)}/runs?limit=${limit}${after}`
+  );
 }
 
 export const SEARCH_LIMIT = 20;
 
-export function searchRunPage(directionId: string, query: string): Promise<RunPage> {
+export function searchRunPage(
+  directionId: string,
+  query: string
+): Promise<RunPage> {
   const projectId = history?.projectId;
   if (!projectId) return Promise.resolve({ runs: [], nextBefore: null });
-  const params = new URLSearchParams({ q: query, direction: directionId, limit: String(SEARCH_LIMIT), light: '1' });
-  return json<RunPage>('GET', `/api/projects/${encodeURIComponent(projectId)}/runs?${params.toString()}`);
+  const params = new URLSearchParams({
+    q: query,
+    direction: directionId,
+    limit: String(SEARCH_LIMIT),
+    light: "1",
+  });
+  return json<RunPage>(
+    "GET",
+    `/api/projects/${encodeURIComponent(projectId)}/runs?${params.toString()}`
+  );
 }
 
 interface RunHistory {
@@ -50,7 +71,10 @@ let older: OlderRuns = NONE;
 let loader: (() => void) | null = null;
 const listeners = new Set<() => void>();
 
-export function publishOlderRuns(next: OlderRuns, load: (() => void) | null): void {
+export function publishOlderRuns(
+  next: OlderRuns,
+  load: (() => void) | null
+): void {
   loader = load;
   if (next.more === older.more && next.loading === older.loading) return;
   older = next.more || next.loading ? next : NONE;

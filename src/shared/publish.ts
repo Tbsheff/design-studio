@@ -1,8 +1,9 @@
-import type { ExportFrame } from './export.js';
+import type { ExportFrame } from "./export.js";
 
-export const CF_MIN_VERSION = '1.0.0-beta.26';
-export const CF_INSTALL_COMMAND = 'npm i -g cf';
-export const CF_NODE_RANGE = 'Node.js 22.23, 24.22 or 26.12 or later in that line';
+export const CF_MIN_VERSION = "1.0.0-beta.26";
+export const CF_INSTALL_COMMAND = "npm i -g cf";
+export const CF_NODE_RANGE =
+  "Node.js 22.23, 24.22 or 26.12 or later in that line";
 export const PUBLISH_EXPIRY_DAYS = [0, 1, 7, 30] as const;
 export type PublishExpiryDays = (typeof PUBLISH_EXPIRY_DAYS)[number];
 export const PUBLISH_DEFAULT_EXPIRY_DAYS: PublishExpiryDays = 7;
@@ -13,7 +14,7 @@ export const PUBLISH_MAX_FILE_BYTES = 25 * 1024 * 1024;
 export const PUBLISH_MAX_BYTES = 100 * 1024 * 1024;
 export const PUBLISH_MAX_FRAMES = 12;
 
-export type PublishKind = 'site' | 'viewer';
+export type PublishKind = "site" | "viewer";
 
 export interface PublishAccount {
   id: string;
@@ -82,7 +83,12 @@ export interface PublishPlan {
   backend: PublishBackendMode;
 }
 
-export type PublicationStatus = 'publishing' | 'live' | 'failed' | 'removed' | 'ended';
+export type PublicationStatus =
+  | "publishing"
+  | "live"
+  | "failed"
+  | "removed"
+  | "ended";
 
 export interface PublishedVersion {
   id: string;
@@ -107,7 +113,7 @@ export interface Publication {
   versionId: string;
   kind: PublishKind;
   title: string;
-  backend: 'app' | 'legacy-worker';
+  backend: "app" | "legacy-worker";
   workerName: string | null;
   accountId: string | null;
   url: string | null;
@@ -142,10 +148,22 @@ export interface PublicationComment {
   createdAt: number;
 }
 
-export type PublishBackendMode = 'cloudflare' | 'local';
+export type PublishBackendMode = "cloudflare" | "local";
 
-export type SetupStepId = 'cli' | 'bucket' | 'database' | 'migrations' | 'key' | 'deploy' | 'health';
-export type SetupStepStatus = 'pending' | 'running' | 'done' | 'skipped' | 'failed';
+export type SetupStepId =
+  | "cli"
+  | "bucket"
+  | "database"
+  | "migrations"
+  | "key"
+  | "deploy"
+  | "health";
+export type SetupStepStatus =
+  | "pending"
+  | "running"
+  | "done"
+  | "skipped"
+  | "failed";
 
 export interface SetupStep {
   id: SetupStepId;
@@ -161,7 +179,7 @@ export interface PublishBackendState {
   url: string | null;
   accountId: string | null;
   databaseId: string | null;
-  keyStore: 'keychain' | 'file' | null;
+  keyStore: "keychain" | "file" | null;
   localAllowed: boolean;
   running: boolean;
   steps: SetupStep[];
@@ -175,10 +193,13 @@ export function publishSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-export function publishExpiryText(expiresAt: number | null, now = Date.now()): string {
-  if (expiresAt === null) return 'No end date';
+export function publishExpiryText(
+  expiresAt: number | null,
+  now = Date.now()
+): string {
+  if (expiresAt === null) return "No end date";
   const left = expiresAt - now;
-  if (left <= 0) return 'Ended';
+  if (left <= 0) return "Ended";
   const days = Math.round(left / 86_400_000);
   if (days >= 2) return `Ends in ${days} days`;
   const hours = Math.max(1, Math.round(left / 3_600_000));
@@ -191,18 +212,24 @@ interface CfVersionParts {
 }
 
 function splitVersion(v: string): CfVersionParts {
-  const [core = '', pre = ''] = v.trim().replace(/^v/, '').split('-', 2);
-  return { core: core.split('.').map((n) => Number(n) || 0), pre: pre ? pre.split('.') : [] };
+  const [core = "", pre = ""] = v.trim().replace(/^v/, "").split("-", 2);
+  return {
+    core: core.split(".").map((n) => Number(n) || 0),
+    pre: pre ? pre.split(".") : [],
+  };
 }
 
 function comparePart(p: string, q: string): number {
   const pn = Number(p);
   const qn = Number(q);
-  return Math.sign(Number.isFinite(pn) && Number.isFinite(qn) ? pn - qn : p.localeCompare(q));
+  return Math.sign(
+    Number.isFinite(pn) && Number.isFinite(qn) ? pn - qn : p.localeCompare(q)
+  );
 }
 
 function comparePre(x: string[], y: string[]): number {
-  if (x.length === 0 || y.length === 0) return y.length - x.length === 0 ? 0 : x.length === 0 ? 1 : -1;
+  if (x.length === 0 || y.length === 0)
+    return y.length - x.length === 0 ? 0 : x.length === 0 ? 1 : -1;
   for (let i = 0; i < Math.max(x.length, y.length); i += 1) {
     const p = x[i];
     const q = y[i];

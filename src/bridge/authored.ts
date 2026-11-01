@@ -1,4 +1,4 @@
-import type { AuthoredRule } from '../shared/contracts.js';
+import type { AuthoredRule } from "../shared/contracts.js";
 
 export const AUTHORED_MAX_RULES = 60;
 export const AUTHORED_MAX_BYTES = 20_000;
@@ -15,18 +15,21 @@ interface Collector {
 function sourceOf(sheet: CSSStyleSheet): string | null {
   if (sheet.href) {
     try {
-      const name = new URL(sheet.href).pathname.split('/').filter(Boolean).at(-1);
+      const name = new URL(sheet.href).pathname
+        .split("/")
+        .filter(Boolean)
+        .at(-1);
       return name ? decodeURIComponent(name) : sheet.href;
     } catch {
       return sheet.href;
     }
   }
-  return sheet.ownerNode instanceof HTMLStyleElement ? '<style>' : null;
+  return sheet.ownerNode instanceof HTMLStyleElement ? "<style>" : null;
 }
 
 function isStudioSheet(sheet: CSSStyleSheet): boolean {
   const owner = sheet.ownerNode;
-  return owner instanceof Element && owner.id.startsWith('studio-');
+  return owner instanceof Element && owner.id.startsWith("studio-");
 }
 
 function rulesOf(sheet: CSSStyleSheet): CSSRuleList | null {
@@ -46,7 +49,8 @@ function matches(element: Element, selector: string): boolean {
 }
 
 function groupApplies(rule: CSSRule): boolean {
-  if (rule instanceof CSSMediaRule) return window.matchMedia(rule.media.mediaText).matches;
+  if (rule instanceof CSSMediaRule)
+    return window.matchMedia(rule.media.mediaText).matches;
   if (rule instanceof CSSSupportsRule) {
     try {
       return CSS.supports(rule.conditionText);
@@ -54,12 +58,18 @@ function groupApplies(rule: CSSRule): boolean {
       return false;
     }
   }
-  return typeof CSSLayerBlockRule !== 'undefined' && rule instanceof CSSLayerBlockRule;
+  return (
+    typeof CSSLayerBlockRule !== "undefined" &&
+    rule instanceof CSSLayerBlockRule
+  );
 }
 
 function add(collector: Collector, rule: AuthoredRule): void {
   const size = rule.selector.length + rule.css.length;
-  if (collector.rules.length >= AUTHORED_MAX_RULES || collector.bytes + size > AUTHORED_MAX_BYTES) {
+  if (
+    collector.rules.length >= AUTHORED_MAX_RULES ||
+    collector.bytes + size > AUTHORED_MAX_BYTES
+  ) {
     collector.full = true;
     return;
   }
@@ -67,21 +77,40 @@ function add(collector: Collector, rule: AuthoredRule): void {
   collector.bytes += size;
 }
 
-function visit(element: Element, rule: CSSRule, source: string | null, collector: Collector, depth: number): void {
+function visit(
+  element: Element,
+  rule: CSSRule,
+  source: string | null,
+  collector: Collector,
+  depth: number
+): void {
   if (rule instanceof CSSStyleRule) {
-    if (rule.style.length > 0 && matches(element, rule.selectorText)) add(collector, { selector: rule.selectorText, css: rule.style.cssText, source });
+    if (rule.style.length > 0 && matches(element, rule.selectorText))
+      add(collector, {
+        selector: rule.selectorText,
+        css: rule.style.cssText,
+        source,
+      });
     return;
   }
   if (rule instanceof CSSImportRule) {
     const imported = rule.styleSheet;
     const nested = imported ? rulesOf(imported) : null;
-    if (imported && nested) walk(element, nested, sourceOf(imported), collector, depth + 1);
+    if (imported && nested)
+      walk(element, nested, sourceOf(imported), collector, depth + 1);
     return;
   }
-  if (rule instanceof CSSGroupingRule && groupApplies(rule)) walk(element, rule.cssRules, source, collector, depth + 1);
+  if (rule instanceof CSSGroupingRule && groupApplies(rule))
+    walk(element, rule.cssRules, source, collector, depth + 1);
 }
 
-function walk(element: Element, list: CSSRuleList, source: string | null, collector: Collector, depth: number): void {
+function walk(
+  element: Element,
+  list: CSSRuleList,
+  source: string | null,
+  collector: Collector,
+  depth: number
+): void {
   if (depth > MAX_DEPTH) return;
   for (const rule of Array.from(list)) {
     if (collector.full) return;
@@ -89,14 +118,14 @@ function walk(element: Element, list: CSSRuleList, source: string | null, collec
   }
 }
 
-export type BoxProp = 'width' | 'height' | 'left' | 'right' | 'top' | 'bottom';
-const SIZE_PROPS: BoxProp[] = ['width', 'height'];
-const INSET_PROPS: BoxProp[] = ['left', 'right', 'top', 'bottom'];
+export type BoxProp = "width" | "height" | "left" | "right" | "top" | "bottom";
+const SIZE_PROPS: BoxProp[] = ["width", "height"];
+const INSET_PROPS: BoxProp[] = ["left", "right", "top", "bottom"];
 const LOGICAL: [string, BoxProp][] = [
-  ['inset-inline-start', 'left'],
-  ['inset-inline-end', 'right'],
-  ['inset-block-start', 'top'],
-  ['inset-block-end', 'bottom'],
+  ["inset-inline-start", "left"],
+  ["inset-inline-end", "right"],
+  ["inset-block-start", "top"],
+  ["inset-block-end", "bottom"],
 ];
 
 interface BoxFound {
@@ -108,65 +137,105 @@ interface BoxFound {
 function readDeclarations(style: CSSStyleDeclaration, found: BoxFound): void {
   for (const prop of found.props) {
     const value = style.getPropertyValue(prop);
-    if (value !== '') found.values[prop] = value.trim();
+    if (value !== "") found.values[prop] = value.trim();
   }
   if (!found.logical) return;
   for (const [logical, prop] of LOGICAL) {
     const value = style.getPropertyValue(logical);
-    if (value !== '') found.values[prop] = value.trim();
+    if (value !== "") found.values[prop] = value.trim();
   }
 }
 
 function hasDeclaration(style: CSSStyleDeclaration, found: BoxFound): boolean {
-  return found.props.some((prop) => style.getPropertyValue(prop) !== '') || (found.logical && LOGICAL.some(([logical]) => style.getPropertyValue(logical) !== ''));
+  return (
+    found.props.some((prop) => style.getPropertyValue(prop) !== "") ||
+    (found.logical &&
+      LOGICAL.some(([logical]) => style.getPropertyValue(logical) !== ""))
+  );
 }
 
-function sizeVisit(element: Element, rule: CSSRule, found: BoxFound, depth: number): void {
+function sizeVisit(
+  element: Element,
+  rule: CSSRule,
+  found: BoxFound,
+  depth: number
+): void {
   if (rule instanceof CSSStyleRule) {
-    if (!hasDeclaration(rule.style, found) || !matches(element, rule.selectorText)) return;
+    if (
+      !hasDeclaration(rule.style, found) ||
+      !matches(element, rule.selectorText)
+    )
+      return;
     readDeclarations(rule.style, found);
     return;
   }
   if (depth > MAX_DEPTH) return;
   if (rule instanceof CSSImportRule) {
-    for (const child of Array.from((rule.styleSheet && rulesOf(rule.styleSheet)) ?? [])) sizeVisit(element, child, found, depth + 1);
+    for (const child of Array.from(
+      (rule.styleSheet && rulesOf(rule.styleSheet)) ?? []
+    ))
+      sizeVisit(element, child, found, depth + 1);
     return;
   }
-  if (rule instanceof CSSGroupingRule && groupApplies(rule)) for (const child of Array.from(rule.cssRules)) sizeVisit(element, child, found, depth + 1);
+  if (rule instanceof CSSGroupingRule && groupApplies(rule))
+    for (const child of Array.from(rule.cssRules))
+      sizeVisit(element, child, found, depth + 1);
 }
 
-function authoredValues(element: Element, found: BoxFound): Record<string, string> {
+function authoredValues(
+  element: Element,
+  found: BoxFound
+): Record<string, string> {
   for (const sheet of Array.from(document.styleSheets)) {
     if (sheet.disabled || isStudioSheet(sheet)) continue;
     const media = sheet.media.mediaText;
     if (media && !window.matchMedia(media).matches) continue;
-    for (const rule of Array.from(rulesOf(sheet) ?? [])) sizeVisit(element, rule, found, 0);
+    for (const rule of Array.from(rulesOf(sheet) ?? []))
+      sizeVisit(element, rule, found, 0);
   }
   if (element instanceof HTMLElement) readDeclarations(element.style, found);
   return found.values;
 }
 
-export function authoredBox(element: Element, insets: boolean): Partial<Record<BoxProp, string>> {
-  return authoredValues(element, { props: insets ? [...SIZE_PROPS, ...INSET_PROPS] : SIZE_PROPS, logical: insets, values: {} });
+export function authoredBox(
+  element: Element,
+  insets: boolean
+): Partial<Record<BoxProp, string>> {
+  return authoredValues(element, {
+    props: insets ? [...SIZE_PROPS, ...INSET_PROPS] : SIZE_PROPS,
+    logical: insets,
+    values: {},
+  });
 }
 
-export function authoredMargins(element: Element): { left?: string; top?: string } {
-  const values = authoredValues(element, { props: ['margin-left', 'margin-top'], logical: false, values: {} });
-  return { left: values['margin-left'], top: values['margin-top'] };
+export function authoredMargins(element: Element): {
+  left?: string;
+  top?: string;
+} {
+  const values = authoredValues(element, {
+    props: ["margin-left", "margin-top"],
+    logical: false,
+    values: {},
+  });
+  return { left: values["margin-left"], top: values["margin-top"] };
 }
 
 const MARGIN_SIDES: [string, string, string][] = [
-  ['top', 'margin-top', 'margin-block-start'],
-  ['right', 'margin-right', 'margin-inline-end'],
-  ['bottom', 'margin-bottom', 'margin-block-end'],
-  ['left', 'margin-left', 'margin-inline-start'],
+  ["top", "margin-top", "margin-block-start"],
+  ["right", "margin-right", "margin-inline-end"],
+  ["bottom", "margin-bottom", "margin-block-end"],
+  ["left", "margin-left", "margin-inline-start"],
 ];
 
 export function declaredMargins(element: Element): Record<string, string> {
-  const props = MARGIN_SIDES.flatMap(([, physical, logical]) => [physical, logical]);
+  const props = MARGIN_SIDES.flatMap(([, physical, logical]) => [
+    physical,
+    logical,
+  ]);
   const values = authoredValues(element, { props, logical: false, values: {} });
   const out: Record<string, string> = {};
-  for (const [side, physical, logical] of MARGIN_SIDES) out[`declared-margin-${side}`] = values[logical] ?? values[physical] ?? '';
+  for (const [side, physical, logical] of MARGIN_SIDES)
+    out[`declared-margin-${side}`] = values[logical] ?? values[physical] ?? "";
   return out;
 }
 
@@ -185,15 +254,26 @@ export function authoredRules(element: Element): AuthoredRule[] {
 
 function crumbLabel(element: Element): string {
   const tag = element.tagName.toLowerCase();
-  const firstClass = (element.getAttribute('class') ?? '').trim().split(/\s+/)[0];
-  const label = element.id ? `${tag}#${element.id}` : firstClass ? `${tag}.${firstClass}` : tag;
+  const firstClass = (element.getAttribute("class") ?? "")
+    .trim()
+    .split(/\s+/)[0];
+  const label = element.id
+    ? `${tag}#${element.id}`
+    : firstClass
+      ? `${tag}.${firstClass}`
+      : tag;
   return label.slice(0, MAX_LABEL);
 }
 
 export function ancestorPath(element: Element): string[] {
   const path: string[] = [];
   let current = element.parentElement;
-  while (current && current !== document.body && current !== document.documentElement && path.length < MAX_PATH) {
+  while (
+    current &&
+    current !== document.body &&
+    current !== document.documentElement &&
+    path.length < MAX_PATH
+  ) {
     path.unshift(crumbLabel(current));
     current = current.parentElement;
   }

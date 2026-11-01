@@ -139,7 +139,7 @@
 }
 
 .ins-status::before {
-  content: '';
+  content: "";
   width: 6px;
   height: 6px;
   border-radius: var(--r-full);
@@ -236,7 +236,9 @@
 
 .ins-field:focus-within {
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--accent), var(--ring-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    var(--ring-soft);
 }
 
 .ins-scrub {
@@ -316,7 +318,7 @@ body.ins-scrubbing * {
   height: 18px;
 }
 
-.ins-input[aria-invalid='true'] {
+.ins-input[aria-invalid="true"] {
   color: var(--danger);
 }
 
@@ -338,7 +340,6 @@ body.ins-scrubbing * {
   background-position: right var(--s-1) center;
 }
 
-
 .ins-field.color .ins-input {
   font-family: var(--mono);
   font-size: var(--t-xs);
@@ -356,7 +357,11 @@ body.ins-scrubbing * {
 }
 
 .ins-swatch.empty {
-  background: repeating-conic-gradient(var(--surface-active) 0 25%, var(--surface) 0 50%) 0 0 / 8px 8px;
+  background: repeating-conic-gradient(
+      var(--surface-active) 0 25%,
+      var(--surface) 0 50%
+    )
+    0 0 / 8px 8px;
 }
 
 .ins-swatch input {
@@ -370,7 +375,10 @@ body.ins-scrubbing * {
 }
 
 .ins-swatch:has(input:focus-visible) {
-  box-shadow: inset 0 0 0 1px var(--edge-strong), 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--edge-strong),
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
 }
 
 .ins-text {
@@ -413,10 +421,10 @@ body.ins-scrubbing * {
   display: grid;
   grid-template-columns: 60px minmax(0, 1fr) 60px;
   grid-template-areas:
-    'head head head'
-    '. top .'
-    'left core right'
-    '. bottom .';
+    "head head head"
+    ". top ."
+    "left core right"
+    ". bottom .";
   align-items: center;
   gap: var(--s-1);
   padding: var(--s-1) var(--s-2) var(--s-2);
@@ -459,7 +467,7 @@ body.ins-scrubbing * {
 }
 
 .ins-link.icon-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
 }
@@ -481,7 +489,9 @@ body.ins-scrubbing * {
 
 .box-ring .side:focus {
   background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--accent), var(--ring-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    var(--ring-soft);
 }
 
 .box-ring .side-cell.top {
@@ -707,7 +717,7 @@ body.ins-scrubbing * {
   scale: 0.96;
 }
 
-.ins-chip-toggle[aria-pressed='true'] {
+.ins-chip-toggle[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }

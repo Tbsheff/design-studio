@@ -1,6 +1,12 @@
 import type { OxlintOverride } from "oxlint";
 
-import { LAYERS, ROOT_POLICIES, dependencies, globsOf, layerOverride } from "./boundaries.ts";
+import {
+  LAYERS,
+  ROOT_POLICIES,
+  dependencies,
+  globsOf,
+  layerOverride,
+} from "./boundaries.ts";
 
 export const LEGACY_GLOBS = [
   "src/server/http/**",
@@ -30,14 +36,29 @@ export const LEGACY_GLOBS = [
   "e2e/**",
 ];
 
-const UI_GLOBALS = ["fetch", "localStorage", "sessionStorage", "EventSource", "BroadcastChannel"].map((name) => ({
+const UI_GLOBALS = [
+  "fetch",
+  "localStorage",
+  "sessionStorage",
+  "EventSource",
+  "BroadcastChannel",
+].map((name) => ({
   name,
   message: "Only src/ui/platform may touch browser I/O.",
 }));
 
-const STUDIO_DESKTOP = [{ object: "window", property: "studioDesktop", message: "Only src/ui/platform may use window.studioDesktop." }];
+const STUDIO_DESKTOP = [
+  {
+    object: "window",
+    property: "studioDesktop",
+    message: "Only src/ui/platform may use window.studioDesktop.",
+  },
+];
 
-export const SHARED_DOM = ["document", "window"].map((name) => ({ name, message: "src/shared runs on every platform." }));
+export const SHARED_DOM = ["document", "window"].map((name) => ({
+  name,
+  message: "src/shared runs on every platform.",
+}));
 
 const isLegacy = (glob: string) => LEGACY_GLOBS.includes(glob);
 
@@ -63,6 +84,15 @@ export const legacy: OxlintOverride[] = [
       "no-restricted-properties": ["warn", ...STUDIO_DESKTOP],
     },
   },
-  { files: ["src/ui/platform/**"], rules: { "no-restricted-globals": "off", "no-restricted-properties": "off" } },
-  { files: ["src/shared/app.ts"], rules: { "no-restricted-globals": ["warn", ...SHARED_DOM] } },
+  {
+    files: ["src/ui/platform/**"],
+    rules: {
+      "no-restricted-globals": "off",
+      "no-restricted-properties": "off",
+    },
+  },
+  {
+    files: ["src/shared/app.ts"],
+    rules: { "no-restricted-globals": ["warn", ...SHARED_DOM] },
+  },
 ];

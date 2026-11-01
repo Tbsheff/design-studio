@@ -1,4 +1,4 @@
-import { pageFileOf, type PageWait } from '../useFirstBuild';
+import { pageFileOf, type PageWait } from "../useFirstBuild";
 
 function SkeletonPage() {
   return (
@@ -24,28 +24,58 @@ function SkeletonPage() {
   );
 }
 
-export function FrameSkeleton({ step, page, missing }: { step: string | null; page?: string; missing?: string }) {
+export function FrameSkeleton({
+  step,
+  page,
+  missing,
+}: {
+  step: string | null;
+  page?: string;
+  missing?: string;
+}) {
   if (missing)
     return (
-      <div className="frame-skeleton idle" role="status" data-testid="frame-missing">
+      <div
+        className="frame-skeleton idle"
+        role="status"
+        data-testid="frame-missing"
+      >
         <div className="frame-skeleton-step">
           <span className="frame-skeleton-text">No page at {missing} yet</span>
         </div>
       </div>
     );
   return (
-    <div className="frame-skeleton" role="status" aria-live="polite" data-testid="frame-skeleton">
+    <div
+      className="frame-skeleton"
+      role="status"
+      aria-live="polite"
+      data-testid="frame-skeleton"
+    >
       <SkeletonPage />
       <div className="frame-skeleton-step">
         <span className="spinner" aria-hidden="true" />
-        <span className="frame-skeleton-text">{step ?? 'Building the first version'}</span>
+        <span className="frame-skeleton-text">
+          {step ?? "Building the first version"}
+        </span>
         {page && <span className="frame-skeleton-page-name">{page}</span>}
       </div>
     </div>
   );
 }
 
-export function FirstBuildCover({ covered, wait, step, path }: { covered: boolean; wait: PageWait; step: string | null | undefined; path: string | undefined }) {
-  if (wait === 'missing') return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
+export function FirstBuildCover({
+  covered,
+  wait,
+  step,
+  path,
+}: {
+  covered: boolean;
+  wait: PageWait;
+  step: string | null | undefined;
+  path: string | undefined;
+}) {
+  if (wait === "missing")
+    return <FrameSkeleton step={null} missing={pageFileOf(path)} />;
   return covered ? <FrameSkeleton step={step ?? null} /> : null;
 }

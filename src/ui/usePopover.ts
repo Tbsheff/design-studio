@@ -1,7 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, type MouseEvent as ReactMouseEvent, type RefObject } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type MouseEvent as ReactMouseEvent,
+  type RefObject,
+} from "react";
 
 function modalDialogOwnsEscape(popover: HTMLElement | null): boolean {
-  const modal = document.querySelector('dialog[open]');
+  const modal = document.querySelector("dialog[open]");
   return modal !== null && popover !== null && !modal.contains(popover);
 }
 
@@ -9,7 +15,7 @@ export function usePopover(
   open: boolean,
   root: RefObject<HTMLElement | null>,
   onClose: (refocus: boolean) => void,
-  trigger?: RefObject<HTMLElement | null>,
+  trigger?: RefObject<HTMLElement | null>
 ): void {
   useEffect(() => {
     if (!open) return;
@@ -19,22 +25,23 @@ export function usePopover(
       if (root.current && !root.current.contains(target)) onClose(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== "Escape") return;
       if (modalDialogOwnsEscape(root.current)) return;
       e.preventDefault();
       e.stopPropagation();
       onClose(true);
     };
-    document.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey, true);
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey, true);
     return () => {
-      document.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey, true);
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey, true);
     };
   }, [open, root, onClose, trigger]);
 }
 
-const FOCUSABLE = 'input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [href], [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE =
+  'input:not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [href], [tabindex]:not([tabindex="-1"])';
 
 function firstFocusable(root: Element | null): HTMLElement | null {
   return root?.querySelector<HTMLElement>(FOCUSABLE) ?? null;
@@ -42,7 +49,10 @@ function firstFocusable(root: Element | null): HTMLElement | null {
 
 export function useReturnFocusOnUnmount(): void {
   useLayoutEffect(() => {
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     return () => {
       if (opener?.isConnected) opener.focus();
     };
@@ -57,9 +67,16 @@ export function useModalDialog(onDismiss: () => boolean | void) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     if (!el.open) el.showModal();
-    (el.querySelector<HTMLElement>('[data-autofocus]') ?? firstFocusable(el.querySelector('.modal-body')) ?? firstFocusable(el))?.focus();
+    (
+      el.querySelector<HTMLElement>("[data-autofocus]") ??
+      firstFocusable(el.querySelector(".modal-body")) ??
+      firstFocusable(el)
+    )?.focus();
     const onCancel = (e: Event) => {
       e.preventDefault();
       dismiss.current();
@@ -67,11 +84,11 @@ export function useModalDialog(onDismiss: () => boolean | void) {
     const onClose = () => {
       if (dismiss.current() === false && el.isConnected) el.showModal();
     };
-    el.addEventListener('cancel', onCancel);
-    el.addEventListener('close', onClose);
+    el.addEventListener("cancel", onCancel);
+    el.addEventListener("close", onClose);
     return () => {
-      el.removeEventListener('cancel', onCancel);
-      el.removeEventListener('close', onClose);
+      el.removeEventListener("cancel", onCancel);
+      el.removeEventListener("close", onClose);
       if (el.open) el.close();
       if (opener?.isConnected) opener.focus();
     };
@@ -80,7 +97,11 @@ export function useModalDialog(onDismiss: () => boolean | void) {
   const onBackdropMouseDown = (e: ReactMouseEvent<HTMLDialogElement>) => {
     if (e.target !== e.currentTarget) return;
     const r = e.currentTarget.getBoundingClientRect();
-    const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+    const inside =
+      e.clientX >= r.left &&
+      e.clientX <= r.right &&
+      e.clientY >= r.top &&
+      e.clientY <= r.bottom;
     if (!inside) dismiss.current();
   };
 

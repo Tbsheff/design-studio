@@ -1,20 +1,71 @@
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { nanoid } from 'nanoid';
-import type { DesignSystemRunCheck, Direction, FinalCheck, LoopSummary, Project, PermissionDecision, PermissionRequest, QueuedMessage, RunPart, RunSentRecord, TodoItem, ToolDiff, RunStatus, RunSummary, RunUsage, StudioEventBody, TelemetrySample, ToolCallRecord } from '../../shared/contracts.js';
-import { levelOf, resolveRunConfig, withRunTask } from '../../shared/run-levels.js';
-import { runTitle } from '../../shared/version-title.js';
-import { applyPartEvent, closeParts, isPartEvent, withFinalText } from '../../shared/run-parts.js';
-import { createCutWriteGuard } from './cut-writes.js';
-import { createBashEditTracker, fileDiff, readFileText, type BashEditResult, type BashWriteCheck, type FileText } from './bash-edits.js';
-import { anyRuleMatches, ruleForCommand } from '../../shared/permissionRules.js';
-import { createCommandRuleStore } from '../store/command-rules.js';
-import { BadRequestError } from '../store/errors.js';
-import { scopeProblem } from '../variations/scope-check.js';
-import { createTodoTracker, evidenceOf, type TodoEvidence } from './todo-tracker.js';
-import { EDIT_TOOL_NAMES } from './permissions.js';
-import { isLeanRun } from './lean-run.js';
-import type { AgentRunContext, AgentRunner, EventBus, ProjectStore, RunHandle, VersionStore } from '../types.js';
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { nanoid } from "nanoid";
+
+import type {
+  DesignSystemRunCheck,
+  Direction,
+  FinalCheck,
+  LoopSummary,
+  Project,
+  PermissionDecision,
+  PermissionRequest,
+  QueuedMessage,
+  RunPart,
+  RunSentRecord,
+  TodoItem,
+  ToolDiff,
+  RunStatus,
+  RunSummary,
+  RunUsage,
+  StudioEventBody,
+  TelemetrySample,
+  ToolCallRecord,
+} from "../../shared/contracts.js";
+import {
+  anyRuleMatches,
+  ruleForCommand,
+} from "../../shared/permissionRules.js";
+import {
+  levelOf,
+  resolveRunConfig,
+  withRunTask,
+} from "../../shared/run-levels.js";
+import {
+  applyPartEvent,
+  closeParts,
+  isPartEvent,
+  withFinalText,
+} from "../../shared/run-parts.js";
+import { runTitle } from "../../shared/version-title.js";
+import { createCommandRuleStore } from "../store/command-rules.js";
+import { BadRequestError } from "../store/errors.js";
+import type {
+  AgentRunContext,
+  AgentRunner,
+  EventBus,
+  ProjectStore,
+  RunHandle,
+  VersionStore,
+} from "../types.js";
+import { scopeProblem } from "../variations/scope-check.js";
+import {
+  createBashEditTracker,
+  fileDiff,
+  readFileText,
+  type BashEditResult,
+  type BashWriteCheck,
+  type FileText,
+} from "./bash-edits.js";
+import { createCutWriteGuard } from "./cut-writes.js";
+import { isLeanRun } from "./lean-run.js";
+import { EDIT_TOOL_NAMES } from "./permissions.js";
+import {
+  createTodoTracker,
+  evidenceOf,
+  type TodoEvidence,
+} from "./todo-tracker.js";
 
 export interface DriverSink {
   textDelta(text: string): void;
@@ -22,16 +73,31 @@ export interface DriverSink {
   thinkingDelta(text: string): void;
   thinking(text: string): void;
   toolStarted(toolUseId: string, name: string, input: unknown): void;
-  toolFinished(toolUseId: string, isError: boolean, summary: string, resultText?: string): void;
-  beforeWrite(toolUseId: string, name: string, input: unknown): void | Promise<void>;
-  bashFinished?(toolUseId: string, check: BashWriteCheck): Promise<BashEditResult>;
+  toolFinished(
+    toolUseId: string,
+    isError: boolean,
+    summary: string,
+    resultText?: string
+  ): void;
+  beforeWrite(
+    toolUseId: string,
+    name: string,
+    input: unknown
+  ): void | Promise<void>;
+  bashFinished?(
+    toolUseId: string,
+    check: BashWriteCheck
+  ): Promise<BashEditResult>;
   usage(contextTokens: number): void;
   retry(attempt: number, max: number, delayMs: number, error: string): void;
   sessionStarted(sessionId: string): Promise<void>;
   sent(message: SentMessage): void;
 }
 
-export type SentMessage = Omit<RunSentRecord, 'type' | 'runId' | 'projectId' | 'directionId' | 'ts'>;
+export type SentMessage = Omit<
+  RunSentRecord,
+  "type" | "runId" | "projectId" | "directionId" | "ts"
+>;
 
 export interface SessionTotals {
   costUsd: number;
@@ -47,7 +113,7 @@ export interface RunInbox {
   take(): QueuedMessage[];
 }
 
-export type PermissionAsk = Omit<PermissionRequest, 'id'>;
+export type PermissionAsk = Omit<PermissionRequest, "id">;
 
 export interface CommandRules {
   allows(command: string): Promise<boolean>;
@@ -68,14 +134,20 @@ export interface DriverInput {
 }
 
 export function queuedText(items: readonly QueuedMessage[]): string {
-  return items.map((item) => item.text.trim()).filter(Boolean).join('\n\n');
+  return items
+    .map((item) => item.text.trim())
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 export function deliveredContext(items: readonly QueuedMessage[]): string {
   return `<user-message-during-run>\nThe user sent this while you were working. Take it into account from now on:\n${queuedText(items)}\n</user-message-during-run>`;
 }
 
-export type DriverStatus = Extract<RunStatus, 'completed' | 'failed' | 'budget_exceeded'>;
+export type DriverStatus = Extract<
+  RunStatus,
+  "completed" | "failed" | "budget_exceeded"
+>;
 
 export interface DriverOutcome {
   status: DriverStatus;
@@ -102,60 +174,97 @@ interface LifecycleDeps {
   beforeCommit?: (project: Project, direction: Direction) => Promise<void>;
 }
 
-export const EMPTY_USAGE: RunUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 };
+export const EMPTY_USAGE: RunUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+};
 
-const FILE_WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit']);
+const FILE_WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
 
 export const DELTA_FLUSH_MS = 50;
 export const DELTA_FLUSH_CHARS = 2048;
 
 function sessionsDirOf(runsDir: string): string {
-  return path.join(path.dirname(runsDir), 'sessions');
+  return path.join(path.dirname(runsDir), "sessions");
 }
 
 function sessionLedgerPath(runsDir: string, sessionId: string): string {
-  return path.join(sessionsDirOf(runsDir), `${sessionId.replace(/[^A-Za-z0-9_-]/g, '_')}.json`);
+  return path.join(
+    sessionsDirOf(runsDir),
+    `${sessionId.replace(/[^A-Za-z0-9_-]/g, "_")}.json`
+  );
 }
 
 function finiteOrNull(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-async function loadPriorSession(runsDir: string, direction: Direction): Promise<PriorSession | null> {
+async function loadPriorSession(
+  runsDir: string,
+  direction: Direction
+): Promise<PriorSession | null> {
   const sessionId = direction.sessionId;
   if (!sessionId) return null;
-  const fallback: PriorSession = { sessionId, costUsd: direction.sessionCostUsd ?? 0, apiMs: null };
+  const fallback: PriorSession = {
+    sessionId,
+    costUsd: direction.sessionCostUsd ?? 0,
+    apiMs: null,
+  };
   try {
-    const raw = JSON.parse(await readFile(sessionLedgerPath(runsDir, sessionId), 'utf8')) as Record<string, unknown>;
-    const promptHash = typeof raw['promptHash'] === 'string' ? raw['promptHash'] : null;
-    return { sessionId, costUsd: finiteOrNull(raw['costUsd']) ?? fallback.costUsd, apiMs: finiteOrNull(raw['apiMs']), promptHash };
+    const raw = JSON.parse(
+      await readFile(sessionLedgerPath(runsDir, sessionId), "utf8")
+    ) as Record<string, unknown>;
+    const promptHash =
+      typeof raw["promptHash"] === "string" ? raw["promptHash"] : null;
+    return {
+      sessionId,
+      costUsd: finiteOrNull(raw["costUsd"]) ?? fallback.costUsd,
+      apiMs: finiteOrNull(raw["apiMs"]),
+      promptHash,
+    };
   } catch {
     return fallback;
   }
 }
 
 function toolFilePath(input: unknown, workTree: string): string | null {
-  if (!input || typeof input !== 'object') return null;
-  const target = (input as Record<string, unknown>)['file_path'];
-  if (typeof target !== 'string') return null;
+  if (!input || typeof input !== "object") return null;
+  const target = (input as Record<string, unknown>)["file_path"];
+  if (typeof target !== "string") return null;
   const relative = path.relative(workTree, path.resolve(workTree, target));
-  return relative.split(path.sep).join('/');
+  return relative.split(path.sep).join("/");
 }
 
-export const TODO_TOOL = 'TodoWrite';
-const TODO_STATUSES = new Set(['pending', 'in_progress', 'completed']);
+export const TODO_TOOL = "TodoWrite";
+const TODO_STATUSES = new Set(["pending", "in_progress", "completed"]);
 
 export function parseTodos(input: unknown): TodoItem[] | null {
-  const raw = input && typeof input === 'object' ? (input as Record<string, unknown>)['todos'] : null;
+  const raw =
+    input && typeof input === "object"
+      ? (input as Record<string, unknown>)["todos"]
+      : null;
   if (!Array.isArray(raw)) return null;
   const todos: TodoItem[] = [];
   for (const item of raw.slice(0, 50)) {
-    if (!item || typeof item !== 'object') continue;
+    if (!item || typeof item !== "object") continue;
     const record = item as Record<string, unknown>;
-    const content = typeof record['content'] === 'string' ? record['content'].slice(0, 300) : '';
-    const status = typeof record['status'] === 'string' && TODO_STATUSES.has(record['status']) ? (record['status'] as TodoItem['status']) : 'pending';
-    const activeForm = typeof record['activeForm'] === 'string' ? record['activeForm'].slice(0, 300) : undefined;
-    if (content) todos.push({ content, status, ...(activeForm ? { activeForm } : {}) });
+    const content =
+      typeof record["content"] === "string"
+        ? record["content"].slice(0, 300)
+        : "";
+    const status =
+      typeof record["status"] === "string" &&
+      TODO_STATUSES.has(record["status"])
+        ? (record["status"] as TodoItem["status"])
+        : "pending";
+    const activeForm =
+      typeof record["activeForm"] === "string"
+        ? record["activeForm"].slice(0, 300)
+        : undefined;
+    if (content)
+      todos.push({ content, status, ...(activeForm ? { activeForm } : {}) });
   }
   return todos;
 }
@@ -166,42 +275,69 @@ interface Before {
   content: FileText;
 }
 
-function writeTarget(input: unknown, workTree: string): { relative: string; absolute: string } | null {
+function writeTarget(
+  input: unknown,
+  workTree: string
+): { relative: string; absolute: string } | null {
   const relative = toolFilePath(input, workTree);
-  if (relative === null || relative.startsWith('..') || path.isAbsolute(relative)) return null;
+  if (
+    relative === null ||
+    relative.startsWith("..") ||
+    path.isAbsolute(relative)
+  )
+    return null;
   return { relative, absolute: path.join(workTree, relative) };
 }
 
-function hunkText(hunk: ToolDiff['hunks'][number]): string[] {
-  return hunk.lines.filter((line) => line.kind === 'add').map((line) => line.text);
+function hunkText(hunk: ToolDiff["hunks"][number]): string[] {
+  return hunk.lines
+    .filter((line) => line.kind === "add")
+    .map((line) => line.text);
 }
 
 export function toolDiff(before: Before): ToolDiff | null {
-  return fileDiff(before.relative, before.content, readFileText(before.absolute));
+  return fileDiff(
+    before.relative,
+    before.content,
+    readFileText(before.absolute)
+  );
 }
 
-async function priorSessionFor(lean: boolean, runsDir: string, direction: Direction): Promise<PriorSession | null> {
+async function priorSessionFor(
+  lean: boolean,
+  runsDir: string,
+  direction: Direction
+): Promise<PriorSession | null> {
   return lean ? null : loadPriorSession(runsDir, direction);
 }
 
-function savesVersion(status: RunStatus, request: AgentRunContext['request']): boolean {
-  if (request.mode !== 'edit') return false;
-  return status === 'completed' || (status !== 'running' && !request.scope);
+function savesVersion(
+  status: RunStatus,
+  request: AgentRunContext["request"]
+): boolean {
+  if (request.mode !== "edit") return false;
+  return status === "completed" || (status !== "running" && !request.scope);
 }
 
 function versionTitle(status: RunStatus, prompt: string): string {
   const title = runTitle(prompt);
-  if (status === 'completed') return title;
-  return `${title} (${status === 'canceled' ? 'stopped' : status === 'failed' ? 'failed' : 'limit reached'})`;
+  if (status === "completed") return title;
+  return `${title} (${status === "canceled" ? "stopped" : status === "failed" ? "failed" : "limit reached"})`;
 }
 
 function leanDriverContext(ctx: AgentRunContext): AgentRunContext {
-  return { ...ctx, designMd: null, direction: { ...ctx.direction, sessionId: null } };
+  return {
+    ...ctx,
+    designMd: null,
+    direction: { ...ctx.direction, sessionId: null },
+  };
 }
 
 function sessionNoteOf(direction: Direction): { sessionNote?: string } {
   if (direction.sessionId || !direction.sessionResetReason) return {};
-  return { sessionNote: `New agent session after ${direction.sessionResetReason}` };
+  return {
+    sessionNote: `New agent session after ${direction.sessionResetReason}`,
+  };
 }
 
 function describeError(error: unknown): string {
@@ -214,25 +350,37 @@ function copyOutcome(summary: RunSummary, outcome: DriverOutcome): void {
   if (outcome.criticCostUsd) summary.criticCostUsd = outcome.criticCostUsd;
   if (outcome.finalCheck) summary.finalCheck = outcome.finalCheck;
   if (outcome.loop) summary.loop = outcome.loop;
-  if (outcome.designSystemCheck) summary.designSystemCheck = outcome.designSystemCheck;
+  if (outcome.designSystemCheck)
+    summary.designSystemCheck = outcome.designSystemCheck;
   summary.modelMs = outcome.modelMs;
 }
 
 type RunEventBody = StudioEventBody & { runId: string };
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
-type RunEventPayload = DistributiveOmit<RunEventBody, 'runId'>;
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+type RunEventPayload = DistributiveOmit<RunEventBody, "runId">;
 
-export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): AgentRunner {
+export function createRunLifecycle(
+  deps: LifecycleDeps,
+  driver: RunDriver
+): AgentRunner {
   const handles = new Map<string, RunHandle>();
   const activeRuns = new Map<string, string>();
   const stopping = new Map<string, Promise<unknown>>();
-  const activeKey = (projectId: string, directionId: string): string => `${projectId}/${directionId}`;
+  const activeKey = (projectId: string, directionId: string): string =>
+    `${projectId}/${directionId}`;
 
-  async function runBeforeCommit(project: Project, direction: Direction): Promise<void> {
+  async function runBeforeCommit(
+    project: Project,
+    direction: Direction
+  ): Promise<void> {
     try {
       await deps.beforeCommit?.(project, direction);
     } catch (error) {
-      console.error(`[agent] before-commit step failed for ${project.id}/${direction.id}: ${describeError(error)}`);
+      console.error(
+        `[agent] before-commit step failed for ${project.id}/${direction.id}: ${describeError(error)}`
+      );
     }
   }
 
@@ -240,20 +388,25 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     const projectId = ctx.project.id;
     const directionId = ctx.direction.id;
     const runKey = activeKey(projectId, directionId);
-    if (activeRuns.has(runKey)) throw new Error('run_in_progress');
+    if (activeRuns.has(runKey)) throw new Error("run_in_progress");
 
     const runId = nanoid();
     activeRuns.set(runKey, runId);
     const controller = new AbortController();
     let canceled = false;
     let driverSettled = false;
-    const runsDir = path.join(deps.projects.projectDir(projectId), 'runs');
+    const runsDir = path.join(deps.projects.projectDir(projectId), "runs");
     const lean = isLeanRun(ctx.request);
     const driverCtx = lean ? leanDriverContext(ctx) : ctx;
     const eventsPath = path.join(runsDir, `${runId}.jsonl`);
     const summaryPath = path.join(runsDir, `${runId}.json`);
-    const telemetryPath = path.join(deps.projects.projectDir(projectId), 'telemetry.jsonl');
-    let writeChain: Promise<void> = mkdir(runsDir, { recursive: true }).then(() => undefined);
+    const telemetryPath = path.join(
+      deps.projects.projectDir(projectId),
+      "telemetry.jsonl"
+    );
+    let writeChain: Promise<void> = mkdir(runsDir, { recursive: true }).then(
+      () => undefined
+    );
     let writeError: unknown = null;
 
     function enqueue(task: () => Promise<void>): void {
@@ -271,9 +424,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       enqueue(() => appendFile(eventsPath, line));
     }
 
-    type DeltaType = 'run.text.delta' | 'run.thinking.delta';
-    let pendingDelta = '';
-    let pendingType: DeltaType = 'run.text.delta';
+    type DeltaType = "run.text.delta" | "run.thinking.delta";
+    let pendingDelta = "";
+    let pendingType: DeltaType = "run.text.delta";
     let deltaTimer: ReturnType<typeof setTimeout> | null = null;
 
     function closeDeltaWindow(): void {
@@ -284,7 +437,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     function publishPendingDelta(): boolean {
       if (!pendingDelta) return false;
       const text = pendingDelta;
-      pendingDelta = '';
+      pendingDelta = "";
       publish({ type: pendingType, runId, text } as StudioEventBody);
       return true;
     }
@@ -295,10 +448,12 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     }
 
     function onDeltaWindowEnd(): void {
-      deltaTimer = publishPendingDelta() ? setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS) : null;
+      deltaTimer = publishPendingDelta()
+        ? setTimeout(onDeltaWindowEnd, DELTA_FLUSH_MS)
+        : null;
     }
 
-    function addDelta(text: string, type: DeltaType = 'run.text.delta'): void {
+    function addDelta(text: string, type: DeltaType = "run.text.delta"): void {
       if (type !== pendingType) {
         publishPendingDelta();
         pendingType = type;
@@ -321,10 +476,23 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       emitBody({ ...payload, runId } as StudioEventBody);
     }
 
-    function recordFileWrite(record: ToolCallRecord, durationMs: number, finishedAt: number): void {
-      const paths = FILE_WRITE_TOOLS.has(record.name) ? [toolFilePath(record.input, ctx.direction.workTree)] : (record.diffs ?? []).map((diff) => diff.path);
+    function recordFileWrite(
+      record: ToolCallRecord,
+      durationMs: number,
+      finishedAt: number
+    ): void {
+      const paths = FILE_WRITE_TOOLS.has(record.name)
+        ? [toolFilePath(record.input, ctx.direction.workTree)]
+        : (record.diffs ?? []).map((diff) => diff.path);
       for (const file of paths) {
-        const sample: TelemetrySample = { kind: 'file.write', projectId, directionId, ms: durationMs, ts: finishedAt, detail: { path: file, tool: record.name, runId } };
+        const sample: TelemetrySample = {
+          kind: "file.write",
+          projectId,
+          directionId,
+          ms: durationMs,
+          ts: finishedAt,
+          detail: { path: file, tool: record.name, runId },
+        };
         const line = `${JSON.stringify(sample)}\n`;
         enqueue(() => appendFile(telemetryPath, line));
       }
@@ -333,7 +501,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     function publishTodos(todos: TodoItem[] | null): void {
       if (!todos) return;
       summary.todos = todos;
-      emitRun({ type: 'run.todos', todos });
+      emitRun({ type: "run.todos", todos });
     }
 
     function recordTodo(event: TodoEvidence | null): void {
@@ -342,12 +510,30 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
 
     function attachBashDiffs(toolUseId: string, diffs: ToolDiff[]): void {
       bashDiffs.set(toolUseId, diffs);
-      recordTodo({ kind: 'write', paths: diffs.map((diff) => diff.path), text: diffs.flatMap((diff) => diff.hunks.flatMap((hunk) => hunkText(hunk))).join('\n') });
+      recordTodo({
+        kind: "write",
+        paths: diffs.map((diff) => diff.path),
+        text: diffs
+          .flatMap((diff) => diff.hunks.flatMap((hunk) => hunkText(hunk)))
+          .join("\n"),
+      });
       const record = toolIndex.get(toolUseId);
       if (!record || record.finishedAt === null) return;
       record.diffs = diffs;
-      recordFileWrite(record, record.finishedAt - record.startedAt, record.finishedAt);
-      emitRun({ type: 'run.tool.finished', toolUseId, isError: record.isError, summary: record.summary ?? '', durationMs: record.finishedAt - record.startedAt, diffs, ...(record.denied ? { denied: true } : {}) });
+      recordFileWrite(
+        record,
+        record.finishedAt - record.startedAt,
+        record.finishedAt
+      );
+      emitRun({
+        type: "run.tool.finished",
+        toolUseId,
+        isError: record.isError,
+        summary: record.summary ?? "",
+        durationMs: record.finishedAt - record.startedAt,
+        diffs,
+        ...(record.denied ? { denied: true } : {}),
+      });
     }
 
     let firstTokenSeen = false;
@@ -355,7 +541,14 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       if (firstTokenSeen) return;
       firstTokenSeen = true;
       const now = Date.now();
-      const sample: TelemetrySample = { kind: 'run.first_token', projectId, directionId, ms: now - startedAt, ts: now, detail: { runId, stage: 'server' } };
+      const sample: TelemetrySample = {
+        kind: "run.first_token",
+        projectId,
+        directionId,
+        ms: now - startedAt,
+        ts: now,
+        detail: { runId, stage: "server" },
+      };
       const line = `${JSON.stringify(sample)}\n`;
       enqueue(() => appendFile(telemetryPath, line));
     }
@@ -366,30 +559,48 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     }
 
     const level = levelOf(ctx.request, ctx.project.settings);
-    const runConfig = withRunTask(resolveRunConfig(ctx.project.settings, level), ctx.request.task);
+    const runConfig = withRunTask(
+      resolveRunConfig(ctx.project.settings, level),
+      ctx.request.task
+    );
     const startedAt = Date.now();
     const toolCalls: ToolCallRecord[] = [];
     const toolIndex = new Map<string, ToolCallRecord>();
     const befores = new Map<string, Before>();
     const cutWrites = createCutWriteGuard();
     let toolMs = 0;
-    let lastText = '';
+    let lastText = "";
     let sessionId: string | null = lean ? null : ctx.direction.sessionId;
     let direction: Direction = ctx.direction;
     const bashEdits = createBashEditTracker({
       workTree: ctx.direction.workTree,
       subscribe: (listener) =>
         deps.bus.subscribe(projectId, (event) => {
-          if (event.type === 'files.changed' && event.directionId === directionId) listener(event.paths);
+          if (
+            event.type === "files.changed" &&
+            event.directionId === directionId
+          )
+            listener(event.paths);
         }),
-      headFile: async (relative) => (await deps.versions.headFile?.(ctx.project, direction, relative)) ?? null,
+      headFile: async (relative) =>
+        (await deps.versions.headFile?.(ctx.project, direction, relative)) ??
+        null,
     });
     const bashDiffs = new Map<string, ToolDiff[]>();
     const todoTracker = createTodoTracker();
-    const contextFiles = [ctx.target?.routeFile, ctx.target?.path].filter((file): file is string => typeof file === 'string' && file !== '');
-    if (ctx.request.mode === 'edit') bashEdits.prepare();
+    const contextFiles = [ctx.target?.routeFile, ctx.target?.path].filter(
+      (file): file is string => typeof file === "string" && file !== ""
+    );
+    if (ctx.request.mode === "edit") bashEdits.prepare();
     const baseVersionId = ctx.direction.headVersionId;
-    const baseFile = async (relative: string): Promise<Uint8Array | null> => (baseVersionId && deps.versions.fileAt ? deps.versions.fileAt(ctx.project, baseVersionId, relative) : ((await deps.versions.headFile?.(ctx.project, ctx.direction, relative)) ?? null));
+    const baseFile = async (relative: string): Promise<Uint8Array | null> =>
+      baseVersionId && deps.versions.fileAt
+        ? deps.versions.fileAt(ctx.project, baseVersionId, relative)
+        : ((await deps.versions.headFile?.(
+            ctx.project,
+            ctx.direction,
+            relative
+          )) ?? null);
 
     const summary: RunSummary = {
       id: runId,
@@ -397,7 +608,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       directionId,
       request: ctx.request,
       level,
-      status: 'running',
+      status: "running",
       startedAt,
       finishedAt: null,
       model: runConfig.model,
@@ -410,7 +621,7 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       toolCalls,
       versionId: null,
       error: null,
-      finalText: '',
+      finalText: "",
       ...sessionNoteOf(ctx.direction),
     };
 
@@ -423,21 +634,28 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       text(text) {
         if (!text) return;
         lastText = text;
-        emitRun({ type: 'run.text', text });
+        emitRun({ type: "run.text", text });
       },
       thinkingDelta(text) {
         if (!text) return;
         recordFirstToken();
-        addDelta(text, 'run.thinking.delta');
+        addDelta(text, "run.thinking.delta");
       },
       thinking(text) {
-        if (text) emitRun({ type: 'run.thinking', text });
+        if (text) emitRun({ type: "run.thinking", text });
       },
       toolStarted(toolUseId, name, input) {
-        const record: ToolCallRecord = { toolUseId, name, input, startedAt: Date.now(), finishedAt: null, isError: false };
+        const record: ToolCallRecord = {
+          toolUseId,
+          name,
+          input,
+          startedAt: Date.now(),
+          finishedAt: null,
+          isError: false,
+        };
         toolCalls.push(record);
         toolIndex.set(toolUseId, record);
-        emitRun({ type: 'run.tool.started', toolUseId, name, input });
+        emitRun({ type: "run.tool.started", toolUseId, name, input });
         const todos = name === TODO_TOOL ? parseTodos(input) : null;
         if (todos) publishTodos(todoTracker.setAgent(todos));
       },
@@ -462,24 +680,55 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
           if (!isError) recordFileWrite(record, durationMs, finishedAt);
         }
         toolMs += durationMs;
-        emitRun({ type: 'run.tool.finished', toolUseId, isError, summary: resultSummary, durationMs, ...(diff ? { diff } : {}), ...(diffs ? { diffs } : {}), ...(denied ? { denied: true } : {}) });
-        if (record) recordTodo(evidenceOf({ name: record.name, input: record.input, isError, resultText, filePath: toolFilePath(record.input, ctx.direction.workTree), isEditTool: EDIT_TOOL_NAMES.has(record.name), contextFiles }));
+        emitRun({
+          type: "run.tool.finished",
+          toolUseId,
+          isError,
+          summary: resultSummary,
+          durationMs,
+          ...(diff ? { diff } : {}),
+          ...(diffs ? { diffs } : {}),
+          ...(denied ? { denied: true } : {}),
+        });
+        if (record)
+          recordTodo(
+            evidenceOf({
+              name: record.name,
+              input: record.input,
+              isError,
+              resultText,
+              filePath: toolFilePath(record.input, ctx.direction.workTree),
+              isEditTool: EDIT_TOOL_NAMES.has(record.name),
+              contextFiles,
+            })
+          );
       },
       usage(contextTokens) {
-        if (!Number.isFinite(contextTokens) || contextTokens <= 0 || contextTokens === summary.contextTokens) return;
+        if (
+          !Number.isFinite(contextTokens) ||
+          contextTokens <= 0 ||
+          contextTokens === summary.contextTokens
+        )
+          return;
         summary.contextTokens = contextTokens;
-        emitRun({ type: 'run.usage', contextTokens });
+        emitRun({ type: "run.usage", contextTokens });
       },
       retry(attempt, max, delayMs, error) {
-        emitRun({ type: 'run.retry', attempt, max, delayMs, error });
+        emitRun({ type: "run.retry", attempt, max, delayMs, error });
       },
       beforeWrite(toolUseId, name, input) {
-        if (name === 'Bash') return ctx.request.mode === 'edit' ? bashEdits.start(toolUseId) : undefined;
+        if (name === "Bash")
+          return ctx.request.mode === "edit"
+            ? bashEdits.start(toolUseId)
+            : undefined;
         if (!FILE_WRITE_TOOLS.has(name) || befores.has(toolUseId)) return;
         const target = writeTarget(input, ctx.direction.workTree);
         if (!target) return;
         cutWrites.start(toolUseId, target.relative, target.absolute);
-        befores.set(toolUseId, { ...target, content: readFileText(target.absolute) });
+        befores.set(toolUseId, {
+          ...target,
+          content: readFileText(target.absolute),
+        });
       },
       async bashFinished(toolUseId, check) {
         const result = await bashEdits.finish(toolUseId, check);
@@ -488,7 +737,14 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       },
       sent(message) {
         flushDelta();
-        const record: RunSentRecord = { type: 'run.sent', runId, projectId, directionId, ts: Date.now(), ...message };
+        const record: RunSentRecord = {
+          type: "run.sent",
+          runId,
+          projectId,
+          directionId,
+          ts: Date.now(),
+          ...message,
+        };
         const line = `${JSON.stringify(record)}\n`;
         enqueue(() => appendFile(eventsPath, line));
       },
@@ -496,17 +752,29 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         sessionId = id;
         summary.sessionId = id;
         if (lean || direction.sessionId === id) return;
-        direction = await deps.projects.updateDirection(projectId, directionId, { sessionId: id, sessionResetReason: null });
-        emitBody({ type: 'direction.updated', direction });
+        direction = await deps.projects.updateDirection(
+          projectId,
+          directionId,
+          { sessionId: id, sessionResetReason: null }
+        );
+        emitBody({ type: "direction.updated", direction });
       },
     };
 
     let queue: QueuedMessage[] = [];
     let steerText: string | null = null;
-    const pendingAsks = new Map<string, { toolUseId: string | null; command: string | null; resolve: (decision: PermissionDecision) => void }>();
+    const pendingAsks = new Map<
+      string,
+      {
+        toolUseId: string | null;
+        command: string | null;
+        resolve: (decision: PermissionDecision) => void;
+      }
+    >();
     const ruleStore = createCommandRuleStore(deps.projects.projectDir);
     const commandRules: CommandRules = {
-      allows: async (command) => anyRuleMatches(await ruleStore.list(projectId), command),
+      allows: async (command) =>
+        anyRuleMatches(await ruleStore.list(projectId), command),
       remember: async (rule) => {
         await ruleStore.add(projectId, rule);
       },
@@ -519,9 +787,17 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         if (queue.length === 0 || canceled) return [];
         const taken = queue;
         queue = [];
-        for (const item of taken) emitRun({ type: 'run.user', id: item.id, text: item.text });
-        emitRun({ type: 'run.queue', items: [] });
-        sink.sent({ text: deliveredContext(taken), imageCount: 0, updatedInstructions: false, recommendedSkills: [], promptHash: 'queued', resume: sessionId });
+        for (const item of taken)
+          emitRun({ type: "run.user", id: item.id, text: item.text });
+        emitRun({ type: "run.queue", items: [] });
+        sink.sent({
+          text: deliveredContext(taken),
+          imageCount: 0,
+          updatedInstructions: false,
+          recommendedSkills: [],
+          promptHash: "queued",
+          resume: sessionId,
+        });
         return taken;
       },
     };
@@ -529,88 +805,130 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
     function resolveAsk(id: string, decision: PermissionDecision): boolean {
       const pending = pendingAsks.get(id);
       if (!pending) return false;
-      if (decision.allow && decision.always !== undefined && (pending.command === null || decision.always !== ruleForCommand(pending.command))) {
-        throw new BadRequestError('rule does not match the command');
+      if (
+        decision.allow &&
+        decision.always !== undefined &&
+        (pending.command === null ||
+          decision.always !== ruleForCommand(pending.command))
+      ) {
+        throw new BadRequestError("rule does not match the command");
       }
       pendingAsks.delete(id);
-      if (!decision.allow && pending.toolUseId) deniedTools.add(pending.toolUseId);
-      emitRun({ type: 'run.permission.resolved', requestId: id, allow: decision.allow });
+      if (!decision.allow && pending.toolUseId)
+        deniedTools.add(pending.toolUseId);
+      emitRun({
+        type: "run.permission.resolved",
+        requestId: id,
+        allow: decision.allow,
+      });
       pending.resolve(decision);
       return true;
     }
 
     function ask(request: PermissionAsk): Promise<PermissionDecision> {
-      if (canceled || controller.signal.aborted) return Promise.resolve({ allow: false, note: 'The run was stopped.' });
+      if (canceled || controller.signal.aborted)
+        return Promise.resolve({ allow: false, note: "The run was stopped." });
       askCounter += 1;
       const id = `${runId}-ask-${askCounter}`;
       return new Promise<PermissionDecision>((resolve) => {
-        const command = request.toolName === 'Bash' && typeof (request.input as { command?: unknown } | null)?.command === 'string' ? (request.input as { command: string }).command : null;
+        const command =
+          request.toolName === "Bash" &&
+          typeof (request.input as { command?: unknown } | null)?.command ===
+            "string"
+            ? (request.input as { command: string }).command
+            : null;
         pendingAsks.set(id, { toolUseId: request.toolUseId, command, resolve });
-        emitRun({ type: 'run.permission', request: { ...request, id } });
+        emitRun({ type: "run.permission", request: { ...request, id } });
       });
     }
 
-    controller.signal.addEventListener('abort', () => {
-      for (const id of [...pendingAsks.keys()]) resolveAsk(id, { allow: false, note: 'The run was stopped.' });
+    controller.signal.addEventListener("abort", () => {
+      for (const id of [...pendingAsks.keys()])
+        resolveAsk(id, { allow: false, note: "The run was stopped." });
     });
 
-    emitRun({ type: 'run.started', request: ctx.request });
+    emitRun({ type: "run.started", request: ctx.request });
     writeSummary({ ...summary, toolCalls: [] });
 
     async function finalize(status: RunStatus): Promise<void> {
       const project = await deps.projects.get(projectId);
-      direction = project.directions.find((candidate) => candidate.id === directionId) ?? direction;
-      if (ctx.request.mode === 'edit') await runBeforeCommit(project, direction);
+      direction =
+        project.directions.find((candidate) => candidate.id === directionId) ??
+        direction;
+      if (ctx.request.mode === "edit")
+        await runBeforeCommit(project, direction);
       if (savesVersion(status, ctx.request)) {
-        const version = await deps.versions.commit(project, direction, versionTitle(status, ctx.request.prompt), {
-          kind: 'run',
-          runId,
-          prompt: ctx.request.prompt,
-          level,
-        });
+        const version = await deps.versions.commit(
+          project,
+          direction,
+          versionTitle(status, ctx.request.prompt),
+          {
+            kind: "run",
+            runId,
+            prompt: ctx.request.prompt,
+            level,
+          }
+        );
         if (version) {
           summary.versionId = version.id;
-          direction = await deps.projects.updateDirection(projectId, directionId, { headVersionId: version.id });
-          emitBody({ type: 'version.created', version });
-          emitBody({ type: 'direction.updated', direction });
+          direction = await deps.projects.updateDirection(
+            projectId,
+            directionId,
+            { headVersionId: version.id }
+          );
+          emitBody({ type: "version.created", version });
+          emitBody({ type: "direction.updated", direction });
         }
       }
       const workTreeStatus = await deps.versions.status(project, direction);
-      emitBody({ type: 'status.changed', status: workTreeStatus });
+      emitBody({ type: "status.changed", status: workTreeStatus });
     }
 
     async function guardScope(): Promise<string | null> {
       const scope = ctx.request.scope;
-      if (!scope || ctx.request.mode !== 'edit') return null;
+      if (!scope || ctx.request.mode !== "edit") return null;
       const project = await deps.projects.get(projectId);
-      const current = project.directions.find((candidate) => candidate.id === directionId) ?? direction;
+      const current =
+        project.directions.find((candidate) => candidate.id === directionId) ??
+        direction;
       const { changed } = await deps.versions.status(project, current);
       const problem = await scopeProblem(current.workTree, changed, scope);
       if (!problem) return null;
       await deps.versions.discard(project, current);
       if (current.variation) {
-        direction = await deps.projects.updateDirection(projectId, directionId, { variation: { ...current.variation, rejected: problem } });
-        emitBody({ type: 'direction.updated', direction });
+        direction = await deps.projects.updateDirection(
+          projectId,
+          directionId,
+          { variation: { ...current.variation, rejected: problem } }
+        );
+        emitBody({ type: "direction.updated", direction });
       }
       return problem;
     }
 
     async function checkFinish(status: RunStatus): Promise<string | null> {
-      if (status === 'completed') return guardScope();
-      if (ctx.request.mode !== 'edit') return null;
+      if (status === "completed") return guardScope();
+      if (ctx.request.mode !== "edit") return null;
       const restored = await cutWrites.restore();
       if (restored.length > 0) summary.restoredFiles = restored;
       return null;
     }
 
-    async function recordSessionTotals(outcome: DriverOutcome | null): Promise<void> {
+    async function recordSessionTotals(
+      outcome: DriverOutcome | null
+    ): Promise<void> {
       const totals = outcome?.sessionTotals;
       if (!totals || sessionId === null) return;
       await mkdir(sessionsDirOf(runsDir), { recursive: true });
-      await writeFile(sessionLedgerPath(runsDir, sessionId), `${JSON.stringify({ sessionId, ...totals, updatedAt: Date.now() })}\n`);
+      await writeFile(
+        sessionLedgerPath(runsDir, sessionId),
+        `${JSON.stringify({ sessionId, ...totals, updatedAt: Date.now() })}\n`
+      );
       if (lean) return;
-      direction = await deps.projects.updateDirection(projectId, directionId, { sessionCostUsd: totals.costUsd });
-      emitBody({ type: 'direction.updated', direction });
+      direction = await deps.projects.updateDirection(projectId, directionId, {
+        sessionCostUsd: totals.costUsd,
+      });
+      emitBody({ type: "direction.updated", direction });
     }
 
     async function execute(): Promise<RunSummary> {
@@ -618,7 +936,18 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       let failure: string | null = null;
       try {
         const prior = await priorSessionFor(lean, runsDir, ctx.direction);
-        outcome = await driver({ ctx: driverCtx, runId, runsDir, signal: controller.signal, sink, prior, inbox, ask, commandRules, baseFile });
+        outcome = await driver({
+          ctx: driverCtx,
+          runId,
+          runsDir,
+          signal: controller.signal,
+          sink,
+          prior,
+          inbox,
+          ask,
+          commandRules,
+          baseFile,
+        });
       } catch (error) {
         failure = describeError(error);
       }
@@ -626,25 +955,35 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       bashEdits.close();
       flushDelta();
 
-      let status: RunStatus = canceled ? 'canceled' : outcome ? outcome.status : 'failed';
+      let status: RunStatus = canceled
+        ? "canceled"
+        : outcome
+          ? outcome.status
+          : "failed";
       summary.error = canceled ? null : (outcome?.error ?? failure);
       if (outcome) copyOutcome(summary, outcome);
-      if (outcome?.finalCheck) recordTodo({ kind: 'review', by: 'The final check' });
+      if (outcome?.finalCheck)
+        recordTodo({ kind: "review", by: "The final check" });
 
       try {
         await recordSessionTotals(outcome);
         const rejected = await checkFinish(status);
         if (rejected) {
-          status = 'failed';
+          status = "failed";
           summary.error = rejected;
         }
         await finalize(status);
       } catch (error) {
-        status = status === 'completed' ? 'failed' : status;
+        status = status === "completed" ? "failed" : status;
         summary.error = `Finishing the run failed: ${describeError(error)}`;
       }
 
-      publishTodos(todoTracker.close(status, ctx.request.mode === 'edit' && !ctx.request.plan));
+      publishTodos(
+        todoTracker.close(
+          status,
+          ctx.request.mode === "edit" && !ctx.request.plan
+        )
+      );
       const finishedAt = Date.now();
       summary.status = status;
       summary.finishedAt = finishedAt;
@@ -655,9 +994,12 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       summary.parts = withFinalText(closeParts(parts), summary.finalText);
 
       writeSummary(summary);
-      emitRun({ type: 'run.finished', summary });
+      emitRun({ type: "run.finished", summary });
       await writeChain;
-      if (writeError) console.error(`[agent] run ${runId} persistence error: ${describeError(writeError)}`);
+      if (writeError)
+        console.error(
+          `[agent] run ${runId} persistence error: ${describeError(writeError)}`
+        );
       return summary;
     }
 
@@ -673,13 +1015,13 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
         canceled = true;
         controller.abort();
         stopping.set(runKey, done);
-        emitRun({ type: 'run.stopping' });
+        emitRun({ type: "run.stopping" });
       },
       done,
       setQueue(items) {
         if (driverSettled || canceled) return false;
-        queue = items.filter((item) => item.text.trim() !== '');
-        emitRun({ type: 'run.queue', items: queue });
+        queue = items.filter((item) => item.text.trim() !== "");
+        emitRun({ type: "run.queue", items: queue });
         return true;
       },
       steer(text) {
@@ -690,9 +1032,13 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
       },
       answer: resolveAsk,
       next() {
-        if (steerText !== null) return { text: [steerText, queuedText(queue)].filter(Boolean).join('\n\n'), reason: 'steer' };
+        if (steerText !== null)
+          return {
+            text: [steerText, queuedText(queue)].filter(Boolean).join("\n\n"),
+            reason: "steer",
+          };
         if (canceled || queue.length === 0) return null;
-        return { text: queuedText(queue), reason: 'queue' };
+        return { text: queuedText(queue), reason: "queue" };
       },
     };
     handles.set(runId, handle);
@@ -702,7 +1048,9 @@ export function createRunLifecycle(deps: LifecycleDeps, driver: RunDriver): Agen
   return {
     start,
     get: (runId) => handles.get(runId),
-    isRunning: (projectId, directionId) => activeRuns.has(activeKey(projectId, directionId)),
-    stopping: (projectId, directionId) => stopping.get(activeKey(projectId, directionId)) ?? null,
+    isRunning: (projectId, directionId) =>
+      activeRuns.has(activeKey(projectId, directionId)),
+    stopping: (projectId, directionId) =>
+      stopping.get(activeKey(projectId, directionId)) ?? null,
   };
 }

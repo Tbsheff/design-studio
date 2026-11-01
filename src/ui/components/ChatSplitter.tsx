@@ -1,5 +1,12 @@
-import { useCallback, useRef, type KeyboardEvent, type PointerEvent, type RefObject } from 'react';
-import { uiStore, useUi } from '../storage';
+import {
+  useCallback,
+  useRef,
+  type KeyboardEvent,
+  type PointerEvent,
+  type RefObject,
+} from "react";
+
+import { uiStore, useUi } from "../storage";
 
 const MIN_CHAT = 300;
 const MAX_CHAT = 640;
@@ -10,10 +17,14 @@ function clampWidth(width: number, container: number): number {
 }
 
 export function chatWidthStyle(width: number | null): Record<string, string> {
-  return width === null ? {} : { '--chat-w': `${width}px` };
+  return width === null ? {} : { "--chat-w": `${width}px` };
 }
 
-export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElement | null> }) {
+export function ChatSplitter({
+  columnsRef,
+}: {
+  columnsRef: RefObject<HTMLDivElement | null>;
+}) {
   const { chatWidth } = useUi();
   const dragging = useRef(false);
 
@@ -24,12 +35,14 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
       const rect = el.getBoundingClientRect();
       return clampWidth(clientX - rect.left, rect.width);
     },
-    [columnsRef],
+    [columnsRef]
   );
 
   const currentWidth = () => {
-    const panel = columnsRef.current?.querySelector('.pane-left');
-    return panel instanceof HTMLElement ? panel.getBoundingClientRect().width : MIN_CHAT;
+    const panel = columnsRef.current?.querySelector(".pane-left");
+    return panel instanceof HTMLElement
+      ? panel.getBoundingClientRect().width
+      : MIN_CHAT;
   };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -37,7 +50,7 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     dragging.current = true;
-    document.body.classList.add('resizing');
+    document.body.classList.add("resizing");
   };
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
@@ -48,12 +61,13 @@ export function ChatSplitter({ columnsRef }: { columnsRef: RefObject<HTMLDivElem
 
   const stop = () => {
     dragging.current = false;
-    document.body.classList.remove('resizing');
+    document.body.classList.remove("resizing");
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.shiftKey ? 48 : 16;
-    const delta = e.key === 'ArrowRight' ? step : e.key === 'ArrowLeft' ? -step : 0;
+    const delta =
+      e.key === "ArrowRight" ? step : e.key === "ArrowLeft" ? -step : 0;
     if (delta === 0) return;
     e.preventDefault();
     const container = columnsRef.current?.getBoundingClientRect().width ?? 0;

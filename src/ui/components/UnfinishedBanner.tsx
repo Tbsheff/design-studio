@@ -1,4 +1,4 @@
-import { Icon } from './Icon';
+import { Icon } from "./Icon";
 
 interface Props {
   count: number;
@@ -8,16 +8,30 @@ interface Props {
   onDiscard: () => void;
 }
 
-export function UnfinishedBanner({ count, busy, runStopped, onKeep, onDiscard }: Props) {
+export function UnfinishedBanner({
+  count,
+  busy,
+  runStopped,
+  onKeep,
+  onDiscard,
+}: Props) {
   return (
     <div className="banner" role="status">
       <Icon name="alert" />
       <span>
-        Unfinished changes in {count} file{count === 1 ? '' : 's'}
+        Unfinished changes in {count} file{count === 1 ? "" : "s"}
       </span>
-      <span className="sub">{runStopped ? 'A run stopped before it saved a version.' : 'Files changed outside a run since the last version.'}</span>
+      <span className="sub">
+        {runStopped
+          ? "A run stopped before it saved a version."
+          : "Files changed outside a run since the last version."}
+      </span>
       <div className="spacer" />
-      <button className="btn small ghost danger" disabled={busy} onClick={onDiscard}>
+      <button
+        className="btn small ghost danger"
+        disabled={busy}
+        onClick={onDiscard}
+      >
         Discard
       </button>
       <button className="btn small" disabled={busy} onClick={onKeep}>

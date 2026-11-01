@@ -1,10 +1,35 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
-import type { AnchorQuery, CommentDrawing, CommentFrame, CommentPrefill, CommentStatus, CommentTarget, DesignComment, RunMention, SelectionContext } from '../shared/contracts';
-import { anchorQueryOf, canPickForChat, drawingTarget, targetFromSelection } from '../shared/comments';
-import { ApiError, api, errorText, json } from './api';
-import { useProjectEvents } from './events';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 
-export type DescribeAnchors = (queries: AnchorQuery[]) => Promise<(SelectionContext | null)[]>;
+import {
+  anchorQueryOf,
+  canPickForChat,
+  drawingTarget,
+  targetFromSelection,
+} from "../shared/comments";
+import type {
+  AnchorQuery,
+  CommentDrawing,
+  CommentFrame,
+  CommentPrefill,
+  CommentStatus,
+  CommentTarget,
+  DesignComment,
+  RunMention,
+  SelectionContext,
+} from "../shared/contracts";
+import { ApiError, api, errorText, json } from "./api";
+import { useProjectEvents } from "./events";
+
+export type DescribeAnchors = (
+  queries: AnchorQuery[]
+) => Promise<(SelectionContext | null)[]>;
 
 export interface CommentPatch {
   text?: string;
@@ -16,10 +41,13 @@ export interface CommentPatch {
 export interface CommentExtras {
   mentions?: RunMention[];
   attachmentIds?: string[];
-  offset?: CommentTarget['offset'];
+  offset?: CommentTarget["offset"];
 }
 
-function targetWith(selection: SelectionContext, offset: CommentTarget['offset']): CommentTarget {
+function targetWith(
+  selection: SelectionContext,
+  offset: CommentTarget["offset"]
+): CommentTarget {
   const target = targetFromSelection(selection);
   return offset ? { ...target, offset } : target;
 }
@@ -39,13 +67,28 @@ export interface CommentsControl {
   setOpenId: (id: string | null) => void;
   setRepinId: (id: string | null) => void;
   clearNotice: () => void;
-  add: (selections: SelectionContext[], text: string, toClaude: boolean, extras?: CommentExtras) => Promise<boolean>;
+  add: (
+    selections: SelectionContext[],
+    text: string,
+    toClaude: boolean,
+    extras?: CommentExtras
+  ) => Promise<boolean>;
   update: (id: string, patch: CommentPatch) => Promise<void>;
   remove: (id: string) => Promise<void>;
   move: (id: string, delta: -1 | 1) => Promise<void>;
   send: (ids?: string[]) => Promise<void>;
-  repin: (id: string, selection: SelectionContext, offset?: CommentTarget['offset']) => Promise<void>;
-  addDrawing: (input: { text: string; drawing: CommentDrawing; image: Blob; toClaude: boolean; extras?: CommentExtras }) => Promise<boolean>;
+  repin: (
+    id: string,
+    selection: SelectionContext,
+    offset?: CommentTarget["offset"]
+  ) => Promise<void>;
+  addDrawing: (input: {
+    text: string;
+    drawing: CommentDrawing;
+    image: Blob;
+    toClaude: boolean;
+    extras?: CommentExtras;
+  }) => Promise<boolean>;
   reply: (id: string, text: string) => Promise<boolean>;
   removeReply: (id: string, replyId: string) => Promise<void>;
   showResolved: boolean;
@@ -60,17 +103,17 @@ export interface CommentsControl {
 
 export type OnPrefill = (prefill: CommentPrefill) => void;
 
-const SHOW_RESOLVED_KEY = 'studio.comments.showResolved';
+const SHOW_RESOLVED_KEY = "studio.comments.showResolved";
 
 function readShowResolved(): boolean {
   try {
-    return window.localStorage.getItem(SHOW_RESOLVED_KEY) === '1';
+    return window.localStorage.getItem(SHOW_RESOLVED_KEY) === "1";
   } catch {
     return false;
   }
 }
 
-const RUNNING_NOTICE = 'Agent is running: queued';
+const RUNNING_NOTICE = "Agent is running: queued";
 const DESCRIBE_TIMEOUT_MS = 800;
 
 function base(projectId: string, directionId: string): string {
@@ -78,13 +121,21 @@ function base(projectId: string, directionId: string): string {
 }
 
 function queuedOf(comments: DesignComment[]): DesignComment[] {
-  return comments.filter((comment) => comment.status === 'queued');
+  return comments.filter((comment) => comment.status === "queued");
 }
 
-async function describeWithTimeout(describe: DescribeAnchors | null, comments: DesignComment[]): Promise<Record<string, SelectionContext>> {
+async function describeWithTimeout(
+  describe: DescribeAnchors | null,
+  comments: DesignComment[]
+): Promise<Record<string, SelectionContext>> {
   if (!describe || comments.length === 0) return {};
-  const timeout = new Promise<null>((resolve) => window.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS));
-  const contexts = await Promise.race([describe(comments.map(anchorQueryOf)).catch(() => null), timeout]);
+  const timeout = new Promise<null>((resolve) =>
+    window.setTimeout(() => resolve(null), DESCRIBE_TIMEOUT_MS)
+  );
+  const contexts = await Promise.race([
+    describe(comments.map(anchorQueryOf)).catch(() => null),
+    timeout,
+  ]);
   const out: Record<string, SelectionContext> = {};
   comments.forEach((comment, index) => {
     const context = contexts?.[index];
@@ -93,7 +144,9 @@ async function describeWithTimeout(describe: DescribeAnchors | null, comments: D
   return out;
 }
 
-function frameField(ref: MutableRefObject<CommentFrame | null>): { frame?: CommentFrame } {
+function frameField(ref: MutableRefObject<CommentFrame | null>): {
+  frame?: CommentFrame;
+} {
   return ref.current ? { frame: ref.current } : {};
 }
 
@@ -101,16 +154,32 @@ function usePicks(comments: DesignComment[]) {
   const [picked, setPicked] = useState<string[]>([]);
   useEffect(() => {
     setPicked((prev) => {
-      const next = prev.filter((id) => comments.some((comment) => comment.id === id && canPickForChat(comment.status)));
+      const next = prev.filter((id) =>
+        comments.some(
+          (comment) => comment.id === id && canPickForChat(comment.status)
+        )
+      );
       return next.length === prev.length ? prev : next;
     });
   }, [comments]);
-  const togglePick = useCallback((id: string) => setPicked((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id])), []);
+  const togglePick = useCallback(
+    (id: string) =>
+      setPicked((prev) =>
+        prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      ),
+    []
+  );
   const clearPicked = useCallback(() => setPicked([]), []);
   return { picked, togglePick, clearPicked };
 }
 
-export function useComments(projectId: string, directionId: string | null, composerActive = false, running = false, onPrefill?: OnPrefill): CommentsControl {
+export function useComments(
+  projectId: string,
+  directionId: string | null,
+  composerActive = false,
+  running = false,
+  onPrefill?: OnPrefill
+): CommentsControl {
   const [comments, setComments] = useState<DesignComment[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -141,7 +210,7 @@ export function useComments(projectId: string, directionId: string | null, compo
     afterRun.current.clear();
     if (!directionId) return;
     let alive = true;
-    json<DesignComment[]>('GET', base(projectId, directionId))
+    json<DesignComment[]>("GET", base(projectId, directionId))
       .then((list) => alive && setComments(list))
       .catch((err: unknown) => alive && setNotice(errorText(err)));
     return () => {
@@ -150,34 +219,58 @@ export function useComments(projectId: string, directionId: string | null, compo
   }, [projectId, directionId]);
 
   useProjectEvents(projectId, (event) => {
-    if (event.type === 'comments.changed' && event.directionId === didRef.current) setComments(event.comments);
+    if (
+      event.type === "comments.changed" &&
+      event.directionId === didRef.current
+    )
+      setComments(event.comments);
   });
 
   const call = useCallback(
-    async <T>(method: string, suffix: string, body?: unknown): Promise<T | null> => {
+    async <T>(
+      method: string,
+      suffix: string,
+      body?: unknown
+    ): Promise<T | null> => {
       const did = didRef.current;
       if (!did) return null;
       return json<T>(method, `${base(projectId, did)}${suffix}`, body);
     },
-    [projectId],
+    [projectId]
   );
 
   const send = useCallback(
     async (ids?: string[]) => {
-      const chosen = ids ? listRef.current.filter((comment) => ids.includes(comment.id)) : queuedOf(listRef.current).filter((comment) => !chatRef.current.includes(comment.id));
+      const chosen = ids
+        ? listRef.current.filter((comment) => ids.includes(comment.id))
+        : queuedOf(listRef.current).filter(
+            (comment) => !chatRef.current.includes(comment.id)
+          );
       if (chosen.length === 0) return;
       setSending(true);
       try {
-        const contexts = await describeWithTimeout(describeRef.current, chosen.filter((comment) => !comment.drawing));
-        await call('POST', '/send', { ids: chosen.map((comment) => comment.id), contexts });
+        const contexts = await describeWithTimeout(
+          describeRef.current,
+          chosen.filter((comment) => !comment.drawing)
+        );
+        await call("POST", "/send", {
+          ids: chosen.map((comment) => comment.id),
+          contexts,
+        });
         setNotice(null);
       } catch (err) {
-        setNotice(err instanceof ApiError && err.status === 409 && err.code === 'run_in_progress' ? RUNNING_NOTICE : errorText(err));
+        setNotice(
+          err instanceof ApiError &&
+            err.status === 409 &&
+            err.code === "run_in_progress"
+            ? RUNNING_NOTICE
+            : errorText(err)
+        );
       } finally {
         setSending(false);
       }
     },
-    [call],
+    [call]
   );
 
   const deliver = useCallback(
@@ -188,32 +281,48 @@ export function useComments(projectId: string, directionId: string | null, compo
         for (const id of ids) afterRun.current.add(id);
         return;
       }
-      listRef.current = [...listRef.current.filter((c) => !ids.includes(c.id)), ...created];
+      listRef.current = [
+        ...listRef.current.filter((c) => !ids.includes(c.id)),
+        ...created,
+      ];
       await send(ids);
     },
-    [send],
+    [send]
   );
 
   const add = useCallback(
-    async (selections: SelectionContext[], text: string, toClaude: boolean, extras: CommentExtras = {}): Promise<boolean> => {
+    async (
+      selections: SelectionContext[],
+      text: string,
+      toClaude: boolean,
+      extras: CommentExtras = {}
+    ): Promise<boolean> => {
       const clean = text.trim();
       if (!clean || selections.length === 0) return false;
       const now = toClaude && !runningRef.current;
       try {
         const created: DesignComment[] = [];
         for (const selection of selections) {
-          const comment = await call<DesignComment>('POST', '', {
+          const comment = await call<DesignComment>("POST", "", {
             text: clean,
-            target: targetWith(selection, selections.length === 1 ? extras.offset : undefined),
+            target: targetWith(
+              selection,
+              selections.length === 1 ? extras.offset : undefined
+            ),
             context: selection,
-            status: now ? 'draft' : 'queued',
+            status: now ? "draft" : "queued",
             ...frameField(frameRef),
             ...(extras.mentions?.length ? { mentions: extras.mentions } : {}),
-            ...(extras.attachmentIds?.length ? { attachmentIds: extras.attachmentIds } : {}),
+            ...(extras.attachmentIds?.length
+              ? { attachmentIds: extras.attachmentIds }
+              : {}),
           });
           if (comment) created.push(comment);
         }
-        setComments((prev) => [...prev.filter((c) => !created.some((n) => n.id === c.id)), ...created]);
+        setComments((prev) => [
+          ...prev.filter((c) => !created.some((n) => n.id === c.id)),
+          ...created,
+        ]);
         await deliver(created, toClaude);
         return true;
       } catch (err) {
@@ -221,42 +330,46 @@ export function useComments(projectId: string, directionId: string | null, compo
         return false;
       }
     },
-    [call, deliver],
+    [call, deliver]
   );
 
   useEffect(() => {
     for (const id of [...afterRun.current]) {
-      if (comments.find((comment) => comment.id === id)?.status !== 'queued') afterRun.current.delete(id);
+      if (comments.find((comment) => comment.id === id)?.status !== "queued")
+        afterRun.current.delete(id);
     }
   }, [comments]);
 
   useEffect(() => {
     if (running || afterRun.current.size === 0) return;
-    const ready = listRef.current.filter((comment) => afterRun.current.has(comment.id) && comment.status === 'queued');
+    const ready = listRef.current.filter(
+      (comment) =>
+        afterRun.current.has(comment.id) && comment.status === "queued"
+    );
     if (ready.length > 0) void send(ready.map((comment) => comment.id));
   }, [running, send]);
 
   const update = useCallback(
     async (id: string, patch: CommentPatch) => {
       try {
-        await call('PATCH', `/${encodeURIComponent(id)}`, patch);
+        await call("PATCH", `/${encodeURIComponent(id)}`, patch);
       } catch (err) {
         setNotice(errorText(err));
       }
     },
-    [call],
+    [call]
   );
 
   const remove = useCallback(
     async (id: string) => {
       try {
-        await call('DELETE', `/${encodeURIComponent(id)}`);
+        await call("DELETE", `/${encodeURIComponent(id)}`);
         setOpenId((current) => (current === id ? null : current));
       } catch (err) {
         setNotice(errorText(err));
       }
     },
-    [call],
+    [call]
   );
 
   const move = useCallback(
@@ -267,45 +380,67 @@ export function useComments(projectId: string, directionId: string | null, compo
       if (at < 0 || to < 0 || to >= ids.length) return;
       [ids[at], ids[to]] = [ids[to] as string, ids[at] as string];
       try {
-        await call('POST', '/reorder', { ids });
+        await call("POST", "/reorder", { ids });
       } catch (err) {
         setNotice(errorText(err));
       }
     },
-    [call],
+    [call]
   );
 
   const repin = useCallback(
-    async (id: string, selection: SelectionContext, offset?: CommentTarget['offset']) => {
+    async (
+      id: string,
+      selection: SelectionContext,
+      offset?: CommentTarget["offset"]
+    ) => {
       const comment = listRef.current.find((item) => item.id === id);
       setRepinId(null);
       if (!comment) return;
       await update(id, {
         target: targetWith(selection, offset),
         context: selection,
-        ...(comment.status === 'orphaned' ? { status: 'queued' as const } : {}),
+        ...(comment.status === "orphaned" ? { status: "queued" as const } : {}),
       });
     },
-    [update],
+    [update]
   );
 
   const merge = useCallback((comment: DesignComment) => {
-    setComments((prev) => (prev.some((c) => c.id === comment.id) ? prev.map((c) => (c.id === comment.id ? comment : c)) : [...prev, comment]));
+    setComments((prev) =>
+      prev.some((c) => c.id === comment.id)
+        ? prev.map((c) => (c.id === comment.id ? comment : c))
+        : [...prev, comment]
+    );
   }, []);
 
   const addDrawing = useCallback(
-    async (input: { text: string; drawing: CommentDrawing; image: Blob; toClaude: boolean; extras?: CommentExtras }): Promise<boolean> => {
+    async (input: {
+      text: string;
+      drawing: CommentDrawing;
+      image: Blob;
+      toClaude: boolean;
+      extras?: CommentExtras;
+    }): Promise<boolean> => {
       const clean = input.text.trim();
       if (!clean) return false;
       const now = input.toClaude && !runningRef.current;
       try {
-        const attachment = await api.uploadAttachment(projectId, new File([input.image], 'drawing.png', { type: 'image/png' }));
-        const comment = await call<DesignComment>('POST', '', {
+        const attachment = await api.uploadAttachment(
+          projectId,
+          new File([input.image], "drawing.png", { type: "image/png" })
+        );
+        const comment = await call<DesignComment>("POST", "", {
           text: clean,
           target: drawingTarget(input.drawing.box),
-          status: now ? 'draft' : 'queued',
-          attachmentIds: [attachment.id, ...(input.extras?.attachmentIds ?? [])].slice(0, 4),
-          ...(input.extras?.mentions?.length ? { mentions: input.extras.mentions } : {}),
+          status: now ? "draft" : "queued",
+          attachmentIds: [
+            attachment.id,
+            ...(input.extras?.attachmentIds ?? []),
+          ].slice(0, 4),
+          ...(input.extras?.mentions?.length
+            ? { mentions: input.extras.mentions }
+            : {}),
           drawing: input.drawing,
           ...frameField(frameRef),
         });
@@ -318,7 +453,7 @@ export function useComments(projectId: string, directionId: string | null, compo
         return false;
       }
     },
-    [call, deliver, merge, projectId],
+    [call, deliver, merge, projectId]
   );
 
   const reply = useCallback(
@@ -326,7 +461,11 @@ export function useComments(projectId: string, directionId: string | null, compo
       const clean = text.trim();
       if (!clean) return false;
       try {
-        const comment = await call<DesignComment>('POST', `/${encodeURIComponent(id)}/replies`, { text: clean });
+        const comment = await call<DesignComment>(
+          "POST",
+          `/${encodeURIComponent(id)}/replies`,
+          { text: clean }
+        );
         if (comment) merge(comment);
         return comment !== null;
       } catch (err) {
@@ -334,32 +473,44 @@ export function useComments(projectId: string, directionId: string | null, compo
         return false;
       }
     },
-    [call, merge],
+    [call, merge]
   );
 
   const removeReply = useCallback(
     async (id: string, replyId: string) => {
       try {
-        const comment = await call<DesignComment>('DELETE', `/${encodeURIComponent(id)}/replies/${encodeURIComponent(replyId)}`);
+        const comment = await call<DesignComment>(
+          "DELETE",
+          `/${encodeURIComponent(id)}/replies/${encodeURIComponent(replyId)}`
+        );
         if (comment) merge(comment);
       } catch (err) {
         setNotice(errorText(err));
       }
     },
-    [call, merge],
+    [call, merge]
   );
 
   const setShowResolved = useCallback((on: boolean) => {
     setShowResolvedState(on);
     try {
-      window.localStorage.setItem(SHOW_RESOLVED_KEY, on ? '1' : '0');
+      window.localStorage.setItem(SHOW_RESOLVED_KEY, on ? "1" : "0");
     } catch {
       return;
     }
   }, []);
 
-  const queued = useMemo(() => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)), [comments, chatIds]);
-  const inChat = useMemo(() => comments.filter((comment) => chatIds.includes(comment.id) && comment.status === 'queued'), [comments, chatIds]);
+  const queued = useMemo(
+    () => queuedOf(comments).filter((comment) => !chatIds.includes(comment.id)),
+    [comments, chatIds]
+  );
+  const inChat = useMemo(
+    () =>
+      comments.filter(
+        (comment) => chatIds.includes(comment.id) && comment.status === "queued"
+      ),
+    [comments, chatIds]
+  );
   const picks = usePicks(comments);
   const clearPicks = picks.clearPicked;
 
@@ -368,7 +519,7 @@ export function useComments(projectId: string, directionId: string | null, compo
       if (ids.length === 0) return;
       setPreparing(true);
       try {
-        const prefill = await call<CommentPrefill>('POST', '/prefill', { ids });
+        const prefill = await call<CommentPrefill>("POST", "/prefill", { ids });
         if (prefill) {
           prefillRef.current?.(prefill);
           setChatIds((prev) => [...new Set([...prev, ...prefill.commentIds])]);
@@ -381,7 +532,7 @@ export function useComments(projectId: string, directionId: string | null, compo
         setPreparing(false);
       }
     },
-    [call, clearPicks],
+    [call, clearPicks]
   );
 
   return {

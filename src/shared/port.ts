@@ -1,9 +1,17 @@
-export const PORT_TASK = 'port';
+export const PORT_TASK = "port";
 export type PortTask = typeof PORT_TASK;
-export const PORT_LEVEL_LABEL = 'Port to app';
-export const PORT_OPEN_EVENT = 'studio:port-to-app';
+export const PORT_LEVEL_LABEL = "Port to app";
+export const PORT_OPEN_EVENT = "studio:port-to-app";
 
-export type PortKitRole = 'card' | 'badge' | 'button' | 'input' | 'table' | 'tabs' | 'avatar' | 'separator';
+export type PortKitRole =
+  | "card"
+  | "badge"
+  | "button"
+  | "input"
+  | "table"
+  | "tabs"
+  | "avatar"
+  | "separator";
 
 export interface PortSection {
   tag: string;
@@ -13,7 +21,7 @@ export interface PortSection {
 }
 
 export interface PortRepeat {
-  role: 'card' | 'row';
+  role: "card" | "row";
   count: number;
   tag: string;
   className: string | null;
@@ -56,14 +64,19 @@ export interface PortKitMiss {
 export interface PortTarget {
   projectId: string;
   name: string;
-  framework: 'next' | 'vite' | null;
+  framework: "next" | "vite" | null;
   route: string | null;
   routeFile: string | null;
   routeExists: boolean;
 }
 
 export interface PortPlan {
-  source: { projectId: string; directionId: string; path: string; title: string | null };
+  source: {
+    projectId: string;
+    directionId: string;
+    path: string;
+    title: string | null;
+  };
   target: PortTarget | null;
   sections: PortSection[];
   steps: string[];
@@ -91,7 +104,7 @@ export interface PortFlowPage {
   plan: PortPlan;
 }
 
-export type PortFlowLinkKind = 'a' | 'form' | 'script';
+export type PortFlowLinkKind = "a" | "form" | "script";
 
 export interface PortFlowLink {
   from: string;
@@ -104,7 +117,7 @@ export interface PortFlowLink {
 
 export interface PortFlowPlan {
   source: { projectId: string; directionId: string; entry: string };
-  target: Omit<PortTarget, 'route' | 'routeFile' | 'routeExists'> | null;
+  target: Omit<PortTarget, "route" | "routeFile" | "routeExists"> | null;
   base: string | null;
   pages: PortFlowPage[];
   links: PortFlowLink[];
@@ -133,22 +146,43 @@ export interface PortStartResult {
 export const PORT_FLOW_MAX_PAGES = 8;
 
 export function portPageSlug(pagePath: string): string {
-  const stem = pagePath.replace(/^.*\//, '').replace(/\.html?$/i, '');
-  return stem.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'page';
+  const stem = pagePath.replace(/^.*\//, "").replace(/\.html?$/i, "");
+  return (
+    stem
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "page"
+  );
 }
 
-const ROUTE_PART = /^[a-z0-9][a-z0-9-]{0,47}$|^\([a-z0-9-]{1,40}\)$|^\[[a-zA-Z0-9_]{1,40}\]$/;
+const ROUTE_PART =
+  /^[a-z0-9][a-z0-9-]{0,47}$|^\([a-z0-9-]{1,40}\)$|^\[[a-zA-Z0-9_]{1,40}\]$/;
 
 export function cleanPortRoute(raw: string): string | null {
-  const parts = raw.trim().replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  const parts = raw
+    .trim()
+    .replace(/^\/+|\/+$/g, "")
+    .split("/")
+    .filter(Boolean);
   if (parts.length === 0 || parts.length > 6) return null;
   if (!parts.every((part) => ROUTE_PART.test(part))) return null;
-  return `/${parts.join('/')}`;
+  return `/${parts.join("/")}`;
 }
 
-export function suggestPortRoute(pagePath: string, title: string | null): string {
-  const stem = pagePath.replace(/^.*\//, '').replace(/\.html?$/i, '');
-  const base = stem && stem !== 'index' ? stem : (title?.split(/\s[·|–—-]\s/)[0] ?? 'prototype');
-  const slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
-  return `/${slug || 'prototype'}`;
+export function suggestPortRoute(
+  pagePath: string,
+  title: string | null
+): string {
+  const stem = pagePath.replace(/^.*\//, "").replace(/\.html?$/i, "");
+  const base =
+    stem && stem !== "index"
+      ? stem
+      : (title?.split(/\s[·|–—-]\s/)[0] ?? "prototype");
+  const slug = base
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+  return `/${slug || "prototype"}`;
 }

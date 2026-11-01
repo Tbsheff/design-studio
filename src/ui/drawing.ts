@@ -1,17 +1,17 @@
-import type { CommentDrawing, DrawStroke } from '../shared/contracts';
+import type { CommentDrawing, DrawStroke } from "../shared/contracts";
 
 export const DRAW_COLORS = [
-  { id: 'red', label: 'Red', value: '#ff3b30' },
-  { id: 'blue', label: 'Blue', value: '#0a84ff' },
-  { id: 'green', label: 'Green', value: '#1fae4c' },
-  { id: 'ink', label: 'Black', value: '#1c1c1e' },
+  { id: "red", label: "Red", value: "#ff3b30" },
+  { id: "blue", label: "Blue", value: "#0a84ff" },
+  { id: "green", label: "Green", value: "#1fae4c" },
+  { id: "ink", label: "Black", value: "#1c1c1e" },
 ] as const;
 
 export const DRAW_SCREEN_WIDTH = 3;
 const SMOOTHING = 0.45;
 const MIN_STEP_SCREEN = 1.5;
 const PNG_MAX_SIDE = 4096;
-const HALO = 'rgba(255, 255, 255, 0.9)';
+const HALO = "rgba(255, 255, 255, 0.9)";
 
 export interface StrokeBuilder {
   add(x: number, y: number): boolean;
@@ -19,7 +19,11 @@ export interface StrokeBuilder {
   points(): number[];
 }
 
-export function createStrokeBuilder(x: number, y: number, minStep: number): StrokeBuilder {
+export function createStrokeBuilder(
+  x: number,
+  y: number,
+  minStep: number
+): StrokeBuilder {
   const points = [round(x), round(y)];
   let lastX = x;
   let lastY = y;
@@ -34,7 +38,11 @@ export function createStrokeBuilder(x: number, y: number, minStep: number): Stro
       return true;
     },
     end(rawX, rawY) {
-      if (points.length >= 4 && Math.hypot(rawX - lastX, rawY - lastY) < minStep / 2) return;
+      if (
+        points.length >= 4 &&
+        Math.hypot(rawX - lastX, rawY - lastY) < minStep / 2
+      )
+        return;
       lastX = rawX;
       lastY = rawY;
       points.push(round(rawX), round(rawY));
@@ -53,7 +61,7 @@ function round(value: number): number {
 
 export function strokePath(points: number[]): string {
   const count = points.length / 2;
-  if (count === 0) return '';
+  if (count === 0) return "";
   const x0 = points[0] as number;
   const y0 = points[1] as number;
   if (count === 1) return `M${x0} ${y0}l0.01 0`;
@@ -78,14 +86,27 @@ function traceStroke(ctx: CanvasRenderingContext2D, points: number[]): void {
   for (let i = 1; i < count - 1; i += 1) {
     const x = points[i * 2] as number;
     const y = points[i * 2 + 1] as number;
-    ctx.quadraticCurveTo(x, y, (x + (points[i * 2 + 2] as number)) / 2, (y + (points[i * 2 + 3] as number)) / 2);
+    ctx.quadraticCurveTo(
+      x,
+      y,
+      (x + (points[i * 2 + 2] as number)) / 2,
+      (y + (points[i * 2 + 3] as number)) / 2
+    );
   }
-  if (count > 1) ctx.lineTo(points[(count - 1) * 2] as number, points[(count - 1) * 2 + 1] as number);
+  if (count > 1)
+    ctx.lineTo(
+      points[(count - 1) * 2] as number,
+      points[(count - 1) * 2 + 1] as number
+    );
 }
 
-export function paintStrokes(ctx: CanvasRenderingContext2D, strokes: DrawStroke[], halo: boolean): void {
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
+export function paintStrokes(
+  ctx: CanvasRenderingContext2D,
+  strokes: DrawStroke[],
+  halo: boolean
+): void {
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   for (const stroke of strokes) {
     if (stroke.points.length < 2) continue;
     traceStroke(ctx, stroke.points);
@@ -103,14 +124,22 @@ export function paintStrokes(ctx: CanvasRenderingContext2D, strokes: DrawStroke[
 export function renderDrawingPng(drawing: CommentDrawing): Promise<Blob> {
   const { width, height } = drawing.frame;
   const scale = Math.min(1, PNG_MAX_SIDE / Math.max(width, height));
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(width * scale));
   canvas.height = Math.max(1, Math.round(height * scale));
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return Promise.reject(new Error('Canvas is not available'));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.reject(new Error("Canvas is not available"));
   ctx.scale(scale, scale);
   paintStrokes(ctx, drawing.strokes, true);
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not make the drawing image'))), 'image/png'));
+  return new Promise((resolve, reject) =>
+    canvas.toBlob(
+      (blob) =>
+        blob
+          ? resolve(blob)
+          : reject(new Error("Could not make the drawing image")),
+      "image/png"
+    )
+  );
 }
 
 export interface PenAnchor {
@@ -129,15 +158,30 @@ function penSegment(from: PenAnchor, to: PenAnchor): string {
 
 function shiftAnchor(anchor: PenAnchor, dx: number, dy: number): PenAnchor {
   const move = (p: { x: number; y: number }) => ({ x: p.x + dx, y: p.y + dy });
-  return { x: anchor.x + dx, y: anchor.y + dy, ...(anchor.hin ? { hin: move(anchor.hin) } : {}), ...(anchor.hout ? { hout: move(anchor.hout) } : {}) };
+  return {
+    x: anchor.x + dx,
+    y: anchor.y + dy,
+    ...(anchor.hin ? { hin: move(anchor.hin) } : {}),
+    ...(anchor.hout ? { hout: move(anchor.hout) } : {}),
+  };
 }
 
-export function penPath(anchors: PenAnchor[], closed: boolean, dx = 0, dy = 0): string {
-  const moved = dx === 0 && dy === 0 ? anchors : anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
+export function penPath(
+  anchors: PenAnchor[],
+  closed: boolean,
+  dx = 0,
+  dy = 0
+): string {
+  const moved =
+    dx === 0 && dy === 0
+      ? anchors
+      : anchors.map((anchor) => shiftAnchor(anchor, dx, dy));
   const first = moved[0];
-  if (!first) return '';
+  if (!first) return "";
   let d = `M${round(first.x)} ${round(first.y)}`;
-  for (let i = 1; i < moved.length; i += 1) d += penSegment(moved[i - 1] as PenAnchor, moved[i] as PenAnchor);
-  if (closed && moved.length > 1) d += `${penSegment(moved[moved.length - 1] as PenAnchor, first)}Z`;
+  for (let i = 1; i < moved.length; i += 1)
+    d += penSegment(moved[i - 1] as PenAnchor, moved[i] as PenAnchor);
+  if (closed && moved.length > 1)
+    d += `${penSegment(moved[moved.length - 1] as PenAnchor, first)}Z`;
   return d;
 }

@@ -1,12 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { SelectionContext } from '../shared/contracts';
-import type { CommentsControl } from './useComments';
-import { isTypingTarget } from './typingTarget';
+import { useCallback, useEffect, useRef, useState } from "react";
 
-type SetSelection = (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
+import type { SelectionContext } from "../shared/contracts";
+import { isTypingTarget } from "./typingTarget";
+import type { CommentsControl } from "./useComments";
 
-function sameSelectors(prev: SelectionContext[], next: SelectionContext[]): boolean {
-  return prev.length === next.length && prev.every((s, i) => s.selector === next[i]?.selector);
+type SetSelection = (
+  updater: (prev: SelectionContext[]) => SelectionContext[]
+) => void;
+
+function sameSelectors(
+  prev: SelectionContext[],
+  next: SelectionContext[]
+): boolean {
+  return (
+    prev.length === next.length &&
+    prev.every((s, i) => s.selector === next[i]?.selector)
+  );
 }
 
 interface CommentMode {
@@ -17,7 +26,11 @@ interface CommentMode {
   guard: (setSelection: SetSelection) => SetSelection;
 }
 
-export function useCommentMode(control: CommentsControl | undefined, live: boolean, setSelectMode: (on: boolean) => void): CommentMode {
+export function useCommentMode(
+  control: CommentsControl | undefined,
+  live: boolean,
+  setSelectMode: (on: boolean) => void
+): CommentMode {
   const [on, setOn] = useState(false);
   const available = Boolean(control) && live;
   const availableRef = useRef(available);
@@ -46,17 +59,23 @@ export function useCommentMode(control: CommentsControl | undefined, live: boole
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (
+        isTypingTarget(event.target) ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      )
+        return;
       const key = event.key.toLowerCase();
-      if (key === 'c' && availableRef.current) {
+      if (key === "c" && availableRef.current) {
         event.preventDefault();
         toggle();
-      } else if (key === 'v' || key === 'escape') {
+      } else if (key === "v" || key === "escape") {
         setOn(false);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [toggle]);
 
   const guard = useCallback(
@@ -68,7 +87,7 @@ export function useCommentMode(control: CommentsControl | undefined, live: boole
           return sameSelectors(prev, next) ? next : prev;
         });
     },
-    [on],
+    [on]
   );
 
   return { available, on, setOn, toggle, guard };

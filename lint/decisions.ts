@@ -15,7 +15,8 @@ type RuleMap = Record<string, RuleModule>;
 const load = createRequire(import.meta.url);
 
 const rulesOf = (specifier: string): RuleMap => {
-  const loaded: { rules?: RuleMap; default?: { rules?: RuleMap } } = load(specifier);
+  const loaded: { rules?: RuleMap; default?: { rules?: RuleMap } } =
+    load(specifier);
   return loaded.rules ?? loaded.default?.rules ?? {};
 };
 
@@ -106,38 +107,64 @@ const NATIVE_ON: Record<string, unknown> = {
 };
 
 export const OFF_REASONS: Record<string, string> = {
-  "anti-slop/require-safety-comment-for-type-assertion": "Requires a comment; Tyler chose the comment rules off (no-comments hook).",
-  "jsdoc-js/require-jsdoc": "Requires a comment; Tyler chose the comment rules off. The plugin is not loaded.",
-  "tsdoc/syntax": "Comment rule family; Tyler chose it off. The plugin is not loaded.",
-  "sonarjs/file-header": "Requires a header comment, which the no-comments hook forbids.",
+  "anti-slop/require-safety-comment-for-type-assertion":
+    "Requires a comment; Tyler chose the comment rules off (no-comments hook).",
+  "jsdoc-js/require-jsdoc":
+    "Requires a comment; Tyler chose the comment rules off. The plugin is not loaded.",
+  "tsdoc/syntax":
+    "Comment rule family; Tyler chose it off. The plugin is not loaded.",
+  "sonarjs/file-header":
+    "Requires a header comment, which the no-comments hook forbids.",
   "sort-imports": "oxfmt sortImports owns import order; the two orders fight.",
-  "sonarjs/arrow-function-convention": "Fights the formatter (arrowParens: always).",
+  "sonarjs/arrow-function-convention":
+    "Fights the formatter (arrowParens: always).",
   "import/prefer-default-export": "Contradicts import/no-default-export.",
-  "import/no-named-export": "With import/no-default-export it bans every export.",
+  "import/no-named-export":
+    "With import/no-default-export it bans every export.",
   "node/no-top-level-await": "Contradicts unicorn/prefer-top-level-await.",
-  "oxc/no-async-await": "Bans ES2017 syntax the ES2023 target has; contradicts promise/prefer-await-to-then.",
-  "oxc/no-optional-chaining": "Bans ES2020 syntax the ES2023 target has; contradicts typescript/prefer-optional-chain.",
-  "oxc/no-rest-spread-properties": "Bans ES2018 syntax the ES2023 target has; contradicts prefer-object-spread.",
-  "react/react-in-jsx-scope": "tsconfig uses jsx react-jsx; React is not in scope by design.",
-  "unicorn/no-null": "The wire contract uses null; no-undefined stays on as the other side.",
-  "unicorn/number-literal-case": "Broken upstream (oxc-project/oxc#21949), so Ultracite keeps it off.",
+  "oxc/no-async-await":
+    "Bans ES2017 syntax the ES2023 target has; contradicts promise/prefer-await-to-then.",
+  "oxc/no-optional-chaining":
+    "Bans ES2020 syntax the ES2023 target has; contradicts typescript/prefer-optional-chain.",
+  "oxc/no-rest-spread-properties":
+    "Bans ES2018 syntax the ES2023 target has; contradicts prefer-object-spread.",
+  "react/react-in-jsx-scope":
+    "tsconfig uses jsx react-jsx; React is not in scope by design.",
+  "unicorn/no-null":
+    "The wire contract uses null; no-undefined stays on as the other side.",
+  "unicorn/number-literal-case":
+    "Broken upstream (oxc-project/oxc#21949), so Ultracite keeps it off.",
   "unicorn/prefer-reflect-apply": "Contradicts anti-slop/no-reflect-apply.",
   "github/no-dataset": "Contradicts unicorn/prefer-dom-node-dataset.",
-  "sonarjs/no-reference-error": "The JS plugin bridge gives no globals, so it flags every identifier.",
-  "vitest/no-importing-vitest-globals": "Contradicts vitest/prefer-importing-vitest-globals; tests import from vitest.",
+  "sonarjs/no-reference-error":
+    "The JS plugin bridge gives no globals, so it flags every identifier.",
+  "vitest/no-importing-vitest-globals":
+    "Contradicts vitest/prefer-importing-vitest-globals; tests import from vitest.",
 };
 
-const REACT_DOCTOR_SKIP_TAGS = new Set(["ink", "r3f", "webgl", "three", "react-native", "server-action", "project-analysis"]);
+const REACT_DOCTOR_SKIP_TAGS = new Set([
+  "ink",
+  "r3f",
+  "webgl",
+  "three",
+  "react-native",
+  "server-action",
+  "project-analysis",
+]);
 
-const NATIVE_REACT_IDS = new Set([
-  ...Object.keys(presetRules),
-  ...Object.keys(NATIVE_ON),
-].filter((key) => /^(react|jsx-a11y|react-perf)\//u.test(key)).map((key) => key.split("/")[1]));
+const NATIVE_REACT_IDS = new Set(
+  [...Object.keys(presetRules), ...Object.keys(NATIVE_ON)]
+    .filter((key) => /^(react|jsx-a11y|react-perf)\//u.test(key))
+    .map((key) => key.split("/")[1])
+);
 
 const reactDoctorKeeps = (id: string, rule: RuleModule) =>
-  rule.framework === "global" && !(rule.tags ?? []).some((tag) => REACT_DOCTOR_SKIP_TAGS.has(tag)) && !NATIVE_REACT_IDS.has(id);
+  rule.framework === "global" &&
+  !(rule.tags ?? []).some((tag) => REACT_DOCTOR_SKIP_TAGS.has(tag)) &&
+  !NATIVE_REACT_IDS.has(id);
 
-const eslintKeeps = (_id: string, rule: RuleModule) => !rule.meta?.deprecated && !rule.meta?.docs?.requiresTypeChecking;
+const eslintKeeps = (_id: string, rule: RuleModule) =>
+  !rule.meta?.deprecated && !rule.meta?.docs?.requiresTypeChecking;
 
 const PLUGINS: [string, string, (id: string, rule: RuleModule) => boolean][] = [
   ["github", "eslint-plugin-github", eslintKeeps],
@@ -145,7 +172,11 @@ const PLUGINS: [string, string, (id: string, rule: RuleModule) => boolean][] = [
   ["react-doctor", "oxlint-plugin-react-doctor", reactDoctorKeeps],
 ];
 
-const pluginRules = (prefix: string, specifier: string, keeps: (id: string, rule: RuleModule) => boolean) =>
+const pluginRules = (
+  prefix: string,
+  specifier: string,
+  keeps: (id: string, rule: RuleModule) => boolean
+) =>
   Object.entries(rulesOf(specifier))
     .filter(([id, rule]) => keeps(id, rule) && isUnset(`${prefix}/${id}`))
     .map(([id]) => [`${prefix}/${id}`, "error"] as const);
@@ -154,21 +185,33 @@ const typeAwareSonar = Object.entries(rulesOf("eslint-plugin-sonarjs"))
   .filter(([, rule]) => rule.meta?.docs?.requiresTypeChecking)
   .map(([id]) => `sonarjs/${id}`);
 
-const off = (keys: string[]) => Object.fromEntries(keys.map((key) => [key, "off"]));
+const off = (keys: string[]) =>
+  Object.fromEntries(keys.map((key) => [key, "off"]));
 
 export const decisions = {
   rules: {
-    ...Object.fromEntries(PLUGINS.flatMap(([prefix, specifier, keeps]) => pluginRules(prefix, specifier, keeps))),
+    ...Object.fromEntries(
+      PLUGINS.flatMap(([prefix, specifier, keeps]) =>
+        pluginRules(prefix, specifier, keeps)
+      )
+    ),
     ...NATIVE_ON,
     ...off(typeAwareSonar),
-    ...off(Object.keys(OFF_REASONS).filter((key) => !/^(jsdoc-js|tsdoc|vitest)\//u.test(key))),
+    ...off(
+      Object.keys(OFF_REASONS).filter(
+        (key) => !/^(jsdoc-js|tsdoc|vitest)\//u.test(key)
+      )
+    ),
   },
 };
 
 type LintRules = NonNullable<OxlintOverride["rules"]>;
 
 export const vitestAll: LintRules = Object.fromEntries(
-  Object.entries(vitestRules).map(([key, value]) => [key, levelOf(value) === "off" ? ("error" as const) : value])
+  Object.entries(vitestRules).map(([key, value]) => [
+    key,
+    levelOf(value) === "off" ? ("error" as const) : value,
+  ])
 );
 vitestAll["vitest/no-importing-vitest-globals"] = "off";
 
@@ -178,20 +221,42 @@ export const playwrightAll: LintRules = Object.fromEntries(
     .map(([id]) => [`playwright/${id}`, "error" as const])
 );
 
-const NODE_RUNTIMES = ["src/server/**", "src/**/*.test.ts", "desktop/**", "scripts/**", "e2e/**", "cloud/**", "lint/**", "*.config.ts"];
+const NODE_RUNTIMES = [
+  "src/server/**",
+  "src/**/*.test.ts",
+  "desktop/**",
+  "scripts/**",
+  "e2e/**",
+  "cloud/**",
+  "lint/**",
+  "*.config.ts",
+];
 
 export const SCOPED_OFF_REASONS: Record<string, string> = {
-  "import/no-nodejs-modules": "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
-  "no-console": "Off in the logger and in scripts, which print by design (plan 5.2).",
-  "node/no-process-env": "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
+  "import/no-nodejs-modules":
+    "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
+  "no-console":
+    "Off in the logger and in scripts, which print by design (plan 5.2).",
+  "node/no-process-env":
+    "Off in the config module and desktop/env.ts, which own env access (plan 5.2).",
   "node/no-sync": "Off in desktop/build.ts and the data lock (plan 5.2).",
-  "import/no-default-export": "Off in *.config.ts: the tools load a default export.",
+  "import/no-default-export":
+    "Off in *.config.ts: the tools load a default export.",
 };
 
 export const decisionOverrides: OxlintOverride[] = [
   { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
-  { files: ["src/server/platform/logger/**", "scripts/**"], rules: { "no-console": "off" } },
-  { files: ["src/server/platform/config/**", "desktop/env.ts"], rules: { "node/no-process-env": "off" } },
-  { files: ["desktop/build.ts", "src/server/platform/data-lock/**"], rules: { "node/no-sync": "off" } },
+  {
+    files: ["src/server/platform/logger/**", "scripts/**"],
+    rules: { "no-console": "off" },
+  },
+  {
+    files: ["src/server/platform/config/**", "desktop/env.ts"],
+    rules: { "node/no-process-env": "off" },
+  },
+  {
+    files: ["desktop/build.ts", "src/server/platform/data-lock/**"],
+    rules: { "node/no-sync": "off" },
+  },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
 ];

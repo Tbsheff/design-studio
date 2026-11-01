@@ -1,18 +1,42 @@
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import type { Project, RunRequest, RunSummary, StudioEvent, Version, WorkTreeStatus } from '../shared/contracts';
-import { api, errorText } from './api';
-import { createDeltaBatcher, frameOrTimeout } from './deltaBatch';
-import { useProjectEvents, type ConnectionState } from './events';
-import { reportFirstToken } from './perfTelemetry';
-import { applyRunEvent, emptyRun, runFromSummary, type RunMap } from './runState';
-import { listRunPage, publishOlderRuns, publishRunHistory } from './runHistoryApi';
-import { useRunNotice } from './useRunNotice';
-import { uiStore, useUi } from './storage';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+
+import type {
+  Project,
+  RunRequest,
+  RunSummary,
+  StudioEvent,
+  Version,
+  WorkTreeStatus,
+} from "../shared/contracts";
+import { api, errorText } from "./api";
+import { createDeltaBatcher, frameOrTimeout } from "./deltaBatch";
+import { useProjectEvents, type ConnectionState } from "./events";
+import { reportFirstToken } from "./perfTelemetry";
+import {
+  listRunPage,
+  publishOlderRuns,
+  publishRunHistory,
+} from "./runHistoryApi";
+import {
+  applyRunEvent,
+  emptyRun,
+  runFromSummary,
+  type RunMap,
+} from "./runState";
+import { uiStore, useUi } from "./storage";
+import { useRunNotice } from "./useRunNotice";
 
 export interface BuildError {
   id: string;
   directionId: string | null;
-  source: 'build' | 'console' | 'runtime' | 'unhandledrejection';
+  source: "build" | "console" | "runtime" | "unhandledrejection";
   message: string;
   file?: string;
   line?: number;
@@ -39,13 +63,18 @@ interface StudioData {
   status: WorkTreeStatus | null;
   setStatus: (s: WorkTreeStatus | null) => void;
   errors: BuildError[];
-  addError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
+  addError: (e: Omit<BuildError, "id" | "ts">) => void;
   clearErrors: () => void;
   clearFrameErrors: () => void;
   lastChange: FilesChange | null;
   connection: ConnectionState;
   refreshVersions: () => void;
-  seedRun: (runId: string, directionId: string, request: RunRequest, stopped?: boolean) => void;
+  seedRun: (
+    runId: string,
+    directionId: string,
+    request: RunRequest,
+    stopped?: boolean
+  ) => void;
   noteSend: () => () => void;
 }
 
@@ -54,14 +83,19 @@ interface SendTimes {
   byRun: Map<string, number>;
 }
 
-function trackFirstToken(sends: SendTimes, projectId: string, event: StudioEvent): void {
-  if (event.type === 'run.started') {
+function trackFirstToken(
+  sends: SendTimes,
+  projectId: string,
+  event: StudioEvent
+): void {
+  if (event.type === "run.started") {
     if (sends.pending === null || event.ts < sends.pending - 1000) return;
     sends.byRun.set(event.runId, sends.pending);
     sends.pending = null;
     return;
   }
-  if (event.type !== 'run.text.delta' && event.type !== 'run.thinking.delta') return;
+  if (event.type !== "run.text.delta" && event.type !== "run.thinking.delta")
+    return;
   const sentAt = sends.byRun.get(event.runId);
   if (sentAt === undefined) return;
   sends.byRun.delete(event.runId);
@@ -82,7 +116,15 @@ interface RunCursor {
 }
 
 function newCursor(projectId: string): RunCursor {
-  return { projectId, before: null, done: false, loading: false, pending: null, byDirection: new Map(), seen: new Set() };
+  return {
+    projectId,
+    before: null,
+    done: false,
+    loading: false,
+    pending: null,
+    byDirection: new Map(),
+    seen: new Set(),
+  };
 }
 
 const THROUGH_RUNS = 60;
@@ -92,7 +134,8 @@ function mergeSummaries(prev: RunMap, list: RunSummary[]): RunMap {
   for (const s of list) {
     const known = next[s.id];
     if (!known?.summary) next[s.id] = runFromSummary(s);
-    else if (s.title && !known.summary.title) next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
+    else if (s.title && !known.summary.title)
+      next[s.id] = { ...known, summary: { ...known.summary, title: s.title } };
   }
   return next;
 }
@@ -101,7 +144,10 @@ function countRuns(cursor: RunCursor, list: RunSummary[]): void {
   for (const s of list) {
     if (cursor.seen.has(s.id)) continue;
     cursor.seen.add(s.id);
-    cursor.byDirection.set(s.directionId, (cursor.byDirection.get(s.directionId) ?? 0) + 1);
+    cursor.byDirection.set(
+      s.directionId,
+      (cursor.byDirection.get(s.directionId) ?? 0) + 1
+    );
   }
 }
 
@@ -112,20 +158,30 @@ function loadedFor(cursor: RunCursor, directionId: string | null): number {
 
 type SetRuns = Dispatch<SetStateAction<RunMap>>;
 
-function useRunPages(projectId: string, directionId: string | null, setRuns: SetRuns, setRunsLoaded: (loaded: boolean) => void): void {
+function useRunPages(
+  projectId: string,
+  directionId: string | null,
+  setRuns: SetRuns,
+  setRunsLoaded: (loaded: boolean) => void
+): void {
   const cursor = useRef<RunCursor>(newCursor(projectId));
   const direction = useRef(directionId);
   direction.current = directionId;
 
   const publish = useCallback((c: RunCursor, load: (() => void) | null) => {
-    if (cursor.current === c) publishOlderRuns({ more: !c.done, loading: c.loading }, load);
+    if (cursor.current === c)
+      publishOlderRuns({ more: !c.done, loading: c.loading }, load);
   }, []);
 
   const page = useCallback(
     async (c: RunCursor, want: (c: RunCursor) => boolean, size: number) => {
       let first = c.before === null;
       while (!c.done && cursor.current === c && want(c)) {
-        const next = await listRunPage(c.projectId, first ? FIRST_RUNS : size, c.before);
+        const next = await listRunPage(
+          c.projectId,
+          first ? FIRST_RUNS : size,
+          c.before
+        );
         if (cursor.current !== c) return;
         first = false;
         countRuns(c, next.runs);
@@ -133,18 +189,26 @@ function useRunPages(projectId: string, directionId: string | null, setRuns: Set
         c.done = next.nextBefore === null;
         setRuns((prev) => mergeSummaries(prev, next.runs));
         setRunsLoaded(true);
-        for (const s of next.runs.filter((r) => r.status === 'running')) {
+        for (const s of next.runs.filter((r) => r.status === "running")) {
           api
             .getRun(s.id)
-            .then(({ events }) => cursor.current === c && setRuns((prev) => events.reduce(applyRunEvent, prev)))
+            .then(
+              ({ events }) =>
+                cursor.current === c &&
+                setRuns((prev) => events.reduce(applyRunEvent, prev))
+            )
             .catch(() => undefined);
         }
       }
     },
-    [setRuns, setRunsLoaded],
+    [setRuns, setRunsLoaded]
   );
 
-  const wantMore = useCallback((target: number) => (c: RunCursor) => loadedFor(c, direction.current) < target, []);
+  const wantMore = useCallback(
+    (target: number) => (c: RunCursor) =>
+      loadedFor(c, direction.current) < target,
+    []
+  );
 
   const fill = useCallback(
     async (c: RunCursor, want: (c: RunCursor) => boolean, size = MORE_RUNS) => {
@@ -156,9 +220,13 @@ function useRunPages(projectId: string, directionId: string | null, setRuns: Set
       await work;
       c.loading = false;
       c.pending = null;
-      publish(c, () => void fill(c, wantMore(loadedFor(c, direction.current) + MORE_RUNS)));
+      publish(
+        c,
+        () =>
+          void fill(c, wantMore(loadedFor(c, direction.current) + MORE_RUNS))
+      );
     },
-    [page, publish, setRunsLoaded, wantMore],
+    [page, publish, setRunsLoaded, wantMore]
   );
 
   const through = useCallback(
@@ -172,7 +240,7 @@ function useRunPages(projectId: string, directionId: string | null, setRuns: Set
       }
       return c.seen.has(runId);
     },
-    [fill],
+    [fill]
   );
 
   useEffect(() => {
@@ -193,7 +261,12 @@ function useRunPages(projectId: string, directionId: string | null, setRuns: Set
 
   useEffect(() => {
     const c = cursor.current;
-    if (directionId !== null && !c.loading && loadedFor(c, directionId) < FIRST_RUNS) void fill(c, wantMore(FIRST_RUNS));
+    if (
+      directionId !== null &&
+      !c.loading &&
+      loadedFor(c, directionId) < FIRST_RUNS
+    )
+      void fill(c, wantMore(FIRST_RUNS));
   }, [directionId, fill, wantMore]);
 }
 
@@ -208,19 +281,26 @@ export function useStudioData(projectId: string): StudioData {
   const [errors, setErrors] = useState<BuildError[]>([]);
   const [lastChange, setLastChange] = useState<FilesChange | null>(null);
   const mountedAt = useRef(Date.now());
-  const [batcher] = useState(() => createDeltaBatcher(setRuns, frameOrTimeout(100)));
+  const [batcher] = useState(() =>
+    createDeltaBatcher(setRuns, frameOrTimeout(100))
+  );
   const sends = useRef<SendTimes>({ pending: null, byRun: new Map() });
   useEffect(() => () => batcher.dispose(), [batcher]);
 
   const stored = ui.directionByProject[projectId];
   const directionId =
-    project?.directions.find((x) => x.id === stored)?.id ?? project?.directions[0]?.id ?? null;
+    project?.directions.find((x) => x.id === stored)?.id ??
+    project?.directions[0]?.id ??
+    null;
   const directionRef = useRef(directionId);
   directionRef.current = directionId;
 
   const setDirectionId = useCallback(
-    (id: string) => uiStore.set((s) => ({ directionByProject: { ...s.directionByProject, [projectId]: id } })),
-    [projectId],
+    (id: string) =>
+      uiStore.set((s) => ({
+        directionByProject: { ...s.directionByProject, [projectId]: id },
+      })),
+    [projectId]
   );
 
   useEffect(() => {
@@ -258,10 +338,12 @@ export function useStudioData(projectId: string): StudioData {
       .catch(() => undefined);
   }, [projectId, directionId, refreshVersions]);
 
-  const addError = useCallback((e: Omit<BuildError, 'id' | 'ts'>) => {
+  const addError = useCallback((e: Omit<BuildError, "id" | "ts">) => {
     setErrors((prev) => {
       const ts = Date.now();
-      const dup = prev.find((x) => x.message === e.message && x.file === e.file && x.line === e.line);
+      const dup = prev.find(
+        (x) => x.message === e.message && x.file === e.file && x.line === e.line
+      );
       if (dup) return prev;
       return [...prev.slice(-49), { ...e, id: `${ts}-${prev.length}`, ts }];
     });
@@ -270,41 +352,55 @@ export function useStudioData(projectId: string): StudioData {
   const onEvent = useCallback(
     (event: StudioEvent) => {
       const live = event.ts >= mountedAt.current - 1000;
-      const active = event.directionId === undefined || event.directionId === directionRef.current;
+      const active =
+        event.directionId === undefined ||
+        event.directionId === directionRef.current;
       batcher.push(event);
       trackFirstToken(sends.current, projectId, event);
       switch (event.type) {
-        case 'files.changed':
+        case "files.changed":
           if (live && event.directionId)
-            setLastChange({ directionId: event.directionId, changedAt: event.changedAt, receivedAt: Date.now(), paths: event.paths, ...(event.reload ? { reload: true } : {}) });
+            setLastChange({
+              directionId: event.directionId,
+              changedAt: event.changedAt,
+              receivedAt: Date.now(),
+              paths: event.paths,
+              ...(event.reload ? { reload: true } : {}),
+            });
           break;
-        case 'version.created':
+        case "version.created":
           if (event.version.directionId === directionRef.current)
             setVersions((prev) =>
-              prev.some((v) => v.id === event.version.id) ? prev : [event.version, ...prev],
+              prev.some((v) => v.id === event.version.id)
+                ? prev
+                : [event.version, ...prev]
             );
           break;
-        case 'versions.changed':
+        case "versions.changed":
           if (active) refreshVersions();
           break;
-        case 'direction.updated':
+        case "direction.updated":
           setProject((prev) => {
             if (!prev) return prev;
-            const exists = prev.directions.some((x) => x.id === event.direction.id);
+            const exists = prev.directions.some(
+              (x) => x.id === event.direction.id
+            );
             const directions = exists
-              ? prev.directions.map((x) => (x.id === event.direction.id ? event.direction : x))
+              ? prev.directions.map((x) =>
+                  x.id === event.direction.id ? event.direction : x
+                )
               : [...prev.directions, event.direction];
             return { ...prev, directions };
           });
           break;
-        case 'status.changed':
+        case "status.changed":
           if (live && active) setStatus(event.status);
           break;
-        case 'preview.build-error':
+        case "preview.build-error":
           if (live && active)
             addError({
               directionId: event.directionId ?? null,
-              source: 'build',
+              source: "build",
               message: event.message,
               file: event.file,
               line: event.line,
@@ -312,20 +408,36 @@ export function useStudioData(projectId: string): StudioData {
           break;
       }
     },
-    [addError, batcher, projectId, refreshVersions],
+    [addError, batcher, projectId, refreshVersions]
   );
 
   const connection = useProjectEvents(projectId, onEvent);
   useRunNotice(project?.name ?? null, runs);
 
-  const seedRun = useCallback((runId: string, did: string, request: RunRequest, stopped = false) => {
-    setRuns((prev) => {
-      const existing = prev[runId];
-      const status = stopped && !existing?.summary ? { status: 'canceled' as const } : {};
-      if (existing) return { ...prev, [runId]: { ...existing, directionId: existing.directionId ?? did, request: existing.request ?? request, ...status } };
-      return { ...prev, [runId]: { ...emptyRun(runId, did, Date.now(), request), ...status } };
-    });
-  }, []);
+  const seedRun = useCallback(
+    (runId: string, did: string, request: RunRequest, stopped = false) => {
+      setRuns((prev) => {
+        const existing = prev[runId];
+        const status =
+          stopped && !existing?.summary ? { status: "canceled" as const } : {};
+        if (existing)
+          return {
+            ...prev,
+            [runId]: {
+              ...existing,
+              directionId: existing.directionId ?? did,
+              request: existing.request ?? request,
+              ...status,
+            },
+          };
+        return {
+          ...prev,
+          [runId]: { ...emptyRun(runId, did, Date.now(), request), ...status },
+        };
+      });
+    },
+    []
+  );
 
   const noteSend = useCallback(() => {
     const at = Date.now();
@@ -349,7 +461,12 @@ export function useStudioData(projectId: string): StudioData {
     errors,
     addError,
     clearErrors: () => setErrors([]),
-    clearFrameErrors: () => setErrors((prev) => (prev.some((e) => e.source !== 'build') ? prev.filter((e) => e.source === 'build') : prev)),
+    clearFrameErrors: () =>
+      setErrors((prev) =>
+        prev.some((e) => e.source !== "build")
+          ? prev.filter((e) => e.source === "build")
+          : prev
+      ),
     lastChange,
     connection,
     refreshVersions,

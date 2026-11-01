@@ -1,9 +1,17 @@
-import type { MeasureRect } from '../../shared/arrange.js';
-import type { ArrangeFacts, ArrangeParentFacts, ArrangeTargetFacts } from '../../shared/arrange-plan.js';
-import { SOURCE_LOC_ATTR, type ComponentUse, type SourceLoc } from '../../shared/contracts.js';
-import { appSourceBody, parseLoc } from '../components/owner-probe.js';
-import type { PreviewService } from '../types.js';
-import { probeOnPage } from '../preview/probe-page.js';
+import type {
+  ArrangeFacts,
+  ArrangeParentFacts,
+  ArrangeTargetFacts,
+} from "../../shared/arrange-plan.js";
+import type { MeasureRect } from "../../shared/arrange.js";
+import {
+  SOURCE_LOC_ATTR,
+  type ComponentUse,
+  type SourceLoc,
+} from "../../shared/contracts.js";
+import { appSourceBody, parseLoc } from "../components/owner-probe.js";
+import { probeOnPage } from "../preview/probe-page.js";
+import type { PreviewService } from "../types.js";
 
 type Viewport = { width: number; height: number };
 
@@ -13,10 +21,17 @@ interface RawSource {
   usedBy: ComponentUse | null;
 }
 
-type RawTarget = Omit<ArrangeTargetFacts, 'source'> & RawSource;
-type RawParent = Omit<ArrangeParentFacts, 'source'> & RawSource;
+type RawTarget = Omit<ArrangeTargetFacts, "source"> & RawSource;
+type RawParent = Omit<ArrangeParentFacts, "source"> & RawSource;
 
-type RawProbe = { error: string } | { targets: RawTarget[]; parent: RawParent | null; sameParent: boolean; container: MeasureRect | null };
+type RawProbe =
+  | { error: string }
+  | {
+      targets: RawTarget[];
+      parent: RawParent | null;
+      sameParent: boolean;
+      container: MeasureRect | null;
+    };
 
 export interface ProbedSource {
   source: SourceLoc | null;
@@ -81,26 +96,56 @@ function probeExpression(selectors: string[]): string {
 }
 
 function sourceEntry(raw: RawSource & { tag: string }): ProbedSource {
-  return { source: parseLoc(raw.loc), usedAt: parseLoc(raw.usedAt), usedBy: raw.usedBy, tag: raw.tag };
+  return {
+    source: parseLoc(raw.loc),
+    usedAt: parseLoc(raw.usedAt),
+    usedBy: raw.usedBy,
+    tag: raw.tag,
+  };
 }
 
 export class ArrangeProbeError extends Error {}
 
-export async function probeArrange(preview: PreviewService, url: string, viewport: Viewport, selectors: string[]): Promise<ArrangeProbe> {
-  const raw = await probeOnPage<RawProbe>(preview, url, viewport, probeExpression(selectors));
-  if ('error' in raw) throw new ArrangeProbeError(raw.error);
+export async function probeArrange(
+  preview: PreviewService,
+  url: string,
+  viewport: Viewport,
+  selectors: string[]
+): Promise<ArrangeProbe> {
+  const raw = await probeOnPage<RawProbe>(
+    preview,
+    url,
+    viewport,
+    probeExpression(selectors)
+  );
+  if ("error" in raw) throw new ArrangeProbeError(raw.error);
   const sources = new Map<string, ProbedSource>();
   const targets = raw.targets.map(({ loc, usedAt, usedBy, ...rest }) => {
-    sources.set(rest.selector, sourceEntry({ loc, usedAt, usedBy, tag: rest.tag }));
+    sources.set(
+      rest.selector,
+      sourceEntry({ loc, usedAt, usedBy, tag: rest.tag })
+    );
     return { ...rest, source: parseLoc(loc) };
   });
   let parent: ArrangeParentFacts | null = null;
   if (raw.parent) {
     const { loc, usedAt, usedBy, ...rest } = raw.parent;
-    if (!sources.has(rest.selector)) sources.set(rest.selector, sourceEntry({ loc, usedAt, usedBy, tag: rest.tag }));
+    if (!sources.has(rest.selector))
+      sources.set(
+        rest.selector,
+        sourceEntry({ loc, usedAt, usedBy, tag: rest.tag })
+      );
     parent = { ...rest, source: parseLoc(loc) };
   }
-  return { facts: { targets, parent, sameParent: raw.sameParent, container: raw.container }, sources };
+  return {
+    facts: {
+      targets,
+      parent,
+      sameParent: raw.sameParent,
+      container: raw.container,
+    },
+    sources,
+  };
 }
 
 function rectsExpression(selectors: string[]): string {
@@ -113,6 +158,16 @@ function rectsExpression(selectors: string[]): string {
   }))(${JSON.stringify(selectors)})`;
 }
 
-export async function probeRects(preview: PreviewService, url: string, viewport: Viewport, selectors: string[]): Promise<(MeasureRect | null)[]> {
-  return probeOnPage<(MeasureRect | null)[]>(preview, url, viewport, rectsExpression(selectors));
+export async function probeRects(
+  preview: PreviewService,
+  url: string,
+  viewport: Viewport,
+  selectors: string[]
+): Promise<(MeasureRect | null)[]> {
+  return probeOnPage<(MeasureRect | null)[]>(
+    preview,
+    url,
+    viewport,
+    rectsExpression(selectors)
+  );
 }

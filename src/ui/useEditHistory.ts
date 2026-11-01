@@ -1,23 +1,49 @@
-import { useCallback, useEffect, useRef, useState, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
-import { anchorQueryOf, targetFromSelection } from '../shared/comments';
-import type { AnchorQuery, Direction, EditHistoryState, SelectionContext, Version } from '../shared/contracts';
-import { api, errorText } from './api';
-import { useProjectEvents } from './events';
-import { historyKeyOf, type HistoryKind, type RedoShortcut } from './useUndoShortcut';
-import { historyPhrase } from './versionLabels';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from "react";
 
-export const PREVIEW_PAINTED_EVENT = 'studio:preview-painted';
+import { anchorQueryOf, targetFromSelection } from "../shared/comments";
+import type {
+  AnchorQuery,
+  Direction,
+  EditHistoryState,
+  SelectionContext,
+  Version,
+} from "../shared/contracts";
+import { api, errorText } from "./api";
+import { useProjectEvents } from "./events";
+import {
+  historyKeyOf,
+  type HistoryKind,
+  type RedoShortcut,
+} from "./useUndoShortcut";
+import { historyPhrase } from "./versionLabels";
 
-const EMPTY: EditHistoryState = { canUndo: false, canRedo: false, undoLabel: null, redoLabel: null };
+export const PREVIEW_PAINTED_EVENT = "studio:preview-painted";
+
+const EMPTY: EditHistoryState = {
+  canUndo: false,
+  canRedo: false,
+  undoLabel: null,
+  redoLabel: null,
+};
 const TOAST_MS = 2400;
 const REFRESH_WINDOW_MS = 3000;
 const SWAPPED_FRAME_RENDER_MS = 80;
 const CHANGE_WINDOW_MS = 8000;
 const CHANGE_RECHECK_MS = [500, 1500, 4000] as const;
 const REPLAY_SLACK_MS = 1000;
-const NOTHING_TO_UNDO = 'Nothing more to undo';
+const NOTHING_TO_UNDO = "Nothing more to undo";
 
-type Describe = (anchors: AnchorQuery[]) => Promise<(SelectionContext | null)[]>;
+type Describe = (
+  anchors: AnchorQuery[]
+) => Promise<(SelectionContext | null)[]>;
 
 interface Options {
   projectId: string;
@@ -33,21 +59,37 @@ interface Options {
 const HISTORY_STEP_TITLE = /^(Undo|Redo): /;
 
 export function isHistoryStep(version: Version | undefined): boolean {
-  return version !== undefined && version.meta.kind === 'manual' && HISTORY_STEP_TITLE.test(version.title);
+  return (
+    version !== undefined &&
+    version.meta.kind === "manual" &&
+    HISTORY_STEP_TITLE.test(version.title)
+  );
 }
 
 export function stepToast(kind: HistoryKind, label: string | null): string {
-  const word = kind === 'undo' ? 'Undid' : 'Redid';
-  if (!label) return kind === 'undo' ? 'Undid the last edit' : 'Redid the edit';
+  const word = kind === "undo" ? "Undid" : "Redid";
+  if (!label) return kind === "undo" ? "Undid the last edit" : "Redid the edit";
   const phrase = historyPhrase(label);
   if (phrase) return `${word} ${phrase}`;
   return `${word} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 
-export function refreshedSelection(prev: SelectionContext[], selectors: string[], contexts: (SelectionContext | null)[]): SelectionContext[] {
+export function refreshedSelection(
+  prev: SelectionContext[],
+  selectors: string[],
+  contexts: (SelectionContext | null)[]
+): SelectionContext[] {
   return prev.map((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
-    return context ? { ...item, styles: context.styles, text: context.text, rect: context.rect, source: context.source ?? item.source } : item;
+    return context
+      ? {
+          ...item,
+          styles: context.styles,
+          text: context.text,
+          rect: context.rect,
+          source: context.source ?? item.source,
+        }
+      : item;
   });
 }
 
@@ -83,7 +125,11 @@ export function useEditHistory(o: Options) {
     api
       .editHistory(projectId, directionId)
       .then((next) => {
-        if (generation.current === started && opts.current.directionId === directionId) apply(next);
+        if (
+          generation.current === started &&
+          opts.current.directionId === directionId
+        )
+          apply(next);
       })
       .catch(() => undefined)
       .finally(() => {
@@ -95,7 +141,11 @@ export function useEditHistory(o: Options) {
 
   useEffect(load, [load]);
   useProjectEvents(projectId, (event) => {
-    if (event.type === 'edit-history.changed' && event.ts >= mountedAt.current - REPLAY_SLACK_MS) load();
+    if (
+      event.type === "edit-history.changed" &&
+      event.ts >= mountedAt.current - REPLAY_SLACK_MS
+    )
+      load();
   });
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
@@ -118,13 +168,19 @@ export function useEditHistory(o: Options) {
         await cur.before();
         known = await api.editHistory(cur.projectId, cur.directionId);
         apply(known);
-        if (!(kind === 'undo' ? known.canUndo : known.canRedo)) {
+        if (!(kind === "undo" ? known.canUndo : known.canRedo)) {
           await fallback?.();
           return;
         }
-        const result = await api.editHistoryStep(cur.projectId, cur.directionId, kind);
+        const result = await api.editHistoryStep(
+          cur.projectId,
+          cur.directionId,
+          kind
+        );
         apply(result.state);
-        showToast(stepToast(kind, kind === 'undo' ? known.undoLabel : known.redoLabel));
+        showToast(
+          stepToast(kind, kind === "undo" ? known.undoLabel : known.redoLabel)
+        );
         cur.onStepped(result.version);
       } catch (err) {
         cur.onError(errorText(err));
@@ -133,22 +189,28 @@ export function useEditHistory(o: Options) {
       }
       if (stateRef.current === known) load();
     },
-    [apply, load, showToast],
+    [apply, load, showToast]
   );
 
   const step = useCallback(
     (kind: HistoryKind, fallback?: () => unknown) => {
       queue.current = queue.current.then(() => runStep(kind, fallback));
     },
-    [runStep],
+    [runStep]
   );
 
-  const redo: RedoShortcut = { enabled: state.canRedo && !o.locked, onRedo: () => step('redo') };
-  const head = o.versions.find((version) => version.id === o.direction?.headVersionId);
-  const versionFallback = (fallback: () => void) => (isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback);
+  const redo: RedoShortcut = {
+    enabled: state.canRedo && !o.locked,
+    onRedo: () => step("redo"),
+  };
+  const head = o.versions.find(
+    (version) => version.id === o.direction?.headVersionId
+  );
+  const versionFallback = (fallback: () => void) =>
+    isHistoryStep(head) ? () => showToast(NOTHING_TO_UNDO) : fallback;
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
     canUndo: canUndo || (state.canUndo && !o.locked),
-    onUndo: () => step('undo', versionFallback(fallback)),
+    onUndo: () => step("undo", versionFallback(fallback)),
   });
   return { state, toast, step, undoChain, redo };
 }
@@ -159,15 +221,29 @@ interface RefreshWatch {
   dropDrafts: () => void;
 }
 
-function sameStyles(a: Record<string, string>, b: Record<string, string>): boolean {
+function sameStyles(
+  a: Record<string, string>,
+  b: Record<string, string>
+): boolean {
   const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => a[key] === b[key])
+  );
 }
 
-function stylesMoved(prev: SelectionContext[], selectors: string[], contexts: (SelectionContext | null)[]): boolean {
+function stylesMoved(
+  prev: SelectionContext[],
+  selectors: string[],
+  contexts: (SelectionContext | null)[]
+): boolean {
   return prev.some((item) => {
     const context = contexts[selectors.indexOf(item.selector)];
-    return context !== null && context !== undefined && !sameStyles(context.styles, item.styles);
+    return (
+      context !== null &&
+      context !== undefined &&
+      !sameStyles(context.styles, item.styles)
+    );
   });
 }
 
@@ -175,7 +251,7 @@ export function useSelectionRefresh(
   selection: SelectionContext[],
   setSelection: Dispatch<SetStateAction<SelectionContext[]>>,
   describeRef: MutableRefObject<Describe | null>,
-  watch: RefreshWatch,
+  watch: RefreshWatch
 ) {
   const { change, directionId } = watch;
   const current = useRef(selection);
@@ -193,11 +269,14 @@ export function useSelectionRefresh(
       return;
     }
     const selectors = current.current.map((item) => item.selector);
-    const queries = current.current.map((item, index) => anchorQueryOf({ id: String(index), target: targetFromSelection(item) }));
+    const queries = current.current.map((item, index) =>
+      anchorQueryOf({ id: String(index), target: targetFromSelection(item) })
+    );
     describe(queries)
       .then((contexts) => {
         if (Date.now() > deadline.current) return;
-        if (stylesMoved(current.current, selectors, contexts)) dropDrafts.current();
+        if (stylesMoved(current.current, selectors, contexts))
+          dropDrafts.current();
         setSelection((prev) => refreshedSelection(prev, selectors, contexts));
       })
       .catch(() => undefined);
@@ -213,7 +292,7 @@ export function useSelectionRefresh(
         timers.current.add(id);
       }
     },
-    [refresh],
+    [refresh]
   );
 
   useEffect(() => {
@@ -231,18 +310,21 @@ export function useSelectionRefresh(
       deadline.current = 0;
     };
     window.addEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-    window.addEventListener('keydown', onInput, true);
-    window.addEventListener('pointerdown', onInput, true);
+    window.addEventListener("keydown", onInput, true);
+    window.addEventListener("pointerdown", onInput, true);
     return () => {
       window.removeEventListener(PREVIEW_PAINTED_EVENT, onPainted);
-      window.removeEventListener('keydown', onInput, true);
-      window.removeEventListener('pointerdown', onInput, true);
+      window.removeEventListener("keydown", onInput, true);
+      window.removeEventListener("pointerdown", onInput, true);
     };
   }, [refresh]);
 
   useEffect(() => {
     if (!change || change.directionId !== directionId) return;
-    deadline.current = Math.max(deadline.current, Date.now() + CHANGE_WINDOW_MS);
+    deadline.current = Math.max(
+      deadline.current,
+      Date.now() + CHANGE_WINDOW_MS
+    );
     later(CHANGE_RECHECK_MS);
   }, [change, directionId, later]);
 
@@ -250,7 +332,7 @@ export function useSelectionRefresh(
     () => () => {
       for (const id of timers.current) window.clearTimeout(id);
     },
-    [],
+    []
   );
 
   return useCallback(
@@ -258,6 +340,6 @@ export function useSelectionRefresh(
       deadline.current = Date.now() + REFRESH_WINDOW_MS;
       if (now) refresh();
     },
-    [refresh],
+    [refresh]
   );
 }

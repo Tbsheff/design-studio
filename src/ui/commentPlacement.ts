@@ -1,14 +1,15 @@
-import { useLayoutEffect, useState, type RefObject } from 'react';
-import type { SelectionContext } from '../shared/contracts';
+import { useLayoutEffect, useState, type RefObject } from "react";
 
-type Rect = SelectionContext['rect'];
+import type { SelectionContext } from "../shared/contracts";
+
+type Rect = SelectionContext["rect"];
 type Size = { width: number; height: number };
 
 export const PIN_SIZE = 28;
 export const CARD_WIDTH = 400;
 const GAP = 8;
 
-export type CardSide = 'right' | 'left' | 'below' | 'above' | 'over';
+export type CardSide = "right" | "left" | "below" | "above" | "over";
 
 export interface PinPlacement {
   left: number;
@@ -29,20 +30,38 @@ function clamp(value: number, min: number, max: number): number {
 export type PinOffset = { x: number; y: number };
 
 function unit(value: number): number {
-  return Number.isFinite(value) ? Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000 : 0;
+  return Number.isFinite(value)
+    ? Math.round(Math.max(0, Math.min(1, value)) * 1000) / 1000
+    : 0;
 }
 
-export function offsetIn(rect: Rect, point: { x: number; y: number } | undefined): PinOffset | undefined {
+export function offsetIn(
+  rect: Rect,
+  point: { x: number; y: number } | undefined
+): PinOffset | undefined {
   if (!point || rect.width <= 0 || rect.height <= 0) return undefined;
-  return { x: unit((point.x - rect.x) / rect.width), y: unit((point.y - rect.y) / rect.height) };
+  return {
+    x: unit((point.x - rect.x) / rect.width),
+    y: unit((point.y - rect.y) / rect.height),
+  };
 }
 
 export function pinAnchor(rect: Rect, offset: PinOffset | undefined): Rect {
   if (!offset) return rect;
-  return { x: rect.x + offset.x * rect.width, y: rect.y + offset.y * rect.height, width: 0, height: 0 };
+  return {
+    x: rect.x + offset.x * rect.width,
+    y: rect.y + offset.y * rect.height,
+    width: 0,
+    height: 0,
+  };
 }
 
-export function pinPlacement(target: Rect, zoom: number, frame: Size, offset?: PinOffset): PinPlacement {
+export function pinPlacement(
+  target: Rect,
+  zoom: number,
+  frame: Size,
+  offset?: PinOffset
+): PinPlacement {
   const rect = pinAnchor(target, offset);
   const pin = PIN_SIZE / zoom;
   const right = rect.x + rect.width;
@@ -55,18 +74,48 @@ export function pinPlacement(target: Rect, zoom: number, frame: Size, offset?: P
   };
 }
 
-function fits(left: number, top: number, width: number, height: number, frame: Size): boolean {
-  return left >= 0 && top >= 0 && left + width <= frame.width && top + height <= frame.height;
+function fits(
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  frame: Size
+): boolean {
+  return (
+    left >= 0 &&
+    top >= 0 &&
+    left + width <= frame.width &&
+    top + height <= frame.height
+  );
 }
 
-export function placeComposer(target: Rect, zoom: number, frame: Size, card: Size, prefer?: CardSide, offset?: PinOffset): ComposerPlacement {
-  const placed = placeAround(pinAnchor(target, offset), zoom, frame, card, prefer);
+export function placeComposer(
+  target: Rect,
+  zoom: number,
+  frame: Size,
+  card: Size,
+  prefer?: CardSide,
+  offset?: PinOffset
+): ComposerPlacement {
+  const placed = placeAround(
+    pinAnchor(target, offset),
+    zoom,
+    frame,
+    card,
+    prefer
+  );
   if (!offset) return placed;
   const pin = pinPlacement(target, zoom, frame, offset);
   return { ...placed, pin };
 }
 
-function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?: CardSide): ComposerPlacement {
+function placeAround(
+  rect: Rect,
+  zoom: number,
+  frame: Size,
+  card: Size,
+  prefer?: CardSide
+): ComposerPlacement {
   const s = 1 / zoom;
   const pin = PIN_SIZE * s;
   const gap = GAP * s;
@@ -77,17 +126,17 @@ function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?:
   const vertical = clamp(rect.y, 0, frame.height - height);
   const options: Record<CardSide, ComposerPlacement> = {
     right: {
-      side: 'right',
+      side: "right",
       pin: { left: right, top: rect.y, flip: false },
       card: { left: right + pin + gap, top: vertical },
     },
     left: {
-      side: 'left',
+      side: "left",
       pin: { left: rect.x - pin, top: rect.y, flip: true },
       card: { left: rect.x - pin - gap - width, top: vertical },
     },
     below: {
-      side: 'below',
+      side: "below",
       pin: { left: rect.x, top: bottom + gap, flip: false },
       card: {
         left: clamp(rect.x + pin + gap, 0, frame.width - width),
@@ -95,7 +144,7 @@ function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?:
       },
     },
     above: {
-      side: 'above',
+      side: "above",
       pin: { left: rect.x, top: rect.y - gap - pin, flip: false },
       card: {
         left: clamp(rect.x + pin + gap, 0, frame.width - width),
@@ -103,7 +152,7 @@ function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?:
       },
     },
     over: {
-      side: 'over',
+      side: "over",
       pin: { left: rect.x, top: rect.y, flip: false },
       card: {
         left: clamp(rect.x + pin + gap, 0, frame.width - width),
@@ -111,12 +160,18 @@ function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?:
       },
     },
   };
-  const order: CardSide[] = ['right', 'left', 'below', 'above'];
+  const order: CardSide[] = ["right", "left", "below", "above"];
   const fitting = (side: CardSide) => {
     const option = options[side];
-    return fits(option.card.left, option.card.top, width, height, frame) && fits(option.pin.left, option.pin.top, pin, pin, frame);
+    return (
+      fits(option.card.left, option.card.top, width, height, frame) &&
+      fits(option.pin.left, option.pin.top, pin, pin, frame)
+    );
   };
-  const side = prefer && prefer !== 'over' && fitting(prefer) ? prefer : (order.find(fitting) ?? 'over');
+  const side =
+    prefer && prefer !== "over" && fitting(prefer)
+      ? prefer
+      : (order.find(fitting) ?? "over");
   const chosen = options[side];
   return {
     side,
@@ -133,50 +188,52 @@ function placeAround(rect: Rect, zoom: number, frame: Size, card: Size, prefer?:
 }
 
 const TEXT_TAGS = new Set([
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'p',
-  'span',
-  'label',
-  'strong',
-  'em',
-  'small',
-  'li',
-  'blockquote',
-  'figcaption',
-  'dt',
-  'dd',
-  'td',
-  'th',
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "p",
+  "span",
+  "label",
+  "strong",
+  "em",
+  "small",
+  "li",
+  "blockquote",
+  "figcaption",
+  "dt",
+  "dd",
+  "td",
+  "th",
 ]);
 
 const KIND_OF_TAG: Record<string, string> = {
-  a: 'link',
-  button: 'button',
-  img: 'image',
-  picture: 'image',
-  video: 'video',
-  svg: 'icon',
-  input: 'field',
-  textarea: 'field',
-  select: 'field',
-  nav: 'nav',
-  header: 'header',
-  footer: 'footer',
-  form: 'form',
+  a: "link",
+  button: "button",
+  img: "image",
+  picture: "image",
+  video: "video",
+  svg: "icon",
+  input: "field",
+  textarea: "field",
+  select: "field",
+  nav: "nav",
+  header: "header",
+  footer: "footer",
+  form: "form",
 };
 
 function snippet(text: string, max: number): string {
-  const line = text.replace(/\s+/g, ' ').trim();
+  const line = text.replace(/\s+/g, " ").trim();
   return line.length > max ? `${line.slice(0, max - 1)}…` : line;
 }
 
 function className(selection: SelectionContext): string | null {
-  const match = /^<[^>]*\bclass="([^"]*)"/.exec(selection.outerHTML.slice(0, 4000));
+  const match = /^<[^>]*\bclass="([^"]*)"/.exec(
+    selection.outerHTML.slice(0, 4000)
+  );
   const first = match?.[1]?.trim().split(/\s+/)[0];
   return first ? first : null;
 }
@@ -184,7 +241,7 @@ function className(selection: SelectionContext): string | null {
 export function elementLabel(selection: SelectionContext): string {
   const tag = selection.tag.toLowerCase();
   const text = snippet(selection.text, 32);
-  const kind = TEXT_TAGS.has(tag) ? 'text' : (KIND_OF_TAG[tag] ?? null);
+  const kind = TEXT_TAGS.has(tag) ? "text" : (KIND_OF_TAG[tag] ?? null);
   if (kind && text) return `${kind} “${text}”`;
   if (kind) return kind;
   const cls = className(selection);
@@ -199,29 +256,53 @@ export interface Breadcrumb {
 
 function parentLabel(selection: SelectionContext): string | null {
   const meaningful = selection.ancestors.find(
-    (label) => label.includes('.') || ['section', 'header', 'footer', 'nav', 'main', 'aside', 'form', 'article'].includes(label),
+    (label) =>
+      label.includes(".") ||
+      [
+        "section",
+        "header",
+        "footer",
+        "nav",
+        "main",
+        "aside",
+        "form",
+        "article",
+      ].includes(label)
   );
   return meaningful ?? null;
 }
 
-export function breadcrumbOf(page: string, selections: SelectionContext[]): Breadcrumb {
+export function breadcrumbOf(
+  page: string,
+  selections: SelectionContext[]
+): Breadcrumb {
   const last = selections[selections.length - 1];
   if (!last) return { short: page, full: page };
   if (selections.length > 1) {
-    const full = [page, ...selections.map(elementLabel)].join(' › ');
+    const full = [page, ...selections.map(elementLabel)].join(" › ");
     return { short: `${page} › ${selections.length} elements`, full };
   }
   const parent = parentLabel(last);
   const element = elementLabel(last);
-  const chain = [...last.ancestors].reverse().filter((label) => label !== 'html');
+  const chain = [...last.ancestors]
+    .reverse()
+    .filter((label) => label !== "html");
   return {
-    short: [page, parent, element].filter((part): part is string => Boolean(part)).join(' › '),
-    full: [page, ...chain, element].join(' › '),
+    short: [page, parent, element]
+      .filter((part): part is string => Boolean(part))
+      .join(" › "),
+    full: [page, ...chain, element].join(" › "),
   };
 }
 
-export function scopeText(breadcrumb: Breadcrumb, selections: SelectionContext[], text: string): string {
-  const selectors = selections.map((selection) => `\`${selection.selector}\``).join(', ');
+export function scopeText(
+  breadcrumb: Breadcrumb,
+  selections: SelectionContext[],
+  text: string
+): string {
+  const selectors = selections
+    .map((selection) => `\`${selection.selector}\``)
+    .join(", ");
   return `About ${breadcrumb.short} (${selectors}): ${text}`;
 }
 

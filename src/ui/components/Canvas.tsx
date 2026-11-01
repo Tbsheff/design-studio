@@ -1,61 +1,157 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type MutableRefObject, type ReactNode, type PointerEvent as ReactPointerEvent, type FocusEvent as ReactFocusEvent } from 'react';
-import { selectMoveOf, type AttachedApp, type CompiledTokenEntry, type ComponentInfo, type Direction, type ProjectKind, type RenderCheckResult, type SelectionContext } from '../../shared/contracts';
-import { api, errorText } from '../api';
-import { markOf, withElementMark } from '../elementMark';
-import { useUi } from '../storage';
-import { isTypingTarget, usePanZoom } from '../usePanZoom';
-import { boundsOf, canHideFrame, canvasStore, frameDirection, frameName, setFrameHidden, setFramePath, shownFrames, useCanvasLofi, withFramePath, type CanvasFrame } from '../canvasFrames';
-import { useLofiFrames } from '../lofiFrames';
-import { unionRect, useCanvasFrames, useFrameActions, useZoomInput } from '../useCanvasFrames';
-import { useDirectionFrames, type DirectionFrames } from '../useDirectionFrames';
-import { FrameMoreMenu, FramePageMenu, FrameResizeHandles, VariationControls, type FrameMenuItem, type FrameVariation } from './FrameControls';
-import { FrameLabel, FrameUndoBar, StablePassiveFrame, useResetPassiveGateInFirstRender, type PassiveEntry } from './CanvasFrames';
-import { ArtboardOverlay } from './ArtboardOverlay';
-import { CanvasLayersPanel, EditNotice, useLayersWatch, useSelectMoveKeys } from './CanvasLayers';
-import { useLayerEdits } from '../useLayerEdits';
-import { useComponentInsert } from '../useComponentInsert';
-import { useImageDrop } from '../useImageDrop';
-import { useResizeHandles, useResizeLive, type ResizeHandles } from '../useResizeHandles';
-import { createLiveStore, useLive, type LiveStore } from '../liveStore';
-import { useStableProps } from '../stableProps';
-import type { HoverBox } from '../usePreviewFrames';
-import { useFreeMove, type FreeMoveView } from '../useFreeMove';
-import { useElementNudge } from '../useElementNudge';
-import { FreeMoveLayer } from './FreeMoveLayer';
-import { useCanvasCommands } from '../commands/useCanvasCommands';
-import { usePreviewMenu } from '../usePreviewMenu';
-import { HTML_FRAME_SANDBOX, type PreviewPort } from '../bridge';
-import { PREVIEW_LAYOUT_KEY_EVENT, usePreviewFrames } from '../usePreviewFrames';
-import { broadcastTheme, setCanvasFront, useCanvasTheme, useTokenFrames, type ThemeChoice } from '../tokenFrames';
-import { usePlannedEdits } from '../usePlannedEdits';
-import type { BuildError, FilesChange } from '../useStudioData';
-import type { CanvasSource } from './CanvasToolbar';
-import { CanvasChrome, useShellPane, type CanvasShell } from './CanvasChrome';
-import { FrameSnapLayer, MarqueeLayer } from './CanvasOverlays';
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type MutableRefObject,
+  type ReactNode,
+  type PointerEvent as ReactPointerEvent,
+  type FocusEvent as ReactFocusEvent,
+} from "react";
 
-const CanvasRulers = lazy(() => import('./CanvasRulers'));
-const VectorLayer = lazy(() => import('./VectorLayer'));
-const InlinePrompt = lazy(() => import('./InlinePrompt'));
-import { RenderCheckPanel } from './RenderCheckPanel';
-import { ReviewEntry } from './ReviewEntry';
-import { CommentLayer, CommentModePill, type CommentTools } from './CommentLayer';
-import type { CommentsControl } from '../useComments';
-import { useCommentMode } from '../useCommentMode';
-import { useCanvasDraw, type DrawTool } from '../useDrawTool';
-import { DrawBar, DrawSurface } from './DrawLayer';
-import { useVectorTool, useVectorToolGuards, useVectorToolKeys } from '../vectorTool';
-import { QUIET_FOCUS_ATTR, useInlineTextEdit, type TextCommitHandler } from '../useInlineTextEdit';
-import { canvasHasKeys } from '../typingTarget';
-import { useCanvasPresence } from '../useCanvasPresence';
-import { useCanvasPoint } from '../useCanvasPoint';
-import { McpPointBadge } from './McpPointBadge';
-import { appRoutePages, useAppCanvas } from './AppCanvas';
-import { usePrototype } from '../usePrototype';
-import { frameStateUrl, useFrameStates, type FrameStatesRead } from '../frameStates';
-import { useClickThrough } from '../useClickThrough';
-import { useFirstBuildCover, useFirstBuildGate, type PageWait } from '../useFirstBuild';
-import { FirstBuildCover } from './FrameSkeleton';
-import { useInlinePrompt, type InlinePromptView } from '../useInlinePrompt';
+import {
+  selectMoveOf,
+  type AttachedApp,
+  type CompiledTokenEntry,
+  type ComponentInfo,
+  type Direction,
+  type ProjectKind,
+  type RenderCheckResult,
+  type SelectionContext,
+} from "../../shared/contracts";
+import { api, errorText } from "../api";
+import { HTML_FRAME_SANDBOX, type PreviewPort } from "../bridge";
+import {
+  boundsOf,
+  canHideFrame,
+  canvasStore,
+  frameDirection,
+  frameName,
+  setFrameHidden,
+  setFramePath,
+  shownFrames,
+  useCanvasLofi,
+  withFramePath,
+  type CanvasFrame,
+} from "../canvasFrames";
+import { useCanvasCommands } from "../commands/useCanvasCommands";
+import { markOf, withElementMark } from "../elementMark";
+import { createLiveStore, useLive, type LiveStore } from "../liveStore";
+import { useLofiFrames } from "../lofiFrames";
+import { useStableProps } from "../stableProps";
+import { useUi } from "../storage";
+import {
+  broadcastTheme,
+  setCanvasFront,
+  useCanvasTheme,
+  useTokenFrames,
+  type ThemeChoice,
+} from "../tokenFrames";
+import {
+  unionRect,
+  useCanvasFrames,
+  useFrameActions,
+  useZoomInput,
+} from "../useCanvasFrames";
+import { useComponentInsert } from "../useComponentInsert";
+import {
+  useDirectionFrames,
+  type DirectionFrames,
+} from "../useDirectionFrames";
+import { useElementNudge } from "../useElementNudge";
+import { useFreeMove, type FreeMoveView } from "../useFreeMove";
+import { useImageDrop } from "../useImageDrop";
+import { useLayerEdits } from "../useLayerEdits";
+import { isTypingTarget, usePanZoom } from "../usePanZoom";
+import { usePlannedEdits } from "../usePlannedEdits";
+import type { HoverBox } from "../usePreviewFrames";
+import {
+  PREVIEW_LAYOUT_KEY_EVENT,
+  usePreviewFrames,
+} from "../usePreviewFrames";
+import { usePreviewMenu } from "../usePreviewMenu";
+import {
+  useResizeHandles,
+  useResizeLive,
+  type ResizeHandles,
+} from "../useResizeHandles";
+import type { BuildError, FilesChange } from "../useStudioData";
+import { ArtboardOverlay } from "./ArtboardOverlay";
+import { CanvasChrome, useShellPane, type CanvasShell } from "./CanvasChrome";
+import {
+  FrameLabel,
+  FrameUndoBar,
+  StablePassiveFrame,
+  useResetPassiveGateInFirstRender,
+  type PassiveEntry,
+} from "./CanvasFrames";
+import {
+  CanvasLayersPanel,
+  EditNotice,
+  useLayersWatch,
+  useSelectMoveKeys,
+} from "./CanvasLayers";
+import { FrameSnapLayer, MarqueeLayer } from "./CanvasOverlays";
+import type { CanvasSource } from "./CanvasToolbar";
+import {
+  FrameMoreMenu,
+  FramePageMenu,
+  FrameResizeHandles,
+  VariationControls,
+  type FrameMenuItem,
+  type FrameVariation,
+} from "./FrameControls";
+import { FreeMoveLayer } from "./FreeMoveLayer";
+
+const CanvasRulers = lazy(() => import("./CanvasRulers"));
+const VectorLayer = lazy(() => import("./VectorLayer"));
+const InlinePrompt = lazy(() => import("./InlinePrompt"));
+import {
+  frameStateUrl,
+  useFrameStates,
+  type FrameStatesRead,
+} from "../frameStates";
+import { canvasHasKeys } from "../typingTarget";
+import { useCanvasPoint } from "../useCanvasPoint";
+import { useCanvasPresence } from "../useCanvasPresence";
+import { useClickThrough } from "../useClickThrough";
+import { useCommentMode } from "../useCommentMode";
+import type { CommentsControl } from "../useComments";
+import { useCanvasDraw, type DrawTool } from "../useDrawTool";
+import {
+  useFirstBuildCover,
+  useFirstBuildGate,
+  type PageWait,
+} from "../useFirstBuild";
+import { useInlinePrompt, type InlinePromptView } from "../useInlinePrompt";
+import {
+  QUIET_FOCUS_ATTR,
+  useInlineTextEdit,
+  type TextCommitHandler,
+} from "../useInlineTextEdit";
+import { usePrototype } from "../usePrototype";
+import {
+  useVectorTool,
+  useVectorToolGuards,
+  useVectorToolKeys,
+} from "../vectorTool";
+import { appRoutePages, useAppCanvas } from "./AppCanvas";
+import {
+  CommentLayer,
+  CommentModePill,
+  type CommentTools,
+} from "./CommentLayer";
+import { DrawBar, DrawSurface } from "./DrawLayer";
+import { FirstBuildCover } from "./FrameSkeleton";
+import { McpPointBadge } from "./McpPointBadge";
+import { RenderCheckPanel } from "./RenderCheckPanel";
+import { ReviewEntry } from "./ReviewEntry";
 
 interface Props {
   projectId: string;
@@ -66,8 +162,10 @@ interface Props {
   onSource: (s: CanvasSource) => void;
   lastChange: FilesChange | null;
   selection: SelectionContext[];
-  setSelection: (updater: (prev: SelectionContext[]) => SelectionContext[]) => void;
-  onError: (e: Omit<BuildError, 'id' | 'ts'>) => void;
+  setSelection: (
+    updater: (prev: SelectionContext[]) => SelectionContext[]
+  ) => void;
+  onError: (e: Omit<BuildError, "id" | "ts">) => void;
   port?: MutableRefObject<PreviewPort | null>;
   comments?: CommentsControl;
   commentTools?: CanvasCommentTools;
@@ -95,30 +193,52 @@ function shellDirectionName(shell: CanvasShell | undefined): string | null {
 }
 
 function inEditPane(shell: CanvasShell | undefined): boolean {
-  return shell?.pane === 'design';
+  return shell?.pane === "design";
 }
 
-function hostedClose(shell: CanvasShell | undefined, close: () => void): (() => void) | undefined {
+function hostedClose(
+  shell: CanvasShell | undefined,
+  close: () => void
+): (() => void) | undefined {
   return shell ? undefined : close;
 }
 
-function noteCommentFrame(control: CommentsControl | undefined, active: { id: string; path?: string; label?: string }): void {
-  if (control) control.frameRef.current = { id: active.id, path: active.path ?? '', ...(active.label ? { label: active.label } : {}) };
+function noteCommentFrame(
+  control: CommentsControl | undefined,
+  active: { id: string; path?: string; label?: string }
+): void {
+  if (control)
+    control.frameRef.current = {
+      id: active.id,
+      path: active.path ?? "",
+      ...(active.label ? { label: active.label } : {}),
+    };
 }
 
-function activeFrameOf(active: { id: string; path?: string }, all: { id: string }[]) {
-  return { id: active.id, path: active.path ?? '', ids: all.map((f) => f.id) };
+function activeFrameOf(
+  active: { id: string; path?: string },
+  all: { id: string }[]
+) {
+  return { id: active.id, path: active.path ?? "", ids: all.map((f) => f.id) };
 }
 
 function pageNameOf(path: string | undefined): string {
-  const file = path?.split('/').pop()?.replace(/\.html?$/i, '');
-  return file && file !== 'index' ? file : 'Page';
+  const file = path
+    ?.split("/")
+    .pop()
+    ?.replace(/\.html?$/i, "");
+  return file && file !== "index" ? file : "Page";
 }
 
 function commentToolsOf(props: Props, path: string | undefined): CommentTools {
   const tools = props.commentTools ?? {};
   return {
-    sources: { projectId: props.projectId, directionId: props.directionId, tokens: tools.tokens, components: tools.components },
+    sources: {
+      projectId: props.projectId,
+      directionId: props.directionId,
+      tokens: tools.tokens,
+      components: tools.components,
+    },
     pageName: pageNameOf(path),
     onSteer: tools.onSteer,
   };
@@ -131,27 +251,45 @@ export interface CanvasDirections {
 }
 
 const RECT_REFRESH_MS = [300, 1200];
-const NO_VERSION_TEXT = 'No completed version yet. Switch to Live to see the current work.';
+const NO_VERSION_TEXT =
+  "No completed version yet. Switch to Live to see the current work.";
 
-type StageNote = 'building' | 'empty' | null;
+type StageNote = "building" | "empty" | null;
 
-function stageNote(p: { running?: boolean; noRuns?: boolean; app?: AttachedApp | null; live: boolean; hasHead: boolean; urlError: string | null }): StageNote {
+function stageNote(p: {
+  running?: boolean;
+  noRuns?: boolean;
+  app?: AttachedApp | null;
+  live: boolean;
+  hasHead: boolean;
+  urlError: string | null;
+}): StageNote {
   if (p.urlError || !p.live || p.hasHead) return null;
-  if (p.running) return 'building';
-  return p.noRuns && !p.app ? 'empty' : null;
+  if (p.running) return "building";
+  return p.noRuns && !p.app ? "empty" : null;
 }
 
-function StageMessage({ note: given, covered, urlError, app }: { note: StageNote; covered: boolean; urlError: string | null; app: ReactNode }) {
+function StageMessage({
+  note: given,
+  covered,
+  urlError,
+  app,
+}: {
+  note: StageNote;
+  covered: boolean;
+  urlError: string | null;
+  app: ReactNode;
+}) {
   const note = covered ? null : given;
   if (urlError) return <div className="stage-message">{urlError}</div>;
-  if (note === 'building')
+  if (note === "building")
     return (
       <div className="stage-message" role="status">
         <span className="spinner" aria-hidden="true" />
         Building the first version…
       </div>
     );
-  if (note === 'empty')
+  if (note === "empty")
     return (
       <div className="stage-message" role="status">
         No design yet. Send a prompt, or start the variations.
@@ -160,16 +298,26 @@ function StageMessage({ note: given, covered, urlError, app }: { note: StageNote
   return app;
 }
 
-function usePreviewUrl(projectId: string, directionId: string | null, source: CanvasSource, headVersionId: string | null) {
+function usePreviewUrl(
+  projectId: string,
+  directionId: string | null,
+  source: CanvasSource,
+  headVersionId: string | null
+) {
   const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
-  const versionId = source.kind === 'version' ? source.versionId : source.kind === 'last' ? headVersionId : null;
+  const versionId =
+    source.kind === "version"
+      ? source.versionId
+      : source.kind === "last"
+        ? headVersionId
+        : null;
   useEffect(() => {
     let alive = true;
     setUrlError(null);
     if (!directionId) return;
     const load =
-      source.kind === 'live'
+      source.kind === "live"
         ? api.directionPreview(projectId, directionId)
         : versionId
           ? api.versionPreview(projectId, versionId)
@@ -180,7 +328,11 @@ function usePreviewUrl(projectId: string, directionId: string | null, source: Ca
         if (!alive) return;
         setBaseUrl(null);
         const text = errorText(err);
-        setUrlError(text === NO_VERSION_TEXT ? text : `Could not load the preview. ${text} Reload the page to try again.`);
+        setUrlError(
+          text === NO_VERSION_TEXT
+            ? text
+            : `Could not load the preview. ${text} Reload the page to try again.`
+        );
       });
     return () => {
       alive = false;
@@ -213,14 +365,27 @@ function useRenderCheck(projectId: string, directionId: string | null) {
   return { checking, results, error, run, close };
 }
 
-function usePortSync(port: MutableRefObject<PreviewPort | null> | undefined, frames: PreviewPort | null, lastChange: FilesChange | null, kind: ProjectKind) {
+function usePortSync(
+  port: MutableRefObject<PreviewPort | null> | undefined,
+  frames: PreviewPort | null,
+  lastChange: FilesChange | null,
+  kind: ProjectKind
+) {
   useEffect(() => {
     if (!port) return;
-    port.current = frames ? { post: frames.post, refreshRects: frames.refreshRects, listen: frames.listen } : null;
+    port.current = frames
+      ? {
+          post: frames.post,
+          refreshRects: frames.refreshRects,
+          listen: frames.listen,
+        }
+      : null;
   });
   useEffect(() => {
-    if (!lastChange || kind !== 'react') return;
-    const timers = RECT_REFRESH_MS.map((ms) => window.setTimeout(() => port?.current?.refreshRects(), ms));
+    if (!lastChange || kind !== "react") return;
+    const timers = RECT_REFRESH_MS.map((ms) =>
+      window.setTimeout(() => port?.current?.refreshRects(), ms)
+    );
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [lastChange, kind, port]);
 }
@@ -232,7 +397,15 @@ interface SlotFrames {
   onFrameLoad: (token: string) => void;
 }
 
-function PreviewSlots({ frames, sandbox, viewport }: { frames: SlotFrames; sandbox?: string; viewport: { width: number; height: number } }) {
+function PreviewSlots({
+  frames,
+  sandbox,
+  viewport,
+}: {
+  frames: SlotFrames;
+  sandbox?: string;
+  viewport: { width: number; height: number };
+}) {
   return frames.slots.map((slot) => (
     <iframe
       key={slot.token}
@@ -240,7 +413,7 @@ function PreviewSlots({ frames, sandbox, viewport }: { frames: SlotFrames; sandb
         frames.elements.current[slot.token] = el;
       }}
       title="Design preview"
-      className={`frame ${slot.token === frames.frontToken ? 'front' : 'back'}`}
+      className={`frame ${slot.token === frames.frontToken ? "front" : "back"}`}
       src={slot.src}
       onLoad={() => frames.onFrameLoad(slot.token)}
       sandbox={sandbox}
@@ -252,11 +425,20 @@ function PreviewSlots({ frames, sandbox, viewport }: { frames: SlotFrames; sandb
 
 function themeSwitch(enabled: boolean | undefined, theme: ThemeChoice) {
   if (!enabled) return undefined;
-  const dark = theme === 'dark';
-  return { dark, onToggle: () => broadcastTheme(dark ? null : 'dark') };
+  const dark = theme === "dark";
+  return { dark, onToggle: () => broadcastTheme(dark ? null : "dark") };
 }
 
-function OtherFrames({ frames, active, passive, sandbox, labelProps, register, waiting, steps }: {
+function OtherFrames({
+  frames,
+  active,
+  passive,
+  sandbox,
+  labelProps,
+  register,
+  waiting,
+  steps,
+}: {
   frames: CanvasFrame[];
   active: CanvasFrame;
   passive: DirectionFrames;
@@ -280,7 +462,9 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register, w
         frame: f,
         src: wait ? null : (slot?.src ?? null),
         nextSrc: wait ? null : (slot?.nextSrc ?? null),
-        pending: wait ? { step: step ?? null, missing: wait === 'missing' } : undefined,
+        pending: wait
+          ? { step: step ?? null, missing: wait === "missing" }
+          : undefined,
         sandbox,
         offset: active,
         label: labelProps(f, did),
@@ -290,24 +474,49 @@ function OtherFrames({ frames, active, passive, sandbox, labelProps, register, w
         },
         onNextLoad: passive.onSwapDone,
       });
-      const sig = JSON.stringify([f, wait, wait ? step : null, slot?.src ?? null, slot?.nextSrc ?? null, slot?.token ?? null, sandbox ?? null, active.x, active.y, labelProps.sig(f, did)]);
-      return <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />;
+      const sig = JSON.stringify([
+        f,
+        wait,
+        wait ? step : null,
+        slot?.src ?? null,
+        slot?.nextSrc ?? null,
+        slot?.token ?? null,
+        sandbox ?? null,
+        active.x,
+        active.y,
+        labelProps.sig(f, did),
+      ]);
+      return (
+        <StablePassiveFrame key={f.id} id={f.id} sig={sig} entries={entries} />
+      );
     });
 }
 
-function livePageUrl(baseUrl: string | null, active: CanvasFrame, states: FrameStatesRead): string | null {
-  return baseUrl ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id) : null;
+function livePageUrl(
+  baseUrl: string | null,
+  active: CanvasFrame,
+  states: FrameStatesRead
+): string | null {
+  return baseUrl
+    ? frameStateUrl(withFramePath(baseUrl, active.path), states, active.id)
+    : null;
 }
 
-function knownList(directions: CanvasDirections | undefined): Direction[] | undefined {
+function knownList(
+  directions: CanvasDirections | undefined
+): Direction[] | undefined {
   return directions?.list;
 }
 
-function activateOf(directions: CanvasDirections | undefined): ((id: string) => void) | undefined {
+function activateOf(
+  directions: CanvasDirections | undefined
+): ((id: string) => void) | undefined {
   return directions?.onActivate;
 }
 
-function knownIds(directions: CanvasDirections | undefined): string[] | undefined {
+function knownIds(
+  directions: CanvasDirections | undefined
+): string[] | undefined {
   return directions?.list.map((d) => d.id);
 }
 
@@ -318,42 +527,104 @@ interface LabelInput {
   activeId: string;
   directions: CanvasDirections | undefined;
   selection: SelectionContext[];
-  setSelection: Props['setSelection'];
+  setSelection: Props["setSelection"];
   frames: ReturnType<typeof useCanvasFrames>;
-  baseLabel: ReturnType<typeof useFrameActions>['labelProps'];
+  baseLabel: ReturnType<typeof useFrameActions>["labelProps"];
   directionName: string | null;
-  frameActions?: (frame: CanvasFrame, directionId: string | null) => FrameMenuItem[];
+  frameActions?: (
+    frame: CanvasFrame,
+    directionId: string | null
+  ) => FrameMenuItem[];
   appPages?: (() => Promise<string[]>) | null;
 }
 
-function frameMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null): FrameMenuItem[] {
+function frameMenuItems(
+  o: LabelInput,
+  frame: CanvasFrame,
+  did: string | null
+): FrameMenuItem[] {
   const extra = o.frameActions?.(frame, did) ?? [];
   const hide: FrameMenuItem = {
-    id: 'hide',
-    label: 'Hide frame',
-    icon: 'eyeOff',
+    id: "hide",
+    label: "Hide frame",
+    icon: "eyeOff",
     run: () => o.frames.update((l) => setFrameHidden(l, frame.id, true)),
-    ...(canHideFrame(o.frames.layout, frame.id) ? {} : { disabled: 'The last shown frame stays.' }),
+    ...(canHideFrame(o.frames.layout, frame.id)
+      ? {}
+      : { disabled: "The last shown frame stays." }),
   };
   return [...extra, hide];
 }
 
-function frameLabelSig(o: LabelInput, frame: CanvasFrame, did: string | null): string {
+function frameLabelSig(
+  o: LabelInput,
+  frame: CanvasFrame,
+  did: string | null
+): string {
   const variation = did ? o.directions?.variationOf(did) : undefined;
-  const items = frameMenuItems(o, frame, did).map((item) => [item.id, item.label, item.icon, item.disabled ?? '']);
-  const v = variation ? [variation.label, variation.title, variation.status, variation.costText, variation.scoped, variation.error, variation.keepBlocked, variation.siblings] : null;
-  const named = did ? o.directions?.list.find((d) => d.id === did)?.name : undefined;
+  const items = frameMenuItems(o, frame, did).map((item) => [
+    item.id,
+    item.label,
+    item.icon,
+    item.disabled ?? "",
+  ]);
+  const v = variation
+    ? [
+        variation.label,
+        variation.title,
+        variation.status,
+        variation.costText,
+        variation.scoped,
+        variation.error,
+        variation.keepBlocked,
+        variation.siblings,
+      ]
+    : null;
+  const named = did
+    ? o.directions?.list.find((d) => d.id === did)?.name
+    : undefined;
   const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
-  return JSON.stringify([index, frame.id === o.activeId, o.frames.layout.frames.length > 1, did, did === o.directionId, named, o.directionName, o.kind, Boolean(o.appPages), v, items]);
+  return JSON.stringify([
+    index,
+    frame.id === o.activeId,
+    o.frames.layout.frames.length > 1,
+    did,
+    did === o.directionId,
+    named,
+    o.directionName,
+    o.kind,
+    Boolean(o.appPages),
+    v,
+    items,
+  ]);
 }
 
-function liveVariation(variation: FrameVariation, did: string, live: MutableRefObject<LabelInput>): FrameVariation {
+function liveVariation(
+  variation: FrameVariation,
+  did: string,
+  live: MutableRefObject<LabelInput>
+): FrameVariation {
   const now = () => live.current.directions?.variationOf(did) ?? variation;
-  return { ...variation, onKeep: () => now().onKeep(), onMix: (to, element) => now().onMix(to, element) };
+  return {
+    ...variation,
+    onKeep: () => now().onKeep(),
+    onMix: (to, element) => now().onMix(to, element),
+  };
 }
 
-function liveMenuItems(o: LabelInput, frame: CanvasFrame, did: string | null, live: MutableRefObject<LabelInput>): FrameMenuItem[] {
-  return frameMenuItems(o, frame, did).map((item) => ({ ...item, run: () => frameMenuItems(live.current, frame, did).find((cur) => cur.id === item.id)?.run() }));
+function liveMenuItems(
+  o: LabelInput,
+  frame: CanvasFrame,
+  did: string | null,
+  live: MutableRefObject<LabelInput>
+): FrameMenuItem[] {
+  return frameMenuItems(o, frame, did).map((item) => ({
+    ...item,
+    run: () =>
+      frameMenuItems(live.current, frame, did)
+        .find((cur) => cur.id === item.id)
+        ?.run(),
+  }));
 }
 
 function useFrameLabels(o: LabelInput) {
@@ -361,41 +632,82 @@ function useFrameLabels(o: LabelInput) {
   const live = useRef(o);
   live.current = o;
   const listPages = useCallback(
-    (did: string) => () => api.workTreeFiles(projectId, did).then(({ files }) => files.filter((f) => f.endsWith('.html')).sort()),
-    [projectId],
+    (did: string) => () =>
+      api
+        .workTreeFiles(projectId, did)
+        .then(({ files }) => files.filter((f) => f.endsWith(".html")).sort()),
+    [projectId]
   );
   const pagesFor = (did: string | null): (() => Promise<string[]>) | null => {
-    if (!o.appPages && !(o.kind === 'html' && did)) return null;
+    if (!o.appPages && !(o.kind === "html" && did)) return null;
     return () => (live.current.appPages ?? listPages(did as string))();
   };
   const label = (frame: CanvasFrame, did: string | null) => {
     const variation = did ? o.directions?.variationOf(did) : undefined;
     const isActive = frame.id === o.activeId;
     const index = o.frames.layout.frames.findIndex((f) => f.id === frame.id);
-    const named = did ? o.directions?.list.find((d) => d.id === did)?.name : undefined;
+    const named = did
+      ? o.directions?.list.find((d) => d.id === did)?.name
+      : undefined;
     return {
       ...o.baseLabel(frame),
-      number: variation ? `1${variation.label.toLowerCase()}` : String(index + 1),
-      title: variation ? undefined : (frame.label ?? named ?? o.directionName ?? undefined),
+      number: variation
+        ? `1${variation.label.toLowerCase()}`
+        : String(index + 1),
+      title: variation
+        ? undefined
+        : (frame.label ?? named ?? o.directionName ?? undefined),
       directionId: did,
-      badge: variation ? { label: variation.label, title: variation.title, current: did === o.directionId } : undefined,
+      badge: variation
+        ? {
+            label: variation.label,
+            title: variation.title,
+            current: did === o.directionId,
+          }
+        : undefined,
       extras: (
         <>
-          {variation && did && <VariationControls variation={liveVariation(variation, did, live)} active={isActive} element={isActive ? (o.selection[0] ?? null) : null} onMixed={() => live.current.setSelection(() => [])} />}
-          <FramePageMenu path={frame.path ?? ''} routes={Boolean(o.appPages)} listPages={pagesFor(did)} onPath={(path) => live.current.frames.update((l) => setFramePath(l, frame.id, path))} />
-          <FrameMoreMenu name={frame.label ?? frameName(frame)} items={liveMenuItems(o, frame, did, live)} />
+          {variation && did && (
+            <VariationControls
+              variation={liveVariation(variation, did, live)}
+              active={isActive}
+              element={isActive ? (o.selection[0] ?? null) : null}
+              onMixed={() => live.current.setSelection(() => [])}
+            />
+          )}
+          <FramePageMenu
+            path={frame.path ?? ""}
+            routes={Boolean(o.appPages)}
+            listPages={pagesFor(did)}
+            onPath={(path) =>
+              live.current.frames.update((l) => setFramePath(l, frame.id, path))
+            }
+          />
+          <FrameMoreMenu
+            name={frame.label ?? frameName(frame)}
+            items={liveMenuItems(o, frame, did, live)}
+          />
         </>
       ),
     };
   };
-  return Object.assign(label, { sig: (frame: CanvasFrame, did: string | null) => frameLabelSig(o, frame, did) });
+  return Object.assign(label, {
+    sig: (frame: CanvasFrame, did: string | null) =>
+      frameLabelSig(o, frame, did),
+  });
 }
 
-function overlayHover<T extends { fromTree?: boolean }>(hover: T | null, picking: boolean): T | null {
+function overlayHover<T extends { fromTree?: boolean }>(
+  hover: T | null,
+  picking: boolean
+): T | null {
   return picking || hover?.fromTree ? hover : null;
 }
 
-interface LiveOverlayProps extends Omit<ComponentProps<typeof ArtboardOverlay>, 'hover' | 'resize'> {
+interface LiveOverlayProps extends Omit<
+  ComponentProps<typeof ArtboardOverlay>,
+  "hover" | "resize"
+> {
   hover: LiveStore<HoverBox | null>;
   picked: LiveStore<SelectionContext[] | null>;
   commenting: boolean;
@@ -405,13 +717,33 @@ interface LiveOverlayProps extends Omit<ComponentProps<typeof ArtboardOverlay>, 
 
 const NO_PICK = createLiveStore<SelectionContext[] | null>(null);
 
-function LiveOverlay({ hover, picked, commenting, picking, resize, selection, ...rest }: LiveOverlayProps) {
+function LiveOverlay({
+  hover,
+  picked,
+  commenting,
+  picking,
+  resize,
+  selection,
+  ...rest
+}: LiveOverlayProps) {
   const box = useLive(hover);
   const early = useLive(commenting ? NO_PICK : picked);
-  return <ArtboardOverlay {...rest} selection={early ?? selection} hover={overlayHover(box, picking)} resize={useResizeLive(resize)} />;
+  return (
+    <ArtboardOverlay
+      {...rest}
+      selection={early ?? selection}
+      hover={overlayHover(box, picking)}
+      resize={useResizeLive(resize)}
+    />
+  );
 }
 
-function StepCover({ steps, ...rest }: Omit<ComponentProps<typeof FirstBuildCover>, 'step'> & { steps: LiveStore<string | null> }) {
+function StepCover({
+  steps,
+  ...rest
+}: Omit<ComponentProps<typeof FirstBuildCover>, "step"> & {
+  steps: LiveStore<string | null>;
+}) {
   return <FirstBuildCover {...rest} step={useLive(steps)} />;
 }
 
@@ -419,100 +751,174 @@ function FreeMoveSlot({ view }: { view: LiveStore<FreeMoveView | null> }) {
   return <FreeMoveLayer view={useLive(view)} />;
 }
 
-function CheckResults({ projectId, check }: { projectId: string; check: ReturnType<typeof useRenderCheck> }) {
+function CheckResults({
+  projectId,
+  check,
+}: {
+  projectId: string;
+  check: ReturnType<typeof useRenderCheck>;
+}) {
   if (!check.results && !check.error) return null;
-  return <RenderCheckPanel projectId={projectId} results={check.results} error={check.error} onClose={check.close} />;
+  return (
+    <RenderCheckPanel
+      projectId={projectId}
+      results={check.results}
+      error={check.error}
+      onClose={check.close}
+    />
+  );
 }
 
-function stageCursor(pz: { panning: boolean; spaceHeld: boolean; zoomHeld: boolean }): string {
-  if (pz.panning) return 'grabbing';
-  if (pz.spaceHeld) return 'grab';
-  return pz.zoomHeld ? 'zoom-in' : '';
+function stageCursor(pz: {
+  panning: boolean;
+  spaceHeld: boolean;
+  zoomHeld: boolean;
+}): string {
+  if (pz.panning) return "grabbing";
+  if (pz.spaceHeld) return "grab";
+  return pz.zoomHeld ? "zoom-in" : "";
 }
 
-function useSelectKey(setSelectMode: (update: (m: boolean) => boolean) => void, onEscape: () => void, clearSelection: () => boolean) {
+function useSelectKey(
+  setSelectMode: (update: (m: boolean) => boolean) => void,
+  onEscape: () => void,
+  clearSelection: () => boolean
+) {
   const latest = useRef(clearSelection);
   latest.current = clearSelection;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'v' || e.key === 'V') {
+      if (isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey)
+        return;
+      if (e.key === "v" || e.key === "V") {
         e.preventDefault();
         setSelectMode((m) => !m);
-      } else if (e.key === 'Escape') {
-        if (!e.defaultPrevented && !e.repeat && canvasHasKeys() && latest.current()) return e.preventDefault();
+      } else if (e.key === "Escape") {
+        if (
+          !e.defaultPrevented &&
+          !e.repeat &&
+          canvasHasKeys() &&
+          latest.current()
+        )
+          return e.preventDefault();
         setSelectMode(() => false);
         onEscape();
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 }
 
-const FIRST_SELECT_KEYS = new Set(['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft']);
+const FIRST_SELECT_KEYS = new Set([
+  "ArrowDown",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowLeft",
+]);
 
 function firstSelectKey(e: KeyboardEvent): boolean {
   if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return false;
-  return selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key));
+  return (
+    selectMoveOf(e) !== null || (!e.shiftKey && FIRST_SELECT_KEYS.has(e.key))
+  );
 }
 
-function useFirstSelectKeys(stage: () => HTMLElement | null, o: { on: boolean; empty: boolean; picking: boolean; selectFirst: () => void; startPicking: () => void }) {
+function useFirstSelectKeys(
+  stage: () => HTMLElement | null,
+  o: {
+    on: boolean;
+    empty: boolean;
+    picking: boolean;
+    selectFirst: () => void;
+    startPicking: () => void;
+  }
+) {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const cur = latest.current;
-      if (!cur.on || !cur.empty || e.defaultPrevented || document.activeElement !== stage() || !firstSelectKey(e)) return;
+      if (
+        !cur.on ||
+        !cur.empty ||
+        e.defaultPrevented ||
+        document.activeElement !== stage() ||
+        !firstSelectKey(e)
+      )
+        return;
       e.preventDefault();
       if (!cur.picking) cur.startPicking();
       cur.selectFirst();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [stage]);
 }
 
 const LAYOUT_WAIT_MS = 1500;
 
 function layoutSectionShown(): boolean {
-  const section = document.querySelector('.ins-layout');
-  return Boolean(section && !section.closest('[inert]') && section.getClientRects().length > 0);
+  const section = document.querySelector(".ins-layout");
+  return Boolean(
+    section &&
+    !section.closest("[inert]") &&
+    section.getClientRects().length > 0
+  );
 }
 
 function isAddLayoutKey(e: KeyboardEvent): boolean {
-  return e.code === 'KeyA' && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey && !e.repeat;
+  return (
+    e.code === "KeyA" &&
+    e.shiftKey &&
+    !e.metaKey &&
+    !e.ctrlKey &&
+    !e.altKey &&
+    !e.repeat
+  );
 }
 
 function forwardLayoutKeyWhenShown(): void {
   const until = performance.now() + LAYOUT_WAIT_MS;
   const wait = () => {
-    if (layoutSectionShown()) window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
+    if (layoutSectionShown())
+      window.dispatchEvent(new CustomEvent(PREVIEW_LAYOUT_KEY_EVENT));
     else if (performance.now() < until) window.requestAnimationFrame(wait);
   };
   wait();
 }
 
-function useLayoutKeyFallback(o: { on: boolean; hasSelection: boolean; openEdit: (() => void | Promise<boolean>) | null }) {
+function useLayoutKeyFallback(o: {
+  on: boolean;
+  hasSelection: boolean;
+  openEdit: (() => void | Promise<boolean>) | null;
+}) {
   const latest = useRef(o);
   latest.current = o;
   useEffect(() => {
     const run = (): boolean => {
       const { on, hasSelection, openEdit } = latest.current;
-      if (!on || !hasSelection || !openEdit || layoutSectionShown()) return false;
+      if (!on || !hasSelection || !openEdit || layoutSectionShown())
+        return false;
       void Promise.resolve(openEdit()).then((moved) => {
         if (moved !== false) forwardLayoutKeyWhenShown();
       });
       return true;
     };
     const onKey = (e: KeyboardEvent) => {
-      if (isAddLayoutKey(e) && !isTypingTarget(e.target) && canvasHasKeys() && run()) e.preventDefault();
+      if (
+        isAddLayoutKey(e) &&
+        !isTypingTarget(e.target) &&
+        canvasHasKeys() &&
+        run()
+      )
+        e.preventDefault();
     };
     const onForwarded = () => void run();
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     };
   }, []);
@@ -521,10 +927,10 @@ function useLayoutKeyFallback(o: { on: boolean; hasSelection: boolean; openEdit:
 interface StageKeys {
   stage: () => HTMLElement | null;
   selection: SelectionContext[];
-  setSelection: Props['setSelection'];
+  setSelection: Props["setSelection"];
   setSelectMode: (update: (m: boolean) => boolean) => void;
   offProto: () => void;
-  post: ReturnType<typeof usePreviewFrames>['post'];
+  post: ReturnType<typeof usePreviewFrames>["post"];
   shell: CanvasShell | undefined;
   picking: boolean;
   live: boolean;
@@ -534,8 +940,10 @@ interface StageKeys {
   protoOn: boolean;
 }
 
-function editOpener(shell: CanvasShell | undefined): (() => void | Promise<boolean>) | null {
-  return shell && shell.pane !== 'design' ? () => shell.onPane('design') : null;
+function editOpener(
+  shell: CanvasShell | undefined
+): (() => void | Promise<boolean>) | null {
+  return shell && shell.pane !== "design" ? () => shell.onPane("design") : null;
 }
 
 function useStageKeys(o: StageKeys) {
@@ -547,19 +955,33 @@ function useStageKeys(o: StageKeys) {
     setSelection(() => []);
     return true;
   });
-  useLayoutKeyFallback({ on: o.live && !o.running && o.directionId !== null, hasSelection: o.selection.length > 0, openEdit: editOpener(o.shell) });
-  useFirstSelectKeys(o.stage, { on: o.live && !o.commentMode && !o.protoOn, empty: o.selection.length === 0, picking: o.picking, selectFirst: () => o.post({ type: 'select-relative', selector: '', move: 'child' }), startPicking: () => o.setSelectMode(() => true) });
+  useLayoutKeyFallback({
+    on: o.live && !o.running && o.directionId !== null,
+    hasSelection: o.selection.length > 0,
+    openEdit: editOpener(o.shell),
+  });
+  useFirstSelectKeys(o.stage, {
+    on: o.live && !o.commentMode && !o.protoOn,
+    empty: o.selection.length === 0,
+    picking: o.picking,
+    selectFirst: () =>
+      o.post({ type: "select-relative", selector: "", move: "child" }),
+    startPicking: () => o.setSelectMode(() => true),
+  });
 }
 
-function quietOnPointer(onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void) {
+function quietOnPointer(
+  onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void
+) {
   return (e: ReactPointerEvent<HTMLDivElement>) => {
-    e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, '');
+    e.currentTarget.setAttribute(QUIET_FOCUS_ATTR, "");
     onPointerDown(e);
   };
 }
 
 function dropQuietFocus(e: ReactFocusEvent<HTMLDivElement>): void {
-  if (e.target === e.currentTarget) e.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
+  if (e.target === e.currentTarget)
+    e.currentTarget.removeAttribute(QUIET_FOCUS_ATTR);
 }
 
 function useFrameChange(key: string, onChange: (() => void) | undefined) {
@@ -574,23 +996,47 @@ function useFrameChange(key: string, onChange: (() => void) | undefined) {
 }
 
 function canvasClass(editing: boolean): string {
-  return editing ? 'canvas text-editing' : 'canvas';
+  return editing ? "canvas text-editing" : "canvas";
 }
 
 type CommentLayerProps = Parameters<typeof CommentLayer>[0];
 
-function CanvasComments(p: { comment: ReturnType<typeof useCommentMode>; control: Props['comments']; draw: DrawTool } & Omit<CommentLayerProps, 'control' | 'commentMode' | 'onExitCommentMode'>) {
+function CanvasComments(
+  p: {
+    comment: ReturnType<typeof useCommentMode>;
+    control: Props["comments"];
+    draw: DrawTool;
+  } & Omit<CommentLayerProps, "control" | "commentMode" | "onExitCommentMode">
+) {
   const { comment, control, draw, ...rest } = p;
   if (!comment.available || !control) return null;
   return (
     <>
-      <CommentLayer {...rest} control={control} commentMode={comment.on} onExitCommentMode={() => comment.setOn(false)} />
-      {draw.on && <DrawSurface draw={draw} control={control} zoom={rest.zoom} frame={rest.frame} tools={rest.tools} />}
+      <CommentLayer
+        {...rest}
+        control={control}
+        commentMode={comment.on}
+        onExitCommentMode={() => comment.setOn(false)}
+      />
+      {draw.on && (
+        <DrawSurface
+          draw={draw}
+          control={control}
+          zoom={rest.zoom}
+          frame={rest.frame}
+          tools={rest.tools}
+        />
+      )}
     </>
   );
 }
 
-function useCanvasVectorTools(editsEnabled: boolean, protoOn: boolean, draw: DrawTool, comment: { on: boolean; setOn: (on: boolean) => void }) {
+function useCanvasVectorTools(
+  editsEnabled: boolean,
+  protoOn: boolean,
+  draw: DrawTool,
+  comment: { on: boolean; setOn: (on: boolean) => void }
+) {
   const { tool } = useVectorTool();
   useVectorToolKeys(editsEnabled && !protoOn);
   useVectorToolGuards(tool, draw.on || comment.on, () => {
@@ -599,7 +1045,11 @@ function useCanvasVectorTools(editsEnabled: boolean, protoOn: boolean, draw: Dra
   });
 }
 
-function VectorSlot(p: Omit<ComponentProps<typeof VectorLayer>, 'directionId'> & { directionId: string | null }) {
+function VectorSlot(
+  p: Omit<ComponentProps<typeof VectorLayer>, "directionId"> & {
+    directionId: string | null;
+  }
+) {
   const { available } = useVectorTool();
   const { directionId } = p;
   if (!available || !directionId) return null;
@@ -610,7 +1060,15 @@ function VectorSlot(p: Omit<ComponentProps<typeof VectorLayer>, 'directionId'> &
   );
 }
 
-function InlinePromptSlot({ view, zoom, frame }: { view: InlinePromptView | null; zoom: number; frame: { width: number; height: number } }) {
+function InlinePromptSlot({
+  view,
+  zoom,
+  frame,
+}: {
+  view: InlinePromptView | null;
+  zoom: number;
+  frame: { width: number; height: number };
+}) {
   if (!view) return null;
   return (
     <Suspense fallback={null}>
@@ -619,7 +1077,11 @@ function InlinePromptSlot({ view, zoom, frame }: { view: InlinePromptView | null
   );
 }
 
-function marqueeAllowed(picking: boolean, prototype: boolean, comment: boolean): boolean {
+function marqueeAllowed(
+  picking: boolean,
+  prototype: boolean,
+  comment: boolean
+): boolean {
   return picking && !prototype && !comment;
 }
 
@@ -629,7 +1091,12 @@ function CanvasView(props: ViewProps) {
   useResetPassiveGateInFirstRender();
   const stageRef = useRef<HTMLDivElement>(null);
   const artboardRef = useRef<HTMLDivElement>(null);
-  const canvasFrames = useCanvasFrames(projectId, directionId, activateOf(props.directions), knownIds(props.directions));
+  const canvasFrames = useCanvasFrames(
+    projectId,
+    directionId,
+    activateOf(props.directions),
+    knownIds(props.directions)
+  );
   const { layout, active } = canvasFrames;
   const shown = shownFrames(layout);
   const viewport = { width: active.width, height: active.height };
@@ -646,11 +1113,22 @@ function CanvasView(props: ViewProps) {
   const [selectMode, setSelectMode] = useState(false);
   const check = useRenderCheck(projectId, directionId);
 
-  const comment = useCommentMode(props.comments, source.kind === 'live', setSelectMode);
+  const comment = useCommentMode(
+    props.comments,
+    source.kind === "live",
+    setSelectMode
+  );
   noteCommentFrame(props.comments, active);
   const commentMode = comment.on;
-  const live = source.kind === 'live';
-  const pane = useShellPane(props.shell, comment, selectMode, setSelectMode, live, ui.layersOpen);
+  const live = source.kind === "live";
+  const pane = useShellPane(
+    props.shell,
+    comment,
+    selectMode,
+    setSelectMode,
+    live,
+    ui.layersOpen
+  );
   const [protoOn, setProtoOn] = useState(false);
   const { layersOpen, toggleEdit } = pane;
   const picking = pane.picking || protoOn;
@@ -659,22 +1137,52 @@ function CanvasView(props: ViewProps) {
     if (!next) return;
     comment.setOn(false);
     setSelectMode(() => false);
-    if (props.shell?.pane === 'design') void props.shell.onPane('chat');
+    if (props.shell?.pane === "design") void props.shell.onPane("chat");
   };
   const draw = useCanvasDraw(comment, picking, setSelectMode);
 
   const preview = usePreviewUrl(projectId, directionId, source, headVersionId);
   const urlError = preview.urlError;
-  const baseUrl = withElementMark(preview.baseUrl, markOf(knownList(props.directions), directionId));
+  const baseUrl = withElementMark(
+    preview.baseUrl,
+    markOf(knownList(props.directions), directionId)
+  );
   const frameStates = useFrameStates(projectId, Boolean(props.app));
   const liveUrl = livePageUrl(baseUrl, active, frameStates);
-  const note = stageNote({ running: props.running, noRuns: props.noRuns, app: props.app, live, hasHead: headVersionId !== null, urlError });
-  const firstBuild = useFirstBuildGate({ projectId, directionId, kind, live, running: props.running, hasHead: headVersionId !== null, urlError, lastChange: props.lastChange, path: active.path, emptyStage: note === 'empty', url: liveUrl });
+  const note = stageNote({
+    running: props.running,
+    noRuns: props.noRuns,
+    app: props.app,
+    live,
+    hasHead: headVersionId !== null,
+    urlError,
+  });
+  const firstBuild = useFirstBuildGate({
+    projectId,
+    directionId,
+    kind,
+    live,
+    running: props.running,
+    hasHead: headVersionId !== null,
+    urlError,
+    lastChange: props.lastChange,
+    path: active.path,
+    emptyStage: note === "empty",
+    url: liveUrl,
+  });
   const textEditAllowed = live && !props.running && !commentMode;
-  const resetPreview = () => props.port?.current?.post({ type: 'preview-reset' });
+  const resetPreview = () =>
+    props.port?.current?.post({ type: "preview-reset" });
   const stageEl = useCallback(() => stageRef.current, []);
-  const inline = useInlineTextEdit(textEditAllowed, props.onTextCommit, resetPreview, stageEl);
-  const openMenu = useRef<(at: { x: number; y: number }) => void>(() => undefined);
+  const inline = useInlineTextEdit(
+    textEditAllowed,
+    props.onTextCommit,
+    resetPreview,
+    stageEl
+  );
+  const openMenu = useRef<(at: { x: number; y: number }) => void>(
+    () => undefined
+  );
 
   const frames = usePreviewFrames({
     projectId,
@@ -694,7 +1202,7 @@ function CanvasView(props: ViewProps) {
       comment.setOn(false);
     },
     onFrameWheel: pz.frameWheel,
-    onZoomKey: (key) => zoomBy(key, 'frame'),
+    onZoomKey: (key) => zoomBy(key, "frame"),
     textEditAllowed,
     onTextEdit: inline.onMessage,
     onContextMenu: (at) => openMenu.current(at),
@@ -718,25 +1226,82 @@ function CanvasView(props: ViewProps) {
     frameStates,
   });
   const theme = useCanvasTheme();
-  useEffect(() => setCanvasFront(frames.frontToken, frames.slots.length > 1), [frames.frontToken, frames.slots.length]);
+  useEffect(
+    () => setCanvasFront(frames.frontToken, frames.slots.length > 1),
+    [frames.frontToken, frames.slots.length]
+  );
   useEffect(() => () => setCanvasFront(null, false), []);
 
   usePortSync(props.port, live ? frames : null, props.lastChange, kind);
 
-  useStageKeys({ stage: stageEl, selection: props.selection, setSelection: props.setSelection, setSelectMode, offProto: () => setProtoOn(false), post: frames.post, shell: props.shell, picking, live, running: props.running, directionId, commentMode, protoOn });
+  useStageKeys({
+    stage: stageEl,
+    selection: props.selection,
+    setSelection: props.setSelection,
+    setSelectMode,
+    offProto: () => setProtoOn(false),
+    post: frames.post,
+    shell: props.shell,
+    picking,
+    live,
+    running: props.running,
+    directionId,
+    commentMode,
+    protoOn,
+  });
   useEffect(() => {
     if (selectMode || comment.on) setProtoOn(false);
   }, [selectMode, comment.on]);
   useLayersWatch(frames.watchTree, layersOpen, frames.frontToken, toggleEdit);
   useSelectMoveKeys(picking, props.selection, frames.selectRelative);
   const editsEnabled = live && !props.running && directionId !== null;
-  const layerEdits = useLayerEdits({ projectId, directionId, kind, enabled: editsEnabled, selectMode: picking, treeWanted: layersOpen, headVersionId, frames, selection: props.selection, setSelection: props.setSelection });
-  useComponentInsert({ projectId, directionId, kind, enabled: editsEnabled, frames, selection: props.selection, notify: layerEdits.notify });
+  const layerEdits = useLayerEdits({
+    projectId,
+    directionId,
+    kind,
+    enabled: editsEnabled,
+    selectMode: picking,
+    treeWanted: layersOpen,
+    headVersionId,
+    frames,
+    selection: props.selection,
+    setSelection: props.setSelection,
+  });
+  useComponentInsert({
+    projectId,
+    directionId,
+    kind,
+    enabled: editsEnabled,
+    frames,
+    selection: props.selection,
+    notify: layerEdits.notify,
+  });
   useCanvasVectorTools(editsEnabled, protoOn, draw, comment);
-  useImageDrop({ projectId, directionId, kind, enabled: editsEnabled, frames, notify: layerEdits.notify });
-  const previewMenu = usePreviewMenu({ selection: props.selection, port: props.port, selectRelative: frames.selectRelative, zoom: (key) => zoomBy(key, 'menu'), edits: layerEdits, ids: { projectId, directionId, kind } });
+  useImageDrop({
+    projectId,
+    directionId,
+    kind,
+    enabled: editsEnabled,
+    frames,
+    notify: layerEdits.notify,
+  });
+  const previewMenu = usePreviewMenu({
+    selection: props.selection,
+    port: props.port,
+    selectRelative: frames.selectRelative,
+    zoom: (key) => zoomBy(key, "menu"),
+    edits: layerEdits,
+    ids: { projectId, directionId, kind },
+  });
   openMenu.current = previewMenu.onContextMenu;
-  const inlinePrompt = useInlinePrompt({ selection: props.selection, live, running: props.running, onSubmit: props.onInlinePrompt, stage: () => stageRef.current, route: active.path });
+  const inlinePrompt = useInlinePrompt({
+    selection: props.selection,
+    live,
+    running: props.running,
+    onSubmit: props.onInlinePrompt,
+    stage: () => stageRef.current,
+    route: active.path,
+  });
   const handlesOn = editsEnabled && !commentMode;
   const resize = useResizeHandles({
     projectId,
@@ -777,39 +1342,139 @@ function CanvasView(props: ViewProps) {
     onError: layerEdits.notify,
   });
 
-  useCanvasPresence({ projectId, directionId, activeId: active.id, liveSize: viewport, selection: props.selection, stage: () => stageRef.current });
-  const pointBadge = useCanvasPoint({ projectId, frames: canvasFrames, post: frames.post, clearSelection: () => props.setSelection(() => []), zoom: (key) => zoomBy(key, 'menu') });
+  useCanvasPresence({
+    projectId,
+    directionId,
+    activeId: active.id,
+    liveSize: viewport,
+    selection: props.selection,
+    stage: () => stageRef.current,
+  });
+  const pointBadge = useCanvasPoint({
+    projectId,
+    frames: canvasFrames,
+    post: frames.post,
+    clearSelection: () => props.setSelection(() => []),
+    zoom: (key) => zoomBy(key, "menu"),
+  });
   const lofiList = useCanvasLofi(projectId);
   useLofiFrames(stageRef, kind, directionId, lofiList);
   const liveDirection = frameDirection(active, directionId);
   const lofiSwitch = liveDirection
-    ? { on: lofiList.includes(liveDirection), onToggle: () => canvasStore.setLofi(projectId, liveDirection, !lofiList.includes(liveDirection), layout) }
+    ? {
+        on: lofiList.includes(liveDirection),
+        onToggle: () =>
+          canvasStore.setLofi(
+            projectId,
+            liveDirection,
+            !lofiList.includes(liveDirection),
+            layout
+          ),
+      }
     : undefined;
   const darkSwitch = themeSwitch(props.darkPreview, theme);
 
-  const sandbox = kind === 'html' ? HTML_FRAME_SANDBOX : undefined;
+  const sandbox = kind === "html" ? HTML_FRAME_SANDBOX : undefined;
   const clickThrough = useClickThrough(frames, picking);
   useFrameChange(`${active.id}|${String(liveUrl)}`, () => {
     props.setSelection((prev) => (prev.length > 0 ? [] : prev));
     props.onFrameChange?.();
   });
-  const { labelProps: baseLabel, registerPassive, addFrameAt, undoRemove, dismissUndo, onResizeStart } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
-  const frameActions = (frame: CanvasFrame, did: string | null): FrameMenuItem[] => {
+  const {
+    labelProps: baseLabel,
+    registerPassive,
+    addFrameAt,
+    undoRemove,
+    dismissUndo,
+    onResizeStart,
+  } = useFrameActions(canvasFrames, pz, artboardRef, clickThrough);
+  const frameActions = (
+    frame: CanvasFrame,
+    did: string | null
+  ): FrameMenuItem[] => {
     const make = props.onMakeStates;
     if (!make) return [];
-    const blocked = props.running ? 'A run is going.' : did !== directionId ? 'Open this direction first.' : undefined;
-    return [{ id: 'states', label: 'Make states', icon: 'layers', run: () => make(frame), ...(blocked ? { disabled: blocked } : {}) }];
+    const blocked = props.running
+      ? "A run is going."
+      : did !== directionId
+        ? "Open this direction first."
+        : undefined;
+    return [
+      {
+        id: "states",
+        label: "Make states",
+        icon: "layers",
+        run: () => make(frame),
+        ...(blocked ? { disabled: blocked } : {}),
+      },
+    ];
   };
-  const labelProps = useFrameLabels({ projectId, kind, directionId, activeId: active.id, directions: props.directions, selection: props.selection, setSelection: props.setSelection, frames: canvasFrames, baseLabel, directionName: shellDirectionName(props.shell), frameActions, appPages: appRoutePages(projectId, props.app) });
-  const proto = usePrototype({ projectId, kind, directionId, frames: layout.frames, shown, active, baseUrl, live, selection: props.selection, clearSelection: () => props.setSelection(() => []), sandbox, notify: layerEdits.notify, on: protoOn, preview: frames, passive });
-  useCanvasCommands({ live, hasHead: headVersionId !== null, zoomBy, selectMode, setSelectMode, comment, draw, layersOpen, onLayers: toggleEdit, onSource: props.onSource, dark: darkSwitch, lofi: lofiSwitch, check, play: proto.play });
-  const appCanvas = useAppCanvas({ projectId, app: props.app, listen: frames.listen, resetKey: `${active.id}|${String(liveUrl)}`, frames: canvasFrames, freeze: pz.freeze, focus: pz.zoomToActive, notify: layerEdits.notify, size: viewport, onSignIn: () => {
-    setSelectMode(false);
-    setProtoOn(false);
-    comment.setOn(false);
-    requestAnimationFrame(() => artboardRef.current?.querySelector('iframe')?.focus());
-  } });
-
+  const labelProps = useFrameLabels({
+    projectId,
+    kind,
+    directionId,
+    activeId: active.id,
+    directions: props.directions,
+    selection: props.selection,
+    setSelection: props.setSelection,
+    frames: canvasFrames,
+    baseLabel,
+    directionName: shellDirectionName(props.shell),
+    frameActions,
+    appPages: appRoutePages(projectId, props.app),
+  });
+  const proto = usePrototype({
+    projectId,
+    kind,
+    directionId,
+    frames: layout.frames,
+    shown,
+    active,
+    baseUrl,
+    live,
+    selection: props.selection,
+    clearSelection: () => props.setSelection(() => []),
+    sandbox,
+    notify: layerEdits.notify,
+    on: protoOn,
+    preview: frames,
+    passive,
+  });
+  useCanvasCommands({
+    live,
+    hasHead: headVersionId !== null,
+    zoomBy,
+    selectMode,
+    setSelectMode,
+    comment,
+    draw,
+    layersOpen,
+    onLayers: toggleEdit,
+    onSource: props.onSource,
+    dark: darkSwitch,
+    lofi: lofiSwitch,
+    check,
+    play: proto.play,
+  });
+  const appCanvas = useAppCanvas({
+    projectId,
+    app: props.app,
+    listen: frames.listen,
+    resetKey: `${active.id}|${String(liveUrl)}`,
+    frames: canvasFrames,
+    freeze: pz.freeze,
+    focus: pz.zoomToActive,
+    notify: layerEdits.notify,
+    size: viewport,
+    onSignIn: () => {
+      setSelectMode(false);
+      setProtoOn(false);
+      comment.setOn(false);
+      requestAnimationFrame(() =>
+        artboardRef.current?.querySelector("iframe")?.focus()
+      );
+    },
+  });
 
   const capture = pz.spaceHeld || pz.panning || pz.zoomHeld;
   const stageMode = stageCursor(pz);
@@ -836,88 +1501,179 @@ function CanvasView(props: ViewProps) {
         sandbox={sandbox}
         selection={props.selection}
         stage={() => stageRef.current}
-        view={{ drawMode: draw.toolbarMode, onToggleDraw: draw.toggle, source, onSource: props.onSource, hasHead: headVersionId !== null, checking: check.checking, onCheck: check.run, theme: darkSwitch, lofi: lofiSwitch, links: proto.viewToggle }}
+        view={{
+          drawMode: draw.toolbarMode,
+          onToggleDraw: draw.toggle,
+          source,
+          onSource: props.onSource,
+          hasHead: headVersionId !== null,
+          checking: check.checking,
+          onCheck: check.run,
+          theme: darkSwitch,
+          lofi: lofiSwitch,
+          links: proto.viewToggle,
+        }}
         proto={{ on: protoOn, set: setProto, play: proto.play }}
       />
       {appCanvas.bar}
       <CheckResults projectId={projectId} check={check} />
-      <ReviewEntry projectId={projectId} directionId={directionId} frame={active} live={live} running={props.running} lastChange={props.lastChange} post={frames.post} shell={props.shell} toolKey={`${protoOn}-${comment.on}-${layersOpen}`} />
+      <ReviewEntry
+        projectId={projectId}
+        directionId={directionId}
+        frame={active}
+        live={live}
+        running={props.running}
+        lastChange={props.lastChange}
+        post={frames.post}
+        shell={props.shell}
+        toolKey={`${protoOn}-${comment.on}-${layersOpen}`}
+      />
       {previewMenu.menu}
       <div className="canvas-body">
-      {layersOpen && pane.place(<CanvasLayersPanel frames={frames} edits={layerEdits} frameName={frameName(active)} selection={props.selection} onSelectMode={() => setSelectMode(true)} onClose={hostedClose(props.shell, pane.closeLayers)} />)}
-      <div ref={stageRef} className={`stage ${stageMode}${pz.panning ? ' panning' : ''}`} tabIndex={-1} aria-label="Canvas" onPointerDown={quietOnPointer(pz.onPointerDown)} onBlur={dropQuietFocus}>
-        <StageMessage note={note} covered={covered} urlError={urlError} app={appCanvas.stage} />
+        {layersOpen &&
+          pane.place(
+            <CanvasLayersPanel
+              frames={frames}
+              edits={layerEdits}
+              frameName={frameName(active)}
+              selection={props.selection}
+              onSelectMode={() => setSelectMode(true)}
+              onClose={hostedClose(props.shell, pane.closeLayers)}
+            />
+          )}
         <div
-          ref={artboardRef}
-          className="artboard"
-          data-frame-id={active.id}
-          data-direction-id={directionId || undefined}
-          style={{
-            width: viewport.width,
-            height: viewport.height,
-            visibility: note === 'empty' ? 'hidden' : undefined,
-          }}
+          ref={stageRef}
+          className={`stage ${stageMode}${pz.panning ? " panning" : ""}`}
+          tabIndex={-1}
+          aria-label="Canvas"
+          onPointerDown={quietOnPointer(pz.onPointerDown)}
+          onBlur={dropQuietFocus}
         >
-          <PreviewSlots frames={frames} sandbox={sandbox} viewport={viewport} />
-          <StepCover steps={props.steps} covered={covered} wait={firstBuild.wait} path={active.path} />
-          <LiveOverlay
-            hover={frames.hover}
-            picked={frames.picked}
-            commenting={commentMode}
-            picking={picking || commentMode}
-            selection={props.selection}
-            zoom={pz.zoom}
-            resize={resize}
-            comments={
-              <CanvasComments
-                comment={comment}
-                draw={draw}
-                control={props.comments}
-                frames={frames}
-                kind={kind}
-                zoom={pz.zoom}
-                frame={viewport}
-                selectMode={pane.picking}
-                editing={inEditPane(props.shell)}
-                selection={props.selection}
-                tools={commentToolsOf(props, active.path)}
-                activeFrame={activeFrameOf(active, layout.frames)}
-              />
-            }
+          <StageMessage
+            note={note}
+            covered={covered}
+            urlError={urlError}
+            app={appCanvas.stage}
           />
-          <InlinePromptSlot view={inlinePrompt} zoom={pz.zoom} frame={viewport} />
-          <MarqueeLayer listen={frames.listen} />
-          <VectorSlot projectId={projectId} directionId={directionId} zoom={pz.zoom} frame={viewport} post={frames.post} listen={frames.listen} notify={layerEdits.notify} page={active.path} />
-          <FreeMoveSlot view={freeMove} />
-          <FrameLabel {...labelProps(active, frameDirection(active, directionId))} note={appCanvas.note} />
-          <FrameResizeHandles onPointerDown={(e, edge) => onResizeStart(e, active, edge)} />
-          <OtherFrames frames={shown} active={active} passive={passive} sandbox={sandbox} labelProps={labelProps} register={registerPassive} waiting={firstBuild.waitFor} steps={props.steps} />
-          <FrameSnapLayer origin={active} />
-          {proto.artboard}
+          <div
+            ref={artboardRef}
+            className="artboard"
+            data-frame-id={active.id}
+            data-direction-id={directionId || undefined}
+            style={{
+              width: viewport.width,
+              height: viewport.height,
+              visibility: note === "empty" ? "hidden" : undefined,
+            }}
+          >
+            <PreviewSlots
+              frames={frames}
+              sandbox={sandbox}
+              viewport={viewport}
+            />
+            <StepCover
+              steps={props.steps}
+              covered={covered}
+              wait={firstBuild.wait}
+              path={active.path}
+            />
+            <LiveOverlay
+              hover={frames.hover}
+              picked={frames.picked}
+              commenting={commentMode}
+              picking={picking || commentMode}
+              selection={props.selection}
+              zoom={pz.zoom}
+              resize={resize}
+              comments={
+                <CanvasComments
+                  comment={comment}
+                  draw={draw}
+                  control={props.comments}
+                  frames={frames}
+                  kind={kind}
+                  zoom={pz.zoom}
+                  frame={viewport}
+                  selectMode={pane.picking}
+                  editing={inEditPane(props.shell)}
+                  selection={props.selection}
+                  tools={commentToolsOf(props, active.path)}
+                  activeFrame={activeFrameOf(active, layout.frames)}
+                />
+              }
+            />
+            <InlinePromptSlot
+              view={inlinePrompt}
+              zoom={pz.zoom}
+              frame={viewport}
+            />
+            <MarqueeLayer listen={frames.listen} />
+            <VectorSlot
+              projectId={projectId}
+              directionId={directionId}
+              zoom={pz.zoom}
+              frame={viewport}
+              post={frames.post}
+              listen={frames.listen}
+              notify={layerEdits.notify}
+              page={active.path}
+            />
+            <FreeMoveSlot view={freeMove} />
+            <FrameLabel
+              {...labelProps(active, frameDirection(active, directionId))}
+              note={appCanvas.note}
+            />
+            <FrameResizeHandles
+              onPointerDown={(e, edge) => onResizeStart(e, active, edge)}
+            />
+            <OtherFrames
+              frames={shown}
+              active={active}
+              passive={passive}
+              sandbox={sandbox}
+              labelProps={labelProps}
+              register={registerPassive}
+              waiting={firstBuild.waitFor}
+              steps={props.steps}
+            />
+            <FrameSnapLayer origin={active} />
+            {proto.artboard}
+          </div>
+          {proto.stage}
+          {ui.rulers && (
+            <Suspense fallback={null}>
+              <CanvasRulers
+                artboardRef={artboardRef}
+                origin={active}
+                selection={unionRect(props.selection)}
+              />
+            </Suspense>
+          )}
+          <DrawBar draw={draw} />
+          <CommentModePill mode={comment} control={props.comments} />
+          {capture && <div className="capture" data-testid="pan-capture" />}
+          <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
+          <EditNotice edits={layerEdits} />
+          <McpPointBadge
+            badge={pointBadge}
+            frameName={(id) => {
+              const f = canvasFrames.layout.frames.find(
+                (item) => item.id === id
+              );
+              return f ? frameName(f) : id;
+            }}
+          />
         </div>
-        {proto.stage}
-        {ui.rulers && (
-          <Suspense fallback={null}>
-            <CanvasRulers artboardRef={artboardRef} origin={active} selection={unionRect(props.selection)} />
-          </Suspense>
-        )}
-        <DrawBar draw={draw} />
-        <CommentModePill mode={comment} control={props.comments} />
-        {capture && <div className="capture" data-testid="pan-capture" />}
-        <FrameUndoBar onUndo={undoRemove} onDismiss={dismissUndo} />
-        <EditNotice edits={layerEdits} />
-        <McpPointBadge badge={pointBadge} frameName={(id) => { const f = canvasFrames.layout.frames.find((item) => item.id === id); return f ? frameName(f) : id; }} />
-      </div>
       </div>
     </div>
   );
 }
 
 const MemoCanvas = memo(CanvasView);
-const NESTED = new Set(['shell', 'commentTools', 'comments', 'directions']);
-const NESTED_LIVE_DIRECTIONS = new Set(['shell', 'commentTools', 'comments']);
+const NESTED = new Set(["shell", "commentTools", "comments", "directions"]);
+const NESTED_LIVE_DIRECTIONS = new Set(["shell", "commentTools", "comments"]);
 
-interface ViewProps extends Omit<Props, 'runStep'> {
+interface ViewProps extends Omit<Props, "runStep"> {
   steps: LiveStore<string | null>;
 }
 
@@ -925,5 +1681,12 @@ export function Canvas({ runStep, ...props }: Props) {
   const variations = props.directions?.list.some((d) => d.variation) === true;
   const [steps] = useState(() => createLiveStore<string | null>(null));
   useLayoutEffect(() => steps.set(runStep ?? null), [steps, runStep]);
-  return <MemoCanvas {...useStableProps({ ...props, steps }, variations ? NESTED_LIVE_DIRECTIONS : NESTED)} />;
+  return (
+    <MemoCanvas
+      {...useStableProps(
+        { ...props, steps },
+        variations ? NESTED_LIVE_DIRECTIONS : NESTED
+      )}
+    />
+  );
 }

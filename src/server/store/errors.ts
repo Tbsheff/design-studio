@@ -1,4 +1,4 @@
-import type { AppCandidate } from '../../shared/contracts.js';
+import type { AppCandidate } from "../../shared/contracts.js";
 
 export class NotFoundError extends Error {
   readonly status = 404;
@@ -14,7 +14,9 @@ export class ConflictError extends Error {
 
 export class PickAppError extends ConflictError {
   constructor(readonly candidates: AppCandidate[]) {
-    super(`This folder has ${candidates.length} Next.js apps. Pick one: ${candidates.map((candidate) => candidate.appDir).join(', ')}.`);
+    super(
+      `This folder has ${candidates.length} Next.js apps. Pick one: ${candidates.map((candidate) => candidate.appDir).join(", ")}.`
+    );
   }
 }
 
@@ -26,5 +28,5 @@ export function assertSafeId(value: string, label: string): string {
 }
 
 export function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && 'code' in error;
+  return error instanceof Error && "code" in error;
 }

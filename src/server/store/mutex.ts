@@ -7,7 +7,7 @@ export function createKeyedMutex(): KeyedMutex {
     const result = previous.then(task, task);
     const tail = result.then(
       () => undefined,
-      () => undefined,
+      () => undefined
     );
     tails.set(key, tail);
     void tail.then(() => {

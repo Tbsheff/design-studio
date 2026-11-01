@@ -349,7 +349,10 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -458,7 +461,7 @@
 
 .cmp-item:hover .cmp-insert,
 .cmp-insert:focus-visible,
-.cmp-insert[aria-expanded='true'] {
+.cmp-insert[aria-expanded="true"] {
   opacity: 1;
 }
 

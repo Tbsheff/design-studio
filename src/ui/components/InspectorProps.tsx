@@ -1,15 +1,31 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import type { SelectionContext } from '../../shared/contracts';
-import type { ComponentInstance, ComponentSchema, PropSpec, PropValue, VariantGroup } from '../../shared/props';
-import { ApiError } from '../api';
-import { useProjectEvents } from '../events';
-import { propsApi } from '../propsApi';
-import { ComponentPreviewThumb } from './ComponentPreviewThumb';
-import { InspectorSection } from './InspectorFields';
-import { UiSelect } from './UiSelect';
-import '../styles/inspector-props.css';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
-const SwapInstanceMenu = lazy(() => import('./SwapInstanceMenu'));
+import type { SelectionContext } from "../../shared/contracts";
+import type {
+  ComponentInstance,
+  ComponentSchema,
+  PropSpec,
+  PropValue,
+  VariantGroup,
+} from "../../shared/props";
+import { ApiError } from "../api";
+import { useProjectEvents } from "../events";
+import { propsApi } from "../propsApi";
+import { ComponentPreviewThumb } from "./ComponentPreviewThumb";
+import { InspectorSection } from "./InspectorFields";
+import { UiSelect } from "./UiSelect";
+
+import "../styles/inspector-props.css";
+
+const SwapInstanceMenu = lazy(() => import("./SwapInstanceMenu"));
 
 interface InspectorPropsProps {
   projectId: string;
@@ -18,19 +34,41 @@ interface InspectorPropsProps {
   editable: boolean;
 }
 
-type Status = { kind: 'idle' } | { kind: 'saving' } | { kind: 'saved'; text: string } | { kind: 'error'; text: string };
+type Status =
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "saved"; text: string }
+  | { kind: "error"; text: string };
 
 function messageOf(error: unknown): string {
-  if (error instanceof ApiError && error.data && typeof (error.data as { message?: unknown }).message === 'string') return (error.data as { message: string }).message;
+  if (
+    error instanceof ApiError &&
+    error.data &&
+    typeof (error.data as { message?: unknown }).message === "string"
+  )
+    return (error.data as { message: string }).message;
   return error instanceof Error ? error.message : String(error);
 }
 
-function useInstance(projectId: string, directionId: string | null, selection: SelectionContext) {
+function useInstance(
+  projectId: string,
+  directionId: string | null,
+  selection: SelectionContext
+) {
   const [instance, setInstance] = useState<ComponentInstance | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const query = useRef({ owners: selection.owners, usedAt: selection.usedAt ?? null });
-  query.current = { owners: selection.owners, usedAt: selection.usedAt ?? null };
-  const key = JSON.stringify([selection.owners?.map((owner) => owner.stack), selection.usedAt ?? null]);
+  const query = useRef({
+    owners: selection.owners,
+    usedAt: selection.usedAt ?? null,
+  });
+  query.current = {
+    owners: selection.owners,
+    usedAt: selection.usedAt ?? null,
+  };
+  const key = JSON.stringify([
+    selection.owners?.map((owner) => owner.stack),
+    selection.usedAt ?? null,
+  ]);
   const live = useRef(0);
   const load = useCallback(() => {
     const { owners, usedAt } = query.current;
@@ -56,22 +94,43 @@ function useInstance(projectId: string, directionId: string | null, selection: S
       .catch(() => undefined);
   }, [projectId, directionId, instance]);
   useProjectEvents(projectId, (event) => {
-    if (event.type === 'version.created' && event.directionId === directionId) refresh();
+    if (event.type === "version.created" && event.directionId === directionId)
+      refresh();
   });
   return { instance, loaded, setInstance };
 }
 
-function valueOf(instance: ComponentInstance, spec: PropSpec): PropValue | undefined {
+function valueOf(
+  instance: ComponentInstance,
+  spec: PropSpec
+): PropValue | undefined {
   return instance.values[spec.name] ?? spec.default;
 }
 
-function SelectProp({ spec, value, overridden, disabled, onChange }: { spec: PropSpec; value: PropValue | undefined; overridden: boolean; disabled: boolean; onChange: (value: PropValue | null) => void }) {
-  const current = value === undefined ? '' : String(value);
+function SelectProp({
+  spec,
+  value,
+  overridden,
+  disabled,
+  onChange,
+}: {
+  spec: PropSpec;
+  value: PropValue | undefined;
+  overridden: boolean;
+  disabled: boolean;
+  onChange: (value: PropValue | null) => void;
+}) {
+  const current = value === undefined ? "" : String(value);
   const options = spec.options ?? [];
-  const list = current && !options.includes(current) ? [current, ...options] : options;
+  const list =
+    current && !options.includes(current) ? [current, ...options] : options;
   return (
-    <div className={`ins-field select prp-field${overridden ? ' set' : ''}`}>
-      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" data-tip={spec.name}>
+    <div className={`ins-field select prp-field${overridden ? " set" : ""}`}>
+      <label
+        htmlFor={`prp-${spec.name}`}
+        className="ins-scrub static prp-name"
+        data-tip={spec.name}
+      >
         {spec.name}
       </label>
       <UiSelect
@@ -81,56 +140,116 @@ function SelectProp({ spec, value, overridden, disabled, onChange }: { spec: Pro
         value={current}
         placeholder="—"
         disabled={disabled}
-        options={list.map((option) => ({ value: option, label: option === spec.default && option !== 'default' ? `${option} (default)` : option }))}
-        onChange={(next) => onChange(next === '' ? null : next)}
+        options={list.map((option) => ({
+          value: option,
+          label:
+            option === spec.default && option !== "default"
+              ? `${option} (default)`
+              : option,
+        }))}
+        onChange={(next) => onChange(next === "" ? null : next)}
       />
     </div>
   );
 }
 
-function BooleanProp({ spec, value, disabled, onChange }: { spec: PropSpec; value: PropValue | undefined; disabled: boolean; onChange: (value: PropValue | null) => void }) {
-  const on = value === true || value === 'true';
+function BooleanProp({
+  spec,
+  value,
+  disabled,
+  onChange,
+}: {
+  spec: PropSpec;
+  value: PropValue | undefined;
+  disabled: boolean;
+  onChange: (value: PropValue | null) => void;
+}) {
+  const on = value === true || value === "true";
   return (
     <div className="prp-bool">
       <span className="prp-name" id={`prp-${spec.name}-label`}>
         {spec.name}
       </span>
-      <button type="button" role="switch" aria-checked={on} aria-labelledby={`prp-${spec.name}-label`} className={`prp-switch${on ? ' on' : ''}`} disabled={disabled} onClick={() => onChange(!on)}>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-labelledby={`prp-${spec.name}-label`}
+        className={`prp-switch${on ? " on" : ""}`}
+        disabled={disabled}
+        onClick={() => onChange(!on)}
+      >
         <span className="prp-switch-knob" />
       </button>
     </div>
   );
 }
 
-function TextProp({ spec, value, disabled, onChange }: { spec: PropSpec; value: PropValue | undefined; disabled: boolean; onChange: (value: PropValue | null) => void }) {
+function TextProp({
+  spec,
+  value,
+  disabled,
+  onChange,
+}: {
+  spec: PropSpec;
+  value: PropValue | undefined;
+  disabled: boolean;
+  onChange: (value: PropValue | null) => void;
+}) {
   const [draft, setDraft] = useState<string | null>(null);
-  const shown = draft ?? (value === undefined ? '' : String(value));
+  const shown = draft ?? (value === undefined ? "" : String(value));
   const commit = () => {
     if (draft === null) return;
     const next = draft;
     setDraft(null);
-    if (next === (value === undefined ? '' : String(value))) return;
-    if (next.trim() === '') onChange(null);
-    else onChange(spec.control === 'number' ? Number(next) : next);
+    if (next === (value === undefined ? "" : String(value))) return;
+    if (next.trim() === "") onChange(null);
+    else onChange(spec.control === "number" ? Number(next) : next);
   };
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') commit();
-    if (event.key === 'Escape') {
+    if (event.key === "Enter") commit();
+    if (event.key === "Escape") {
       event.stopPropagation();
       setDraft(null);
     }
   };
   return (
     <div className="ins-field wide prp-field">
-      <label htmlFor={`prp-${spec.name}`} className="ins-scrub static prp-name" data-tip={spec.name}>
+      <label
+        htmlFor={`prp-${spec.name}`}
+        className="ins-scrub static prp-name"
+        data-tip={spec.name}
+      >
         {spec.name}
       </label>
-      <input id={`prp-${spec.name}`} className="ins-input" aria-label={`${spec.name} prop`} type={spec.control === 'number' ? 'number' : 'text'} value={shown} placeholder={spec.node ? 'Text' : ''} disabled={disabled} spellCheck={false} onChange={(event) => setDraft(event.target.value)} onBlur={commit} onKeyDown={onKeyDown} />
+      <input
+        id={`prp-${spec.name}`}
+        className="ins-input"
+        aria-label={`${spec.name} prop`}
+        type={spec.control === "number" ? "number" : "text"}
+        value={shown}
+        placeholder={spec.node ? "Text" : ""}
+        disabled={disabled}
+        spellCheck={false}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commit}
+        onKeyDown={onKeyDown}
+      />
     </div>
   );
 }
 
-function PropRow({ instance, spec, disabled, onChange }: { instance: ComponentInstance; spec: PropSpec; disabled: boolean; onChange: (name: string, value: PropValue | null) => void }) {
+function PropRow({
+  instance,
+  spec,
+  disabled,
+  onChange,
+}: {
+  instance: ComponentInstance;
+  spec: PropSpec;
+  disabled: boolean;
+  onChange: (name: string, value: PropValue | null) => void;
+}) {
   const value = valueOf(instance, spec);
   const locked = instance.dynamic.includes(spec.name);
   const change = (next: PropValue | null) => onChange(spec.name, next);
@@ -142,39 +261,106 @@ function PropRow({ instance, spec, disabled, onChange }: { instance: ComponentIn
       </div>
     );
   }
-  if (spec.control === 'select') return <SelectProp spec={spec} value={value} overridden={spec.name in instance.values} disabled={disabled} onChange={change} />;
-  if (spec.control === 'boolean') return <BooleanProp spec={spec} value={value} disabled={disabled} onChange={change} />;
-  return <TextProp spec={spec} value={value} disabled={disabled} onChange={change} />;
+  if (spec.control === "select")
+    return (
+      <SelectProp
+        spec={spec}
+        value={value}
+        overridden={spec.name in instance.values}
+        disabled={disabled}
+        onChange={change}
+      />
+    );
+  if (spec.control === "boolean")
+    return (
+      <BooleanProp
+        spec={spec}
+        value={value}
+        disabled={disabled}
+        onChange={change}
+      />
+    );
+  return (
+    <TextProp spec={spec} value={value} disabled={disabled} onChange={change} />
+  );
 }
 
 const PADDING: { label: string; props: string[] }[] = [
-  { label: 'Padding X', props: ['padding-left', 'padding-right'] },
-  { label: 'Padding Y', props: ['padding-top', 'padding-bottom'] },
+  { label: "Padding X", props: ["padding-left", "padding-right"] },
+  { label: "Padding Y", props: ["padding-top", "padding-bottom"] },
 ];
 
-type ClassBody = { style?: Record<string, string | null>; classes?: { add?: string[]; remove?: string[] } };
+type ClassBody = {
+  style?: Record<string, string | null>;
+  classes?: { add?: string[]; remove?: string[] };
+};
 
-function VariantPicker({ groups, group, value, onProp, onValue }: { groups: VariantGroup[]; group: VariantGroup; value: string; onProp: (prop: string) => void; onValue: (value: string) => void }) {
+function VariantPicker({
+  groups,
+  group,
+  value,
+  onProp,
+  onValue,
+}: {
+  groups: VariantGroup[];
+  group: VariantGroup;
+  value: string;
+  onProp: (prop: string) => void;
+  onValue: (value: string) => void;
+}) {
   return (
     <div className="ins-grid">
       <div className="ins-field select">
-        <UiSelect className="ins-select" aria-label="Variant prop" value={group.prop} options={groups.map((entry) => ({ value: entry.prop, label: entry.prop }))} onChange={onProp} />
+        <UiSelect
+          className="ins-select"
+          aria-label="Variant prop"
+          value={group.prop}
+          options={groups.map((entry) => ({
+            value: entry.prop,
+            label: entry.prop,
+          }))}
+          onChange={onProp}
+        />
       </div>
       <div className="ins-field select">
-        <UiSelect className="ins-select" aria-label="Variant value" value={value} options={group.options.map((entry) => ({ value: entry.value, label: entry.value }))} onChange={onValue} />
+        <UiSelect
+          className="ins-select"
+          aria-label="Variant value"
+          value={value}
+          options={group.options.map((entry) => ({
+            value: entry.value,
+            label: entry.value,
+          }))}
+          onChange={onValue}
+        />
       </div>
     </div>
   );
 }
 
-function ClassChips({ label, classes, editable, onRemove }: { label: string; classes: string[]; editable: boolean; onRemove: (name: string) => void }) {
+function ClassChips({
+  label,
+  classes,
+  editable,
+  onRemove,
+}: {
+  label: string;
+  classes: string[];
+  editable: boolean;
+  onRemove: (name: string) => void;
+}) {
   return (
     <div className="prp-classes" aria-label={label}>
       {classes.map((name) => (
         <span key={name} className="prp-class">
           <code>{name}</code>
           {editable && (
-            <button type="button" className="prp-class-x" aria-label={`Remove ${name}`} onClick={() => onRemove(name)}>
+            <button
+              type="button"
+              className="prp-class-x"
+              aria-label={`Remove ${name}`}
+              onClick={() => onRemove(name)}
+            >
               ×
             </button>
           )}
@@ -185,12 +371,25 @@ function ClassChips({ label, classes, editable, onRemove }: { label: string; cla
 }
 
 function ClassEditors({ send }: { send: (body: ClassBody) => void }) {
-  const [adding, setAdding] = useState('');
+  const [adding, setAdding] = useState("");
   return (
     <>
       <div className="ins-grid">
         {PADDING.map((entry) => (
-          <PxField key={entry.label} label={entry.label} onCommit={(px) => send({ style: Object.fromEntries(entry.props.map((name) => [name, px === null ? null : `${px}px`])) })} />
+          <PxField
+            key={entry.label}
+            label={entry.label}
+            onCommit={(px) =>
+              send({
+                style: Object.fromEntries(
+                  entry.props.map((name) => [
+                    name,
+                    px === null ? null : `${px}px`,
+                  ])
+                ),
+              })
+            }
+          />
         ))}
       </div>
       <div className="ins-field wide">
@@ -202,9 +401,9 @@ function ClassEditors({ send }: { send: (body: ClassBody) => void }) {
           spellCheck={false}
           onChange={(event) => setAdding(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key !== 'Enter' || adding.trim() === '') return;
+            if (event.key !== "Enter" || adding.trim() === "") return;
             send({ classes: { add: adding.trim().split(/\s+/) } });
-            setAdding('');
+            setAdding("");
           }}
         />
       </div>
@@ -212,62 +411,142 @@ function ClassEditors({ send }: { send: (body: ClassBody) => void }) {
   );
 }
 
-function initialValue(instance: ComponentInstance, group: VariantGroup | undefined): string {
-  if (!group) return '';
-  return String(instance.values[group.prop] ?? group.default ?? group.options[0]?.value ?? '');
+function initialValue(
+  instance: ComponentInstance,
+  group: VariantGroup | undefined
+): string {
+  if (!group) return "";
+  return String(
+    instance.values[group.prop] ??
+      group.default ??
+      group.options[0]?.value ??
+      ""
+  );
 }
 
-function VariantStyles({ projectId, directionId, instance, onStatus }: { projectId: string; directionId: string; instance: ComponentInstance; onStatus: (status: Status) => void }) {
+function VariantStyles({
+  projectId,
+  directionId,
+  instance,
+  onStatus,
+}: {
+  projectId: string;
+  directionId: string;
+  instance: ComponentInstance;
+  onStatus: (status: Status) => void;
+}) {
   const cva = instance.component?.cva;
   const groups = cva?.variants ?? [];
-  const [prop, setProp] = useState(groups[0]?.prop ?? '');
+  const [prop, setProp] = useState(groups[0]?.prop ?? "");
   const group = groups.find((entry) => entry.prop === prop) ?? groups[0];
   const current = initialValue(instance, group);
   const [value, setValue] = useState(current);
-  const option = group?.options.find((entry) => entry.value === value) ?? group?.options[0];
+  const option =
+    group?.options.find((entry) => entry.value === value) ?? group?.options[0];
   useEffect(() => setValue(current), [current]);
   const component = instance.component;
   if (!cva || !group || !option || !component) return null;
   const send = (body: ClassBody) => {
-    onStatus({ kind: 'saving' });
+    onStatus({ kind: "saving" });
     propsApi
-      .variantClasses(projectId, directionId, { file: component.file, cva: cva.name, prop: group.prop, value: option.value, ...body })
-      .then((result) => onStatus({ kind: 'saved', text: result.note ?? `${group.prop} ${option.value}: ${result.classes.join(' ')}` }))
-      .catch((error: unknown) => onStatus({ kind: 'error', text: messageOf(error) }));
+      .variantClasses(projectId, directionId, {
+        file: component.file,
+        cva: cva.name,
+        prop: group.prop,
+        value: option.value,
+        ...body,
+      })
+      .then((result) =>
+        onStatus({
+          kind: "saved",
+          text:
+            result.note ??
+            `${group.prop} ${option.value}: ${result.classes.join(" ")}`,
+        })
+      )
+      .catch((error: unknown) =>
+        onStatus({ kind: "error", text: messageOf(error) })
+      );
   };
-  const uses = instance.uses > 1 ? ` (${instance.uses} uses in this project)` : '';
+  const uses =
+    instance.uses > 1 ? ` (${instance.uses} uses in this project)` : "";
   return (
     <div className="prp-variant" aria-label="Variant styles">
       <p className="ins-note prp-warn" role="note">
-        This changes every {component.name} with {group.prop} “{option.value}”{uses}.
+        This changes every {component.name} with {group.prop} “{option.value}”
+        {uses}.
       </p>
-      <VariantPicker groups={groups} group={group} value={option.value} onProp={setProp} onValue={setValue} />
-      <ClassChips label={`${group.prop} ${option.value} classes`} classes={option.classes.split(/\s+/).filter(Boolean)} editable={option.editable} onRemove={(name) => send({ classes: { remove: [name] } })} />
-      {option.editable ? <ClassEditors send={send} /> : <p className="ins-note">These classes are not a plain string, so they are not edited here.</p>}
+      <VariantPicker
+        groups={groups}
+        group={group}
+        value={option.value}
+        onProp={setProp}
+        onValue={setValue}
+      />
+      <ClassChips
+        label={`${group.prop} ${option.value} classes`}
+        classes={option.classes.split(/\s+/).filter(Boolean)}
+        editable={option.editable}
+        onRemove={(name) => send({ classes: { remove: [name] } })}
+      />
+      {option.editable ? (
+        <ClassEditors send={send} />
+      ) : (
+        <p className="ins-note">
+          These classes are not a plain string, so they are not edited here.
+        </p>
+      )}
     </div>
   );
 }
 
-function PxField({ label, onCommit }: { label: string; onCommit: (px: number | null) => void }) {
-  const [text, setText] = useState('');
+function PxField({
+  label,
+  onCommit,
+}: {
+  label: string;
+  onCommit: (px: number | null) => void;
+}) {
+  const [text, setText] = useState("");
   const commit = () => {
     const trimmed = text.trim();
-    if (trimmed === '') return;
-    const px = Number(trimmed.replace(/px$/, ''));
+    if (trimmed === "") return;
+    const px = Number(trimmed.replace(/px$/, ""));
     if (Number.isFinite(px) && px >= 0) onCommit(px);
-    setText('');
+    setText("");
   };
   return (
     <div className="ins-field">
-      <span className="ins-scrub static">{label === 'Padding X' ? 'X' : 'Y'}</span>
-      <input className="ins-input" aria-label={label} placeholder={label} value={text} inputMode="numeric" onChange={(event) => setText(event.target.value)} onBlur={commit} onKeyDown={(event) => event.key === 'Enter' && commit()} />
+      <span className="ins-scrub static">
+        {label === "Padding X" ? "X" : "Y"}
+      </span>
+      <input
+        className="ins-input"
+        aria-label={label}
+        placeholder={label}
+        value={text}
+        inputMode="numeric"
+        onChange={(event) => setText(event.target.value)}
+        onBlur={commit}
+        onKeyDown={(event) => event.key === "Enter" && commit()}
+      />
     </div>
   );
 }
 
-function PropRows({ instance, component, disabled, onChange }: { instance: ComponentInstance; component: ComponentSchema; disabled: boolean; onChange: (name: string, value: PropValue | null) => void }) {
-  const variants = component.props.filter((spec) => spec.from === 'variant');
-  const others = component.props.filter((spec) => spec.from !== 'variant');
+function PropRows({
+  instance,
+  component,
+  disabled,
+  onChange,
+}: {
+  instance: ComponentInstance;
+  component: ComponentSchema;
+  disabled: boolean;
+  onChange: (name: string, value: PropValue | null) => void;
+}) {
+  const variants = component.props.filter((spec) => spec.from === "variant");
+  const others = component.props.filter((spec) => spec.from !== "variant");
   return (
     <>
       {variants.length > 0 && (
@@ -275,7 +554,13 @@ function PropRows({ instance, component, disabled, onChange }: { instance: Compo
           <span className="prp-group-label">Variant</span>
           <div className="prp-rows">
             {variants.map((spec) => (
-              <PropRow key={spec.name} instance={instance} spec={spec} disabled={disabled} onChange={onChange} />
+              <PropRow
+                key={spec.name}
+                instance={instance}
+                spec={spec}
+                disabled={disabled}
+                onChange={onChange}
+              />
             ))}
           </div>
         </div>
@@ -283,7 +568,13 @@ function PropRows({ instance, component, disabled, onChange }: { instance: Compo
       {others.length > 0 && (
         <div className="prp-rows">
           {others.map((spec) => (
-            <PropRow key={spec.name} instance={instance} spec={spec} disabled={disabled} onChange={onChange} />
+            <PropRow
+              key={spec.name}
+              instance={instance}
+              spec={spec}
+              disabled={disabled}
+              onChange={onChange}
+            />
           ))}
         </div>
       )}
@@ -291,17 +582,46 @@ function PropRows({ instance, component, disabled, onChange }: { instance: Compo
   );
 }
 
-function SwapButton({ projectId, directionId, instance, onStatus }: { projectId: string; directionId: string; instance: ComponentInstance; onStatus: (status: Status) => void }) {
+function SwapButton({
+  projectId,
+  directionId,
+  instance,
+  onStatus,
+}: {
+  projectId: string;
+  directionId: string;
+  instance: ComponentInstance;
+  onStatus: (status: Status) => void;
+}) {
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
   return (
     <div className="prp-swap">
-      <button type="button" className="btn small" aria-haspopup="menu" aria-expanded={open} data-tip="Change this use to another component with props that fit" onClick={() => setOpen((value) => !value)}>
+      <button
+        type="button"
+        className="btn small"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        data-tip="Change this use to another component with props that fit"
+        onClick={() => setOpen((value) => !value)}
+      >
         Swap instance
       </button>
       {open && (
         <Suspense fallback={null}>
-          <SwapInstanceMenu projectId={projectId} directionId={directionId} use={instance.use} onDone={(result) => onStatus(result.ok ? { kind: 'saved', text: result.text } : { kind: 'error', text: result.text })} onClose={close} />
+          <SwapInstanceMenu
+            projectId={projectId}
+            directionId={directionId}
+            use={instance.use}
+            onDone={(result) =>
+              onStatus(
+                result.ok
+                  ? { kind: "saved", text: result.text }
+                  : { kind: "error", text: result.text }
+              )
+            }
+            onClose={close}
+          />
         </Suspense>
       )}
     </div>
@@ -309,35 +629,67 @@ function SwapButton({ projectId, directionId, instance, onStatus }: { projectId:
 }
 
 function StatusLine({ status }: { status: Status }) {
-  if (status.kind === 'idle') return null;
-  if (status.kind === 'saving') return <p className="ins-note prp-status">Saving…</p>;
+  if (status.kind === "idle") return null;
+  if (status.kind === "saving")
+    return <p className="ins-note prp-status">Saving…</p>;
   return (
-    <p className={`ins-note prp-status${status.kind === 'error' ? ' error' : ''}`} role={status.kind === 'error' ? 'alert' : 'status'}>
+    <p
+      className={`ins-note prp-status${status.kind === "error" ? " error" : ""}`}
+      role={status.kind === "error" ? "alert" : "status"}
+    >
       {status.text}
     </p>
   );
 }
 
-export default function InspectorProps({ projectId, directionId, selection, editable }: InspectorPropsProps) {
-  const { instance, setInstance } = useInstance(projectId, directionId, selection);
-  const [status, setStatus] = useState<Status>({ kind: 'idle' });
+export default function InspectorProps({
+  projectId,
+  directionId,
+  selection,
+  editable,
+}: InspectorPropsProps) {
+  const { instance, setInstance } = useInstance(
+    projectId,
+    directionId,
+    selection
+  );
+  const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [styles, setStyles] = useState(false);
   const component = instance?.component;
   if (!instance || !component || !directionId) return null;
   const onChange = (name: string, value: PropValue | null) => {
-    setStatus({ kind: 'saving' });
-    setInstance({ ...instance, values: value === null ? Object.fromEntries(Object.entries(instance.values).filter(([key]) => key !== name)) : { ...instance.values, [name]: value } });
+    setStatus({ kind: "saving" });
+    setInstance({
+      ...instance,
+      values:
+        value === null
+          ? Object.fromEntries(
+              Object.entries(instance.values).filter(([key]) => key !== name)
+            )
+          : { ...instance.values, [name]: value },
+    });
     propsApi
       .setProps(projectId, directionId, instance.use, { [name]: value })
       .then((result) => {
         if (result.instance) setInstance(result.instance);
-        setStatus(result.version && (result.changed.length > 0 || result.removed.length > 0) ? { kind: 'saved', text: result.version.title } : { kind: 'idle' });
+        setStatus(
+          result.version &&
+            (result.changed.length > 0 || result.removed.length > 0)
+            ? { kind: "saved", text: result.version.title }
+            : { kind: "idle" }
+        );
       })
-      .catch((error: unknown) => setStatus({ kind: 'error', text: messageOf(error) }));
+      .catch((error: unknown) =>
+        setStatus({ kind: "error", text: messageOf(error) })
+      );
   };
-  const disabled = !editable || status.kind === 'saving';
+  const disabled = !editable || status.kind === "saving";
   const chip = (
-    <span className="prp-chip" data-tip={`${component.file}:${component.line}`} data-tip-align="end">
+    <span
+      className="prp-chip"
+      data-tip={`${component.file}:${component.line}`}
+      data-tip-align="end"
+    >
       {component.name}
     </span>
   );
@@ -346,30 +698,68 @@ export default function InspectorProps({ projectId, directionId, selection, edit
       <p className="prp-where">
         Used at {instance.use.file}:{instance.use.line}
       </p>
-      {component.file.startsWith('packages/') && (
+      {component.file.startsWith("packages/") && (
         <div className="prp-kit" data-testid="kit-preview">
-          <ComponentPreviewThumb projectId={projectId} directionId={directionId} id={`${component.file}#${component.name}`} version="0" active className="prp-kit-thumb" />
-          <p className="prp-where" data-tip={`${component.file}:${component.line}`}>
+          <ComponentPreviewThumb
+            projectId={projectId}
+            directionId={directionId}
+            id={`${component.file}#${component.name}`}
+            version="0"
+            active
+            className="prp-kit-thumb"
+          />
+          <p
+            className="prp-where"
+            data-tip={`${component.file}:${component.line}`}
+          >
             Kit component, default props
           </p>
         </div>
       )}
-      {component.props.length === 0 && <p className="ins-note">No props to edit here.</p>}
-      <PropRows instance={instance} component={component} disabled={disabled} onChange={onChange} />
-      {instance.spread && <p className="ins-note">This element also spreads props, so a value there can win.</p>}
+      {component.props.length === 0 && (
+        <p className="ins-note">No props to edit here.</p>
+      )}
+      <PropRows
+        instance={instance}
+        component={component}
+        disabled={disabled}
+        onChange={onChange}
+      />
+      {instance.spread && (
+        <p className="ins-note">
+          This element also spreads props, so a value there can win.
+        </p>
+      )}
       {component.note && <p className="ins-note">{component.note}</p>}
       <StatusLine status={status} />
       {editable && (
         <div className="prp-actions">
-          <SwapButton projectId={projectId} directionId={directionId} instance={instance} onStatus={setStatus} />
+          <SwapButton
+            projectId={projectId}
+            directionId={directionId}
+            instance={instance}
+            onStatus={setStatus}
+          />
           {component.cva && (
-            <button type="button" className="btn small prp-styles-btn" aria-expanded={styles} onClick={() => setStyles((open) => !open)}>
-              {styles ? 'Hide variant styles' : 'Edit variant styles'}
+            <button
+              type="button"
+              className="btn small prp-styles-btn"
+              aria-expanded={styles}
+              onClick={() => setStyles((open) => !open)}
+            >
+              {styles ? "Hide variant styles" : "Edit variant styles"}
             </button>
           )}
         </div>
       )}
-      {styles && <VariantStyles projectId={projectId} directionId={directionId} instance={instance} onStatus={setStatus} />}
+      {styles && (
+        <VariantStyles
+          projectId={projectId}
+          directionId={directionId}
+          instance={instance}
+          onStatus={setStatus}
+        />
+      )}
     </InspectorSection>
   );
 }

@@ -1,32 +1,47 @@
-import { readFileSync, statSync } from 'node:fs';
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import type { ToolDiff } from '../../shared/contracts.js';
-import { diffLines } from '../../shared/line-diff.js';
-import { isExecutedConfigFile, isSecretFile } from './permissions.js';
+import { readFileSync, statSync } from "node:fs";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import type { ToolDiff } from "../../shared/contracts.js";
+import { diffLines } from "../../shared/line-diff.js";
+import { isExecutedConfigFile, isSecretFile } from "./permissions.js";
 
 export const DIFF_MAX_BYTES = 1_000_000;
 const QUIET_MS = 150;
 const MAX_WAIT_MS = 1500;
 const MAX_PATHS = 60;
 const GUARD_SCAN_DEPTH = 12;
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', '.next', '.turbo', '.vite', '.studio', 'vite-cache']);
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  ".next",
+  ".turbo",
+  ".vite",
+  ".studio",
+  "vite-cache",
+]);
 
-export type FileText = { kind: 'missing' } | { kind: 'text'; text: string } | { kind: 'skip' };
+export type FileText =
+  | { kind: "missing" }
+  | { kind: "text"; text: string }
+  | { kind: "skip" };
 
 export function textOf(bytes: Uint8Array | null): FileText {
-  if (bytes === null) return { kind: 'missing' };
-  if (bytes.byteLength > DIFF_MAX_BYTES) return { kind: 'skip' };
-  const text = Buffer.from(bytes).toString('utf8');
-  return text.includes('\u0000') ? { kind: 'skip' } : { kind: 'text', text };
+  if (bytes === null) return { kind: "missing" };
+  if (bytes.byteLength > DIFF_MAX_BYTES) return { kind: "skip" };
+  const text = Buffer.from(bytes).toString("utf8");
+  return text.includes("\u0000") ? { kind: "skip" } : { kind: "text", text };
 }
 
 export function readFileText(file: string): FileText {
   try {
-    if (statSync(file).size > DIFF_MAX_BYTES) return { kind: 'skip' };
+    if (statSync(file).size > DIFF_MAX_BYTES) return { kind: "skip" };
     return textOf(readFileSync(file));
   } catch (error) {
-    return (error as NodeJS.ErrnoException).code === 'ENOENT' ? { kind: 'missing' } : { kind: 'skip' };
+    return (error as NodeJS.ErrnoException).code === "ENOENT"
+      ? { kind: "missing" }
+      : { kind: "skip" };
   }
 }
 
@@ -38,11 +53,19 @@ function readBytes(file: string): Uint8Array | null {
   }
 }
 
-export function fileDiff(relative: string, before: FileText, after: FileText): ToolDiff | null {
-  if (before.kind === 'skip' || after.kind === 'skip') return null;
-  const old = before.kind === 'text' ? before.text : '';
-  const next = after.kind === 'text' ? after.text : '';
-  return { path: relative, created: before.kind === 'missing', ...diffLines(old, next) };
+export function fileDiff(
+  relative: string,
+  before: FileText,
+  after: FileText
+): ToolDiff | null {
+  if (before.kind === "skip" || after.kind === "skip") return null;
+  const old = before.kind === "text" ? before.text : "";
+  const next = after.kind === "text" ? after.text : "";
+  return {
+    path: relative,
+    created: before.kind === "missing",
+    ...diffLines(old, next),
+  };
 }
 
 export type BashWriteCheck = (relative: string) => string | null;
@@ -73,16 +96,27 @@ function isGuardedName(file: string): boolean {
   return isSecretFile(file) || isExecutedConfigFile(file);
 }
 
-async function scanGuarded(root: string, dir: string, depth: number, found: Map<string, Uint8Array>): Promise<void> {
+async function scanGuarded(
+  root: string,
+  dir: string,
+  depth: number,
+  found: Map<string, Uint8Array>
+): Promise<void> {
   const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
   await Promise.all(
     items.map(async (item) => {
       const target = path.join(dir, item.name);
-      if (item.isDirectory() && depth < GUARD_SCAN_DEPTH && !SKIP_DIRS.has(item.name)) return scanGuarded(root, target, depth + 1, found);
+      if (
+        item.isDirectory() &&
+        depth < GUARD_SCAN_DEPTH &&
+        !SKIP_DIRS.has(item.name)
+      )
+        return scanGuarded(root, target, depth + 1, found);
       if (!item.isFile() || !isGuardedName(item.name)) return;
       const bytes = await readFile(target).catch(() => null);
-      if (bytes) found.set(path.relative(root, target).split(path.sep).join('/'), bytes);
-    }),
+      if (bytes)
+        found.set(path.relative(root, target).split(path.sep).join("/"), bytes);
+    })
   );
 }
 
@@ -94,11 +128,13 @@ function sameBytes(a: Uint8Array | null, b: Uint8Array | null): boolean {
 function revertMessage(problems: Map<string, string>): string | null {
   if (problems.size === 0) return null;
   const lines = [...problems].map(([file, problem]) => `- ${file}: ${problem}`);
-  return `Design Studio undid this command's changes to ${problems.size === 1 ? 'this file' : 'these files'}:\n${lines.join('\n')}`;
+  return `Design Studio undid this command's changes to ${problems.size === 1 ? "this file" : "these files"}:\n${lines.join("\n")}`;
 }
 
 function isInside(relative: string): boolean {
-  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+  return (
+    relative !== "" && !relative.startsWith("..") && !path.isAbsolute(relative)
+  );
 }
 
 export function createBashEditTracker(deps: BashEditDeps) {
@@ -116,7 +152,10 @@ export function createBashEditTracker(deps: BashEditDeps) {
     return guarded;
   };
 
-  async function putBack(relative: string, bytes: Uint8Array | null): Promise<void> {
+  async function putBack(
+    relative: string,
+    bytes: Uint8Array | null
+  ): Promise<void> {
     const absolute = path.join(root, relative);
     if (bytes === null) {
       await rm(absolute, { force: true });
@@ -128,7 +167,8 @@ export function createBashEditTracker(deps: BashEditDeps) {
 
   async function before(relative: string): Promise<Uint8Array | null> {
     if (known.has(relative)) return known.get(relative) ?? null;
-    if (isGuardedName(relative)) return (await guardedSnapshot()).get(relative) ?? null;
+    if (isGuardedName(relative))
+      return (await guardedSnapshot()).get(relative) ?? null;
     return deps.headFile(relative);
   }
 
@@ -143,7 +183,12 @@ export function createBashEditTracker(deps: BashEditDeps) {
     }
   }
 
-  async function inspect(relative: string, check: BashWriteCheck, problems: Map<string, string>, diffs: ToolDiff[]): Promise<void> {
+  async function inspect(
+    relative: string,
+    check: BashWriteCheck,
+    problems: Map<string, string>,
+    diffs: ToolDiff[]
+  ): Promise<void> {
     const after = readBytes(path.join(root, relative));
     const old = await before(relative);
     if (sameBytes(old, after)) return;
@@ -155,7 +200,11 @@ export function createBashEditTracker(deps: BashEditDeps) {
     }
     known.set(relative, after);
     const diff = fileDiff(relative, textOf(old), textOf(after));
-    if (diff && (diff.added > 0 || diff.removed > 0 || diff.created || after === null)) diffs.push(diff);
+    if (
+      diff &&
+      (diff.added > 0 || diff.removed > 0 || diff.created || after === null)
+    )
+      diffs.push(diff);
   }
 
   return {
@@ -174,7 +223,11 @@ export function createBashEditTracker(deps: BashEditDeps) {
 
     async start(toolUseId: string): Promise<void> {
       await guardedSnapshot();
-      const watch: Watch = { paths: new Set(), lastEventAt: 0, stop: () => undefined };
+      const watch: Watch = {
+        paths: new Set(),
+        lastEventAt: 0,
+        stop: () => undefined,
+      };
       watch.stop = deps.subscribe((paths) => {
         for (const entry of paths) watch.paths.add(entry);
         watch.lastEventAt = Date.now();
@@ -183,7 +236,10 @@ export function createBashEditTracker(deps: BashEditDeps) {
       watches.set(toolUseId, watch);
     },
 
-    async finish(toolUseId: string, check: BashWriteCheck): Promise<BashEditResult> {
+    async finish(
+      toolUseId: string,
+      check: BashWriteCheck
+    ): Promise<BashEditResult> {
       const watch = watches.get(toolUseId);
       if (!watch) return { diffs: [], reverted: [], message: null };
       await settle(watch);
@@ -191,9 +247,17 @@ export function createBashEditTracker(deps: BashEditDeps) {
       watches.delete(toolUseId);
       const problems = new Map<string, string>();
       const diffs: ToolDiff[] = [];
-      const paths = [...watch.paths].filter(isInside).sort().slice(0, MAX_PATHS);
-      for (const relative of paths) await inspect(relative, check, problems, diffs);
-      return { diffs, reverted: [...problems.keys()], message: revertMessage(problems) };
+      const paths = [...watch.paths]
+        .filter(isInside)
+        .sort()
+        .slice(0, MAX_PATHS);
+      for (const relative of paths)
+        await inspect(relative, check, problems, diffs);
+      return {
+        diffs,
+        reverted: [...problems.keys()],
+        message: revertMessage(problems),
+      };
     },
   };
 }

@@ -1,8 +1,8 @@
-import type { DraftSourceKind } from '../../../shared/contracts.js';
+import type { DraftSourceKind } from "../../../shared/contracts.js";
 
 export type SourceKind = DraftSourceKind;
 
-export type CandidateConfidence = 'high' | 'medium';
+export type CandidateConfidence = "high" | "medium";
 
 export interface Candidate {
   token: string;
@@ -21,7 +21,13 @@ export interface Candidate {
 export interface ExtraToken {
   group: string;
   name: string;
-  type: 'color' | 'dimension' | 'fontFamily' | 'shadow' | 'fontWeight' | 'number';
+  type:
+    | "color"
+    | "dimension"
+    | "fontFamily"
+    | "shadow"
+    | "fontWeight"
+    | "number";
   value: string;
   dark?: string;
   evidence: string;
@@ -46,4 +52,4 @@ export type {
   CoverageGrade,
   DesignSystemCoverage as Coverage,
   DraftSourceReport as SourceReport,
-} from '../../../shared/contracts.js';
+} from "../../../shared/contracts.js";

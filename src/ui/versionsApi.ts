@@ -1,29 +1,42 @@
-import { STUDIO_TOKEN_HEADER } from '../shared/contracts';
-import type { HunkRevertRequest, HunkRevertResult } from '../shared/hunk';
-import { json } from './api';
-import { getSession } from './session';
+import { STUDIO_TOKEN_HEADER } from "../shared/contracts";
+import type { HunkRevertRequest, HunkRevertResult } from "../shared/hunk";
+import { json } from "./api";
+import { getSession } from "./session";
 
 const MAX_THUMB_FETCHES = 2;
 
-const base = (pid: string, vid: string) => `/api/projects/${encodeURIComponent(pid)}/versions/${encodeURIComponent(vid)}`;
+const base = (pid: string, vid: string) =>
+  `/api/projects/${encodeURIComponent(pid)}/versions/${encodeURIComponent(vid)}`;
 
-const COMPARE_MODE_KEY = 'design-studio.compare-mode';
+const COMPARE_MODE_KEY = "design-studio.compare-mode";
 
-export const revertHunk = (pid: string, did: string, request: HunkRevertRequest) =>
-  json<HunkRevertResult>('POST', `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/hunks/revert`, request);
+export const revertHunk = (
+  pid: string,
+  did: string,
+  request: HunkRevertRequest
+) =>
+  json<HunkRevertResult>(
+    "POST",
+    `/api/projects/${encodeURIComponent(pid)}/d/${encodeURIComponent(did)}/hunks/revert`,
+    request
+  );
 
 export function openCompareInCode(): void {
   try {
-    localStorage.setItem(COMPARE_MODE_KEY, 'code');
+    localStorage.setItem(COMPARE_MODE_KEY, "code");
   } catch {
     return;
   }
 }
 
-export const renameVersion = (pid: string, vid: string, name: string | null) => json<{ id: string; name: string | null }>('PATCH', base(pid, vid), { name });
+export const renameVersion = (pid: string, vid: string, name: string | null) =>
+  json<{ id: string; name: string | null }>("PATCH", base(pid, vid), { name });
 
 async function fetchPng(url: string, signal: AbortSignal): Promise<Response> {
-  return fetch(url, { headers: { [STUDIO_TOKEN_HEADER]: getSession().token }, signal });
+  return fetch(url, {
+    headers: { [STUDIO_TOKEN_HEADER]: getSession().token },
+    signal,
+  });
 }
 
 export type ThumbResult = string | null;
@@ -45,7 +58,11 @@ function forget(request: ThumbRequest): void {
   if (requests.get(request.key) === request) requests.delete(request.key);
 }
 
-function finish(request: ThumbRequest, result: ThumbResult, cache: boolean): void {
+function finish(
+  request: ThumbRequest,
+  result: ThumbResult,
+  cache: boolean
+): void {
   forget(request);
   if (cache) thumbs.set(request.key, result);
   for (const listener of request.listeners) listener(result);
@@ -78,7 +95,11 @@ export function cachedThumb(pid: string, vid: string): ThumbResult | undefined {
   return thumbs.get(`${pid}/${vid}`);
 }
 
-export function requestThumb(pid: string, vid: string, onResult: (result: ThumbResult) => void): () => void {
+export function requestThumb(
+  pid: string,
+  vid: string,
+  onResult: (result: ThumbResult) => void
+): () => void {
   const key = `${pid}/${vid}`;
   if (thumbs.has(key)) {
     onResult(thumbs.get(key) ?? null);
@@ -86,7 +107,13 @@ export function requestThumb(pid: string, vid: string, onResult: (result: ThumbR
   }
   let request = requests.get(key);
   if (!request) {
-    request = { key, url: `${base(pid, vid)}/thumb`, listeners: new Set(), controller: new AbortController(), started: false };
+    request = {
+      key,
+      url: `${base(pid, vid)}/thumb`,
+      listeners: new Set(),
+      controller: new AbortController(),
+      started: false,
+    };
     requests.set(key, request);
     waiting.push(request);
   }
@@ -107,11 +134,25 @@ export interface DiffMaskResult {
   changedPct: number;
 }
 
-export async function versionDiff(pid: string, beforeId: string, afterId: string, viewport: { width: number; height: number }, signal: AbortSignal): Promise<DiffMaskResult> {
-  const res = await fetchPng(`${base(pid, beforeId)}/diff/${encodeURIComponent(afterId)}?w=${viewport.width}&h=${viewport.height}`, signal);
+export async function versionDiff(
+  pid: string,
+  beforeId: string,
+  afterId: string,
+  viewport: { width: number; height: number },
+  signal: AbortSignal
+): Promise<DiffMaskResult> {
+  const res = await fetchPng(
+    `${base(pid, beforeId)}/diff/${encodeURIComponent(afterId)}?w=${viewport.width}&h=${viewport.height}`,
+    signal
+  );
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(body.error ?? `Could not compare these versions (${res.status}).`);
+    throw new Error(
+      body.error ?? `Could not compare these versions (${res.status}).`
+    );
   }
-  return { url: URL.createObjectURL(await res.blob()), changedPct: Number(res.headers.get('x-changed-pct') ?? 0) };
+  return {
+    url: URL.createObjectURL(await res.blob()),
+    changedPct: Number(res.headers.get("x-changed-pct") ?? 0),
+  };
 }

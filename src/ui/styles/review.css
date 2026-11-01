@@ -10,7 +10,7 @@
   color: var(--text-3);
 }
 
-.canvas-topbar .btn.topbar-review[aria-pressed='true'] {
+.canvas-topbar .btn.topbar-review[aria-pressed="true"] {
   background: var(--accent-soft);
   color: var(--accent-text);
   box-shadow: none;
@@ -33,7 +33,7 @@
   color: var(--on-measure);
 }
 
-:root[data-theme='dark'] .review-badge.high {
+:root[data-theme="dark"] .review-badge.high {
   color: var(--bg);
 }
 
@@ -54,7 +54,10 @@
   right: var(--s-3);
   z-index: 40;
   width: 400px;
-  max-height: min(640px, calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px)));
+  max-height: min(
+    640px,
+    calc(100% - var(--bar-h) - 24px - var(--viewrow-h, 0px))
+  );
   display: flex;
   flex-direction: column;
   background: var(--surface-raised);

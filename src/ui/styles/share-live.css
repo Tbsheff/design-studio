@@ -44,7 +44,7 @@
 }
 
 .share-cursor.below span::after {
-  content: ' ↓';
+  content: " ↓";
 }
 
 @media (prefers-reduced-motion: reduce) {

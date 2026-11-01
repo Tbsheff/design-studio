@@ -1,4 +1,4 @@
-import { PNG } from 'pngjs';
+import { PNG } from "pngjs";
 
 export function halfSize(source: Buffer): Buffer {
   const png = PNG.sync.read(source);
@@ -9,7 +9,12 @@ export function halfSize(source: Buffer): Buffer {
     for (let x = 0; x < width; x += 1) {
       for (let channel = 0; channel < 4; channel += 1) {
         let sum = 0;
-        for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
+        for (const [dx, dy] of [
+          [0, 0],
+          [1, 0],
+          [0, 1],
+          [1, 1],
+        ] as const) {
           const sx = Math.min(png.width - 1, x * 2 + dx);
           const sy = Math.min(png.height - 1, y * 2 + dy);
           sum += png.data[(sy * png.width + sx) * 4 + channel] ?? 0;

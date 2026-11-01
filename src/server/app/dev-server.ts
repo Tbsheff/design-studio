@@ -1,19 +1,25 @@
-import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import net from 'node:net';
-import path from 'node:path';
-import type { AppLogLine, AppServerStatus, Project } from '../../shared/contracts.js';
-import type { EventBus } from '../types.js';
-import { DevServerPids } from './dev-server-pids.js';
-import { installHint } from './install-hint.js';
-import { diagnose, probeRoot, sameDoctor, type DoctorProbe } from './doctor.js';
-import type { AppDoctorResult } from '../../shared/app-doctor.js';
+import { spawn, type ChildProcess } from "node:child_process";
+import { existsSync } from "node:fs";
+import net from "node:net";
+import path from "node:path";
+
+import type { AppDoctorResult } from "../../shared/app-doctor.js";
+import type {
+  AppLogLine,
+  AppServerStatus,
+  Project,
+} from "../../shared/contracts.js";
+import type { EventBus } from "../types.js";
+import { DevServerPids } from "./dev-server-pids.js";
+import { diagnose, probeRoot, sameDoctor, type DoctorProbe } from "./doctor.js";
+import { installHint } from "./install-hint.js";
 
 const MAX_LOG_LINES = 400;
 const READY_TIMEOUT_MS = 180_000;
 const STOP_GRACE_MS = 4000;
 const MAX_LINE = 2000;
-const BLOCKED_ENV = /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
+const BLOCKED_ENV =
+  /^(STUDIO_|ANTHROPIC_|CLAUDE_|ELECTRON_RUN_AS_NODE$|NODE_OPTIONS$|VITE_)/;
 const ANSI = /\u001b\[[0-9;?]*[ -/]*[@-~]/g;
 const PROBE_TIMEOUT_MS = 3000;
 const DOCTOR_DELAY_MS = 300;
@@ -47,36 +53,52 @@ function freePort(start: number, count: number): Promise<number> {
     new Promise((resolve, reject) => {
       const probe = net.createServer();
       probe.unref();
-      probe.once('error', () => (port < last ? resolve(tryPort(port + 1)) : reject(new Error(`No free port from ${start} to ${last} for the app dev server. Set STUDIO_APP_PORT_BASE and STUDIO_APP_PORT_COUNT to pick another range.`))));
-      probe.listen(port, '127.0.0.1', () => probe.close(() => resolve(port)));
+      probe.once("error", () =>
+        port < last
+          ? resolve(tryPort(port + 1))
+          : reject(
+              new Error(
+                `No free port from ${start} to ${last} for the app dev server. Set STUDIO_APP_PORT_BASE and STUDIO_APP_PORT_COUNT to pick another range.`
+              )
+            )
+      );
+      probe.listen(port, "127.0.0.1", () => probe.close(() => resolve(port)));
     });
   return tryPort(start);
 }
 
 function canConnect(port: number): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = net.connect({ port, host: '127.0.0.1' });
-    socket.once('connect', () => {
+    const socket = net.connect({ port, host: "127.0.0.1" });
+    socket.once("connect", () => {
       socket.destroy();
       resolve(true);
     });
-    socket.once('error', () => resolve(false));
+    socket.once("error", () => resolve(false));
   });
 }
 
 async function portClosed(port: number, timeoutMs: number): Promise<void> {
   const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline && (await canConnect(port))) await new Promise((resolve) => setTimeout(resolve, 150));
+  while (Date.now() < deadline && (await canConnect(port)))
+    await new Promise((resolve) => setTimeout(resolve, 150));
 }
 
 export function nextBinary(workTree: string, appDir: string): string | null {
-  const candidates = [path.join(workTree, appDir, 'node_modules', '.bin', 'next'), path.join(workTree, 'node_modules', '.bin', 'next')];
+  const candidates = [
+    path.join(workTree, appDir, "node_modules", ".bin", "next"),
+    path.join(workTree, "node_modules", ".bin", "next"),
+  ];
   return candidates.find((candidate) => existsSync(candidate)) ?? null;
 }
 
 async function answers(upstream: string): Promise<boolean> {
   try {
-    const res = await fetch(upstream, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) });
+    const res = await fetch(upstream, {
+      method: "GET",
+      redirect: "manual",
+      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+    });
     await res.body?.cancel().catch(() => undefined);
     return true;
   } catch {
@@ -92,18 +114,43 @@ export function missingNextMessage(workTree: string, appDir: string): string {
 
 function exitMessage(logs: AppLogLine[], base: string): string {
   const recent = logs.slice(-30).map((line) => line.text);
-  if (!recent.some((text) => text.includes('Another next dev server is already running'))) return base;
-  const url = recent.map((text) => /Local:\s+(https?:\/\/\S+)/.exec(text)?.[1]).filter(Boolean).pop();
-  const pid = recent.map((text) => /PID:\s+(\d+)/.exec(text)?.[1]).filter(Boolean).pop();
-  return `${base}. Another next dev already runs for this app${url ? ` at ${url}` : ''}. Use that URL, or stop it${pid ? ` (PID ${pid})` : ''} and start again.`;
+  if (
+    !recent.some((text) =>
+      text.includes("Another next dev server is already running")
+    )
+  )
+    return base;
+  const url = recent
+    .map((text) => /Local:\s+(https?:\/\/\S+)/.exec(text)?.[1])
+    .filter(Boolean)
+    .pop();
+  const pid = recent
+    .map((text) => /PID:\s+(\d+)/.exec(text)?.[1])
+    .filter(Boolean)
+    .pop();
+  return `${base}. Another next dev already runs for this app${url ? ` at ${url}` : ""}. Use that URL, or stop it${pid ? ` (PID ${pid})` : ""} and start again.`;
 }
 
-function childEnv(extra: Record<string, string> | undefined, port: number): NodeJS.ProcessEnv {
+function childEnv(
+  extra: Record<string, string> | undefined,
+  port: number
+): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
-  for (const [key, value] of Object.entries(process.env)) if (!BLOCKED_ENV.test(key) && value !== undefined) env[key] = value;
-  if (!process.versions.electron) env.PATH = [path.dirname(process.execPath), env.PATH ?? ''].filter(Boolean).join(path.delimiter);
+  for (const [key, value] of Object.entries(process.env))
+    if (!BLOCKED_ENV.test(key) && value !== undefined) env[key] = value;
+  if (!process.versions.electron)
+    env.PATH = [path.dirname(process.execPath), env.PATH ?? ""]
+      .filter(Boolean)
+      .join(path.delimiter);
   delete env.NODE_ENV;
-  return { ...env, ...extra, PORT: String(port), BROWSER: 'none', NEXT_TELEMETRY_DISABLED: '1', FORCE_COLOR: '0' };
+  return {
+    ...env,
+    ...extra,
+    PORT: String(port),
+    BROWSER: "none",
+    NEXT_TELEMETRY_DISABLED: "1",
+    FORCE_COLOR: "0",
+  };
 }
 
 export class AppServers {
@@ -111,28 +158,40 @@ export class AppServers {
   private readonly pids: DevServerPids | null;
   private readonly reaped: Promise<void>;
   private readonly onExit = (): void => {
-    for (const server of this.servers.values()) this.killGroup(server.child, 'SIGKILL');
+    for (const server of this.servers.values())
+      this.killGroup(server.child, "SIGKILL");
     this.pids?.clearSync();
   };
 
   constructor(private readonly deps: AppServerDeps) {
-    process.once('exit', this.onExit);
+    process.once("exit", this.onExit);
     this.pids = deps.dataDir ? new DevServerPids(deps.dataDir) : null;
-    this.reaped = this.pids ? this.pids.reapAll((line) => console.log(`[studio] ${line}`)).catch(() => undefined) : Promise.resolve();
+    this.reaped = this.pids
+      ? this.pids
+          .reapAll((line) => console.log(`[studio] ${line}`))
+          .catch(() => undefined)
+      : Promise.resolve();
   }
 
   private entry(project: Project): AppServer {
     let server = this.servers.get(project.id);
-    const mode = project.app?.mode ?? 'managed';
+    const mode = project.app?.mode ?? "managed";
     if (!server) {
       server = {
         projectId: project.id,
-        status: { state: 'idle', mode, upstream: null, command: null, message: null, startedAt: null },
+        status: {
+          state: "idle",
+          mode,
+          upstream: null,
+          command: null,
+          message: null,
+          startedAt: null,
+        },
         logs: [],
         child: null,
         ready: null,
-        workTree: project.directions[0]?.workTree ?? '',
-        appDir: project.app?.appDir ?? '.',
+        workTree: project.directions[0]?.workTree ?? "",
+        appDir: project.app?.appDir ?? ".",
         startAt: 0,
         probe: null,
         probing: null,
@@ -145,31 +204,61 @@ export class AppServers {
 
   private setStatus(server: AppServer, patch: Partial<AppServerStatus>): void {
     server.status = { ...server.status, ...patch };
-    this.deps.bus.emit({ type: 'app.status', projectId: server.projectId, status: server.status });
+    this.deps.bus.emit({
+      type: "app.status",
+      projectId: server.projectId,
+      status: server.status,
+    });
   }
 
-  private log(server: AppServer, stream: AppLogLine['stream'], chunk: string): void {
-    const lines = chunk.replace(ANSI, '').split(/\r?\n/).filter((line) => line.trim() !== '');
-    for (const line of lines) server.logs.push({ at: Date.now(), stream, text: line.slice(0, MAX_LINE) });
-    if (server.logs.length > MAX_LOG_LINES) server.logs.splice(0, server.logs.length - MAX_LOG_LINES);
+  private log(
+    server: AppServer,
+    stream: AppLogLine["stream"],
+    chunk: string
+  ): void {
+    const lines = chunk
+      .replace(ANSI, "")
+      .split(/\r?\n/)
+      .filter((line) => line.trim() !== "");
+    for (const line of lines)
+      server.logs.push({
+        at: Date.now(),
+        stream,
+        text: line.slice(0, MAX_LINE),
+      });
+    if (server.logs.length > MAX_LOG_LINES)
+      server.logs.splice(0, server.logs.length - MAX_LOG_LINES);
     this.scheduleDoctor(server);
   }
 
   private diagnosis(server: AppServer): AppDoctorResult {
-    const lines = server.logs.filter((line) => line.at >= server.startAt).map((line) => line.text);
-    return diagnose({ lines, message: server.status.message, probe: server.probe, workTree: server.workTree, appDir: server.appDir, ready: server.status.state === 'ready' });
+    const lines = server.logs
+      .filter((line) => line.at >= server.startAt)
+      .map((line) => line.text);
+    return diagnose({
+      lines,
+      message: server.status.message,
+      probe: server.probe,
+      workTree: server.workTree,
+      appDir: server.appDir,
+      ready: server.status.state === "ready",
+    });
   }
 
   private refreshDoctor(server: AppServer): void {
     if (server.doctorTimer) clearTimeout(server.doctorTimer);
     server.doctorTimer = null;
     const doctor = this.diagnosis(server);
-    if (!sameDoctor(doctor, server.status.doctor)) this.setStatus(server, { doctor });
+    if (!sameDoctor(doctor, server.status.doctor))
+      this.setStatus(server, { doctor });
   }
 
   private scheduleDoctor(server: AppServer): void {
     if (server.doctorTimer) return;
-    server.doctorTimer = setTimeout(() => this.refreshDoctor(server), DOCTOR_DELAY_MS);
+    server.doctorTimer = setTimeout(
+      () => this.refreshDoctor(server),
+      DOCTOR_DELAY_MS
+    );
     server.doctorTimer.unref?.();
   }
 
@@ -193,8 +282,10 @@ export class AppServers {
 
   async doctor(project: Project, fresh = false): Promise<AppDoctorResult> {
     const server = this.entry(project);
-    const upstream = server.status.state === 'ready' ? server.status.upstream : null;
-    if (upstream && (fresh || !server.probing)) await this.probe(server, upstream);
+    const upstream =
+      server.status.state === "ready" ? server.status.upstream : null;
+    if (upstream && (fresh || !server.probing))
+      await this.probe(server, upstream);
     else if (server.probing) await server.probing;
     this.refreshDoctor(server);
     return server.status.doctor ?? this.diagnosis(server);
@@ -203,8 +294,15 @@ export class AppServers {
   status(project: Project): AppServerStatus {
     const server = this.servers.get(project.id);
     if (server) return server.status;
-    const mode = project.app?.mode ?? 'managed';
-    return { state: 'idle', mode, upstream: mode === 'url' ? (project.app?.url ?? null) : null, command: null, message: null, startedAt: null };
+    const mode = project.app?.mode ?? "managed";
+    return {
+      state: "idle",
+      mode,
+      upstream: mode === "url" ? (project.app?.url ?? null) : null,
+      command: null,
+      message: null,
+      startedAt: null,
+    };
   }
 
   logs(projectId: string): AppLogLine[] {
@@ -213,54 +311,84 @@ export class AppServers {
 
   upstreamOf(projectId: string): string | null {
     const server = this.servers.get(projectId);
-    return server?.status.state === 'ready' ? server.status.upstream : null;
+    return server?.status.state === "ready" ? server.status.upstream : null;
   }
 
   ensure(project: Project): Promise<string> {
     const app = project.app;
-    if (!app) return Promise.reject(new Error('project is not an attached app'));
+    if (!app)
+      return Promise.reject(new Error("project is not an attached app"));
     const server = this.entry(project);
     if (server.status.mode !== app.mode) this.switchMode(server, app.mode);
-    if (app.mode === 'url') return this.checkUrl(server, new URL(app.url ?? '').origin);
-    if (server.ready && server.status.state !== 'failed' && server.status.state !== 'stopped') return server.ready;
+    if (app.mode === "url")
+      return this.checkUrl(server, new URL(app.url ?? "").origin);
+    if (
+      server.ready &&
+      server.status.state !== "failed" &&
+      server.status.state !== "stopped"
+    )
+      return server.ready;
     server.workTree = project.directions[0]?.workTree ?? server.workTree;
-    const attempt: Promise<string> = this.spawnNext(server, project).catch((error: unknown) => {
-      if (server.ready !== attempt) throw error;
-      const message = error instanceof Error ? error.message : String(error);
-      this.log(server, 'studio', message);
-      this.setStatus(server, { state: 'failed', message });
-      this.refreshDoctor(server);
-      throw error;
-    });
+    const attempt: Promise<string> = this.spawnNext(server, project).catch(
+      (error: unknown) => {
+        if (server.ready !== attempt) throw error;
+        const message = error instanceof Error ? error.message : String(error);
+        this.log(server, "studio", message);
+        this.setStatus(server, { state: "failed", message });
+        this.refreshDoctor(server);
+        throw error;
+      }
+    );
     server.ready = attempt;
     return attempt;
   }
 
-  private switchMode(server: AppServer, mode: AppServerStatus['mode']): void {
-    this.killGroup(server.child, 'SIGTERM');
+  private switchMode(server: AppServer, mode: AppServerStatus["mode"]): void {
+    this.killGroup(server.child, "SIGTERM");
     server.child = null;
     server.ready = null;
-    this.setStatus(server, { state: 'idle', mode, upstream: null, command: null, message: null, startedAt: null });
+    this.setStatus(server, {
+      state: "idle",
+      mode,
+      upstream: null,
+      command: null,
+      message: null,
+      startedAt: null,
+    });
   }
 
   private checkUrl(server: AppServer, upstream: string): Promise<string> {
-    if (server.status.upstream === upstream && server.status.state === 'ready') return Promise.resolve(upstream);
-    if (server.ready && server.status.state === 'starting' && server.status.upstream === upstream) return server.ready;
-    this.setStatus(server, { state: 'starting', mode: 'url', upstream, command: null, message: null, startedAt: Date.now(), doctor: null });
+    if (server.status.upstream === upstream && server.status.state === "ready")
+      return Promise.resolve(upstream);
+    if (
+      server.ready &&
+      server.status.state === "starting" &&
+      server.status.upstream === upstream
+    )
+      return server.ready;
+    this.setStatus(server, {
+      state: "starting",
+      mode: "url",
+      upstream,
+      command: null,
+      message: null,
+      startedAt: Date.now(),
+      doctor: null,
+    });
     server.startAt = Date.now();
     server.probe = null;
     server.probing = null;
     const probe: Promise<string> = answers(upstream).then((up) => {
       const current = server.ready === probe;
       if (up) {
-        if (current) this.setStatus(server, { state: 'ready', message: null });
+        if (current) this.setStatus(server, { state: "ready", message: null });
         if (current) void this.probe(server, upstream);
         return upstream;
       }
       const message = `Nothing answers at ${upstream}. Start your dev server there, or change the URL in the app settings.`;
       if (current) {
-        this.log(server, 'studio', message);
-        this.setStatus(server, { state: 'failed', message });
+        this.log(server, "studio", message);
+        this.setStatus(server, { state: "failed", message });
       }
       throw new Error(message);
     });
@@ -268,35 +396,77 @@ export class AppServers {
     return probe;
   }
 
-  private async spawnNext(server: AppServer, project: Project): Promise<string> {
+  private async spawnNext(
+    server: AppServer,
+    project: Project
+  ): Promise<string> {
     const app = project.app;
-    if (!app) throw new Error('project is not an attached app');
+    if (!app) throw new Error("project is not an attached app");
     const appRoot = path.join(server.workTree, app.appDir);
     this.resetDoctor(server, project);
     this.setStatus(server, { doctor: null });
     const binary = nextBinary(server.workTree, app.appDir);
-    if (!binary) throw new Error(missingNextMessage(server.workTree, app.appDir));
+    if (!binary)
+      throw new Error(missingNextMessage(server.workTree, app.appDir));
     await this.reaped;
-    await this.pids?.reap(project.id, (line) => this.log(server, 'studio', line));
-    const port = await freePort(this.deps.portBase, this.deps.portCount ?? DEFAULT_PORT_COUNT);
-    const args = ['dev', '-p', String(port), '-H', '127.0.0.1'];
-    const command = `next ${args.join(' ')}`;
-    this.setStatus(server, { state: 'starting', mode: 'managed', upstream: null, command, message: null, startedAt: Date.now() });
-    this.log(server, 'studio', `Starting ${command} in ${appRoot}`);
-    const child = spawn(binary, args, { cwd: appRoot, env: childEnv(app.env, port), detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    await this.pids?.reap(project.id, (line) =>
+      this.log(server, "studio", line)
+    );
+    const port = await freePort(
+      this.deps.portBase,
+      this.deps.portCount ?? DEFAULT_PORT_COUNT
+    );
+    const args = ["dev", "-p", String(port), "-H", "127.0.0.1"];
+    const command = `next ${args.join(" ")}`;
+    this.setStatus(server, {
+      state: "starting",
+      mode: "managed",
+      upstream: null,
+      command,
+      message: null,
+      startedAt: Date.now(),
+    });
+    this.log(server, "studio", `Starting ${command} in ${appRoot}`);
+    const child = spawn(binary, args, {
+      cwd: appRoot,
+      env: childEnv(app.env, port),
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
     server.child = child;
-    if (child.pid) void this.pids?.record(project.id, { pid: child.pid, port, appRoot, startedAt: Date.now() });
-    child.stdout?.setEncoding('utf8').on('data', (chunk: string) => this.log(server, 'stdout', chunk));
-    child.stderr?.setEncoding('utf8').on('data', (chunk: string) => this.log(server, 'stderr', chunk));
+    if (child.pid)
+      void this.pids?.record(project.id, {
+        pid: child.pid,
+        port,
+        appRoot,
+        startedAt: Date.now(),
+      });
+    child.stdout
+      ?.setEncoding("utf8")
+      .on("data", (chunk: string) => this.log(server, "stdout", chunk));
+    child.stderr
+      ?.setEncoding("utf8")
+      .on("data", (chunk: string) => this.log(server, "stderr", chunk));
     const exited = new Promise<never>((_, reject) => {
-      child.once('error', (error) => reject(error));
-      child.once('exit', (code, signal) => {
+      child.once("error", (error) => reject(error));
+      child.once("exit", (code, signal) => {
         const current = server.child === child;
         if (current) server.child = null;
         if (child.pid) void this.pids?.forget(project.id, child.pid);
-        const message = exitMessage(server.logs, `next dev exited (${signal ?? `code ${code ?? 0}`})`);
-        this.log(server, 'studio', message);
-        if (current && server.status.state !== 'stopped') this.setStatus(server, { state: server.status.state === 'ready' && (code === 0 || signal !== null) ? 'stopped' : 'failed', message, upstream: null });
+        const message = exitMessage(
+          server.logs,
+          `next dev exited (${signal ?? `code ${code ?? 0}`})`
+        );
+        this.log(server, "studio", message);
+        if (current && server.status.state !== "stopped")
+          this.setStatus(server, {
+            state:
+              server.status.state === "ready" && (code === 0 || signal !== null)
+                ? "stopped"
+                : "failed",
+            message,
+            upstream: null,
+          });
         reject(new Error(message));
       });
     });
@@ -306,14 +476,16 @@ export class AppServers {
     while (Date.now() < deadline) {
       const up = await Promise.race([canConnect(port), exited]);
       if (up) {
-        this.setStatus(server, { state: 'ready', upstream, message: null });
+        this.setStatus(server, { state: "ready", upstream, message: null });
         void this.probe(server, upstream);
         return upstream;
       }
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
-    this.killGroup(child, 'SIGKILL');
-    throw new Error(`next dev did not open port ${port} within ${READY_TIMEOUT_MS / 1000} s`);
+    this.killGroup(child, "SIGKILL");
+    throw new Error(
+      `next dev did not open port ${port} within ${READY_TIMEOUT_MS / 1000} s`
+    );
   }
 
   private killGroup(child: ChildProcess | null, signal: NodeJS.Signals): void {
@@ -329,16 +501,29 @@ export class AppServers {
     const server = this.servers.get(projectId);
     if (!server) return;
     const child = server.child;
-    const port = server.status.mode === 'managed' && server.status.upstream ? Number(new URL(server.status.upstream).port) : null;
+    const port =
+      server.status.mode === "managed" && server.status.upstream
+        ? Number(new URL(server.status.upstream).port)
+        : null;
     server.ready = null;
-    if (server.status.mode === 'managed') this.setStatus(server, { state: 'stopped', upstream: null, message: null });
+    if (server.status.mode === "managed")
+      this.setStatus(server, {
+        state: "stopped",
+        upstream: null,
+        message: null,
+      });
     if (!child || child.exitCode !== null) return;
-    const done = new Promise<void>((resolve) => child.once('exit', () => resolve()));
-    this.killGroup(child, 'SIGTERM');
-    const timer = setTimeout(() => this.killGroup(child, 'SIGKILL'), STOP_GRACE_MS);
+    const done = new Promise<void>((resolve) =>
+      child.once("exit", () => resolve())
+    );
+    this.killGroup(child, "SIGTERM");
+    const timer = setTimeout(
+      () => this.killGroup(child, "SIGKILL"),
+      STOP_GRACE_MS
+    );
     await done;
     clearTimeout(timer);
-    this.killGroup(child, 'SIGKILL');
+    this.killGroup(child, "SIGKILL");
     if (port) await portClosed(port, STOP_GRACE_MS);
   }
 
@@ -350,6 +535,6 @@ export class AppServers {
   async stopAll(): Promise<void> {
     await Promise.all([...this.servers.keys()].map((id) => this.stop(id)));
     this.pids?.clearSync();
-    process.removeListener('exit', this.onExit);
+    process.removeListener("exit", this.onExit);
   }
 }

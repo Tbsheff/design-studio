@@ -1,15 +1,24 @@
-import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
-import { shortcutLabel } from '../../shared/keymap';
-import { IS_MAC } from '../commands/keys';
-import { Icon, type IconName } from './Icon';
-import { usePopover } from '../usePopover';
-import type { PanelTab } from '../usePanelTab';
-import { useLive } from '../liveStore';
-import { chatSearchAvailable, chatSearchOpen } from '../chatSearchState';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
-type ThemePref = 'system' | 'light' | 'dark';
+import { shortcutLabel } from "../../shared/keymap";
+import { chatSearchAvailable, chatSearchOpen } from "../chatSearchState";
+import { IS_MAC } from "../commands/keys";
+import { useLive } from "../liveStore";
+import type { PanelTab } from "../usePanelTab";
+import { usePopover } from "../usePopover";
+import { Icon, type IconName } from "./Icon";
+
+type ThemePref = "system" | "light" | "dark";
 type ThemeApi = { get: () => ThemePref; set: (pref: ThemePref) => void };
-const themeApi = (): ThemeApi | undefined => (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
+const themeApi = (): ThemeApi | undefined =>
+  (window as unknown as { studioTheme?: ThemeApi }).studioTheme;
 
 interface Props {
   name: string;
@@ -48,7 +57,7 @@ function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
     <button
       key={item.id}
       type="button"
-      role={item.checked === undefined ? 'menuitem' : 'menuitemradio'}
+      role={item.checked === undefined ? "menuitem" : "menuitemradio"}
       aria-checked={item.checked}
       className="ui-menu-item"
       disabled={item.disabled}
@@ -65,42 +74,119 @@ function MenuItems({ items, onDone }: { items: Item[]; onDone: () => void }) {
 }
 
 function onMenuKey(event: KeyboardEvent<HTMLDivElement>) {
-  if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-  const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>('.ui-menu-item:not(:disabled)')];
+  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+  const items = [
+    ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      ".ui-menu-item:not(:disabled)"
+    ),
+  ];
   const at = items.indexOf(document.activeElement as HTMLButtonElement);
-  const next = items[(at + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+  const next =
+    items[
+      (at + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length
+    ];
   event.preventDefault();
   next?.focus();
 }
 
-function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onStartRename: () => void; trigger: RefObject<HTMLButtonElement | null> }) {
+function ProjectMenu(
+  props: Props & {
+    onClose: (refocus: boolean) => void;
+    onStartRename: () => void;
+    trigger: RefObject<HTMLButtonElement | null>;
+  }
+) {
   const root = useRef<HTMLDivElement>(null);
   usePopover(true, root, props.onClose, props.trigger);
   const done = () => props.onClose(false);
-  const pref = themeApi()?.get() ?? 'system';
+  const pref = themeApi()?.get() ?? "system";
   const panels: Item[] = [
-    { id: 'versions', label: 'Versions', icon: 'history', run: () => props.onTab('versions') },
-    ...(props.hasTokens ? [{ id: 'tokens', label: 'Tokens', icon: 'token' as const, run: () => props.onTab('tokens') }] : []),
-    ...(props.hasComponents ? [{ id: 'components', label: 'Components', icon: 'component' as const, run: () => props.onTab('components') }] : []),
-    ...(props.hasTweaks ? [{ id: 'tweaks', label: 'Tweaks', icon: 'sliders' as const, run: () => props.onTab('tweaks') }] : []),
-    { id: 'system', label: 'Design system', icon: 'palette', run: () => props.onTab('system') },
-    { id: 'design-md', label: 'Edit DESIGN.md', icon: 'doc', run: props.onDesignMd },
+    {
+      id: "versions",
+      label: "Versions",
+      icon: "history",
+      run: () => props.onTab("versions"),
+    },
+    ...(props.hasTokens
+      ? [
+          {
+            id: "tokens",
+            label: "Tokens",
+            icon: "token" as const,
+            run: () => props.onTab("tokens"),
+          },
+        ]
+      : []),
+    ...(props.hasComponents
+      ? [
+          {
+            id: "components",
+            label: "Components",
+            icon: "component" as const,
+            run: () => props.onTab("components"),
+          },
+        ]
+      : []),
+    ...(props.hasTweaks
+      ? [
+          {
+            id: "tweaks",
+            label: "Tweaks",
+            icon: "sliders" as const,
+            run: () => props.onTab("tweaks"),
+          },
+        ]
+      : []),
+    {
+      id: "system",
+      label: "Design system",
+      icon: "palette",
+      run: () => props.onTab("system"),
+    },
+    {
+      id: "design-md",
+      label: "Edit DESIGN.md",
+      icon: "doc",
+      run: props.onDesignMd,
+    },
   ];
   const project: Item[] = [
-    { id: 'rename', label: 'Rename', icon: 'pencil', run: props.onStartRename },
-    { id: 'settings', label: 'Project settings', icon: 'settings', run: props.onSettings },
+    { id: "rename", label: "Rename", icon: "pencil", run: props.onStartRename },
+    {
+      id: "settings",
+      label: "Project settings",
+      icon: "settings",
+      run: props.onSettings,
+    },
   ];
-  const themes: Item[] = (['system', 'light', 'dark'] as const).map((value) => ({
-    id: `theme-${value}`,
-    label: value === 'system' ? 'System theme' : value === 'light' ? 'Light theme' : 'Dark theme',
-    icon: value === 'dark' ? 'moon' : value === 'light' ? 'sparkle' : 'desktop',
-    checked: pref === value,
-    run: () => themeApi()?.set(value),
-  }));
+  const themes: Item[] = (["system", "light", "dark"] as const).map(
+    (value) => ({
+      id: `theme-${value}`,
+      label:
+        value === "system"
+          ? "System theme"
+          : value === "light"
+            ? "Light theme"
+            : "Dark theme",
+      icon:
+        value === "dark" ? "moon" : value === "light" ? "sparkle" : "desktop",
+      checked: pref === value,
+      run: () => themeApi()?.set(value),
+    })
+  );
   return (
-    <div ref={root} className="ui-menu pane-project-menu" role="menu" aria-label="Project" onKeyDown={onMenuKey}>
+    <div
+      ref={root}
+      className="ui-menu pane-project-menu"
+      role="menu"
+      aria-label="Project"
+      onKeyDown={onMenuKey}
+    >
       <div className="ui-menu-section">
-        <div className="ui-menu-label">{props.kindLabel}{props.directionName ? ` · ${props.directionName}` : ''}</div>
+        <div className="ui-menu-label">
+          {props.kindLabel}
+          {props.directionName ? ` · ${props.directionName}` : ""}
+        </div>
         <MenuItems items={project} onDone={done} />
       </div>
       <div className="ui-menu-section">
@@ -112,8 +198,19 @@ function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onSta
       <div className="ui-menu-section">
         <MenuItems
           items={[
-            { id: 'rail', label: props.railOpen ? 'Hide project list' : 'Show project list', icon: 'sidebar', meta: shortcutLabel('project-rail', IS_MAC), run: props.onToggleRail },
-            { id: 'home', label: 'All projects', icon: 'arrowLeft', run: props.onExit },
+            {
+              id: "rail",
+              label: props.railOpen ? "Hide project list" : "Show project list",
+              icon: "sidebar",
+              meta: shortcutLabel("project-rail", IS_MAC),
+              run: props.onToggleRail,
+            },
+            {
+              id: "home",
+              label: "All projects",
+              icon: "arrowLeft",
+              run: props.onExit,
+            },
           ]}
           onDone={done}
         />
@@ -122,7 +219,13 @@ function ProjectMenu(props: Props & { onClose: (refocus: boolean) => void; onSta
   );
 }
 
-function RenameField({ name, onDone }: { name: string; onDone: (next: string | null) => void }) {
+function RenameField({
+  name,
+  onDone,
+}: {
+  name: string;
+  onDone: (next: string | null) => void;
+}) {
   const [value, setValue] = useState(name);
   const done = useRef(false);
   const finish = (save: boolean) => {
@@ -140,8 +243,8 @@ function RenameField({ name, onDone }: { name: string; onDone: (next: string | n
       onFocus={(e) => e.currentTarget.select()}
       onBlur={() => finish(true)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') finish(true);
-        else if (e.key === 'Escape') {
+        if (e.key === "Enter") finish(true);
+        else if (e.key === "Escape") {
           e.preventDefault();
           e.stopPropagation();
           finish(false);
@@ -151,20 +254,41 @@ function RenameField({ name, onDone }: { name: string; onDone: (next: string | n
   );
 }
 
-function Status({ connection, error, onDismiss }: { connection: string; error: string | null; onDismiss: () => void }): ReactNode {
+function Status({
+  connection,
+  error,
+  onDismiss,
+}: {
+  connection: string;
+  error: string | null;
+  onDismiss: () => void;
+}): ReactNode {
   return (
     <>
-      {connection !== 'open' && (
-        <span className="conn pane-conn" role="status" data-tip={connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}>
+      {connection !== "open" && (
+        <span
+          className="conn pane-conn"
+          role="status"
+          data-tip={
+            connection === "connecting" ? "Connecting…" : "Reconnecting…"
+          }
+        >
           <span className="spinner" />
-          <span className="sr-only">{connection === 'connecting' ? 'Connecting…' : 'Reconnecting…'}</span>
+          <span className="sr-only">
+            {connection === "connecting" ? "Connecting…" : "Reconnecting…"}
+          </span>
         </span>
       )}
       {error && (
         <div className="pane-error ui-notice" role="alert">
           <Icon name="alert" size={14} />
           <span className="pane-error-text">{error}</span>
-          <button type="button" className="icon-btn small" aria-label="Dismiss" onClick={onDismiss}>
+          <button
+            type="button"
+            className="icon-btn small"
+            aria-label="Dismiss"
+            onClick={onDismiss}
+          >
             <Icon name="close" size={12} />
           </button>
         </div>
@@ -181,8 +305,8 @@ export function StudioPaneHeader(props: Props) {
     setOpen(false);
     if (refocus) trigger.current?.focus();
   }, []);
-  const commentsOn = props.tab === 'comments';
-  const searchShown = useLive(chatSearchAvailable) && props.tab === 'chat';
+  const commentsOn = props.tab === "comments";
+  const searchShown = useLive(chatSearchAvailable) && props.tab === "chat";
   const searchOpen = useLive(chatSearchOpen);
   return (
     <>
@@ -211,11 +335,29 @@ export function StudioPaneHeader(props: Props) {
               <span className="truncate">{props.name}</span>
               <Icon name="chevronDown" size={12} />
             </button>
-            {open && <ProjectMenu {...props} trigger={trigger} onClose={close} onStartRename={() => setRenaming(true)} />}
+            {open && (
+              <ProjectMenu
+                {...props}
+                trigger={trigger}
+                onClose={close}
+                onStartRename={() => setRenaming(true)}
+              />
+            )}
           </span>
         )}
-        <Status connection={props.connection} error={null} onDismiss={props.onDismissError} />
-        <button type="button" className="icon-btn pane-head-btn" aria-label="Hide chat pane" data-tip="Hide pane" data-tip-align="end" onClick={props.onCollapse}>
+        <Status
+          connection={props.connection}
+          error={null}
+          onDismiss={props.onDismissError}
+        />
+        <button
+          type="button"
+          className="icon-btn pane-head-btn"
+          aria-label="Hide chat pane"
+          data-tip="Hide pane"
+          data-tip-align="end"
+          onClick={props.onCollapse}
+        >
           <Icon name="sidebar" size={14} />
         </button>
         {searchShown && (
@@ -238,13 +380,19 @@ export function StudioPaneHeader(props: Props) {
           aria-pressed={commentsOn}
           data-tip="Comments"
           data-tip-align="end"
-          onClick={() => props.onTab(commentsOn ? 'chat' : 'comments')}
+          onClick={() => props.onTab(commentsOn ? "chat" : "comments")}
         >
           <Icon name="comment" size={14} />
-          {props.commentCount > 0 && <span className="pane-head-badge">{props.commentCount}</span>}
+          {props.commentCount > 0 && (
+            <span className="pane-head-badge">{props.commentCount}</span>
+          )}
         </button>
       </header>
-      <Status connection="open" error={props.actionError} onDismiss={props.onDismissError} />
+      <Status
+        connection="open"
+        error={props.actionError}
+        onDismiss={props.onDismissError}
+      />
     </>
   );
 }

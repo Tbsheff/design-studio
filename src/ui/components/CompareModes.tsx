@@ -1,7 +1,18 @@
-import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
-import type { ProjectKind, Version } from '../../shared/contracts';
-import { versionDiff, type DiffMaskResult } from '../versionsApi';
-import { CompareFrame } from './CompareFrame';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
+
+import type { ProjectKind, Version } from "../../shared/contracts";
+import { versionDiff, type DiffMaskResult } from "../versionsApi";
+import { CompareFrame } from "./CompareFrame";
 
 export interface BoardProps {
   projectId: string;
@@ -26,18 +37,32 @@ const KEY_STEP: Record<string, (pos: number, big: boolean) => number> = {
 
 const clampPct = (value: number) => Math.min(100, Math.max(0, value));
 
-function Label({ side, title, align }: { side: 'A' | 'B'; title: string; align: 'start' | 'end' }) {
+function Label({
+  side,
+  title,
+  align,
+}: {
+  side: "A" | "B";
+  title: string;
+  align: "start" | "end";
+}) {
   return (
     <div className={`compare-label ${align}`} data-tip={title}>
       <span className="badge accent">{side}</span>
-      <span className="compare-title truncate">
-        {title}
-      </span>
+      <span className="compare-title truncate">{title}</span>
     </div>
   );
 }
 
-function Stage({ labels, width, children }: { labels: ReactNode; width: number; children: ReactNode }) {
+function Stage({
+  labels,
+  width,
+  children,
+}: {
+  labels: ReactNode;
+  width: number;
+  children: ReactNode;
+}) {
   return (
     <div className="compare-pane single">
       <div className="compare-labels" style={{ width }}>
@@ -55,7 +80,8 @@ function useWipe() {
   const handle = useRef<HTMLDivElement>(null);
   const fromPointer = (clientX: number) => {
     const rect = board.current?.getBoundingClientRect();
-    if (rect && rect.width > 0) setPos(clampPct(((clientX - rect.left) / rect.width) * 100));
+    if (rect && rect.width > 0)
+      setPos(clampPct(((clientX - rect.left) / rect.width) * 100));
   };
   const boardProps = {
     ref: board,
@@ -67,7 +93,8 @@ function useWipe() {
       fromPointer(event.clientX);
       handle.current?.focus({ preventScroll: true });
     },
-    onPointerMove: (event: PointerEvent<HTMLDivElement>) => dragging && fromPointer(event.clientX),
+    onPointerMove: (event: PointerEvent<HTMLDivElement>) =>
+      dragging && fromPointer(event.clientX),
     onPointerUp: () => setDragging(false),
     onPointerCancel: () => setDragging(false),
   };
@@ -81,7 +108,19 @@ function useWipe() {
   return { pos, dragging, boardProps, handle, onKeyDown };
 }
 
-function WipeHandle({ handleRef, pos, width, onKeyDown, valueText }: { handleRef: RefObject<HTMLDivElement | null>; pos: number; width: number; onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void; valueText: string }) {
+function WipeHandle({
+  handleRef,
+  pos,
+  width,
+  onKeyDown,
+  valueText,
+}: {
+  handleRef: RefObject<HTMLDivElement | null>;
+  pos: number;
+  width: number;
+  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
+  valueText: string;
+}) {
   const rounded = Math.round(pos);
   return (
     <div
@@ -100,7 +139,16 @@ function WipeHandle({ handleRef, pos, width, onKeyDown, valueText }: { handleRef
       onKeyDown={onKeyDown}
     >
       <span className="compare-knob" aria-hidden="true">
-        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M6 4 2 8l4 4M10 4l4 4-4 4" />
         </svg>
       </span>
@@ -114,35 +162,87 @@ export function SliderBoard(props: BoardProps) {
   const wipe = useWipe();
   const rounded = Math.round(wipe.pos);
   return (
-    <Stage width={width} labels={<><Label side="A" title={props.olderTitle} align="start" /><Label side="B" title={props.newerTitle} align="end" /></>}>
-      <div {...wipe.boardProps} className={`compare-board locked slider ${wipe.dragging ? 'dragging' : ''}`} data-testid="compare-slider" style={{ width, height: viewport.height * scale }}>
-        <CompareFrame projectId={props.projectId} version={props.older} title={props.olderTitle} kind={props.kind} viewport={viewport} scale={scale} onError={props.onError} />
-        <div className="compare-layer" data-testid="compare-slider-top" style={{ clipPath: `inset(0 0 0 ${wipe.pos}%)` }}>
-          <CompareFrame projectId={props.projectId} version={props.newer} title={props.newerTitle} kind={props.kind} viewport={viewport} scale={scale} onError={props.onError} />
+    <Stage
+      width={width}
+      labels={
+        <>
+          <Label side="A" title={props.olderTitle} align="start" />
+          <Label side="B" title={props.newerTitle} align="end" />
+        </>
+      }
+    >
+      <div
+        {...wipe.boardProps}
+        className={`compare-board locked slider ${wipe.dragging ? "dragging" : ""}`}
+        data-testid="compare-slider"
+        style={{ width, height: viewport.height * scale }}
+      >
+        <CompareFrame
+          projectId={props.projectId}
+          version={props.older}
+          title={props.olderTitle}
+          kind={props.kind}
+          viewport={viewport}
+          scale={scale}
+          onError={props.onError}
+        />
+        <div
+          className="compare-layer"
+          data-testid="compare-slider-top"
+          style={{ clipPath: `inset(0 0 0 ${wipe.pos}%)` }}
+        >
+          <CompareFrame
+            projectId={props.projectId}
+            version={props.newer}
+            title={props.newerTitle}
+            kind={props.kind}
+            viewport={viewport}
+            scale={scale}
+            onError={props.onError}
+          />
         </div>
-        <WipeHandle handleRef={wipe.handle} pos={wipe.pos} width={width} onKeyDown={wipe.onKeyDown} valueText={`${rounded}% A, ${100 - rounded}% B`} />
+        <WipeHandle
+          handleRef={wipe.handle}
+          pos={wipe.pos}
+          width={width}
+          onKeyDown={wipe.onKeyDown}
+          valueText={`${rounded}% A, ${100 - rounded}% B`}
+        />
       </div>
     </Stage>
   );
 }
 
-type MaskState = { status: 'loading' } | { status: 'ready'; mask: DiffMaskResult } | { status: 'error'; message: string };
+type MaskState =
+  | { status: "loading" }
+  | { status: "ready"; mask: DiffMaskResult }
+  | { status: "error"; message: string };
 
-function useDiffMask(projectId: string, older: string, newer: string, viewport: { width: number; height: number }, attempt: number): MaskState {
-  const [state, setState] = useState<MaskState>({ status: 'loading' });
+function useDiffMask(
+  projectId: string,
+  older: string,
+  newer: string,
+  viewport: { width: number; height: number },
+  attempt: number
+): MaskState {
+  const [state, setState] = useState<MaskState>({ status: "loading" });
   useEffect(() => {
     const controller = new AbortController();
     let url: string | null = null;
-    setState({ status: 'loading' });
+    setState({ status: "loading" });
     versionDiff(projectId, older, newer, viewport, controller.signal).then(
       (mask) => {
         url = mask.url;
         if (controller.signal.aborted) URL.revokeObjectURL(mask.url);
-        else setState({ status: 'ready', mask });
+        else setState({ status: "ready", mask });
       },
       (error: unknown) => {
-        if (!controller.signal.aborted) setState({ status: 'error', message: error instanceof Error ? error.message : String(error) });
-      },
+        if (!controller.signal.aborted)
+          setState({
+            status: "error",
+            message: error instanceof Error ? error.message : String(error),
+          });
+      }
     );
     return () => {
       controller.abort();
@@ -152,8 +252,14 @@ function useDiffMask(projectId: string, older: string, newer: string, viewport: 
   return state;
 }
 
-function OverlayStatus({ state, onRetry }: { state: MaskState; onRetry: () => void }) {
-  if (state.status === 'loading') {
+function OverlayStatus({
+  state,
+  onRetry,
+}: {
+  state: MaskState;
+  onRetry: () => void;
+}) {
+  if (state.status === "loading") {
     return (
       <span className="compare-status" role="status">
         <span className="spinner" aria-hidden="true" />
@@ -161,7 +267,7 @@ function OverlayStatus({ state, onRetry }: { state: MaskState; onRetry: () => vo
       </span>
     );
   }
-  if (state.status === 'error') {
+  if (state.status === "error") {
     return (
       <span className="compare-status error" role="alert">
         {state.message}
@@ -173,8 +279,14 @@ function OverlayStatus({ state, onRetry }: { state: MaskState; onRetry: () => vo
   }
   const pct = state.mask.changedPct;
   return (
-    <span className="compare-status" role="status" data-testid="compare-changed">
-      {pct === 0 ? 'No visible changes' : `${pct < 0.1 ? '< 0.1' : pct}% of pixels changed`}
+    <span
+      className="compare-status"
+      role="status"
+      data-testid="compare-changed"
+    >
+      {pct === 0
+        ? "No visible changes"
+        : `${pct < 0.1 ? "< 0.1" : pct}% of pixels changed`}
     </span>
   );
 }
@@ -184,7 +296,13 @@ export function OverlayBoard(props: BoardProps) {
   const [attempt, setAttempt] = useState(0);
   const [show, setShow] = useState(true);
   const [opacity, setOpacity] = useState(70);
-  const state = useDiffMask(props.projectId, props.older.id, props.newer.id, viewport, attempt);
+  const state = useDiffMask(
+    props.projectId,
+    props.older.id,
+    props.newer.id,
+    viewport,
+    attempt
+  );
   return (
     <Stage
       width={viewport.width * scale}
@@ -192,9 +310,16 @@ export function OverlayBoard(props: BoardProps) {
         <>
           <Label side="B" title={props.newerTitle} align="start" />
           <div className="compare-overlay-controls">
-            <OverlayStatus state={state} onRetry={() => setAttempt((n) => n + 1)} />
+            <OverlayStatus
+              state={state}
+              onRetry={() => setAttempt((n) => n + 1)}
+            />
             <label className="compare-toggle">
-              <input type="checkbox" checked={show} onChange={(event) => setShow(event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={show}
+                onChange={(event) => setShow(event.target.checked)}
+              />
               Show changes
             </label>
             <input
@@ -213,11 +338,25 @@ export function OverlayBoard(props: BoardProps) {
         </>
       }
     >
-      <div className="compare-board locked" style={{ width: viewport.width * scale, height: viewport.height * scale }}>
-        <CompareFrame projectId={props.projectId} version={props.newer} title={props.newerTitle} kind={props.kind} viewport={viewport} scale={scale} onError={props.onError} />
-        {state.status === 'ready' && (
+      <div
+        className="compare-board locked"
+        style={{
+          width: viewport.width * scale,
+          height: viewport.height * scale,
+        }}
+      >
+        <CompareFrame
+          projectId={props.projectId}
+          version={props.newer}
+          title={props.newerTitle}
+          kind={props.kind}
+          viewport={viewport}
+          scale={scale}
+          onError={props.onError}
+        />
+        {state.status === "ready" && (
           <img
-            className={`compare-mask ${show ? '' : 'off'}`}
+            className={`compare-mask ${show ? "" : "off"}`}
             data-testid="compare-mask"
             src={state.mask.url}
             alt=""
@@ -240,7 +379,7 @@ let lastPicture: Picture | null = null;
 function usePicture() {
   const [picture, setPictureState] = useState<Picture | null>(lastPicture);
   const setPicture = (file: File | undefined) => {
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file || !file.type.startsWith("image/")) return;
     if (lastPicture) URL.revokeObjectURL(lastPicture.url);
     lastPicture = { url: URL.createObjectURL(file), name: file.name };
     setPictureState(lastPicture);
@@ -248,12 +387,20 @@ function usePicture() {
   return { picture, setPicture };
 }
 
-function PicturePicker({ onPick, compact, size }: { onPick: (file: File | undefined) => void; compact?: boolean; size?: { width: number; height: number } }) {
+function PicturePicker({
+  onPick,
+  compact,
+  size,
+}: {
+  onPick: (file: File | undefined) => void;
+  compact?: boolean;
+  size?: { width: number; height: number };
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
     onPick(event.target.files?.[0]);
-    event.target.value = '';
+    event.target.value = "";
   };
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -262,16 +409,35 @@ function PicturePicker({ onPick, compact, size }: { onPick: (file: File | undefi
   };
   const pick = (
     <>
-      <input ref={input} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={onChange} data-testid="compare-ref-input" />
-      <button type="button" className="btn small" onClick={() => input.current?.click()}>
-        {compact ? 'Change picture…' : 'Choose picture…'}
+      <input
+        ref={input}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp"
+        hidden
+        onChange={onChange}
+        data-testid="compare-ref-input"
+      />
+      <button
+        type="button"
+        className="btn small"
+        onClick={() => input.current?.click()}
+      >
+        {compact ? "Change picture…" : "Choose picture…"}
       </button>
     </>
   );
   if (compact) return pick;
   return (
-    <div className={`compare-ref-empty ${over ? 'over' : ''}`} style={size} onDragOver={(event) => (event.preventDefault(), setOver(true))} onDragLeave={() => setOver(false)} onDrop={onDrop}>
-      <span>Drop a screenshot or mock here to lay it over the newer version.</span>
+    <div
+      className={`compare-ref-empty ${over ? "over" : ""}`}
+      style={size}
+      onDragOver={(event) => (event.preventDefault(), setOver(true))}
+      onDragLeave={() => setOver(false)}
+      onDrop={onDrop}
+    >
+      <span>
+        Drop a screenshot or mock here to lay it over the newer version.
+      </span>
       {pick}
     </div>
   );
@@ -296,7 +462,16 @@ export function ReferenceBoard(props: BoardProps) {
                 <span className="compare-ref-name" data-tip={picture.name}>
                   <span className="truncate">Reference: {picture.name}</span>
                 </span>
-                <input type="range" className="compare-opacity" aria-label="Reference opacity" min={10} max={100} step={5} value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} />
+                <input
+                  type="range"
+                  className="compare-opacity"
+                  aria-label="Reference opacity"
+                  min={10}
+                  max={100}
+                  step={5}
+                  value={opacity}
+                  onChange={(event) => setOpacity(Number(event.target.value))}
+                />
                 <span className="compare-opacity-value">{opacity}%</span>
                 <PicturePicker onPick={setPicture} compact />
               </>
@@ -306,15 +481,49 @@ export function ReferenceBoard(props: BoardProps) {
       }
     >
       {picture ? (
-        <div {...wipe.boardProps} className={`compare-board locked slider ${wipe.dragging ? 'dragging' : ''}`} data-testid="compare-reference" style={{ width, height: viewport.height * scale }}>
-          <CompareFrame projectId={props.projectId} version={props.newer} title={props.newerTitle} kind={props.kind} viewport={viewport} scale={scale} onError={props.onError} />
-          <div className="compare-layer" style={{ clipPath: `inset(0 0 0 ${wipe.pos}%)`, opacity: opacity / 100 }}>
-            <img className="compare-ref-picture" data-testid="compare-ref-picture" src={picture.url} alt={`Reference ${picture.name}`} draggable={false} />
+        <div
+          {...wipe.boardProps}
+          className={`compare-board locked slider ${wipe.dragging ? "dragging" : ""}`}
+          data-testid="compare-reference"
+          style={{ width, height: viewport.height * scale }}
+        >
+          <CompareFrame
+            projectId={props.projectId}
+            version={props.newer}
+            title={props.newerTitle}
+            kind={props.kind}
+            viewport={viewport}
+            scale={scale}
+            onError={props.onError}
+          />
+          <div
+            className="compare-layer"
+            style={{
+              clipPath: `inset(0 0 0 ${wipe.pos}%)`,
+              opacity: opacity / 100,
+            }}
+          >
+            <img
+              className="compare-ref-picture"
+              data-testid="compare-ref-picture"
+              src={picture.url}
+              alt={`Reference ${picture.name}`}
+              draggable={false}
+            />
           </div>
-          <WipeHandle handleRef={wipe.handle} pos={wipe.pos} width={width} onKeyDown={wipe.onKeyDown} valueText={`${rounded}% frame, ${100 - rounded}% reference`} />
+          <WipeHandle
+            handleRef={wipe.handle}
+            pos={wipe.pos}
+            width={width}
+            onKeyDown={wipe.onKeyDown}
+            valueText={`${rounded}% frame, ${100 - rounded}% reference`}
+          />
         </div>
       ) : (
-        <PicturePicker onPick={setPicture} size={{ width, height: viewport.height * scale }} />
+        <PicturePicker
+          onPick={setPicture}
+          size={{ width, height: viewport.height * scale }}
+        />
       )}
     </Stage>
   );

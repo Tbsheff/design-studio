@@ -1,24 +1,48 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { STUDIO_TOKEN_HEADER, type StudioEvent } from '../shared/contracts';
-import { emptyLinksFile, type LinkMotion, type LinkSource, type LinksFile, type LinkTarget, type LinkTransition, type PrototypeLink } from '../shared/links';
-import { ApiError } from './api';
-import { useProjectEvents } from './events';
-import { getSession } from './session';
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+import { STUDIO_TOKEN_HEADER, type StudioEvent } from "../shared/contracts";
+import {
+  emptyLinksFile,
+  type LinkMotion,
+  type LinkSource,
+  type LinksFile,
+  type LinkTarget,
+  type LinkTransition,
+  type PrototypeLink,
+} from "../shared/links";
+import { ApiError } from "./api";
+import { useProjectEvents } from "./events";
+import { getSession } from "./session";
+
+async function call<T>(
+  method: string,
+  path: string,
+  body?: unknown
+): Promise<T> {
   const res = await fetch(path, {
     method,
-    headers: { [STUDIO_TOKEN_HEADER]: getSession().token, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
+    headers: {
+      [STUDIO_TOKEN_HEADER]: getSession().token,
+      ...(body === undefined ? {} : { "content-type": "application/json" }),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { error?: string; message?: string } | null;
-    throw new ApiError(res.status, data?.message ?? data?.error ?? `${method} ${path} failed: ${res.status}`, data?.error);
+    const data = (await res.json().catch(() => null)) as {
+      error?: string;
+      message?: string;
+    } | null;
+    throw new ApiError(
+      res.status,
+      data?.message ?? data?.error ?? `${method} ${path} failed: ${res.status}`,
+      data?.error
+    );
   }
   return (await res.json()) as T;
 }
 
-const base = (projectId: string) => `/api/projects/${encodeURIComponent(projectId)}/links`;
+const base = (projectId: string) =>
+  `/api/projects/${encodeURIComponent(projectId)}/links`;
 
 interface Entry {
   file: LinksFile;
@@ -50,40 +74,58 @@ function load(projectId: string): void {
   if (entry.loaded || entry.loading) return;
   entry.loading = true;
   entry.requestedAt = Date.now();
-  call<{ links: LinksFile }>('GET', base(projectId))
+  call<{ links: LinksFile }>("GET", base(projectId))
     .then(({ links }) => {
       entry.loaded = true;
       setFile(projectId, links);
     })
-    .catch((error: unknown) => console.error('[links] load failed', error))
+    .catch((error: unknown) => console.error("[links] load failed", error))
     .finally(() => {
       entry.loading = false;
     });
 }
 
 function receive(event: StudioEvent): void {
-  if (event.type !== 'links.changed') return;
+  if (event.type !== "links.changed") return;
   const entry = entryOf(event.projectId);
   if (!entry.loaded || event.ts < entry.requestedAt) return;
   setFile(event.projectId, event.links);
 }
 
-async function write(projectId: string, method: string, path: string, body?: unknown): Promise<LinksFile> {
+async function write(
+  projectId: string,
+  method: string,
+  path: string,
+  body?: unknown
+): Promise<LinksFile> {
   const { links } = await call<{ links: LinksFile }>(method, path, body);
   setFile(projectId, links);
   return links;
 }
 
 export const linksApi = {
-  add: async (projectId: string, link: { from: LinkSource; to: LinkTarget; transition: LinkTransition }): Promise<PrototypeLink | null> => {
-    const { links, link: saved } = await call<{ links: LinksFile; link: PrototypeLink | null }>('POST', base(projectId), link);
+  add: async (
+    projectId: string,
+    link: { from: LinkSource; to: LinkTarget; transition: LinkTransition }
+  ): Promise<PrototypeLink | null> => {
+    const { links, link: saved } = await call<{
+      links: LinksFile;
+      link: PrototypeLink | null;
+    }>("POST", base(projectId), link);
     setFile(projectId, links);
     return saved;
   },
-  update: (projectId: string, id: string, change: { to?: LinkTarget } & LinkMotion) => write(projectId, 'PATCH', `${base(projectId)}/${id}`, change),
-  keep: (projectId: string, ids: string[] | 'all', motion: LinkMotion = {}) => write(projectId, 'POST', `${base(projectId)}/keep`, { ids, ...motion }),
-  remove: (projectId: string, id: string) => write(projectId, 'DELETE', `${base(projectId)}/${id}`),
-  setStart: (projectId: string, frame: string) => write(projectId, 'PUT', `${base(projectId)}/start`, { frame }),
+  update: (
+    projectId: string,
+    id: string,
+    change: { to?: LinkTarget } & LinkMotion
+  ) => write(projectId, "PATCH", `${base(projectId)}/${id}`, change),
+  keep: (projectId: string, ids: string[] | "all", motion: LinkMotion = {}) =>
+    write(projectId, "POST", `${base(projectId)}/keep`, { ids, ...motion }),
+  remove: (projectId: string, id: string) =>
+    write(projectId, "DELETE", `${base(projectId)}/${id}`),
+  setStart: (projectId: string, frame: string) =>
+    write(projectId, "PUT", `${base(projectId)}/start`, { frame }),
 };
 
 function subscribe(listener: () => void): () => void {
@@ -96,28 +138,39 @@ function subscribe(listener: () => void): () => void {
 export function useLinks(projectId: string): LinksFile {
   useEffect(() => load(projectId), [projectId]);
   useProjectEvents(projectId, receive);
-  return useSyncExternalStore(subscribe, () => entries.get(projectId)?.file ?? EMPTY);
+  return useSyncExternalStore(
+    subscribe,
+    () => entries.get(projectId)?.file ?? EMPTY
+  );
 }
 
 const IMPLICIT_DEBOUNCE_MS = 400;
 const REPLAY_SLACK_MS = 1000;
 
-export function useImplicitLinks(projectId: string, framesKey: string): PrototypeLink[] {
+export function useImplicitLinks(
+  projectId: string,
+  framesKey: string
+): PrototypeLink[] {
   const [links, setLinks] = useState<PrototypeLink[]>([]);
   const timer = useRef(0);
   const seq = useRef(0);
   const fetchNow = useRef(() => undefined as void);
   fetchNow.current = () => {
     const at = ++seq.current;
-    call<{ implicit: PrototypeLink[] }>('GET', `${base(projectId)}/implicit`)
+    call<{ implicit: PrototypeLink[] }>("GET", `${base(projectId)}/implicit`)
       .then(({ implicit }) => {
         if (at === seq.current) setLinks(implicit);
       })
-      .catch((error: unknown) => console.error('[links] implicit load failed', error));
+      .catch((error: unknown) =>
+        console.error("[links] implicit load failed", error)
+      );
   };
   const later = () => {
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => fetchNow.current(), IMPLICIT_DEBOUNCE_MS);
+    timer.current = window.setTimeout(
+      () => fetchNow.current(),
+      IMPLICIT_DEBOUNCE_MS
+    );
   };
   const mountedAt = useRef(Date.now());
   const lastKey = useRef(framesKey);
@@ -128,11 +181,16 @@ export function useImplicitLinks(projectId: string, framesKey: string): Prototyp
   useEffect(() => {
     const before = lastKey.current;
     lastKey.current = framesKey;
-    if (before !== '' && before !== framesKey) later();
+    if (before !== "" && before !== framesKey) later();
   }, [framesKey]);
   useProjectEvents(projectId, (event) => {
     if (event.ts < mountedAt.current - REPLAY_SLACK_MS) return;
-    if (event.type === 'files.changed' || event.type === 'links.changed' || event.type === 'version.created') later();
+    if (
+      event.type === "files.changed" ||
+      event.type === "links.changed" ||
+      event.type === "version.created"
+    )
+      later();
   });
   return links;
 }

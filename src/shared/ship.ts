@@ -1,8 +1,8 @@
-import { slugify } from './folders.js';
+import { slugify } from "./folders.js";
 
-export type ShipMode = 'branch' | 'push' | 'pr';
+export type ShipMode = "branch" | "push" | "pr";
 
-export const SHIP_MODES: readonly ShipMode[] = ['branch', 'push', 'pr'];
+export const SHIP_MODES: readonly ShipMode[] = ["branch", "push", "pr"];
 
 export interface ShipSettings {
   user: string;
@@ -12,13 +12,22 @@ export interface ShipSettings {
 }
 
 export const DEFAULT_SHIP_SETTINGS: ShipSettings = {
-  user: '',
-  branchTemplate: '{user}/{issue}-{slug}',
-  bodyTemplate: '{summary}\n\n### Studio versions\n{versions}\n\nFixes {ISSUE}',
-  issueId: '',
+  user: "",
+  branchTemplate: "{user}/{issue}-{slug}",
+  bodyTemplate: "{summary}\n\n### Studio versions\n{versions}\n\nFixes {ISSUE}",
+  issueId: "",
 };
 
-export const SHIP_TEXT_MAX = { user: 40, branchTemplate: 200, bodyTemplate: 4000, issueId: 40, title: 200, commitMessage: 4000, body: 20000, branch: 200 };
+export const SHIP_TEXT_MAX = {
+  user: 40,
+  branchTemplate: 200,
+  bodyTemplate: 4000,
+  issueId: 40,
+  title: 200,
+  commitMessage: 4000,
+  body: 20000,
+  branch: 200,
+};
 
 export interface ShipRecord {
   versionId: string;
@@ -43,7 +52,7 @@ export interface ShipRepoInfo {
   gh: boolean;
 }
 
-export type ShipBaseKind = 'attached' | 'last-ship' | 'version';
+export type ShipBaseKind = "attached" | "last-ship" | "version";
 
 export interface ShipBaseOption {
   versionId: string;
@@ -52,7 +61,7 @@ export interface ShipBaseOption {
   kind: ShipBaseKind;
 }
 
-export type ShipFileStatus = 'added' | 'modified' | 'deleted';
+export type ShipFileStatus = "added" | "modified" | "deleted";
 
 export interface ShipFile {
   path: string;
@@ -72,7 +81,7 @@ export interface ShipDefaults {
   body: string;
 }
 
-export type ShipFormatTool = 'biome' | 'prettier';
+export type ShipFormatTool = "biome" | "prettier";
 
 export interface ShipFormat {
   tool: ShipFormatTool | null;
@@ -144,53 +153,106 @@ const PLACEHOLDER = /\{(user|slug|issue|ISSUE|title|summary|versions|files)\}/g;
 function values(vars: ShipTemplateVars): Record<string, string> {
   return {
     user: vars.user,
-    slug: vars.title.trim() ? slugify(vars.title).slice(0, 40).replace(/-+$/, '') : '',
+    slug: vars.title.trim()
+      ? slugify(vars.title).slice(0, 40).replace(/-+$/, "")
+      : "",
     issue: vars.issue.trim().toLowerCase(),
     ISSUE: vars.issue.trim(),
     title: vars.title.trim(),
     summary: vars.summary.trim(),
-    versions: vars.versions.map((title) => `- ${title}`).join('\n'),
-    files: vars.files.map((file) => `- \`${file}\``).join('\n'),
+    versions: vars.versions.map((title) => `- ${title}`).join("\n"),
+    files: vars.files.map((file) => `- \`${file}\``).join("\n"),
   };
 }
 
-export function renderShipTemplate(template: string, vars: ShipTemplateVars): string {
+export function renderShipTemplate(
+  template: string,
+  vars: ShipTemplateVars
+): string {
   const table = values(vars);
-  const lines = template.split('\n').flatMap((line) => {
-    const names = [...line.matchAll(PLACEHOLDER)].map((match) => match[1] ?? '');
-    if (names.length > 0 && names.every((name) => (table[name] ?? '') === '')) return [];
-    return [line.replace(PLACEHOLDER, (_all, name: string) => table[name] ?? '')];
+  const lines = template.split("\n").flatMap((line) => {
+    const names = [...line.matchAll(PLACEHOLDER)].map(
+      (match) => match[1] ?? ""
+    );
+    if (names.length > 0 && names.every((name) => (table[name] ?? "") === ""))
+      return [];
+    return [
+      line.replace(PLACEHOLDER, (_all, name: string) => table[name] ?? ""),
+    ];
   });
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return lines
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export function cleanBranchName(raw: string): string {
   return raw
     .toLowerCase()
-    .replace(/[^a-z0-9/._-]+/g, '-')
-    .split('/')
-    .map((part) => part.replace(/\.{2,}/g, '.').replace(/^[-.]+|[-.]+$/g, '').replace(/\.lock$/, ''))
+    .replace(/[^a-z0-9/._-]+/g, "-")
+    .split("/")
+    .map((part) =>
+      part
+        .replace(/\.{2,}/g, ".")
+        .replace(/^[-.]+|[-.]+$/g, "")
+        .replace(/\.lock$/, "")
+    )
     .filter(Boolean)
-    .join('/')
+    .join("/")
     .slice(0, 120)
-    .replace(/[/.-]+$/, '');
+    .replace(/[/.-]+$/, "");
 }
 
-export function renderBranchName(template: string, vars: ShipTemplateVars): string {
-  return cleanBranchName(renderShipTemplate(template, vars).split('\n')[0] ?? '');
+export function renderBranchName(
+  template: string,
+  vars: ShipTemplateVars
+): string {
+  return cleanBranchName(
+    renderShipTemplate(template, vars).split("\n")[0] ?? ""
+  );
 }
 
-const SECRET_NAMES = new Set(['id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519', '.npmrc', '.netrc', '.pypirc', '.htpasswd', 'credentials.json', 'service-account.json', '.git-credentials']);
-const SECRET_EXTENSIONS = ['.pem', '.key', '.p12', '.pfx', '.keystore', '.jks', '.secret', '.asc', '.gpg'];
+const SECRET_NAMES = new Set([
+  "id_rsa",
+  "id_dsa",
+  "id_ecdsa",
+  "id_ed25519",
+  ".npmrc",
+  ".netrc",
+  ".pypirc",
+  ".htpasswd",
+  "credentials.json",
+  "service-account.json",
+  ".git-credentials",
+]);
+const SECRET_EXTENSIONS = [
+  ".pem",
+  ".key",
+  ".p12",
+  ".pfx",
+  ".keystore",
+  ".jks",
+  ".secret",
+  ".asc",
+  ".gpg",
+];
 
 export function refusedPath(file: string): string | null {
-  const parts = file.split('/');
-  const name = (parts[parts.length - 1] ?? '').toLowerCase();
-  if (parts.some((part) => part === 'node_modules')) return 'node_modules is never committed.';
-  if (parts.some((part) => part === '.git')) return '.git is never committed.';
-  if (name.startsWith('.env')) return 'Environment files (.env*) are never committed.';
-  if (SECRET_NAMES.has(name) || name.startsWith('id_rsa') || /^secrets?\./.test(name)) return 'This looks like a secret or credentials file.';
-  if (SECRET_EXTENSIONS.some((ext) => name.endsWith(ext))) return 'Key and certificate files are never committed.';
+  const parts = file.split("/");
+  const name = (parts[parts.length - 1] ?? "").toLowerCase();
+  if (parts.some((part) => part === "node_modules"))
+    return "node_modules is never committed.";
+  if (parts.some((part) => part === ".git")) return ".git is never committed.";
+  if (name.startsWith(".env"))
+    return "Environment files (.env*) are never committed.";
+  if (
+    SECRET_NAMES.has(name) ||
+    name.startsWith("id_rsa") ||
+    /^secrets?\./.test(name)
+  )
+    return "This looks like a secret or credentials file.";
+  if (SECRET_EXTENSIONS.some((ext) => name.endsWith(ext)))
+    return "Key and certificate files are never committed.";
   return null;
 }
 

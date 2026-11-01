@@ -1,19 +1,53 @@
-import { useCallback, useEffect, useRef, useState, type FocusEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from 'react';
-import type { SelectionContext } from '../../shared/contracts';
-import { PREVIEW_ARRANGE_KEY_EVENT, PREVIEW_LAYOUT_KEY_EVENT } from '../usePreviewFrames';
-import { isTypingTarget } from '../typingTarget';
-import type { DirectEdit } from '../useDirectEdit';
-import { PIN_OPTIONS, pinFields, pinModeOf, pinPatch, type InsetProp, type PinAxis, type PinMode } from '../constraints';
-import { SIZE_MODES, activeCell, alignCell, isFlexDisplay, isGridDisplay, parentLayout, sizeFacts, sizeModeOf, sizePatch, type Axis, type SizeFacts, type SizeMode } from '../sizing';
-import { Icon, type IconName } from './Icon';
-import { InspectorSection, SelectField } from './InspectorFields';
-import { AddButton } from './InspectorShared';
-import { NumberField } from './NumberField';
-import { useLive } from '../liveStore';
-import { resizeReadout } from '../useResizeHandles';
-import { UiSelect } from './UiSelect';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
-type Patch = Parameters<DirectEdit['preview']>[0];
+import type { SelectionContext } from "../../shared/contracts";
+import {
+  PIN_OPTIONS,
+  pinFields,
+  pinModeOf,
+  pinPatch,
+  type InsetProp,
+  type PinAxis,
+  type PinMode,
+} from "../constraints";
+import { useLive } from "../liveStore";
+import {
+  SIZE_MODES,
+  activeCell,
+  alignCell,
+  isFlexDisplay,
+  isGridDisplay,
+  parentLayout,
+  sizeFacts,
+  sizeModeOf,
+  sizePatch,
+  type Axis,
+  type SizeFacts,
+  type SizeMode,
+} from "../sizing";
+import { isTypingTarget } from "../typingTarget";
+import type { DirectEdit } from "../useDirectEdit";
+import {
+  PREVIEW_ARRANGE_KEY_EVENT,
+  PREVIEW_LAYOUT_KEY_EVENT,
+} from "../usePreviewFrames";
+import { resizeReadout } from "../useResizeHandles";
+import { Icon, type IconName } from "./Icon";
+import { InspectorSection, SelectField } from "./InspectorFields";
+import { AddButton } from "./InspectorShared";
+import { NumberField } from "./NumberField";
+import { UiSelect } from "./UiSelect";
+
+type Patch = Parameters<DirectEdit["preview"]>[0];
 
 function write(edit: DirectEdit, patch: Patch): void {
   edit.preview(patch);
@@ -21,23 +55,47 @@ function write(edit: DirectEdit, patch: Patch): void {
 }
 
 function isLayoutShortcut(event: KeyboardEvent): boolean {
-  return event.code === 'KeyA' && event.shiftKey && !event.metaKey && !event.ctrlKey && !event.altKey && !event.repeat;
+  return (
+    event.code === "KeyA" &&
+    event.shiftKey &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.altKey &&
+    !event.repeat
+  );
 }
 
-const REMOVE_LAYOUT_CHORD = 'Alt+Shift+KeyA';
+const REMOVE_LAYOUT_CHORD = "Alt+Shift+KeyA";
 
 function isRemoveShortcut(event: KeyboardEvent): boolean {
-  return event.code === 'KeyA' && event.shiftKey && event.altKey && !event.metaKey && !event.ctrlKey && !event.repeat;
+  return (
+    event.code === "KeyA" &&
+    event.shiftKey &&
+    event.altKey &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.repeat
+  );
 }
 
-function useLayoutKeys(root: RefObject<HTMLElement | null>, onAdd: () => void, onRemove: () => void): void {
+function useLayoutKeys(
+  root: RefObject<HTMLElement | null>,
+  onAdd: () => void,
+  onRemove: () => void
+): void {
   const latest = useRef({ onAdd, onRemove });
   latest.current = { onAdd, onRemove };
   useEffect(() => {
-    const visible = () => Boolean(root.current && !root.current.closest('[inert]'));
+    const visible = () =>
+      Boolean(root.current && !root.current.closest("[inert]"));
     const onKey = (event: KeyboardEvent) => {
       const add = isLayoutShortcut(event);
-      if ((!add && !isRemoveShortcut(event)) || isTypingTarget(event.target) || !visible()) return;
+      if (
+        (!add && !isRemoveShortcut(event)) ||
+        isTypingTarget(event.target) ||
+        !visible()
+      )
+        return;
       event.preventDefault();
       if (add) latest.current.onAdd();
       else latest.current.onRemove();
@@ -46,13 +104,18 @@ function useLayoutKeys(root: RefObject<HTMLElement | null>, onAdd: () => void, o
       if (visible()) latest.current.onAdd();
     };
     const onArrangeKey = (event: Event) => {
-      if ((event as CustomEvent<{ key?: string }>).detail?.key === REMOVE_LAYOUT_CHORD && visible()) latest.current.onRemove();
+      if (
+        (event as CustomEvent<{ key?: string }>).detail?.key ===
+          REMOVE_LAYOUT_CHORD &&
+        visible()
+      )
+        latest.current.onRemove();
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
     window.addEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
     window.addEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener("keydown", onKey);
       window.removeEventListener(PREVIEW_LAYOUT_KEY_EVENT, onForwarded);
       window.removeEventListener(PREVIEW_ARRANGE_KEY_EVENT, onArrangeKey);
     };
@@ -60,23 +123,43 @@ function useLayoutKeys(root: RefObject<HTMLElement | null>, onAdd: () => void, o
 }
 
 const DIRECTIONS: { value: string; icon: IconName; label: string }[] = [
-  { value: 'row', icon: 'arrowRight', label: 'Horizontal' },
-  { value: 'column', icon: 'arrowDown', label: 'Vertical' },
+  { value: "row", icon: "arrowRight", label: "Horizontal" },
+  { value: "column", icon: "arrowDown", label: "Vertical" },
 ];
 
-const POSITIONS = ['start', 'center', 'end'];
+const POSITIONS = ["start", "center", "end"];
 
-const DISPLAYS = ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'none'];
+const DISPLAYS = [
+  "block",
+  "inline",
+  "inline-block",
+  "flex",
+  "inline-flex",
+  "grid",
+  "none",
+];
 
 function gridValue(value: string): string {
-  if (value === 'flex-start') return 'start';
-  if (value === 'flex-end') return 'end';
+  if (value === "flex-start") return "start";
+  if (value === "flex-end") return "end";
   return value;
 }
 
-function AlignGrid({ edit, isRow, grid = false }: { edit: DirectEdit; isRow: boolean; grid?: boolean }) {
-  const justifyProp = grid ? 'justify-items' : 'justify-content';
-  const active = activeCell(edit.values[justifyProp], edit.values['align-items'], isRow);
+function AlignGrid({
+  edit,
+  isRow,
+  grid = false,
+}: {
+  edit: DirectEdit;
+  isRow: boolean;
+  grid?: boolean;
+}) {
+  const justifyProp = grid ? "justify-items" : "justify-content";
+  const active = activeCell(
+    edit.values[justifyProp],
+    edit.values["align-items"],
+    isRow
+  );
   return (
     <div className="ins-align-grid" role="group" aria-label="Alignment">
       {[0, 1, 2].map((row) =>
@@ -87,65 +170,113 @@ function AlignGrid({ edit, isRow, grid = false }: { edit: DirectEdit; isRow: boo
             <button
               key={`${row}-${col}`}
               type="button"
-              className={on ? 'on' : ''}
+              className={on ? "on" : ""}
               aria-label={label}
               aria-pressed={on}
               data-tip={label}
               onClick={() => {
                 const cell = alignCell(col, row, isRow);
-                write(edit, grid ? { 'justify-items': gridValue(cell.justify), 'align-items': gridValue(cell.align) } : { 'justify-content': cell.justify, 'align-items': cell.align });
+                write(
+                  edit,
+                  grid
+                    ? {
+                        "justify-items": gridValue(cell.justify),
+                        "align-items": gridValue(cell.align),
+                      }
+                    : {
+                        "justify-content": cell.justify,
+                        "align-items": cell.align,
+                      }
+                );
               }}
             >
               <span className="ins-align-dot" aria-hidden="true" />
             </button>
           );
-        }),
+        })
       )}
     </div>
   );
 }
 
-type GapMode = 'fixed' | 'auto';
+type GapMode = "fixed" | "auto";
 
 const GAP_MODES: { value: GapMode; label: string }[] = [
-  { value: 'fixed', label: 'Fixed' },
-  { value: 'auto', label: 'Auto' },
+  { value: "fixed", label: "Fixed" },
+  { value: "auto", label: "Auto" },
 ];
 
-const DEFAULT_GAP = '8px';
+const DEFAULT_GAP = "8px";
 
 function useLastGap(edit: DirectEdit): string {
-  const last = useRef(parseFloat(edit.values.gap) > 0 ? edit.values.gap : DEFAULT_GAP);
+  const last = useRef(
+    parseFloat(edit.values.gap) > 0 ? edit.values.gap : DEFAULT_GAP
+  );
   if (parseFloat(edit.values.gap) > 0) last.current = edit.values.gap;
   return last.current;
 }
 
 function GapModeField({ edit }: { edit: DirectEdit }) {
-  const mode: GapMode = edit.values['justify-content'] === 'space-between' ? 'auto' : 'fixed';
+  const mode: GapMode =
+    edit.values["justify-content"] === "space-between" ? "auto" : "fixed";
   const lastGap = useLastGap(edit);
   const change = (next: GapMode) => {
     if (next === mode) return;
-    write(edit, next === 'auto' ? { 'justify-content': 'space-between', gap: '' } : { 'justify-content': '', gap: lastGap });
+    write(
+      edit,
+      next === "auto"
+        ? { "justify-content": "space-between", gap: "" }
+        : { "justify-content": "", gap: lastGap }
+    );
   };
   return (
-    <div className="ins-field select ins-gap-mode" data-tip="Auto puts the space between the children" data-tip-align="end">
+    <div
+      className="ins-field select ins-gap-mode"
+      data-tip="Auto puts the space between the children"
+      data-tip-align="end"
+    >
       <span className="ins-scrub static">Spacing</span>
-      <UiSelect className="ins-select" aria-label="Gap mode" value={mode} options={GAP_MODES} onChange={change} />
+      <UiSelect
+        className="ins-select"
+        aria-label="Gap mode"
+        value={mode}
+        options={GAP_MODES}
+        onChange={change}
+      />
     </div>
   );
 }
 
-function GapFields({ edit, split, auto }: { edit: DirectEdit; split: boolean; auto: boolean }) {
+function GapFields({
+  edit,
+  split,
+  auto,
+}: {
+  edit: DirectEdit;
+  split: boolean;
+  auto: boolean;
+}) {
   if (split) {
     return (
       <div className="ins-gap-pair">
-        <NumberField short="Row" spec={{ prop: 'row-gap', label: 'Row gap', edit, min: 0 }} />
-        <NumberField short="Col" spec={{ prop: 'column-gap', label: 'Column gap', edit, min: 0 }} />
+        <NumberField
+          short="Row"
+          spec={{ prop: "row-gap", label: "Row gap", edit, min: 0 }}
+        />
+        <NumberField
+          short="Col"
+          spec={{ prop: "column-gap", label: "Column gap", edit, min: 0 }}
+        />
       </div>
     );
   }
   if (auto) return null;
-  return <NumberField short="Gap" spec={{ prop: 'gap', label: 'Gap', edit, min: 0 }} />;
+  return (
+    <NumberField
+      short="Gap"
+      spec={{ prop: "gap", label: "Gap", edit, min: 0 }}
+    />
+  );
 }
 
 function GridControls({ edit }: { edit: DirectEdit }) {
@@ -160,24 +291,32 @@ function GridControls({ edit }: { edit: DirectEdit }) {
 }
 
 function FlexControls({ edit }: { edit: DirectEdit }) {
-  const direction = edit.values['flex-direction'].startsWith('column') ? 'column' : 'row';
-  const wraps = edit.values['flex-wrap'] === 'wrap' || edit.values['flex-wrap'] === 'wrap-reverse';
-  const auto = edit.values['justify-content'] === 'space-between';
+  const direction = edit.values["flex-direction"].startsWith("column")
+    ? "column"
+    : "row";
+  const wraps =
+    edit.values["flex-wrap"] === "wrap" ||
+    edit.values["flex-wrap"] === "wrap-reverse";
+  const auto = edit.values["justify-content"] === "space-between";
   return (
     <div className="ins-flex">
-      <AlignGrid edit={edit} isRow={direction === 'row'} />
+      <AlignGrid edit={edit} isRow={direction === "row"} />
       <div className="ins-flex-side">
         <div className="ins-flex-row">
-          <div className="segmented icons ins-direction" role="group" aria-label="Direction">
+          <div
+            className="segmented icons ins-direction"
+            role="group"
+            aria-label="Direction"
+          >
             {DIRECTIONS.map((option) => (
               <button
                 key={option.value}
                 type="button"
-                className={direction === option.value ? 'on' : ''}
+                className={direction === option.value ? "on" : ""}
                 aria-label={option.label}
                 aria-pressed={direction === option.value}
                 data-tip={option.label}
-                onClick={() => write(edit, { 'flex-direction': option.value })}
+                onClick={() => write(edit, { "flex-direction": option.value })}
               >
                 <Icon name={option.icon} size={14} />
               </button>
@@ -188,8 +327,10 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
             className="icon-btn ins-toggle"
             aria-label="Wrap"
             aria-pressed={wraps}
-            data-tip={wraps ? 'Wrap: on' : 'Wrap: off'}
-            onClick={() => write(edit, { 'flex-wrap': wraps ? 'nowrap' : 'wrap' })}
+            data-tip={wraps ? "Wrap: on" : "Wrap: off"}
+            onClick={() =>
+              write(edit, { "flex-wrap": wraps ? "nowrap" : "wrap" })
+            }
           >
             <Icon name="wrap" size={14} />
           </button>
@@ -201,21 +342,43 @@ function FlexControls({ edit }: { edit: DirectEdit }) {
   );
 }
 
-export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children }: { edit: DirectEdit; title?: string; lead?: ReactNode; children?: ReactNode }) {
+export function AutoLayoutSection({
+  edit,
+  title = "Auto layout",
+  lead,
+  children,
+}: {
+  edit: DirectEdit;
+  title?: string;
+  lead?: ReactNode;
+  children?: ReactNode;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const flex = isFlexDisplay(edit.values.display);
   const grid = isGridDisplay(edit.values.display);
   useLayoutKeys(
     root,
     () => {
-      if (!isFlexDisplay(edit.values.display) && !isGridDisplay(edit.values.display)) write(edit, { display: 'flex' });
+      if (
+        !isFlexDisplay(edit.values.display) &&
+        !isGridDisplay(edit.values.display)
+      )
+        write(edit, { display: "flex" });
     },
     () => {
-      if (isFlexDisplay(edit.values.display)) write(edit, { display: 'block' });
-    },
+      if (isFlexDisplay(edit.values.display)) write(edit, { display: "block" });
+    }
   );
   const remove = (
-    <button type="button" className="icon-btn small" aria-label="Remove auto layout" aria-keyshortcuts="Alt+Shift+A" data-tip="Remove auto layout ⌥⇧A" data-tip-align="end" onClick={() => write(edit, { display: 'block' })}>
+    <button
+      type="button"
+      className="icon-btn small"
+      aria-label="Remove auto layout"
+      aria-keyshortcuts="Alt+Shift+A"
+      data-tip="Remove auto layout ⌥⇧A"
+      data-tip-align="end"
+      onClick={() => write(edit, { display: "block" })}
+    >
       <Icon name="close" size={12} />
     </button>
   );
@@ -224,8 +387,21 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
       {lead}
       <div ref={root} className="ins-layout">
         <div className="ins-layout-row">
-          <SelectField prop="display" label="Display" short="Display" edit={edit} options={DISPLAYS} />
-          {!flex && !grid && <AddButton label="Auto layout" tip="Add auto layout ⇧A" shortcut="Shift+A" onClick={() => write(edit, { display: 'flex' })} />}
+          <SelectField
+            prop="display"
+            label="Display"
+            short="Display"
+            edit={edit}
+            options={DISPLAYS}
+          />
+          {!flex && !grid && (
+            <AddButton
+              label="Auto layout"
+              tip="Add auto layout ⇧A"
+              shortcut="Shift+A"
+              onClick={() => write(edit, { display: "flex" })}
+            />
+          )}
         </div>
         {flex && <FlexControls edit={edit} />}
         {grid && <GridControls edit={edit} />}
@@ -237,13 +413,27 @@ export function AutoLayoutSection({ edit, title = 'Auto layout', lead, children 
 
 function liveFacts(edit: DirectEdit, selection: SelectionContext): SizeFacts {
   const facts = sizeFacts(selection.styles);
-  const drafted = (['width', 'height'] as const).filter((axis) => edit.dirty.includes(axis));
-  return drafted.length === 0 ? facts : { ...facts, authored: { ...facts.authored, ...Object.fromEntries(drafted.map((axis) => [axis, edit.values[axis].trim()])) } };
+  const drafted = (["width", "height"] as const).filter((axis) =>
+    edit.dirty.includes(axis)
+  );
+  return drafted.length === 0
+    ? facts
+    : {
+        ...facts,
+        authored: {
+          ...facts.authored,
+          ...Object.fromEntries(
+            drafted.map((axis) => [axis, edit.values[axis].trim()])
+          ),
+        },
+      };
 }
 
 function roundedPx(value: string): string {
   const px = Number.parseFloat(value);
-  return value.endsWith('px') && Number.isFinite(px) ? `${Math.round(px * 10) / 10}px` : value;
+  return value.endsWith("px") && Number.isFinite(px)
+    ? `${Math.round(px * 10) / 10}px`
+    : value;
 }
 
 interface FixedDrag {
@@ -254,77 +444,129 @@ interface FixedDrag {
   used: string;
 }
 
-function startFixedDrag(event: ReactPointerEvent<HTMLLabelElement>, o: FixedDrag): void {
+function startFixedDrag(
+  event: ReactPointerEvent<HTMLLabelElement>,
+  o: FixedDrag
+): void {
   if (event.button !== 0) return;
   event.preventDefault();
-  const start = { x: event.clientX, value: Math.round(Number.parseFloat(o.used) || 0), values: o.edit.values };
+  const start = {
+    x: event.clientX,
+    value: Math.round(Number.parseFloat(o.used) || 0),
+    values: o.edit.values,
+  };
   let moved = false;
   const move = (ev: PointerEvent) => {
     const steps = Math.trunc((ev.clientX - start.x) / 2);
     if (steps === 0 && !moved) return;
     moved = true;
-    document.body.classList.add('ins-scrubbing');
+    document.body.classList.add("ins-scrubbing");
     const next = Math.max(0, start.value + steps * (ev.shiftKey ? 10 : 1));
-    o.edit.preview(sizePatch(o.axis, 'fixed', start.values, o.parent, `${next}px`, o.facts));
+    o.edit.preview(
+      sizePatch(o.axis, "fixed", start.values, o.parent, `${next}px`, o.facts)
+    );
   };
   const stop = () => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', stop);
-    window.removeEventListener('pointercancel', stop);
-    document.body.classList.remove('ins-scrubbing');
+    window.removeEventListener("pointermove", move);
+    window.removeEventListener("pointerup", stop);
+    window.removeEventListener("pointercancel", stop);
+    document.body.classList.remove("ins-scrubbing");
     if (!moved) return;
     o.edit.commit();
     const eat = (click: MouseEvent) => {
       click.preventDefault();
       click.stopPropagation();
     };
-    window.addEventListener('click', eat, { capture: true, once: true });
-    window.setTimeout(() => window.removeEventListener('click', eat, { capture: true }), 0);
+    window.addEventListener("click", eat, { capture: true, once: true });
+    window.setTimeout(
+      () => window.removeEventListener("click", eat, { capture: true }),
+      0
+    );
   };
-  window.addEventListener('pointermove', move);
-  window.addEventListener('pointerup', stop);
-  window.addEventListener('pointercancel', stop);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", stop);
+  window.addEventListener("pointercancel", stop);
 }
 
 function LiveSize({ axis, value }: { axis: Axis; value: number }) {
-  const short = axis === 'width' ? 'W' : 'H';
+  const short = axis === "width" ? "W" : "H";
   return (
-    <div className="ins-field ins-size-display" role="status" aria-label={`${axis === 'width' ? 'Width' : 'Height'} ${value}px while resizing`}>
+    <div
+      className="ins-field ins-size-display"
+      role="status"
+      aria-label={`${axis === "width" ? "Width" : "Height"} ${value}px while resizing`}
+    >
       <span className="ins-scrub static" aria-hidden="true">
         {short}
       </span>
-      <input className="ins-input num" tabIndex={-1} aria-hidden="true" value={`${value}px`} readOnly />
+      <input
+        className="ins-input num"
+        tabIndex={-1}
+        aria-hidden="true"
+        value={`${value}px`}
+        readOnly
+      />
     </div>
   );
 }
 
-function SizeValue({ axis, mode, used, edit, onDrag }: { axis: Axis; mode: SizeMode; used: string; edit: DirectEdit; onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void }) {
+function SizeValue({
+  axis,
+  mode,
+  used,
+  edit,
+  onDrag,
+}: {
+  axis: Axis;
+  mode: SizeMode;
+  used: string;
+  edit: DirectEdit;
+  onDrag: (event: ReactPointerEvent<HTMLLabelElement>) => void;
+}) {
   const [editing, setEditing] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
-  const short = axis === 'width' ? 'W' : 'H';
-  const name = axis === 'width' ? 'Width' : 'Height';
+  const short = axis === "width" ? "W" : "H";
+  const name = axis === "width" ? "Width" : "Height";
   useEffect(() => {
-    if (editing) wrap.current?.querySelector<HTMLInputElement>('input.ins-input')?.focus();
+    if (editing)
+      wrap.current?.querySelector<HTMLInputElement>("input.ins-input")?.focus();
   }, [editing]);
   useEffect(() => {
-    if (mode !== 'fixed' && !wrap.current?.contains(document.activeElement)) setEditing(false);
+    if (mode !== "fixed" && !wrap.current?.contains(document.activeElement))
+      setEditing(false);
   }, [mode]);
-  if (mode === 'fixed' || editing) {
+  if (mode === "fixed" || editing) {
     const leave = (event: FocusEvent<HTMLDivElement>) => {
       const next = event.relatedTarget;
-      if (!(next instanceof Node && event.currentTarget.contains(next))) setEditing(false);
+      if (!(next instanceof Node && event.currentTarget.contains(next)))
+        setEditing(false);
     };
     return (
-      <div ref={wrap} style={{ display: 'contents' }} onBlur={mode === 'fixed' ? undefined : leave}>
-        <NumberField short={short} spec={{ prop: axis, label: name, edit, min: 0 }} />
+      <div
+        ref={wrap}
+        style={{ display: "contents" }}
+        onBlur={mode === "fixed" ? undefined : leave}
+      >
+        <NumberField
+          short={short}
+          spec={{ prop: axis, label: name, edit, min: 0 }}
+        />
       </div>
     );
   }
-  const label = SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
+  const label =
+    SIZE_MODES.find((option) => option.value === mode)?.label ?? mode;
   const px = roundedPx(used);
   return (
-    <div className="ins-field ins-size-display" data-tip={`${label}: ${px} now. Type or drag the label to set a fixed ${axis}.`}>
-      <label htmlFor={`ins-${axis}`} className="ins-scrub" onPointerDown={onDrag}>
+    <div
+      className="ins-field ins-size-display"
+      data-tip={`${label}: ${px} now. Type or drag the label to set a fixed ${axis}.`}
+    >
+      <label
+        htmlFor={`ins-${axis}`}
+        className="ins-scrub"
+        onPointerDown={onDrag}
+      >
         {short}
       </label>
       <input
@@ -344,54 +586,90 @@ function SizeValue({ axis, mode, used, edit, onDrag }: { axis: Axis; mode: SizeM
   );
 }
 
-function SizeRow({ axis, edit, selection }: { axis: Axis; edit: DirectEdit; selection: SelectionContext }) {
+function SizeRow({
+  axis,
+  edit,
+  selection,
+}: {
+  axis: Axis;
+  edit: DirectEdit;
+  selection: SelectionContext;
+}) {
   const parent = parentLayout(selection.styles);
   const facts = liveFacts(edit, selection);
   const mode = sizeModeOf(axis, edit.values, parent, facts);
-  const name = axis === 'width' ? 'Width' : 'Height';
+  const name = axis === "width" ? "Width" : "Height";
   const used = selection.styles[`used-${axis}`] ?? edit.values[axis];
   const live = useLive(resizeReadout);
   const resizing = live?.selector === selection.selector ? live : null;
   return (
     <>
       {resizing ? (
-        <LiveSize axis={axis} value={axis === 'width' ? resizing.width : resizing.height} />
+        <LiveSize
+          axis={axis}
+          value={axis === "width" ? resizing.width : resizing.height}
+        />
       ) : (
-        <SizeValue key={selection.selector} axis={axis} mode={mode} used={used} edit={edit} onDrag={(event) => startFixedDrag(event, { axis, edit, parent, facts, used })} />
+        <SizeValue
+          key={selection.selector}
+          axis={axis}
+          mode={mode}
+          used={used}
+          edit={edit}
+          onDrag={(event) =>
+            startFixedDrag(event, { axis, edit, parent, facts, used })
+          }
+        />
       )}
       <div className="ins-field select ins-size-field">
-        <UiSelect className="ins-select ins-size-mode" aria-label={`${name} sizing`} value={mode} options={SIZE_MODES} onChange={(next: SizeMode) => write(edit, sizePatch(axis, next, edit.values, parent, used, facts))} />
+        <UiSelect
+          className="ins-select ins-size-mode"
+          aria-label={`${name} sizing`}
+          value={mode}
+          options={SIZE_MODES}
+          onChange={(next: SizeMode) =>
+            write(edit, sizePatch(axis, next, edit.values, parent, used, facts))
+          }
+        />
       </div>
     </>
   );
 }
 
 const SELF: { value: string; icon: IconName; label: string }[] = [
-  { value: 'flex-start', icon: 'selfStart', label: 'Align self start' },
-  { value: 'center', icon: 'selfCenter', label: 'Align self center' },
-  { value: 'flex-end', icon: 'selfEnd', label: 'Align self end' },
-  { value: 'stretch', icon: 'selfStretch', label: 'Align self stretch' },
+  { value: "flex-start", icon: "selfStart", label: "Align self start" },
+  { value: "center", icon: "selfCenter", label: "Align self center" },
+  { value: "flex-end", icon: "selfEnd", label: "Align self end" },
+  { value: "stretch", icon: "selfStretch", label: "Align self stretch" },
 ];
 
 function selfSlot(value: string): string {
-  if (value === 'start' || value === 'self-start') return 'flex-start';
-  if (value === 'end' || value === 'self-end') return 'flex-end';
+  if (value === "start" || value === "self-start") return "flex-start";
+  if (value === "end" || value === "self-end") return "flex-end";
   return value;
 }
 
 function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
-  const current = selfSlot(edit.values['align-self']);
+  const current = selfSlot(edit.values["align-self"]);
   return (
-    <div className={`segmented icons ins-self ${column ? 'column' : ''}`} role="group" aria-label="Align self">
+    <div
+      className={`segmented icons ins-self ${column ? "column" : ""}`}
+      role="group"
+      aria-label="Align self"
+    >
       {SELF.map((option) => (
         <button
           key={option.value}
           type="button"
-          className={current === option.value ? 'on' : ''}
+          className={current === option.value ? "on" : ""}
           aria-label={option.label}
           aria-pressed={current === option.value}
           data-tip={option.label}
-          onClick={() => write(edit, { 'align-self': current === option.value ? '' : option.value })}
+          onClick={() =>
+            write(edit, {
+              "align-self": current === option.value ? "" : option.value,
+            })
+          }
         >
           <Icon name={option.icon} size={14} />
         </button>
@@ -401,16 +679,18 @@ function AlignSelf({ edit, column }: { edit: DirectEdit; column: boolean }) {
 }
 
 const LIMITS = [
-  { prop: 'min-width', short: 'Min W', label: 'Min width' },
-  { prop: 'max-width', short: 'Max W', label: 'Max width' },
-  { prop: 'min-height', short: 'Min H', label: 'Min height' },
-  { prop: 'max-height', short: 'Max H', label: 'Max height' },
+  { prop: "min-width", short: "Min W", label: "Min width" },
+  { prop: "max-width", short: "Max W", label: "Max width" },
+  { prop: "min-height", short: "Min H", label: "Min height" },
+  { prop: "max-height", short: "Max H", label: "Max height" },
 ] as const;
 
-const UNSET_LIMITS = new Set(['', 'auto', 'none', '0', '0px']);
+const UNSET_LIMITS = new Set(["", "auto", "none", "0", "0px"]);
 
 function limitsSet(edit: DirectEdit): boolean {
-  return LIMITS.some((limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim()));
+  return LIMITS.some(
+    (limit) => !UNSET_LIMITS.has(edit.values[limit.prop].trim())
+  );
 }
 
 export function MinMaxRows({ edit }: { edit: DirectEdit }) {
@@ -418,30 +698,49 @@ export function MinMaxRows({ edit }: { edit: DirectEdit }) {
   if (!open && !limitsSet(edit)) {
     return (
       <div className="ins-add-row ins-limits-add">
-        <AddButton label="Min/Max" tip="Add min and max width and height" onClick={() => setOpen(true)} />
+        <AddButton
+          label="Min/Max"
+          tip="Add min and max width and height"
+          onClick={() => setOpen(true)}
+        />
       </div>
     );
   }
   return (
     <div className="ins-grid ins-limits">
       {LIMITS.map((limit) => (
-        <NumberField key={limit.prop} short={limit.short} spec={{ prop: limit.prop, label: limit.label, edit, min: 0 }} />
+        <NumberField
+          key={limit.prop}
+          short={limit.short}
+          spec={{ prop: limit.prop, label: limit.label, edit, min: 0 }}
+        />
       ))}
     </div>
   );
 }
 
-const IN_FLOW = { position: '', top: '', right: '', bottom: '', left: '' };
+const IN_FLOW = { position: "", top: "", right: "", bottom: "", left: "" };
 
 function isPositioned(value: string): boolean {
-  return value === 'absolute' || value === 'fixed';
+  return value === "absolute" || value === "fixed";
 }
 
-function PositionRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+function PositionRows({
+  edit,
+  selection,
+}: {
+  edit: DirectEdit;
+  selection: SelectionContext;
+}) {
   const on = isPositioned(edit.values.position);
   const toggle = () => {
     if (on) write(edit, IN_FLOW);
-    else write(edit, { position: 'absolute', left: selection.styles['offset-left'] || '0px', top: selection.styles['offset-top'] || '0px' });
+    else
+      write(edit, {
+        position: "absolute",
+        left: selection.styles["offset-left"] || "0px",
+        top: selection.styles["offset-top"] || "0px",
+      });
   };
   return (
     <>
@@ -450,10 +749,14 @@ function PositionRows({ edit, selection }: { edit: DirectEdit; selection: Select
           type="button"
           className="btn small has-icon ins-abs-toggle"
           aria-pressed={on}
-          data-tip={on ? 'Put the element back in the flow' : 'Take the element out of the flow. X and Y count from the nearest positioned ancestor.'}
+          data-tip={
+            on
+              ? "Put the element back in the flow"
+              : "Take the element out of the flow. X and Y count from the nearest positioned ancestor."
+          }
           onClick={toggle}
         >
-          <Icon name={on ? 'check' : 'frame'} size={14} />
+          <Icon name={on ? "check" : "frame"} size={14} />
           Absolute position
         </button>
       </div>
@@ -463,40 +766,70 @@ function PositionRows({ edit, selection }: { edit: DirectEdit; selection: Select
 }
 
 const INSET_FIELDS: Record<InsetProp, { short: string; label: string }> = {
-  left: { short: 'X', label: 'Left (X)' },
-  right: { short: 'R', label: 'Right' },
-  top: { short: 'Y', label: 'Top (Y)' },
-  bottom: { short: 'B', label: 'Bottom' },
+  left: { short: "X", label: "Left (X)" },
+  right: { short: "R", label: "Right" },
+  top: { short: "Y", label: "Top (Y)" },
+  bottom: { short: "B", label: "Bottom" },
 };
 
 const PIN_TIPS: Record<PinAxis, string> = {
-  x: 'How the element follows when its container gets wider or narrower',
-  y: 'How the element follows when its container gets taller or shorter',
+  x: "How the element follows when its container gets wider or narrower",
+  y: "How the element follows when its container gets taller or shorter",
 };
 
 const PIN_RESELECT_MS = [400, 1000, 2000, 3500, 6000];
 
-type QueuedPins ={ selector: string; pins: Partial<Record<PinAxis, { mode: PinMode; from: PinMode }>> };
+type QueuedPins = {
+  selector: string;
+  pins: Partial<Record<PinAxis, { mode: PinMode; from: PinMode }>>;
+};
 
-function pinStyles(edit: DirectEdit, selection: SelectionContext): Record<string, string> {
-  const margins = (['margin-top', 'margin-right', 'margin-bottom', 'margin-left'] as const).map((prop) => [prop, edit.values[prop] ?? '']);
+function pinStyles(
+  edit: DirectEdit,
+  selection: SelectionContext
+): Record<string, string> {
+  const margins = (
+    ["margin-top", "margin-right", "margin-bottom", "margin-left"] as const
+  ).map((prop) => [prop, edit.values[prop] ?? ""]);
   return { ...selection.styles, ...Object.fromEntries(margins) };
 }
 
 function hasPinGeometry(selection: SelectionContext): boolean {
-  return selection.styles['container-width'] !== undefined && selection.styles['pin-left'] !== undefined;
+  return (
+    selection.styles["container-width"] !== undefined &&
+    selection.styles["pin-left"] !== undefined
+  );
 }
 
-function useQueuedPins(edit: DirectEdit, selection: SelectionContext, applied: (modes: Partial<Record<PinAxis, PinMode>>) => void) {
+function useQueuedPins(
+  edit: DirectEdit,
+  selection: SelectionContext,
+  applied: (modes: Partial<Record<PinAxis, PinMode>>) => void
+) {
   const [queued, setQueued] = useState<QueuedPins | null>(null);
   const ready = hasPinGeometry(selection);
   useEffect(() => {
     if (!queued) return;
     if (queued.selector !== selection.selector) return setQueued(null);
     if (!ready) return;
-    const patch = (Object.entries(queued.pins) as [PinAxis, { mode: PinMode; from: PinMode }][]).reduce<Record<string, string>>((all, [axis, pin]) => ({ ...all, ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from) }), {});
+    const patch = (
+      Object.entries(queued.pins) as [
+        PinAxis,
+        { mode: PinMode; from: PinMode },
+      ][]
+    ).reduce<Record<string, string>>(
+      (all, [axis, pin]) => ({
+        ...all,
+        ...pinPatch(axis, pin.mode, pinStyles(edit, selection), pin.from),
+      }),
+      {}
+    );
     setQueued(null);
-    applied(Object.fromEntries(Object.entries(queued.pins).map(([axis, pin]) => [axis, pin.mode])));
+    applied(
+      Object.fromEntries(
+        Object.entries(queued.pins).map(([axis, pin]) => [axis, pin.mode])
+      )
+    );
     edit.preview(patch, true);
     edit.commit();
   }, [queued, ready, selection, edit, applied]);
@@ -508,11 +841,33 @@ function useQueuedPins(edit: DirectEdit, selection: SelectionContext, applied: (
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [waiting, reselect]);
   const queue = (axis: PinAxis, mode: PinMode, from: PinMode) =>
-    setQueued((prev) => ({ selector: selection.selector, pins: { ...(prev?.selector === selection.selector ? prev.pins : {}), [axis]: { mode, from: prev?.pins[axis]?.from ?? from } } }));
+    setQueued((prev) => ({
+      selector: selection.selector,
+      pins: {
+        ...(prev?.selector === selection.selector ? prev.pins : {}),
+        [axis]: { mode, from: prev?.pins[axis]?.from ?? from },
+      },
+    }));
   return { ready, queue };
 }
 
-function PinSelect({ axis, mode, edit, selection, onPick, ready, queue }: { axis: PinAxis; mode: PinMode; edit: DirectEdit; selection: SelectionContext; onPick: (axis: PinAxis, mode: PinMode) => void; ready: boolean; queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void }) {
+function PinSelect({
+  axis,
+  mode,
+  edit,
+  selection,
+  onPick,
+  ready,
+  queue,
+}: {
+  axis: PinAxis;
+  mode: PinMode;
+  edit: DirectEdit;
+  selection: SelectionContext;
+  onPick: (axis: PinAxis, mode: PinMode) => void;
+  ready: boolean;
+  queue: (axis: PinAxis, mode: PinMode, from: PinMode) => void;
+}) {
   const change = (next: PinMode) => {
     if (next === mode) return;
     onPick(axis, next);
@@ -521,45 +876,114 @@ function PinSelect({ axis, mode, edit, selection, onPick, ready, queue }: { axis
     edit.commit();
   };
   return (
-    <div className="ins-field select ins-pin" data-tip={PIN_TIPS[axis]} data-tip-align="end">
-      <span className="ins-scrub static">{axis === 'x' ? 'H' : 'V'}</span>
-      <UiSelect className="ins-select" aria-label={axis === 'x' ? 'Horizontal constraint' : 'Vertical constraint'} value={mode} options={PIN_OPTIONS[axis]} onChange={change} />
+    <div
+      className="ins-field select ins-pin"
+      data-tip={PIN_TIPS[axis]}
+      data-tip-align="end"
+    >
+      <span className="ins-scrub static">{axis === "x" ? "H" : "V"}</span>
+      <UiSelect
+        className="ins-select"
+        aria-label={
+          axis === "x" ? "Horizontal constraint" : "Vertical constraint"
+        }
+        value={mode}
+        options={PIN_OPTIONS[axis]}
+        onChange={change}
+      />
     </div>
   );
 }
 
-function usePinModes(selection: SelectionContext): { modes: Record<PinAxis, PinMode>; pick: (next: Partial<Record<PinAxis, PinMode>>) => void } {
-  const authored = ['left', 'right', 'top', 'bottom'].map((side) => selection.styles[`authored-${side}`] ?? '').join('|');
+function usePinModes(selection: SelectionContext): {
+  modes: Record<PinAxis, PinMode>;
+  pick: (next: Partial<Record<PinAxis, PinMode>>) => void;
+} {
+  const authored = ["left", "right", "top", "bottom"]
+    .map((side) => selection.styles[`authored-${side}`] ?? "")
+    .join("|");
   const key = `${selection.selector}|${authored}`;
-  const [picked, setPicked] = useState<{ key: string; modes: Partial<Record<PinAxis, PinMode>> }>({ key, modes: {} });
+  const [picked, setPicked] = useState<{
+    key: string;
+    modes: Partial<Record<PinAxis, PinMode>>;
+  }>({ key, modes: {} });
   const fresh = picked.key === key ? picked.modes : {};
-  const modes = { x: fresh.x ?? pinModeOf('x', selection.styles), y: fresh.y ?? pinModeOf('y', selection.styles) };
-  const pick = useCallback((next: Partial<Record<PinAxis, PinMode>>) => setPicked((prev) => ({ key, modes: { ...(prev.key.startsWith(`${selection.selector}|`) ? prev.modes : {}), ...next } })), [key, selection.selector]);
+  const modes = {
+    x: fresh.x ?? pinModeOf("x", selection.styles),
+    y: fresh.y ?? pinModeOf("y", selection.styles),
+  };
+  const pick = useCallback(
+    (next: Partial<Record<PinAxis, PinMode>>) =>
+      setPicked((prev) => ({
+        key,
+        modes: {
+          ...(prev.key.startsWith(`${selection.selector}|`) ? prev.modes : {}),
+          ...next,
+        },
+      })),
+    [key, selection.selector]
+  );
   return { modes, pick };
 }
 
-function ConstraintRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+function ConstraintRows({
+  edit,
+  selection,
+}: {
+  edit: DirectEdit;
+  selection: SelectionContext;
+}) {
   const { modes, pick } = usePinModes(selection);
   const { ready, queue } = useQueuedPins(edit, selection, pick);
-  const fields = [...pinFields('x', modes.x), ...pinFields('y', modes.y)];
+  const fields = [...pinFields("x", modes.x), ...pinFields("y", modes.y)];
   return (
     <>
       {fields.length > 0 && (
         <div className="ins-grid">
           {fields.map((prop) => (
-            <NumberField key={prop} short={INSET_FIELDS[prop].short} spec={{ prop, label: INSET_FIELDS[prop].label, edit }} />
+            <NumberField
+              key={prop}
+              short={INSET_FIELDS[prop].short}
+              spec={{ prop, label: INSET_FIELDS[prop].label, edit }}
+            />
           ))}
         </div>
       )}
-      <div className="ins-grid ins-constraints" role="group" aria-label="Constraints">
-        <PinSelect axis="x" mode={modes.x} edit={edit} selection={selection} onPick={(axis, mode) => pick({ [axis]: mode })} ready={ready} queue={queue} />
-        <PinSelect axis="y" mode={modes.y} edit={edit} selection={selection} onPick={(axis, mode) => pick({ [axis]: mode })} ready={ready} queue={queue} />
+      <div
+        className="ins-grid ins-constraints"
+        role="group"
+        aria-label="Constraints"
+      >
+        <PinSelect
+          axis="x"
+          mode={modes.x}
+          edit={edit}
+          selection={selection}
+          onPick={(axis, mode) => pick({ [axis]: mode })}
+          ready={ready}
+          queue={queue}
+        />
+        <PinSelect
+          axis="y"
+          mode={modes.y}
+          edit={edit}
+          selection={selection}
+          onPick={(axis, mode) => pick({ [axis]: mode })}
+          ready={ready}
+          queue={queue}
+        />
       </div>
     </>
   );
 }
 
-export function SizeRows({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+export function SizeRows({
+  edit,
+  selection,
+}: {
+  edit: DirectEdit;
+  selection: SelectionContext;
+}) {
   const parent = parentLayout(selection.styles);
   return (
     <>
@@ -568,13 +992,21 @@ export function SizeRows({ edit, selection }: { edit: DirectEdit; selection: Sel
         <SizeRow axis="height" edit={edit} selection={selection} />
       </div>
       <MinMaxRows edit={edit} />
-      {(parent.flex || parent.grid) && !isPositioned(edit.values.position) && <AlignSelf edit={edit} column={parent.flex && !parent.row} />}
+      {(parent.flex || parent.grid) && !isPositioned(edit.values.position) && (
+        <AlignSelf edit={edit} column={parent.flex && !parent.row} />
+      )}
       <PositionRows edit={edit} selection={selection} />
     </>
   );
 }
 
-export function SizeSection({ edit, selection }: { edit: DirectEdit; selection: SelectionContext }) {
+export function SizeSection({
+  edit,
+  selection,
+}: {
+  edit: DirectEdit;
+  selection: SelectionContext;
+}) {
   return (
     <InspectorSection title="Size">
       <SizeRows edit={edit} selection={selection} />

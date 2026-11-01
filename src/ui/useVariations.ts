@@ -1,9 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { VARIATION_MIN, type Direction, type Project, type RunLevel, type RunRequest, type SelectionContext, type VariationBrief, type VariationBriefsResult } from '../shared/contracts';
-import { resolveRunConfig } from '../shared/run-levels';
-import { errorText } from './api';
-import { showVariationFrames } from './canvasVariations';
-import { maxVariationsFor, variationsApi } from './variationsApi';
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import {
+  VARIATION_MIN,
+  type Direction,
+  type Project,
+  type RunLevel,
+  type RunRequest,
+  type SelectionContext,
+  type VariationBrief,
+  type VariationBriefsResult,
+} from "../shared/contracts";
+import { resolveRunConfig } from "../shared/run-levels";
+import { errorText } from "./api";
+import { showVariationFrames } from "./canvasVariations";
+import { maxVariationsFor, variationsApi } from "./variationsApi";
 
 export interface BriefDraft {
   prompt: string;
@@ -28,7 +38,7 @@ interface Options {
   seedRun: (runId: string, directionId: string, request: RunRequest) => void;
 }
 
-const COUNT_KEY = 'studio.variations.count';
+const COUNT_KEY = "studio.variations.count";
 
 function storedCount(): number {
   const raw = Number(window.localStorage.getItem(COUNT_KEY));
@@ -36,15 +46,25 @@ function storedCount(): number {
 }
 
 function relabel(briefs: VariationBrief[]): VariationBrief[] {
-  return briefs.map((brief, index) => ({ ...brief, label: 'ABCD'[index] ?? String(index + 1) }));
+  return briefs.map((brief, index) => ({
+    ...brief,
+    label: "ABCD"[index] ?? String(index + 1),
+  }));
 }
 
-export { formatUsd as money } from './format';
+export { formatUsd as money } from "./format";
 
-export function budgetFor(project: Project | null, level: RunLevel, count: number): { perRun: number | null; total: number | null } {
+export function budgetFor(
+  project: Project | null,
+  level: RunLevel,
+  count: number
+): { perRun: number | null; total: number | null } {
   if (!project) return { perRun: 0, total: 0 };
   const perRun = resolveRunConfig(project.settings, level).maxBudgetUsd;
-  return { perRun, total: perRun === null ? null : Math.round(perRun * count * 100) / 100 };
+  return {
+    perRun,
+    total: perRun === null ? null : Math.round(perRun * count * 100) / 100,
+  };
 }
 
 export function useVariations(o: Options) {
@@ -74,101 +94,229 @@ export function useVariations(o: Options) {
     setAsk(null);
   }, [o.projectId]);
 
-  const startWith = useCallback(async (current: BriefDraft, briefs: VariationBrief[]) => {
-    const { projectId, seedRun, direction, setDirectionId } = opts.current;
-    setDraft({ ...current, starting: true, error: null });
-    try {
-      const result = await variationsApi.start(projectId, {
-        prompt: current.prompt,
-        briefs,
-        level: current.level,
-        fromDirectionId: current.fromDirectionId,
-        ...(current.attachmentIds.length ? { attachmentIds: current.attachmentIds } : {}),
-        ...(current.element ? { element: current.element } : {}),
-      });
-      result.items.forEach((item, index) => {
-        const brief = briefs[index];
-        if (!item.runId || !item.directionId || !brief) return;
-        seedRun(item.runId, item.directionId, { prompt: current.prompt, mode: 'edit', level: current.level, variation: { ...brief, index, count: briefs.length } });
-      });
-      const failed = result.items.filter((item) => item.error);
-      setNotice(failed.length ? failed.map((item) => `${item.label}: ${item.error}`).join(' ') : null);
-      setDraft(null);
-      setGroupId(result.groupId);
-      const ids = result.items.map((item) => item.directionId).filter((id): id is string => Boolean(id));
-      const currentId = direction?.id ?? null;
-      const live = showVariationFrames(projectId, ids, currentId, !direction?.headVersionId);
-      if (live && live !== currentId) setDirectionId(live);
-    } catch (err) {
-      setDraft({ ...current, starting: false, autoStart: false, error: errorText(err) });
-    }
-  }, []);
+  const startWith = useCallback(
+    async (current: BriefDraft, briefs: VariationBrief[]) => {
+      const { projectId, seedRun, direction, setDirectionId } = opts.current;
+      setDraft({ ...current, starting: true, error: null });
+      try {
+        const result = await variationsApi.start(projectId, {
+          prompt: current.prompt,
+          briefs,
+          level: current.level,
+          fromDirectionId: current.fromDirectionId,
+          ...(current.attachmentIds.length
+            ? { attachmentIds: current.attachmentIds }
+            : {}),
+          ...(current.element ? { element: current.element } : {}),
+        });
+        result.items.forEach((item, index) => {
+          const brief = briefs[index];
+          if (!item.runId || !item.directionId || !brief) return;
+          seedRun(item.runId, item.directionId, {
+            prompt: current.prompt,
+            mode: "edit",
+            level: current.level,
+            variation: { ...brief, index, count: briefs.length },
+          });
+        });
+        const failed = result.items.filter((item) => item.error);
+        setNotice(
+          failed.length
+            ? failed.map((item) => `${item.label}: ${item.error}`).join(" ")
+            : null
+        );
+        setDraft(null);
+        setGroupId(result.groupId);
+        const ids = result.items
+          .map((item) => item.directionId)
+          .filter((id): id is string => Boolean(id));
+        const currentId = direction?.id ?? null;
+        const live = showVariationFrames(
+          projectId,
+          ids,
+          currentId,
+          !direction?.headVersionId
+        );
+        if (live && live !== currentId) setDirectionId(live);
+      } catch (err) {
+        setDraft({
+          ...current,
+          starting: false,
+          autoStart: false,
+          error: errorText(err),
+        });
+      }
+    },
+    []
+  );
 
   const propose = useCallback(
-    async (prompt: string, level: RunLevel, attachmentIds: string[], requestedCount?: number) => {
+    async (
+      prompt: string,
+      level: RunLevel,
+      attachmentIds: string[],
+      requestedCount?: number
+    ) => {
       const { projectId, project, direction } = opts.current;
-      const count = requestedCount === undefined ? effectiveCount : Math.min(requestedCount, project ? maxVariationsFor(project.kind) : requestedCount);
+      const count =
+        requestedCount === undefined
+          ? effectiveCount
+          : Math.min(
+              requestedCount,
+              project ? maxVariationsFor(project.kind) : requestedCount
+            );
       const fromDirectionId = direction?.headVersionId ? direction.id : null;
       const ticket = requestRef.current + 1;
       requestRef.current = ticket;
       autoStartRef.current = false;
-      const base: BriefDraft = { prompt, level, attachmentIds, count, fromDirectionId, briefs: null, result: null, loading: true, starting: false, autoStart: false, error: null, element: null };
+      const base: BriefDraft = {
+        prompt,
+        level,
+        attachmentIds,
+        count,
+        fromDirectionId,
+        briefs: null,
+        result: null,
+        loading: true,
+        starting: false,
+        autoStart: false,
+        error: null,
+        element: null,
+      };
       setDraft(base);
       try {
-        const result = await variationsApi.briefs(projectId, { prompt, count, fromDirectionId });
+        const result = await variationsApi.briefs(projectId, {
+          prompt,
+          count,
+          fromDirectionId,
+        });
         if (requestRef.current !== ticket) return;
-        const ready: BriefDraft = { ...base, briefs: result.briefs, result, loading: false, autoStart: autoStartRef.current };
+        const ready: BriefDraft = {
+          ...base,
+          briefs: result.briefs,
+          result,
+          loading: false,
+          autoStart: autoStartRef.current,
+        };
         if (autoStartRef.current) await startWith(ready, result.briefs);
         else setDraft(ready);
       } catch (err) {
-        if (requestRef.current === ticket) setDraft({ ...base, loading: false, error: errorText(err) });
+        if (requestRef.current === ticket)
+          setDraft({ ...base, loading: false, error: errorText(err) });
       }
     },
-    [effectiveCount, startWith],
+    [effectiveCount, startWith]
   );
 
   const proposeElement = useCallback(
-    async (element: SelectionContext, note: string, requestedCount: number, level: RunLevel) => {
+    async (
+      element: SelectionContext,
+      note: string,
+      requestedCount: number,
+      level: RunLevel
+    ) => {
       const { projectId, project, direction } = opts.current;
-      const count = Math.max(VARIATION_MIN, Math.min(requestedCount, project ? maxVariationsFor(project.kind) : requestedCount));
-      const prompt = note.trim() || `Try different versions of this ${element.tag}`;
+      const count = Math.max(
+        VARIATION_MIN,
+        Math.min(
+          requestedCount,
+          project ? maxVariationsFor(project.kind) : requestedCount
+        )
+      );
+      const prompt =
+        note.trim() || `Try different versions of this ${element.tag}`;
       const fromDirectionId = direction?.id ?? null;
       const ticket = requestRef.current + 1;
       requestRef.current = ticket;
       autoStartRef.current = true;
       setAsk(null);
-      const base: BriefDraft = { prompt, level, attachmentIds: [], count, fromDirectionId, briefs: null, result: null, loading: true, starting: false, autoStart: true, error: null, element };
+      const base: BriefDraft = {
+        prompt,
+        level,
+        attachmentIds: [],
+        count,
+        fromDirectionId,
+        briefs: null,
+        result: null,
+        loading: true,
+        starting: false,
+        autoStart: true,
+        error: null,
+        element,
+      };
       setDraft(base);
       try {
-        const result = await variationsApi.briefs(projectId, { prompt, count, fromDirectionId, element });
+        const result = await variationsApi.briefs(projectId, {
+          prompt,
+          count,
+          fromDirectionId,
+          element,
+        });
         if (requestRef.current !== ticket) return;
-        const ready: BriefDraft = { ...base, briefs: result.briefs, result, loading: false };
+        const ready: BriefDraft = {
+          ...base,
+          briefs: result.briefs,
+          result,
+          loading: false,
+        };
         if (autoStartRef.current) await startWith(ready, result.briefs);
         else setDraft({ ...ready, autoStart: false });
       } catch (err) {
-        if (requestRef.current === ticket) setDraft({ ...base, loading: false, autoStart: false, error: errorText(err) });
+        if (requestRef.current === ticket)
+          setDraft({
+            ...base,
+            loading: false,
+            autoStart: false,
+            error: errorText(err),
+          });
       }
     },
-    [startWith],
+    [startWith]
   );
 
-  const keepElement = useCallback(async (groupId: string, directionId: string) => {
-    const { projectId, setDirectionId } = opts.current;
-    const kept = await variationsApi.keep(projectId, groupId, directionId);
-    setDirectionId(kept.directionId);
-    return kept;
-  }, []);
+  const keepElement = useCallback(
+    async (groupId: string, directionId: string) => {
+      const { projectId, setDirectionId } = opts.current;
+      const kept = await variationsApi.keep(projectId, groupId, directionId);
+      setDirectionId(kept.directionId);
+      return kept;
+    },
+    []
+  );
 
-  const editBrief = useCallback((index: number, patch: Partial<Pick<VariationBrief, 'title' | 'brief'>>) => {
-    setDraft((prev) => (prev?.briefs ? { ...prev, briefs: prev.briefs.map((brief, i) => (i === index ? { ...brief, ...patch } : brief)) } : prev));
-  }, []);
+  const editBrief = useCallback(
+    (
+      index: number,
+      patch: Partial<Pick<VariationBrief, "title" | "brief">>
+    ) => {
+      setDraft((prev) =>
+        prev?.briefs
+          ? {
+              ...prev,
+              briefs: prev.briefs.map((brief, i) =>
+                i === index ? { ...brief, ...patch } : brief
+              ),
+            }
+          : prev
+      );
+    },
+    []
+  );
 
   const removeBrief = useCallback((index: number) => {
-    setDraft((prev) => (prev?.briefs && prev.briefs.length > VARIATION_MIN ? { ...prev, briefs: relabel(prev.briefs.filter((_, i) => i !== index)) } : prev));
+    setDraft((prev) =>
+      prev?.briefs && prev.briefs.length > VARIATION_MIN
+        ? {
+            ...prev,
+            briefs: relabel(prev.briefs.filter((_, i) => i !== index)),
+          }
+        : prev
+    );
   }, []);
 
   const start = useCallback(() => {
-    if (draft?.briefs && !draft.starting) void startWith(draft, relabel(draft.briefs));
+    if (draft?.briefs && !draft.starting)
+      void startWith(draft, relabel(draft.briefs));
   }, [draft, startWith]);
 
   const skip = useCallback(() => {
@@ -181,12 +329,29 @@ export function useVariations(o: Options) {
     setDraft({ ...draft, autoStart: true });
   }, [draft, startWith]);
 
-  const mix = useCallback(async (fromDirectionId: string, toDirectionId: string, element: SelectionContext, level: RunLevel) => {
-    const { projectId, seedRun } = opts.current;
-    const { runId } = await variationsApi.mix(projectId, { fromDirectionId, toDirectionId, element, level });
-    seedRun(runId, toDirectionId, { prompt: `Use the ${element.tag} from another variation`, mode: 'edit', level });
-    return runId;
-  }, []);
+  const mix = useCallback(
+    async (
+      fromDirectionId: string,
+      toDirectionId: string,
+      element: SelectionContext,
+      level: RunLevel
+    ) => {
+      const { projectId, seedRun } = opts.current;
+      const { runId } = await variationsApi.mix(projectId, {
+        fromDirectionId,
+        toDirectionId,
+        element,
+        level,
+      });
+      seedRun(runId, toDirectionId, {
+        prompt: `Use the ${element.tag} from another variation`,
+        mode: "edit",
+        level,
+      });
+      return runId;
+    },
+    []
+  );
 
   const cancelAll = useCallback(async (groupId: string) => {
     await variationsApi.cancel(opts.current.projectId, groupId);

@@ -1,12 +1,24 @@
-import { watch } from 'chokidar';
-import type { FSWatcher } from 'chokidar';
-import { watch as watchTree } from 'node:fs';
-import { readdir, stat } from 'node:fs/promises';
-import path from 'node:path';
-import type { Direction, Project } from '../../shared/contracts.js';
-import type { EventBus, ProjectStore, VersionStore } from '../types.js';
+import { watch as watchTree } from "node:fs";
+import { readdir, stat } from "node:fs/promises";
+import path from "node:path";
 
-const IGNORED_SEGMENTS = new Set(['node_modules', '.git', 'dist', '.vite', 'vite-cache', '.DS_Store', '.studio', '.next', '.turbo']);
+import { watch } from "chokidar";
+import type { FSWatcher } from "chokidar";
+
+import type { Direction, Project } from "../../shared/contracts.js";
+import type { EventBus, ProjectStore, VersionStore } from "../types.js";
+
+const IGNORED_SEGMENTS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  ".vite",
+  "vite-cache",
+  ".DS_Store",
+  ".studio",
+  ".next",
+  ".turbo",
+]);
 const COALESCE_MS = 20;
 const STATUS_INTERVAL_MS = 500;
 
@@ -14,8 +26,17 @@ interface WatcherDeps {
   bus: EventBus;
   projects: ProjectStore;
   versions: VersionStore;
-  onChanged?: (change: { projectId: string; directionId: string; root: string; paths: string[] }) => void;
-  needsReload?: (change: { projectId: string; root: string; paths: string[] }) => boolean;
+  onChanged?: (change: {
+    projectId: string;
+    directionId: string;
+    root: string;
+    paths: string[];
+  }) => void;
+  needsReload?: (change: {
+    projectId: string;
+    root: string;
+    paths: string[];
+  }) => boolean;
 }
 
 interface DirectionWatch {
@@ -36,8 +57,10 @@ interface DirectionWatch {
 
 function isIgnored(root: string, target: string): boolean {
   const relative = path.relative(root, target);
-  if (relative === '' || relative.startsWith('..')) return false;
-  return relative.split(path.sep).some((segment) => IGNORED_SEGMENTS.has(segment));
+  if (relative === "" || relative.startsWith("..")) return false;
+  return relative
+    .split(path.sep)
+    .some((segment) => IGNORED_SEGMENTS.has(segment));
 }
 
 interface TreeWatcher {
@@ -45,7 +68,11 @@ interface TreeWatcher {
 }
 
 function nativeTreeWatch(project: Project): boolean {
-  return process.platform === 'darwin' && project.imported !== null && project.imported.created !== true;
+  return (
+    process.platform === "darwin" &&
+    project.imported !== null &&
+    project.imported.created !== true
+  );
 }
 
 function watchKey(projectId: string, directionId: string): string {
@@ -83,20 +110,32 @@ export class WatcherManager {
       awaitWriteFinish: false,
       persistent: true,
     });
-    const entry = this.entryFor(project, direction, root, watcher, new Promise<void>((resolve) => watcher.once('ready', () => resolve())));
+    const entry = this.entryFor(
+      project,
+      direction,
+      root,
+      watcher,
+      new Promise<void>((resolve) => watcher.once("ready", () => resolve()))
+    );
     const watchedAt = Date.now();
-    watcher.once('ready', () => void this.recordEarlyWrites(entry, watchedAt));
+    watcher.once("ready", () => void this.recordEarlyWrites(entry, watchedAt));
     const onPath = (target: string): void => this.record(entry, target);
-    watcher.on('add', onPath);
-    watcher.on('change', onPath);
-    watcher.on('unlink', onPath);
-    watcher.on('addDir', onPath);
-    watcher.on('unlinkDir', onPath);
-    watcher.on('error', () => undefined);
+    watcher.on("add", onPath);
+    watcher.on("change", onPath);
+    watcher.on("unlink", onPath);
+    watcher.on("addDir", onPath);
+    watcher.on("unlinkDir", onPath);
+    watcher.on("error", () => undefined);
     this.watches.set(key, entry);
   }
 
-  private entryFor(project: Project, direction: Direction, root: string, watcher: TreeWatcher, readyPromise: Promise<void>): DirectionWatch {
+  private entryFor(
+    project: Project,
+    direction: Direction,
+    root: string,
+    watcher: TreeWatcher,
+    readyPromise: Promise<void>
+  ): DirectionWatch {
     return {
       projectId: project.id,
       directionId: direction.id,
@@ -114,21 +153,38 @@ export class WatcherManager {
     };
   }
 
-  private watchNative(project: Project, direction: Direction, root: string): void {
+  private watchNative(
+    project: Project,
+    direction: Direction,
+    root: string
+  ): void {
     let entry: DirectionWatch | null = null;
-    const native = watchTree(root, { recursive: true, persistent: true }, (_event, name) => {
-      if (!entry || !name) return;
-      const target = path.join(root, name.toString());
-      if (!isIgnored(root, target)) this.record(entry, target);
-    });
-    native.on('error', () => undefined);
-    entry = this.entryFor(project, direction, root, { close: () => native.close() }, Promise.resolve());
+    const native = watchTree(
+      root,
+      { recursive: true, persistent: true },
+      (_event, name) => {
+        if (!entry || !name) return;
+        const target = path.join(root, name.toString());
+        if (!isIgnored(root, target)) this.record(entry, target);
+      }
+    );
+    native.on("error", () => undefined);
+    entry = this.entryFor(
+      project,
+      direction,
+      root,
+      { close: () => native.close() },
+      Promise.resolve()
+    );
     this.watches.set(watchKey(project.id, direction.id), entry);
     void this.recordEarlyWrites(entry, Date.now());
   }
 
   ready(projectId: string, directionId: string): Promise<void> {
-    return this.watches.get(watchKey(projectId, directionId))?.readyPromise ?? Promise.resolve();
+    return (
+      this.watches.get(watchKey(projectId, directionId))?.readyPromise ??
+      Promise.resolve()
+    );
   }
 
   unwatchOf(projectId: string, directionId: string): void {
@@ -155,18 +211,25 @@ export class WatcherManager {
         if (entry.flushTimer) clearTimeout(entry.flushTimer);
         if (entry.statusTimer) clearTimeout(entry.statusTimer);
         await entry.watcher.close();
-      }),
+      })
     );
   }
 
-  private async recordEarlyWrites(entry: DirectionWatch, since: number): Promise<void> {
+  private async recordEarlyWrites(
+    entry: DirectionWatch,
+    since: number
+  ): Promise<void> {
     const walk = async (dir: string): Promise<void> => {
       const items = await readdir(dir, { withFileTypes: true }).catch(() => []);
       for (const item of items) {
         const target = path.join(dir, item.name);
         if (entry.closed || isIgnored(entry.root, target)) continue;
         if (item.isDirectory()) await walk(target);
-        else if (item.isFile() && ((await stat(target).catch(() => null))?.mtimeMs ?? 0) >= since) this.record(entry, target);
+        else if (
+          item.isFile() &&
+          ((await stat(target).catch(() => null))?.mtimeMs ?? 0) >= since
+        )
+          this.record(entry, target);
       }
     };
     await walk(entry.root);
@@ -174,10 +237,14 @@ export class WatcherManager {
 
   private record(entry: DirectionWatch, target: string): void {
     if (entry.closed) return;
-    const relative = path.relative(entry.root, target).split(path.sep).join('/');
-    if (!relative || relative.startsWith('..')) return;
+    const relative = path
+      .relative(entry.root, target)
+      .split(path.sep)
+      .join("/");
+    if (!relative || relative.startsWith("..")) return;
     entry.pending.add(relative);
-    if (!entry.flushTimer) entry.flushTimer = setTimeout(() => this.flush(entry), COALESCE_MS);
+    if (!entry.flushTimer)
+      entry.flushTimer = setTimeout(() => this.flush(entry), COALESCE_MS);
   }
 
   private flush(entry: DirectionWatch): void {
@@ -185,16 +252,26 @@ export class WatcherManager {
     if (entry.closed || entry.pending.size === 0) return;
     const paths = [...entry.pending].sort();
     entry.pending.clear();
-    const reload = this.deps.needsReload?.({ projectId: entry.projectId, root: entry.root, paths }) ?? false;
+    const reload =
+      this.deps.needsReload?.({
+        projectId: entry.projectId,
+        root: entry.root,
+        paths,
+      }) ?? false;
     this.deps.bus.emit({
-      type: 'files.changed',
+      type: "files.changed",
       projectId: entry.projectId,
       directionId: entry.directionId,
       paths,
       changedAt: Date.now(),
       ...(reload ? { reload } : {}),
     });
-    this.deps.onChanged?.({ projectId: entry.projectId, directionId: entry.directionId, root: entry.root, paths });
+    this.deps.onChanged?.({
+      projectId: entry.projectId,
+      directionId: entry.directionId,
+      root: entry.root,
+      paths,
+    });
     for (const changed of paths) entry.statusPaths.add(changed);
     this.scheduleStatus(entry);
   }
@@ -205,7 +282,10 @@ export class WatcherManager {
       entry.statusQueued = true;
       return;
     }
-    const wait = Math.max(0, entry.lastStatusAt + STATUS_INTERVAL_MS - Date.now());
+    const wait = Math.max(
+      0,
+      entry.lastStatusAt + STATUS_INTERVAL_MS - Date.now()
+    );
     entry.statusTimer = setTimeout(() => {
       entry.statusTimer = null;
       void this.emitStatus(entry);
@@ -220,11 +300,22 @@ export class WatcherManager {
     entry.statusPaths.clear();
     try {
       const project = await this.deps.projects.get(entry.projectId);
-      const direction = project.directions.find((item) => item.id === entry.directionId);
+      const direction = project.directions.find(
+        (item) => item.id === entry.directionId
+      );
       if (direction && !entry.closed) {
-        const status = await this.deps.versions.status(project, direction, paths);
+        const status = await this.deps.versions.status(
+          project,
+          direction,
+          paths
+        );
         if (!entry.closed) {
-          this.deps.bus.emit({ type: 'status.changed', projectId: entry.projectId, directionId: entry.directionId, status });
+          this.deps.bus.emit({
+            type: "status.changed",
+            projectId: entry.projectId,
+            directionId: entry.directionId,
+            status,
+          });
         }
       }
     } catch {

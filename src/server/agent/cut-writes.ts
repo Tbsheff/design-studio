@@ -1,6 +1,6 @@
-import { readFileSync, statSync } from 'node:fs';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import { readFileSync, statSync } from "node:fs";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 interface WriteStart {
   relative: string;
@@ -27,7 +27,8 @@ export function createCutWriteGuard() {
 
   return {
     start(toolUseId: string, relative: string, absolute: string): void {
-      if (!open.has(toolUseId)) open.set(toolUseId, { relative, absolute, bytes: readStart(absolute) });
+      if (!open.has(toolUseId))
+        open.set(toolUseId, { relative, absolute, bytes: readStart(absolute) });
     },
 
     finish(toolUseId: string, isError: boolean): void {
@@ -40,7 +41,8 @@ export function createCutWriteGuard() {
 
     async restore(): Promise<string[]> {
       const entries = new Map(cut);
-      for (const entry of open.values()) if (!entries.has(entry.relative)) entries.set(entry.relative, entry);
+      for (const entry of open.values())
+        if (!entries.has(entry.relative)) entries.set(entry.relative, entry);
       open.clear();
       cut.clear();
       const restored: string[] = [];

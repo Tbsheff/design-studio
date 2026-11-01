@@ -2,8 +2,13 @@ import { defineConfig, type OxlintOverride } from "oxlint";
 
 import { ELEMENTS, ROOT_POLICIES, dependencies } from "./lint/boundaries.ts";
 import { coarse } from "./lint/coarse.ts";
-import { decisionOverrides, decisions, playwrightAll, vitestAll } from "./lint/decisions.ts";
 import { dayOne } from "./lint/day-one.ts";
+import {
+  decisionOverrides,
+  decisions,
+  playwrightAll,
+  vitestAll,
+} from "./lint/decisions.ts";
 import { legacy } from "./lint/legacy.ts";
 import { antiSlop, core, js, jsPluginSettings, react } from "./lint/presets.ts";
 import { serverOrder } from "./lint/server-order.ts";
@@ -26,22 +31,43 @@ export const LINT_IGNORES = [
 ];
 
 export const BOUNDARY_SETTINGS = {
-  "import/resolver": { [new URL("lint/ts-resolver.cjs", import.meta.url).pathname]: {} },
+  "import/resolver": {
+    [new URL("lint/ts-resolver.cjs", import.meta.url).pathname]: {},
+  },
   "boundaries/elements": ELEMENTS,
 };
 
 export const TEST_OVERRIDES: OxlintOverride[] = [
-  { files: ["src/**/*.test.ts", "desktop/**/*.test.ts", "e2e/support/**/*.test.ts"], plugins: ["vitest"], rules: vitestAll },
+  {
+    files: [
+      "src/**/*.test.ts",
+      "desktop/**/*.test.ts",
+      "e2e/support/**/*.test.ts",
+    ],
+    plugins: ["vitest"],
+    rules: vitestAll,
+  },
   { files: ["e2e/**/*.spec.ts"], rules: playwrightAll },
-  { files: ["oxlint.*.config.ts"], rules: { "github/filenames-match-regex": "off" } },
+  {
+    files: ["oxlint.*.config.ts"],
+    rules: { "github/filenames-match-regex": "off" },
+  },
 ];
 
-export const BOUNDARY_OVERRIDES: OxlintOverride[] = [...coarse, ...serverOrder, ...legacy];
+export const BOUNDARY_OVERRIDES: OxlintOverride[] = [
+  ...coarse,
+  ...serverOrder,
+  ...legacy,
+];
 
 export default defineConfig({
   env: core.env,
   extends: [core, react, js, antiSlop],
-  jsPlugins: [...(js.jsPlugins ?? []), "eslint-plugin-boundaries", "eslint-plugin-playwright"],
+  jsPlugins: [
+    ...(js.jsPlugins ?? []),
+    "eslint-plugin-boundaries",
+    "eslint-plugin-playwright",
+  ],
   options: { typeAware: false },
   ignorePatterns: LINT_IGNORES,
   settings: { ...jsPluginSettings, ...BOUNDARY_SETTINGS },
@@ -49,5 +75,10 @@ export default defineConfig({
     ...decisions.rules,
     "boundaries/dependencies": dependencies("error", ROOT_POLICIES),
   },
-  overrides: [...BOUNDARY_OVERRIDES, ...decisionOverrides, ...TEST_OVERRIDES, ...dayOne],
+  overrides: [
+    ...BOUNDARY_OVERRIDES,
+    ...decisionOverrides,
+    ...TEST_OVERRIDES,
+    ...dayOne,
+  ],
 });

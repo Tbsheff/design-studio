@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { ProjectKind } from '../shared/contracts';
-import type { FilesChange } from './useStudioData';
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+
+import type { ProjectKind } from "../shared/contracts";
+import type { FilesChange } from "./useStudioData";
 
 const SWAP_RELEASE_MS = 4000;
 
@@ -69,7 +70,13 @@ export interface GateTarget {
   headVersionId: string | null;
 }
 
-export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange: FilesChange | null, hold: boolean, liveDirectionId: string | null = null): SwapGate {
+export function useSwapGate(
+  kind: ProjectKind,
+  targets: GateTarget[],
+  lastChange: FilesChange | null,
+  hold: boolean,
+  liveDirectionId: string | null = null
+): SwapGate {
   const queue = useRef(new SwapQueue());
   const [version, bump] = useReducer((n: number) => n + 1, 0);
   const heads = useRef<Record<string, string>>({});
@@ -78,7 +85,7 @@ export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange
   const holdRef = useRef(hold);
   holdRef.current = hold;
   const [liveWait, setLiveWait] = useState(0);
-  const gated = kind === 'html';
+  const gated = kind === "html";
 
   const onSwapDone = useCallback((key: string) => {
     if (queue.current.done(key)) bump();
@@ -86,8 +93,11 @@ export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange
 
   useEffect(() => {
     if (!gated || !lastChange) return;
-    if (lastChange.directionId === liveDirectionId && queue.current.hold(true)) setLiveWait((n) => n + 1);
-    const hits = live.current.filter((target) => target.directionId === lastChange.directionId);
+    if (lastChange.directionId === liveDirectionId && queue.current.hold(true))
+      setLiveWait((n) => n + 1);
+    const hits = live.current.filter(
+      (target) => target.directionId === lastChange.directionId
+    );
     for (const target of hits) queue.current.offer(target.key, lastChange);
     if (hits.length > 0) bump();
   }, [gated, lastChange, liveDirectionId]);
@@ -100,15 +110,31 @@ export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange
     return () => window.clearTimeout(timer);
   }, [liveWait]);
 
-  const headKey = targets.map((target) => `${target.key}:${target.directionId}:${target.headVersionId ?? ''}`).join('|');
+  const headKey = targets
+    .map(
+      (target) =>
+        `${target.key}:${target.directionId}:${target.headVersionId ?? ""}`
+    )
+    .join("|");
   useEffect(() => {
     for (const target of live.current) {
-      const head = `${target.directionId}:${target.headVersionId ?? ''}`;
+      const head = `${target.directionId}:${target.headVersionId ?? ""}`;
       const previous = heads.current[target.key];
       heads.current[target.key] = head;
-      if (!gated || previous === undefined || previous === head || !previous.startsWith(`${target.directionId}:`)) continue;
+      if (
+        !gated ||
+        previous === undefined ||
+        previous === head ||
+        !previous.startsWith(`${target.directionId}:`)
+      )
+        continue;
       const now = Date.now();
-      queue.current.offer(target.key, { directionId: target.directionId, changedAt: now, receivedAt: now, paths: [] });
+      queue.current.offer(target.key, {
+        directionId: target.directionId,
+        changedAt: now,
+        receivedAt: now,
+        paths: [],
+      });
       bump();
     }
   }, [headKey, gated]);
@@ -125,7 +151,13 @@ export function useSwapGate(kind: ProjectKind, targets: GateTarget[], lastChange
     return () => window.clearTimeout(timer);
   }, [flying, flight, onSwapDone]);
 
-  const shownFor = useCallback((directionId: string) => queue.current.shown.get(directionId) ?? null, [version]);
-  const nextFor = useCallback((directionId: string) => queue.current.next.get(directionId) ?? null, [version]);
+  const shownFor = useCallback(
+    (directionId: string) => queue.current.shown.get(directionId) ?? null,
+    [version]
+  );
+  const nextFor = useCallback(
+    (directionId: string) => queue.current.next.get(directionId) ?? null,
+    [version]
+  );
   return { shownFor, nextFor, onSwapDone };
 }

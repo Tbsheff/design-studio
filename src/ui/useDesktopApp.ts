@@ -1,22 +1,34 @@
-import { useEffect, useState } from 'react';
-import type { Project } from '../shared/contracts';
-import type { DesktopCommand } from '../shared/desktop-link';
-import { api, errorText } from './api';
-import { COMMAND_EVENT, LAYER_EVENT } from './commands/registry';
-import { useDesktopCommand, useDesktopContext } from './desktop';
-import { uiStore } from './storage';
-import { isTypingTarget } from './typingTarget';
+import { useEffect, useState } from "react";
 
-function projectForFolder(projects: Project[], folder: string): Project | undefined {
-  const clean = folder.replace(/\/+$/, '');
-  return projects.find((project) => project.imported?.sourcePath === clean || project.directions.some((direction) => direction.workTree === clean));
+import type { Project } from "../shared/contracts";
+import type { DesktopCommand } from "../shared/desktop-link";
+import { api, errorText } from "./api";
+import { COMMAND_EVENT, LAYER_EVENT } from "./commands/registry";
+import { useDesktopCommand, useDesktopContext } from "./desktop";
+import { uiStore } from "./storage";
+import { isTypingTarget } from "./typingTarget";
+
+function projectForFolder(
+  projects: Project[],
+  folder: string
+): Project | undefined {
+  const clean = folder.replace(/\/+$/, "");
+  return projects.find(
+    (project) =>
+      project.imported?.sourcePath === clean ||
+      project.directions.some((direction) => direction.workTree === clean)
+  );
 }
 
 function focusNewProject(): void {
-  window.requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')?.focus());
+  window.requestAnimationFrame(() =>
+    document
+      .querySelector<HTMLTextAreaElement>('[aria-label="Describe the design"]')
+      ?.focus()
+  );
 }
 
-function textEdit(kind: 'undo' | 'redo'): boolean {
+function textEdit(kind: "undo" | "redo"): boolean {
   if (!isTypingTarget(document.activeElement)) return false;
   document.execCommand(kind);
   return true;
@@ -39,21 +51,25 @@ function dropBridge(): DropBridge | undefined {
 }
 
 function hasFiles(event: DragEvent): boolean {
-  return event.dataTransfer?.types.includes('Files') ?? false;
+  return event.dataTransfer?.types.includes("Files") ?? false;
 }
 
 function droppedFolder(event: DragEvent, bridge: DropBridge): string | null {
   for (const item of Array.from(event.dataTransfer?.items ?? [])) {
-    if (item.kind !== 'file' || !item.webkitGetAsEntry()?.isDirectory) continue;
+    if (item.kind !== "file" || !item.webkitGetAsEntry()?.isDirectory) continue;
     const file = item.getAsFile();
-    const folder = file ? bridge.pathForFile?.(file) : '';
+    const folder = file ? bridge.pathForFile?.(file) : "";
     if (folder) return folder;
   }
   return null;
 }
 
 function ownsDrop(event: DragEvent): boolean {
-  return event.defaultPrevented || (event.target instanceof Element && event.target.closest('.prompt') !== null);
+  return (
+    event.defaultPrevented ||
+    (event.target instanceof Element &&
+      event.target.closest(".prompt") !== null)
+  );
 }
 
 function useFolderDrop(): void {
@@ -63,7 +79,7 @@ function useFolderDrop(): void {
     const onDragOver = (event: DragEvent) => {
       if (ownsDrop(event) || !hasFiles(event)) return;
       event.preventDefault();
-      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     };
     const onDrop = (event: DragEvent) => {
       if (ownsDrop(event) || !hasFiles(event)) return;
@@ -71,36 +87,40 @@ function useFolderDrop(): void {
       const folder = droppedFolder(event, bridge);
       if (folder) bridge.openDropped?.(folder);
     };
-    window.addEventListener('dragover', onDragOver);
-    window.addEventListener('drop', onDrop);
+    window.addEventListener("dragover", onDragOver);
+    window.addEventListener("drop", onDrop);
     return () => {
-      window.removeEventListener('dragover', onDragOver);
-      window.removeEventListener('drop', onDrop);
+      window.removeEventListener("dragover", onDragOver);
+      window.removeEventListener("drop", onDrop);
     };
   }, []);
 }
 
 function runAppCommand(id: string): void {
-  const layer = id === 'palette' || id === 'shortcuts';
-  window.dispatchEvent(new CustomEvent(layer ? LAYER_EVENT : COMMAND_EVENT, { detail: id }));
+  const layer = id === "palette" || id === "shortcuts";
+  window.dispatchEvent(
+    new CustomEvent(layer ? LAYER_EVENT : COMMAND_EVENT, { detail: id })
+  );
 }
 
 function useAppCommands(setError: (error: string | null) => void): void {
   useDesktopCommand((command: DesktopCommand) => {
-    if (command.type === 'new-project') {
+    if (command.type === "new-project") {
       uiStore.set({ activeProjectId: null });
       focusNewProject();
-    } else if (command.type === 'open-project') {
+    } else if (command.type === "open-project") {
       setError(null);
       uiStore.set({ activeProjectId: command.projectId });
-    } else if (command.type === 'open-folder') {
+    } else if (command.type === "open-folder") {
       setError(null);
       openFolder(command.path)
         .then((id) => uiStore.set({ activeProjectId: id }))
-        .catch((err) => setError(`Cannot open ${command.path}: ${errorText(err)}`));
-    } else if (command.type === 'undo' || command.type === 'redo') {
+        .catch((err) =>
+          setError(`Cannot open ${command.path}: ${errorText(err)}`)
+        );
+    } else if (command.type === "undo" || command.type === "redo") {
       textEdit(command.type);
-    } else if (command.type === 'command') {
+    } else if (command.type === "command") {
       runAppCommand(command.id);
     }
     return true;
@@ -109,7 +129,10 @@ function useAppCommands(setError: (error: string | null) => void): void {
 
 export function useDesktopApp(activeProjectId: string | null): string | null {
   const [error, setError] = useState<string | null>(null);
-  useDesktopContext({ projectId: null, directionId: null, running: false }, activeProjectId === null);
+  useDesktopContext(
+    { projectId: null, directionId: null, running: false },
+    activeProjectId === null
+  );
   useAppCommands(setError);
   useFolderDrop();
   return error;

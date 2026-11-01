@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import type { DoctorCause } from '../../shared/app-doctor';
-import { api, errorText } from '../api';
-import { CopyButton } from './CopyButton';
-import { Icon } from './Icon';
+import { useState } from "react";
+
+import type { DoctorCause } from "../../shared/app-doctor";
+import { api, errorText } from "../api";
+import { CopyButton } from "./CopyButton";
+import { Icon } from "./Icon";
 
 interface DoctorCardProps {
   projectId: string;
@@ -13,7 +14,14 @@ interface DoctorCardProps {
   onRestart?: (() => void) | undefined;
 }
 
-export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose, onRestart }: DoctorCardProps) {
+export default function DoctorCard({
+  projectId,
+  cause,
+  onFixed,
+  onLog,
+  onClose,
+  onRestart,
+}: DoctorCardProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fix = () => {
@@ -32,13 +40,23 @@ export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose, 
       <div className="app-fail-head">
         <Icon name="alert" size={14} />
         <strong className="grow">{cause.title}</strong>
-        <button type="button" className="icon-btn small" aria-label="Dismiss" data-tip="Dismiss" onClick={onClose}>
+        <button
+          type="button"
+          className="icon-btn small"
+          aria-label="Dismiss"
+          data-tip="Dismiss"
+          onClick={onClose}
+        >
           <Icon name="close" size={12} />
         </button>
       </div>
       <p className="app-fail-message">{cause.detail}</p>
       {cause.evidence[0] && (
-        <span className="app-doctor-evidence" data-tip={cause.evidence.join('\n')} data-tip-align="start">
+        <span
+          className="app-doctor-evidence"
+          data-tip={cause.evidence.join("\n")}
+          data-tip-align="start"
+        >
           <code className="truncate">{cause.evidence[0]}</code>
         </span>
       )}
@@ -55,12 +73,21 @@ export default function DoctorCard({ projectId, cause, onFixed, onLog, onClose, 
         </button>
         <span className="grow" />
         {cause.fix && (
-          <button type="button" className="btn small primary" disabled={busy} onClick={fix}>
-            {busy ? 'Restarting…' : cause.fix.label}
+          <button
+            type="button"
+            className="btn small primary"
+            disabled={busy}
+            onClick={fix}
+          >
+            {busy ? "Restarting…" : cause.fix.label}
           </button>
         )}
-        {!cause.fix && onRestart && cause.severity === 'error' && (
-          <button type="button" className="btn small primary" onClick={onRestart}>
+        {!cause.fix && onRestart && cause.severity === "error" && (
+          <button
+            type="button"
+            className="btn small primary"
+            onClick={onRestart}
+          >
             Restart dev server
           </button>
         )}

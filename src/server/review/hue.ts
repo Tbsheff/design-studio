@@ -1,20 +1,23 @@
-import { converter, parse, type Color } from 'culori';
+import { converter, parse, type Color } from "culori";
 
-const toHsl = converter('hsl');
+const toHsl = converter("hsl");
 const TINTED = 0.15;
 const KEEP_SATURATION = 0.4;
 const HUE_SPAN = 40;
 
 function hsl(value: string | Color) {
-  const color = typeof value === 'string' ? parse(value) : value;
+  const color = typeof value === "string" ? parse(value) : value;
   return color ? toHsl(color) : undefined;
 }
 
 function hueGap(a: number, b: number): number {
-  return Math.abs((((a - b) % 360) + 540) % 360 - 180);
+  return Math.abs(((((a - b) % 360) + 540) % 360) - 180);
 }
 
-export function keepsHue(source: string | Color, target: string | Color): boolean {
+export function keepsHue(
+  source: string | Color,
+  target: string | Color
+): boolean {
   const from = hsl(source);
   const to = hsl(target);
   if (!from || !to) return true;

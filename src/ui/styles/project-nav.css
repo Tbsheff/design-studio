@@ -12,13 +12,13 @@
   box-shadow: inset 0 0 0 1px var(--line);
 }
 
-.pnav-thumb[data-type='next'],
-.pnav-thumb[data-type='vite'] {
+.pnav-thumb[data-type="next"],
+.pnav-thumb[data-type="vite"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }
 
-.pnav-thumb[data-type='design-system'] {
+.pnav-thumb[data-type="design-system"] {
   background: var(--brand-soft);
   color: var(--brand);
 }
@@ -30,19 +30,19 @@
   object-position: top;
 }
 
-.pnav-badge[data-type='next'],
-.pnav-badge[data-type='vite'] {
+.pnav-badge[data-type="next"],
+.pnav-badge[data-type="vite"] {
   background: var(--accent-soft);
   color: var(--accent-text);
 }
 
-.pnav-badge[data-type='html'],
-.pnav-badge[data-type='react'] {
+.pnav-badge[data-type="html"],
+.pnav-badge[data-type="react"] {
   background: var(--ok-soft);
   color: var(--ok);
 }
 
-.pnav-badge[data-type='design-system'] {
+.pnav-badge[data-type="design-system"] {
   background: var(--brand-soft);
   color: var(--text-2);
 }
@@ -55,19 +55,19 @@
   background: var(--text-faint);
 }
 
-.pnav-dot[data-level='ok'] {
+.pnav-dot[data-level="ok"] {
   background: var(--ok);
 }
 
-.pnav-dot[data-level='busy'] {
+.pnav-dot[data-level="busy"] {
   background: var(--accent);
 }
 
-.pnav-dot[data-level='warn'] {
+.pnav-dot[data-level="warn"] {
   background: var(--warn);
 }
 
-.pnav-dot[data-level='failed'] {
+.pnav-dot[data-level="failed"] {
   background: var(--danger);
 }
 
@@ -76,7 +76,7 @@
   position: relative;
 }
 
-.studio[data-rail='open'] {
+.studio[data-rail="open"] {
   --rail-w: 224px;
 }
 
@@ -85,11 +85,11 @@
 }
 
 @media (max-width: 1279px) {
-  .studio[data-rail='open'] > .columns {
+  .studio[data-rail="open"] > .columns {
     --rail-w: 52px;
   }
 
-  .prail[data-state='open'] {
+  .prail[data-state="open"] {
     z-index: 60;
     box-shadow:
       inset -1px 0 0 var(--line),
@@ -109,11 +109,11 @@
   box-shadow: inset -1px 0 0 var(--line);
 }
 
-:root[data-shell='mac'] .prail {
+:root[data-shell="mac"] .prail {
   padding-top: 0;
 }
 
-.prail[data-state='mini'] {
+.prail[data-state="mini"] {
   align-items: center;
   gap: var(--s-2);
   padding-bottom: var(--s-2);
@@ -172,7 +172,7 @@
 }
 
 .prail-item .pnav-thumb::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -184,7 +184,7 @@
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 
-.prail-mini[aria-current='page'] {
+.prail-mini[aria-current="page"] {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
@@ -215,7 +215,9 @@
 }
 
 .prail-find:focus-within {
-  box-shadow: inset 0 0 0 1px var(--accent-line), 0 0 0 3px var(--ring-soft);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-line),
+    0 0 0 3px var(--ring-soft);
 }
 
 .prail .prail-find input,
@@ -274,7 +276,7 @@
   background: var(--tint-hover);
 }
 
-.prail-row[aria-current='page'] {
+.prail-row[aria-current="page"] {
   background: var(--accent-tint);
   box-shadow: inset 0 0 0 1px var(--accent-line);
   font-weight: var(--w-medium);
@@ -299,40 +301,45 @@
   gap: var(--s-1);
 }
 
-.prail[data-state='mini'] .prail-foot {
+.prail[data-state="mini"] .prail-foot {
   margin-top: auto;
 }
 
-.prail[data-state='open'] .prail-foot {
+.prail[data-state="open"] .prail-foot {
   padding: var(--s-2);
   box-shadow: inset 0 1px 0 var(--line);
 }
 
-.prail[data-state='open'] .prail-foot .btn {
+.prail[data-state="open"] .prail-foot .btn {
   justify-content: flex-start;
 }
 
-:root[data-shell='mac'] .prail-top {
+:root[data-shell="mac"] .prail-top {
   height: calc(var(--shell-top) + 30px);
 }
 
-:root[data-shell='mac'] .prail-head {
+:root[data-shell="mac"] .prail-head {
   height: calc(var(--shell-top) + var(--bar-h));
 }
 
-:root[data-shell='mac'] .prail-top,
-:root[data-shell='mac'] .prail-head {
+:root[data-shell="mac"] .prail-top,
+:root[data-shell="mac"] .prail-head {
   padding-top: var(--shell-top);
   -webkit-app-region: drag;
   app-region: drag;
 }
 
-:root[data-shell='mac'] .prail-head > button {
+:root[data-shell="mac"] .prail-head > button {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 
-:root[data-shell='mac'] .studio[data-rail] .pane-head,
-:root[data-shell='mac'] .studio[data-rail][data-pane='collapsed'] .canvas-topbar {
-  padding-left: max(var(--pane-inset, var(--s-3)), calc(var(--shell-inset) - var(--rail-w)));
+:root[data-shell="mac"] .studio[data-rail] .pane-head,
+:root[data-shell="mac"]
+  .studio[data-rail][data-pane="collapsed"]
+  .canvas-topbar {
+  padding-left: max(
+    var(--pane-inset, var(--s-3)),
+    calc(var(--shell-inset) - var(--rail-w))
+  );
 }

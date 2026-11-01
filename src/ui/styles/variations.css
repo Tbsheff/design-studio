@@ -126,7 +126,8 @@
   height: 10px;
   border-radius: var(--r-full);
   background: var(--surface-hover);
-  animation: variation-pulse var(--dur-loop) var(--ease-in-out) infinite alternate;
+  animation: variation-pulse var(--dur-loop) var(--ease-in-out) infinite
+    alternate;
 }
 
 .skeleton-lines span:last-child {
@@ -289,12 +290,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.element-variants-count .btn[aria-disabled='true'] {
+.element-variants-count .btn[aria-disabled="true"] {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.frame-chip.keep[aria-disabled='true'] {
+.frame-chip.keep[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }

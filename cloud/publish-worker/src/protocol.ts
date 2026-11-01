@@ -1,4 +1,4 @@
-export const WORKER_NAME = 'design-studio-publish';
+export const WORKER_NAME = "design-studio-publish";
 export const SCHEMA_VERSION = 1;
 
 export const LIMITS = {
@@ -15,7 +15,7 @@ export const LIMITS = {
   versionsListed: 20,
 } as const;
 
-export type PublishKind = 'site' | 'viewer';
+export type PublishKind = "site" | "viewer";
 
 export interface ManifestFile {
   path: string;
@@ -77,7 +77,11 @@ export interface RemotePublication {
   createdAt: number;
   updatedAt: number;
   versions: RemoteVersion[];
-  views: { total: number; last7: number; days: { day: string; views: number }[] };
+  views: {
+    total: number;
+    last7: number;
+    days: { day: string; views: number }[];
+  };
   commentCount: number;
 }
 

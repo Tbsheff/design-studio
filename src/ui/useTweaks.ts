@@ -1,17 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Project, RunRequest, Version } from '../shared/contracts';
-import { tweaksPreviewCss, type TweakControl, type TweaksState, type TweakValue } from '../shared/tweaks';
-import { ApiError, api, errorText } from './api';
-import { broadcastTweakCss, holdTweakCssUntilReload } from './tokenFrames';
-import { AGENT_BUSY_MESSAGE } from './useTokenDraft';
-import type { FilesChange } from './useStudioData';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { Project, RunRequest, Version } from "../shared/contracts";
+import {
+  tweaksPreviewCss,
+  type TweakControl,
+  type TweaksState,
+  type TweakValue,
+} from "../shared/tweaks";
+import { ApiError, api, errorText } from "./api";
+import { broadcastTweakCss, holdTweakCssUntilReload } from "./tokenFrames";
+import type { FilesChange } from "./useStudioData";
+import { AGENT_BUSY_MESSAGE } from "./useTokenDraft";
 
 type TweakMap = Record<string, TweakValue>;
 
 export const TWEAKS_REQUEST: RunRequest = {
-  prompt: 'Suggest tweaks for this design: add 3 to 8 live controls (spacing, accent color, radius, density, font size, a layout toggle) bound to CSS variables. Keep the look the same at the default values.',
-  mode: 'edit',
-  task: 'tweaks',
+  prompt:
+    "Suggest tweaks for this design: add 3 to 8 live controls (spacing, accent color, radius, density, font size, a layout toggle) bound to CSS variables. Keep the look the same at the default values.",
+  mode: "edit",
+  task: "tweaks",
 };
 
 interface Step {
@@ -27,18 +34,29 @@ interface Options {
   onCommitted: (version: Version) => void;
 }
 
-function changeStamp(change: FilesChange | null, directionId: string | null): number {
+function changeStamp(
+  change: FilesChange | null,
+  directionId: string | null
+): number {
   return change && change.directionId === directionId ? change.receivedAt : 0;
 }
 
-function baseValue(state: TweaksState | null, control: TweakControl): TweakValue {
+function baseValue(
+  state: TweaksState | null,
+  control: TweakControl
+): TweakValue {
   return state?.current[control.id] ?? control.default;
 }
 
 function useTweaksState(o: Options) {
-  const [loaded, setLoaded] = useState<{ key: string; state: TweaksState } | null>(null);
+  const [loaded, setLoaded] = useState<{
+    key: string;
+    state: TweaksState;
+  } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const headVersionId = o.project?.directions.find((x) => x.id === o.directionId)?.headVersionId ?? null;
+  const headVersionId =
+    o.project?.directions.find((x) => x.id === o.directionId)?.headVersionId ??
+    null;
   const stamp = changeStamp(o.lastChange, o.directionId);
   const key = `${o.projectId}:${o.directionId}`;
   const live = useRef(key);
@@ -55,10 +73,15 @@ function useTweaksState(o: Options) {
         setLoaded({ key: want, state });
         setLoadError(null);
       })
-      .catch((err: unknown) => live.current === want && setLoadError(errorText(err)));
+      .catch(
+        (err: unknown) => live.current === want && setLoadError(errorText(err))
+      );
   }, [o.projectId, o.directionId, headVersionId, stamp]);
 
-  const replace = useCallback((state: TweaksState) => setLoaded({ key: live.current, state }), []);
+  const replace = useCallback(
+    (state: TweaksState) => setLoaded({ key: live.current, state }),
+    []
+  );
   const state = loaded?.key === key ? loaded.state : null;
   return { state, loadError, replace };
 }
@@ -86,7 +109,9 @@ export function useTweaks(o: Options) {
     if (frame.current !== null) return;
     frame.current = window.requestAnimationFrame(() => {
       frame.current = null;
-      broadcastTweakCss(tweaksPreviewCss(stateRef.current?.controls ?? [], pendingRef.current));
+      broadcastTweakCss(
+        tweaksPreviewCss(stateRef.current?.controls ?? [], pendingRef.current)
+      );
     });
   }, []);
 
@@ -100,7 +125,7 @@ export function useTweaks(o: Options) {
 
   const discard = useCallback(() => {
     clearDraft();
-    broadcastTweakCss('');
+    broadcastTweakCss("");
   }, [clearDraft]);
 
   const scope = `${o.projectId}:${o.directionId}`;
@@ -113,20 +138,22 @@ export function useTweaks(o: Options) {
       setCommitError(null);
       schedulePreview();
     },
-    [schedulePreview],
+    [schedulePreview]
   );
 
   const edit = useCallback(
     (control: TweakControl, value: TweakValue) => {
       const map = pendingRef.current;
       const last = history.current[history.current.length - 1];
-      if (!last || last.id !== control.id) history.current.push({ id: control.id, before: map[control.id] });
+      if (!last || last.id !== control.id)
+        history.current.push({ id: control.id, before: map[control.id] });
       const next = { ...map };
-      if (value === baseValue(stateRef.current, control)) delete next[control.id];
+      if (value === baseValue(stateRef.current, control))
+        delete next[control.id];
       else next[control.id] = value;
       apply(next);
     },
-    [apply],
+    [apply]
   );
 
   const revert = useCallback(
@@ -136,7 +163,7 @@ export function useTweaks(o: Options) {
       delete next[id];
       apply(next);
     },
-    [apply],
+    [apply]
   );
 
   const undoLast = useCallback(() => {
@@ -153,7 +180,9 @@ export function useTweaks(o: Options) {
     const values = pendingRef.current;
     if (!directionId || Object.keys(values).length === 0) return;
     stopPreview();
-    broadcastTweakCss(tweaksPreviewCss(stateRef.current?.controls ?? [], values));
+    broadcastTweakCss(
+      tweaksPreviewCss(stateRef.current?.controls ?? [], values)
+    );
     setCommitting(true);
     setCommitError(null);
     try {
@@ -163,7 +192,11 @@ export function useTweaks(o: Options) {
       holdTweakCssUntilReload();
       opts.current.onCommitted(result.version);
     } catch (err) {
-      setCommitError(err instanceof ApiError && err.status === 409 ? AGENT_BUSY_MESSAGE : errorText(err));
+      setCommitError(
+        err instanceof ApiError && err.status === 409
+          ? AGENT_BUSY_MESSAGE
+          : errorText(err)
+      );
     } finally {
       setCommitting(false);
     }
@@ -172,7 +205,9 @@ export function useTweaks(o: Options) {
   const confirmLeave = useCallback(() => {
     const count = Object.keys(pendingRef.current).length;
     if (count === 0) return true;
-    const ok = window.confirm(`Discard ${count} tweak ${count === 1 ? 'change' : 'changes'}?`);
+    const ok = window.confirm(
+      `Discard ${count} tweak ${count === 1 ? "change" : "changes"}?`
+    );
     if (ok) discard();
     return ok;
   }, [discard]);
@@ -180,15 +215,32 @@ export function useTweaks(o: Options) {
   const count = Object.keys(pending).length;
   const undoChain = (canUndo: boolean, fallback: () => void) => ({
     canUndo: canUndo || count > 0,
-    onUndo: () => (Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback()),
+    onUndo: () =>
+      Object.keys(pendingRef.current).length > 0 ? undoLast() : fallback(),
   });
   const values = useMemo(() => {
     const out: TweakMap = {};
-    for (const control of state?.controls ?? []) out[control.id] = pending[control.id] ?? baseValue(state, control);
+    for (const control of state?.controls ?? [])
+      out[control.id] = pending[control.id] ?? baseValue(state, control);
     return out;
   }, [state, pending]);
 
-  return { state, loadError, pending, values, count, committing, commitError, edit, revert, undoLast, undoChain, discard, commit, confirmLeave };
+  return {
+    state,
+    loadError,
+    pending,
+    values,
+    count,
+    committing,
+    commitError,
+    edit,
+    revert,
+    undoLast,
+    undoChain,
+    discard,
+    commit,
+    confirmLeave,
+  };
 }
 
 export type TweaksDraft = ReturnType<typeof useTweaks>;

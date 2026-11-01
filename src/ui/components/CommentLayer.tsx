@@ -1,22 +1,58 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MutableRefObject } from 'react';
-import type { AnchorQuery, AnchorReport, CommentDrawing, DesignComment, ProjectKind, SelectionContext } from '../../shared/contracts';
-import { anchorQueryOf, canPickForChat, createOrphanTracker, hasPin } from '../../shared/comments';
-import { ChatPickBar } from './CommentsPanel';
-import { onActiveFrame, reviewReport, type ActiveFrame } from '../commentAnchors';
-import { postToFrame, useBridge, type BridgeFrame } from '../bridge';
-import { isTypingTarget } from '../typingTarget';
-import type { CommentsControl } from '../useComments';
-import { OpenCommentPopover } from './CommentPopover';
-import { CommentComposer, type ComposerSources, type ComposerSubmit } from './CommentComposer';
-import { AvatarFace } from './CommentAvatar';
-import { breadcrumbOf, offsetIn, pinPlacement, scopeText, type PinOffset } from '../commentPlacement';
-import { mentionLabel } from './MentionPicker';
-import { useProfileInitial } from '../useProfileInitial';
-import { INLINE_PROMPT_OPEN_EVENT } from '../useInlinePrompt';
-import { DrawingStrokes, PenIcon } from './DrawLayer';
-import '../styles/comments.css';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MutableRefObject,
+} from "react";
 
-type Rect = SelectionContext['rect'];
+import {
+  anchorQueryOf,
+  canPickForChat,
+  createOrphanTracker,
+  hasPin,
+} from "../../shared/comments";
+import type {
+  AnchorQuery,
+  AnchorReport,
+  CommentDrawing,
+  DesignComment,
+  ProjectKind,
+  SelectionContext,
+} from "../../shared/contracts";
+import { postToFrame, useBridge, type BridgeFrame } from "../bridge";
+import {
+  onActiveFrame,
+  reviewReport,
+  type ActiveFrame,
+} from "../commentAnchors";
+import {
+  breadcrumbOf,
+  offsetIn,
+  pinPlacement,
+  scopeText,
+  type PinOffset,
+} from "../commentPlacement";
+import { isTypingTarget } from "../typingTarget";
+import type { CommentsControl } from "../useComments";
+import { INLINE_PROMPT_OPEN_EVENT } from "../useInlinePrompt";
+import { useProfileInitial } from "../useProfileInitial";
+import { AvatarFace } from "./CommentAvatar";
+import {
+  CommentComposer,
+  type ComposerSources,
+  type ComposerSubmit,
+} from "./CommentComposer";
+import { OpenCommentPopover } from "./CommentPopover";
+import { ChatPickBar } from "./CommentsPanel";
+import { DrawingStrokes, PenIcon } from "./DrawLayer";
+import { mentionLabel } from "./MentionPicker";
+
+import "../styles/comments.css";
+
+type Rect = SelectionContext["rect"];
 
 interface FrameSet {
   slots: { token: string; src: string }[];
@@ -56,7 +92,10 @@ const addedListeners = new Set<() => void>();
 function markAdded(): void {
   addedAt = Date.now();
   addedListeners.forEach((listener) => listener());
-  window.setTimeout(() => addedListeners.forEach((listener) => listener()), ADDED_MS + 20);
+  window.setTimeout(
+    () => addedListeners.forEach((listener) => listener()),
+    ADDED_MS + 20
+  );
 }
 
 function subscribeAdded(listener: () => void): () => void {
@@ -67,67 +106,135 @@ function subscribeAdded(listener: () => void): () => void {
 }
 
 function useJustAdded(): boolean {
-  return useSyncExternalStore(subscribeAdded, () => Date.now() - addedAt < ADDED_MS);
+  return useSyncExternalStore(
+    subscribeAdded,
+    () => Date.now() - addedAt < ADDED_MS
+  );
 }
 
-function pinTarget(comment: DesignComment, rect: Rect, zoom: number, frame: { width: number }): { rect: Rect; offset?: PinOffset } {
+function pinTarget(
+  comment: DesignComment,
+  rect: Rect,
+  zoom: number,
+  frame: { width: number }
+): { rect: Rect; offset?: PinOffset } {
   if (comment.drawing) return { rect };
   if (rect.height > LABEL_MAX_H) return { rect, offset: comment.target.offset };
   const fitsRight = rect.x + rect.width + PIN_SIZE / zoom <= frame.width;
-  return fitsRight ? { rect } : { rect: { ...rect, x: rect.x + rect.width - 1, width: 1 } };
+  return fitsRight
+    ? { rect }
+    : { rect: { ...rect, x: rect.x + rect.width - 1, width: 1 } };
 }
 
-function visible(rect: Rect, frame: { width: number; height: number }): boolean {
-  return rect.y + rect.height > 0 && rect.y < frame.height && rect.x + rect.width > 0 && rect.x < frame.width;
+function visible(
+  rect: Rect,
+  frame: { width: number; height: number }
+): boolean {
+  return (
+    rect.y + rect.height > 0 &&
+    rect.y < frame.height &&
+    rect.x + rect.width > 0 &&
+    rect.x < frame.width
+  );
 }
 
-function useShown(control: CommentsControl, active: ActiveFrame | undefined): DesignComment[] {
+function useShown(
+  control: CommentsControl,
+  active: ActiveFrame | undefined
+): DesignComment[] {
   const showResolved = control.showResolved;
-  const activeKey = active ? JSON.stringify(active) : '';
+  const activeKey = active ? JSON.stringify(active) : "";
   return useMemo(() => {
-    const frame: ActiveFrame | null = activeKey ? (JSON.parse(activeKey) as ActiveFrame) : null;
-    return control.comments.filter((c) => (hasPin(c.status) || c.status === 'orphaned' || (showResolved && c.status === 'resolved')) && (!frame || onActiveFrame(c, frame)));
+    const frame: ActiveFrame | null = activeKey
+      ? (JSON.parse(activeKey) as ActiveFrame)
+      : null;
+    return control.comments.filter(
+      (c) =>
+        (hasPin(c.status) ||
+          c.status === "orphaned" ||
+          (showResolved && c.status === "resolved")) &&
+        (!frame || onActiveFrame(c, frame))
+    );
   }, [control.comments, showResolved, activeKey]);
 }
 
 function openComment(control: CommentsControl): DesignComment | null {
-  return control.openId ? (control.comments.find((c) => c.id === control.openId) ?? null) : null;
+  return control.openId
+    ? (control.comments.find((c) => c.id === control.openId) ?? null)
+    : null;
 }
 
 function drawingAnchor(drawing: CommentDrawing): Rect {
   const points = drawing.strokes[0]?.points ?? [];
   const x = points[0] ?? drawing.box.x;
   const y = points[1] ?? drawing.box.y;
-  return { x, y: y - PIN_SIZE / 2, width: Math.max(1, drawing.box.x + drawing.box.width - x), height: PIN_SIZE };
+  return {
+    x,
+    y: y - PIN_SIZE / 2,
+    width: Math.max(1, drawing.box.x + drawing.box.width - x),
+    height: PIN_SIZE,
+  };
 }
 
 function focusLater(selector: string): void {
-  window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
+  window.requestAnimationFrame(() =>
+    document.querySelector<HTMLElement>(selector)?.focus()
+  );
 }
 
 function selectionKey(selection: SelectionContext[]): string {
-  return selection.map((s) => s.selector).join('\n');
+  return selection.map((s) => s.selector).join("\n");
 }
 
-function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment: DesignComment; rect: Rect | undefined; frame: Props['frame']; zoom: number; initial: string | null; control: CommentsControl }) {
-  if (!rect || !visible(rect, frame) || control.openId === comment.id) return null;
+function CommentPin({
+  comment,
+  rect,
+  frame,
+  zoom,
+  initial,
+  control,
+}: {
+  comment: DesignComment;
+  rect: Rect | undefined;
+  frame: Props["frame"];
+  zoom: number;
+  initial: string | null;
+  control: CommentsControl;
+}) {
+  if (!rect || !visible(rect, frame) || control.openId === comment.id)
+    return null;
   const pin = pinTarget(comment, rect, zoom, frame);
   const place = pinPlacement(pin.rect, zoom, frame, pin.offset);
   const replies = comment.replies?.length ?? 0;
-  const repliesLabel = replies ? `, ${replies} ${replies === 1 ? 'reply' : 'replies'}` : '';
+  const repliesLabel = replies
+    ? `, ${replies} ${replies === 1 ? "reply" : "replies"}`
+    : "";
   return (
-    <div className={`comment-pin-wrap${place.flip ? ' flip' : ''}`} style={{ left: place.left, top: place.top, transform: `scale(${1 / zoom})` }}>
+    <div
+      className={`comment-pin-wrap${place.flip ? " flip" : ""}`}
+      style={{
+        left: place.left,
+        top: place.top,
+        transform: `scale(${1 / zoom})`,
+      }}
+    >
       <button
         type="button"
-        className={`comment-pin ${comment.status}${comment.drawing ? ' has-drawing' : ''}${control.picked.includes(comment.id) ? ' picked' : ''}`}
+        className={`comment-pin ${comment.status}${comment.drawing ? " has-drawing" : ""}${control.picked.includes(comment.id) ? " picked" : ""}`}
         data-testid="comment-pin"
         data-comment-id={comment.id}
-        aria-label={`Comment ${comment.n}${comment.author ? ` by ${comment.author}` : ''}${repliesLabel}: ${comment.text}`}
+        aria-label={`Comment ${comment.n}${comment.author ? ` by ${comment.author}` : ""}${repliesLabel}: ${comment.text}`}
         aria-expanded={false}
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => pinClick(control, comment, event)}
       >
-        <AvatarFace initial={initial} flip={place.flip} tone={comment.status} count={replies} author={comment.author} />
+        <AvatarFace
+          initial={initial}
+          flip={place.flip}
+          tone={comment.status}
+          count={replies}
+          author={comment.author}
+        />
         {comment.drawing && (
           <span className="pin-pen" aria-hidden="true">
             <PenIcon size={10} />
@@ -135,13 +242,21 @@ function CommentPin({ comment, rect, frame, zoom, initial, control }: { comment:
         )}
       </button>
       <span className="comment-pin-tip" role="tooltip">
-        <span className="comment-pin-num">#{comment.n}</span> {comment.author && <span className="comment-pin-author">{comment.author}:</span>} {comment.text}
+        <span className="comment-pin-num">#{comment.n}</span>{" "}
+        {comment.author && (
+          <span className="comment-pin-author">{comment.author}:</span>
+        )}{" "}
+        {comment.text}
       </span>
     </div>
   );
 }
 
-function pinClick(control: CommentsControl, comment: DesignComment, event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }): void {
+function pinClick(
+  control: CommentsControl,
+  comment: DesignComment,
+  event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }
+): void {
   const multi = event.shiftKey || event.metaKey || event.ctrlKey;
   if (multi && canPickForChat(comment.status)) control.togglePick(comment.id);
   else control.setOpenId(comment.id);
@@ -156,7 +271,23 @@ function threadCrumb(comment: DesignComment, pageName: string) {
   return comment.context ? breadcrumbOf(pageName, [comment.context]) : null;
 }
 
-function OpenComment({ comment: open, rect: openRect, zoom, frame, control, initial, pageName }: { comment: DesignComment; rect: Rect; zoom: number; frame: Props['frame']; control: CommentsControl; initial: string | null; pageName: string }) {
+function OpenComment({
+  comment: open,
+  rect: openRect,
+  zoom,
+  frame,
+  control,
+  initial,
+  pageName,
+}: {
+  comment: DesignComment;
+  rect: Rect;
+  zoom: number;
+  frame: Props["frame"];
+  control: CommentsControl;
+  initial: string | null;
+  pageName: string;
+}) {
   return (
     <>
       {open.drawing && <DrawingStrokes drawing={open.drawing} />}
@@ -184,9 +315,9 @@ function OpenComment({ comment: open, rect: openRect, zoom, frame, control, init
         onSave={(text) => void control.update(open.id, { text })}
         onResolve={() => {
           control.setOpenId(null);
-          void control.update(open.id, { status: 'resolved' });
+          void control.update(open.id, { status: "resolved" });
         }}
-        onReopen={() => void control.update(open.id, { status: 'queued' })}
+        onReopen={() => void control.update(open.id, { status: "queued" })}
         onReply={(text) => control.reply(open.id, text)}
         onDeleteReply={(replyId) => void control.removeReply(open.id, replyId)}
         onDelete={() => void control.remove(open.id)}
@@ -199,24 +330,47 @@ function OpenComment({ comment: open, rect: openRect, zoom, frame, control, init
   );
 }
 
-function withMentions(text: string, mentions: ComposerSubmit['mentions']): string {
-  return mentions.length ? `${text} (see ${mentions.map((mention) => `@${mentionLabel(mention)}`).join(', ')})` : text;
+function withMentions(
+  text: string,
+  mentions: ComposerSubmit["mentions"]
+): string {
+  return mentions.length
+    ? `${text} (see ${mentions.map((mention) => `@${mentionLabel(mention)}`).join(", ")})`
+    : text;
 }
 
-export function CommentModePill({ mode, control }: { mode: { on: boolean; available: boolean }; control: CommentsControl | undefined }) {
+export function CommentModePill({
+  mode,
+  control,
+}: {
+  mode: { on: boolean; available: boolean };
+  control: CommentsControl | undefined;
+}) {
   const added = useJustAdded();
   if (added && mode.available)
     return (
-      <div className="comment-mode-pill" role="status" data-testid="comment-added">
+      <div
+        className="comment-mode-pill"
+        role="status"
+        data-testid="comment-added"
+      >
         Comment added
       </div>
     );
   if (!mode.on || !mode.available) return null;
-  const repin = control?.repinId ? control.comments.find((comment) => comment.id === control.repinId) : undefined;
+  const repin = control?.repinId
+    ? control.comments.find((comment) => comment.id === control.repinId)
+    : undefined;
   return (
     <>
-      <div className="comment-mode-pill" role="status" data-testid="comment-mode-pill">
-        {repin ? `Click an element to move comment #${repin.n}` : 'Click to comment, Shift-click pins to select, P to draw'}
+      <div
+        className="comment-mode-pill"
+        role="status"
+        data-testid="comment-mode-pill"
+      >
+        {repin
+          ? `Click an element to move comment #${repin.n}`
+          : "Click to comment, Shift-click pins to select, P to draw"}
       </div>
       {control && <ChatPickBar control={control} className="floating" />}
     </>
@@ -224,9 +378,20 @@ export function CommentModePill({ mode, control }: { mode: { on: boolean; availa
 }
 
 function usePick() {
-  const [picked, setPicked] = useState<{ selection: SelectionContext; offset?: PinOffset } | null>(null);
-  const setPick = useCallback((selection: SelectionContext | null, offset?: PinOffset) => setPicked(selection ? { selection, offset } : null), []);
-  return { pick: picked?.selection ?? null, pickOffset: picked?.offset, setPick };
+  const [picked, setPicked] = useState<{
+    selection: SelectionContext;
+    offset?: PinOffset;
+  } | null>(null);
+  const setPick = useCallback(
+    (selection: SelectionContext | null, offset?: PinOffset) =>
+      setPicked(selection ? { selection, offset } : null),
+    []
+  );
+  return {
+    pick: picked?.selection ?? null,
+    pickOffset: picked?.offset,
+    setPick,
+  };
 }
 
 export function CommentLayer(props: Props) {
@@ -238,7 +403,9 @@ export function CommentLayer(props: Props) {
   const feedbackInput = useRef<HTMLTextAreaElement>(null);
   const initial = useProfileInitial();
   const orphans = useRef(createOrphanTracker(ORPHAN_GRACE_MS));
-  const pending = useRef(new Map<string, (contexts: (SelectionContext | null)[]) => void>());
+  const pending = useRef(
+    new Map<string, (contexts: (SelectionContext | null)[]) => void>()
+  );
   const recheck = useRef<number | null>(null);
   const retargeted = useRef(new Map<string, string>());
   const live = useRef({ control, commentMode: props.commentMode });
@@ -246,7 +413,10 @@ export function CommentLayer(props: Props) {
 
   const shown = useShown(control, props.activeFrame);
   const tracked = useMemo(() => shown.filter((c) => !c.drawing), [shown]);
-  const queries = useMemo<AnchorQuery[]>(() => tracked.map(anchorQueryOf), [tracked]);
+  const queries = useMemo<AnchorQuery[]>(
+    () => tracked.map(anchorQueryOf),
+    [tracked]
+  );
   const queryKey = JSON.stringify(queries);
   const queriesRef = useRef(queries);
   queriesRef.current = queries;
@@ -255,9 +425,15 @@ export function CommentLayer(props: Props) {
     (token: string | null): BridgeFrame | null => {
       const slot = frames.slots.find((s) => s.token === token);
       if (!slot) return null;
-      return { key: slot.token, token: slot.token, url: slot.src, kind: props.kind, element: frames.elements.current[slot.token] ?? null };
+      return {
+        key: slot.token,
+        token: slot.token,
+        url: slot.src,
+        kind: props.kind,
+        element: frames.elements.current[slot.token] ?? null,
+      };
     },
-    [frames.slots, frames.elements, props.kind],
+    [frames.slots, frames.elements, props.kind]
   );
   const frameOfRef = useRef(frameOf);
   frameOfRef.current = frameOf;
@@ -266,7 +442,11 @@ export function CommentLayer(props: Props) {
 
   const readyTokens = useRef(new Set<string>());
   const track = useCallback((frameTarget: BridgeFrame | null) => {
-    if (frameTarget && readyTokens.current.has(frameTarget.token)) postToFrame(frameTarget, { type: 'track-anchors', anchors: queriesRef.current });
+    if (frameTarget && readyTokens.current.has(frameTarget.token))
+      postToFrame(frameTarget, {
+        type: "track-anchors",
+        anchors: queriesRef.current,
+      });
   }, []);
 
   useEffect(() => {
@@ -282,7 +462,7 @@ export function CommentLayer(props: Props) {
     () => () => {
       if (recheck.current !== null) window.clearTimeout(recheck.current);
     },
-    [],
+    []
   );
 
   const onReports = useCallback(
@@ -290,7 +470,11 @@ export function CommentLayer(props: Props) {
       const { control: current } = live.current;
       const next: Record<string, Rect> = {};
       let missing = false;
-      const state = { orphans: orphans.current, retargeted: retargeted.current, now: Date.now() };
+      const state = {
+        orphans: orphans.current,
+        retargeted: retargeted.current,
+        now: Date.now(),
+      };
       for (const report of reports) {
         const comment = current.comments.find((c) => c.id === report.id);
         if (!comment) continue;
@@ -307,33 +491,43 @@ export function CommentLayer(props: Props) {
         }, ORPHAN_GRACE_MS + 50);
       }
     },
-    [track],
+    [track]
   );
 
   useBridge(
-    () => frames.slots.map((slot) => frameOf(slot.token)).filter((f): f is BridgeFrame => f !== null),
+    () =>
+      frames.slots
+        .map((slot) => frameOf(slot.token))
+        .filter((f): f is BridgeFrame => f !== null),
     (source, message) => {
-      if (message.type === 'ready') {
+      if (message.type === "ready") {
         readyTokens.current.add(source.token);
         track(source);
         return;
       }
       if (source.token !== frontRef.current) return;
-      if (message.type === 'anchor-rects') onReports(message.anchors);
-      else if (message.type === 'anchor-contexts') {
+      if (message.type === "anchor-rects") onReports(message.anchors);
+      else if (message.type === "anchor-contexts") {
         const resolve = pending.current.get(message.requestId);
         pending.current.delete(message.requestId);
         resolve?.(message.contexts);
-      } else if (message.type === 'select' && live.current.commentMode) {
+      } else if (message.type === "select" && live.current.commentMode) {
         const repinId = live.current.control.repinId;
         if (repinId) {
-          void live.current.control.repin(repinId, message.selection, offsetIn(message.selection.rect, message.point));
+          void live.current.control.repin(
+            repinId,
+            message.selection,
+            offsetIn(message.selection.rect, message.point)
+          );
           props.onExitCommentMode();
         } else {
-          setPick(message.selection, offsetIn(message.selection.rect, message.point));
+          setPick(
+            message.selection,
+            offsetIn(message.selection.rect, message.point)
+          );
         }
       }
-    },
+    }
   );
 
   useEffect(() => {
@@ -346,7 +540,11 @@ export function CommentLayer(props: Props) {
         }
         const requestId = Math.random().toString(36).slice(2);
         pending.current.set(requestId, resolve);
-        postToFrame(target, { type: 'describe-anchors', requestId, anchors: anchorList });
+        postToFrame(target, {
+          type: "describe-anchors",
+          requestId,
+          anchors: anchorList,
+        });
       });
     return () => {
       control.describeRef.current = null;
@@ -386,22 +584,29 @@ export function CommentLayer(props: Props) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
-      if ((event.key === 'f' || event.key === 'F') && feedbackOpen) {
+      if (
+        isTypingTarget(event.target) ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey
+      )
+        return;
+      if ((event.key === "f" || event.key === "F") && feedbackOpen) {
         event.preventDefault();
         setFeedbackActive(true);
         feedbackInput.current?.focus();
-      } else if (event.key === 'Escape') {
+      } else if (event.key === "Escape") {
         if (feedbackOpen) setDismissedKey(selKey);
         if (live.current.control.openId) live.current.control.setOpenId(null);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [feedbackOpen, selKey]);
 
-  const pinned = shown.filter((c) => c.status !== 'orphaned');
-  const rectOf = (comment: DesignComment): Rect | undefined => (comment.drawing ? drawingAnchor(comment.drawing) : rects[comment.id]);
+  const pinned = shown.filter((c) => c.status !== "orphaned");
+  const rectOf = (comment: DesignComment): Rect | undefined =>
+    comment.drawing ? drawingAnchor(comment.drawing) : rects[comment.id];
   const open = openComment(control);
   const openRect = open ? (open.drawing?.box ?? rects[open.id] ?? null) : null;
   const lastSelected = props.selection[props.selection.length - 1];
@@ -409,30 +614,65 @@ export function CommentLayer(props: Props) {
 
   const finishPick = () => {
     setPick(null);
-    focusLater('.stage');
+    focusLater(".stage");
   };
 
-  const submitFor = (selections: SelectionContext[], finish: () => void, offset?: PinOffset) => async (input: ComposerSubmit) => {
-    if (input.toClaude && input.now && control.running && input.attachmentIds.length === 0 && tools.onSteer) {
-      tools.onSteer(scopeText(breadcrumbOf(tools.pageName, selections), selections, withMentions(input.text, input.mentions)));
-      finish();
-      return true;
-    }
-    const ok = await control.add(selections, input.text, input.toClaude, { mentions: input.mentions, attachmentIds: input.attachmentIds, ...(offset ? { offset } : {}) });
-    if (ok) {
-      markAdded();
-      finish();
-    }
-    return ok;
-  };
+  const submitFor =
+    (selections: SelectionContext[], finish: () => void, offset?: PinOffset) =>
+    async (input: ComposerSubmit) => {
+      if (
+        input.toClaude &&
+        input.now &&
+        control.running &&
+        input.attachmentIds.length === 0 &&
+        tools.onSteer
+      ) {
+        tools.onSteer(
+          scopeText(
+            breadcrumbOf(tools.pageName, selections),
+            selections,
+            withMentions(input.text, input.mentions)
+          )
+        );
+        finish();
+        return true;
+      }
+      const ok = await control.add(selections, input.text, input.toClaude, {
+        mentions: input.mentions,
+        attachmentIds: input.attachmentIds,
+        ...(offset ? { offset } : {}),
+      });
+      if (ok) {
+        markAdded();
+        finish();
+      }
+      return ok;
+    };
 
-  const shared = { zoom, frame, initial, running: control.running, busy: control.sending, sources: tools.sources, images: true, steer: Boolean(tools.onSteer) };
+  const shared = {
+    zoom,
+    frame,
+    initial,
+    running: control.running,
+    busy: control.sending,
+    sources: tools.sources,
+    images: true,
+    steer: Boolean(tools.onSteer),
+  };
   const many = props.selection.length > 1;
 
   return (
     <>
       {pinned.map((comment) => (
-        <CommentPin key={comment.id} comment={comment} rect={rectOf(comment)} frame={frame} zoom={zoom} initial={initial} control={control} />
+        <CommentPin
+          key={comment.id}
+          comment={comment}
+          rect={rectOf(comment)}
+          frame={frame}
+          zoom={zoom}
+          initial={initial}
+          control={control}
+        />
       ))}
       {pick && (
         <CommentComposer
@@ -449,7 +689,7 @@ export function CommentLayer(props: Props) {
           onSubmit={submitFor([pick], finishPick, pickOffset)}
           onCancel={() => {
             setPick(null);
-            focusLater('.stage');
+            focusLater(".stage");
           }}
         />
       )}
@@ -457,7 +697,11 @@ export function CommentLayer(props: Props) {
         <CommentComposer
           {...shared}
           key={selKey}
-          label={many ? `Comment on ${props.selection.length} elements` : 'Comment on selection'}
+          label={
+            many
+              ? `Comment on ${props.selection.length} elements`
+              : "Comment on selection"
+          }
           testId="comment-feedback"
           anchor={lastSelected.rect}
           breadcrumb={breadcrumbOf(tools.pageName, props.selection)}
@@ -468,11 +712,21 @@ export function CommentLayer(props: Props) {
           onSubmit={submitFor(props.selection, () => setDismissedKey(selKey))}
           onCancel={() => {
             setDismissedKey(selKey);
-            focusLater('.stage');
+            focusLater(".stage");
           }}
         />
       )}
-      {open && openRect && <OpenComment comment={open} rect={openRect} zoom={zoom} frame={frame} control={control} initial={initial} pageName={tools.pageName} />}
+      {open && openRect && (
+        <OpenComment
+          comment={open}
+          rect={openRect}
+          zoom={zoom}
+          frame={frame}
+          control={control}
+          initial={initial}
+          pageName={tools.pageName}
+        />
+      )}
     </>
   );
 }

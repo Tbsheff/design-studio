@@ -1,22 +1,50 @@
-import { useEffect, useId, useRef, useState, type ClipboardEvent, type DragEvent, type FormEvent, type ReactNode } from 'react';
-import { Icon } from './Icon';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type DragEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
-export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+import { Icon } from "./Icon";
+
+export const IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+];
 export const MAX_IMAGES = 4;
 export const MAX_REFERENCES = 3;
 export const MAX_IMAGE_BYTES = Math.floor(3.75 * 1024 * 1024);
 
 export function imageProblem(file: File): string | null {
-  if (!IMAGE_TYPES.includes(file.type)) return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
-  if (file.size > MAX_IMAGE_BYTES) return `${file.name} is larger than 3.75 MB. Attach a smaller image.`;
+  if (!IMAGE_TYPES.includes(file.type))
+    return `${file.name} is not a PNG, JPEG, GIF or WebP image.`;
+  if (file.size > MAX_IMAGE_BYTES)
+    return `${file.name} is larger than 3.75 MB. Attach a smaller image.`;
   return null;
 }
 
-export function ComposerAlert({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+export function ComposerAlert({
+  children,
+  onClose,
+}: {
+  children: ReactNode;
+  onClose: () => void;
+}) {
   return (
     <div className="alert error composer-alert" role="alert">
       <span className="composer-alert-text">{children}</span>
-      <button type="button" className="icon-btn composer-alert-close" aria-label="Dismiss" onClick={onClose}>
+      <button
+        type="button"
+        className="icon-btn composer-alert-close"
+        aria-label="Dismiss"
+        onClick={onClose}
+      >
         <Icon name="close" size={12} />
       </button>
     </div>
@@ -39,7 +67,7 @@ export function soleUrl(text: string): ReferenceDraft | null {
   if (!/^https?:\/\/\S+$/i.test(trimmed)) return null;
   try {
     const url = new URL(trimmed);
-    return { url: url.href, host: url.host.replace(/^www\./, '') };
+    return { url: url.href, host: url.host.replace(/^www\./, "") };
   } catch {
     return null;
   }
@@ -49,26 +77,56 @@ export function imageFiles(list: FileList | File[] | null | undefined): File[] {
   return [...(list ?? [])].filter((file) => IMAGE_TYPES.includes(file.type));
 }
 
-export function ComposerChips({ lead, images, references, onRemoveImage, onRemoveReference }: { lead?: ReactNode; images: ImageDraft[]; references: ReferenceDraft[]; onRemoveImage: (id: string) => void; onRemoveReference: (url: string) => void }) {
+export function ComposerChips({
+  lead,
+  images,
+  references,
+  onRemoveImage,
+  onRemoveReference,
+}: {
+  lead?: ReactNode;
+  images: ImageDraft[];
+  references: ReferenceDraft[];
+  onRemoveImage: (id: string) => void;
+  onRemoveReference: (url: string) => void;
+}) {
   if (!lead && images.length === 0 && references.length === 0) return null;
   return (
     <ul className="home-chips" aria-label="Attached to this prompt">
       {lead}
       {images.map((image) => (
-        <li key={image.id} className="home-chip image" data-tip={image.file.name}>
+        <li
+          key={image.id}
+          className="home-chip image"
+          data-tip={image.file.name}
+        >
           <img src={image.url} alt="" />
           <span className="truncate">{image.file.name}</span>
-          <button type="button" className="home-chip-remove" aria-label={`Remove ${image.file.name}`} onClick={() => onRemoveImage(image.id)}>
+          <button
+            type="button"
+            className="home-chip-remove"
+            aria-label={`Remove ${image.file.name}`}
+            onClick={() => onRemoveImage(image.id)}
+          >
             <Icon name="close" size={12} />
           </button>
         </li>
       ))}
       {references.map((reference) => (
-        <li key={reference.url} className="home-chip reference" data-tip={`Use as reference: ${reference.url}`}>
+        <li
+          key={reference.url}
+          className="home-chip reference"
+          data-tip={`Use as reference: ${reference.url}`}
+        >
           <Icon name="globe" size={14} />
           <span className="home-chip-label">Use as reference</span>
           <span className="truncate home-chip-host">{reference.host}</span>
-          <button type="button" className="home-chip-remove" aria-label={`Remove ${reference.host}`} onClick={() => onRemoveReference(reference.url)}>
+          <button
+            type="button"
+            className="home-chip-remove"
+            aria-label={`Remove ${reference.host}`}
+            onClick={() => onRemoveReference(reference.url)}
+          >
             <Icon name="close" size={12} />
           </button>
         </li>
@@ -77,25 +135,42 @@ export function ComposerChips({ lead, images, references, onRemoveImage, onRemov
   );
 }
 
-export function useComposerAttachments(setFormError: (message: string | null) => void, onFolder?: (data: DataTransfer) => boolean) {
+export function useComposerAttachments(
+  setFormError: (message: string | null) => void,
+  onFolder?: (data: DataTransfer) => boolean
+) {
   const [images, setImages] = useState<ImageDraft[]>([]);
   const [references, setReferences] = useState<ReferenceDraft[]>([]);
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef(images);
   imagesRef.current = images;
-  useEffect(() => () => imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url)), []);
+  useEffect(
+    () => () =>
+      imagesRef.current.forEach((image) => URL.revokeObjectURL(image.url)),
+    []
+  );
 
   const addImages = (picked: File[]) => {
     if (picked.length === 0) return;
-    const problems = picked.map(imageProblem).filter((problem): problem is string => problem !== null);
-    if (problems.length > 0) setFormError(problems.join(' '));
+    const problems = picked
+      .map(imageProblem)
+      .filter((problem): problem is string => problem !== null);
+    if (problems.length > 0) setFormError(problems.join(" "));
     const files = picked.filter((file) => imageProblem(file) === null);
     if (files.length === 0) return;
     setImages((current) => {
       const room = Math.max(0, MAX_IMAGES - current.length);
-      if (files.length > room) setFormError(`You can attach up to ${MAX_IMAGES} images.`);
-      return [...current, ...files.slice(0, room).map((file) => ({ id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`, file, url: URL.createObjectURL(file) }))];
+      if (files.length > room)
+        setFormError(`You can attach up to ${MAX_IMAGES} images.`);
+      return [
+        ...current,
+        ...files.slice(0, room).map((file) => ({
+          id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
+          file,
+          url: URL.createObjectURL(file),
+        })),
+      ];
     });
   };
 
@@ -124,7 +199,7 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
       addImages(files);
       return;
     }
-    const reference = soleUrl(event.clipboardData.getData('text/plain'));
+    const reference = soleUrl(event.clipboardData.getData("text/plain"));
     if (reference) {
       event.preventDefault();
       addReference(reference);
@@ -132,9 +207,14 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
   };
 
   const onDragOver = (event: DragEvent<HTMLFormElement>) => {
-    if (![...event.dataTransfer.types].some((type) => type === 'Files' || type === 'text/uri-list')) return;
+    if (
+      ![...event.dataTransfer.types].some(
+        (type) => type === "Files" || type === "text/uri-list"
+      )
+    )
+      return;
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'copy';
+    event.dataTransfer.dropEffect = "copy";
     if (!dragging) setDragging(true);
   };
 
@@ -147,17 +227,31 @@ export function useComposerAttachments(setFormError: (message: string | null) =>
       addImages(files);
       return;
     }
-    const reference = soleUrl(event.dataTransfer.getData('text/uri-list').split('\n')[0] ?? '');
+    const reference = soleUrl(
+      event.dataTransfer.getData("text/uri-list").split("\n")[0] ?? ""
+    );
     if (reference) addReference(reference);
   };
 
-  const removeReference = (url: string) => setReferences((current) => current.filter((item) => item.url !== url));
+  const removeReference = (url: string) =>
+    setReferences((current) => current.filter((item) => item.url !== url));
   const dropHandlers = {
     onDragOver,
     onDrop,
     onDragLeave: (event: DragEvent<HTMLFormElement>) => {
-      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+        setDragging(false);
     },
   };
-  return { images, references, dragging, fileRef, addImages, removeImage, removeReference, onPromptPaste, dropHandlers };
+  return {
+    images,
+    references,
+    dragging,
+    fileRef,
+    addImages,
+    removeImage,
+    removeReference,
+    onPromptPaste,
+    dropHandlers,
+  };
 }

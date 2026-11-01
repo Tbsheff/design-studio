@@ -1,5 +1,5 @@
 export const CLARIFY_WORD_LIMIT = 12;
-const ANSWERS_HEAD = '\n\nAnswers to your questions:\n';
+const ANSWERS_HEAD = "\n\nAnswers to your questions:\n";
 
 export function wordCount(prompt: string): number {
   return prompt.trim().split(/\s+/).filter(Boolean).length;
@@ -10,9 +10,16 @@ export function needsQuestions(prompt: string): boolean {
   return count > 0 && count < CLARIFY_WORD_LIMIT;
 }
 
-export function formatAnswers(prompt: string, answers: Array<{ question: string; answer: string }>): string {
-  const lines = answers.filter((item) => item.answer.trim() !== '').map((item) => `- ${item.question} ${item.answer.trim()}`);
-  return lines.length === 0 ? prompt.trim() : `${prompt.trim()}${ANSWERS_HEAD}${lines.join('\n')}`;
+export function formatAnswers(
+  prompt: string,
+  answers: Array<{ question: string; answer: string }>
+): string {
+  const lines = answers
+    .filter((item) => item.answer.trim() !== "")
+    .map((item) => `- ${item.question} ${item.answer.trim()}`);
+  return lines.length === 0
+    ? prompt.trim()
+    : `${prompt.trim()}${ANSWERS_HEAD}${lines.join("\n")}`;
 }
 
 export function withoutAnswers(prompt: string): string {

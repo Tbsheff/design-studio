@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react';
-import type { DesignSystemCheckResult, PackDetail, PackSummary } from '../../shared/contracts';
-import { Markdown } from '../ai/components/ai/markdown';
-import { api, errorText } from '../api';
-import { useModalDialog } from '../usePopover';
-import { Icon } from './Icon';
-import { PackBadges } from './PackBadges';
-import { PackPreview } from './PackPreview';
+import { useEffect, useState } from "react";
+
+import type {
+  DesignSystemCheckResult,
+  PackDetail,
+  PackSummary,
+} from "../../shared/contracts";
+import { Markdown } from "../ai/components/ai/markdown";
+import { api, errorText } from "../api";
+import { useModalDialog } from "../usePopover";
+import { Icon } from "./Icon";
+import { PackBadges } from "./PackBadges";
+import { PackPreview } from "./PackPreview";
 
 export interface PackDetailActions {
   onRename: (pack: PackSummary) => void;
@@ -35,7 +40,12 @@ function useLoad<T>(load: () => Promise<T>, key: string): Load<T> {
 }
 
 function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
-  if (check.error) return <div className="alert error small">Could not run the check. {check.error}</div>;
+  if (check.error)
+    return (
+      <div className="alert error small">
+        Could not run the check. {check.error}
+      </div>
+    );
   if (!check.value) {
     return (
       <div className="lib-check" role="status">
@@ -53,11 +63,15 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
   }
   const { problems } = check.value;
   const byRule = new Map<string, string[]>();
-  for (const problem of problems) byRule.set(problem.rule, [...(byRule.get(problem.rule) ?? []), problem.message]);
+  for (const problem of problems)
+    byRule.set(problem.rule, [
+      ...(byRule.get(problem.rule) ?? []),
+      problem.message,
+    ]);
   return (
     <div className="lib-check fail" role="status">
       <strong>
-        {problems.length} {problems.length === 1 ? 'problem' : 'problems'}
+        {problems.length} {problems.length === 1 ? "problem" : "problems"}
       </strong>
       <ul>
         {[...byRule].map(([rule, messages]) => (
@@ -75,46 +89,96 @@ function CheckResult({ check }: { check: Load<DesignSystemCheckResult> }) {
   );
 }
 
-function ActionBar({ pack, actions, busy, run }: { pack: PackSummary; actions: PackDetailActions; busy: boolean; run: (task: () => Promise<void>) => void }) {
-  const user = pack.source === 'user';
+function ActionBar({
+  pack,
+  actions,
+  busy,
+  run,
+}: {
+  pack: PackSummary;
+  actions: PackDetailActions;
+  busy: boolean;
+  run: (task: () => Promise<void>) => void;
+}) {
+  const user = pack.source === "user";
   const usable = !pack.draft;
   return (
     <div className="lib-actions" aria-label="Actions" role="group">
       {actions.onApply && usable && (
-        <button type="button" className="btn primary small" disabled={busy} onClick={() => run(() => actions.onApply!(pack))}>
+        <button
+          type="button"
+          className="btn primary small"
+          disabled={busy}
+          onClick={() => run(() => actions.onApply!(pack))}
+        >
           Apply to current project
         </button>
       )}
       {usable && (
-        <button type="button" className={`btn small ${actions.onApply ? '' : 'primary'}`} disabled={busy} onClick={() => actions.onUseInNew(pack)}>
+        <button
+          type="button"
+          className={`btn small ${actions.onApply ? "" : "primary"}`}
+          disabled={busy}
+          onClick={() => actions.onUseInNew(pack)}
+        >
           Use in new project
         </button>
       )}
       {user ? (
-        <button type="button" className="btn small" disabled={busy} onClick={() => run(() => actions.onOpenEditor(pack))}>
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={() => run(() => actions.onOpenEditor(pack))}
+        >
           Open in editor
         </button>
       ) : (
-        <button type="button" className="btn small" disabled={busy} onClick={() => run(() => actions.onDuplicate(pack))}>
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={() => run(() => actions.onDuplicate(pack))}
+        >
           Make a copy to edit
         </button>
       )}
       {user && (
-        <button type="button" className="btn small" disabled={busy} onClick={() => run(() => actions.onDuplicate(pack))}>
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={() => run(() => actions.onDuplicate(pack))}
+        >
           Duplicate
         </button>
       )}
       {user && (
-        <button type="button" className="btn small" disabled={busy} onClick={() => actions.onRename(pack)}>
+        <button
+          type="button"
+          className="btn small"
+          disabled={busy}
+          onClick={() => actions.onRename(pack)}
+        >
           Rename
         </button>
       )}
-      <button type="button" className="btn small has-icon" disabled={busy} onClick={() => run(() => actions.onExport(pack))}>
+      <button
+        type="button"
+        className="btn small has-icon"
+        disabled={busy}
+        onClick={() => run(() => actions.onExport(pack))}
+      >
         <Icon name="download" size={14} />
         Export
       </button>
       {user && (
-        <button type="button" className="btn ghost danger small" disabled={busy} onClick={() => actions.onDelete(pack)}>
+        <button
+          type="button"
+          className="btn ghost danger small"
+          disabled={busy}
+          onClick={() => actions.onDelete(pack)}
+        >
           Delete
         </button>
       )}
@@ -122,9 +186,23 @@ function ActionBar({ pack, actions, busy, run }: { pack: PackSummary; actions: P
   );
 }
 
-export function PackDetailDialog({ pack, actions, onClose }: { pack: PackSummary; actions: PackDetailActions; onClose: () => void }) {
-  const detail = useLoad<PackDetail>(() => api.getPack(pack.id), `${pack.id}:${pack.name}`);
-  const check = useLoad<DesignSystemCheckResult>(() => api.checkPack(pack.id), `${pack.id}:${pack.name}`);
+export function PackDetailDialog({
+  pack,
+  actions,
+  onClose,
+}: {
+  pack: PackSummary;
+  actions: PackDetailActions;
+  onClose: () => void;
+}) {
+  const detail = useLoad<PackDetail>(
+    () => api.getPack(pack.id),
+    `${pack.id}:${pack.name}`
+  );
+  const check = useLoad<DesignSystemCheckResult>(
+    () => api.checkPack(pack.id),
+    `${pack.id}:${pack.name}`
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dialog = useModalDialog(() => (busy ? false : onClose()));
@@ -138,14 +216,25 @@ export function PackDetailDialog({ pack, actions, onClose }: { pack: PackSummary
   };
 
   return (
-    <dialog ref={dialog.ref} className="modal lib-detail" aria-label={`${pack.name} design system`} onMouseDown={dialog.onMouseDown}>
+    <dialog
+      ref={dialog.ref}
+      className="modal lib-detail"
+      aria-label={`${pack.name} design system`}
+      onMouseDown={dialog.onMouseDown}
+    >
       <div className="modal-head">
         <div className="titles">
           <h2>{pack.name}</h2>
           <p>{pack.description}</p>
           <PackBadges pack={pack} />
         </div>
-        <button type="button" className="icon-btn" aria-label="Close design system" onClick={onClose} disabled={busy}>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Close design system"
+          onClick={onClose}
+          disabled={busy}
+        >
           <Icon name="close" />
         </button>
       </div>
@@ -160,8 +249,16 @@ export function PackDetailDialog({ pack, actions, onClose }: { pack: PackSummary
       <div className="modal-body lib-detail-body" aria-busy={busy}>
         <section className="lib-detail-section" aria-label="Preview">
           <h3>Preview</h3>
-          {detail.error && <div className="alert error small">Could not load the tokens. {detail.error}</div>}
-          {detail.value ? <PackPreview pack={pack} entries={detail.value.entries} /> : !detail.error && <div className="pv-skeleton" aria-hidden="true" />}
+          {detail.error && (
+            <div className="alert error small">
+              Could not load the tokens. {detail.error}
+            </div>
+          )}
+          {detail.value ? (
+            <PackPreview pack={pack} entries={detail.value.entries} />
+          ) : (
+            !detail.error && <div className="pv-skeleton" aria-hidden="true" />
+          )}
         </section>
         <section className="lib-detail-section" aria-label="Check">
           <h3>Check</h3>
@@ -169,7 +266,9 @@ export function PackDetailDialog({ pack, actions, onClose }: { pack: PackSummary
         </section>
         <section className="lib-detail-section" aria-label="DESIGN.md">
           <h3>DESIGN.md</h3>
-          {detail.value && <Markdown className="lib-doc">{detail.value.designMd}</Markdown>}
+          {detail.value && (
+            <Markdown className="lib-doc">{detail.value.designMd}</Markdown>
+          )}
         </section>
       </div>
     </dialog>

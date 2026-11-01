@@ -1,5 +1,5 @@
-import type { SourceLoc, Version } from './contracts.js';
-import type { InsertTarget } from './insert.js';
+import type { SourceLoc, Version } from "./contracts.js";
+import type { InsertTarget } from "./insert.js";
 
 export const CREATE_TARGETS_MAX = 24;
 export const COMPONENT_NAME = /^[A-Z][A-Za-z0-9]{0,63}$/;
@@ -30,7 +30,7 @@ export interface CreateComponentResult {
 
 export interface ComponentFolder {
   folder: string;
-  kind: 'kit' | 'app';
+  kind: "kit" | "app";
   label: string;
   kebab: boolean;
 }

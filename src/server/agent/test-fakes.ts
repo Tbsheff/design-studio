@@ -1,6 +1,7 @@
-import { mkdir, mkdtemp, realpath } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
+import { mkdir, mkdtemp, realpath } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import {
   DEFAULT_SETTINGS,
   type Direction,
@@ -11,8 +12,13 @@ import {
   type StudioEventInput,
   type Version,
   type VersionMeta,
-} from '../../shared/contracts.js';
-import type { EventBus, PreviewService, ProjectStore, VersionStore } from '../types.js';
+} from "../../shared/contracts.js";
+import type {
+  EventBus,
+  PreviewService,
+  ProjectStore,
+  VersionStore,
+} from "../types.js";
 
 interface FakeBus extends EventBus {
   events: StudioEvent[];
@@ -24,13 +30,19 @@ export function createFakeBus(): FakeBus {
   return {
     events,
     emit(input: StudioEventInput) {
-      const event = { ...input, seq: events.length + 1, ts: Date.now() } as StudioEvent;
+      const event = {
+        ...input,
+        seq: events.length + 1,
+        ts: Date.now(),
+      } as StudioEvent;
       events.push(event);
       for (const listener of listeners) listener(event);
       return event;
     },
     since(projectId, afterSeq) {
-      return events.filter((event) => event.projectId === projectId && event.seq > afterSeq);
+      return events.filter(
+        (event) => event.projectId === projectId && event.seq > afterSeq
+      );
     },
     subscribe(_projectId, listener) {
       listeners.add(listener);
@@ -47,7 +59,10 @@ interface FakeProjects extends ProjectStore {
   current: Project;
 }
 
-export function createFakeProjects(project: Project, dataDir: string): FakeProjects {
+export function createFakeProjects(
+  project: Project,
+  dataDir: string
+): FakeProjects {
   const store: FakeProjects = {
     current: project,
     async list() {
@@ -56,25 +71,27 @@ export function createFakeProjects(project: Project, dataDir: string): FakeProje
     async get() {
       return structuredClone(store.current);
     },
-    create: () => notImplemented('create'),
-    importFolder: () => notImplemented('importFolder'),
+    create: () => notImplemented("create"),
+    importFolder: () => notImplemented("importFolder"),
     async save(next) {
       store.current = structuredClone(next);
     },
-    addDirection: () => notImplemented('addDirection'),
+    addDirection: () => notImplemented("addDirection"),
     async updateDirection(_projectId, directionId, patch) {
-      const direction = store.current.directions.find((candidate) => candidate.id === directionId);
+      const direction = store.current.directions.find(
+        (candidate) => candidate.id === directionId
+      );
       if (!direction) throw new Error(`direction ${directionId} not found`);
       Object.assign(direction, patch);
       return structuredClone(direction);
     },
     projectDir(projectId) {
-      return path.join(dataDir, 'projects', projectId);
+      return path.join(dataDir, "projects", projectId);
     },
-    saveAttachment: () => notImplemented('saveAttachment'),
-    getAttachment: () => notImplemented('getAttachment'),
+    saveAttachment: () => notImplemented("saveAttachment"),
+    getAttachment: () => notImplemented("getAttachment"),
     readDesignMd: async () => null,
-    writeDesignMd: () => notImplemented('writeDesignMd'),
+    writeDesignMd: () => notImplemented("writeDesignMd"),
   };
   return store;
 }
@@ -115,19 +132,19 @@ export function createFakeVersions(): FakeVersions {
     },
     async get(_project, versionId) {
       const version = versions.find((candidate) => candidate.id === versionId);
-      if (!version) throw new Error('not found');
+      if (!version) throw new Error("not found");
       return version;
     },
     async status() {
       store.statusCalls += 1;
-      return { dirty: true, changed: ['index.html'] };
+      return { dirty: true, changed: ["index.html"] };
     },
-    commitFile: () => notImplemented('commitFile'),
-    discard: () => notImplemented('discard'),
-    restore: () => notImplemented('restore'),
-    checkoutInto: () => notImplemented('checkoutInto'),
-    snapshot: () => notImplemented('snapshot'),
-    exportZip: () => notImplemented('exportZip'),
+    commitFile: () => notImplemented("commitFile"),
+    discard: () => notImplemented("discard"),
+    restore: () => notImplemented("restore"),
+    checkoutInto: () => notImplemented("checkoutInto"),
+    snapshot: () => notImplemented("snapshot"),
+    exportZip: () => notImplemented("exportZip"),
   };
   return store;
 }
@@ -136,45 +153,72 @@ export function createFakePreview(): PreviewService {
   return {
     async start() {},
     async stop() {},
-    directionUrl: () => notImplemented('directionUrl'),
-    snapshotUrl: () => notImplemented('snapshotUrl'),
+    directionUrl: () => notImplemented("directionUrl"),
+    snapshotUrl: () => notImplemented("snapshotUrl"),
     watch() {},
     unwatch() {},
     async release() {},
     async renderCheck() {
       return [
-        { viewport: 'desktop', width: 1440, height: 900, ok: true, consoleErrors: [], pageErrors: [], horizontalOverflow: false, layout: [], layoutTotal: 0, screenshotPath: '' },
-        { viewport: 'mobile', width: 375, height: 812, ok: true, consoleErrors: [], pageErrors: [], horizontalOverflow: false, layout: [], layoutTotal: 0, screenshotPath: '' },
+        {
+          viewport: "desktop",
+          width: 1440,
+          height: 900,
+          ok: true,
+          consoleErrors: [],
+          pageErrors: [],
+          horizontalOverflow: false,
+          layout: [],
+          layoutTotal: 0,
+          screenshotPath: "",
+        },
+        {
+          viewport: "mobile",
+          width: 375,
+          height: 812,
+          ok: true,
+          consoleErrors: [],
+          pageErrors: [],
+          horizontalOverflow: false,
+          layout: [],
+          layoutTotal: 0,
+          screenshotPath: "",
+        },
       ];
     },
-    inspect: () => notImplemented('inspect'),
-    screenshot: () => notImplemented('screenshot'),
-    screenshotTiles: () => notImplemented('screenshotTiles'),
+    inspect: () => notImplemented("inspect"),
+    screenshot: () => notImplemented("screenshot"),
+    screenshotTiles: () => notImplemented("screenshotTiles"),
   };
 }
 
-export async function createTempProject(kind: ProjectKind, settings: Partial<ProjectSettings> = {}) {
-  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), 'studio-agent-')));
-  const workTree = path.join(root, 'work');
+export async function createTempProject(
+  kind: ProjectKind,
+  settings: Partial<ProjectSettings> = {}
+) {
+  const root = await realpath(
+    await mkdtemp(path.join(os.tmpdir(), "studio-agent-"))
+  );
+  const workTree = path.join(root, "work");
   await mkdir(workTree, { recursive: true });
   const direction: Direction = {
-    id: 'd1',
-    name: 'main',
+    id: "d1",
+    name: "main",
     workTree,
-    branch: 'd/d1',
+    branch: "d/d1",
     headVersionId: null,
     parentVersionId: null,
     sessionId: null,
     createdAt: Date.now(),
   };
   const project: Project = {
-    id: 'p1',
-    name: 'Test',
+    id: "p1",
+    name: "Test",
     kind,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     imported: null,
-    entry: kind === 'html' ? 'index.html' : 'src/main.tsx',
+    entry: kind === "html" ? "index.html" : "src/main.tsx",
     settings: { ...DEFAULT_SETTINGS, ...settings },
     directions: [direction],
   };

@@ -1,21 +1,39 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
-import type { DesignComment, SelectionContext } from '../../shared/contracts';
-import { CARD_WIDTH, placeComposer, useCardSize, type Breadcrumb, type CardSide } from '../commentPlacement';
-import { AvatarFace, CommentAuthor } from './CommentAvatar';
-import { useProfileInitial } from '../useProfileInitial';
-import { Icon } from './Icon';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 
-type Rect = SelectionContext['rect'];
+import type { DesignComment, SelectionContext } from "../../shared/contracts";
+import {
+  CARD_WIDTH,
+  placeComposer,
+  useCardSize,
+  type Breadcrumb,
+  type CardSide,
+} from "../commentPlacement";
+import { useProfileInitial } from "../useProfileInitial";
+import { AvatarFace, CommentAuthor } from "./CommentAvatar";
+import { Icon } from "./Icon";
 
-export const MOD_LABEL = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+type Rect = SelectionContext["rect"];
+
+export const MOD_LABEL =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "⌘"
+    : "Ctrl+";
 
 function focusables(root: HTMLElement | null): HTMLElement[] {
   if (!root) return [];
-  return Array.from(root.querySelectorAll<HTMLElement>('input, textarea, button:not(:disabled)')).filter((element) => element.tabIndex >= 0);
+  return Array.from(
+    root.querySelectorAll<HTMLElement>("input, textarea, button:not(:disabled)")
+  ).filter((element) => element.tabIndex >= 0);
 }
 
 export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
-  if (event.key !== 'Tab') return;
+  if (event.key !== "Tab") return;
   const items = focusables(root);
   const first = items[0];
   const last = items[items.length - 1];
@@ -29,28 +47,49 @@ export function trapTab(event: KeyboardEvent, root: HTMLElement | null): void {
   }
 }
 
-export const STATUS_LABEL: Record<DesignComment['status'], string> = {
-  draft: 'Draft',
-  queued: 'Queued',
-  sent: 'Sent to Claude',
-  resolved: 'Resolved',
-  orphaned: 'Element not found',
+export const STATUS_LABEL: Record<DesignComment["status"], string> = {
+  draft: "Draft",
+  queued: "Queued",
+  sent: "Sent to Claude",
+  resolved: "Resolved",
+  orphaned: "Element not found",
 };
 
-export function CommentReplies({ comment, onDelete }: { comment: DesignComment; onDelete: (replyId: string) => void }) {
+export function CommentReplies({
+  comment,
+  onDelete,
+}: {
+  comment: DesignComment;
+  onDelete: (replyId: string) => void;
+}) {
   const initial = useProfileInitial();
   const replies = comment.replies ?? [];
   if (replies.length === 0) return null;
   return (
-    <ul className="comment-replies" aria-label={`Replies to comment ${comment.n}`} data-testid="comment-replies">
+    <ul
+      className="comment-replies"
+      aria-label={`Replies to comment ${comment.n}`}
+      data-testid="comment-replies"
+    >
       {replies.map((reply, index) => (
-        <li key={reply.id} className="comment-reply" data-testid="comment-reply">
+        <li
+          key={reply.id}
+          className="comment-reply"
+          data-testid="comment-reply"
+        >
           <AvatarFace initial={initial} tone="reply" author={reply.author} />
           <span className="comment-reply-text">
-            {reply.author && <span className="comment-reply-author">{reply.author}</span>}
+            {reply.author && (
+              <span className="comment-reply-author">{reply.author}</span>
+            )}
             {reply.text}
           </span>
-          <button type="button" className="thread-icon" aria-label={`Delete reply ${index + 1} to comment ${comment.n}`} onClick={() => onDelete(reply.id)}>
+          <button
+            type="button"
+            className="thread-icon"
+            aria-label={`Delete reply ${index + 1} to comment ${comment.n}`}
+            onClick={() => onDelete(reply.id)}
+          >
             <Icon name="close" size={12} />
           </button>
         </li>
@@ -70,7 +109,7 @@ function GrowingArea(props: {
 }) {
   return (
     <textarea
-      className={`comment-area ${props.className ?? ''}`}
+      className={`comment-area ${props.className ?? ""}`}
       rows={1}
       aria-label={props.label}
       placeholder={props.placeholder}
@@ -79,7 +118,12 @@ function GrowingArea(props: {
       disabled={props.disabled}
       onChange={(event) => props.onChange(event.target.value)}
       onKeyDown={(event) => {
-        if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+        if (
+          event.key !== "Enter" ||
+          event.shiftKey ||
+          event.nativeEvent.isComposing
+        )
+          return;
         event.preventDefault();
         props.onEnter();
       }}
@@ -87,15 +131,21 @@ function GrowingArea(props: {
   );
 }
 
-function ReplyBox({ comment, onReply }: { comment: DesignComment; onReply: (text: string) => Promise<boolean> }) {
-  const [text, setText] = useState('');
+function ReplyBox({
+  comment,
+  onReply,
+}: {
+  comment: DesignComment;
+  onReply: (text: string) => Promise<boolean>;
+}) {
+  const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const send = () => {
-    if (busy || text.trim() === '') return;
+    if (busy || text.trim() === "") return;
     setBusy(true);
     void onReply(text).then((ok) => {
       setBusy(false);
-      if (ok) setText('');
+      if (ok) setText("");
     });
   };
   return (
@@ -138,16 +188,19 @@ export function OpenCommentPopover(props: OpenProps) {
   const root = useRef<HTMLDivElement>(null);
   const side = useRef<CardSide | undefined>(undefined);
   const size = useCardSize(root);
-  const editable = comment.status === 'queued';
-  const changed = text.trim() !== '' && text.trim() !== comment.text;
+  const editable = comment.status === "queued";
+  const changed = text.trim() !== "" && text.trim() !== comment.text;
 
   useEffect(() => {
-    const target = root.current?.querySelector<HTMLTextAreaElement>('textarea:not(:disabled)') ?? focusables(root.current)[0];
+    const target =
+      root.current?.querySelector<HTMLTextAreaElement>(
+        "textarea:not(:disabled)"
+      ) ?? focusables(root.current)[0];
     target?.focus({ preventScroll: true });
   }, [comment.id]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
       props.onClose();
@@ -156,7 +209,14 @@ export function OpenCommentPopover(props: OpenProps) {
     trapTab(event, root.current);
   };
 
-  const placement = placeComposer(props.anchor, props.zoom, props.frame, size, side.current, comment.drawing ? undefined : comment.target.offset);
+  const placement = placeComposer(
+    props.anchor,
+    props.zoom,
+    props.frame,
+    size,
+    side.current,
+    comment.drawing ? undefined : comment.target.offset
+  );
   side.current = placement.side;
   const scale = 1 / props.zoom;
 
@@ -186,7 +246,13 @@ export function OpenCommentPopover(props: OpenProps) {
         }}
         aria-hidden="true"
       >
-        <AvatarFace initial={props.initial} flip={placement.pin.flip} tone={comment.status} count={comment.replies?.length ?? 0} author={comment.author} />
+        <AvatarFace
+          initial={props.initial}
+          flip={placement.pin.flip}
+          tone={comment.status}
+          count={comment.replies?.length ?? 0}
+          author={comment.author}
+        />
       </div>
       <div
         ref={root}
@@ -206,33 +272,76 @@ export function OpenCommentPopover(props: OpenProps) {
       >
         <div className="thread-head">
           <span className="thread-num">#{comment.n}</span>
-          <CommentAuthor author={comment.author} viewer={comment.from === 'viewer'} />
-          <span className={`thread-status ${comment.status}`}>{STATUS_LABEL[comment.status]}</span>
+          <CommentAuthor
+            author={comment.author}
+            viewer={comment.from === "viewer"}
+          />
+          <span className={`thread-status ${comment.status}`}>
+            {STATUS_LABEL[comment.status]}
+          </span>
           <span className="spacer" />
           {props.onFix && (
-            <button type="button" className="thread-icon" aria-label="Fix with agent" data-tip="Fix with agent: fill the chat" data-tip-side="top" data-testid="comment-fix-open" onClick={props.onFix}>
+            <button
+              type="button"
+              className="thread-icon"
+              aria-label="Fix with agent"
+              data-tip="Fix with agent: fill the chat"
+              data-tip-side="top"
+              data-testid="comment-fix-open"
+              onClick={props.onFix}
+            >
               <Icon name="sparkle" size={14} />
             </button>
           )}
-          {comment.status !== 'resolved' && comment.status !== 'sent' && (
-            <button type="button" className="thread-icon" aria-label="Resolve" data-tip="Resolve" data-tip-side="top" onClick={props.onResolve}>
+          {comment.status !== "resolved" && comment.status !== "sent" && (
+            <button
+              type="button"
+              className="thread-icon"
+              aria-label="Resolve"
+              data-tip="Resolve"
+              data-tip-side="top"
+              onClick={props.onResolve}
+            >
               <Icon name="check" size={14} />
             </button>
           )}
-          {comment.status === 'resolved' && (
-            <button type="button" className="thread-icon" aria-label="Reopen" data-tip="Reopen" data-tip-side="top" onClick={props.onReopen}>
+          {comment.status === "resolved" && (
+            <button
+              type="button"
+              className="thread-icon"
+              aria-label="Reopen"
+              data-tip="Reopen"
+              data-tip-side="top"
+              onClick={props.onReopen}
+            >
               <Icon name="undo" size={14} />
             </button>
           )}
-          <button type="button" className="thread-icon danger" aria-label="Delete" data-tip="Delete" data-tip-side="top" onClick={props.onDelete}>
+          <button
+            type="button"
+            className="thread-icon danger"
+            aria-label="Delete"
+            data-tip="Delete"
+            data-tip-side="top"
+            onClick={props.onDelete}
+          >
             <Icon name="trash" size={14} />
           </button>
-          <button type="button" className="thread-icon" aria-label="Close comment" onClick={props.onClose}>
+          <button
+            type="button"
+            className="thread-icon"
+            aria-label="Close comment"
+            onClick={props.onClose}
+          >
             <Icon name="close" size={14} />
           </button>
         </div>
         {props.breadcrumb && (
-          <p className="comment-card-crumb" data-tip={props.breadcrumb.full} data-tip-align="start">
+          <p
+            className="comment-card-crumb"
+            data-tip={props.breadcrumb.full}
+            data-tip-align="start"
+          >
             {props.breadcrumb.short}
           </p>
         )}
@@ -242,14 +351,23 @@ export function OpenCommentPopover(props: OpenProps) {
         {editable && (
           <div className="comment-card-foot">
             {changed ? (
-              <button type="button" className="thread-text-btn" onClick={() => props.onSave(text.trim())}>
+              <button
+                type="button"
+                className="thread-text-btn"
+                onClick={() => props.onSave(text.trim())}
+              >
                 Save
               </button>
             ) : (
               <span className="comment-card-note">Saved on the canvas</span>
             )}
             <span className="spacer" />
-            <button type="button" className="thread-text-btn primary" disabled={props.busy} onClick={props.onSend}>
+            <button
+              type="button"
+              className="thread-text-btn primary"
+              disabled={props.busy}
+              onClick={props.onSend}
+            >
               <Icon name="arrowUp" size={13} />
               Send to Claude
             </button>

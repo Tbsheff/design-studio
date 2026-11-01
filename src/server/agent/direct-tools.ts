@@ -1,24 +1,65 @@
-import { z } from 'zod';
-import { kebabKeys } from '../../shared/style-keys.js';
-import { DIRECT_STYLE_PROPERTIES, STRUCTURE_OPS, TOKENS_FILE, type DirectStyleProperty, type SelectionContext, type StructureOp } from '../../shared/contracts.js';
-import { appTokensFor, readAppTokensAt } from '../design-system/app-tokens/source.js';
-import { plannedCssText } from '../design-system/app-tokens/write.js';
-import { SOURCE_DIR } from '../design-system/extract/draft.js';
-import { writeFileAtomic } from '../design-system/packs.js';
-import { readDesignSystemState } from '../design-system/state.js';
-import { invalidateTokenSource } from '../design-system/token-preview.js';
-import { plannedTokensText, writeTokensText } from '../design-system/update-tokens.js';
-import { DirectEditError, parseDirectEditRequest, planDirectEdit, writeAtomic, type PlannedEdit } from '../direct-edit/index.js';
-import { announcePlanned, domPatchOf, withdrawPlanned } from '../direct-edit/planned-feed.js';
-import { chooseEditSite, EDIT_TARGETS, siteNote, siteRequest, textComesFromData, type EditSite } from '../direct-edit/edit-site.js';
-import { planStructureEdit } from '../direct-edit/structure-apply.js';
-import { knownTokenVars } from '../direct-edit/tokens.js';
-import { editPageUrl } from './run-target.js';
-import { describeElements, textHintsOf } from '../mcp/element.js';
-import { isLayerRef, memoPage, resolveLayerRefs, scopeOf, type Viewport } from '../mcp/layer-ref.js';
-import type { AgentRunContext, PreviewService } from '../types.js';
-import { evaluateToolUse } from './permissions.js';
-import { canvasOwner, readCanvasAt, type CanvasService } from '../canvas/service.js';
+import { z } from "zod";
+
+import {
+  DIRECT_STYLE_PROPERTIES,
+  STRUCTURE_OPS,
+  TOKENS_FILE,
+  type DirectStyleProperty,
+  type SelectionContext,
+  type StructureOp,
+} from "../../shared/contracts.js";
+import { kebabKeys } from "../../shared/style-keys.js";
+import {
+  canvasOwner,
+  readCanvasAt,
+  type CanvasService,
+} from "../canvas/service.js";
+import {
+  appTokensFor,
+  readAppTokensAt,
+} from "../design-system/app-tokens/source.js";
+import { plannedCssText } from "../design-system/app-tokens/write.js";
+import { SOURCE_DIR } from "../design-system/extract/draft.js";
+import { writeFileAtomic } from "../design-system/packs.js";
+import { readDesignSystemState } from "../design-system/state.js";
+import { invalidateTokenSource } from "../design-system/token-preview.js";
+import {
+  plannedTokensText,
+  writeTokensText,
+} from "../design-system/update-tokens.js";
+import {
+  chooseEditSite,
+  EDIT_TARGETS,
+  siteNote,
+  siteRequest,
+  textComesFromData,
+  type EditSite,
+} from "../direct-edit/edit-site.js";
+import {
+  DirectEditError,
+  parseDirectEditRequest,
+  planDirectEdit,
+  writeAtomic,
+  type PlannedEdit,
+} from "../direct-edit/index.js";
+import {
+  announcePlanned,
+  domPatchOf,
+  withdrawPlanned,
+} from "../direct-edit/planned-feed.js";
+import { planStructureEdit } from "../direct-edit/structure-apply.js";
+import { knownTokenVars } from "../direct-edit/tokens.js";
+import { describeElements, textHintsOf } from "../mcp/element.js";
+import {
+  isLayerRef,
+  memoPage,
+  resolveLayerRefs,
+  scopeOf,
+  type Viewport,
+} from "../mcp/layer-ref.js";
+import type { AgentRunContext, PreviewService } from "../types.js";
+import { evaluateToolUse } from "./permissions.js";
+import { editPageUrl } from "./run-target.js";
 
 export interface DirectToolDeps {
   preview: PreviewService;
@@ -27,35 +68,138 @@ export interface DirectToolDeps {
 }
 
 export async function canvasFrames(deps: DirectToolDeps) {
-  const snapshot = deps.canvas ? await deps.canvas.read(deps.ctx.project) : await readCanvasAt(canvasOwner(deps.ctx.project).workTree);
+  const snapshot = deps.canvas
+    ? await deps.canvas.read(deps.ctx.project)
+    : await readCanvasAt(canvasOwner(deps.ctx.project).workTree);
   return snapshot.canvas?.frames ?? [];
 }
 
-type ToolText = { content: { type: 'text'; text: string }[]; isError?: boolean };
+type ToolText = {
+  content: { type: "text"; text: string }[];
+  isError?: boolean;
+};
 
-const RUN_NOTE = 'The run saves this change in its version, like your file edits.';
+const RUN_NOTE =
+  "The run saves this change in its version, like your file edits.";
 const styleValue = z.string().max(200).nullable();
 const classNames = z.array(z.string().trim().min(1).max(100)).max(30);
 
 export const editElementShape = {
-  selector: z.string().trim().min(1).max(2000).describe('CSS selector of one element on the page, for example "h1" or "[data-name=\'Hero\'] button".'),
-  path: z.string().trim().max(300).optional().describe('Page path, for example "about.html". Leave out for the page of the frame in <canvas-context> (or the entry page).'),
-  style: z.preprocess(kebabKeys, z.object(Object.fromEntries(DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>).strict()).optional().describe('CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property.'),
-  text: z.string().max(5000).optional().describe('New text of a leaf element.'),
-  classes: z.object({ add: classNames.optional(), remove: classNames.optional() }).strict().optional().describe('Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge().'),
-  variant: z.string().trim().max(60).optional().describe('Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'),
-  target: z.enum(EDIT_TARGETS).optional().describe('Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'),
-  op: z.enum(STRUCTURE_OPS).optional().describe('Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'),
-  targetSelector: z.string().trim().min(1).max(2000).optional().describe('For op move: CSS selector of the new parent.'),
-  beforeSelector: z.string().trim().min(1).max(2000).optional().describe('For op move or duplicate: put the element (or the copy) just before this sibling, like a drag on the canvas. Use instead of targetSelector.'),
-  afterSelector: z.string().trim().min(1).max(2000).optional().describe('For op move or duplicate: put the element (or the copy) just after this sibling. Use instead of targetSelector.'),
-  also: z.array(z.string().trim().min(1).max(2000)).min(1).max(49).optional().describe('With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here.'),
+  selector: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .describe(
+      'CSS selector of one element on the page, for example "h1" or "[data-name=\'Hero\'] button".'
+    ),
+  path: z
+    .string()
+    .trim()
+    .max(300)
+    .optional()
+    .describe(
+      'Page path, for example "about.html". Leave out for the page of the frame in <canvas-context> (or the entry page).'
+    ),
+  style: z
+    .preprocess(
+      kebabKeys,
+      z
+        .object(
+          Object.fromEntries(
+            DIRECT_STYLE_PROPERTIES.map((prop) => [prop, styleValue.optional()])
+          ) as Record<DirectStyleProperty, z.ZodOptional<typeof styleValue>>
+        )
+        .strict()
+    )
+    .optional()
+    .describe(
+      "CSS properties to set inline, as kebab-case (margin-left) or camelCase (marginLeft) keys. null removes the property."
+    ),
+  text: z.string().max(5000).optional().describe("New text of a leaf element."),
+  classes: z
+    .object({ add: classNames.optional(), remove: classNames.optional() })
+    .strict()
+    .optional()
+    .describe(
+      "Tailwind classes to add or remove, with any variant prefix. An added class replaces the class of the same utility and variant (p-6 replaces p-4). Works on a plain class or className string and on string arguments of cn(), clsx() or twMerge()."
+    ),
+  variant: z
+    .string()
+    .trim()
+    .max(60)
+    .optional()
+    .describe(
+      'Breakpoint and state for style: "md:", "lg:", "hover:", "focus:", "active:", "dark:" or a mix such as "md:hover:". In Tailwind it writes prefixed classes (md:p-6); in a plain HTML page a media query or :hover rule. Leave out for the base style.'
+    ),
+  target: z
+    .enum(EDIT_TARGETS)
+    .optional()
+    .describe(
+      'Attached apps only. Leave out: the outer element of a shared component use (such as <Button> or <CardTitle> from packages/ui) is edited where it is used (its className prop and text in the page file), so only this use changes. "component" edits the shared component file, which changes every use.'
+    ),
+  op: z
+    .enum(STRUCTURE_OPS)
+    .optional()
+    .describe(
+      'Structure edit instead: delete, duplicate, wrap (in a flex column frame), group (in a plain <div data-name="Group"> with no layout, like Cmd+G), unwrap (also ungroups) or move (into targetSelector, as its last child).'
+    ),
+  targetSelector: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .optional()
+    .describe("For op move: CSS selector of the new parent."),
+  beforeSelector: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .optional()
+    .describe(
+      "For op move or duplicate: put the element (or the copy) just before this sibling, like a drag on the canvas. Use instead of targetSelector."
+    ),
+  afterSelector: z
+    .string()
+    .trim()
+    .min(1)
+    .max(2000)
+    .optional()
+    .describe(
+      "For op move or duplicate: put the element (or the copy) just after this sibling. Use instead of targetSelector."
+    ),
+  also: z
+    .array(z.string().trim().min(1).max(2000))
+    .min(1)
+    .max(49)
+    .optional()
+    .describe(
+      "With op: more elements (CSS selectors or layer ids) to change in the same edit, like a multi-select in the studio. For group and wrap they must be siblings in one file. Ids from select_matching work here."
+    ),
 };
 
 export const setTokenShape = {
-  name: z.string().trim().min(3).max(120).describe('Token CSS variable, for example "--primary", or its path, for example "color.primary".'),
-  value: z.string().trim().min(1).max(400).describe('New value, for example "#015A5D" or "var(--color-brand-teal-500)".'),
-  theme: z.enum(['light', 'dark']).default('light').describe('light changes the main value, dark the dark value.'),
+  name: z
+    .string()
+    .trim()
+    .min(3)
+    .max(120)
+    .describe(
+      'Token CSS variable, for example "--primary", or its path, for example "color.primary".'
+    ),
+  value: z
+    .string()
+    .trim()
+    .min(1)
+    .max(400)
+    .describe(
+      'New value, for example "#015A5D" or "var(--color-brand-teal-500)".'
+    ),
+  theme: z
+    .enum(["light", "dark"])
+    .default("light")
+    .describe("light changes the main value, dark the dark value."),
 };
 
 const editElementSchema = z.object(editElementShape).strict();
@@ -65,32 +209,63 @@ type EditElementArgs = z.input<typeof editElementSchema>;
 type SetTokenArgs = z.input<typeof setTokenSchema>;
 
 function text(message: string): ToolText {
-  return { content: [{ type: 'text', text: message }] };
+  return { content: [{ type: "text", text: message }] };
 }
 
 function failure(message: string): ToolText {
-  return { content: [{ type: 'text', text: message }], isError: true };
+  return { content: [{ type: "text", text: message }], isError: true };
 }
 
 export function refusal(ctx: AgentRunContext, tool: string): string | null {
-  if (ctx.request.plan) return 'Plan mode is on, so files stay as they are. Reply with the plan; the user approves it before the build.';
-  if (ctx.request.mode === 'critique') return `${tool} is not available in critique runs.`;
+  if (ctx.request.plan)
+    return "Plan mode is on, so files stay as they are. Reply with the plan; the user approves it before the build.";
+  if (ctx.request.mode === "critique")
+    return `${tool} is not available in critique runs.`;
   return null;
 }
 
-export function writeProblem(ctx: AgentRunContext, relative: string): string | null {
-  const policy = { workTree: ctx.direction.workTree, mode: ctx.request.mode, allowBash: false, allowInstall: false, ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}) };
-  const result = evaluateToolUse(policy, 'Write', { file_path: relative });
-  return result.behavior === 'deny' ? result.message : null;
+export function writeProblem(
+  ctx: AgentRunContext,
+  relative: string
+): string | null {
+  const policy = {
+    workTree: ctx.direction.workTree,
+    mode: ctx.request.mode,
+    allowBash: false,
+    allowInstall: false,
+    ...(ctx.project.designSystemFor ? { readOnlyDirs: [SOURCE_DIR] } : {}),
+  };
+  const result = evaluateToolUse(policy, "Write", { file_path: relative });
+  return result.behavior === "deny" ? result.message : null;
 }
 
-async function findElements(deps: DirectToolDeps, page: string | undefined, selectors: string[]): Promise<SelectionContext[]> {
-  if (!deps.ctx.previewUrl) throw new DirectEditError('invalid_request', 'Preview is not running for this direction, so elements cannot be found. Edit the file instead.');
-  const found = await describeElements(deps.preview, editPageUrl(deps.ctx, page), selectors);
+async function findElements(
+  deps: DirectToolDeps,
+  page: string | undefined,
+  selectors: string[]
+): Promise<SelectionContext[]> {
+  if (!deps.ctx.previewUrl)
+    throw new DirectEditError(
+      "invalid_request",
+      "Preview is not running for this direction, so elements cannot be found. Edit the file instead."
+    );
+  const found = await describeElements(
+    deps.preview,
+    editPageUrl(deps.ctx, page),
+    selectors
+  );
   return found.map((element, index) => {
-    const selector = selectors[index] ?? '';
-    if (!element) throw new DirectEditError('element_not_found', `No element matches ${selector} on the page.`);
-    if (!element.source) throw new DirectEditError('element_not_found', `${selector} has no source location (it may come from a component or a script). Edit the file instead.`);
+    const selector = selectors[index] ?? "";
+    if (!element)
+      throw new DirectEditError(
+        "element_not_found",
+        `No element matches ${selector} on the page.`
+      );
+    if (!element.source)
+      throw new DirectEditError(
+        "element_not_found",
+        `${selector} has no source location (it may come from a component or a script). Edit the file instead.`
+      );
     return element;
   });
 }
@@ -101,79 +276,179 @@ function describeError(error: unknown): string {
 
 const EDIT_VIEWPORT: Viewport = { width: 1440, height: 900 };
 
-async function alsoSelectors(deps: DirectToolDeps, input: z.output<typeof editElementSchema>): Promise<string[]> {
+async function alsoSelectors(
+  deps: DirectToolDeps,
+  input: z.output<typeof editElementSchema>
+): Promise<string[]> {
   const list = input.also ?? [];
-  if (!list.some((item) => isLayerRef(item)) || !deps.ctx.previewUrl) return list;
+  if (!list.some((item) => isLayerRef(item)) || !deps.ctx.previewUrl)
+    return list;
   const scope = scopeOf(deps.ctx.project.id, deps.ctx.direction.id);
-  const page = input.path ?? memoPage(scope, list.find((item) => isLayerRef(item))?.trim() ?? '');
-  const refs = list.filter((item) => isLayerRef(item)).map((item) => item.trim());
-  const paths = await resolveLayerRefs(deps.preview, editPageUrl(deps.ctx, page), EDIT_VIEWPORT, scope, refs);
-  return list.map((item) => (isLayerRef(item) ? (paths.get(item.trim()) ?? item) : item));
+  const page =
+    input.path ??
+    memoPage(scope, list.find((item) => isLayerRef(item))?.trim() ?? "");
+  const refs = list
+    .filter((item) => isLayerRef(item))
+    .map((item) => item.trim());
+  const paths = await resolveLayerRefs(
+    deps.preview,
+    editPageUrl(deps.ctx, page),
+    EDIT_VIEWPORT,
+    scope,
+    refs
+  );
+  return list.map((item) =>
+    isLayerRef(item) ? (paths.get(item.trim()) ?? item) : item
+  );
 }
 
-function placeOf(input: z.output<typeof editElementSchema>): { key: 'into' | 'before' | 'after'; selector: string } | null {
-  if (input.targetSelector) return { key: 'into', selector: input.targetSelector };
-  if (input.beforeSelector) return { key: 'before', selector: input.beforeSelector };
-  return input.afterSelector ? { key: 'after', selector: input.afterSelector } : null;
+function placeOf(
+  input: z.output<typeof editElementSchema>
+): { key: "into" | "before" | "after"; selector: string } | null {
+  if (input.targetSelector)
+    return { key: "into", selector: input.targetSelector };
+  if (input.beforeSelector)
+    return { key: "before", selector: input.beforeSelector };
+  return input.afterSelector
+    ? { key: "after", selector: input.afterSelector }
+    : null;
 }
 
-async function structureEdit(deps: DirectToolDeps, input: z.output<typeof editElementSchema>, op: StructureOp): Promise<ToolText> {
+async function structureEdit(
+  deps: DirectToolDeps,
+  input: z.output<typeof editElementSchema>,
+  op: StructureOp
+): Promise<ToolText> {
   const also = await alsoSelectors(deps, input);
   const place = placeOf(input);
   const selectors = place ? [input.selector, place.selector] : [input.selector];
   const [element, parent] = await findElements(deps, input.path, selectors);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
-  const more = also.length > 0 ? await findElements(deps, input.path, also) : [];
-  const targets = [element, ...more].map((found, index) => ({ source: found.source as NonNullable<SelectionContext['source']>, selector: [input.selector, ...also][index] as string, tag: found.tag }));
-  const raw = { op, targets, ...(place && parent?.source ? { [place.key]: { source: parent.source, selector: place.selector, tag: parent.tag } } : {}) };
+  const more =
+    also.length > 0 ? await findElements(deps, input.path, also) : [];
+  const targets = [element, ...more].map((found, index) => ({
+    source: found.source as NonNullable<SelectionContext["source"]>,
+    selector: [input.selector, ...also][index] as string,
+    tag: found.tag,
+  }));
+  const raw = {
+    op,
+    targets,
+    ...(place && parent?.source
+      ? {
+          [place.key]: {
+            source: parent.source,
+            selector: place.selector,
+            tag: parent.tag,
+          },
+        }
+      : {}),
+  };
   const plan = await planStructureEdit(deps.ctx.direction.workTree, raw);
-  if (plan.changed.length === 0) return text('Nothing changed.');
+  if (plan.changed.length === 0) return text("Nothing changed.");
   for (const file of plan.changed) {
     const problem = writeProblem(deps.ctx, file.target.relative);
     if (problem) return failure(problem);
   }
-  for (const file of plan.changed) await writeAtomic(file.target.file, file.code);
-  const select = plan.changed.flatMap((file) => file.select).map((loc) => `${loc.file}:${loc.line}:${loc.col}`);
-  return text(`${plan.title} in ${plan.changed.map((file) => file.target.relative).join(', ')}.${select.length > 0 ? ` New location: ${select.join(', ')}.` : ''} ${RUN_NOTE}`);
+  for (const file of plan.changed)
+    await writeAtomic(file.target.file, file.code);
+  const select = plan.changed
+    .flatMap((file) => file.select)
+    .map((loc) => `${loc.file}:${loc.line}:${loc.col}`);
+  return text(
+    `${plan.title} in ${plan.changed.map((file) => file.target.relative).join(", ")}.${select.length > 0 ? ` New location: ${select.join(", ")}.` : ""} ${RUN_NOTE}`
+  );
 }
 
 type EditInput = z.output<typeof editElementSchema>;
-type Sourced = SelectionContext & { source: NonNullable<SelectionContext['source']> };
+type Sourced = SelectionContext & {
+  source: NonNullable<SelectionContext["source"]>;
+};
 
 function directRequest(input: EditInput, element: Sourced, site: EditSite) {
-  const style = Object.fromEntries(Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined));
-  return parseDirectEditRequest({ ...siteRequest(site), selector: input.selector, ...(Object.keys(style).length > 0 ? { style } : {}), ...(input.text !== undefined ? { text: input.text, hints: textHintsOf(element) } : {}), ...(input.classes ? { classes: input.classes } : {}), ...(input.variant ? { variant: input.variant } : {}) });
+  const style = Object.fromEntries(
+    Object.entries(input.style ?? {}).filter(([, value]) => value !== undefined)
+  );
+  return parseDirectEditRequest({
+    ...siteRequest(site),
+    selector: input.selector,
+    ...(Object.keys(style).length > 0 ? { style } : {}),
+    ...(input.text !== undefined
+      ? { text: input.text, hints: textHintsOf(element) }
+      : {}),
+    ...(input.classes ? { classes: input.classes } : {}),
+    ...(input.variant ? { variant: input.variant } : {}),
+  });
 }
 
 function hasStyleOrClasses(input: EditInput): boolean {
-  return Object.values(input.style ?? {}).some((value) => value !== undefined) || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
+  return (
+    Object.values(input.style ?? {}).some((value) => value !== undefined) ||
+    (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0
+  );
 }
 
-async function planSite(deps: DirectToolDeps, input: EditInput, element: Sourced, site: EditSite) {
+async function planSite(
+  deps: DirectToolDeps,
+  input: EditInput,
+  element: Sourced,
+  site: EditSite
+) {
   const workTree = deps.ctx.direction.workTree;
-  const origin = deps.ctx.previewUrl ? new URL(deps.ctx.previewUrl).origin : null;
+  const origin = deps.ctx.previewUrl
+    ? new URL(deps.ctx.previewUrl).origin
+    : null;
   const known = await knownTokenVars(workTree);
-  const planKnown = (chosen: EditSite) => planDirectEdit(workTree, directRequest(input, element, chosen), known, { projectKind: deps.ctx.project.kind, previewOrigin: async () => origin }).then((planned) => ({ planned, site: chosen }));
+  const planKnown = (chosen: EditSite) =>
+    planDirectEdit(workTree, directRequest(input, element, chosen), known, {
+      projectKind: deps.ctx.project.kind,
+      previewOrigin: async () => origin,
+    }).then((planned) => ({ planned, site: chosen }));
   try {
     return await planKnown(site);
   } catch (error) {
     const textOnly = input.text !== undefined && !hasStyleOrClasses(input);
-    if (site.kind !== 'use' || site.explicit || !textOnly || !(error instanceof DirectEditError) || error.code !== 'text_not_editable') throw error;
-    if (!(await textComesFromData({ workTree, project: deps.ctx.project }, element.source))) throw error;
-    const fallback = await planKnown({ kind: 'component', source: element.source, tag: element.tag, shared: site.shared, explicit: false }).catch(() => null);
-    if (!fallback || fallback.planned.target.relative === site.shared.file) throw error;
+    if (
+      site.kind !== "use" ||
+      site.explicit ||
+      !textOnly ||
+      !(error instanceof DirectEditError) ||
+      error.code !== "text_not_editable"
+    )
+      throw error;
+    if (
+      !(await textComesFromData(
+        { workTree, project: deps.ctx.project },
+        element.source
+      ))
+    )
+      throw error;
+    const fallback = await planKnown({
+      kind: "component",
+      source: element.source,
+      tag: element.tag,
+      shared: site.shared,
+      explicit: false,
+    }).catch(() => null);
+    if (!fallback || fallback.planned.target.relative === site.shared.file)
+      throw error;
     return fallback;
   }
 }
 
 function siteText(site: EditSite): string {
   const note = siteNote(site);
-  return note ? ` ${note}` : '';
+  return note ? ` ${note}` : "";
 }
 
-async function writeAnnounced(deps: DirectToolDeps, plan: PlannedEdit): Promise<void> {
+async function writeAnnounced(
+  deps: DirectToolDeps,
+  plan: PlannedEdit
+): Promise<void> {
   const { project, direction } = deps.ctx;
-  const id = announcePlanned(project.id, direction.id, [domPatchOf(plan.request, plan.patch)]);
+  const id = announcePlanned(project.id, direction.id, [
+    domPatchOf(plan.request, plan.patch),
+  ]);
   try {
     await writeAtomic(plan.target.file, plan.patch.code);
   } catch (error) {
@@ -182,85 +457,156 @@ async function writeAnnounced(deps: DirectToolDeps, plan: PlannedEdit): Promise<
   }
 }
 
-async function styleEdit(deps: DirectToolDeps, input: EditInput): Promise<ToolText> {
+async function styleEdit(
+  deps: DirectToolDeps,
+  input: EditInput
+): Promise<ToolText> {
   const [element] = await findElements(deps, input.path, [input.selector]);
   if (!element?.source) return failure(`No element matches ${input.selector}.`);
   const sourced = { ...element, source: element.source };
-  const chosen = await chooseEditSite({ workTree: deps.ctx.direction.workTree, project: deps.ctx.project }, sourced, { selector: input.selector, target: input.target, classes: hasStyleOrClasses(input) });
-  if ('error' in chosen) return failure(chosen.error);
+  const chosen = await chooseEditSite(
+    { workTree: deps.ctx.direction.workTree, project: deps.ctx.project },
+    sourced,
+    {
+      selector: input.selector,
+      target: input.target,
+      classes: hasStyleOrClasses(input),
+    }
+  );
+  if ("error" in chosen) return failure(chosen.error);
   const { planned: plan, site } = await planSite(deps, input, sourced, chosen);
   const problem = writeProblem(deps.ctx, plan.target.relative);
   if (problem) return failure(problem);
-  if (plan.patch.code === plan.original) return text(`${plan.target.relative}: the values were already set.`);
+  if (plan.patch.code === plan.original)
+    return text(`${plan.target.relative}: the values were already set.`);
   await writeAnnounced(deps, plan);
-  const parts = [...plan.patch.applied.style, ...(plan.patch.applied.classes ? ['classes'] : []), ...(plan.patch.applied.text ? ['text'] : [])];
+  const parts = [
+    ...plan.patch.applied.style,
+    ...(plan.patch.applied.classes ? ["classes"] : []),
+    ...(plan.patch.applied.text ? ["text"] : []),
+  ];
   const tailwind = plan.patch.tailwind;
-  const classNote = tailwind && tailwind.mode !== 'none' ? ` Classes now: ${tailwind.classes.join(' ') || '(none)'}.${tailwind.note ? ` ${tailwind.note}` : ''}` : '';
+  const classNote =
+    tailwind && tailwind.mode !== "none"
+      ? ` Classes now: ${tailwind.classes.join(" ") || "(none)"}.${tailwind.note ? ` ${tailwind.note}` : ""}`
+      : "";
   const found = plan.patch.textSource;
-  if (found) return text(`Edited ${found.what} in ${found.file}:${found.line}, where the text of ${input.selector} comes from.${found.shared ? ` ${found.shared}` : ''} ${RUN_NOTE}`);
-  return text(`Edited ${plan.patch.tag} (${parts.join(', ')}) at ${plan.target.relative}:${site.source.line}.${classNote}${siteText(site)} ${RUN_NOTE}`);
+  if (found)
+    return text(
+      `Edited ${found.what} in ${found.file}:${found.line}, where the text of ${input.selector} comes from.${found.shared ? ` ${found.shared}` : ""} ${RUN_NOTE}`
+    );
+  return text(
+    `Edited ${plan.patch.tag} (${parts.join(", ")}) at ${plan.target.relative}:${site.source.line}.${classNote}${siteText(site)} ${RUN_NOTE}`
+  );
 }
 
 function placesFit(input: z.output<typeof editElementSchema>): boolean {
-  const places = [input.targetSelector, input.beforeSelector, input.afterSelector].filter((value) => value !== undefined).length;
-  if (input.op === 'move') return places === 1;
-  return places <= (input.op === 'duplicate' && input.targetSelector === undefined ? 1 : 0);
+  const places = [
+    input.targetSelector,
+    input.beforeSelector,
+    input.afterSelector,
+  ].filter((value) => value !== undefined).length;
+  if (input.op === "move") return places === 1;
+  return (
+    places <=
+    (input.op === "duplicate" && input.targetSelector === undefined ? 1 : 0)
+  );
 }
 
-function editShapeError(input: z.output<typeof editElementSchema>): string | null {
-  const hasChange = input.text !== undefined || Object.keys(input.style ?? {}).length > 0 || (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) > 0;
-  if (input.op === undefined && !hasChange) return 'edit_element needs style, text or classes, or op.';
-  if (input.op !== undefined && (hasChange || input.variant !== undefined)) return 'Pass op alone, or style/text/classes without op.';
-  if (!placesFit(input)) return 'op move needs one of targetSelector, beforeSelector or afterSelector; duplicate takes at most beforeSelector or afterSelector; other ops take none.';
-  if (input.also !== undefined && input.op === undefined) return 'also needs op.';
+function editShapeError(
+  input: z.output<typeof editElementSchema>
+): string | null {
+  const hasChange =
+    input.text !== undefined ||
+    Object.keys(input.style ?? {}).length > 0 ||
+    (input.classes?.add?.length ?? 0) + (input.classes?.remove?.length ?? 0) >
+      0;
+  if (input.op === undefined && !hasChange)
+    return "edit_element needs style, text or classes, or op.";
+  if (input.op !== undefined && (hasChange || input.variant !== undefined))
+    return "Pass op alone, or style/text/classes without op.";
+  if (!placesFit(input))
+    return "op move needs one of targetSelector, beforeSelector or afterSelector; duplicate takes at most beforeSelector or afterSelector; other ops take none.";
+  if (input.also !== undefined && input.op === undefined)
+    return "also needs op.";
   return null;
 }
 
-export async function runEditElement(deps: DirectToolDeps, args: EditElementArgs): Promise<ToolText> {
-  const blocked = refusal(deps.ctx, 'edit_element');
+export async function runEditElement(
+  deps: DirectToolDeps,
+  args: EditElementArgs
+): Promise<ToolText> {
+  const blocked = refusal(deps.ctx, "edit_element");
   if (blocked) return failure(blocked);
   const parsed = editElementSchema.safeParse(args);
-  if (!parsed.success) return failure(`edit_element: ${parsed.error.issues.map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`).join('; ')}`);
+  if (!parsed.success)
+    return failure(
+      `edit_element: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`
+    );
   const input = parsed.data;
   const invalid = editShapeError(input);
   if (invalid) return failure(invalid);
   try {
-    return input.op ? await structureEdit(deps, input, input.op) : await styleEdit(deps, input);
+    return input.op
+      ? await structureEdit(deps, input, input.op)
+      : await styleEdit(deps, input);
   } catch (error) {
     return failure(`edit_element failed: ${describeError(error)}`);
   }
 }
 
-export async function runSetToken(deps: DirectToolDeps, args: SetTokenArgs): Promise<ToolText> {
-  const blocked = refusal(deps.ctx, 'set_token');
+export async function runSetToken(
+  deps: DirectToolDeps,
+  args: SetTokenArgs
+): Promise<ToolText> {
+  const blocked = refusal(deps.ctx, "set_token");
   if (blocked) return failure(blocked);
   const parsed = setTokenSchema.safeParse(args);
-  if (!parsed.success) return failure(`set_token: ${parsed.error.issues.map((issue) => issue.message).join('; ')}`);
+  if (!parsed.success)
+    return failure(
+      `set_token: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`
+    );
   const input = parsed.data;
   const { project, direction } = deps.ctx;
   const workTree = direction.workTree;
   try {
     const state = await readDesignSystemState(project, direction);
-    const entry = state.entries.find((item) => item.cssVar === input.name || item.path === input.name);
-    if (!entry) return failure(state.entries.length === 0 ? 'This design has no tokens.' : `No token ${input.name}. Read design-system/tokens.json (or the app token CSS file) for the names.`);
-    const change = input.theme === 'dark' ? { path: entry.path, darkValue: input.value } : { path: entry.path, value: input.value };
+    const entry = state.entries.find(
+      (item) => item.cssVar === input.name || item.path === input.name
+    );
+    if (!entry)
+      return failure(
+        state.entries.length === 0
+          ? "This design has no tokens."
+          : `No token ${input.name}. Read design-system/tokens.json (or the app token CSS file) for the names.`
+      );
+    const change =
+      input.theme === "dark"
+        ? { path: entry.path, darkValue: input.value }
+        : { path: entry.path, value: input.value };
     const app = await appTokensFor(project, direction);
     if (app) {
       const loaded = await readAppTokensAt(workTree, app.file);
-      if (!loaded) return failure('The app token file is gone.');
+      if (!loaded) return failure("The app token file is gone.");
       const problem = writeProblem(deps.ctx, loaded.file);
       if (problem) return failure(problem);
       const next = plannedCssText(loaded, [change]);
-      if (next === loaded.text) return text(`${entry.cssVar} is already ${input.value}.`);
+      if (next === loaded.text)
+        return text(`${entry.cssVar} is already ${input.value}.`);
       await writeFileAtomic(loaded.absolute, next);
-      return text(`Set ${entry.cssVar}${input.theme === 'dark' ? ' (dark)' : ''} to ${input.value} in ${loaded.file}. ${RUN_NOTE}`);
+      return text(
+        `Set ${entry.cssVar}${input.theme === "dark" ? " (dark)" : ""} to ${input.value} in ${loaded.file}. ${RUN_NOTE}`
+      );
     }
     const problem = writeProblem(deps.ctx, TOKENS_FILE);
     if (problem) return failure(problem);
     const next = await plannedTokensText(workTree, [change]);
-    if (next === null) return text(`${entry.cssVar} is already ${input.value}.`);
+    if (next === null)
+      return text(`${entry.cssVar} is already ${input.value}.`);
     await writeTokensText(workTree, next);
-    return text(`Set ${entry.cssVar}${input.theme === 'dark' ? ' (dark)' : ''} to ${input.value} in ${TOKENS_FILE}; tokens.css was rebuilt. ${RUN_NOTE}`);
+    return text(
+      `Set ${entry.cssVar}${input.theme === "dark" ? " (dark)" : ""} to ${input.value} in ${TOKENS_FILE}; tokens.css was rebuilt. ${RUN_NOTE}`
+    );
   } catch (error) {
     return failure(`set_token failed: ${describeError(error)}`);
   } finally {

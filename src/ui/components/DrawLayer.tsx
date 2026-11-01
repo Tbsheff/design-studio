@@ -1,15 +1,32 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import type { CommentDrawing, DrawStroke } from '../../shared/contracts';
-import { strokesBox } from '../../shared/comments';
-import { DRAW_COLORS, DRAW_SCREEN_WIDTH, createStrokeBuilder, minStepFor, paintStrokes, renderDrawingPng, strokePath, type StrokeBuilder } from '../drawing';
-import type { CommentsControl } from '../useComments';
-import type { DrawTool } from '../useDrawTool';
-import { MOD_LABEL } from './CommentPopover';
-import { CommentComposer, type ComposerSubmit } from './CommentComposer';
-import type { CommentTools } from './CommentLayer';
-import { useProfileInitial } from '../useProfileInitial';
-import { Icon } from './Icon';
-import '../styles/drawing.css';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
+
+import { strokesBox } from "../../shared/comments";
+import type { CommentDrawing, DrawStroke } from "../../shared/contracts";
+import {
+  DRAW_COLORS,
+  DRAW_SCREEN_WIDTH,
+  createStrokeBuilder,
+  minStepFor,
+  paintStrokes,
+  renderDrawingPng,
+  strokePath,
+  type StrokeBuilder,
+} from "../drawing";
+import type { CommentsControl } from "../useComments";
+import type { DrawTool } from "../useDrawTool";
+import { useProfileInitial } from "../useProfileInitial";
+import { CommentComposer, type ComposerSubmit } from "./CommentComposer";
+import type { CommentTools } from "./CommentLayer";
+import { MOD_LABEL } from "./CommentPopover";
+import { Icon } from "./Icon";
+
+import "../styles/drawing.css";
 
 type Frame = { width: number; height: number };
 
@@ -18,7 +35,18 @@ const MAX_BACKING_AREA = 24_000_000;
 
 export function PenIcon({ size = 16 }: { size?: number }) {
   return (
-    <svg className="icon" width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      className="icon"
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M2.5 12.5c1.6-2.6 3-3.4 4-2.6 1.1.9-.6 2.8.6 3.3 1.1.5 2.6-1.2 3.6-2.2" />
       <path d="m9.6 7.4 3.6-3.6a1.13 1.13 0 0 0-1.6-1.6L8 5.8l-.5 2.1 2.1-.5Z" />
     </svg>
@@ -26,8 +54,12 @@ export function PenIcon({ size = 16 }: { size?: number }) {
 }
 
 function backingScale(frame: Frame, zoom: number): number {
-  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
-  return Math.min(dpr * zoom, MAX_BACKING_SIDE / Math.max(frame.width, frame.height), Math.sqrt(MAX_BACKING_AREA / (frame.width * frame.height)));
+  const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  return Math.min(
+    dpr * zoom,
+    MAX_BACKING_SIDE / Math.max(frame.width, frame.height),
+    Math.sqrt(MAX_BACKING_AREA / (frame.width * frame.height))
+  );
 }
 
 interface SurfaceProps {
@@ -38,20 +70,34 @@ interface SurfaceProps {
   tools: CommentTools;
 }
 
-export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps) {
+export function DrawSurface({
+  draw,
+  control,
+  zoom,
+  frame,
+  tools,
+}: SurfaceProps) {
   const initial = useProfileInitial();
   const canvas = useRef<HTMLCanvasElement>(null);
-  const active = useRef<{ builder: StrokeBuilder; stroke: DrawStroke; pointer: number } | null>(null);
+  const active = useRef<{
+    builder: StrokeBuilder;
+    stroke: DrawStroke;
+    pointer: number;
+  } | null>(null);
   const [drawing, setDrawing] = useState(false);
   const scale = backingScale(frame, zoom);
 
   const paint = () => {
-    const ctx = canvas.current?.getContext('2d');
+    const ctx = canvas.current?.getContext("2d");
     if (!ctx) return;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    paintStrokes(ctx, active.current ? [...draw.strokes, active.current.stroke] : draw.strokes, false);
+    paintStrokes(
+      ctx,
+      active.current ? [...draw.strokes, active.current.stroke] : draw.strokes,
+      false
+    );
   };
 
   useEffect(paint, [draw.strokes, scale, frame.width, frame.height]);
@@ -59,7 +105,10 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
   const pointOf = (event: { clientX: number; clientY: number }) => {
     const rect = canvas.current?.getBoundingClientRect();
     if (!rect || rect.width === 0 || rect.height === 0) return null;
-    return { x: ((event.clientX - rect.left) * frame.width) / rect.width, y: ((event.clientY - rect.top) * frame.height) / rect.height };
+    return {
+      x: ((event.clientX - rect.left) * frame.width) / rect.width,
+      y: ((event.clientY - rect.top) * frame.height) / rect.height,
+    };
   };
 
   const onDown = (event: PointerEvent<HTMLCanvasElement>) => {
@@ -70,7 +119,15 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
     const builder = createStrokeBuilder(point.x, point.y, minStepFor(zoom));
-    active.current = { builder, pointer: event.pointerId, stroke: { color: draw.color, width: Math.round((DRAW_SCREEN_WIDTH / zoom) * 10) / 10, points: builder.points() } };
+    active.current = {
+      builder,
+      pointer: event.pointerId,
+      stroke: {
+        color: draw.color,
+        width: Math.round((DRAW_SCREEN_WIDTH / zoom) * 10) / 10,
+        points: builder.points(),
+      },
+    };
     setDrawing(true);
     paint();
   };
@@ -94,19 +151,38 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
     active.current = null;
     setDrawing(false);
     const point = pointOf(event);
-    if (point && current.builder.points().length < draw.pointsLeft) current.builder.end(point.x, point.y);
+    if (point && current.builder.points().length < draw.pointsLeft)
+      current.builder.end(point.x, point.y);
     draw.push({ ...current.stroke, points: [...current.builder.points()] });
   };
 
   const box = strokesBox(draw.strokes);
 
-  const submit = async ({ text, toClaude, mentions, attachmentIds }: ComposerSubmit): Promise<boolean> => {
+  const submit = async ({
+    text,
+    toClaude,
+    mentions,
+    attachmentIds,
+  }: ComposerSubmit): Promise<boolean> => {
     if (!box) return false;
     const strokes = draw.strokes;
-    const value: CommentDrawing = { frame: { width: Math.round(frame.width), height: Math.round(frame.height) }, box, strokes };
+    const value: CommentDrawing = {
+      frame: {
+        width: Math.round(frame.width),
+        height: Math.round(frame.height),
+      },
+      box,
+      strokes,
+    };
     const image = await renderDrawingPng(value).catch(() => null);
     if (!image) return false;
-    const ok = await control.addDrawing({ text, drawing: value, image, toClaude, extras: { mentions, attachmentIds } });
+    const ok = await control.addDrawing({
+      text,
+      drawing: value,
+      image,
+      toClaude,
+      extras: { mentions, attachmentIds },
+    });
     if (ok) draw.setOn(false);
     return ok;
   };
@@ -134,7 +210,10 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
           anchor={box}
           zoom={zoom}
           frame={frame}
-          breadcrumb={{ short: `${tools.pageName} › Drawing`, full: `${tools.pageName} › Drawing` }}
+          breadcrumb={{
+            short: `${tools.pageName} › Drawing`,
+            full: `${tools.pageName} › Drawing`,
+          }}
           initial={initial}
           draftKey="draw"
           autoFocus
@@ -153,9 +232,16 @@ export function DrawSurface({ draw, control, zoom, frame, tools }: SurfaceProps)
 }
 
 function onSwatchKey(event: KeyboardEvent<HTMLDivElement>) {
-  const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+  const step =
+    event.key === "ArrowRight" || event.key === "ArrowDown"
+      ? 1
+      : event.key === "ArrowLeft" || event.key === "ArrowUp"
+        ? -1
+        : 0;
   if (step === 0) return;
-  const radios = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+  const radios = Array.from(
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')
+  );
   const index = radios.indexOf(document.activeElement as HTMLButtonElement);
   if (index < 0) return;
   event.preventDefault();
@@ -168,8 +254,19 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
   if (!draw.on) return null;
   const count = draw.strokes.length;
   return (
-    <div className="draw-bar" role="toolbar" aria-label="Drawing" data-testid="draw-bar" onPointerDown={(event) => event.stopPropagation()}>
-      <div className="draw-swatches" role="radiogroup" aria-label="Pen color" onKeyDown={onSwatchKey}>
+    <div
+      className="draw-bar"
+      role="toolbar"
+      aria-label="Drawing"
+      data-testid="draw-bar"
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <div
+        className="draw-swatches"
+        role="radiogroup"
+        aria-label="Pen color"
+        onKeyDown={onSwatchKey}
+      >
         {DRAW_COLORS.map((color) => (
           <button
             key={color.id}
@@ -185,14 +282,38 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
         ))}
       </div>
       <div className="toolbar-sep" />
-      <button type="button" className="icon-btn small" aria-label="Undo stroke" aria-keyshortcuts="Meta+Z Control+Z" data-tip={`Undo stroke  ${MOD_LABEL}Z`} disabled={count === 0} onClick={draw.undo}>
+      <button
+        type="button"
+        className="icon-btn small"
+        aria-label="Undo stroke"
+        aria-keyshortcuts="Meta+Z Control+Z"
+        data-tip={`Undo stroke  ${MOD_LABEL}Z`}
+        disabled={count === 0}
+        onClick={draw.undo}
+      >
         <Icon name="undo" />
       </button>
-      <button type="button" className="icon-btn small" aria-label="Clear drawing" data-tip="Clear" disabled={count === 0} onClick={draw.clear}>
+      <button
+        type="button"
+        className="icon-btn small"
+        aria-label="Clear drawing"
+        data-tip="Clear"
+        disabled={count === 0}
+        onClick={draw.clear}
+      >
         <Icon name="trash" />
       </button>
-      <span className="draw-hint">{count === 0 ? 'Draw on the design' : `${count} ${count === 1 ? 'stroke' : 'strokes'}`}</span>
-      <button type="button" className="btn small ghost" aria-keyshortcuts="Escape" onClick={() => draw.setOn(false)}>
+      <span className="draw-hint">
+        {count === 0
+          ? "Draw on the design"
+          : `${count} ${count === 1 ? "stroke" : "strokes"}`}
+      </span>
+      <button
+        type="button"
+        className="btn small ghost"
+        aria-keyshortcuts="Escape"
+        onClick={() => draw.setOn(false)}
+      >
         Done <kbd>Esc</kbd>
       </button>
     </div>
@@ -202,12 +323,23 @@ export function DrawBar({ draw }: { draw: DrawTool }) {
 export function DrawingStrokes({ drawing }: { drawing: CommentDrawing }) {
   const { width, height } = drawing.frame;
   return (
-    <svg className="drawing-strokes" data-testid="comment-drawing" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+    <svg
+      className="drawing-strokes"
+      data-testid="comment-drawing"
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      aria-hidden="true"
+    >
       {drawing.strokes.map((stroke, index) => {
         const d = strokePath(stroke.points);
         return (
           <g key={index}>
-            <path d={d} style={{ stroke: 'var(--halo)' }} strokeWidth={stroke.width + 3} />
+            <path
+              d={d}
+              style={{ stroke: "var(--halo)" }}
+              strokeWidth={stroke.width + 3}
+            />
             <path d={d} stroke={stroke.color} strokeWidth={stroke.width} />
           </g>
         );

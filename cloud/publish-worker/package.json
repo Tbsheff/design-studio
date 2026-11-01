@@ -2,8 +2,8 @@
   "name": "design-studio-publish-worker",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "One Cloudflare Worker that serves every design published from Design Studio (R2 files, D1 metadata).",
+  "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "node scripts/build.mjs",

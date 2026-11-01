@@ -1,9 +1,10 @@
-import { existsSync } from 'node:fs';
-import { readdir, readFile, stat } from 'node:fs/promises';
-import path from 'node:path';
-import type { RunSummary } from '../../shared/contracts.js';
-import { runMatches, runQueryTerms } from '../../shared/rewind.js';
-import { BadRequestError } from '../store/errors.js';
+import { existsSync } from "node:fs";
+import { readdir, readFile, stat } from "node:fs/promises";
+import path from "node:path";
+
+import type { RunSummary } from "../../shared/contracts.js";
+import { runMatches, runQueryTerms } from "../../shared/rewind.js";
+import { BadRequestError } from "../store/errors.js";
 
 interface CachedRun {
   mtimeMs: number;
@@ -29,19 +30,26 @@ const CACHE_MAX = 2000;
 const cache = new Map<string, CachedRun>();
 
 export function isRunSummary(value: unknown): value is RunSummary {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return false;
   const record = value as Partial<RunSummary>;
-  return typeof record.id === 'string' && typeof record.status === 'string' && typeof record.request === 'object' && record.request !== null;
+  return (
+    typeof record.id === "string" &&
+    typeof record.status === "string" &&
+    typeof record.request === "object" &&
+    record.request !== null
+  );
 }
 
 async function readRun(file: string): Promise<RunSummary | null> {
   const info = await stat(file).catch(() => null);
   if (!info?.isFile()) return null;
   const known = cache.get(file);
-  if (known && known.mtimeMs === info.mtimeMs && known.size === info.size) return known.summary;
+  if (known && known.mtimeMs === info.mtimeMs && known.size === info.size)
+    return known.summary;
   let summary: RunSummary | null = null;
   try {
-    const parsed: unknown = JSON.parse(await readFile(file, 'utf8'));
+    const parsed: unknown = JSON.parse(await readFile(file, "utf8"));
     summary = isRunSummary(parsed) ? parsed : null;
   } catch {
     summary = null;
@@ -53,55 +61,99 @@ async function readRun(file: string): Promise<RunSummary | null> {
 
 export async function listRunSummaries(dir: string): Promise<RunSummary[]> {
   if (!existsSync(dir)) return [];
-  const names = (await readdir(dir)).filter((name) => name.endsWith('.json') && !name.startsWith('session-'));
-  const runs = await Promise.all(names.map((name) => readRun(path.join(dir, name))));
-  return runs.filter((run): run is RunSummary => run !== null).sort((a, b) => b.startedAt - a.startedAt);
+  const names = (await readdir(dir)).filter(
+    (name) => name.endsWith(".json") && !name.startsWith("session-")
+  );
+  const runs = await Promise.all(
+    names.map((name) => readRun(path.join(dir, name)))
+  );
+  return runs
+    .filter((run): run is RunSummary => run !== null)
+    .sort((a, b) => b.startedAt - a.startedAt);
 }
 
-export async function latestRunStatus(dir: string): Promise<RunSummary['status'] | null> {
+export async function latestRunStatus(
+  dir: string
+): Promise<RunSummary["status"] | null> {
   if (!existsSync(dir)) return null;
-  const names = (await readdir(dir)).filter((name) => name.endsWith('.json') && !name.startsWith('session-'));
-  const stamped = await Promise.all(names.map(async (name) => ({ file: path.join(dir, name), at: (await stat(path.join(dir, name)).catch(() => null))?.mtimeMs ?? 0 })));
+  const names = (await readdir(dir)).filter(
+    (name) => name.endsWith(".json") && !name.startsWith("session-")
+  );
+  const stamped = await Promise.all(
+    names.map(async (name) => ({
+      file: path.join(dir, name),
+      at: (await stat(path.join(dir, name)).catch(() => null))?.mtimeMs ?? 0,
+    }))
+  );
   const newest = stamped.sort((a, b) => b.at - a.at).slice(0, 3);
-  const runs = (await Promise.all(newest.map((item) => readRun(item.file)))).filter((run): run is RunSummary => run !== null);
+  const runs = (
+    await Promise.all(newest.map((item) => readRun(item.file)))
+  ).filter((run): run is RunSummary => run !== null);
   return runs.sort((a, b) => b.startedAt - a.startedAt)[0]?.status ?? null;
 }
 
 function whole(raw: string | undefined, name: string): number | null {
-  if (raw === undefined || raw === '') return null;
+  if (raw === undefined || raw === "") return null;
   const value = Number(raw);
-  if (!Number.isInteger(value) || value < 0) throw new BadRequestError(`${name} must be a whole number`);
+  if (!Number.isInteger(value) || value < 0)
+    throw new BadRequestError(`${name} must be a whole number`);
   return value;
 }
 
-export function runListQuery(query: (name: string) => string | undefined): RunListQuery {
-  const limit = whole(query('limit'), 'limit');
+export function runListQuery(
+  query: (name: string) => string | undefined
+): RunListQuery {
+  const limit = whole(query("limit"), "limit");
   return {
     limit: limit === null ? null : Math.min(Math.max(limit, 1), LIMIT_MAX),
-    before: whole(query('before'), 'before'),
-    light: query('light') === '1',
-    terms: runQueryTerms(query('q') ?? ''),
-    directionId: query('direction') || null,
+    before: whole(query("before"), "before"),
+    light: query("light") === "1",
+    terms: runQueryTerms(query("q") ?? ""),
+    directionId: query("direction") || null,
   };
 }
 
 function lightRun(run: RunSummary): RunSummary {
-  const { parts: _parts, todos: _todos, loop: _loop, designSystemCheck: _ds, finalCheck: _check, ...rest } = run;
+  const {
+    parts: _parts,
+    todos: _todos,
+    loop: _loop,
+    designSystemCheck: _ds,
+    finalCheck: _check,
+    ...rest
+  } = run;
   return { ...rest, toolCalls: [], finalText: run.finalText.slice(0, 400) };
 }
 
 function matchRuns(all: RunSummary[], query: RunListQuery): RunSummary[] {
   const { terms, directionId, before } = query;
   if (terms.length === 0 && directionId === null && before === null) return all;
-  return all.filter((run) => (before === null || run.startedAt < before) && (directionId === null || run.directionId === directionId) && runMatches(terms, run.request.prompt ?? '', run.title));
+  return all.filter(
+    (run) =>
+      (before === null || run.startedAt < before) &&
+      (directionId === null || run.directionId === directionId) &&
+      runMatches(terms, run.request.prompt ?? "", run.title)
+  );
 }
 
-export function runListBody(all: RunSummary[], query: RunListQuery): RunSummary[] | RunPage {
+export function runListBody(
+  all: RunSummary[],
+  query: RunListQuery
+): RunSummary[] | RunPage {
   const filtered = query.terms.length > 0 || query.directionId !== null;
-  if (query.limit === null && query.before === null && !query.light && !filtered) return all;
+  if (
+    query.limit === null &&
+    query.before === null &&
+    !query.light &&
+    !filtered
+  )
+    return all;
   const after = matchRuns(all, query);
   const page = query.limit === null ? after : after.slice(0, query.limit);
   const last = page[page.length - 1];
   const runs = query.light ? page.map(lightRun) : page;
-  return { runs, nextBefore: last && page.length < after.length ? last.startedAt : null };
+  return {
+    runs,
+    nextBefore: last && page.length < after.length ? last.startedAt : null,
+  };
 }

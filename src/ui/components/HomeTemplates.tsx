@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import type { ProjectKind, RunLevel, Starter } from '../../shared/contracts';
-import { api } from '../api';
+import { useEffect, useState, type ReactNode } from "react";
+
+import type { ProjectKind, RunLevel, Starter } from "../../shared/contracts";
+import { api } from "../api";
 
 export interface HomeTemplate {
   id: string;
@@ -11,9 +12,19 @@ export interface HomeTemplate {
   level?: RunLevel;
 }
 
-const S = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
-const soft = { fill: 'currentColor', fillOpacity: 0.14 } as const;
-const mark = { fill: 'currentColor', fillOpacity: 0.55, stroke: 'none' } as const;
+const S = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+const soft = { fill: "currentColor", fillOpacity: 0.14 } as const;
+const mark = {
+  fill: "currentColor",
+  fillOpacity: 0.55,
+  stroke: "none",
+} as const;
 
 function Art({ children }: { children: ReactNode }) {
   return (
@@ -57,8 +68,19 @@ const ART: Record<string, ReactNode> = {
     <Art>
       <rect x="5" y="7" width="46" height="34" rx="3" {...soft} />
       <path d="M10 13h10M10 19h36" />
-      <path d="M11 23l34 12M45 23L11 35" strokeDasharray="2.5 2.5" strokeOpacity={0.7} />
-      <rect x="11" y="23" width="34" height="12" rx="1" strokeDasharray="2.5 2.5" />
+      <path
+        d="M11 23l34 12M45 23L11 35"
+        strokeDasharray="2.5 2.5"
+        strokeOpacity={0.7}
+      />
+      <rect
+        x="11"
+        y="23"
+        width="34"
+        height="12"
+        rx="1"
+        strokeDasharray="2.5 2.5"
+      />
     </Art>
   ),
   animation: (
@@ -85,7 +107,11 @@ const ART: Record<string, ReactNode> = {
       <rect x="5" y="6" width="46" height="36" rx="3" {...soft} />
       <path d="M5 13h46M14 13v29" />
       <path d="M8 18h3M8 22h3M8 26h3" />
-      <path d="M21 36V27M28 36V21M35 36V24M42 36V18" strokeWidth={3} strokeOpacity={0.7} />
+      <path
+        d="M21 36V27M28 36V21M35 36V24M42 36V18"
+        strokeWidth={3}
+        strokeOpacity={0.7}
+      />
     </Art>
   ),
   landing: (
@@ -118,33 +144,101 @@ const ART: Record<string, ReactNode> = {
   pairing: (
     <Art>
       <rect x="7" y="5" width="42" height="38" rx="3" {...soft} />
-      <text x="12" y="25" fill="currentColor" stroke="none" fontFamily="var(--serif)" fontSize="15">
+      <text
+        x="12"
+        y="25"
+        fill="currentColor"
+        stroke="none"
+        fontFamily="var(--serif)"
+        fontSize="15"
+      >
         Aa
       </text>
       <path d="M33 15h10M36 19h7" />
       <rect x="12" y="31" width="8" height="7" rx="1.5" {...mark} />
-      <rect x="23" y="31" width="8" height="7" rx="1.5" fill="currentColor" fillOpacity={0.3} stroke="none" />
+      <rect
+        x="23"
+        y="31"
+        width="8"
+        height="7"
+        rx="1.5"
+        fill="currentColor"
+        fillOpacity={0.3}
+        stroke="none"
+      />
       <rect x="34" y="31" width="8" height="7" rx="1.5" />
     </Art>
   ),
 };
 
 export const HOME_TEMPLATES: HomeTemplate[] = [
-  { id: 'blank', label: 'Blank', prompt: '' },
-  { id: 'mobile', label: 'Mobile app', prompt: 'Design a mobile app for ', starterId: 'mobile-app' },
-  { id: 'slides', label: 'Slides', prompt: 'Make a slide deck about ', starterId: 'deck' },
-  { id: 'document', label: 'Document', prompt: 'Write and lay out a document about ', starterId: 'docs' },
-  { id: 'wireframe', label: 'Wireframe', prompt: 'Wireframe ', level: 'wireframe' },
-  { id: 'animation', label: 'Animation', prompt: 'Make an animated ' },
-  { id: 'mockups', label: 'UI mockups', prompt: 'Make UI mockups for ', kind: 'react' },
-  { id: 'dashboard', label: 'Dashboard', prompt: 'Prototype a dashboard for ', starterId: 'dashboard' },
-  { id: 'landing', label: 'Landing page', prompt: 'Design a landing page for ', starterId: 'landing' },
-  { id: 'form', label: 'Form', prompt: 'Design a form for ', starterId: 'form' },
-  { id: 'email', label: 'HTML email', prompt: 'Design an HTML email for ' },
-  { id: 'pairing', label: 'Color + type pairing', prompt: 'Make a color and type pairing sheet for ' },
+  { id: "blank", label: "Blank", prompt: "" },
+  {
+    id: "mobile",
+    label: "Mobile app",
+    prompt: "Design a mobile app for ",
+    starterId: "mobile-app",
+  },
+  {
+    id: "slides",
+    label: "Slides",
+    prompt: "Make a slide deck about ",
+    starterId: "deck",
+  },
+  {
+    id: "document",
+    label: "Document",
+    prompt: "Write and lay out a document about ",
+    starterId: "docs",
+  },
+  {
+    id: "wireframe",
+    label: "Wireframe",
+    prompt: "Wireframe ",
+    level: "wireframe",
+  },
+  { id: "animation", label: "Animation", prompt: "Make an animated " },
+  {
+    id: "mockups",
+    label: "UI mockups",
+    prompt: "Make UI mockups for ",
+    kind: "react",
+  },
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    prompt: "Prototype a dashboard for ",
+    starterId: "dashboard",
+  },
+  {
+    id: "landing",
+    label: "Landing page",
+    prompt: "Design a landing page for ",
+    starterId: "landing",
+  },
+  {
+    id: "form",
+    label: "Form",
+    prompt: "Design a form for ",
+    starterId: "form",
+  },
+  { id: "email", label: "HTML email", prompt: "Design an HTML email for " },
+  {
+    id: "pairing",
+    label: "Color + type pairing",
+    prompt: "Make a color and type pairing sheet for ",
+  },
 ];
 
-export function HomeTemplateGrid({ selected, disabled, onPick }: { selected: string | null; disabled: boolean; onPick: (template: HomeTemplate, starter: Starter | null) => void }) {
+export function HomeTemplateGrid({
+  selected,
+  disabled,
+  onPick,
+}: {
+  selected: string | null;
+  disabled: boolean;
+  onPick: (template: HomeTemplate, starter: Starter | null) => void;
+}) {
   const [starters, setStarters] = useState<Starter[]>([]);
   useEffect(() => {
     api
@@ -153,7 +247,11 @@ export function HomeTemplateGrid({ selected, disabled, onPick }: { selected: str
       .catch(() => setStarters([]));
   }, []);
   return (
-    <div className="ui-tile-grid home-tile-grid" role="group" aria-label="Templates">
+    <div
+      className="ui-tile-grid home-tile-grid"
+      role="group"
+      aria-label="Templates"
+    >
       {HOME_TEMPLATES.map((template) => (
         <button
           key={template.id}
@@ -162,7 +260,13 @@ export function HomeTemplateGrid({ selected, disabled, onPick }: { selected: str
           aria-pressed={selected === template.id}
           disabled={disabled}
           data-template={template.id}
-          onClick={() => onPick(template, starters.find((starter) => starter.id === template.starterId) ?? null)}
+          onClick={() =>
+            onPick(
+              template,
+              starters.find((starter) => starter.id === template.starterId) ??
+                null
+            )
+          }
         >
           <span className="ui-tile-art">{ART[template.id]}</span>
           {template.label}

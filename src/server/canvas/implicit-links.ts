@@ -350,7 +350,7 @@ export async function implicitLinks(
   if (frames.length < 2) return [];
   const stored = file ?? (await deps.canvas.links.read(deps.project));
   const key = framesKey(deps.project, frames);
-  const slow = deps.project.kind !== "html" || !!deps.project.app;
+  const slow = deps.project.kind !== "html" || Boolean(deps.project.app);
   const hit = cache.get(key);
   let links: Promise<PrototypeLink[]>;
   if (slow && hit && Date.now() - hit.at < CACHE_MS) links = hit.links;

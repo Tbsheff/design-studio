@@ -27,8 +27,11 @@ let current: { window: BrowserWindow; options: SetupWindowOptions } | null =
   null;
 
 function fromSetupWindow(event: IpcMainInvokeEvent): boolean {
+  if (!current) {
+    return false;
+  }
+
   return (
-    !!current &&
     event.sender === current.window.webContents &&
     event.senderFrame?.url.endsWith(`/${FIRST_RUN_FILE}`) === true
   );

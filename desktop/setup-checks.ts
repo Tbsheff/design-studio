@@ -85,9 +85,13 @@ function runAuthStatus(
       { env, timeout: AUTH_TIMEOUT_MS },
       (error, stdout) => {
         const timedOut =
-          !!error && (error as { killed?: boolean }).killed === true;
+          Boolean(error) && (error as { killed?: boolean }).killed === true;
 
-        resolve({ stdout: String(stdout ?? ""), timedOut, failed: !!error });
+        resolve({
+          stdout: String(stdout ?? ""),
+          timedOut,
+          failed: Boolean(error),
+        });
       }
     );
   });

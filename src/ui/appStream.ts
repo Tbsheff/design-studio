@@ -361,7 +361,7 @@ class Leader {
     const live = new Set(
       (state.held ?? [])
         .map((lock) => lock.name)
-        .filter((name): name is string => !!name?.startsWith(TAB_LOCK))
+        .filter((name): name is string => Boolean(name?.startsWith(TAB_LOCK)))
     );
     for (const tab of [...this.tabs.keys()])
       if (tab !== this.tab.id && !live.has(TAB_LOCK + tab)) this.drop(tab);
@@ -406,7 +406,7 @@ function startStream(): AppStream {
   const shared =
     typeof BroadcastChannel !== "undefined" &&
     typeof navigator !== "undefined" &&
-    !!navigator.locks;
+    Boolean(navigator.locks);
   const channel = shared ? new BroadcastChannel(CHANNEL) : null;
   let leader: Leader | null = null;
   const tab = new Tab((wants) => {

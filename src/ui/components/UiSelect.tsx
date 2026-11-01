@@ -102,7 +102,8 @@ function useOutsideClose(
 
     const inside = (target: EventTarget | null) =>
       target instanceof Node &&
-      (!!root.current?.contains(target) || !!panel.current?.contains(target));
+      (Boolean(root.current?.contains(target)) ||
+        Boolean(panel.current?.contains(target)));
 
     const spot = () => {
       const box = root.current?.getBoundingClientRect();

@@ -66,7 +66,11 @@ function renderSession(index: number): Session {
 
 function isFaviconMiss(url: string | undefined): boolean {
   try {
-    return !!url && new URL(url).pathname === "/favicon.ico";
+    if (!url) {
+      return false;
+    }
+
+    return new URL(url).pathname === "/favicon.ico";
   } catch {
     return false;
   }

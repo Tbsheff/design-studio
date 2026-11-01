@@ -493,9 +493,10 @@ export function coveredBy(
     return (
       sameTarget &&
       (item.from.selector === link.from.selector ||
-        (!!item.from.text &&
-          !!link.from.text &&
-          normalizedText(item.from.text) === normalizedText(link.from.text)))
+        (Boolean(item.from.text) &&
+          Boolean(link.from.text) &&
+          normalizedText(item.from.text ?? "") ===
+            normalizedText(link.from.text ?? "")))
     );
   });
 }

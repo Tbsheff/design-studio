@@ -118,8 +118,11 @@ function hasMatchedAncestor(element: Element, matched: Set<Element>): boolean {
 function isRect(value: unknown): value is Rect {
   const r = value as Partial<Rect> | null;
 
+  if (!r) {
+    return false;
+  }
+
   return (
-    !!r &&
     typeof r.x === "number" &&
     typeof r.y === "number" &&
     typeof r.width === "number" &&

@@ -148,7 +148,7 @@ async function prepare(): Promise<Prepared | null> {
   const choice = await chooseDataDir({
     preferred,
     separate: userDataFile("studio-data-desktop"),
-    explicit: !!fromEnv,
+    explicit: Boolean(fromEnv),
   });
   if ("quit" in choice) {
     if (choice.quit)

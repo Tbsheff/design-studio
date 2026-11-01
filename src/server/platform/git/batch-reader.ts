@@ -1,0 +1,158 @@
+import type { ChildProcessWithoutNullStreams } from "node:child_process";
+import { once } from "node:events";
+
+import { spawnPiped } from "../process/spawn.js";
+
+interface RawObject {
+  body: Buffer;
+  type: string;
+}
+
+type Outcome = { error: Error } | { value: RawObject | null };
+
+interface Pending {
+  sha: string;
+  signal: EventTarget;
+}
+
+type BinaryResolver = () => Promise<string>;
+
+const NEWLINE_BYTE = 0x0a;
+const DONE = "done";
+
+const ignoreError = (): null => null;
+
+const deliver = (pending: Pending, outcome: Outcome): void => {
+  pending.signal.dispatchEvent(new CustomEvent(DONE, { detail: outcome }));
+};
+
+class BatchReader {
+  private buffer: Buffer = Buffer.alloc(0);
+  private child: ChildProcessWithoutNullStreams | null = null;
+  private readonly binary: BinaryResolver;
+  private readonly cwd: string;
+  private readonly env: NodeJS.ProcessEnv;
+  private queue: Pending[] = [];
+
+  public constructor(
+    binary: BinaryResolver,
+    env: NodeJS.ProcessEnv,
+    cwd: string
+  ) {
+    this.binary = binary;
+    this.env = env;
+    this.cwd = cwd;
+  }
+
+  public async read(sha: string): Promise<RawObject | null> {
+    const child = await this.start();
+    const signal = new EventTarget();
+    const settled = once(signal, DONE);
+
+    this.queue.push({ sha, signal });
+    child.stdin.write(`${sha}\n`);
+
+    const [event] = (await settled) as [CustomEvent<Outcome>];
+
+    if ("error" in event.detail) {
+      throw event.detail.error;
+    }
+
+    return event.detail.value;
+  }
+
+  public close(): void {
+    this.child?.stdin.end();
+    this.child = null;
+  }
+
+  private async start(): Promise<ChildProcessWithoutNullStreams> {
+    if (this.child) {
+      return this.child;
+    }
+
+    const child = spawnPiped(await this.binary(), ["cat-file", "--batch"], {
+      cwd: this.cwd,
+      env: this.env,
+    });
+
+    this.child = child;
+    child.stdout.on("data", (chunk: Buffer) => {
+      this.consume(chunk);
+    });
+    child.stdin.on("error", ignoreError);
+    child.once("exit", () => {
+      this.fail(child, new Error("git cat-file stopped"));
+    });
+    child.once("error", (error) => {
+      this.fail(child, error);
+    });
+
+    return child;
+  }
+
+  private fail(child: ChildProcessWithoutNullStreams, error: Error): void {
+    if (this.child === child) {
+      this.child = null;
+    }
+
+    this.buffer = Buffer.alloc(0);
+
+    for (const pending of this.queue.splice(0)) {
+      deliver(pending, { error });
+    }
+  }
+
+  private consume(chunk: Buffer): void {
+    this.buffer = Buffer.concat([this.buffer, chunk]);
+
+    let more = true;
+
+    while (more) {
+      more = this.consumeOne();
+    }
+  }
+
+  private settle(pending: Pending, value: RawObject | null): true {
+    this.queue.shift();
+    deliver(pending, { value });
+
+    return true;
+  }
+
+  private consumeOne(): boolean {
+    const [pending] = this.queue;
+    const eol = this.buffer.indexOf(NEWLINE_BYTE);
+
+    if (!pending || eol === -1) {
+      return false;
+    }
+
+    const [, type = "", sizeText] = this.buffer
+      .toString("utf-8", 0, eol)
+      .split(" ");
+
+    if (type === "missing") {
+      this.buffer = this.buffer.subarray(eol + 1);
+
+      return this.settle(pending, null);
+    }
+
+    const start = eol + 1;
+    const end = start + Number(sizeText);
+
+    if (this.buffer.length < end + 1) {
+      return false;
+    }
+
+    const body = Buffer.from(this.buffer.subarray(start, end));
+
+    this.buffer = this.buffer.subarray(end + 1);
+
+    return this.settle(pending, { body, type });
+  }
+}
+
+export { BatchReader };
+
+export type { BinaryResolver, RawObject };

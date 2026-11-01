@@ -256,6 +256,22 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "node/no-process-env": "off" },
   },
   {
+    files: [
+      "src/server/platform/**",
+      "src/server/store/git-objects.ts",
+      "src/server/git/user-git.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
+    files: ["src/server/platform/git/**", "src/server/platform/process/**"],
+    rules: {
+      "node/no-process-env": "off",
+      "sonarjs/hashing": "off",
+      "sonarjs/no-os-command-from-path": "off",
+    },
+  },
+  {
     files: ["desktop/build.ts", "src/server/platform/data-lock/**"],
     rules: { "node/no-sync": "off" },
   },

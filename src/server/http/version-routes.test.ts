@@ -216,7 +216,7 @@ describe("version thumbnails", () => {
       ).status
     ).toBe(200);
     expect(shots).toHaveLength(1);
-    expect(await readdir(thumbsDir(project.id))).toEqual([
+    await expect(readdir(thumbsDir(project.id))).resolves.toEqual([
       `vp-${older.id}.png`,
     ]);
   });
@@ -281,7 +281,7 @@ describe("version thumbnails", () => {
     controller.abort();
     open();
     await first;
-    expect(await second).toMatchObject({ name: "AbortError" });
+    await expect(second).resolves.toMatchObject({ name: "AbortError" });
     expect(shots).toHaveLength(1);
   });
 
@@ -401,7 +401,9 @@ describe("version names", () => {
     const rename = (name: unknown) =>
       request("PATCH", `/api/projects/${project.id}/versions/${id}`, { name });
 
-    expect(await (await rename("  Hero   with photo ")).json()).toEqual({
+    await expect(
+      (await rename("  Hero   with photo ")).json()
+    ).resolves.toEqual({
       id,
       name: "Hero with photo",
     });
@@ -424,7 +426,10 @@ describe("version names", () => {
     ).json()) as { changed: string[] };
 
     expect(status.changed).toEqual([]);
-    expect(await (await rename("   ")).json()).toEqual({ id, name: null });
+    await expect((await rename("   ")).json()).resolves.toEqual({
+      id,
+      name: null,
+    });
     expect(
       ((await (await request("GET", listUrl)).json()) as Version[])[0]?.name
     ).toBeUndefined();

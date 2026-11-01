@@ -67,9 +67,9 @@ describe("version store", { timeout: 20_000 }, () => {
       directionId: "main",
     });
 
-    expect(
-      await versions.commit(project, main, "Nothing", { kind: "run" })
-    ).toBeNull();
+    await expect(
+      versions.commit(project, main, "Nothing", { kind: "run" })
+    ).resolves.toBeNull();
 
     await write(main.workTree, "style.css", "h1{}");
     await write(main.workTree, "node_modules/x/index.js", "ignored");
@@ -99,9 +99,9 @@ describe("version store", { timeout: 20_000 }, () => {
       directionId: "main",
     });
     expect(undo.parentId).toBe(v2!.id);
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("v1");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("v1");
     expect(existsSync(path.join(main.workTree, "extra.html"))).toBe(false);
 
     const list = await versions.list(project, main);
@@ -117,12 +117,12 @@ describe("version store", { timeout: 20_000 }, () => {
       restoredFrom: v2!.id,
       directionId: "main",
     });
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("v2");
-    expect(
-      await readFile(path.join(main.workTree, "extra.html"), "utf-8")
-    ).toBe("extra");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("v2");
+    await expect(
+      readFile(path.join(main.workTree, "extra.html"), "utf-8")
+    ).resolves.toBe("extra");
   });
 
   it("undo and restore titles name the original version and never nest", async () => {
@@ -153,7 +153,7 @@ describe("version store", { timeout: 20_000 }, () => {
     const main = projects.mainDirection(project);
     await write(main.workTree, "index.html", "clean");
     await versions.commit(project, main, "base", { kind: "run" });
-    expect(await versions.status(project, main)).toEqual({
+    await expect(versions.status(project, main)).resolves.toEqual({
       dirty: false,
       changed: [],
     });
@@ -167,9 +167,9 @@ describe("version store", { timeout: 20_000 }, () => {
 
     const after = await versions.discard(project, main);
     expect(after).toEqual({ dirty: false, changed: [] });
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("clean");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("clean");
     expect(existsSync(path.join(main.workTree, "new/page.html"))).toBe(false);
     expect(existsSync(path.join(main.workTree, ".DS_Store"))).toBe(true);
   });
@@ -188,9 +188,9 @@ describe("version store", { timeout: 20_000 }, () => {
     });
     project = await projects.get(project.id);
     expect(branch.parentVersionId).toBe(base!.id);
-    expect(
-      await readFile(path.join(branch.workTree, "index.html"), "utf-8")
-    ).toBe("base");
+    await expect(
+      readFile(path.join(branch.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("base");
     const fork = await versions.commit(project, branch, "Fork", {
       kind: "fork",
     });
@@ -204,17 +204,17 @@ describe("version store", { timeout: 20_000 }, () => {
     });
     await write(main.workTree, "main.html", "main only");
 
-    expect(await versions.status(project, main)).toEqual({
+    await expect(versions.status(project, main)).resolves.toEqual({
       dirty: true,
       changed: ["main.html"],
     });
-    expect(await versions.status(project, branch)).toEqual({
+    await expect(versions.status(project, branch)).resolves.toEqual({
       dirty: false,
       changed: [],
     });
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("base");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("base");
     expect(existsSync(path.join(main.workTree, "alt.html"))).toBe(false);
 
     expect(
@@ -237,12 +237,12 @@ describe("version store", { timeout: 20_000 }, () => {
     const target = await mkdtemp(path.join(os.tmpdir(), "studio checkout "));
     try {
       await versions.checkoutInto(project, version!.id, target);
-      expect(await readFile(path.join(target, "index.html"), "utf-8")).toBe(
-        "<p>export me</p>"
-      );
-      expect(await readFile(path.join(target, "assets/a.css"), "utf-8")).toBe(
-        "p{}"
-      );
+      await expect(
+        readFile(path.join(target, "index.html"), "utf-8")
+      ).resolves.toBe("<p>export me</p>");
+      await expect(
+        readFile(path.join(target, "assets/a.css"), "utf-8")
+      ).resolves.toBe("p{}");
     } finally {
       await rm(target, { recursive: true, force: true });
     }
@@ -251,10 +251,12 @@ describe("version store", { timeout: 20_000 }, () => {
     expect(snapshotDir).toBe(
       path.join(projects.projectDir(project.id), "snapshots", version!.id)
     );
-    expect(await readFile(path.join(snapshotDir, "index.html"), "utf-8")).toBe(
-      "<p>export me</p>"
+    await expect(
+      readFile(path.join(snapshotDir, "index.html"), "utf-8")
+    ).resolves.toBe("<p>export me</p>");
+    await expect(versions.snapshot(project, version!.id)).resolves.toBe(
+      snapshotDir
     );
-    expect(await versions.snapshot(project, version!.id)).toBe(snapshotDir);
 
     const zip = await versions.exportZip(project, version!.id);
     expect(zip[0]).toBe(0x50);
@@ -284,20 +286,20 @@ describe("version store", { timeout: 20_000 }, () => {
     ]);
 
     await versions.restore(project, main, v2!.id, "undo");
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("v1");
-    expect(
-      await readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
-    ).toBe("mine");
-    expect(
-      await readFile(path.join(main.workTree, "notes/deep.md"), "utf-8")
-    ).toBe("deep");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("v1");
+    await expect(
+      readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
+    ).resolves.toBe("mine");
+    await expect(
+      readFile(path.join(main.workTree, "notes/deep.md"), "utf-8")
+    ).resolves.toBe("deep");
 
     await versions.restore(project, main, v1!.id, "restore");
-    expect(
-      await readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
-    ).toBe("mine");
+    await expect(
+      readFile(path.join(main.workTree, "user-notes.txt"), "utf-8")
+    ).resolves.toBe("mine");
     expect((await versions.status(project, main)).changed.sort()).toEqual([
       "notes/deep.md",
       "user-notes.txt",
@@ -312,19 +314,19 @@ describe("version store", { timeout: 20_000 }, () => {
     await write(main.workTree, "stray/note.txt", "keep me somewhere");
     await versions.status(project, main);
 
-    expect(await versions.discard(project, main)).toEqual({
+    await expect(versions.discard(project, main)).resolves.toEqual({
       dirty: false,
       changed: [],
     });
     expect(existsSync(path.join(main.workTree, "stray/note.txt"))).toBe(false);
     const trashRoot = path.join(projects.projectDir(project.id), "trash");
     const [stamp] = await readdir(trashRoot);
-    expect(
-      await readFile(path.join(trashRoot, stamp!, "stray/note.txt"), "utf-8")
-    ).toBe("keep me somewhere");
-    expect(
-      await readFile(path.join(main.workTree, "index.html"), "utf-8")
-    ).toBe("clean");
+    await expect(
+      readFile(path.join(trashRoot, stamp!, "stray/note.txt"), "utf-8")
+    ).resolves.toBe("keep me somewhere");
+    await expect(
+      readFile(path.join(main.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("clean");
   });
 
   it("never commits or exports a node_modules symlink, even from an old exclude file", async () => {
@@ -364,13 +366,13 @@ describe("version store", { timeout: 20_000 }, () => {
     await versions.commit(project, main, "base", { kind: "run" });
     await write(main.workTree, "a.html", "a");
     await write(main.workTree, "b.html", "b");
-    expect(await versions.status(project, main, ["a.html"])).toEqual({
+    await expect(versions.status(project, main, ["a.html"])).resolves.toEqual({
       dirty: true,
       changed: ["a.html"],
     });
-    expect(
-      await versions.status(project, main, ["gone.html", "node_modules"])
-    ).toEqual({ dirty: true, changed: ["a.html", "b.html"] });
+    await expect(
+      versions.status(project, main, ["gone.html", "node_modules"])
+    ).resolves.toEqual({ dirty: true, changed: ["a.html", "b.html"] });
     expect((await versions.status(project, main, [])).changed).toEqual([
       "a.html",
       "b.html",
@@ -397,15 +399,15 @@ describe("version store", { timeout: 20_000 }, () => {
     expect(version?.parentId).toBe(base!.id);
     expect(version?.changedFiles).toEqual(["DESIGN.md"]);
     expect(version?.meta.kind).toBe("manual");
-    expect(await versions.status(project, main)).toEqual({
+    await expect(versions.status(project, main)).resolves.toEqual({
       dirty: true,
       changed: ["index.html"],
     });
-    expect(
-      await versions.commitFile(project, main, "DESIGN.md", "again", {
+    await expect(
+      versions.commitFile(project, main, "DESIGN.md", "again", {
         kind: "manual",
       })
-    ).toBeNull();
+    ).resolves.toBeNull();
   });
 
   it("lists the same changed files as one diff-tree per commit", async () => {
@@ -439,7 +441,7 @@ describe("version store", { timeout: 20_000 }, () => {
     );
     await write(main.workTree, "deep/a/b/c.txt", "c");
     await commitStep("Binary and nested");
-    expect(await commitStep("Empty fork", "fork")).not.toBeNull();
+    await expect(commitStep("Empty fork", "fork")).resolves.not.toBeNull();
 
     const list = await versions.list(project, main);
     expect(list).toEqual([...committed].reverse());

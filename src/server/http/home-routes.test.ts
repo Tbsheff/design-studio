@@ -180,6 +180,10 @@ async function waitFor<T>(
   }
 }
 
+interface Deleted {
+  deleted: number;
+}
+
 const head = (project: Project): string | null =>
   projects.mainDirection(project).headVersionId;
 
@@ -253,12 +257,12 @@ describe("home routes", { timeout: 30_000 }, () => {
       "Sample edit: new headline",
       "Starter: Landing page",
     ]);
-    expect(
-      await readFile(
+    await expect(
+      readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
         "utf-8"
       )
-    ).toContain("roasted to order");
+    ).resolves.toContain("roasted to order");
     expect(started).toHaveLength(0);
   });
 
@@ -294,7 +298,9 @@ describe("home routes", { timeout: 30_000 }, () => {
     expect(path.dirname(copyTree)).toBe(
       path.dirname(projects.mainDirection(project).workTree)
     );
-    expect(await readFile(path.join(copyTree, "index.html"), "utf-8")).toBe(
+    await expect(
+      readFile(path.join(copyTree, "index.html"), "utf-8")
+    ).resolves.toBe(
       await readFile(
         path.join(projects.mainDirection(project).workTree, "index.html"),
         "utf-8"
@@ -417,15 +423,17 @@ describe("home routes", { timeout: 30_000 }, () => {
     expect(copiedExtra.workTree).toBe(
       path.join(projects.projectDir(copy.id), "directions", extra.id)
     );
-    expect(
-      await readFile(path.join(copiedExtra.workTree, "index.html"), "utf-8")
-    ).toBe("<h1>Bold direction</h1>\n");
-    expect(
-      await readFile(
+    await expect(
+      readFile(path.join(copiedExtra.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("<h1>Bold direction</h1>\n");
+    await expect(
+      readFile(
         path.join(projects.mainDirection(copy).workTree, "index.html"),
         "utf-8"
       )
-    ).toBe(await readFile(path.join(sourceTree, "index.html"), "utf-8"));
+    ).resolves.toBe(
+      await readFile(path.join(sourceTree, "index.html"), "utf-8")
+    );
 
     for (const direction of source.directions) {
       const status = await call<{ changed: string[] }>(
@@ -455,13 +463,13 @@ describe("home routes", { timeout: 30_000 }, () => {
         await readdir(path.join(projects.projectDir(project.id), "directions"))
       ).sort()
     ).toEqual(sourceDirections);
-    expect(
-      await readFile(path.join(extra.workTree, "index.html"), "utf-8")
-    ).toBe("<h1>Bold direction</h1>\n");
+    await expect(
+      readFile(path.join(extra.workTree, "index.html"), "utf-8")
+    ).resolves.toBe("<h1>Bold direction</h1>\n");
   });
 
   it("lists the trash, deletes one item or all of them forever, and keeps the work tree", async () => {
-    expect(await call<TrashItem[]>("GET", "/api/trash")).toEqual([]);
+    await expect(call<TrashItem[]>("GET", "/api/trash")).resolves.toEqual([]);
     const first = await fromStarter("form");
     const second = await fromStarter("landing");
     const firstTree = projects.mainDirection(first).workTree;
@@ -515,9 +523,9 @@ describe("home routes", { timeout: 30_000 }, () => {
     ).toBe(true);
     expect(existsSync(path.join(config.dataDir, "projects"))).toBe(true);
 
-    expect(
-      await call<{ deleted: number }>("DELETE", `/api/trash/${a.trashId}`)
-    ).toEqual({ deleted: 1 });
+    await expect(
+      call<Deleted>("DELETE", `/api/trash/${a.trashId}`)
+    ).resolves.toEqual({ deleted: 1 });
     expect(
       existsSync(path.join(config.dataDir, "trash", "projects", a.trashId))
     ).toBe(false);
@@ -527,10 +535,10 @@ describe("home routes", { timeout: 30_000 }, () => {
     ).toEqual([b.trashId]);
     await call("POST", `/api/trash/${a.trashId}/restore`, undefined, 404);
 
-    expect(await call<{ deleted: number }>("DELETE", "/api/trash")).toEqual({
+    await expect(call<Deleted>("DELETE", "/api/trash")).resolves.toEqual({
       deleted: 1,
     });
-    expect(await call<TrashItem[]>("GET", "/api/trash")).toEqual([]);
+    await expect(call<TrashItem[]>("GET", "/api/trash")).resolves.toEqual([]);
     expect(
       existsSync(
         path.join(projects.mainDirection(second).workTree, "index.html")
@@ -695,13 +703,13 @@ describe("home routes", { timeout: 30_000 }, () => {
       path.join(config.dataDir, PREFERENCES_FILE),
       JSON.stringify({ version: 1, projectsDir: config.projectsDir })
     );
-    expect(
-      await call<{ dismissed: boolean }>("GET", "/api/onboarding")
-    ).toEqual({ dismissed: false });
+    await expect(
+      call<{ dismissed: boolean }>("GET", "/api/onboarding")
+    ).resolves.toEqual({ dismissed: false });
     await call("POST", "/api/onboarding/dismiss");
-    expect(
-      await call<{ dismissed: boolean }>("GET", "/api/onboarding")
-    ).toEqual({ dismissed: true });
+    await expect(
+      call<{ dismissed: boolean }>("GET", "/api/onboarding")
+    ).resolves.toEqual({ dismissed: true });
 
     const saved = JSON.parse(
       await readFile(path.join(config.dataDir, PREFERENCES_FILE), "utf-8")

@@ -191,7 +191,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       const res = await failure(importZip(zipFiles(entries)));
       expect(res.status, label).toBe(400);
     }
-    expect(await userPacks()).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
     const userDir = path.join(config.dataDir, "packs");
     expect(
       existsSync(userDir)
@@ -245,7 +245,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       status: 400,
       body: { error: expect.stringMatching(/no DESIGN.md/) },
     });
-    expect(await userPacks()).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
   });
 
   it("refuses a zip larger than 2 MB, a file that inflates past 512 KB, and a non-zip", async () => {
@@ -278,7 +278,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       status: 400,
       body: { error: "not a zip file" },
     });
-    expect(await userPacks()).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
   });
 
   it("refuses a bad pack.json, bad tokens and an empty DESIGN.md with the reason", async () => {
@@ -354,7 +354,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       status: 400,
       body: { error: "DESIGN.md is empty" },
     });
-    expect(await userPacks()).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
   });
 
   it("asks before it replaces a user pack with the same id or name, then replaces or keeps both", async () => {
@@ -374,7 +374,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       error: "pack_exists",
       existing: { id: "user-house", name: "House" },
     });
-    expect(await userPacks()).toHaveLength(1);
+    await expect(userPacks()).resolves.toHaveLength(1);
 
     const replaced = await ok<ImportPackResult>(importZip(zip, "replace"));
     expect(replaced).toMatchObject({
@@ -382,7 +382,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
       pack: { id: "user-house", provenance: "imported" },
     });
     expect(replaced.pack.description).not.toBe("Changed after export.");
-    expect(await userPacks()).toHaveLength(1);
+    await expect(userPacks()).resolves.toHaveLength(1);
 
     const kept = await ok<ImportPackResult>(importZip(zip, "copy"));
     expect(kept).toMatchObject({
@@ -449,12 +449,10 @@ describe("GET /api/packs/:id/check", () => {
   it("passes every built-in pack and reports pack problems without kit page rules", async () => {
     const packs = await ok<PackSummary[]>(call("GET", "/api/packs"));
     for (const pack of packs.filter((item) => item.source === "builtin")) {
-      expect(
-        await ok<DesignSystemCheckResult>(
-          call("GET", `/api/packs/${pack.id}/check`)
-        ),
+      await expect(
+        ok<DesignSystemCheckResult>(call("GET", `/api/packs/${pack.id}/check`)),
         pack.id
-      ).toEqual({ passed: true, problems: [] });
+      ).resolves.toEqual({ passed: true, problems: [] });
     }
     const detail = await ok<PackDetail>(
       call("GET", "/api/packs/modern-minimal")
@@ -576,7 +574,9 @@ describe("POST /api/packs/:id/editor", { timeout: 30_000 }, () => {
     expect(
       (await failure(call("POST", "/api/packs/user-none/editor"))).status
     ).toBe(404);
-    expect(await ok<Project[]>(call("GET", "/api/projects"))).toEqual([]);
+    await expect(ok<Project[]>(call("GET", "/api/projects"))).resolves.toEqual(
+      []
+    );
   });
 });
 

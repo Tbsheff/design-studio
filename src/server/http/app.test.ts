@@ -245,7 +245,9 @@ describe("http app", { timeout: 20_000 }, () => {
       projects.mainDirection(project).workTree,
       "DESIGN.md"
     );
-    expect(await readFile(file, "utf-8")).toBe("# Brand\nprimary #0B6E4F");
+    await expect(readFile(file, "utf-8")).resolves.toBe(
+      "# Brand\nprimary #0B6E4F"
+    );
     expect(started[0]?.designMd).toBe("# Brand\nprimary #0B6E4F");
   });
 
@@ -265,11 +267,9 @@ describe("http app", { timeout: 20_000 }, () => {
       meta: { kind: "manual" },
       changedFiles: ["DESIGN.md"],
     });
-    expect(
-      await (
-        await call("GET", `/api/projects/${project.id}/d/main/status`)
-      ).json()
-    ).toEqual({ dirty: false, changed: [] });
+    await expect(
+      (await call("GET", `/api/projects/${project.id}/d/main/status`)).json()
+    ).resolves.toEqual({ dirty: false, changed: [] });
   });
 
   it("returns 409 for a second run on a direction with an active run", async () => {
@@ -315,7 +315,7 @@ describe("http app", { timeout: 20_000 }, () => {
         })
       ).status
     ).toBe(200);
-    expect(await mainOf()).toMatchObject({
+    await expect(mainOf()).resolves.toMatchObject({
       sessionId: null,
       sessionCostUsd: 0,
       sessionResetReason: "restore",
@@ -340,7 +340,7 @@ describe("http app", { timeout: 20_000 }, () => {
     expect(
       (await call("POST", `/api/projects/${project.id}/d/main/undo`)).status
     ).toBe(200);
-    expect(await mainOf()).toMatchObject({
+    await expect(mainOf()).resolves.toMatchObject({
       sessionId: null,
       sessionResetReason: "undo",
     });
@@ -378,7 +378,9 @@ describe("http app", { timeout: 20_000 }, () => {
         const head = projects.mainDirection(current).headVersionId;
         if (head === null) throw new Error("no head");
         const snapshot = await versions.snapshot(current, head);
-        expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
+        await expect(
+          readFile(path.join(workTree, "index.html"), "utf-8")
+        ).resolves.toBe(
           await readFile(path.join(snapshot, "index.html"), "utf-8")
         );
       }

@@ -160,7 +160,7 @@ describe("edit history", { timeout: 30_000 }, () => {
 
     const end = await readFile(file, "utf-8");
     expect(end).not.toBe(PAGE);
-    expect(await stateOf(project)).toEqual({
+    await expect(stateOf(project)).resolves.toEqual({
       canUndo: true,
       canRedo: false,
       undoLabel: "Edit h1: color",
@@ -175,7 +175,7 @@ describe("edit history", { timeout: 30_000 }, () => {
       undone.push(((await response.json()) as { version: Version }).version);
     }
 
-    expect(await readFile(file, "utf-8")).toBe(PAGE);
+    await expect(readFile(file, "utf-8")).resolves.toBe(PAGE);
     expect(undone.map((version) => version.title)).toEqual([
       "Undo: Edit h1: color",
       "Undo: Edit h1: font-size",
@@ -187,7 +187,7 @@ describe("edit history", { timeout: 30_000 }, () => {
     expect((await projects.get(project.id)).directions[0]?.headVersionId).toBe(
       undone[2]?.id
     );
-    expect(await stateOf(project)).toEqual({
+    await expect(stateOf(project)).resolves.toEqual({
       canUndo: false,
       canRedo: true,
       undoLabel: null,
@@ -199,8 +199,8 @@ describe("edit history", { timeout: 30_000 }, () => {
       expect((await step(project, "redo")).status).toBe(200);
     }
 
-    expect(await readFile(file, "utf-8")).toBe(end);
-    expect(await stateOf(project)).toMatchObject({
+    await expect(readFile(file, "utf-8")).resolves.toBe(end);
+    await expect(stateOf(project)).resolves.toMatchObject({
       canUndo: true,
       canRedo: false,
     });
@@ -225,8 +225,8 @@ describe("edit history", { timeout: 30_000 }, () => {
     expect(((await response.json()) as { error: string }).error).toBe(
       "history_stale"
     );
-    expect(await readFile(file, "utf-8")).toBe(changed);
-    expect(await stateOf(project)).toEqual({
+    await expect(readFile(file, "utf-8")).resolves.toBe(changed);
+    await expect(stateOf(project)).resolves.toEqual({
       canUndo: false,
       canRedo: false,
       undoLabel: null,
@@ -240,10 +240,10 @@ describe("edit history", { timeout: 30_000 }, () => {
     const before = await readFile(file, "utf-8");
     running.add(`${project.id}/main`);
     expect((await step(project, "undo")).status).toBe(409);
-    expect(await readFile(file, "utf-8")).toBe(before);
+    await expect(readFile(file, "utf-8")).resolves.toBe(before);
     running.clear();
     expect((await step(project, "undo")).status).toBe(200);
-    expect(await readFile(file, "utf-8")).toBe(PAGE);
+    await expect(readFile(file, "utf-8")).resolves.toBe(PAGE);
   });
 
   it("clears redo when a new edit is recorded", async () => {
@@ -251,9 +251,9 @@ describe("edit history", { timeout: 30_000 }, () => {
     await edit(project, { color: "red" });
     await edit(project, { color: "blue" });
     expect((await step(project, "undo")).status).toBe(200);
-    expect(await stateOf(project)).toMatchObject({ canRedo: true });
+    await expect(stateOf(project)).resolves.toMatchObject({ canRedo: true });
     await edit(project, { "font-size": "30px" });
-    expect(await stateOf(project)).toEqual({
+    await expect(stateOf(project)).resolves.toEqual({
       canUndo: true,
       canRedo: false,
       undoLabel: "Edit h1: font-size",
@@ -296,13 +296,13 @@ describe("edit history", { timeout: 30_000 }, () => {
     expect(
       ((await undo.json()) as { version: Version }).version.changedFiles.sort()
     ).toEqual(["about.html", "index.html"]);
-    expect(await readFile(file, "utf-8")).toBe(PAGE);
-    expect(await readFile(other, "utf-8")).toBe("<p>About</p>\n");
+    await expect(readFile(file, "utf-8")).resolves.toBe(PAGE);
+    await expect(readFile(other, "utf-8")).resolves.toBe("<p>About</p>\n");
 
     await writeFile(other, "<p>Changed by someone else</p>\n");
     expect((await step(project, "redo")).status).toBe(409);
-    expect(await readFile(file, "utf-8")).toBe(PAGE);
-    expect(await readFile(other, "utf-8")).toBe(
+    await expect(readFile(file, "utf-8")).resolves.toBe(PAGE);
+    await expect(readFile(other, "utf-8")).resolves.toBe(
       "<p>Changed by someone else</p>\n"
     );
   });

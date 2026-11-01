@@ -50,14 +50,14 @@ describe("default projects folder", () => {
 
   it("puts a saved setting before the env fallback", async () => {
     const store = createDefaultFolderStore(dataDir, fallback);
-    expect(await store.current()).toBe(fallback);
+    await expect(store.current()).resolves.toBe(fallback);
     const chosen = path.join(root, "chosen");
     await mkdir(chosen);
-    expect(await store.set(chosen)).toBe(chosen);
-    expect(await store.current()).toBe(chosen);
-    expect(await createDefaultFolderStore(dataDir, fallback).current()).toBe(
-      chosen
-    );
+    await expect(store.set(chosen)).resolves.toBe(chosen);
+    await expect(store.current()).resolves.toBe(chosen);
+    await expect(
+      createDefaultFolderStore(dataDir, fallback).current()
+    ).resolves.toBe(chosen);
     expect(
       JSON.parse(readFileSync(path.join(dataDir, PREFERENCES_FILE), "utf-8"))
     ).toEqual({ version: 1, projectsDir: chosen });
@@ -68,13 +68,13 @@ describe("default projects folder", () => {
       path.join(dataDir, PREFERENCES_FILE),
       '{"version":1,"projectsDir":"relative"}'
     );
-    expect(await createDefaultFolderStore(dataDir, fallback).current()).toBe(
-      fallback
-    );
+    await expect(
+      createDefaultFolderStore(dataDir, fallback).current()
+    ).resolves.toBe(fallback);
     await writeFile(path.join(dataDir, PREFERENCES_FILE), "not json");
-    expect(await createDefaultFolderStore(dataDir, fallback).current()).toBe(
-      fallback
-    );
+    await expect(
+      createDefaultFolderStore(dataDir, fallback).current()
+    ).resolves.toBe(fallback);
   });
 
   it("validates a new default like other folder inputs", async () => {
@@ -104,7 +104,7 @@ describe("default projects folder", () => {
     const store = createDefaultFolderStore(dataDir, fallback);
     await store.current();
     expect(existsSync(fallback)).toBe(false);
-    expect(await store.ensure()).toBe(fallback);
+    await expect(store.ensure()).resolves.toBe(fallback);
     expect(existsSync(fallback)).toBe(true);
     await expect(
       createDefaultFolderStore(dataDir, path.join(dataDir, "inside")).ensure()

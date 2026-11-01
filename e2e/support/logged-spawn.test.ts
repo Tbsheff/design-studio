@@ -75,7 +75,7 @@ describe("spawnDetachedToLog", () => {
     );
     expect(grandchildPid).toBeGreaterThan(0);
 
-    expect(await waitForFile(exitPath, 15_000)).toBe("0");
+    await expect(waitForFile(exitPath, 15_000)).resolves.toBe("0");
     const log = readFileSync(logPath, "utf-8");
     expect(log).toContain(`line ${LINES - 1}`);
     expect(log).toContain(`err ${LINES - 1}`);

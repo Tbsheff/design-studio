@@ -568,11 +568,13 @@ describe("sdk driver run levels", () => {
         suggestions: [],
         toolUseID: "x",
       } as never);
-    expect(await ask(t.seenOptions[0])).toMatchObject({
+    await expect(ask(t.seenOptions[0])).resolves.toMatchObject({
       behavior: "deny",
       message: expect.stringContaining("wireframe"),
     });
-    expect(await ask(t.seenOptions[1])).toMatchObject({ behavior: "allow" });
+    await expect(ask(t.seenOptions[1])).resolves.toMatchObject({
+      behavior: "allow",
+    });
   });
 
   it("adds the critic cost to the run cost but not to the session totals that the next resume subtracts", () => {
@@ -938,7 +940,7 @@ describe("sdk driver baseline capture", () => {
     expect(t.timeline.indexOf("read-done")).toBeLessThan(write);
     expect(t.timeline.indexOf("baseline:desktop")).toBeLessThan(write);
     expect(t.timeline.indexOf("baseline:mobile")).toBeLessThan(write);
-    expect(await t.hookWaits["Write"]).toEqual({});
+    await expect(t.hookWaits["Write"]).resolves.toEqual({});
   });
 
   it("marks only read and check tools as tools that cannot change the preview", () => {

@@ -579,57 +579,51 @@ describe("skills", () => {
 describe("design system projects", () => {
   it("keeps source/ read only, allows the other files, and permits the check tool without counting it as a change", async () => {
     const readOnly = { readOnlyDirs: ["source"] };
-    expect(
-      await decide(
+    await expect(
+      decide(
         "Write",
         { file_path: path.join(workTree, "source", "evidence.md") },
         readOnly
       )
-    ).toMatchObject({ behavior: "deny" });
-    expect(
-      await decide(
-        "Edit",
-        { file_path: "source/url-1/page.html.txt" },
-        readOnly
-      )
-    ).toMatchObject({ behavior: "deny" });
-    expect(
-      await decide(
+    ).resolves.toMatchObject({ behavior: "deny" });
+    await expect(
+      decide("Edit", { file_path: "source/url-1/page.html.txt" }, readOnly)
+    ).resolves.toMatchObject({ behavior: "deny" });
+    await expect(
+      decide(
         "Write",
         { file_path: path.join(workTree, "Source", "x.md") },
         readOnly
       )
-    ).toMatchObject({ behavior: "deny" });
-    expect(
-      await decide(
+    ).resolves.toMatchObject({ behavior: "deny" });
+    await expect(
+      decide(
         "Read",
         { file_path: path.join(workTree, "source", "evidence.md") },
         readOnly
       )
-    ).toMatchObject({ behavior: "allow" });
-    expect(
-      await decide(
-        "Write",
-        { file_path: path.join(workTree, "DESIGN.md") },
-        readOnly
-      )
-    ).toMatchObject({ behavior: "allow" });
-    expect(
-      await decide(
+    ).resolves.toMatchObject({ behavior: "allow" });
+    await expect(
+      decide("Write", { file_path: path.join(workTree, "DESIGN.md") }, readOnly)
+    ).resolves.toMatchObject({ behavior: "allow" });
+    await expect(
+      decide(
         "Write",
         { file_path: path.join(workTree, "sources.md") },
         readOnly
       )
-    ).toMatchObject({ behavior: "allow" });
-    expect(
-      await decide("Write", {
+    ).resolves.toMatchObject({ behavior: "allow" });
+    await expect(
+      decide("Write", {
         file_path: path.join(workTree, "source", "evidence.md"),
       })
-    ).toMatchObject({ behavior: "allow" });
+    ).resolves.toMatchObject({ behavior: "allow" });
     expect(permittedToolNames(policy())).toContain(
       "mcp__studio__design_system_check"
     );
-    expect(await decide("mcp__studio__design_system_check", {})).toMatchObject({
+    await expect(
+      decide("mcp__studio__design_system_check", {})
+    ).resolves.toMatchObject({
       behavior: "allow",
     });
     expect(canChangePreview("mcp__studio__design_system_check")).toBe(false);

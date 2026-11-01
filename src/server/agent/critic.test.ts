@@ -238,7 +238,7 @@ describe("design_review tool", () => {
   it("is not available below polish", async () => {
     const seen: Options[] = [];
     const d = await deps("prototype", "[]", seen);
-    expect(await runDesignReview(d)).toMatchObject({ isError: true });
+    await expect(runDesignReview(d)).resolves.toMatchObject({ isError: true });
     expect(seen).toHaveLength(0);
   });
 

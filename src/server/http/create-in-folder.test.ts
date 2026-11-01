@@ -401,7 +401,7 @@ describe("the default projects folder", { timeout: 30_000 }, () => {
       "<h1>Old landing</h1>\n"
     );
     expect(existsSync(oldTree)).toBe(false);
-    expect(await versions.status(movedHtml, main)).toEqual({
+    await expect(versions.status(movedHtml, main)).resolves.toEqual({
       dirty: false,
       changed: [],
     });

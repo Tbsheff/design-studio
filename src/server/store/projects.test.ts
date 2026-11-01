@@ -57,7 +57,7 @@ describe("project store", () => {
       path.join(config.dataDir, "projects", project.id, "directions", "main")
     );
     expect(existsSync(main!.workTree)).toBe(true);
-    expect(await projects.get(project.id)).toEqual(project);
+    await expect(projects.get(project.id)).resolves.toEqual(project);
     expect((await projects.list()).map((item) => item.id)).toEqual([
       project.id,
     ]);
@@ -91,7 +91,7 @@ describe("project store", () => {
       expect(project.kind).toBe("html");
       expect(project.directions[0]?.workTree).toBe(realpathSync(folder));
       expect(project.imported).toEqual({ sourcePath: realpathSync(folder) });
-      expect(await readdir(folder)).toEqual(["index.html"]);
+      await expect(readdir(folder)).resolves.toEqual(["index.html"]);
 
       await writeFile(
         path.join(folder, "package.json"),
@@ -123,20 +123,17 @@ describe("project store", () => {
         `${attachment.id}.png`
       )
     );
-    expect(await projects.getAttachment(project.id, attachment.id)).toEqual(
-      attachment
-    );
+    await expect(
+      projects.getAttachment(project.id, attachment.id)
+    ).resolves.toEqual(attachment);
     expect([...(await readFile(attachment.path))]).toEqual([1, 2, 3]);
 
-    expect(await projects.readDesignMd(project.id)).toBeNull();
+    await expect(projects.readDesignMd(project.id)).resolves.toBeNull();
     await projects.writeDesignMd(project.id, "# Brand\n");
-    expect(await projects.readDesignMd(project.id)).toBe("# Brand\n");
-    expect(
-      await readFile(
-        path.join(project.directions[0]!.workTree, "DESIGN.md"),
-        "utf-8"
-      )
-    ).toBe("# Brand\n");
+    await expect(projects.readDesignMd(project.id)).resolves.toBe("# Brand\n");
+    await expect(
+      readFile(path.join(project.directions[0]!.workTree, "DESIGN.md"), "utf-8")
+    ).resolves.toBe("# Brand\n");
   });
 
   it("updates directions atomically and rejects unsafe ids", async () => {

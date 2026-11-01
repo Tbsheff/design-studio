@@ -137,7 +137,7 @@ describe("discoverSkills", () => {
   });
 
   it("returns nothing for a missing home", async () => {
-    expect(await discoverSkills(path.join(root, "missing"))).toEqual({
+    await expect(discoverSkills(path.join(root, "missing"))).resolves.toEqual({
       skills: [],
       problems: [],
     });

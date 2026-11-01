@@ -399,9 +399,9 @@ describe("mock agent run, Round 3", () => {
     const write = summary.toolCalls.find((tool) => tool.name === "Write");
     expect(write?.isError).toBe(true);
     expect(write?.summary).toBe(PLAN_MODE_DENY);
-    expect(await readFile(path.join(env.workTree, "index.html"), "utf-8")).toBe(
-      before
-    );
+    await expect(
+      readFile(path.join(env.workTree, "index.html"), "utf-8")
+    ).resolves.toBe(before);
     expect(summary.finalText).toMatch(/^Plan:/);
   });
 });

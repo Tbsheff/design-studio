@@ -58,7 +58,7 @@ describe("folder picker", () => {
       execFile: fakeExec({ error: null, stdout: `${folder}/\n` }),
     });
     const title = 'Pick "it"; do shell script "rm -rf ~"';
-    expect(await picker.pick({ title, defaultPath: folder })).toEqual({
+    await expect(picker.pick({ title, defaultPath: folder })).resolves.toEqual({
       status: "picked",
       path: folder,
     });
@@ -95,7 +95,7 @@ describe("folder picker", () => {
         stderr: "execution error: User canceled. (-128)",
       }),
     });
-    expect(await picker.pick({})).toEqual({ status: "canceled" });
+    await expect(picker.pick({})).resolves.toEqual({ status: "canceled" });
   });
 
   it("reports a timeout when the process is killed", async () => {
@@ -108,7 +108,7 @@ describe("folder picker", () => {
       timeoutMs: 1234,
       execFile: fakeExec({ error }),
     });
-    expect(await picker.pick({})).toEqual({ status: "timeout" });
+    await expect(picker.pick({})).resolves.toEqual({ status: "timeout" });
     expect(calls[0]?.timeout).toBe(1234);
   });
 
@@ -117,7 +117,7 @@ describe("folder picker", () => {
       platform: "linux",
       execFile: fakeExec({ error: null, stdout: folder }),
     });
-    expect(await picker.pick({})).toEqual({ status: "unsupported" });
+    await expect(picker.pick({})).resolves.toEqual({ status: "unsupported" });
     expect(calls).toEqual([]);
   });
 
@@ -130,9 +130,9 @@ describe("folder picker", () => {
       ),
     });
     const first = picker.pick({});
-    expect(await picker.pick({})).toEqual({ status: "busy" });
+    await expect(picker.pick({})).resolves.toEqual({ status: "busy" });
     finish({ error: null, stdout: folder });
-    expect(await first).toEqual({ status: "picked", path: folder });
+    await expect(first).resolves.toEqual({ status: "picked", path: folder });
     expect(calls).toHaveLength(1);
   });
 
@@ -141,7 +141,7 @@ describe("folder picker", () => {
       platform: "darwin",
       execFile: fakeExec({ error: null, stdout: `${folder}/gone/` }),
     });
-    expect(await picker.pick({})).toMatchObject({ status: "failed" });
+    await expect(picker.pick({})).resolves.toMatchObject({ status: "failed" });
   });
 });
 
@@ -207,7 +207,7 @@ describe("POST /api/pick-folder", () => {
       )
     );
     expect(picked.status).toBe(200);
-    expect(await picked.json()).toEqual({ path: folder });
+    await expect(picked.json()).resolves.toEqual({ path: folder });
     const canceled = await post(
       appWith(
         createFolderPicker({
@@ -220,7 +220,7 @@ describe("POST /api/pick-folder", () => {
       )
     );
     expect(canceled.status).toBe(204);
-    expect(await canceled.text()).toBe("");
+    await expect(canceled.text()).resolves.toBe("");
     expect(
       (await post(appWith(createFolderPicker({ platform: "win32" })))).status
     ).toBe(501);

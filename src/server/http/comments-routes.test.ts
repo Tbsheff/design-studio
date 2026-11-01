@@ -311,7 +311,9 @@ describe("comment routes", { timeout: 20_000 }, () => {
     runningKeys.add(`${project.id}/main`);
     const response = await call("POST", `${base}/send`, { ids: [draft.id] });
     expect(response.status).toBe(409);
-    expect(await response.json()).toEqual({ error: "run_in_progress" });
+    await expect(response.json()).resolves.toEqual({
+      error: "run_in_progress",
+    });
     expect(started).toHaveLength(0);
     expect((await list()).map((c) => [c.id, c.status])).toEqual([
       [queued.id, "queued"],
@@ -469,7 +471,7 @@ describe("comment drawings and replies", { timeout: 20_000 }, () => {
         })
       ).status
     ).toBe(400);
-    expect(await list()).toEqual([]);
+    await expect(list()).resolves.toEqual([]);
   });
 
   it("adds and deletes replies, and sends replies in the comment text", async () => {

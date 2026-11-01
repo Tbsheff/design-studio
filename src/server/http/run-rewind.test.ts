@@ -161,7 +161,7 @@ describe("R7-4 rewind per message", { timeout: 60_000 }, () => {
       { versionId: second }
     );
     expect(restored.status).toBe(200);
-    expect(await treeOf(project.id, restored.data.id)).toBe(
+    await expect(treeOf(project.id, restored.data.id)).resolves.toBe(
       await treeOf(project.id, second)
     );
     const workTree = projects.mainDirection(

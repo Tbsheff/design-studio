@@ -182,11 +182,11 @@ describe("claude version", () => {
       '#!/bin/sh\n[ "$1" = "--version" ] && printf "2.1.309 (Claude Code)"\n'
     );
     chmodSync(file, 0o755);
-    expect(await claudeVersion(file, { PATH: "/usr/bin:/bin" })).toBe(
+    await expect(claudeVersion(file, { PATH: "/usr/bin:/bin" })).resolves.toBe(
       "2.1.309"
     );
-    expect(
-      await claudeVersion(path.join(dir, "missing"), { PATH: "/usr/bin:/bin" })
-    ).toBeNull();
+    await expect(
+      claudeVersion(path.join(dir, "missing"), { PATH: "/usr/bin:/bin" })
+    ).resolves.toBeNull();
   });
 });

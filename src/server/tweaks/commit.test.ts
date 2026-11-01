@@ -261,7 +261,7 @@ describe("tweaks commit: HTML", { timeout: 30_000 }, () => {
       .replace("--wide: 0;", "--wide: 1;")
       .replace("--gap: 20px;", "--gap: 32px;");
 
-    expect(await read(workTree, "index.html")).toBe(expected);
+    await expect(read(workTree, "index.html")).resolves.toBe(expected);
     expect(expected).toContain("--gap:  24px");
 
     const saved = JSON.parse(await read(workTree, TWEAKS_FILE)) as {
@@ -273,13 +273,15 @@ describe("tweaks commit: HTML", { timeout: 30_000 }, () => {
       "#ff3366",
       true,
     ]);
-    expect(await listVersions(project)).toHaveLength(before.length + 1);
+    await expect(listVersions(project)).resolves.toHaveLength(
+      before.length + 1
+    );
 
     expect(
       (await call("POST", `/api/projects/${project.id}/d/main/undo`)).status
     ).toBe(200);
-    expect(await read(workTree, "index.html")).toBe(PAGE);
-    expect(await read(workTree, TWEAKS_FILE)).toBe(tweaksBefore);
+    await expect(read(workTree, "index.html")).resolves.toBe(PAGE);
+    await expect(read(workTree, TWEAKS_FILE)).resolves.toBe(tweaksBefore);
   });
 
   it("returns 409 while a run is active and 422 for bad values, unknown ids and undeclared vars", async () => {
@@ -299,38 +301,38 @@ describe("tweaks commit: HTML", { timeout: 30_000 }, () => {
     ]);
     await keep(project);
     running.add(`${project.id}/main`);
-    expect(await errorOf(await commit(project, { gap: 8 }))).toEqual({
+    await expect(errorOf(await commit(project, { gap: 8 }))).resolves.toEqual({
       status: 409,
       error: "run_in_progress",
     });
     running.clear();
-    expect(await errorOf(await commit(project, { gap: 99 }))).toEqual({
+    await expect(errorOf(await commit(project, { gap: 99 }))).resolves.toEqual({
       status: 422,
       error: "invalid_tweak_value",
     });
-    expect(
-      await errorOf(await commit(project, { accent: "red; } body { x" }))
-    ).toEqual({ status: 422, error: "invalid_tweak_value" });
-    expect(await errorOf(await commit(project, { nope: 1 }))).toEqual({
+    await expect(
+      errorOf(await commit(project, { accent: "red; } body { x" }))
+    ).resolves.toEqual({ status: 422, error: "invalid_tweak_value" });
+    await expect(errorOf(await commit(project, { nope: 1 }))).resolves.toEqual({
       status: 422,
       error: "unknown_tweak",
     });
-    expect(await errorOf(await commit(project, { size: 3 }))).toEqual({
+    await expect(errorOf(await commit(project, { size: 3 }))).resolves.toEqual({
       status: 422,
       error: "tweak_not_declared",
     });
-    expect(await errorOf(await commit(project, { gap: 20 }))).toEqual({
+    await expect(errorOf(await commit(project, { gap: 20 }))).resolves.toEqual({
       status: 422,
       error: "no_change",
     });
-    expect(await read(workTree, "index.html")).toBe(PAGE);
+    await expect(read(workTree, "index.html")).resolves.toBe(PAGE);
   });
 
   it("returns 404 when the direction has no tweaks", async () => {
     const { project, workTree } = await create("html");
     await writeFile(path.join(workTree, "index.html"), PAGE);
     await keep(project);
-    expect(await errorOf(await commit(project, { gap: 8 }))).toEqual({
+    await expect(errorOf(await commit(project, { gap: 8 }))).resolves.toEqual({
       status: 404,
       error: "no_tweaks",
     });
@@ -359,7 +361,7 @@ describe("tweaks commit: React", { timeout: 30_000 }, () => {
     await keep(project);
     const response = await commit(project, { radius: 14 });
     expect(response.status).toBe(200);
-    expect(await read(workTree, cssPath)).toBe(
+    await expect(read(workTree, cssPath)).resolves.toBe(
       css.replace("--radius: 8px;", "--radius: 14px;")
     );
   });
@@ -398,7 +400,7 @@ describe("tweaks commit: design-system token", { timeout: 30_000 }, () => {
     const cssAfter = await read(workTree, TOKENS_CSS_FILE);
     expect(cssAfter).not.toBe(cssBefore);
     expect(cssAfter).toContain("--radius-md: 13px");
-    expect(await read(workTree, "index.html")).toBe(page);
+    await expect(read(workTree, "index.html")).resolves.toBe(page);
   });
 });
 
@@ -437,7 +439,7 @@ describe(
       };
 
       expect(tokens.radius.md.$value).toBe("13px");
-      expect(await read(workTree, "index.html")).toBe(
+      await expect(read(workTree, "index.html")).resolves.toBe(
         page.replace("--radius-md: 8px;", "--radius-md: 13px;")
       );
     });

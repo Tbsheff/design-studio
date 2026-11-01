@@ -75,7 +75,7 @@ describe("html preview origins", () => {
       `${projectPreviewOrigin("ProjA_1-x", port)}/d/ProjA_1-x/main/index.html`
     );
     expect(own.status).toBe(200);
-    expect(await own.text()).toContain("ProjA_1-x");
+    await expect(own.text()).resolves.toContain("ProjA_1-x");
     expect(own.headers.get("access-control-allow-origin")).toBeNull();
     expect(own.headers.get("cross-origin-resource-policy")).toBe("same-origin");
   });

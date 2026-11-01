@@ -44,7 +44,7 @@ describe("comment store", () => {
     const file = path.join(dataDir, "projects", "p1", "comments", "main.json");
     expect(existsSync(file)).toBe(true);
     expect(JSON.parse(await readFile(file, "utf-8")).comments).toHaveLength(1);
-    expect(await store.list("p1", "other")).toEqual([]);
+    await expect(store.list("p1", "other")).resolves.toEqual([]);
     expect(events.at(-1)).toMatchObject({
       type: "comments.changed",
       directionId: "main",

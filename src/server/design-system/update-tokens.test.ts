@@ -228,8 +228,8 @@ describe("token preview", { timeout: 30_000 }, () => {
     expect(css).toContain(":root {\n  --radius-md: 12px;");
     expect(css).toContain(`${DARK_SELECTOR} {\n  --radius-md: 12px;`);
     expect(css).toContain(SYSTEM_DARK_MEDIA);
-    expect(await readAll(workTree)).toEqual(before);
-    expect(await listVersions(project)).toHaveLength(baseline);
+    await expect(readAll(workTree)).resolves.toEqual(before);
+    await expect(listVersions(project)).resolves.toHaveLength(baseline);
   });
 
   it("includes tokens that alias the changed token", async () => {
@@ -280,29 +280,25 @@ describe("token preview", { timeout: 30_000 }, () => {
 
   it("rejects unknown paths with 404 and bad values with 422", async () => {
     const { project } = await setup();
-    expect(
-      await errorOf(
-        await preview(project, [{ path: "color.nope", value: "#fff" }])
-      )
-    ).toEqual({ status: 404, error: "unknown_token" });
-    expect(
-      await errorOf(
+    await expect(
+      errorOf(await preview(project, [{ path: "color.nope", value: "#fff" }]))
+    ).resolves.toEqual({ status: 404, error: "unknown_token" });
+    await expect(
+      errorOf(
         await preview(project, [
           { path: "color.primary", value: "not a color" },
         ])
       )
-    ).toEqual({ status: 422, error: "invalid_request" });
-    expect(
-      await errorOf(
+    ).resolves.toEqual({ status: 422, error: "invalid_request" });
+    await expect(
+      errorOf(
         await preview(project, [{ path: "radius.md", value: "12 parsecs" }])
       )
-    ).toEqual({ status: 422, error: "invalid_request" });
-    expect(
-      await errorOf(
-        await preview(project, [{ path: "radius.md", darkValue: "4px" }])
-      )
-    ).toEqual({ status: 422, error: "invalid_request" });
-    expect(await errorOf(await preview(project, []))).toEqual({
+    ).resolves.toEqual({ status: 422, error: "invalid_request" });
+    await expect(
+      errorOf(await preview(project, [{ path: "radius.md", darkValue: "4px" }]))
+    ).resolves.toEqual({ status: 422, error: "invalid_request" });
+    await expect(errorOf(await preview(project, []))).resolves.toEqual({
       status: 422,
       error: "invalid_request",
     });
@@ -415,7 +411,7 @@ describe("token update", { timeout: 30_000 }, () => {
     const css = await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8");
     expect(css).toContain("--primary: #ff0000;");
     expect(css).toContain("--radius-md: 12px;");
-    expect(await listVersions(project)).toHaveLength(baseline + 1);
+    await expect(listVersions(project)).resolves.toHaveLength(baseline + 1);
     const types = seen.map((event) => event.type);
     expect(types).toEqual(
       expect.arrayContaining([
@@ -451,7 +447,7 @@ describe("token update", { timeout: 30_000 }, () => {
       (await update(project, [{ path: "color.accent", darkValue: null }]))
         .status
     ).toBe(200);
-    expect(await readFile(file, "utf-8")).toBe(before);
+    await expect(readFile(file, "utf-8")).resolves.toBe(before);
   });
 
   it("removes only the dark value of a token that has one", async () => {
@@ -481,50 +477,42 @@ describe("token update", { timeout: 30_000 }, () => {
         ])
       ).status
     ).toBe(200);
-    expect(await readAll(workTree)).not.toEqual(before);
+    await expect(readAll(workTree)).resolves.not.toEqual(before);
     expect(
       (await call("POST", `/api/projects/${project.id}/d/main/undo`)).status
     ).toBe(200);
-    expect(await readAll(workTree)).toEqual(before);
+    await expect(readAll(workTree)).resolves.toEqual(before);
   });
 
   it("refuses while the agent runs, unknown paths, bad values and no-op changes", async () => {
     const { project } = await setup();
     running.add(`${project.id}/main`);
-    expect(
-      await errorOf(
-        await update(project, [{ path: "radius.md", value: "12px" }])
-      )
-    ).toEqual({ status: 409, error: "run_in_progress" });
+    await expect(
+      errorOf(await update(project, [{ path: "radius.md", value: "12px" }]))
+    ).resolves.toEqual({ status: 409, error: "run_in_progress" });
     running.clear();
-    expect(
-      await errorOf(
-        await update(project, [{ path: "radius.nope", value: "12px" }])
-      )
-    ).toEqual({ status: 404, error: "unknown_token" });
-    expect(
-      await errorOf(
-        await update(project, [{ path: "radius.md", value: "big" }])
-      )
-    ).toEqual({ status: 422, error: "invalid_request" });
-    expect(
-      await errorOf(
+    await expect(
+      errorOf(await update(project, [{ path: "radius.nope", value: "12px" }]))
+    ).resolves.toEqual({ status: 404, error: "unknown_token" });
+    await expect(
+      errorOf(await update(project, [{ path: "radius.md", value: "big" }]))
+    ).resolves.toEqual({ status: 422, error: "invalid_request" });
+    await expect(
+      errorOf(
         await update(project, [
           { path: "color.primary", value: "{color.ring}" },
         ])
       )
-    ).toEqual({ status: 422, error: "invalid_request" });
-    expect(
-      await errorOf(
-        await update(project, [{ path: "radius.md", value: "8px" }])
-      )
-    ).toEqual({ status: 422, error: "no_change" });
-    expect(
-      await errorOf(
+    ).resolves.toEqual({ status: 422, error: "invalid_request" });
+    await expect(
+      errorOf(await update(project, [{ path: "radius.md", value: "8px" }]))
+    ).resolves.toEqual({ status: 422, error: "no_change" });
+    await expect(
+      errorOf(
         await update(project, [{ path: "color.accent", darkValue: null }])
       )
-    ).toEqual({ status: 422, error: "no_change" });
-    expect(await listVersions(project)).toHaveLength(baseline);
+    ).resolves.toEqual({ status: 422, error: "no_change" });
+    await expect(listVersions(project)).resolves.toHaveLength(baseline);
   });
 
   it("accepts an alias value and the preview cache sees the commit", async () => {
@@ -579,7 +567,7 @@ describe("token update", { timeout: 30_000 }, () => {
       ).toBe(200);
     }
 
-    expect(await readAll(workTree)).toEqual(before);
+    await expect(readAll(workTree)).resolves.toEqual(before);
 
     for (let index = 0; index < 2; index += 1) {
       expect(
@@ -592,6 +580,6 @@ describe("token update", { timeout: 30_000 }, () => {
       ).toBe(200);
     }
 
-    expect(await readAll(workTree)).toEqual(end);
+    await expect(readAll(workTree)).resolves.toEqual(end);
   });
 });

@@ -350,9 +350,9 @@ describe("mock agent run", () => {
     expect(app).toContain("<h1>Team dashboard</h1>");
     await env.runner.start(env.context({ prompt: "Ops board", mode: "edit" }))
       .done;
-    expect(
-      await readFile(path.join(env.workTree, "src", "App.tsx"), "utf-8")
-    ).toContain("<h1>Ops board</h1>");
+    await expect(
+      readFile(path.join(env.workTree, "src", "App.tsx"), "utf-8")
+    ).resolves.toContain("<h1>Ops board</h1>");
   });
 });
 
@@ -428,9 +428,9 @@ describe("mock design system run", () => {
       "mcp__studio__design_system_check",
       "mcp__studio__design_system_check",
     ]);
-    expect(
-      await readFile(path.join(t.workTree, "DESIGN.md"), "utf-8")
-    ).not.toMatch(/^_To do:/m);
+    await expect(
+      readFile(path.join(t.workTree, "DESIGN.md"), "utf-8")
+    ).resolves.not.toMatch(/^_To do:/m);
     expect(
       JSON.parse(
         await readFile(

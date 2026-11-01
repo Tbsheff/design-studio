@@ -117,13 +117,15 @@ describe("draft coverage after a run", () => {
     expect(next.fallbacks).not.toContain("radius.pill");
     expect(next.fallbacks).toContain("shadow.lg");
     expect(next.score).toBeGreaterThan(coverage.score);
-    expect(await readCoverage(root)).toEqual(next);
+    await expect(readCoverage(root)).resolves.toEqual(next);
   });
 
   it("leaves coverage.json alone when no fallback token changed", async () => {
     const { root, coverage } = await draftTree({ brief: "Quiet tools" });
     const before = (await stat(path.join(root, COVERAGE_FILE))).mtimeMs;
-    expect(await refreshDraftCoverage(root, packRegistry())).toEqual(coverage);
+    await expect(refreshDraftCoverage(root, packRegistry())).resolves.toEqual(
+      coverage
+    );
     expect((await stat(path.join(root, COVERAGE_FILE))).mtimeMs).toBe(before);
   });
 
@@ -134,7 +136,9 @@ describe("draft coverage after a run", () => {
     });
 
     expect(coverage.mode).toBe("dark");
-    expect(await refreshDraftCoverage(root, packRegistry())).toEqual(coverage);
+    await expect(refreshDraftCoverage(root, packRegistry())).resolves.toEqual(
+      coverage
+    );
     await editTokens(root, (tokens) => {
       tokens["color"]!["warning"]!.$value = "oklch(80% 0.15 80)";
     });
@@ -163,10 +167,12 @@ describe("draft attachment ids", () => {
         ],
       })
     );
-    expect(await draftAttachmentIds(root, async (id) => id !== "gone")).toEqual(
-      ["img1"]
-    );
+    await expect(
+      draftAttachmentIds(root, async (id) => id !== "gone")
+    ).resolves.toEqual(["img1"]);
     await writeFile(path.join(root, META_FILE), "{ broken");
-    expect(await draftAttachmentIds(root, async () => true)).toEqual([]);
+    await expect(draftAttachmentIds(root, async () => true)).resolves.toEqual(
+      []
+    );
   });
 });

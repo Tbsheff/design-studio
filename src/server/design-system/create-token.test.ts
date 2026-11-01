@@ -43,6 +43,7 @@ const PAGE =
 const H1 = { file: "index.html", line: 5, col: 3 };
 const P = { file: "index.html", line: 6, col: 3 };
 const DESIGN_FILES = [TOKENS_FILE, TOKENS_CSS_FILE, "DESIGN.md"];
+const UNKNOWN_TOKEN = { status: 422, error: "unknown_token" };
 
 let config: ServerConfig;
 let cleanup: () => Promise<void>;
@@ -194,9 +195,9 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
     });
 
     expect(response.status).toBe(200);
-    expect(
-      await readFile(path.join(workTree, "index.html"), "utf-8")
-    ).toContain('<h1 style="color: var(--primary);" class="t">');
+    await expect(
+      readFile(path.join(workTree, "index.html"), "utf-8")
+    ).resolves.toContain('<h1 style="color: var(--primary);" class="t">');
 
     const fallback = await directEdit(project, {
       source: P,
@@ -205,9 +206,9 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
     });
 
     expect(fallback.status).toBe(200);
-    expect(
-      await readFile(path.join(workTree, "index.html"), "utf-8")
-    ).toContain('<p style="margin-top: var(--space-4, 16px);">');
+    await expect(
+      readFile(path.join(workTree, "index.html"), "utf-8")
+    ).resolves.toContain('<p style="margin-top: var(--space-4, 16px);">');
   });
 
   it("refuses an unknown token and a var() without a name", async () => {
@@ -219,10 +220,7 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
       style: { color: "var(--nope)" },
     });
 
-    expect(await errorOf(unknown)).toEqual({
-      status: 422,
-      error: "unknown_token",
-    });
+    await expect(errorOf(unknown)).resolves.toEqual(UNKNOWN_TOKEN);
 
     const nested = await directEdit(project, {
       source: H1,
@@ -230,10 +228,7 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
       style: { color: "var(--primary, var(--nope))" },
     });
 
-    expect(await errorOf(nested)).toEqual({
-      status: 422,
-      error: "unknown_token",
-    });
+    await expect(errorOf(nested)).resolves.toEqual(UNKNOWN_TOKEN);
 
     const bad = await directEdit(project, {
       source: H1,
@@ -241,10 +236,13 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
       style: { color: "var(primary)" },
     });
 
-    expect(await errorOf(bad)).toEqual({ status: 422, error: "invalid_token" });
-    expect(await readFile(path.join(workTree, "index.html"), "utf-8")).toBe(
-      PAGE
-    );
+    await expect(errorOf(bad)).resolves.toEqual({
+      status: 422,
+      error: "invalid_token",
+    });
+    await expect(
+      readFile(path.join(workTree, "index.html"), "utf-8")
+    ).resolves.toBe(PAGE);
   });
 
   it("allows any token name when the direction has no design system", async () => {
@@ -257,9 +255,9 @@ describe("direct edit token references", { timeout: 30_000 }, () => {
     });
 
     expect(response.status).toBe(200);
-    expect(
-      await readFile(path.join(workTree, "index.html"), "utf-8")
-    ).toContain("color: var(--whatever);");
+    await expect(
+      readFile(path.join(workTree, "index.html"), "utf-8")
+    ).resolves.toContain("color: var(--whatever);");
   });
 });
 
@@ -402,9 +400,9 @@ describe("create token", { timeout: 60_000 }, () => {
     );
 
     expect(entry?.darkValue).toMatch(/^oklch\(/);
-    expect(
-      await readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8")
-    ).toMatch(/\.dark \{[^}]*--brand-2:/);
+    await expect(
+      readFile(path.join(workTree, TOKENS_CSS_FILE), "utf-8")
+    ).resolves.toMatch(/\.dark \{[^}]*--brand-2:/);
   });
 
   it("refuses bad names, bad values and a dark value on a non-color group", async () => {
@@ -432,70 +430,70 @@ describe("create token", { timeout: 60_000 }, () => {
     ];
 
     for (const body of bodies) {
-      expect(
-        await errorOf(await createTokenCall(project, body)),
+      await expect(
+        errorOf(await createTokenCall(project, body)),
         JSON.stringify(body)
-      ).toEqual({ status: 422, error: "invalid_request" });
+      ).resolves.toEqual({ status: 422, error: "invalid_request" });
     }
 
-    expect(await readAll(workTree, DESIGN_FILES)).toEqual(before);
+    await expect(readAll(workTree, DESIGN_FILES)).resolves.toEqual(before);
   });
 
   it("refuses an existing path and a css variable that another group already uses", async () => {
     const { project } = await setup();
-    expect(
-      await errorOf(
+    await expect(
+      errorOf(
         await createTokenCall(project, {
           group: "color",
           name: "primary",
           value: "#000",
         })
       )
-    ).toEqual({ status: 409, error: "token_exists" });
-    expect(
-      await errorOf(
+    ).resolves.toEqual({ status: 409, error: "token_exists" });
+    await expect(
+      errorOf(
         await createTokenCall(project, {
           group: "color",
           name: "text-lg",
           value: "#000",
         })
       )
-    ).toEqual({ status: 409, error: "token_exists" });
-    expect(
-      await errorOf(
+    ).resolves.toEqual({ status: 409, error: "token_exists" });
+    await expect(
+      errorOf(
         await createTokenCall(project, {
           group: "color",
           name: "space-4",
           value: "#000",
         })
       )
-    ).toEqual({ status: 409, error: "token_exists" });
+    ).resolves.toEqual({ status: 409, error: "token_exists" });
   });
 
   it("returns 404 without a design system and 409 while the agent runs", async () => {
     const plain = await setup(false);
-    expect(
-      await errorOf(
+    await expect(
+      errorOf(
         await createTokenCall(plain.project, {
           group: "color",
           name: "x",
           value: "#000",
         })
       )
-    ).toEqual({ status: 404, error: "no_design_system" });
+    ).resolves.toEqual({ status: 404, error: "no_design_system" });
     const { project, workTree } = await setup();
     running.add(`${project.id}/main`);
     const before = await readAll(workTree, DESIGN_FILES);
-    expect(
-      await errorOf(
+    await expect(
+      errorOf(
         await createTokenCall(project, {
           group: "color",
           name: "x",
           value: "#000",
         })
       )
-    ).toEqual({ status: 409, error: "run_in_progress" });
-    expect(await readAll(workTree, DESIGN_FILES)).toEqual(before);
+    ).resolves.toEqual({ status: 409, error: "run_in_progress" });
+    await expect(readAll(workTree, DESIGN_FILES)).resolves.toEqual(before);
   });
 
   it("applies the new token to the selected element in the same version and emits events", async () => {
@@ -530,9 +528,9 @@ describe("create token", { timeout: 60_000 }, () => {
       applied: { style: ["color"], text: false },
     });
     expect((await listVersions(project)).length).toBe(count + 1);
-    expect(
-      await readFile(path.join(workTree, "index.html"), "utf-8")
-    ).toContain('<h1 style="color: var(--brand-2);" class="t">');
+    await expect(
+      readFile(path.join(workTree, "index.html"), "utf-8")
+    ).resolves.toContain('<h1 style="color: var(--brand-2);" class="t">');
     const types = seen.map((event) => event.type);
     expect(types).toEqual(
       expect.arrayContaining([
@@ -543,7 +541,7 @@ describe("create token", { timeout: 60_000 }, () => {
     );
     const direction = projects.mainDirection(await projects.get(project.id));
     expect(direction.headVersionId).toBe(result.version.id);
-    expect(await versions.status(project, direction)).toEqual({
+    await expect(versions.status(project, direction)).resolves.toEqual({
       dirty: false,
       changed: [],
     });
@@ -565,7 +563,7 @@ describe("create token", { timeout: 60_000 }, () => {
       },
     });
 
-    expect(await errorOf(stale)).toEqual({
+    await expect(errorOf(stale)).resolves.toEqual({
       status: 422,
       error: "stale_selection",
     });
@@ -577,13 +575,10 @@ describe("create token", { timeout: 60_000 }, () => {
       apply: { source: H1, selector: "h1", style: { color: "var(--brand-3)" } },
     });
 
-    expect(await errorOf(unknown)).toEqual({
-      status: 422,
-      error: "unknown_token",
-    });
-    expect(await readAll(workTree, [...DESIGN_FILES, "index.html"])).toEqual(
-      before
-    );
+    await expect(errorOf(unknown)).resolves.toEqual(UNKNOWN_TOKEN);
+    await expect(
+      readAll(workTree, [...DESIGN_FILES, "index.html"])
+    ).resolves.toEqual(before);
   });
 
   it("undo restores tokens.json, tokens.css, DESIGN.md and the source file together", async () => {
@@ -610,7 +605,7 @@ describe("create token", { timeout: 60_000 }, () => {
     );
     const undo = await call("POST", `/api/projects/${project.id}/d/main/undo`);
     expect(undo.status).toBe(200);
-    expect(await readAll(workTree, files)).toEqual(before);
+    await expect(readAll(workTree, files)).resolves.toEqual(before);
 
     const state = (await (
       await call("GET", `/api/projects/${project.id}/d/main/design-system`)
@@ -685,7 +680,7 @@ describe("create token", { timeout: 60_000 }, () => {
     ).toBe(true);
     const direction = projects.mainDirection(await projects.get(project.id));
     expect(direction.headVersionId).toBe(list[0]?.id);
-    expect(await versions.status(project, direction)).toEqual({
+    await expect(versions.status(project, direction)).resolves.toEqual({
       dirty: false,
       changed: [],
     });

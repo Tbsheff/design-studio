@@ -291,8 +291,8 @@ describe("pack library store", () => {
   it("deletes user packs only", async () => {
     const pack = await library.createUserPack(await fixtureInput("Gone"));
     await library.deletePack(pack.manifest.id);
-    expect(await registry.get(pack.manifest.id)).toBeNull();
-    expect(await readdir(userDir)).toEqual([]);
+    await expect(registry.get(pack.manifest.id)).resolves.toBeNull();
+    await expect(readdir(userDir)).resolves.toEqual([]);
     expect((await errorOf(library.deletePack("editorial"))).status).toBe(400);
     expect((await errorOf(library.deletePack("user-missing"))).status).toBe(
       404
@@ -300,7 +300,7 @@ describe("pack library store", () => {
     expect(
       (await errorOf(library.updateUserPack("editorial", { name: "X" }))).status
     ).toBe(400);
-    expect(await registry.get("editorial")).not.toBeNull();
+    await expect(registry.get("editorial")).resolves.not.toBeNull();
   });
 
   it("exports a zip with the three files", async () => {

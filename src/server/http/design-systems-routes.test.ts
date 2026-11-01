@@ -212,11 +212,11 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
         "design-system/tokens.json",
       ])
     );
-    expect(
-      await ok<{ dirty: boolean }>(
+    await expect(
+      ok<{ dirty: boolean }>(
         call("GET", `/api/projects/${result.project.id}/d/main/status`)
       )
-    ).toMatchObject({ dirty: false });
+    ).resolves.toMatchObject({ dirty: false });
     const info = await ok<DesignSystemDraftInfo>(
       call("GET", `/api/projects/${result.project.id}/design-system-draft`)
     );
@@ -278,9 +278,9 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
     ) as { color: Record<string, { $value: string }> };
     expect(tokens.color.primary?.$value).toBe(normalizeColor("#2563eb"));
     expect(tokens.color.accent?.$value).toBe(normalizeColor("#e8590c"));
-    expect(await readFile(path.join(tree, "DESIGN.md"), "utf-8")).toContain(
-      "Bold and loud."
-    );
+    await expect(
+      readFile(path.join(tree, "DESIGN.md"), "utf-8")
+    ).resolves.toContain("Bold and loud.");
   });
 
   it("refuses private and loopback URLs without the test allow, and leaves nothing behind", async () => {
@@ -298,8 +298,10 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
       expect(response.status, url).toBe(400);
       expect(response.error).toMatch(/Cannot read/);
     }
-    expect(await userPacks()).toEqual([]);
-    expect(await ok<Project[]>(call("GET", "/api/projects"))).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
+    await expect(ok<Project[]>(call("GET", "/api/projects"))).resolves.toEqual(
+      []
+    );
   });
 
   it("removes the draft pack, the backing project and its folder when create fails after the pack is made", async () => {
@@ -322,12 +324,14 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
     });
     expect(res.status).toBe(500);
     expect(during).toEqual([...before, "broken-kit-design-system"]);
-    expect(await userPacks()).toEqual([]);
-    expect(await ok<Project[]>(call("GET", "/api/projects"))).toEqual([]);
-    expect(await readdir(projectsDir)).toEqual(before);
-    expect(
-      await readdir(path.join(config.dataDir, "projects")).catch(() => [])
-    ).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
+    await expect(ok<Project[]>(call("GET", "/api/projects"))).resolves.toEqual(
+      []
+    );
+    await expect(readdir(projectsDir)).resolves.toEqual(before);
+    await expect(
+      readdir(path.join(config.dataDir, "projects")).catch(() => [])
+    ).resolves.toEqual([]);
   });
 
   it("needs a source and checks uploads", async () => {
@@ -358,7 +362,7 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
     expect(
       (await errorOf(call("POST", "/api/design-systems/draft", svg))).error
     ).toMatch(/PNG, JPEG, GIF or WebP/);
-    expect(await userPacks()).toEqual([]);
+    await expect(userPacks()).resolves.toEqual([]);
   });
 
   it("save to library from the backing project updates the same draft pack", async () => {

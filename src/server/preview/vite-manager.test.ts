@@ -80,10 +80,10 @@ describe("ViteManager child process", { timeout: 60_000 }, () => {
 
     const page = await (await fetch(url)).text();
     expect(page).toContain(BRIDGE_SCRIPT_PATH);
-    expect(
-      await (await fetch(new URL(BRIDGE_SCRIPT_PATH, url))).text()
-    ).toContain("__bridgeLoaded");
-    expect(await manager.url(target)).toBe(url);
+    await expect(
+      (await fetch(new URL(BRIDGE_SCRIPT_PATH, url))).text()
+    ).resolves.toContain("__bridgeLoaded");
+    await expect(manager.url(target)).resolves.toBe(url);
   });
 
   it("stops the child on stopOne", async () => {

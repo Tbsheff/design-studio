@@ -37,7 +37,7 @@ afterEach(async () => {
 
 describe("workspace store", () => {
   it("starts empty and reports the home dir", async () => {
-    expect(await store.list()).toEqual({
+    await expect(store.list()).resolves.toEqual({
       homeDir: "/Users/tester",
       folders: [],
     });
@@ -54,7 +54,7 @@ describe("workspace store", () => {
       label: "Client Work",
       missing: false,
     });
-    expect(await store.add({ path: `${real}/` })).toEqual(added);
+    await expect(store.add({ path: `${real}/` })).resolves.toEqual(added);
     expect((await store.list()).folders).toHaveLength(1);
     const saved = JSON.parse(
       await readFile(path.join(dataDir, WORKSPACES_FILE), "utf-8")

@@ -283,7 +283,7 @@ describe("apply a pack on create", { timeout: 30_000 }, () => {
         })
       ).status
     ).toBe(400);
-    expect(await projects.list()).toEqual([]);
+    await expect(projects.list()).resolves.toEqual([]);
     expect(
       (
         await call("POST", "/api/projects", {
@@ -440,17 +440,19 @@ describe("html preview link", () => {
     expect(out).toContain(
       '<head><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap"><link rel="stylesheet" href="design-system/tokens.css"><title>'
     );
-    expect(await injectForPreview(root, "pages/a.html", html)).toContain(
-      'href="../design-system/tokens.css"'
-    );
+    await expect(
+      injectForPreview(root, "pages/a.html", html)
+    ).resolves.toContain('href="../design-system/tokens.css"');
 
     const linked =
       '<head><link rel="stylesheet" href="design-system/tokens.css"><link href="https://fonts.googleapis.com/x" rel="stylesheet"></head>';
 
-    expect(await injectForPreview(root, "index.html", linked)).toBe(linked);
-    expect(await injectForPreview(await tempDir(), "index.html", html)).toBe(
-      html
+    await expect(injectForPreview(root, "index.html", linked)).resolves.toBe(
+      linked
     );
+    await expect(
+      injectForPreview(await tempDir(), "index.html", html)
+    ).resolves.toBe(html);
   });
 
   it("builds relative hrefs and detects links", () => {
@@ -495,7 +497,9 @@ describe("html preview link", () => {
       path.join(root, "index.html"),
       '<html><head><link rel="stylesheet" href="design-system/tokens.css"></head></html>'
     );
-    expect(await designSystemLinkProblem(root, "index.html")).toBeNull();
+    await expect(
+      designSystemLinkProblem(root, "index.html")
+    ).resolves.toBeNull();
   });
 });
 
@@ -510,7 +514,7 @@ describe("recompile", { timeout: 20_000 }, () => {
     expect((await syncDesignSystem(await tempDir())).present).toBe(false);
     const tokensOnly = await copyFixtureWorkTree();
     await rm(path.join(tokensOnly, PACK_FILE));
-    expect(await syncDesignSystem(tokensOnly)).toEqual({
+    await expect(syncDesignSystem(tokensOnly)).resolves.toEqual({
       present: false,
       changed: [],
       errors: [],
@@ -569,9 +573,9 @@ describe("recompile", { timeout: 20_000 }, () => {
       await waitFor(async () => buildErrorAfterBadWrite() !== undefined);
       const error = buildErrorAfterBadWrite();
       expect(error).toMatchObject({ file: TOKENS_FILE, directionId: "d1" });
-      expect(
-        await readFile(path.join(root, TOKENS_CSS_FILE), "utf-8")
-      ).toContain("--primary: #ff0000;");
+      await expect(
+        readFile(path.join(root, TOKENS_CSS_FILE), "utf-8")
+      ).resolves.toContain("--primary: #ff0000;");
     } finally {
       await watcher.closeAll();
     }
@@ -623,9 +627,9 @@ describe("recompile", { timeout: 20_000 }, () => {
     }).done;
 
     expect(summary.status).toBe("completed");
-    expect(
-      await readFile(path.join(main.workTree, TOKENS_CSS_FILE), "utf-8")
-    ).toContain("--accent: #00aa00;");
+    await expect(
+      readFile(path.join(main.workTree, TOKENS_CSS_FILE), "utf-8")
+    ).resolves.toContain("--accent: #00aa00;");
     const latest = await projects.get(project.id);
     expect(
       (await versions.status(latest, projects.mainDirection(latest))).dirty

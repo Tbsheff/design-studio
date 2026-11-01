@@ -156,11 +156,11 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
       project: { packId: "brutalist" },
       state: { packId: "brutalist" },
     });
-    expect(await titles(project)).toEqual([
+    await expect(titles(project)).resolves.toEqual([
       "Switch to Brutalist design system",
       "Apply Editorial design system",
     ]);
-    expect(await read(project, TOKENS_CSS_FILE)).not.toBe(before);
+    await expect(read(project, TOKENS_CSS_FILE)).resolves.not.toBe(before);
     const designMd = await read(project, "DESIGN.md");
     expect(designMd.startsWith("# Brutalist")).toBe(true);
     expect(designMd).toContain("## Project notes\n\nUse big type.\n");
@@ -170,7 +170,7 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
     );
 
     await ok<Version>(call("POST", `/api/projects/${project.id}/d/main/undo`));
-    expect(await read(project, TOKENS_CSS_FILE)).toBe(before);
+    await expect(read(project, TOKENS_CSS_FILE)).resolves.toBe(before);
     expect((await projects.get(project.id)).packId).toBe("editorial");
   });
 
@@ -179,7 +179,7 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
     const result = await ok<ApplyPackResult>(apply(project, "editorial"));
     expect(result.version.title).toBe("Apply Editorial design system");
     expect(result.project.packId).toBe("editorial");
-    expect(await read(project, "DESIGN.md")).toContain(
+    await expect(read(project, "DESIGN.md")).resolves.toContain(
       "## Project notes\n\nPlain notes.\n"
     );
   });
@@ -204,8 +204,12 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
       ).status
     ).toBe(400);
     expect((await apply(project, "editorial")).status).toBe(422);
-    expect(await read(project, PACK_FILE)).toContain('"id": "editorial"');
-    expect(await titles(project)).toEqual(["Apply Editorial design system"]);
+    await expect(read(project, PACK_FILE)).resolves.toContain(
+      '"id": "editorial"'
+    );
+    await expect(titles(project)).resolves.toEqual([
+      "Apply Editorial design system",
+    ]);
   });
 
   it("rewires main.tsx and the font link for a created react project", async () => {
@@ -251,9 +255,9 @@ describe("apply or switch a pack on a project", { timeout: 30_000 }, () => {
     expect(result.written.sort()).toEqual(
       ["DESIGN.md", PACK_FILE, TOKENS_CSS_FILE, TOKENS_FILE].sort()
     );
-    expect(await readFile(path.join(folder, "src", "main.tsx"), "utf-8")).toBe(
-      "console.log('hi');\n"
-    );
+    await expect(
+      readFile(path.join(folder, "src", "main.tsx"), "utf-8")
+    ).resolves.toBe("console.log('hi');\n");
   });
 });
 
@@ -297,10 +301,10 @@ describe(
       });
 
       await ok<ApplyPackResult>(apply(target, "user-house-style"));
-      expect(await read(target, TOKENS_FILE)).toBe(
+      await expect(read(target, TOKENS_FILE)).resolves.toBe(
         await read(source, TOKENS_FILE)
       );
-      expect(await read(target, TOKENS_CSS_FILE)).toBe(
+      await expect(read(target, TOKENS_CSS_FILE)).resolves.toBe(
         await read(source, TOKENS_CSS_FILE)
       );
       const targetMd = await read(target, "DESIGN.md");
@@ -416,11 +420,11 @@ describe("library routes", { timeout: 30_000 }, () => {
     );
 
     expect(copy).toMatchObject({ id: "user-editorial-copy", source: "user" });
-    expect(
-      await ok<PackSummary>(
+    await expect(
+      ok<PackSummary>(
         call("PATCH", `/api/packs/${copy.id}`, { name: "Renamed" })
       )
-    ).toMatchObject({ id: copy.id, name: "Renamed" });
+    ).resolves.toMatchObject({ id: copy.id, name: "Renamed" });
     const zip = await call("GET", `/api/packs/${copy.id}/export`);
     expect(zip.headers.get("content-type")).toBe("application/zip");
     expect(
@@ -429,11 +433,13 @@ describe("library routes", { timeout: 30_000 }, () => {
         .toString("hex")
     ).toBe("504b0304");
     expect((await call("DELETE", "/api/packs/editorial")).status).toBe(400);
-    expect(
-      await ok<{ ok: boolean }>(call("DELETE", `/api/packs/${copy.id}`))
-    ).toEqual({ ok: true });
+    await expect(
+      ok<{ ok: boolean }>(call("DELETE", `/api/packs/${copy.id}`))
+    ).resolves.toEqual({ ok: true });
     expect((await call("GET", `/api/packs/${copy.id}`)).status).toBe(404);
     expect((await call("POST", "/api/packs", { name: "x" })).status).toBe(400);
-    expect(await ok<unknown[]>(call("GET", "/api/packs/problems"))).toEqual([]);
+    await expect(
+      ok<unknown[]>(call("GET", "/api/packs/problems"))
+    ).resolves.toEqual([]);
   });
 });

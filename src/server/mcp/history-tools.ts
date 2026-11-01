@@ -82,8 +82,8 @@ async function step(
   );
   refuseWhileRunning(deps, project, direction);
   const before = await historyState(deps, project, direction);
-  const label = kind === "undo" ? before.undoLabel : before.redoLabel;
-  if (!label)
+  const listed = kind === "undo" ? before.undoLabel : before.redoLabel;
+  if (!listed)
     throw new EditError(
       kind === "undo"
         ? "Nothing to undo in this direction. Use list_versions and restore_version for older changes."
@@ -92,7 +92,9 @@ async function step(
   const result = await studioCall<{
     state: EditHistoryState;
     version: Version;
+    label?: string;
   }>(deps, "POST", `${base(project, direction.id)}/edit-history/${kind}`);
+  const label = result.label ?? listed;
   const verb = kind === "undo" ? "Undid" : "Redid";
   const output = ok({
     [kind === "undo" ? "undid" : "redid"]: label,

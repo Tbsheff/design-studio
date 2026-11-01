@@ -4,6 +4,7 @@ import path from "node:path";
 import type { Direction, Project } from "../../shared/contracts.js";
 import type { CanvasService } from "../canvas/service.js";
 import { warmKit } from "../components/props-service.js";
+import type { EditHistory } from "../direct-edit/history.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import type { ExportDeps } from "../export/source.js";
 import type { AgentRunner, EventBus } from "../types.js";
@@ -22,7 +23,7 @@ export interface EditDeps extends ExportDeps {
   activity: ActivityLog;
   dataDir: string;
   projectsFolder(): Promise<string>;
-  history?: EditRecorder;
+  history?: EditRecorder & Partial<Pick<EditHistory, "mark" | "dropUnsaved">>;
 }
 
 export class EditError extends Error {

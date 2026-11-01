@@ -1725,6 +1725,8 @@ async function recordActivity(
   );
 }
 
+const FAILED_TARGET = z.object({ projectId: z.string() });
+
 export async function callEditTool(
   deps: EditDeps,
   name: string,
@@ -1732,12 +1734,23 @@ export async function callEditTool(
   client: string
 ): Promise<ToolResult> {
   if (!EDIT_NAMES.has(name)) throw new EditError(`unknown tool ${name}`);
+  const mark = deps.history?.mark?.() ?? null;
+  const target = FAILED_TARGET.safeParse(args);
+  const failedProject = target.success ? target.data.projectId : null;
+  const forgetFailed = async (): Promise<void> => {
+    if (mark !== null && failedProject !== null)
+      await deps.history?.dropUnsaved?.(failedProject, mark);
+  };
   try {
     const done = await run(deps, name, args, client);
-    if (done.activity && !done.result.isError)
-      await recordActivity(deps, name, client, done.activity);
+    if (done.result.isError) {
+      await forgetFailed();
+      return done.result;
+    }
+    if (done.activity) await recordActivity(deps, name, client, done.activity);
     return done.result;
   } catch (error) {
+    await forgetFailed();
     if (
       error instanceof EditError ||
       error instanceof FolderError ||

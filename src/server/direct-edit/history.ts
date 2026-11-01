@@ -38,9 +38,12 @@ export type HistoryStep = "undo" | "redo";
 export interface EditStepResult {
   state: EditHistoryState;
   version: Version;
+  label: string;
 }
 
 export interface EditHistory extends EditRecorder {
+  mark: () => number;
+  dropUnsaved: (projectId: string, since: number) => Promise<number>;
   state(projectId: string, directionId: string): EditHistoryState;
   list?(projectId: string, directionId: string, limit: number): EditHistoryList;
   step(
@@ -154,6 +157,8 @@ function stepMeta(kind: HistoryStep, record: EditRecord): VersionMeta {
 export function createEditHistory(options: HistoryOptions): EditHistory {
   const limit = options.limit ?? HISTORY_LIMIT;
   const projects = new Map<string, Stacks>();
+  const recorded = new WeakMap<EditRecord, number>();
+  let sequence = 0;
 
   const stacksOf = (projectId: string): Stacks => {
     let stacks = projects.get(projectId);
@@ -285,6 +290,7 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     push(kind === "undo" ? stacks.redo : stacks.undo, record);
     changed(project.id, direction.id);
     return {
+      label: record.label,
       state: state(project.id, direction.id),
       version: await deps.versions.get(project, savedVersionId(head)),
     };
@@ -362,7 +368,11 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
     );
     await publishVersion(deps, project, direction, version);
     changed(project.id, direction.id);
-    return { state: state(project.id, direction.id), version };
+    return {
+      label: record.label,
+      state: state(project.id, direction.id),
+      version,
+    };
   };
 
   const record = (entry: EditRecord): void => {
@@ -377,12 +387,69 @@ export function createEditHistory(options: HistoryOptions): EditHistory {
         files,
       });
     const stacks = stacksOf(entry.projectId);
-    push(stacks.undo, { ...entry, files });
+    const stored = { ...entry, files };
+    sequence += 1;
+    recorded.set(stored, sequence);
+    push(stacks.undo, stored);
     for (let index = stacks.redo.length - 1; index >= 0; index -= 1)
       if (stacks.redo[index]?.directionId === entry.directionId)
         stacks.redo.splice(index, 1);
     changed(entry.projectId, entry.directionId);
   };
 
-  return { record, state, list, step, clear, forget };
+  const unsaved = async (
+    projectId: string,
+    entry: EditRecord
+  ): Promise<boolean> => {
+    if (entry.files.length === 0 || entry.layout) return false;
+    const records = projects.get(projectId)?.undo ?? [];
+    const later = new Set(
+      records
+        .slice(records.indexOf(entry) + 1)
+        .flatMap((next) =>
+          next.files.map((change) => `${change.file}\0${change.before}`)
+        )
+    );
+    const chained = entry.files.some((change) =>
+      later.has(`${change.file}\0${change.after}`)
+    );
+    if (chained) return false;
+    try {
+      const texts = await Promise.all(
+        entry.files.map((change) => readOrNull(change.file))
+      );
+      for (const [index, change] of entry.files.entries())
+        if (texts[index] !== textBefore(change)) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const mark = (): number => sequence;
+
+  const dropUnsaved = async (
+    projectId: string,
+    since: number
+  ): Promise<number> => {
+    const stacks = projects.get(projectId);
+    if (!stacks) return 0;
+    const fresh = stacks.undo.filter(
+      (entry) => (recorded.get(entry) ?? 0) > since
+    );
+    const flags = await Promise.all(
+      fresh.map((entry) => unsaved(projectId, entry))
+    );
+    const drop = fresh.filter((entry) => flags[fresh.indexOf(entry)]);
+    if (drop.length === 0) return 0;
+    for (const entry of drop) {
+      const position = stacks.undo.indexOf(entry);
+      if (position !== -1) stacks.undo.splice(position, 1);
+    }
+    for (const directionId of new Set(drop.map((entry) => entry.directionId)))
+      changed(projectId, directionId);
+    return drop.length;
+  };
+
+  return { record, state, list, step, clear, forget, mark, dropUnsaved };
 }

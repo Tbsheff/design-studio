@@ -28,6 +28,7 @@ export const LINT_IGNORES = [
   "verification/**",
   "design-review/**",
   "artifacts/**",
+  "docs/patterns/golden/**",
   "lint/day-one.ts",
 ];
 

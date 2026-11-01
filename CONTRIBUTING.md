@@ -14,6 +14,12 @@ Thanks for helping with Design Studio.
 - Keep files small. Split a file before it grows past about 1,000 lines.
 - Do not add a new model client. All model calls go through the Claude Agent SDK.
 
+## Add an endpoint
+
+Follow [AGENTS.md section 2](AGENTS.md#2-how-to-add-an-endpoint). Copy the golden files that [docs/patterns.md](docs/patterns.md) lists.
+
+The `pnpm run new:op` stamp lands after S4b, with the S4s wave. Until then, write the op contract and the handler from the golden files, then run `pnpm exec tsx scripts/gen-routes.ts`.
+
 ## Setup
 
 This repo uses pnpm 11. Do not use npm or npx. Install the dependencies:

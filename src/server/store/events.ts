@@ -13,6 +13,7 @@ import { assertSafeId } from "./errors.js";
 const RING_SIZE = 5000;
 const FLUSH_DELAY_MS = 5;
 const EVENT_FILES_MAX = 20;
+const SEQ_PER_MS = 1000;
 
 interface ProjectLog {
   file: string;
@@ -20,7 +21,6 @@ interface ProjectLog {
   ring: StudioEvent[];
   listeners: Set<(event: StudioEvent) => void>;
   unflushed: StudioEvent[];
-  sent: number;
   dirReady: boolean;
   timer: NodeJS.Timeout | null;
   chain: Promise<void>;
@@ -95,27 +95,24 @@ const appendLines = async (log: ProjectLog, text: string): Promise<void> => {
 
 const writeBatch = async (
   log: ProjectLog,
-  previous: Promise<void>,
-  batch: StudioEvent[]
+  previous: Promise<void>
 ): Promise<void> => {
   await previous;
+  const batch = [...log.unflushed];
+  if (batch.length === 0) return;
   try {
     await appendLines(log, toLines(batch));
+    log.unflushed.splice(0, batch.length);
   } catch (error) {
     report("append", { error });
-  } finally {
-    log.unflushed.splice(0, batch.length);
-    log.sent -= batch.length;
   }
 };
 
 const flushLog = (log: ProjectLog): void => {
   if (log.timer !== null) clearTimeout(log.timer);
   log.timer = null;
-  const batch = log.unflushed.slice(log.sent);
-  if (batch.length === 0) return;
-  log.sent += batch.length;
-  log.chain = writeBatch(log, log.chain, batch);
+  if (log.unflushed.length === 0) return;
+  log.chain = writeBatch(log, log.chain);
 };
 
 const scheduleFlush = (log: ProjectLog): void => {
@@ -163,11 +160,10 @@ const openLog = (file: string): ProjectLog => {
   const stored = readFileEvents(file);
   return {
     file,
-    lastSeq: stored.at(-1)?.seq ?? 0,
+    lastSeq: Math.max(stored.at(-1)?.seq ?? 0, Date.now() * SEQ_PER_MS),
     ring: stored.slice(-RING_SIZE),
     listeners: new Set(),
     unflushed: [],
-    sent: 0,
     dirReady: false,
     timer: null,
     chain: Promise.resolve(),

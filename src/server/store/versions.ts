@@ -80,7 +80,7 @@ const MAX_SCOPED_PATHS = 500;
 const MAX_CACHED_TREES = 4096;
 const LOOSE_OBJECTS_TO_PACK = 1000;
 const APP_MAX_TRACKED_BYTES = 2 * 1024 * 1024;
-const APP_ATTRIBUTES = "* -text -filter -ident\n";
+const RAW_ATTRIBUTES = "* -text -filter -ident -working-tree-encoding\n";
 const STAT_BATCH = 256;
 
 const APP_EXCLUDES = [
@@ -524,9 +524,9 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const writeExclude = async (project: Project): Promise<void> => {
     const infoDir = path.join(gitDirOf(project), "info");
     const base = await writeBaseExclude(project);
+    await writeFile(path.join(infoDir, "attributes"), RAW_ATTRIBUTES);
 
     if (project.app) {
-      await writeFile(path.join(infoDir, "attributes"), APP_ATTRIBUTES);
       const large = await largeUntracked(project);
 
       if (large.length > 0) {
@@ -549,6 +549,14 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     }
 
     await writeExclude(project);
+  };
+
+  const rawFastOk = async (
+    project: Project,
+    direction: Direction
+  ): Promise<boolean> => {
+    await refreshExclude(project);
+    return fastOk(project, direction);
   };
 
   const projectRoot = (project: Project): string =>
@@ -832,7 +840,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   ): Promise<void> => {
     const key = lockKey(project, direction);
 
-    const tracked = await fastOk(project, direction);
+    const tracked = await rawFastOk(project, direction);
     const scan = tracked ? tracker.beginFullScan(key, rootOf(direction)) : null;
 
     await stageAll(directionScope(project, direction), firstOfApp);
@@ -1318,7 +1326,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   ): Promise<WorkTreeStatus> => {
     const key = lockKey(project, direction);
     const head = await headOf(project, direction);
-    const tracked = head !== null && (await fastOk(project, direction));
+    const tracked = head !== null && (await rawFastOk(project, direction));
     const scan = tracked ? tracker.beginFullScan(key, rootOf(direction)) : null;
 
     const indexFile = path.join(
@@ -1354,7 +1362,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   ): Promise<WorkTreeStatus> => {
     await refreshExclude(project);
 
-    const fast = (await fastOk(project, direction))
+    const fast = (await rawFastOk(project, direction))
       ? await direct.status(project, direction, paths)
       : "git";
 
@@ -1579,7 +1587,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     const headTree = await treeOf(project, head);
     const live = await readLayout(project, direction);
 
-    const planned = (await fastOk(project, direction))
+    const planned = (await rawFastOk(project, direction))
       ? await layoutTree(project, tree, live)
       : null;
 
@@ -1830,7 +1838,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       if (
         head === null ||
         direct.has(project, direction) ||
-        !(await fastOk(project, direction))
+        !(await rawFastOk(project, direction))
       ) {
         return null;
       }
@@ -1932,7 +1940,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     direction: Direction,
     tree: string | null
   ): Promise<WorkTreeStatus | null> => {
-    if (tree === null || !(await fastOk(project, direction))) {
+    if (tree === null || !(await rawFastOk(project, direction))) {
       return null;
     }
 
@@ -1974,7 +1982,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       ];
 
       return locked(project, direction, async () => {
-        const fast = (await fastOk(project, direction))
+        const fast = (await rawFastOk(project, direction))
           ? await commitDirect(project, direction, paths, title, meta)
           : undefined;
 
@@ -2036,7 +2044,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
           packLooseObjects(project);
         }
 
-        if (await fastOk(project, direction)) {
+        if (await rawFastOk(project, direction)) {
           direct.remember(project, direction, version.id, []);
         }
 

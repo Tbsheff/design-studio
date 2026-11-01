@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { logError } from "../platform/logger/index.js";
+
 interface SourceFileChange {
   relative: string;
   before: string;
@@ -82,7 +84,7 @@ const emitSourceChange = (change: SourceChange): void => {
     try {
       listener(change);
     } catch (error) {
-      console.error("[source-change] listener failed", error);
+      logError("[source-change] listener failed", error);
     }
   }
 };

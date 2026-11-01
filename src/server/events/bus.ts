@@ -8,6 +8,7 @@ import type {
   Version,
 } from "../../shared/contracts.js";
 import { assertSafeId } from "../platform/errors/safe-id.js";
+import { logError } from "../platform/logger/index.js";
 
 const RING_SIZE = 5000;
 const FLUSH_DELAY_MS = 5;
@@ -29,7 +30,7 @@ interface ProjectLog {
 }
 
 const report = (label: string, cause: { error: unknown }): void => {
-  console.error(`[events] ${label} failed`, cause.error);
+  logError(`[events] ${label} failed`, cause.error);
 };
 
 const parseLine = (line: string): StudioEvent | null => {

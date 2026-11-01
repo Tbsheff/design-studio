@@ -7,7 +7,7 @@ import type {
   SelectionContext,
   SourceLoc,
 } from "../../shared/contracts.js";
-import { checkPathInside } from "../agent/permissions.js";
+import { checkPathInside } from "../platform/paths/index.js";
 
 const SNIPPET_LINES = 40;
 const SNIPPET_CHARS = 4000;

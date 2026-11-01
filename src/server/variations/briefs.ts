@@ -16,9 +16,9 @@ import {
   type VariationBrief,
   type VariationBriefsResult,
 } from "../../shared/contracts.js";
+import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
-import { extractJson } from "../agent/critic.js";
-import { buildEnv } from "../agent/sdk-driver.js";
+import { buildEnv } from "../platform/config/index.js";
 
 type QueryFn = typeof query;
 

@@ -2,8 +2,8 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import type { RunMention } from "../../shared/contracts.js";
-import { checkPathInside } from "../agent/permissions.js";
 import { treeStamp } from "../direct-edit/change-feed.js";
+import { checkPathInside } from "../platform/paths/index.js";
 import { BadRequestError } from "../store/errors.js";
 import type { MentionFile } from "../types.js";
 

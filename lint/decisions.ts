@@ -239,7 +239,7 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
   "import/no-nodejs-modules":
     "Off where the code runs on Node: it can never reach 0 there. The coarse ban covers browser code.",
   "no-console":
-    "Off in the logger, in scripts, in the events module, in the server entry and in the worker client until it logs through the logger (plan 5.2).",
+    "Off in the logger and in scripts only (plan 5.2). Other server code logs through platform/logger.",
   "node/no-process-env":
     "Off in the config module, desktop/env.ts and the server entry, which own env access (plan 5.2).",
   "unicorn/no-process-exit":
@@ -248,22 +248,12 @@ export const SCOPED_OFF_REASONS: Record<string, string> = {
     "Off in desktop/build.ts, the data lock, the resource lookup, the path checks and the event log replay and exit flush, whose callers are sync (plan 5.2).",
   "import/no-default-export":
     "Off in *.config.ts: the tools load a default export.",
-  "import/consistent-type-specifier-style":
-    "Off in agent/permissions.ts: one shared/contracts import carries a value and an inline type, which keeps its parent-import count at the baseline.",
-  "unicorn/prefer-export-from":
-    "Off in the agent, layout-history and props-schema shims: they re-export a symbol moved to platform or shared and also use it, so they need an import binding.",
 };
 
 export const decisionOverrides: OxlintOverride[] = [
   { files: NODE_RUNTIMES, rules: { "import/no-nodejs-modules": "off" } },
   {
-    files: [
-      "src/server/platform/logger/**",
-      "src/server/platform/process/worker-client.ts",
-      "src/server/events/**",
-      SERVER_MAIN,
-      "scripts/**",
-    ],
+    files: ["src/server/platform/logger/**", "scripts/**"],
     rules: { "no-console": "off" },
   },
   {
@@ -276,30 +266,45 @@ export const decisionOverrides: OxlintOverride[] = [
   },
   {
     files: [
-      "src/server/platform/**",
-      "src/server/events/**",
-      "src/server/run-log/**",
-      "src/server/project-source/**",
+      "src/server/events/bus.ts",
+      "src/server/events/change-feed.ts",
+      "src/server/events/planned-feed.ts",
+      "src/server/events/render-wait.ts",
+      "src/server/platform/config/index.ts",
+      "src/server/platform/edit-origin/index.ts",
+      "src/server/platform/git/batch-reader.ts",
+      "src/server/platform/git/objects.ts",
+      "src/server/platform/git/user-git.ts",
+      "src/server/platform/process/worker-client.ts",
+      "src/server/platform/resources/index.ts",
+      "src/server/project-source/source.ts",
+      "src/server/run-log/run-list.ts",
       SERVER_MAIN,
-      "src/server/store/events.ts",
       "src/server/direct-edit/change-feed.ts",
       "src/server/direct-edit/planned-feed.ts",
-      "src/server/preview/render-wait.ts",
-      "src/server/preview/ports.ts",
-      "src/server/store/git-objects.ts",
-      "src/server/store/default-folder.ts",
-      "src/server/store/data-lock.ts",
       "src/server/git/user-git.ts",
+      "src/server/preview/render-wait.ts",
+      "src/server/store/data-lock.ts",
+      "src/server/store/events.ts",
+      "src/server/store/git-objects.ts",
+      "src/server/store/mutex.ts",
     ],
     rules: { "import/no-relative-parent-imports": "off" },
   },
   {
-    files: ["src/server/platform/git/**", "src/server/platform/process/**"],
-    rules: {
-      "node/no-process-env": "off",
-      "sonarjs/hashing": "off",
-      "sonarjs/no-os-command-from-path": "off",
-    },
+    files: ["src/server/platform/git/encoding.ts"],
+    rules: { "sonarjs/hashing": "off" },
+  },
+  {
+    files: [
+      "src/server/platform/git/run-git.ts",
+      "src/server/platform/git/user-git.ts",
+    ],
+    rules: { "node/no-process-env": "off" },
+  },
+  {
+    files: ["src/server/platform/git/run-git.ts"],
+    rules: { "sonarjs/no-os-command-from-path": "off" },
   },
   {
     files: [
@@ -312,18 +317,4 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "node/no-sync": "off" },
   },
   { files: ["*.config.ts"], rules: { "import/no-default-export": "off" } },
-  {
-    files: [
-      "src/server/agent/sdk-driver.ts",
-      "src/server/agent/critic.ts",
-      "src/server/agent/permissions.ts",
-      "src/server/canvas/layout-history.ts",
-      "src/server/components/props-schema.ts",
-    ],
-    rules: { "unicorn/prefer-export-from": "off" },
-  },
-  {
-    files: ["src/server/agent/permissions.ts"],
-    rules: { "import/consistent-type-specifier-style": "off" },
-  },
 ];

@@ -7,7 +7,8 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk";
 
 import { CANVAS_DIR } from "../../shared/canvas-file.js";
-import { TOKENS_CSS_FILE, type RunMode } from "../../shared/contracts.js";
+import { TOKENS_CSS_FILE } from "../../shared/contracts.js";
+import type { RunMode } from "../../shared/contracts.js";
 import { TWEAKS_FILE, TWEAKS_TOOL } from "../../shared/tweaks.js";
 import {
   BLOCKED_SEGMENTS,
@@ -16,8 +17,6 @@ import {
   workTreeRoot,
 } from "../platform/paths/index.js";
 import type { ToolGate } from "./ask-gate.js";
-
-export { checkPathInside };
 
 export const DESIGN_SYSTEM_CHECK_TOOL = "mcp__studio__design_system_check";
 export const CANVAS_LIST_TOOL = "mcp__studio__canvas_list";

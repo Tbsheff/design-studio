@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile, realpath, rm } from "node:fs/promises";
 import path from "node:path";
 
+import type { LayoutChange } from "../../shared/canvas-file.js";
 import type {
   Direction,
   EditHistoryEntry,
@@ -11,7 +12,6 @@ import type {
   Version,
   VersionMeta,
 } from "../../shared/contracts.js";
-import type { LayoutChange } from "../canvas/layout-history.js";
 import { isNodeError } from "../store/errors.js";
 import type { EventBus } from "../types.js";
 import { emitSourceChange } from "./change-feed.js";

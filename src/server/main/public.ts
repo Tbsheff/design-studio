@@ -14,6 +14,7 @@ import { createApp } from "../http/app.js";
 import { loadConfig } from "../platform/config/index.js";
 import type { ServerConfig } from "../platform/config/index.js";
 import { acquireDataLock } from "../platform/data-lock/index.js";
+import { logError, logInfo } from "../platform/logger/index.js";
 import { loadBridgeScript } from "../preview/bridge-bundle.js";
 import { createPreviewService } from "../preview/index.js";
 import { createCommentStore } from "../store/comments.js";
@@ -83,10 +84,7 @@ const watchProject = async (
     try {
       preview.watch(project, direction);
     } catch (error) {
-      console.error(
-        `[studio] cannot watch ${project.id}/${direction.id}`,
-        error
-      );
+      logError(`[studio] cannot watch ${project.id}/${direction.id}`, error);
     }
   }
 };
@@ -127,7 +125,7 @@ const warmPreview = async (
     await watchExisting(preview, versions, projects);
     await loadBridgeScript();
   } catch (error) {
-    console.error("[studio] preview warm-up failed", error, config.dataDir);
+    logError("[studio] preview warm-up failed", error, config.dataDir);
   }
 };
 
@@ -223,7 +221,7 @@ const stopAll = async (
   try {
     await Promise.all([baseBus.flush(), preview.stop()]);
   } catch (error) {
-    console.error("[studio] shutdown step failed", error);
+    logError("[studio] shutdown step failed", error);
   }
 
   process.exit(0);
@@ -242,7 +240,7 @@ const handleSignals = (
     }
 
     stopping = true;
-    console.log(`[studio] ${signal} received, shutting down`);
+    logInfo(`[studio] ${signal} received, shutting down`);
     const forceExit = setTimeout(() => process.exit(1), FORCE_EXIT_MS);
 
     forceExit.unref();
@@ -274,7 +272,7 @@ const createServer = async (
   const server = serve(
     { fetch: app.fetch, hostname: "127.0.0.1", port: config.studioPort },
     () => {
-      console.log(
+      logInfo(
         `Design Studio running at ${config.studioOrigin} (agent: ${config.agentMode}, data: ${config.dataDir})`
       );
     }

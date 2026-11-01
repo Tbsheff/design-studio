@@ -6,6 +6,7 @@ import type {
   DomPatch,
   TailwindOutcome,
 } from "../../shared/contracts.js";
+import { logError } from "../platform/logger/index.js";
 
 interface AppliedPatch {
   applied: { text: boolean };
@@ -39,7 +40,7 @@ const emit = (edit: PlannedEdit): void => {
     try {
       listener(edit);
     } catch (error) {
-      console.error("[planned-edit] listener failed", error);
+      logError("[planned-edit] listener failed", error);
     }
   }
 };

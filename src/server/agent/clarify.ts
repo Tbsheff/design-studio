@@ -9,8 +9,8 @@ import { z } from "zod";
 
 import { needsQuestions } from "../../shared/clarify.js";
 import type { ClarifyQuestion } from "../../shared/contracts.js";
+import { extractJson } from "../../shared/extract-json.js";
 import { WIREFRAME_MODEL } from "../../shared/run-levels.js";
-import { extractJson } from "./critic.js";
 
 type QueryFn = typeof query;
 

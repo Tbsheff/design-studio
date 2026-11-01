@@ -10,6 +10,7 @@ import { firstVersionBlock } from "../app/first-version.js";
 import { takeSaveFailures } from "../direct-edit/save-queue.js";
 import { withMcpOrigin } from "../edit-origin.js";
 import type { ExportDeps } from "../export/source.js";
+import { isKnownError } from "../platform/errors/known.js";
 import {
   renderedSince,
   renderPending,
@@ -102,9 +103,7 @@ async function runTool(
   try {
     return await callTool(deps, name, args);
   } catch (error) {
-    const known =
-      error instanceof ToolError ||
-      (error instanceof Error && "status" in error);
+    const known = error instanceof ToolError || isKnownError(error);
     if (!known) console.error("[mcp] tool failed", name, error);
     return {
       content: [
@@ -246,9 +245,7 @@ async function runEdit(
         : result;
     return withSaveFailures(done, args.projectId);
   } catch (error) {
-    const known =
-      error instanceof EditError ||
-      (error instanceof Error && "status" in error);
+    const known = error instanceof EditError || isKnownError(error);
     if (!known) console.error("[mcp] edit tool failed", name, error);
     return {
       content: [

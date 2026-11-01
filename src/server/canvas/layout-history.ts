@@ -6,8 +6,6 @@ import type {
 import type { CanvasWriteSource, Project } from "../../shared/contracts.js";
 import type { LinksFile } from "../../shared/links.js";
 
-export type { LayoutChange };
-
 export type LayoutListener = (
   project: Project,
   change: LayoutChange,

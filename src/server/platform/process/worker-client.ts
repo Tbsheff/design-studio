@@ -5,15 +5,8 @@ import { Worker } from "node:worker_threads";
 import type { Transferable } from "node:worker_threads";
 
 import { REPO_ROOT } from "../config/index.js";
-
-type WorkerReply<Reply> =
-  | { id: number; result: Reply }
-  | { id: number; error: string };
-
-interface WorkerRequest<Query> {
-  id: number;
-  request: Query;
-}
+import { logError } from "../logger/index.js";
+import type { WorkerReply, WorkerRequest } from "./worker-protocol.js";
 
 interface WorkerClientOptions<Query, Reply> {
   file: string;
@@ -157,7 +150,7 @@ class WorkerClient<Query, Reply> {
 
       return worker;
     } catch (error) {
-      console.error(
+      logError(
         `[${this.options.label}] worker did not start; running in process`,
         error
       );
@@ -234,7 +227,7 @@ class WorkerClient<Query, Reply> {
     this.failures += 1;
 
     if (this.failures >= MAX_FAILURES) {
-      console.error(
+      logError(
         `[${this.options.label}] worker failed ${this.failures} times; running in process`,
         error
       );

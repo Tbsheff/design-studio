@@ -1,5 +1,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 
+import { logError } from "../platform/logger/index.js";
+
 const WATCH_DELAY_MS = 300;
 const SETTLE_MAX_MS = 60_000;
 const PAGES_MAX = 6;
@@ -41,7 +43,7 @@ const runJob = async (
     await render(job.controller.signal);
   } catch (error) {
     if (!job.controller.signal.aborted) {
-      console.error("[render-wait] warm failed", error);
+      logError("[render-wait] warm failed", error);
     }
   } finally {
     lastDone.set(projectId, Date.now());

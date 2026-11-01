@@ -1,13 +1,9 @@
 import type { MessagePort, Transferable } from "node:worker_threads";
 
-export type WorkerReply<R> =
-  | { id: number; result: R }
-  | { id: number; error: string };
-
-export interface WorkerRequest<Q> {
-  id: number;
-  request: Q;
-}
+import type {
+  WorkerReply,
+  WorkerRequest,
+} from "./platform/process/worker-protocol.js";
 
 export interface WorkerAnswer<R> {
   result: R;

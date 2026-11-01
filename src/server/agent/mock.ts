@@ -10,6 +10,7 @@ import type {
 import { levelOf } from "../../shared/run-levels.js";
 import { probeWithPreview } from "../canvas/link-tools.js";
 import type { CanvasService } from "../canvas/service.js";
+import { checkPathInside } from "../platform/paths/index.js";
 import { MOCK_TWEAKS_TAG, runMockTweaks } from "../tweaks/mock-tweaks.js";
 import type { PreviewService } from "../types.js";
 import { runVariationMock } from "../variations/mock-pages.js";
@@ -40,11 +41,7 @@ import {
   runMockDesignSystemFix,
 } from "./mock-design-system.js";
 import { runMockDirect, wantsMockDirect } from "./mock-direct.js";
-import {
-  bashWriteProblem,
-  checkPathInside,
-  evaluateToolUse,
-} from "./permissions.js";
+import { bashWriteProblem, evaluateToolUse } from "./permissions.js";
 import type { ToolPolicy } from "./permissions.js";
 import { runReferencePass } from "./reference-check.js";
 import { buildUserMessageParts, buildUserText } from "./user-message.js";

@@ -22,7 +22,7 @@ import {
 } from "../../shared/run-levels.js";
 import type { CanvasService } from "../canvas/service.js";
 import { SOURCE_DIR } from "../design-system/extract/draft.js";
-import { buildEnv, LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
+import { buildEnv } from "../platform/config/index.js";
 import type { CommentStore } from "../store/comments.js";
 import type { PreviewService } from "../types.js";
 import { createBashGate, type ToolGate } from "./ask-gate.js";
@@ -132,7 +132,8 @@ interface AttemptResult {
   sawInit: boolean;
 }
 
-export { buildEnv, LOGIN_SHELL_PATH_ENV };
+export { buildEnv, LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
+
 const TODO_TOOL_ENV = "CLAUDE_CODE_ENABLE_TASKS";
 const CHECK_TOOL_NAME = "mcp__studio__render_check";
 

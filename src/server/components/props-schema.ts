@@ -26,7 +26,7 @@ import {
 import type { ProgramScope, TypedProps } from "./props-program.js";
 
 export { compilerOptionsFor } from "./props-program.js";
-export { loadTypeScript };
+export { loadTypeScript } from "../platform/ts-compiler/index.js";
 
 type Ts = typeof TS;
 

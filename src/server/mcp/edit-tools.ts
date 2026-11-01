@@ -60,6 +60,7 @@ import {
   savedVersionId,
   savesSettled,
 } from "../direct-edit/save-queue.js";
+import { isKnownError } from "../platform/errors/known.js";
 import {
   editSummary,
   frameStepText,
@@ -1754,7 +1755,7 @@ export async function callEditTool(
     if (
       error instanceof EditError ||
       error instanceof FolderError ||
-      (error instanceof Error && "status" in error)
+      isKnownError(error)
     )
       return {
         content: [{ type: "text", text: mcpErrorText(error.message) }],

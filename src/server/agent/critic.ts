@@ -19,8 +19,6 @@ import { changedSince } from "./screens.js";
 import type { RunScreen } from "./screens.js";
 import type { TasteRule } from "./taste.js";
 
-export { extractJson };
-
 type QueryFn = typeof query;
 
 const CRITIC_TILES = {

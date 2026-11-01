@@ -1,3 +1,4 @@
+import type { LayoutChange } from "../../shared/canvas-file.js";
 import type { CanvasWriteSource, Project } from "../../shared/contracts.js";
 import type { EditRecorder } from "../direct-edit/index.js";
 import {
@@ -6,7 +7,7 @@ import {
   revertCanvas,
   revertLinks,
 } from "./layout-history.js";
-import type { LayoutChange, LayoutStep } from "./layout-history.js";
+import type { LayoutStep } from "./layout-history.js";
 import type { CanvasService } from "./service.js";
 
 export function recordLayout(

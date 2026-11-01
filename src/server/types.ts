@@ -12,8 +12,6 @@ import type {
   RenderCheckResult,
   RunRequest,
   RunSummary,
-  StudioEvent,
-  StudioEventInput,
   Version,
   VersionChanges,
   VersionMeta,
@@ -31,6 +29,10 @@ import type {
   TileResult,
 } from "./preview/ports.js";
 
+export type { EventBus } from "./events/index.js";
+
+export type { ServerConfig } from "./platform/config/index.js";
+
 export type {
   InspectResult,
   PeekOptions,
@@ -40,30 +42,6 @@ export type {
   TileRequest,
   TileResult,
 } from "./preview/ports.js";
-
-export interface ServerConfig {
-  dataDir: string;
-  projectsDir: string;
-  studioPort: number;
-  previewPort: number;
-  vitePortBase: number;
-  appPortBase?: number;
-  appPortCount?: number;
-  studioToken: string;
-  agentMode: "sdk" | "mock";
-  studioOrigin: string;
-  previewOrigin: string;
-  fetchAllowLoopback?: boolean;
-}
-
-export interface EventBus {
-  emit(event: StudioEventInput): StudioEvent;
-  since(projectId: string, afterSeq: number): StudioEvent[];
-  subscribe(
-    projectId: string,
-    listener: (event: StudioEvent) => void
-  ): () => void;
-}
 
 export interface ProjectStore {
   list(): Promise<Project[]>;

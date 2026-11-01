@@ -1,6 +1,7 @@
 import { mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { LayoutChange } from "../../shared/canvas-file.js";
 import type {
   Direction,
   DirectEditRequest,
@@ -10,7 +11,6 @@ import type {
   VersionMeta,
 } from "../../shared/contracts.js";
 import { variantLabel } from "../../shared/variants.js";
-import type { LayoutChange } from "../canvas/layout-history.js";
 import { isOutsideRequest } from "../edit-origin.js";
 import { writeAtomic as platformWriteAtomic } from "../platform/atomic-write/index.js";
 import { isNodeError } from "../store/errors.js";

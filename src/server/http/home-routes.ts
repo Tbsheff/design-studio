@@ -4,7 +4,7 @@ import type { Context, Hono } from "hono";
 
 import type { Project } from "../../shared/contracts.js";
 import { askQuestions } from "../agent/clarify.js";
-import { buildEnv } from "../agent/sdk-driver.js";
+import { buildEnv } from "../platform/config/index.js";
 import {
   SAMPLE_NAME,
   SAMPLE_STARTER_ID,

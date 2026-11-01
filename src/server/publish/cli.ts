@@ -2,8 +2,8 @@ import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 
 import { compareCfVersion, type PublishAccount } from "../../shared/publish.js";
-import { LOGIN_SHELL_PATH_ENV } from "../agent/sdk-driver.js";
 import { findOnPath } from "../git/user-git.js";
+import { LOGIN_SHELL_PATH_ENV } from "../platform/config/index.js";
 import { scrubCliText } from "./scrub.js";
 
 export interface CliResult {

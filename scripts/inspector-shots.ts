@@ -33,7 +33,7 @@ const SHORT = { timeout: 5000 };
 async function selectInFrame(
   page: Page,
   target: Locator,
-  modifiers?: Array<"Shift">,
+  modifiers?: "Shift"[],
   corner = true
 ): Promise<void> {
   await target.waitFor(SHORT);

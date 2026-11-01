@@ -3,7 +3,7 @@ import type { Candidate, Harvest, SourceKind } from "./types.js";
 import { colorsInText, primaryFamily } from "./values.js";
 import { candidate } from "./vars.js";
 
-const FONT_ROLES: Array<[RegExp, string]> = [
+const FONT_ROLES: [RegExp, string][] = [
   [/\b(mono|monospace|code)\b/i, "font.mono"],
   [
     /\b(heading|headings|display|title|titles|headline|headlines)\b/i,
@@ -59,7 +59,7 @@ function nameBefore(
 function fontsIn(
   line: string,
   inTypography: boolean
-): Array<{ token: string; stack: string }> {
+): { token: string; stack: string }[] {
   const text = plain(line);
 
   if (colorsInText(text).length > 0) {
@@ -157,10 +157,8 @@ function fontCandidates(
   );
 }
 
-function proseLines(
-  markdown: string
-): Array<{ line: string; heading: string }> {
-  const out: Array<{ line: string; heading: string }> = [];
+function proseLines(markdown: string): { line: string; heading: string }[] {
+  const out: { line: string; heading: string }[] = [];
   let inFence = false;
   let heading = "";
 

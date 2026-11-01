@@ -212,9 +212,10 @@ function emitted(entry: Keyed, matches: SiteToken[]): string[] {
   if (entry.kind === "single")
     return entry.token === null ? [] : [`${entry.variants}${entry.token}`];
   const map = expand(matches);
-  for (const [side, value] of Object.entries(entry.values) as Array<
-    [Side, SideValue | null]
-  >) {
+  for (const [side, value] of Object.entries(entry.values) as [
+    Side,
+    SideValue | null,
+  ][]) {
     if (value === null) delete map[side];
     else map[side] = value;
   }
@@ -256,8 +257,7 @@ function serialize(
   parts: SegmentTokens,
   output: Output
 ): string {
-  const out: Array<{ sep: string; text: string; original: SiteToken | null }> =
-    [];
+  const out: { sep: string; text: string; original: SiteToken | null }[] = [];
   const push = (text: string, sep: string, original: SiteToken | null) =>
     out.push({ sep: out.length === 0 ? "" : sep || " ", text, original });
   const trailingPartial =

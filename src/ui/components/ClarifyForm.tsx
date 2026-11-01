@@ -90,7 +90,7 @@ export function ClarifyForm({
 }: {
   questions: ClarifyQuestion[];
   busy: boolean;
-  onBuild: (answers: Array<{ question: string; answer: string }>) => void;
+  onBuild: (answers: { question: string; answer: string }[]) => void;
   onSkip: () => void;
   onCancel: () => void;
 }) {

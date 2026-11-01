@@ -48,7 +48,7 @@ const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 
 function buildBlockList(withLoopback: boolean): BlockList {
   const list = new BlockList();
-  const v4: Array<[string, number]> = [
+  const v4: [string, number][] = [
     ["0.0.0.0", 8],
     ["10.0.0.0", 8],
     ["100.64.0.0", 10],
@@ -64,7 +64,7 @@ function buildBlockList(withLoopback: boolean): BlockList {
     ["224.0.0.0", 4],
     ["240.0.0.0", 4],
   ];
-  const v6: Array<[string, number]> = [
+  const v6: [string, number][] = [
     ["::", 128],
     ["64:ff9b::", 96],
     ["100::", 64],

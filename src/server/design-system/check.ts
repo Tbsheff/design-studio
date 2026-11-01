@@ -29,7 +29,7 @@ import { DESIGN_MD_FILE, manifestSchema } from "./packs.js";
 
 export const AA_CONTRAST = 4.5;
 const LISTED_PER_RULE = 8;
-const FIXED_PAIRS: Array<[ink: string, fill: string]> = [
+const FIXED_PAIRS: [ink: string, fill: string][] = [
   ["fg", "bg"],
   ["fg-muted", "bg"],
   ["fg", "surface"],
@@ -214,7 +214,7 @@ export function valueInMode(
 
 function contrastPairs(
   entries: CompiledTokenEntry[]
-): Array<[ink: string, fill: string]> {
+): [ink: string, fill: string][] {
   const colors = new Set(
     entries
       .filter((entry) => entry.path.startsWith("color."))

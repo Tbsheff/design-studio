@@ -18,7 +18,7 @@ export interface AppToken {
   darkValue: string | null;
 }
 
-const NAMESPACES: Array<[RegExp, string, TokenType | null]> = [
+const NAMESPACES: [RegExp, string, TokenType | null][] = [
   [/^--color(-|$)/, "color", "color"],
   [/^--font-weight(-|$)/, "font-weight", "fontWeight"],
   [/^--font(-|$)/, "font", "fontFamily"],

@@ -1,12 +1,12 @@
 export interface CssRule {
   selector: string;
   media: string[];
-  decls: Array<[string, string]>;
+  decls: [string, string][];
 }
 
 interface Frame {
   prelude: string;
-  decls: Array<[string, string]>;
+  decls: [string, string][];
 }
 
 const SKIPPED_AT_RULES =
@@ -276,7 +276,7 @@ const MAX_SUBSTITUTIONS = 64;
 
 export function resolveVars(
   value: string,
-  scopes: Array<Map<string, string>>,
+  scopes: Map<string, string>[],
   depth = 0
 ): string {
   if (depth > 8 || !value.includes("var(")) {

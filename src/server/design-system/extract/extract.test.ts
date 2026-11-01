@@ -238,7 +238,7 @@ describe("URL time limit", () => {
     `<!doctype html><html><head>${Array.from({ length: links }, (_v, index) => `<link rel="stylesheet" href="/s${index}.css">`).join("")}<style>:root { --primary: #1f6feb; }</style></head><body></body></html>`;
 
   it("keeps what it read and lists the stylesheets left when the site limit runs out", async () => {
-    const deadlines: Array<number | undefined> = [];
+    const deadlines: (number | undefined)[] = [];
 
     const fetcher = async (
       url: string,
@@ -499,7 +499,7 @@ describe("DESIGN.md text extractor", () => {
 
 function harvestOf(
   source: Harvest["source"],
-  candidates: Array<Omit<Candidate, "source" | "evidence">>
+  candidates: Omit<Candidate, "source" | "evidence">[]
 ): Harvest {
   return {
     source,
@@ -806,7 +806,7 @@ body { color: var(--foreground); }
       compiled.entries.map((entry) => [entry.cssVar, entry])
     );
 
-    const expected: Array<[string, string, string]> = [
+    const expected: [string, string, string][] = [
       ["--background", "--bg", "color"],
       ["--foreground", "--fg", "color"],
       ["--primary", "--primary", "color"],
@@ -833,7 +833,7 @@ body { color: var(--foreground); }
 
     const coverage = JSON.parse(
       draft.files.find((file) => file.path === "source/coverage.json")!.content
-    ) as { sources: Array<{ found: number }> };
+    ) as { sources: { found: number }[] };
 
     expect(coverage.sources[0]?.found).toBe(10);
   });

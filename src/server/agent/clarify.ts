@@ -33,7 +33,7 @@ const CLARIFY_SYSTEM = `You help a designer start a design from a short brief. B
 Answer with JSON only: an array of at most 3 items, each {"question": "short question", "options": ["2 to 4 short likely answers"]}. Questions under 12 words, options under 5 words, sentence case, no numbering.`;
 
 export function toQuestions(
-  raw: Array<{ question: string; options: string[] }>
+  raw: { question: string; options: string[] }[]
 ): ClarifyQuestion[] {
   return raw.slice(0, MAX_QUESTIONS).map((item, index) => ({
     id: `q${index + 1}`,

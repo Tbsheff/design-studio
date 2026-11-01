@@ -12,7 +12,7 @@ import { loadTasteRules, tasteHome } from "./taste.js";
 const dirs: string[] = [];
 
 function library(
-  rows: Array<{ id: string; scope: string; data: unknown; retired?: boolean }>
+  rows: { id: string; scope: string; data: unknown; retired?: boolean }[]
 ): string {
   const home = mkdtempSync(path.join(os.tmpdir(), "taste-"));
   dirs.push(home);

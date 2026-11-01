@@ -26,7 +26,7 @@ function opaque(raw: string): string | null {
   return normalizeColor(raw);
 }
 
-function mostCommon(values: Array<string | null>): string | undefined {
+function mostCommon(values: (string | null)[]): string | undefined {
   const counts = new Map<string, number>();
 
   for (const value of values) {
@@ -44,7 +44,7 @@ function styles(live: LivePage, role: string): LiveStyle[] {
 
 const saturated = (value: string) => chromaOf(value) > 0.04;
 
-type Painted = ReadonlyArray<readonly [string, number]>;
+type Painted = readonly (readonly [string, number])[];
 
 function pushBase(
   live: LivePage,

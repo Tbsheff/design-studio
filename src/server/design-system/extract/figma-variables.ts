@@ -276,7 +276,7 @@ function colorOf(value: unknown): string | null {
   return `#${channel(value.r)}${channel(value.g)}${channel(value.b)}${alpha}`;
 }
 
-const SCOPE_TYPES: Array<[string, string]> = [
+const SCOPE_TYPES: [string, string][] = [
   ["FONT_WEIGHT", "fontWeight"],
   ["LINE_HEIGHT", "lineHeight"],
   ["LETTER_SPACING", "letterSpacing"],

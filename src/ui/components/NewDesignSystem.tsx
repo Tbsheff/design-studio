@@ -630,11 +630,11 @@ function Advanced({
 
 function sourceList(
   form: DraftForm
-): Array<{ icon: Parameters<typeof Icon>[0]["name"]; label: string }> {
-  const list: Array<{
+): { icon: Parameters<typeof Icon>[0]["name"]; label: string }[] {
+  const list: {
     icon: Parameters<typeof Icon>[0]["name"];
     label: string;
-  }> = allUrls(form).map((url) => ({
+  }[] = allUrls(form).map((url) => ({
     icon: "globe",
     label: url.replace(/^https?:\/\//, "").replace(/\/$/, ""),
   }));

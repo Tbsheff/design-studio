@@ -93,10 +93,10 @@ async function collect(
   root: string,
   limits: FolderLimits
 ): Promise<{
-  files: Array<{ file: string; kind: FileKind }>;
+  files: { file: string; kind: FileKind }[];
   skipped: string[];
 }> {
-  const files: Array<{ file: string; kind: FileKind }> = [];
+  const files: { file: string; kind: FileKind }[] = [];
   const skipped: string[] = [];
   let entries = 0;
   const visit = async (dir: string, depth: number): Promise<void> => {
@@ -142,7 +142,7 @@ function scssVariables(text: string): Map<string, string> {
   return out;
 }
 
-const TAILWIND_SECTIONS: Array<[string, string, ValueKind]> = [
+const TAILWIND_SECTIONS: [string, string, ValueKind][] = [
   ["colors", "color", "color"],
   ["fontFamily", "font", "font"],
   ["borderRadius", "radius", "dimension"],
@@ -235,7 +235,7 @@ function absorb(
 
 async function readMatched(
   root: string,
-  files: Array<{ file: string; kind: FileKind }>,
+  files: { file: string; kind: FileKind }[],
   limits: FolderLimits,
   acc: ScanAccumulator
 ): Promise<void> {

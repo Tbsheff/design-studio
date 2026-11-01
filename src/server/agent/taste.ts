@@ -55,7 +55,7 @@ export function loadTasteRules(home: string = tasteHome()): TasteRule[] {
 
   try {
     db = new DatabaseSync(file, { readOnly: true });
-    const rows = db.prepare(ACTIVE_GLOBAL).all() as Array<{ data: string }>;
+    const rows = db.prepare(ACTIVE_GLOBAL).all() as { data: string }[];
 
     return rows
       .map((row) => toRule(row.data))

@@ -161,7 +161,7 @@ function problemText(rule: DesignSystemCheckRule, message: string): string {
 
 function groupProblems(
   problems: DesignSystemCheckResult["problems"]
-): Array<{ rule: DesignSystemCheckRule; items: string[] }> {
+): { rule: DesignSystemCheckRule; items: string[] }[] {
   return RULE_ORDER.map((rule) => ({
     rule,
     items: problems

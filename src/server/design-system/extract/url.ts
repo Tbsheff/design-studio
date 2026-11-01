@@ -62,7 +62,7 @@ function beforeDeadline<T>(
 export interface UrlSnapshot {
   url: string;
   html: string;
-  stylesheets: Array<{ url: string; css: string }>;
+  stylesheets: { url: string; css: string }[];
   failures: string[];
 }
 
@@ -205,12 +205,12 @@ async function loadStylesheets(
   fetcher: Fetcher,
   failures: string[],
   clock: SiteClock
-): Promise<Array<{ url: string; css: string }>> {
+): Promise<{ url: string; css: string }[]> {
   const queue = first
     .map((href) => absolute(href, base))
     .filter((url): url is string => url !== null);
   const seen = new Set<string>();
-  const out: Array<{ url: string; css: string }> = [];
+  const out: { url: string; css: string }[] = [];
   while (queue.length > 0 && seen.size < MAX_STYLESHEETS) {
     const url = queue.shift()!;
     if (seen.has(url)) continue;
@@ -296,7 +296,7 @@ interface Decl {
 }
 
 function newTallies(): Tallies {
-  const names: Array<keyof Tallies> = [
+  const names: (keyof Tallies)[] = [
     "bodyBg",
     "bodyFg",
     "buttonBg",

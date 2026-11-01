@@ -33,7 +33,7 @@ const V3_OPACITY = new Set([
   100,
 ]);
 
-const FRACTIONS: Array<[number, string]> = [
+const FRACTIONS: [number, string][] = [
   [50, "1/2"],
   [100 / 3, "1/3"],
   [200 / 3, "2/3"],

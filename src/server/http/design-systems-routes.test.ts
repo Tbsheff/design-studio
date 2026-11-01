@@ -267,7 +267,7 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
     const tree = workTree(result.project);
     const meta = JSON.parse(
       await readFile(path.join(tree, "source/meta.json"), "utf-8")
-    ) as { attachments: Array<{ id: string; name: string }> };
+    ) as { attachments: { id: string; name: string }[] };
     expect(meta.attachments).toHaveLength(1);
     expect(meta.attachments[0]?.name).toBe("logo.png");
     expect(existsSync(path.join(tree, "source/url-1/page.html.txt"))).toBe(
@@ -463,7 +463,7 @@ describe("POST /api/design-systems/draft", { timeout: 30_000 }, () => {
         path.join(workTree(result.project), "source/meta.json"),
         "utf-8"
       )
-    ) as { attachments: Array<{ id: string }> };
+    ) as { attachments: { id: string }[] };
     started.length = 0;
     await ok(
       call("POST", `/api/projects/${result.project.id}/d/main/runs`, {

@@ -173,7 +173,7 @@ export function candidatesFromVars(
 
 const EXTRA_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-const LENGTH_GROUPS: Array<[RegExp, string, RegExp]> = [
+const LENGTH_GROUPS: [RegExp, string, RegExp][] = [
   [/breakpoint|screen|^bp-/, "breakpoint", /^(breakpoint|screen|bp)-?/],
   [/radius|rounded/, "radius", /^(radius|rounded)-?/],
   [/^(text|font-size)/, "text", /^(text|font-size)-?/],

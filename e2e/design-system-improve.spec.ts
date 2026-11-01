@@ -162,7 +162,7 @@ test("improve with AI: the studio sends the agent back when the check fails, and
   );
 
   const detail = await api.call<{
-    sent: Array<{ text: string; continuation?: number }>;
+    sent: { text: string; continuation?: number }[];
   }>("GET", `/api/runs/${run?.id}`);
 
   expect(detail.sent.map((item) => item.continuation ?? 0)).toEqual([0, 1]);

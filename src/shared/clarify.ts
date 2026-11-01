@@ -12,7 +12,7 @@ export function needsQuestions(prompt: string): boolean {
 
 export function formatAnswers(
   prompt: string,
-  answers: Array<{ question: string; answer: string }>
+  answers: { question: string; answer: string }[]
 ): string {
   const lines = answers
     .filter((item) => item.answer.trim() !== "")

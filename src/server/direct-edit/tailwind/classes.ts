@@ -803,14 +803,14 @@ export function emitSided(
 
 type SideMap = Partial<Record<Side, SideValue>>;
 
-function compactBox(map: SideMap): Array<[string, SideValue]> {
+function compactBox(map: SideMap): [string, SideValue][] {
   const { t, r, b, l } = map;
 
   if (t && sameValue(t, r) && sameValue(t, b) && sameValue(t, l)) {
     return [["all", t]];
   }
 
-  const out: Array<[string, SideValue]> = [];
+  const out: [string, SideValue][] = [];
 
   if (l && sameValue(l, r)) {
     out.push(["x", l]);
@@ -845,8 +845,8 @@ function pairs(
   map: SideMap,
   first: [Side, Side, string],
   second: [Side, Side, string]
-): Array<[string, SideValue]> {
-  const out: Array<[string, SideValue]> = [];
+): [string, SideValue][] {
+  const out: [string, SideValue][] = [];
 
   for (const [a, b, name] of [first, second]) {
     const va = map[a];
@@ -868,7 +868,7 @@ function pairs(
   return out;
 }
 
-function compactCorners(map: SideMap): Array<[string, SideValue]> {
+function compactCorners(map: SideMap): [string, SideValue][] {
   const { tl, tr, br, bl } = map;
 
   if (tl && sameValue(tl, tr) && sameValue(tl, br) && sameValue(tl, bl)) {
@@ -885,7 +885,7 @@ export function compactSides(
   group: SidedGroup,
   map: SideMap,
   useSize: boolean
-): Array<[string, SideValue]> {
+): [string, SideValue][] {
   if (group === "padding" || group === "margin" || group === "inset") {
     return compactBox(map);
   }

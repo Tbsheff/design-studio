@@ -46,7 +46,7 @@ import {
   type FigmaDocument,
 } from "./nodes.js";
 
-type Styles = Array<[string, string]>;
+type Styles = [string, string][];
 
 type Axis = "h" | "v";
 
@@ -63,7 +63,7 @@ export interface MarkupContext {
 
 interface El {
   tag: string;
-  attrs: Array<[string, string]>;
+  attrs: [string, string][];
   styles: Styles;
   text: string | null;
   children: El[];
@@ -700,7 +700,7 @@ function typeStyles(node: FigmaNode): Styles {
     out.push(["letter-spacing", px(style.letterSpacing)]);
   }
 
-  const extras: Array<[string, string | undefined]> = [
+  const extras: [string, string | undefined][] = [
     ["text-align", TEXT_ALIGN[style.textAlignHorizontal ?? ""]],
     ["text-transform", TEXT_CASE[style.textCase ?? ""]],
     ["text-decoration-line", DECORATION[style.textDecoration ?? ""]],
@@ -813,7 +813,7 @@ function shapeElement(node: FigmaNode, parent: Parent | null, walk: Walk): El {
   };
 }
 
-function nameAttr(node: FigmaNode): Array<[string, string]> {
+function nameAttr(node: FigmaNode): [string, string][] {
   return DEFAULT_NAME.test(node.name.trim())
     ? []
     : [["data-name", node.name.trim().slice(0, 80)]];
@@ -822,7 +822,7 @@ function nameAttr(node: FigmaNode): Array<[string, string]> {
 function semanticTag(
   node: FigmaNode,
   parent: Parent | null
-): { tag: string; attrs: Array<[string, string]>; styles: Styles } {
+): { tag: string; attrs: [string, string][]; styles: Styles } {
   if (parent?.inline) {
     return { tag: "span", attrs: [], styles: [] };
   }

@@ -199,7 +199,7 @@ afterEach(async () => {
 
 describe("home routes", { timeout: 30_000 }, () => {
   it("creates each starter with a first version and no run", async () => {
-    const list = await call<Array<{ id: string }>>("GET", "/api/starters");
+    const list = await call<{ id: string }[]>("GET", "/api/starters");
     expect(list.map((starter) => starter.id)).toEqual([
       "landing",
       "dashboard",

@@ -281,7 +281,7 @@ function isThemeDecl(decl: CssDeclaration | null | undefined): boolean {
 
 function namespaceOf(name: string): { ns: ThemeNamespace; key: string } | null {
   if (name.slice(2).includes("--")) return null;
-  const rules: Array<[RegExp, ThemeNamespace]> = [
+  const rules: [RegExp, ThemeNamespace][] = [
     [/^--color-(.+)$/, "color"],
     [/^--spacing-(.+)$/, "spacing"],
     [/^--text-(.+)$/, "text"],
@@ -318,9 +318,10 @@ function emptyTheme(version: TailwindVersion): TailwindTheme {
   };
 }
 
-function mergedSheet(
-  sheets: Array<{ sheet: CssTokenSheet; project: boolean }>
-): { sheet: CssTokenSheet; projectNames: Set<string> } {
+function mergedSheet(sheets: { sheet: CssTokenSheet; project: boolean }[]): {
+  sheet: CssTokenSheet;
+  projectNames: Set<string>;
+} {
   const declarations: CssDeclaration[] = [];
   const projectNames = new Set<string>();
   for (const { sheet, project } of sheets) {

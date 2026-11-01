@@ -90,13 +90,13 @@ function legacyClass(prop: string, value: string): string {
   return `[${prop}:${arbitrary(value)}]`;
 }
 
-function borderParts(value: string): Array<[string, string]> {
+function borderParts(value: string): [string, string][] {
   if (value.trim() === "none") {
     return [["border-width", "0px"]];
   }
 
   const parts = value.trim().split(/\s+(?![^(]*\))/);
-  const out: Array<[string, string]> = [];
+  const out: [string, string][] = [];
   const color: string[] = [];
 
   for (const part of parts) {
@@ -138,7 +138,7 @@ function blankSite(): ClassSite {
 }
 
 export function tailwindClassesFor(
-  styles: Array<[string, string]>,
+  styles: [string, string][],
   theme: TailwindTheme
 ): string[] {
   const edits: ClassEdit[] = [];
@@ -151,7 +151,7 @@ export function tailwindClassesFor(
   );
 
   const expanded = styles
-    .flatMap(([prop, value]): Array<[string, string]> =>
+    .flatMap(([prop, value]): [string, string][] =>
       prop === "border" ? borderParts(value) : [[prop, value]]
     )
     .filter(

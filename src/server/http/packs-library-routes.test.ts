@@ -159,7 +159,7 @@ describe("POST /api/packs/import", { timeout: 30_000 }, () => {
 
   it("refuses entries outside one pack folder and writes nothing", async () => {
     const good = await packEntries("editorial", "editorial");
-    const cases: Array<[string, ZipEntry[]]> = [
+    const cases: [string, ZipEntry[]][] = [
       [
         "parent folder",
         good.map((entry) => ({

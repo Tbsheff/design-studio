@@ -3,6 +3,7 @@ import type { PublishCliState } from '../../shared/publish';
 import { errorText } from '../api';
 import { publishApi } from '../publishApi';
 import { CopyButton } from './CopyButton';
+import { BackendSetup, usePublishBackend, type BackendHook } from './PublishBackendSetup';
 import '../styles/publish.css';
 
 export function usePublishCli() {
@@ -138,28 +139,31 @@ function AccountStep({ cli, busy, run }: { cli: PublishCliState; busy: boolean; 
   );
 }
 
-export function PublishSetupBody({ state }: { state: Cli }) {
+export function PublishSetupBody({ state, backend }: { state: Cli; backend: BackendHook }) {
   const { cli, busy, error, run } = state;
   if (!cli) return <p className="field-help">{error ?? 'Looking for the Cloudflare CLI…'}</p>;
+  const installed = cli.installed && cli.versionOk;
   return (
     <>
-      {!cli.installed || !cli.versionOk ? <InstallStep cli={cli} busy={busy} run={run} /> : cli.signedIn ? <AccountStep cli={cli} busy={busy} run={run} /> : <SignInStep cli={cli} busy={busy} run={run} />}
+      {!installed ? <InstallStep cli={cli} busy={busy} run={run} /> : cli.signedIn ? <AccountStep cli={cli} busy={busy} run={run} /> : <SignInStep cli={cli} busy={busy} run={run} />}
       {(error ?? cli.error) && (
         <div className="alert error small" role="alert">
           {error ?? cli.error}
         </div>
       )}
+      {installed && <BackendSetup hook={backend} cli={cli} />}
     </>
   );
 }
 
 export default function PublishSetup() {
   const state = usePublishCli();
+  const backend = usePublishBackend();
   return (
     <section className="ship-settings publish-settings" aria-label="Publishing">
       <h3>Publishing</h3>
-      <p className="field-help">Share › Publish puts a saved version on a public Cloudflare workers.dev address.</p>
-      <PublishSetupBody state={state} />
+      <p className="field-help">Share › Publish puts a saved version on your own Cloudflare account. One Worker serves every design; files go to R2, links and view counts to D1.</p>
+      <PublishSetupBody state={state} backend={backend} />
     </section>
   );
 }

@@ -88,3 +88,13 @@ export async function buildSiteBundle(root: string, outDir: string, secrets: str
   }
   return { pages, files, bytes, skipped };
 }
+
+const ROOT_REF = /\s(?:src|href|action|poster)\s*=\s*["']\/(?!\/)[^"']*["']|url\(\s*["']?\/(?!\/)/i;
+
+export async function rootRefPages(outDir: string, files: string[]): Promise<string[]> {
+  const hits: string[] = [];
+  for (const relative of files.filter((f) => /\.(html?|css)$/i.test(f))) {
+    if (ROOT_REF.test(await readFile(path.join(outDir, relative), 'utf8'))) hits.push(relative);
+  }
+  return hits;
+}

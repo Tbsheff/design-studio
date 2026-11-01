@@ -5,7 +5,9 @@ import { canvasFrameChoices } from '../exportApi';
 import { publishApi } from '../publishApi';
 import { canvasFrameName } from './CanvasFrames';
 import { CopyButton } from './CopyButton';
-import { cliReady, PublishSetupBody, usePublishCli } from './PublishSetup';
+import { usePublishBackend } from './PublishBackendSetup';
+import { PublicationRow } from './PublicationRow';
+import { PublishSetupBody, usePublishCli } from './PublishSetup';
 
 export interface PublishTarget {
   projectId: string;
@@ -23,11 +25,16 @@ const EXPIRIES: { id: PublishExpiryDays; label: string }[] = [
 
 function usePublications(projectId: string) {
   const [list, setList] = useState<Publication[]>([]);
-  const reload = useCallback(async () => setList((await publishApi.list(projectId)).publications), [projectId]);
+  const [backendError, setBackendError] = useState<string | null>(null);
+  const reload = useCallback(async () => {
+    const next = await publishApi.list(projectId);
+    setList(next.publications);
+    setBackendError(next.backendError);
+  }, [projectId]);
   useEffect(() => {
     void reload().catch(() => undefined);
   }, [reload]);
-  return { list, reload };
+  return { list, backendError, reload };
 }
 
 function Toggle({ on, label, onChange }: { on: boolean; label: string; onChange: (on: boolean) => void }) {
@@ -44,6 +51,8 @@ interface FormState {
   password: string;
   expiry: PublishExpiryDays;
   comments: boolean;
+  viewerComments: boolean;
+  indexable: boolean;
 }
 
 function FramePicker({ target, form, setForm }: { target: PublishTarget; form: FormState; setForm: (f: FormState) => void }) {
@@ -70,17 +79,23 @@ function FramePicker({ target, form, setForm }: { target: PublishTarget; form: F
   );
 }
 
+function SwitchRow({ title, help, on, onChange }: { title: string; help: string; on: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <div className="share-lan-row">
+      <div className="share-lan-text">
+        <span className="share-lan-title">{title}</span>
+        <span className="share-lan-help">{help}</span>
+      </div>
+      <Toggle on={on} label={title} onChange={onChange} />
+    </div>
+  );
+}
+
 function PublishForm({ target, form, setForm }: { target: PublishTarget; form: FormState; setForm: (f: FormState) => void }) {
   return (
     <div className="publish-form">
       {target.kind === 'site' ? <p className="publish-step-text">Every page of the saved version goes up as a static site: HTML, CSS, scripts, images and fonts. Source files, .env, node_modules and studio scripts stay on this Mac.</p> : <FramePicker target={target} form={form} setForm={setForm} />}
-      <div className="share-lan-row">
-        <div className="share-lan-text">
-          <span className="share-lan-title">Password</span>
-          <span className="share-lan-help">{form.passwordOn ? 'Viewers type it in a browser prompt. Any user name works.' : 'Off: anyone with the URL can open it.'}</span>
-        </div>
-        <Toggle on={form.passwordOn} label="Password" onChange={(on) => setForm({ ...form, passwordOn: on })} />
-      </div>
+      <SwitchRow title="Password" help={form.passwordOn ? 'Viewers type it on a sign-in page.' : 'Off: anyone with the URL can open it.'} on={form.passwordOn} onChange={(on) => setForm({ ...form, passwordOn: on })} />
       {form.passwordOn && (
         <label className="field">
           <span>Password ({PUBLISH_PASSWORD_MIN} or more characters)</span>
@@ -97,34 +112,40 @@ function PublishForm({ target, form, setForm }: { target: PublishTarget; form: F
           ))}
         </div>
       </div>
-      {target.kind === 'viewer' && (
-        <div className="share-lan-row">
-          <div className="share-lan-text">
-            <span className="share-lan-title">Show open comments</span>
-            <span className="share-lan-help">{form.comments ? 'Open comments show as read-only text next to the frames.' : 'Off: only the images go up.'}</span>
-          </div>
-          <Toggle on={form.comments} label="Show open comments" onChange={(on) => setForm({ ...form, comments: on })} />
-        </div>
-      )}
+      {target.kind === 'viewer' && <SwitchRow title="Show open comments" help={form.comments ? 'Open studio comments show as read-only text next to the frames.' : 'Off: only the images go up.'} on={form.comments} onChange={(on) => setForm({ ...form, comments: on })} />}
+      <SwitchRow title="Viewer comments" help={form.viewerComments ? 'Viewers can leave a name and a comment on a comments page. You can delete them here.' : 'Off: viewers cannot comment.'} on={form.viewerComments} onChange={(on) => setForm({ ...form, viewerComments: on })} />
+      <SwitchRow title="Search engines" help={form.indexable ? 'On: search engines may list this design.' : 'Off: pages send noindex.'} on={form.indexable} onChange={(on) => setForm({ ...form, indexable: on })} />
     </div>
   );
+}
+
+function filesText(plan: PublishPlan): string {
+  const base = `${plan.fileCount} file${plan.fileCount === 1 ? '' : 's'}, ${publishSize(plan.bytes)}`;
+  return plan.changedFiles === null ? base : `${base} (${plan.changedFiles} changed since the live version)`;
 }
 
 function PlanView({ plan }: { plan: PublishPlan }) {
   const rows: [string, string][] = [
     ['Address', plan.url ?? plan.urlPattern],
     [plan.kind === 'site' ? 'Pages' : 'Frames', plan.pages.join(', ')],
-    ['Files', `${plan.fileCount} file${plan.fileCount === 1 ? '' : 's'}, ${publishSize(plan.bytes)}`],
+    ['Files', filesText(plan)],
     ['Password', plan.password ? 'On' : 'Off: anyone with the URL'],
     ['Ends', publishExpiryText(plan.expiresAt)],
+    ['Comments', plan.viewerComments ? 'Viewers can comment' : 'Off'],
+    ['Indexing', plan.noindex ? 'noindex' : 'Search engines may list it'],
     ['Version', plan.versionId.slice(0, 7)],
   ];
-  if (plan.kind === 'viewer') rows.push(['Comments', plan.comments > 0 ? `${plan.comments} open comment${plan.comments === 1 ? '' : 's'}` : 'None']);
+  if (plan.kind === 'viewer') rows.push(['Studio notes', plan.comments > 0 ? `${plan.comments} open comment${plan.comments === 1 ? '' : 's'}` : 'None']);
   return (
     <div className="publish-plan" data-testid="publish-plan">
       <div className="alert publish-public" role="alert">
-        This goes on the public internet. {plan.republishOf ? 'It replaces what is at this address now.' : 'Anyone who has the address can open it.'}
+        This goes on the public internet. {plan.republishOf ? 'It becomes the live version at this address; older versions stay for rollback.' : 'Anyone who has the address can open it.'}
       </div>
+      {plan.warnings.map((w) => (
+        <div key={w} className="alert small" role="note">
+          {w}
+        </div>
+      ))}
       <dl className="publish-plan-list">
         {rows.map(([k, v]) => (
           <div key={k} className="publish-kv">
@@ -133,60 +154,14 @@ function PlanView({ plan }: { plan: PublishPlan }) {
           </div>
         ))}
       </dl>
-      <p className="share-link-note">cf checked the bundle: {plan.check.split('\n').find((l) => /Total Upload/.test(l))?.replace(/^[\s│]+/, '') ?? 'ok'}</p>
+      <p className="share-link-note">{plan.backend === 'local' ? 'Target: local test server.' : 'Target: your publish Worker on Cloudflare.'} Only files that the Worker does not have yet upload.</p>
     </div>
-  );
-}
-
-function statusText(p: Publication, now: number): string {
-  if (p.status === 'removed') return 'Unpublished';
-  if (p.status === 'failed') return 'Failed';
-  if (p.status === 'publishing') return 'Publishing…';
-  return [publishExpiryText(p.expiresAt, now), p.password ? 'Password' : 'Public', `v ${p.versionId.slice(0, 7)}`].join(' · ');
-}
-
-type RowActions = { busy: boolean; onRepublish: (p: Publication) => void; onUnpublish: (p: Publication) => void };
-
-function PublicationRow({ p, now, busy, onRepublish, onUnpublish }: RowActions & { p: Publication; now: number }) {
-  const live = p.status === 'live' || p.status === 'failed';
-  return (
-    <li className={`share-link${p.status === 'live' ? '' : ' off'}`} data-testid="publication" data-publication-id={p.id}>
-      <div className="share-link-head">
-        <span className="share-link-title">
-          <span className="truncate">{p.title}</span>
-        </span>
-        <span className="share-link-meta truncate">{statusText(p, now)}</span>
-        {live && (
-          <>
-            <button type="button" className="btn ghost small" disabled={busy} onClick={() => onRepublish(p)} data-tip="Check the head version for this address, then confirm">
-              Republish latest
-            </button>
-            <button type="button" className="btn ghost small danger" disabled={busy} onClick={() => onUnpublish(p)} data-tip="Deletes the Cloudflare Worker; the address stops working">
-              Unpublish
-            </button>
-          </>
-        )}
-      </div>
-      {p.url && p.status === 'live' && (
-        <div className="share-url">
-          <span className="share-url-kind">{new Date(p.updatedAt).toLocaleDateString()}</span>
-          <code className="mono truncate">{p.url}</code>
-          <span className="publish-url-actions">
-            <a className="btn ghost small" href={p.url} target="_blank" rel="noreferrer noopener">
-              Open
-            </a>
-            <CopyButton text={p.url} label="Copy link" />
-          </span>
-        </div>
-      )}
-      {p.error && <p className="publish-error">{p.error}</p>}
-    </li>
   );
 }
 
 function planInputOf(target: PublishTarget, form: FormState): PublishPlanInput {
   const frames = canvasFrameChoices(target.projectId, target.directionId).filter((f) => form.picked.has(f.id));
-  const input: PublishPlanInput = { versionId: target.versionId ?? undefined, expiresInDays: form.expiry, ...(target.directionId ? { directionId: target.directionId } : {}) };
+  const input: PublishPlanInput = { versionId: target.versionId ?? undefined, expiresInDays: form.expiry, viewerComments: form.viewerComments, noindex: !form.indexable, ...(target.directionId ? { directionId: target.directionId } : {}) };
   if (form.passwordOn) input.password = form.password;
   if (target.kind === 'viewer') Object.assign(input, { frames: frames.map((f) => f.frame), frameIds: frames.map((f) => f.id), comments: form.comments });
   return input;
@@ -231,66 +206,87 @@ function usePublishFlow(target: PublishTarget) {
       await publishApi.unpublish(target.projectId, p.id);
       await pubs.reload();
     });
-  return { pubs, plan, setPlan, busy, error, done, check, confirm, unpublish };
+  const rollback = (p: Publication, versionId: string) =>
+    act('Rolling back…', async () => {
+      await publishApi.rollback(target.projectId, p.id, versionId);
+      await pubs.reload();
+    });
+  return { pubs, plan, setPlan, busy, error, done, check, confirm, unpublish, rollback };
+}
+
+function DoneNote({ done }: { done: Publication }) {
+  if (done.status !== 'live' || !done.url) return null;
+  const upload = done.lastUpload ? ` Uploaded ${done.lastUpload.sent}, reused ${done.lastUpload.reused}.` : '';
+  return (
+    <div className="share-url publish-done" role="status" data-testid="publish-done">
+      <span className="share-url-kind">Published</span>
+      <code className="mono truncate">{done.url}</code>
+      <CopyButton text={done.url} label="Copy link" />
+      {upload && <span className="publish-done-upload">{upload.trim()}</span>}
+    </div>
+  );
+}
+
+type Flow = ReturnType<typeof usePublishFlow>;
+
+function PaneFoot({ flow, ready, problem, onClose, onCheck }: { flow: Flow; ready: boolean; problem: string | null; onClose: () => void; onCheck: () => void }) {
+  return (
+    <div className="modal-foot">
+      <span className="share-foot-note">{flow.plan ? 'Nothing is uploaded until you click Publish.' : ready && problem ? problem : 'Hosted by your own publish Worker.'}</span>
+      <span className="share-spacer" />
+      {flow.plan ? (
+        <>
+          <button type="button" className="btn ghost" disabled={flow.busy !== null} onClick={() => flow.setPlan(null)}>
+            Back
+          </button>
+          <button type="button" className="btn primary" disabled={flow.busy !== null} onClick={() => void flow.confirm()} data-autofocus>
+            {flow.busy ?? (flow.plan.republishOf ? 'Republish' : 'Publish')}
+          </button>
+        </>
+      ) : (
+        <>
+          <button type="button" className="btn ghost" onClick={onClose}>
+            Close
+          </button>
+          <button type="button" className="btn primary" disabled={!ready || problem !== null || flow.busy !== null} onClick={onCheck}>
+            {flow.busy ?? 'Check what goes public'}
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function PublishPane({ target, onClose }: { target: PublishTarget; onClose: () => void }) {
   const cli = usePublishCli();
+  const backend = usePublishBackend();
   const flow = usePublishFlow(target);
-  const [form, setForm] = useState<FormState>(() => ({ picked: new Set(canvasFrameChoices(target.projectId, target.directionId).slice(0, PUBLISH_MAX_FRAMES).map((f) => f.id)), passwordOn: false, password: '', expiry: PUBLISH_DEFAULT_EXPIRY_DAYS, comments: false }));
-  const ready = cliReady(cli.cli);
+  const [form, setForm] = useState<FormState>(() => ({ picked: new Set(canvasFrameChoices(target.projectId, target.directionId).slice(0, PUBLISH_MAX_FRAMES).map((f) => f.id)), passwordOn: false, password: '', expiry: PUBLISH_DEFAULT_EXPIRY_DAYS, comments: false, viewerComments: false, indexable: false }));
+  const ready = backend.backend?.ready === true;
   const problem = formError(target, form);
   const now = Date.now();
   const shown = flow.pubs.list.filter((p) => p.status !== 'removed').concat(flow.pubs.list.filter((p) => p.status === 'removed').slice(0, 2));
   return (
     <>
       <div className="modal-body share-body publish-body">
-        {!ready && <PublishSetupBody state={cli} />}
+        {!ready && <PublishSetupBody state={cli} backend={backend} />}
         {ready && !flow.plan && <PublishForm target={target} form={form} setForm={setForm} />}
         {flow.plan && <PlanView plan={flow.plan} />}
-        {flow.done?.status === 'live' && flow.done.url && !flow.plan && (
-          <div className="share-url publish-done" role="status">
-            <span className="share-url-kind">Published</span>
-            <code className="mono truncate">{flow.done.url}</code>
-            <CopyButton text={flow.done.url} label="Copy link" />
-          </div>
-        )}
-        {flow.error && (
+        {flow.done && !flow.plan && <DoneNote done={flow.done} />}
+        {(flow.error ?? flow.pubs.backendError) && (
           <div className="alert error small" role="alert">
-            {flow.error}
+            {flow.error ?? flow.pubs.backendError}
           </div>
         )}
         {shown.length > 0 && (
           <ul className="share-links" aria-label="Publications">
             {shown.map((p) => (
-              <PublicationRow key={p.id} p={p} now={now} busy={flow.busy !== null} onRepublish={(pub) => void flow.check({ publicationId: pub.id, versionId: target.versionId ?? undefined })} onUnpublish={(pub) => void flow.unpublish(pub)} />
+              <PublicationRow key={p.id} p={p} now={now} projectId={target.projectId} busy={flow.busy !== null} onRepublish={(pub) => void flow.check({ publicationId: pub.id, versionId: target.versionId ?? undefined })} onUnpublish={(pub) => void flow.unpublish(pub)} onRollback={(pub, vid) => void flow.rollback(pub, vid)} onChanged={() => void flow.pubs.reload()} />
             ))}
           </ul>
         )}
       </div>
-      <div className="modal-foot">
-        <span className="share-foot-note">{flow.plan ? 'Nothing is uploaded until you click Publish.' : ready && problem ? problem : 'Hosted on your Cloudflare account through cf.'}</span>
-        <span className="share-spacer" />
-        {flow.plan ? (
-          <>
-            <button type="button" className="btn ghost" disabled={flow.busy !== null} onClick={() => flow.setPlan(null)}>
-              Back
-            </button>
-            <button type="button" className="btn primary" disabled={flow.busy !== null} onClick={() => void flow.confirm()} data-autofocus>
-              {flow.busy ?? (flow.plan.republishOf ? 'Republish' : 'Publish')}
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" className="btn ghost" onClick={onClose}>
-              Close
-            </button>
-            <button type="button" className="btn primary" disabled={!ready || problem !== null || flow.busy !== null} onClick={() => void flow.check(planInputOf(target, form))}>
-              {flow.busy ?? 'Check what goes public'}
-            </button>
-          </>
-        )}
-      </div>
+      <PaneFoot flow={flow} ready={ready} problem={problem} onClose={onClose} onCheck={() => void flow.check(planInputOf(target, form))} />
     </>
   );
 }

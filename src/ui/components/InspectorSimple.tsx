@@ -104,7 +104,7 @@ const BoxModelMemo = memo(
   BoxModel,
   (a, b) =>
     sameEditValues(a.edit, b.edit, BOX_PROPS) &&
-    a.edit.dirty.join() === b.edit.dirty.join() &&
+    a.edit.dirty.join(",") === b.edit.dirty.join(",") &&
     SIDES.every((side) => a.declared?.[side] === b.declared?.[side])
 );
 

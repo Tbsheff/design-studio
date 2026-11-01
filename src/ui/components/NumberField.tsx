@@ -112,7 +112,7 @@ function sameSpec(a: NumberSpec, b: NumberSpec): boolean {
     a.display === b.display;
   return (
     sameShape &&
-    targets.join() === (b.targets ?? [b.prop]).join() &&
+    targets.join(",") === (b.targets ?? [b.prop]).join(",") &&
     sameEditValues(a.edit, b.edit, targets)
   );
 }

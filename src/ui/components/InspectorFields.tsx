@@ -280,7 +280,7 @@ export const ColorField = memo(ColorFieldView, sameField);
 
 export const SelectField = memo(
   SelectFieldView,
-  (a, b) => sameField(a, b) && a.options.join() === b.options.join()
+  (a, b) => sameField(a, b) && a.options.join(",") === b.options.join(",")
 );
 
 export const AlignField = memo(AlignFieldView, (a, b) =>

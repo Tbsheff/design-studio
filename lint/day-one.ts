@@ -1593,7 +1593,6 @@ const RULES: [string, unknown[], number[]][] = [
   ["unicorn/prefer-ternary", [], [156,161,166,331,357,371,410,584,691,718,1036,1161]],
   ["unicorn/prefer-top-level-await", [], [13,18,39,146,151,154,155,156,160,162,163,164,165,166,167,169,170,173,174,175,176,177,178,179,181,183,184,185,543,1052]],
   ["unicorn/relative-url-style", [], [1051,1099,1177]],
-  ["unicorn/require-array-join-separator", [], [92,713,930,939,958]],
   ["unicorn/require-post-message-target-origin", [], [813]],
   ["unicorn/switch-case-braces", [], [591,1150]],
   ["unicorn/text-encoding-identifier-case", [{"withDash":true}], [1,27,133]],

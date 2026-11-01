@@ -52,7 +52,7 @@ describe("brief parsing and validation", () => {
       briefProblems(
         [{ title: "A", brief: "x".repeat(400) }, THREE[1]!],
         2
-      ).join()
+      ).join(",")
     ).toMatch(/longer than/);
     expect(
       briefProblems(
@@ -61,15 +61,17 @@ describe("brief parsing and validation", () => {
           THREE[1]!,
         ],
         2
-      ).join()
+      ).join(",")
     ).toMatch(/more than 2 lines/);
     const copy = { title: "Workshop ledger two", brief: THREE[0]!.brief };
-    expect(briefProblems([THREE[0]!, copy], 2).join()).toMatch(/too similar/);
+    expect(briefProblems([THREE[0]!, copy], 2).join(",")).toMatch(
+      /too similar/
+    );
     expect(
       briefProblems(
         [THREE[0]!, { ...THREE[1]!, title: "workshop LEDGER" }],
         2
-      ).join()
+      ).join(",")
     ).toMatch(/same title/);
     expect(briefProblems(THREE, 3)).toEqual([]);
   });

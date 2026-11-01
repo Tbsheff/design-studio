@@ -721,7 +721,8 @@ async function moveSample(
   await page.keyboard.press(key);
 
   const bytes =
-    (await bytesAt(ctx.file, (s) => order(s).join() === want.join())) - t0;
+    (await bytesAt(ctx.file, (s) => order(s).join(",") === want.join(","))) -
+    t0;
 
   const visible =
     (await seen()) -

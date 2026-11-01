@@ -1,9 +1,11 @@
 import { execFile } from "node:child_process";
 import type { ExecFileException } from "node:child_process";
-import { access } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
+
+import { childEnv, gitOverride } from "../config/index.js";
+import { fileExists } from "./file-exists.js";
 
 interface GitScope {
   gitDir: string;
@@ -39,16 +41,6 @@ let gitEnvBase: NodeJS.ProcessEnv | null = null;
 
 const ignoreError = (): null => null;
 
-const fileExists = async (file: string): Promise<boolean> => {
-  try {
-    await access(file);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 const findGitBinary = async (): Promise<string> => {
   try {
     const { stdout } = await execFileAsync("git", ["--exec-path"], {
@@ -68,7 +60,7 @@ const findGitBinary = async (): Promise<string> => {
 };
 
 const resolveGitBinary = (): Promise<string> => {
-  const override = process.env.STUDIO_GIT ?? "";
+  const override = gitOverride();
 
   if (override !== "") {
     return Promise.resolve(override);
@@ -81,7 +73,7 @@ const resolveGitBinary = (): Promise<string> => {
 
 const buildBaseEnv = (): NodeJS.ProcessEnv => {
   const env: NodeJS.ProcessEnv = {
-    ...process.env,
+    ...childEnv(),
     GIT_AUTHOR_EMAIL: STUDIO_EMAIL,
     GIT_AUTHOR_NAME: STUDIO_NAME,
     GIT_COMMITTER_EMAIL: STUDIO_EMAIL,

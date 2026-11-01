@@ -225,12 +225,18 @@ const buildEnv = (
   return env;
 };
 
+const gitOverride = (): string => process.env.STUDIO_GIT ?? "";
+
+const childEnv = (): NodeJS.ProcessEnv => ({ ...process.env });
+
 export {
   DEFAULT_FOLDER_NAME,
   DEV_PROJECTS_FOLDER,
   LOGIN_SHELL_PATH_ENV,
   REPO_ROOT,
   buildEnv,
+  childEnv,
+  gitOverride,
   loadConfig,
   projectsDirFromEnv,
   resourcesDir,

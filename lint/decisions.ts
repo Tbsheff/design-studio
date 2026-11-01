@@ -274,6 +274,7 @@ export const decisionOverrides: OxlintOverride[] = [
       "src/server/platform/edit-origin/index.ts",
       "src/server/platform/git/batch-reader.ts",
       "src/server/platform/git/objects.ts",
+      "src/server/platform/git/run-git.ts",
       "src/server/platform/git/user-git.ts",
       "src/server/platform/process/worker-client.ts",
       "src/server/platform/resources/index.ts",
@@ -296,10 +297,7 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "sonarjs/hashing": "off" },
   },
   {
-    files: [
-      "src/server/platform/git/run-git.ts",
-      "src/server/platform/git/user-git.ts",
-    ],
+    files: ["src/server/platform/git/user-git.ts"],
     rules: { "node/no-process-env": "off" },
   },
   {

@@ -343,6 +343,13 @@ export const decisionOverrides: OxlintOverride[] = [
     rules: { "eslint/sort-keys": "off" },
   },
   {
+    files: [
+      "src/server/agent/legacy/agent-ops.ts",
+      "src/server/agent/legacy/direct-edit.ts",
+    ],
+    rules: { "import/no-relative-parent-imports": "off" },
+  },
+  {
     files: ["src/server/mcp/legacy/frame-target.ts"],
     rules: { "eslint/id-length": "off" },
   },

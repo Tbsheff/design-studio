@@ -17,54 +17,89 @@ import {
   workTreeRoot,
 } from "../platform/paths/index.js";
 import type { ToolGate } from "./ask-gate.js";
+import { AGENT_OPS } from "./legacy/agent-ops.js";
+import { LEGACY_AGENT_TOOLS } from "./legacy/all.js";
+import {
+  ADD_FLOW_TOOL,
+  CANVAS_LIST_TOOL,
+  CANVAS_PLACE_TOOL,
+  CANVAS_POINT_TOOL,
+  EDIT_LINKS_TOOL,
+  LIST_FRAME_STATES_TOOL,
+  LIST_LINKS_TOOL,
+  LIST_ROUTE_LINKS_TOOL,
+  SET_FRAME_SESSION_TOOL,
+  SET_FRAME_STATE_TOOL,
+} from "./legacy/canvas.js";
+import {
+  COMPARE_REFERENCE_TOOL,
+  LIST_COMMENTS_TOOL,
+  RESOLVE_COMMENT_TOOL,
+} from "./legacy/comments.js";
+import {
+  ARRANGE_TOOL,
+  CLEAR_TEXT_TOOL,
+  COMPONENT_PREVIEW_TOOL,
+  CREATE_COMPONENT_TOOL,
+  EDIT_ELEMENT_TOOL,
+  GET_LAYERS_TOOL,
+  INSERT_COMPONENT_TOOL,
+  INSERT_JSX_TOOL,
+  LIST_COMPONENTS_TOOL,
+  LIST_LOCKS_MCP,
+  REPLACE_STYLE_TOOL,
+  REVIEW_FRAME_TOOL,
+  SELECT_MATCHING_TOOL,
+  SET_IMAGE_TOOL,
+  SET_PROPS_TOOL,
+  SET_TOKEN_TOOL,
+  STUDIO_EDIT_TOOLS_R13,
+  SWAP_INSTANCE_TOOL,
+} from "./legacy/direct-edit.js";
+import { EXPORT_FRAME_TOOL } from "./legacy/export.js";
+import { APP_DOCTOR_TOOL, GET_RUN_CONTEXT_TOOL } from "./legacy/mcp-read.js";
+import { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
+import { STUDIO_HELP_TOOL } from "./legacy/studio.js";
+import { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
-export const DESIGN_SYSTEM_CHECK_TOOL = "mcp__studio__design_system_check";
-export const CANVAS_LIST_TOOL = "mcp__studio__canvas_list";
-export const CANVAS_PLACE_TOOL = "mcp__studio__canvas_place";
-export const CANVAS_POINT_TOOL = "mcp__studio__canvas_point";
-export const LIST_LINKS_TOOL = "mcp__studio__list_links";
-export const EDIT_LINKS_TOOL = "mcp__studio__edit_links";
-export const LIST_FRAME_STATES_TOOL = "mcp__studio__list_frame_states";
-export const SET_FRAME_STATE_TOOL = "mcp__studio__set_frame_state";
-export const SET_FRAME_SESSION_TOOL = "mcp__studio__set_frame_session";
-export const LIST_ROUTE_LINKS_TOOL = "mcp__studio__list_route_links";
-export const ADD_FLOW_TOOL = "mcp__studio__add_flow";
-export const EDIT_ELEMENT_TOOL = "mcp__studio__edit_element";
-export const SET_TOKEN_TOOL = "mcp__studio__set_token";
-export const SET_PROPS_TOOL = "mcp__studio__set_props";
-export const INSERT_COMPONENT_TOOL = "mcp__studio__insert_component";
-export const INSERT_JSX_TOOL = "mcp__studio__insert_jsx";
-export const CLEAR_TEXT_TOOL = "mcp__studio__clear_text";
-export const FIND_STYLES_TOOL = "mcp__studio__find_styles";
-export const REPLACE_STYLE_TOOL = "mcp__studio__replace_style";
-export const ARRANGE_TOOL = "mcp__studio__arrange";
-export const MEASURE_TOOL = "mcp__studio__measure";
-export const SELECT_MATCHING_TOOL = "mcp__studio__select_matching";
-export const DIFF_VERSIONS_TOOL = "mcp__studio__diff_versions";
-export const EXPORT_FRAME_TOOL = "mcp__studio__export_frame";
-export const COMPONENT_PREVIEW_TOOL = "mcp__studio__component_preview";
-export const REVIEW_FRAME_TOOL = "mcp__studio__review_frame";
-export const LIST_COMPONENTS_TOOL = "mcp__studio__list_components";
-export const GET_LAYERS_TOOL = "mcp__studio__get_layers";
-export const LIST_COMMENTS_TOOL = "mcp__studio__list_comments";
-export const RESOLVE_COMMENT_TOOL = "mcp__studio__resolve_comment";
-export const GET_RUN_CONTEXT_TOOL = "mcp__studio__get_run_context";
-export const APP_DOCTOR_TOOL = "mcp__studio__app_doctor";
-export const CREATE_COMPONENT_TOOL = "mcp__studio__create_component";
-export const SWAP_INSTANCE_TOOL = "mcp__studio__swap_instance";
-export const SET_IMAGE_TOOL = "mcp__studio__set_image";
-const LIST_LOCKS_MCP = "mcp__studio__list_locked_layers";
-const COMPARE_REFERENCE_TOOL = "mcp__studio__compare_to_reference";
-
-const STUDIO_EDIT_TOOLS_R13 = [
-  "mcp__studio__import_figma_frame",
-  "mcp__studio__set_layer_state",
-  "mcp__studio__draw_vector",
-  "mcp__studio__boolean_shapes",
-  "mcp__studio__paint_shape",
-];
-
-export const STUDIO_HELP_TOOL = "mcp__studio__studio_help";
+export {
+  ADD_FLOW_TOOL,
+  CANVAS_LIST_TOOL,
+  CANVAS_PLACE_TOOL,
+  CANVAS_POINT_TOOL,
+  EDIT_LINKS_TOOL,
+  LIST_FRAME_STATES_TOOL,
+  LIST_LINKS_TOOL,
+  LIST_ROUTE_LINKS_TOOL,
+  SET_FRAME_SESSION_TOOL,
+  SET_FRAME_STATE_TOOL,
+} from "./legacy/canvas.js";
+export { LIST_COMMENTS_TOOL, RESOLVE_COMMENT_TOOL } from "./legacy/comments.js";
+export {
+  ARRANGE_TOOL,
+  CLEAR_TEXT_TOOL,
+  COMPONENT_PREVIEW_TOOL,
+  CREATE_COMPONENT_TOOL,
+  EDIT_ELEMENT_TOOL,
+  FIND_STYLES_TOOL,
+  GET_LAYERS_TOOL,
+  INSERT_COMPONENT_TOOL,
+  INSERT_JSX_TOOL,
+  LIST_COMPONENTS_TOOL,
+  MEASURE_TOOL,
+  REPLACE_STYLE_TOOL,
+  REVIEW_FRAME_TOOL,
+  SELECT_MATCHING_TOOL,
+  SET_IMAGE_TOOL,
+  SET_PROPS_TOOL,
+  SET_TOKEN_TOOL,
+  SWAP_INSTANCE_TOOL,
+} from "./legacy/direct-edit.js";
+export { EXPORT_FRAME_TOOL } from "./legacy/export.js";
+export { APP_DOCTOR_TOOL, GET_RUN_CONTEXT_TOOL } from "./legacy/mcp-read.js";
+export { DESIGN_SYSTEM_CHECK_TOOL } from "./legacy/packs.js";
+export { STUDIO_HELP_TOOL } from "./legacy/studio.js";
+export { DIFF_VERSIONS_TOOL } from "./legacy/versions.js";
 
 const DIRECT_EDIT_TOOLS = new Set<string>([
   EDIT_ELEMENT_TOOL,
@@ -89,54 +124,13 @@ export const EDIT_TOOL_NAMES: ReadonlySet<string> = new Set<string>([
   "MultiEdit",
   BASH_EDIT_TOOL,
   ...DIRECT_EDIT_TOOLS,
+  ...AGENT_OPS.editIds,
 ]);
 
-const STUDIO_MCP_TOOLS = [
-  "mcp__studio__screenshot",
-  "mcp__studio__render_check",
-  "mcp__studio__design_review",
-  "mcp__studio__define_tweaks",
-  DESIGN_SYSTEM_CHECK_TOOL,
-  CANVAS_LIST_TOOL,
-  CANVAS_PLACE_TOOL,
-  CANVAS_POINT_TOOL,
-  LIST_LINKS_TOOL,
-  EDIT_LINKS_TOOL,
-  LIST_FRAME_STATES_TOOL,
-  SET_FRAME_STATE_TOOL,
-  SET_FRAME_SESSION_TOOL,
-  EDIT_ELEMENT_TOOL,
-  SET_TOKEN_TOOL,
-  SET_PROPS_TOOL,
-  FIND_STYLES_TOOL,
-  REPLACE_STYLE_TOOL,
-  INSERT_COMPONENT_TOOL,
-  INSERT_JSX_TOOL,
-  CLEAR_TEXT_TOOL,
-  "mcp__studio__prepare_ship",
-  REVIEW_FRAME_TOOL,
-  LIST_COMPONENTS_TOOL,
-  GET_LAYERS_TOOL,
-  LIST_COMMENTS_TOOL,
-  RESOLVE_COMMENT_TOOL,
-  LIST_ROUTE_LINKS_TOOL,
-  ADD_FLOW_TOOL,
-  ARRANGE_TOOL,
-  MEASURE_TOOL,
-  GET_RUN_CONTEXT_TOOL,
-  APP_DOCTOR_TOOL,
-  COMPONENT_PREVIEW_TOOL,
-  CREATE_COMPONENT_TOOL,
-  SWAP_INSTANCE_TOOL,
-  SELECT_MATCHING_TOOL,
-  DIFF_VERSIONS_TOOL,
-  EXPORT_FRAME_TOOL,
-  SET_IMAGE_TOOL,
-  ...STUDIO_EDIT_TOOLS_R13,
-  LIST_LOCKS_MCP,
-  COMPARE_REFERENCE_TOOL,
-  STUDIO_HELP_TOOL,
-] as const;
+const STUDIO_MCP_TOOLS: readonly string[] = [
+  ...LEGACY_AGENT_TOOLS,
+  ...AGENT_OPS.toolIds,
+];
 
 const READ_TOOLS = ["Read", "Glob", "Grep"];
 const READ_ONLY_TOOLS = new Set(READ_TOOLS);
@@ -792,6 +786,7 @@ const PLAN_BLOCKED = new Set<string>([
   EDIT_LINKS_TOOL,
   ADD_FLOW_TOOL,
   ...DIRECT_EDIT_TOOLS,
+  ...AGENT_OPS.writeIds,
 ]);
 
 const CRITIQUE_BLOCKED = new Set<string>([
@@ -800,6 +795,7 @@ const CRITIQUE_BLOCKED = new Set<string>([
   EDIT_LINKS_TOOL,
   ADD_FLOW_TOOL,
   ...DIRECT_EDIT_TOOLS,
+  ...AGENT_OPS.writeIds,
 ]);
 
 export function blockedInCritique(toolName: string): boolean {

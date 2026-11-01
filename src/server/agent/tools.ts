@@ -131,6 +131,7 @@ import {
   runSetLayerState,
 } from "./layer-state-tool.js";
 import { isLeanRun } from "./lean-run.js";
+import { AGENT_OPS } from "./legacy/agent-ops.js";
 import { recordShot } from "./polish-loop.js";
 import { runSetProps, setPropsShape } from "./props-tool.js";
 import {
@@ -1500,5 +1501,12 @@ export function studioHelp(name: string, allowed: ReadonlySet<string>): string {
     return `No studio tool ${short} in this run. Tools: ${[...allowed].filter((entry) => entry !== HELP_TOOL).join(", ")}.`;
   }
 
-  return TOOL_HELP[short as Exclude<StudioToolName, "studio_help">];
+  return toolHelpText(short);
+}
+
+function toolHelpText(short: string): string {
+  return (
+    AGENT_OPS.help.get(short) ??
+    TOOL_HELP[short as Exclude<StudioToolName, "studio_help">]
+  );
 }

@@ -269,6 +269,8 @@ export const decisionOverrides: OxlintOverride[] = [
     files: [
       "src/server/platform/**",
       "src/server/events/**",
+      "src/server/run-log/**",
+      "src/server/project-source/**",
       "src/server/store/events.ts",
       "src/server/direct-edit/change-feed.ts",
       "src/server/direct-edit/planned-feed.ts",

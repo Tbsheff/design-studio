@@ -11,7 +11,7 @@ import {
   type ProjectSearchResult,
   type RouteHit,
 } from "../../shared/project-search.js";
-import { latestRunStatus } from "../http/run-list.js";
+import { latestRunStatus } from "../run-log/index.js";
 import { listAppRoutes } from "./routes.js";
 
 export interface ProjectSearchDeps {

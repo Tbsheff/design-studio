@@ -887,7 +887,7 @@ export async function callTool(
     case "get_design_md": {
       const src = await source(deps, args);
       const md = await readFile(
-        path.join(await src.files(), DESIGN_MD_FILE),
+        path.join(src.root, DESIGN_MD_FILE),
         "utf-8"
       ).catch(() => null);
       return text(md ?? "This project has no DESIGN.md.");
@@ -898,13 +898,13 @@ export async function callTool(
       const src = await source(deps, args);
       return json({
         versionId: src.version.id,
-        files: await listFiles(await src.files()),
+        files: await listFiles(src.root),
       });
     }
     case "read_file": {
       const src = await source(deps, args);
       const file = await insideRoot(
-        await src.files(),
+        src.root,
         str(args, "path", true) as string
       );
       if (!TEXT_EXT.has(path.extname(file).toLowerCase()))

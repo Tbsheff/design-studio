@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { constants as fsConstants, existsSync } from "node:fs";
 import {
   copyFile,
@@ -458,7 +458,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
   const untrackedCounts = new Map<string, number>();
   const tracker = createChangeTracker(MAX_SCOPED_PATHS);
   const headIndexTrees = new Map<string, string>();
-  const fullyStaged = new Set<string>();
 
   const listCache = new Map<
     string,
@@ -697,18 +696,62 @@ export function createVersionStore(config: ServerConfig): VersionStore {
       .map(parseLogRecord);
   };
 
+  const committedAtOf = async (
+    project: Project,
+    sha: string
+  ): Promise<string> => {
+    const raw = await objectsOf(project).readObject(sha);
+    const header = raw?.body.toString("utf-8").split("\n\n")[0] ?? "";
+
+    const committer = header
+      .split("\n")
+      .find((line) => line.startsWith("committer "));
+
+    return / (?<at>\d+) [+-]\d{4}$/u.exec(committer ?? "")?.groups?.at ?? "0";
+  };
+
+  const changedFilesAt = async (
+    project: Project,
+    commit: CommitInfo
+  ): Promise<string[]> => {
+    if (commit.parents.length > 1) {
+      return [];
+    }
+
+    const [parent] = commit.parents;
+
+    const changes = await diffTrees(
+      objectsOf(project),
+      parent === undefined ? null : await treeOf(project, parent),
+      commit.tree
+    );
+
+    return changes.map((change) => change.path);
+  };
+
   const getVersion = async (
     project: Project,
     versionId: string
   ): Promise<Version> => {
     const sha = await requireCommit(project, versionId);
-    const [version] = await readVersions(project, ["-n", "1", sha]);
+    const commit = await readCommitObject(project, sha);
 
-    if (!version) {
+    if (!commit) {
       throw new NotFoundError(`version ${versionId} not found`);
     }
 
-    return version;
+    const { meta } = parseCommitMessage(commit.message);
+
+    const committedAt =
+      meta?.createdAt === undefined ? await committedAtOf(project, sha) : "0";
+
+    return toVersion(
+      sha,
+      commit.parents.join(" "),
+      committedAt,
+      commit.message,
+      await changedFilesAt(project, commit)
+    );
   };
 
   const commitInfo = async (
@@ -793,7 +836,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     const scan = tracked ? tracker.beginFullScan(key, rootOf(direction)) : null;
 
     await stageAll(directionScope(project, direction), firstOfApp);
-    fullyStaged.add(key);
 
     if (tracked) {
       tracker.endFullScan(key, scan);
@@ -867,45 +909,6 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         exact.has(relative) ||
         listed.some((entry) => entry.startsWith(`${relative}/`))
     );
-  };
-
-  const stageChanged = async (
-    project: Project,
-    direction: Direction
-  ): Promise<void> => {
-    const changed = (await fastOk(project, direction))
-      ? await tracker.changedSinceScan(
-          lockKey(project, direction),
-          rootOf(direction)
-        )
-      : null;
-
-    if (changed === null) {
-      return fullStage(project, direction);
-    }
-
-    const scope = directionScope(project, direction);
-    const scoped = scopedPaths(scope, changed);
-
-    if (scoped.length === 0) {
-      return;
-    }
-
-    try {
-      const stageable = await stageableOf(scope, scoped);
-
-      if (stageable.length > 0) {
-        await runGit(scope, [
-          "--literal-pathspecs",
-          "add",
-          "-A",
-          "--",
-          ...stageable,
-        ]);
-      }
-    } catch {
-      await fullStage(project, direction);
-    }
   };
 
   const commitTree = async (
@@ -1262,38 +1265,39 @@ export function createVersionStore(config: ServerConfig): VersionStore {
     await untrackNeverTracked(scope);
   };
 
-  const statusOf = async (
+  const scanIndexBase = async (
     project: Project,
     direction: Direction,
-    paths?: string[]
-  ): Promise<WorkTreeStatus> => {
-    await refreshExclude(project);
-    const scope = directionScope(project, direction);
+    head: string | null,
+    indexFile: string
+  ): Promise<string> => {
+    const live = directionScope(project, direction).indexFile as string;
 
-    const eligible = await fastOk(project, direction);
+    const copied =
+      existsSync(live) &&
+      (await copyFile(live, indexFile, fsConstants.COPYFILE_FICLONE).then(
+        () => true
+      ));
 
-    const fast = eligible
-      ? await direct.status(project, direction, paths)
-      : "git";
-
-    if (typeof fast !== "string") {
-      return fast;
+    if (!copied) {
+      return head ?? "";
     }
 
-    await direct.syncIndex(project, direction);
+    return (
+      await readFile(staleMarkerOf(project, direction), "utf-8").catch(() => "")
+    ).trim();
+  };
 
-    if (
-      fast === "full" ||
-      !(project.app || fullyStaged.has(lockKey(project, direction)))
-    ) {
-      await fullStage(project, direction);
-    } else {
-      await (paths === undefined
-        ? stageChanged(project, direction)
-        : stagePaths(project, direction, paths));
+  const changedInIndex = async (
+    scope: GitScope,
+    head: string | null,
+    base: string
+  ): Promise<string[]> => {
+    if (base !== "") {
+      await runGit(scope, ["read-tree", "--reset", base]);
     }
 
-    const head = await headOf(project, direction);
+    await stageAll(scope);
 
     const { stdout } = head
       ? await runGit(scope, [
@@ -1305,15 +1309,56 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         ])
       : await runGit(scope, ["ls-files", "-z"]);
 
-    const changed = splitNul(stdout).filter(
-      (entry) => !LAYOUT_FILES.includes(entry)
+    return splitNul(stdout);
+  };
+
+  const scanStatus = async (
+    project: Project,
+    direction: Direction
+  ): Promise<WorkTreeStatus> => {
+    const key = lockKey(project, direction);
+    const head = await headOf(project, direction);
+    const tracked = head !== null && (await fastOk(project, direction));
+    const scan = tracked ? tracker.beginFullScan(key, rootOf(direction)) : null;
+
+    const indexFile = path.join(
+      gitDirOf(project),
+      `index-status-${randomUUID()}`
     );
 
-    if (eligible && head && (paths === undefined || fast === "full")) {
-      direct.remember(project, direction, head, changed);
-    }
+    try {
+      const base = await scanIndexBase(project, direction, head, indexFile);
 
-    return { dirty: changed.length > 0, changed };
+      const changed = (
+        await changedInIndex(
+          { ...directionScope(project, direction), indexFile },
+          head,
+          base
+        )
+      ).filter((entry) => !LAYOUT_FILES.includes(entry));
+
+      if (head !== null && tracker.endFullScan(key, scan)) {
+        await direct.adopt(project, direction, head, head, changed);
+      }
+
+      return { dirty: changed.length > 0, changed };
+    } finally {
+      await rm(indexFile, { force: true });
+    }
+  };
+
+  const statusOf = async (
+    project: Project,
+    direction: Direction,
+    paths?: string[]
+  ): Promise<WorkTreeStatus> => {
+    await refreshExclude(project);
+
+    const fast = (await fastOk(project, direction))
+      ? await direct.status(project, direction, paths)
+      : "git";
+
+    return typeof fast === "string" ? scanStatus(project, direction) : fast;
   };
 
   const layoutOf = (direction: Direction, file: string): string =>
@@ -1799,21 +1844,11 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         return null;
       }
 
-      const live = directionScope(project, direction).indexFile as string;
-
-      const stale = (
-        await readFile(staleMarkerOf(project, direction), "utf-8").catch(
-          () => ""
-        )
-      ).trim();
-
-      const copied =
-        existsSync(live) &&
-        (await copyFile(live, indexFile, fsConstants.COPYFILE_FICLONE).then(
-          () => true
-        ));
-
-      return { head, scan, base: copied ? stale : head };
+      return {
+        head,
+        scan,
+        base: await scanIndexBase(project, direction, head, indexFile),
+      };
     });
 
   const scanAside = async (
@@ -1837,23 +1872,7 @@ export function createVersionStore(config: ServerConfig): VersionStore {
         indexFile,
       };
 
-      if (start.base !== "") {
-        await runGit(scope, ["read-tree", "--reset", start.base]);
-      }
-
-      await stageAll(scope);
-
-      const changed = splitNul(
-        (
-          await runGit(scope, [
-            "diff-index",
-            "--cached",
-            "--name-only",
-            "-z",
-            start.head,
-          ])
-        ).stdout
-      );
+      const changed = await changedInIndex(scope, start.head, start.base);
 
       await locked(project, direction, async () => {
         const head = await headOf(project, direction);
